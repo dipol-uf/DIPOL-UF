@@ -1,0 +1,7 @@
+C:\Andor_programs\Projects\Test\Test\bin\Debug\Test.exe.config
+C:\Andor_programs\Projects\Test\Test\bin\Debug\Test.exe
+C:\Andor_programs\Projects\Test\Test\bin\Debug\Test.pdb
+C:\Andor_programs\Projects\Test\Test\bin\Debug\ATMCD64CS.dll
+C:\Andor_programs\Projects\Test\Test\obj\Debug\Test.csprojResolveAssemblyReference.cache
+C:\Andor_programs\Projects\Test\Test\obj\Debug\Test.exe
+C:\Andor_programs\Projects\Test\Test\obj\Debug\Test.pdb
