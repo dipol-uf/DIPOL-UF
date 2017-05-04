@@ -1,0 +1,6 @@
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\Debug\ANDOR_CS.exe.config
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\Debug\ANDOR_CS.exe
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\Debug\ANDOR_CS.pdb
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\obj\Debug\ANDOR-CS.csprojResolveAssemblyReference.cache
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\obj\Debug\ANDOR_CS.exe
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\obj\Debug\ANDOR_CS.pdb
