@@ -5,11 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 using ATMCD64CS;
+using ANDOR_CS.Enums;
+using ANDOR_CS.DataStructures;
 
-using SDKInit = Test.AndorSDKInitialization;
+using SDKInit = ANDOR_CS.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
 
-namespace Test
+namespace ANDOR_CS
 {
     /// <summary>
     /// Represents an instance of a Camera device
@@ -46,12 +48,12 @@ namespace Test
             get;
             internal set;
         } = "Unknown";
-        public SDK.AndorCapabilities Capabilities
+        public DeviceCpabilities Capabilities
         {
             get;
             internal set;
 
-        } = default(SDK.AndorCapabilities);
+        } = default(DeviceCpabilities);
         public int[] TemperatureRange
         {
             get;
@@ -245,6 +247,7 @@ namespace Test
             return cameraCount;
         }
 
+
         private void GetCameraSerialNumber()
         {
             int number = -1;
@@ -280,7 +283,7 @@ namespace Test
                 throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.GetCapabilities)} returned error code.",
                     result);
             else
-                Capabilities = caps;           
+                Capabilities = new DeviceCpabilities(caps);           
         }
 
         private void GetTemperatureRange()
@@ -294,6 +297,9 @@ namespace Test
                     result);
             else
                 TemperatureRange = new[] { min, max };
-        } 
+        }
+
+        
     }
+
 }

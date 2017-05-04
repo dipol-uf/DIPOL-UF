@@ -4,16 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using SDKInit = Test.AndorSDKInitialization;
+using SDKInit = ANDOR_CS.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
 
-namespace Test
+using ANDOR_CS.Enums;
+using ANDOR_CS.DataStructures;
+
+namespace ANDOR_CS
 {
     class Program
     {
         static void Main(string[] args)
         {
-            Test();
+            //Test();
+
+            Test2();
             
             
             Console.ReadKey();
@@ -67,6 +72,23 @@ namespace Test
                 Console.WriteLine(result == SDK.DRV_SUCCESS ? "Success!" : "Failed!");
                 
             }
+            
+        }
+
+        public static void Test2()
+        {
+            SDK.AndorCapabilities caps = default(SDK.AndorCapabilities);
+
+            caps.ulAcqModes = 1 | 8 | 64 | 32 | 2;
+
+            DeviceCpabilities newCaps = new DeviceCpabilities(caps);
+
+            //EnumNames.GetName(typeof(int), newCaps.AcquisitionModes);
+            
+            foreach (var name in EnumNames.GetName(typeof(AcquisitionMode), newCaps.AcquisitionModes).Skip(1))
+                Console.Write(name + " ");
+
+           // Console.ReadKey();
             
         }
 

@@ -6,12 +6,27 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{D1E8B17D-4C59-42DD-87BD-F111DF8E631D}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Test</RootNamespace>
-    <AssemblyName>Test</AssemblyName>
+    <RootNamespace>ANDOR_CS</RootNamespace>
+    <AssemblyName>ANDOR_CS</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
@@ -66,18 +81,41 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AndorSDKException.cs" />
-    <Compile Include="AndorSDKInitialization.cs" />
-    <Compile Include="Camera.cs" />
-    <Compile Include="CoolerModeEnum.cs" />
-    <Compile Include="FanModeEnum.cs" />
+    <Compile Include="Classes\EnumNames.cs" />
+    <Compile Include="DataStructures\DeviceCpabilities.cs" />
+    <Compile Include="Enums\AcquisitionModeEnum.cs" />
+    <Compile Include="Classes\AndorSDKException.cs" />
+    <Compile Include="Classes\AndorSDKInitialization.cs" />
+    <Compile Include="Classes\Camera.cs" />
+    <Compile Include="Enums\CameraTypeEnum.cs" />
+    <Compile Include="Enums\CoolerModeEnum.cs" />
+    <Compile Include="Enums\FanModeEnum.cs" />
+    <Compile Include="Enums\EMGainEnum.cs" />
+    <Compile Include="Enums\GetFunctionEnum.cs" />
+    <Compile Include="Enums\PixelModeEnum.cs" />
+    <Compile Include="Enums\ReadModeEnum.cs" />
+    <Compile Include="Enums\SDKFeaturesEnum.cs" />
+    <Compile Include="Enums\SetFunctionEnum.cs" />
+    <Compile Include="Enums\TriggerModeEnum.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TemperatureInfo.cs" />
-    <Compile Include="TemperatureStatusEnum.cs" />
+    <Compile Include="DataStructures\TemperatureInfo.cs" />
+    <Compile Include="Enums\TemperatureStatusEnum.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

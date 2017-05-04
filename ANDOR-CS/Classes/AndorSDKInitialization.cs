@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Test
+namespace ANDOR_CS
 {
     /// <summary>
     /// Holds a singleton instance of AndorSDK class that is used across applications.

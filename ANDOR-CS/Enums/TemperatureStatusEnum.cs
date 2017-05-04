@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using SDK = ATMCD64CS.AndorSDK;
 
-namespace Test
+namespace ANDOR_CS.Enums
 {
     public enum TemperatureStatus : int
     {

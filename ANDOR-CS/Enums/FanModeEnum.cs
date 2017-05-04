@@ -4,11 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Test
+namespace ANDOR_CS.Enums
 {
-    public enum CoolerMode : int
+    public enum FanMode : int
     {
-        On = 1,
-        Off = 0
+        FullSpeed = 0,
+        LowSpeed = 1,
+        Off = 2
     }
 }
