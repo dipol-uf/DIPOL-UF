@@ -31,7 +31,7 @@ namespace Test
 
                 // Frame transfer ON
                 result = SDKInit.SDKInstance.SetFrameTransferMode(1);
-
+                
                 // Single Scan
                 result = SDKInit.SDKInstance.SetAcquisitionMode(3);
 
