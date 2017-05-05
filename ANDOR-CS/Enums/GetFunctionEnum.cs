@@ -9,20 +9,20 @@ using SDK = ATMCD64CS.AndorSDK;
 namespace ANDOR_CS.Enums
 {
     [Flags]
-    public enum GetFunction : int
+    public enum GetFunction : uint
     {
         Unknown = 0,
-        Temperature = (int) SDK.AC_GETFUNCTION_TEMPERATURE,
-        TemperatureRange = (int)SDK.AC_GETFUNCTION_TEMPERATURERANGE,
-        DetectorSize = (int)SDK.AC_GETFUNCTION_DETECTORSIZE,
-        MCPGain = (int)SDK.AC_GETFUNCTION_MCPGAIN,
-        EMCCDGain = (int)SDK.AC_GETFUNCTION_EMCCDGAIN,
-        GateMode = (int)SDK.AC_GETFUNCTION_GATEMODE,
-        DDGTimes = (int)SDK.AC_GETFUNCTION_DDGTIMES,
-        DDGIntegrateOnChip = (int)SDK.AC_GETFUNCTION_IOC,
-        Intelligate = (int)SDK.AC_GETFUNCTION_INTELLIGATE,
-        InsertionDelay = (int)SDK.AC_GETFUNCTION_INSERTION_DELAY,
-        PhosphorStatus = (int)SDK.AC_GETFUNCTION_PHOSPHORSTATUS,
-        BaselineClamp = (int)SDK.AC_GETFUNCTION_BASELINECLAMP
+        Temperature =  SDK.AC_GETFUNCTION_TEMPERATURE,
+        TemperatureRange = SDK.AC_GETFUNCTION_TEMPERATURERANGE,
+        DetectorSize = SDK.AC_GETFUNCTION_DETECTORSIZE,
+        MCPGain = SDK.AC_GETFUNCTION_MCPGAIN,
+        EMCCDGain = SDK.AC_GETFUNCTION_EMCCDGAIN,
+        GateMode = SDK.AC_GETFUNCTION_GATEMODE,
+        DDGTimes = SDK.AC_GETFUNCTION_DDGTIMES,
+        DDGIntegrateOnChip = SDK.AC_GETFUNCTION_IOC,
+        Intelligate = SDK.AC_GETFUNCTION_INTELLIGATE,
+        InsertionDelay = SDK.AC_GETFUNCTION_INSERTION_DELAY,
+        PhosphorStatus = SDK.AC_GETFUNCTION_PHOSPHORSTATUS,
+        BaselineClamp = SDK.AC_GETFUNCTION_BASELINECLAMP
     }
 }

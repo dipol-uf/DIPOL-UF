@@ -1,0 +1,11 @@
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\obj\x86\Debug\ANDOR-CS.csprojResolveAssemblyReference.cache
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x86\Debug\atmcd32d.dll
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x86\Debug\atmcd64d.dll
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x86\Debug\ANDOR_CS.exe.config
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x86\Debug\ANDOR_CS.exe
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x86\Debug\ANDOR_CS.pdb
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x86\Debug\ATMCD32CS.dll
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x86\Debug\GetFITS.dll
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x86\Debug\GetFITS.pdb
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\obj\x86\Debug\ANDOR_CS.exe
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\obj\x86\Debug\ANDOR_CS.pdb

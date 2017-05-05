@@ -10,21 +10,21 @@ namespace ANDOR_CS.Enums
 {
 
     [Flags]
-    public enum TriggerMode : int
+    public enum TriggerMode : uint
     {
         Unknown = 0,
-        Internal = (int)SDK.AC_TRIGGERMODE_INTERNAL,
-        External = (int)SDK.AC_TRIGGERMODE_EXTERNAL,
-        ExternalFVBEM = (int)SDK.AC_TRIGGERMODE_EXTERNAL_FVB_EM,
-        Continuous = (int)SDK.AC_TRIGGERMODE_CONTINUOUS,
-        ExternalStart = (int)SDK.AC_TRIGGERMODE_EXTERNALSTART,
+        Internal = SDK.AC_TRIGGERMODE_INTERNAL,
+        External = SDK.AC_TRIGGERMODE_EXTERNAL,
+        ExternalFVBEM = SDK.AC_TRIGGERMODE_EXTERNAL_FVB_EM,
+        Continuous = SDK.AC_TRIGGERMODE_CONTINUOUS,
+        ExternalStart = SDK.AC_TRIGGERMODE_EXTERNALSTART,
         /// <summary>
-        /// WARNING! Deprecated by <code>TriggerMode.ExternalExposure</code>
+        /// WARNING! Deprecated by <see cref="TriggerMode.ExternalExposure"/>
         /// </summary>
-        Bulb = (int)SDK.AC_TRIGGERMODE_BULB,
-        ExternalExposure = (int)SDK.AC_TRIGGERMODE_EXTERNALEXPOSURE,
-        Inverted = (int)SDK.AC_TRIGGERMODE_INVERTED,
-        ExternalChargeshifting = (int)SDK.AC_TRIGGERMODE_EXTERNAL_CHARGESHIFTING
+        Bulb = SDK.AC_TRIGGERMODE_BULB,
+        ExternalExposure = SDK.AC_TRIGGERMODE_EXTERNALEXPOSURE,
+        Inverted = SDK.AC_TRIGGERMODE_INVERTED,
+        ExternalChargeshifting = SDK.AC_TRIGGERMODE_EXTERNAL_CHARGESHIFTING
     }
 
     
