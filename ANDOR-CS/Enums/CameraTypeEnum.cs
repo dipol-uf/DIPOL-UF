@@ -8,27 +8,31 @@ using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Enums
 {
-    public enum CameraType : int
+    public enum CameraType : uint
     {
         
-        PDA = (int)SDK.AC_CAMERATYPE_PDA,
-        iXon = (int)SDK.AC_CAMERATYPE_IXON,
-        ICCD = (int)SDK.AC_CAMERATYPE_ICCD,
-        EMCCD = (int)SDK.AC_CAMERATYPE_EMCCD,
-        CCD = (int)SDK.AC_CAMERATYPE_CCD,
-        iStar = (int)SDK.AC_CAMERATYPE_ISTAR,
-        ThirdPartyVideo = (int)SDK.AC_CAMERATYPE_VIDEO,
-        iDus = (int)SDK.AC_CAMERATYPE_IDUS,
-        Newton = (int)SDK.AC_CAMERATYPE_NEWTON,
-        Surcam = (int)SDK.AC_CAMERATYPE_SURCAM,
-        USBICCD = (int)SDK.AC_CAMERATYPE_USBICCD,
-        Luca = (int)SDK.AC_CAMERATYPE_LUCA,
-        Reserved = (int)SDK.AC_CAMERATYPE_RESERVED,
-        iKon = (int)SDK.AC_CAMERATYPE_IKON,
-        InGaAs = (int)SDK.AC_CAMERATYPE_INGAAS,
-        iVac = (int)SDK.AC_CAMERATYPE_IVAC,
-        Clara = (int)SDK.AC_CAMERATYPE_CLARA,
-        USBiStar = (int)SDK.AC_CAMERATYPE_USBISTAR,
-        iXonUltra = (int)SDK.AC_CAMERATYPE_IXONULTRA
+        PDA = SDK.AC_CAMERATYPE_PDA,
+        iXon = SDK.AC_CAMERATYPE_IXON,
+        ICCD = SDK.AC_CAMERATYPE_ICCD,
+        EMCCD = SDK.AC_CAMERATYPE_EMCCD,
+        CCD = SDK.AC_CAMERATYPE_CCD,
+        iStar = SDK.AC_CAMERATYPE_ISTAR,
+        ThirdPartyVideo = SDK.AC_CAMERATYPE_VIDEO,
+        iDus = SDK.AC_CAMERATYPE_IDUS,
+        Newton = SDK.AC_CAMERATYPE_NEWTON,
+        Surcam = SDK.AC_CAMERATYPE_SURCAM,
+        USBICCD = SDK.AC_CAMERATYPE_USBICCD,
+        Luca = SDK.AC_CAMERATYPE_LUCA,
+        Reserved = SDK.AC_CAMERATYPE_RESERVED,
+        iKon = SDK.AC_CAMERATYPE_IKON,
+        InGaAs = SDK.AC_CAMERATYPE_INGAAS,
+        iVac = SDK.AC_CAMERATYPE_IVAC,
+        Clara = SDK.AC_CAMERATYPE_CLARA,
+        USBiStar = SDK.AC_CAMERATYPE_USBISTAR,
+        iXonUltra = SDK.AC_CAMERATYPE_IXONULTRA,
+        iVacCCD = SDK.AC_CAMERATYPE_IVAC_CCD,
+        iKonXL = SDK.AC_CAMERATYPE_IKONXL,
+        iStarSCMOS = SDK.AC_CAMERATYPE_ISTAR_SCMOS,
+        iKonLR = 31 //SDK.AC_CAMERATYPE_IKONLR
     }
 }

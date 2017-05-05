@@ -8,13 +8,13 @@ using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Enums
 {
-    public enum TemperatureStatus : int
+    public enum TemperatureStatus : uint
     {
         UnknownOrBusy = 0,
-        Off = (int)SDK.DRV_TEMPERATURE_OFF,
-        Stabilized = (int)SDK.DRV_TEMPERATURE_STABILIZED,
-        NotReached = (int)SDK.DRV_TEMPERATURE_NOT_REACHED,
-        Drift = (int)SDK.DRV_TEMPERATURE_DRIFT,
-        NotStabilized = (int)SDK.DRV_TEMPERATURE_NOT_STABILIZED
+        Off = SDK.DRV_TEMPERATURE_OFF,
+        Stabilized = SDK.DRV_TEMPERATURE_STABILIZED,
+        NotReached = SDK.DRV_TEMPERATURE_NOT_REACHED,
+        Drift = SDK.DRV_TEMPERATURE_DRIFT,
+        NotStabilized = SDK.DRV_TEMPERATURE_NOT_STABILIZED
     }
 }

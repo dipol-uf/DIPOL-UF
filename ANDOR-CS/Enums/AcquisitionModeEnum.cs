@@ -9,15 +9,15 @@ using SDK = ATMCD64CS.AndorSDK;
 namespace ANDOR_CS.Enums
 {
     [Flags]
-    public enum AcquisitionMode : int
+    public enum AcquisitionMode : uint
     {
         Unknown = 0,
-        SingleScan = (int)SDK.AC_ACQMODE_SINGLE,
-        RunTillAbort = (int)SDK.AC_ACQMODE_VIDEO,
-        Accumulation = (int)SDK.AC_ACQMODE_ACCUMULATE,
-        Kinetic = (int)SDK.AC_ACQMODE_KINETIC,
-        FrameTransfer = (int)SDK.AC_ACQMODE_FRAMETRANSFER,
-        FastKinetics = (int)SDK.AC_ACQMODE_FASTKINETICS,
-        Overlap = (int)SDK.AC_ACQMODE_OVERLAP
+        SingleScan = SDK.AC_ACQMODE_SINGLE,
+        RunTillAbort = SDK.AC_ACQMODE_VIDEO,
+        Accumulation = SDK.AC_ACQMODE_ACCUMULATE,
+        Kinetic = SDK.AC_ACQMODE_KINETIC,
+        FrameTransfer = SDK.AC_ACQMODE_FRAMETRANSFER,
+        FastKinetics = SDK.AC_ACQMODE_FASTKINETICS,
+        Overlap = SDK.AC_ACQMODE_OVERLAP
     }
 }

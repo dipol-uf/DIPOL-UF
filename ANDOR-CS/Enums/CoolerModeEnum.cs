@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ANDOR_CS.Enums
 {
-    public enum CoolerMode : int
+    public enum CoolerMode : uint
     {
         On = 1,
         Off = 0
