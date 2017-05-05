@@ -99,11 +99,12 @@ namespace ANDOR_CS
                     $"{nameof(SDKInit.SDKInstance.Initialize)}", e);
             }
 
+            GetCapabilities();
+
             FanControl(FanMode.Off);
             CoolerControl(CoolerMode.Off);
             GetCameraSerialNumber();
             GetHeadModel();
-            GetCapabilities();
             GetTemperatureRange();
         }
 

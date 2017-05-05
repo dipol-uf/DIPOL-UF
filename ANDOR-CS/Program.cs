@@ -18,10 +18,11 @@ namespace ANDOR_CS
         {
             //Test();
 
-            Test2();
+            Test3();
+
             
             
-            Console.ReadKey();
+           // Console.ReadKey();
         }
 
         public static void Test()
@@ -57,22 +58,51 @@ namespace ANDOR_CS
 
                 result = SDKInit.SDKInstance.SetImage(1, 1, 1, x, 1, y);
 
-
+                var now = DateTime.Now;
                 result = SDKInit.SDKInstance.StartAcquisition();
                 result = SDKInit.SDKInstance.WaitForAcquisition();
 
-                System.Threading.Thread.Sleep(15000);
+                System.Threading.Thread.Sleep(5000);
 
-                //result = SDKInit.SDKInstance.SaveAsFITS(".\\test.fits", 4);
+                //result = SDKInit.SDKInstance.SaveAsSif(".\\test.sif");
 
-                int[] array = new int[x * y * n];
+                //result = SDKInit.SDKInstance.SaveAsRaw(".\\test.raw", 3);
 
-                result = SDKInit.SDKInstance.GetAcquiredData(array, (uint)array.Length);
+                //result = SDKInit.SDKInstance.SaveAsFITS(".\\test.fits", 2);
+
+                float[] array = new float[x * y * n];
+
+                result = SDKInit.SDKInstance.GetAcquiredFloatData(array, (uint)array.Length);
+
+                var imgData = GetImage(array.Take(x * y).Select((p) => (double)p).ToArray(), x, y);
+
+                List<GetFITS.Keyword> keys = new List<GetFITS.Keyword>();
+                keys.Add(new GetFITS.Keyword("TIME", GetFITS.KeywordType.String, now.ToString("yyyy-MM-dd hh:mm:ss.ffffff"), "Custom keyword"));
+
+                var block = GetFITS.FITSBlock.FITSFromImage(imgData, GetFITS.PixType.FLOAT_32, keys);
+
+                using (var file = GetFITS.FITSFile.CreateNew(new System.IO.FileStream("newfits.fits", System.IO.FileMode.OpenOrCreate)))
+                {
+                    file.AssignHDUs(block);
+
+                    file.WriteToStream();
+                }
 
                 Console.WriteLine(result == SDK.DRV_SUCCESS ? "Success!" : "Failed!");
-                
+
             }
             
+        }
+
+        public static double[,] GetImage(double[] data, int n, int m)
+        {
+            double[,] result = new double[n, m];
+
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < m; j++)
+                    result[i, j] = data[j + m * i];
+
+            return result;
         }
 
         public static void Test2()
@@ -92,5 +122,55 @@ namespace ANDOR_CS
             
         }
 
+        public static void Test3()
+        {
+            using (Camera cam = new Camera())
+            {
+                var x = cam.Capabilities;
+
+
+                Console.WriteLine("\r\nAcquisition Modes:");
+                foreach (var val in EnumNames.GetName(typeof(AcquisitionMode), x.AcquisitionModes).Skip(1))
+                    Console.WriteLine("\t> " + val);
+
+                Console.WriteLine("\r\nRead Modes:");
+                foreach (var val in EnumNames.GetName(typeof(ReadMode), x.ReadModes).Skip(1))
+                    Console.WriteLine("\t> " + val);
+
+                Console.WriteLine("\r\nFT Read Modes:");
+                foreach (var val in EnumNames.GetName(typeof(ReadMode), x.FTReadModes).Skip(1))
+                    Console.WriteLine("\t> " + val);
+
+                Console.WriteLine("\r\nTrigger Modes:");
+                foreach (var val in EnumNames.GetName(typeof(TriggerMode), x.TriggerModes).Skip(1))
+                    Console.WriteLine("\t> " + val);
+
+                Console.WriteLine("\r\nCamera Type:");
+                Console.WriteLine("\t> " + x.CameraType);
+
+                Console.WriteLine("\r\nPixel Modes:");
+                foreach (var val in EnumNames.GetName(typeof(PixelMode), x.PixelModes))
+                    Console.WriteLine("\t> " + val);
+
+                Console.WriteLine("\r\nSet Functions:");
+                foreach (var val in EnumNames.GetName(typeof(SetFunction), x.SetFunctions).Skip(1))
+                    Console.WriteLine("\t> " + val);
+
+                Console.WriteLine("\r\nGet Functions:");
+                foreach (var val in EnumNames.GetName(typeof(GetFunction), x.GetFunctions).Skip(1))
+                    Console.WriteLine("\t> " + val);
+
+                Console.WriteLine("\r\nFeatures:");
+                foreach (var val in EnumNames.GetName(typeof(SDKFeatures), x.Features).Skip(1))
+                    Console.WriteLine("\t> " + val);
+
+                Console.WriteLine("\r\nEM Gain:");
+                foreach (var val in EnumNames.GetName(typeof(EMGain), x.EMGainFeatures).Skip(1))
+                    Console.WriteLine("\t> " + val);
+
+
+
+            }
+        }
     }
 }
