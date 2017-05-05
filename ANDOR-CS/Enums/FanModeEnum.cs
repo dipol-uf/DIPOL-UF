@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ANDOR_CS.Enums
 {
-    public enum FanMode : int
+    public enum FanMode : uint
     {
         FullSpeed = 0,
         LowSpeed = 1,
