@@ -18,6 +18,7 @@ namespace ANDOR_CS.Enums
         Kinetic = SDK.AC_ACQMODE_KINETIC,
         FrameTransfer = SDK.AC_ACQMODE_FRAMETRANSFER,
         FastKinetics = SDK.AC_ACQMODE_FASTKINETICS,
-        Overlap = SDK.AC_ACQMODE_OVERLAP
+        Overlap = SDK.AC_ACQMODE_OVERLAP,
+        UnspecifiedMode = 1 << 7
     }
 }
