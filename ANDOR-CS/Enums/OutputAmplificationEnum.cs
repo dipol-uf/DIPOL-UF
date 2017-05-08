@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace ANDOR_CS.Enums
 {
-    public enum Switch : uint
+    public enum OutputAmplification : uint
     {
-        Enabled = 1,
-        Disabled = 0
+        ElectromMultiplication = 0,
+        Conventional = 1
     }
 }

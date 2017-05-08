@@ -24,7 +24,7 @@ namespace ANDOR_CS.Enums
         ReadTemperatureDuringAcquisition = SDK.AC_FEATURES_TEMPERATUREDURINGACQUISITION,
         KeepCleanControl = SDK.AC_FEATURES_KEEPCLEANCONTROL,
         DDGLite = SDK.AC_FEATURES_DDGLITE,
-        FramTransferAndExternalExposure = SDK.AC_FEATURES_FTEXTERNALEXPOSURE,
+        FrameTransferAndExternalExposure = SDK.AC_FEATURES_FTEXTERNALEXPOSURE,
         KineticAndExternalExposure = SDK.AC_FEATURES_KINETICEXTERNALEXPOSURE,
         DACCntrol = SDK.AC_FEATURES_DACCONTROL,
         MetaData = SDK.AC_FEATURES_METADATA,

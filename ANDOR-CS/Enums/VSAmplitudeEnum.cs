@@ -6,9 +6,12 @@ using System.Threading.Tasks;
 
 namespace ANDOR_CS.Enums
 {
-    public enum Switch : uint
+    public enum VSAmplitude : int
     {
-        Enabled = 1,
-        Disabled = 0
+        Normal = 0,
+        Plus1 = 1,
+        Plus2 = 2,
+        Plus3 = 3,
+        Plus4 = 4
     }
 }
