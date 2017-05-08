@@ -11,6 +11,8 @@ using ANDOR_CS.DataStructures;
 using SDKInit = ANDOR_CS.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
 
+using static ANDOR_CS.AndorSDKException;
+
 namespace ANDOR_CS
 {
     /// <summary>
@@ -18,6 +20,11 @@ namespace ANDOR_CS
     /// </summary>
     public class Camera :IDisposable
     {
+        private static List<Camera> CreatedCameras = new List<Camera>();
+        private static Camera ActiveCamera = null;
+
+               
+        public bool IsActive => ActiveCamera == this;
         public int CameraHandlePtr
         {
             get;
@@ -33,11 +40,11 @@ namespace ANDOR_CS
             get;
             internal set;
         } = FanMode.Off;
-        public CoolerMode CoolerMode
+        public Switch CoolerMode
         {
             get;
             internal set;
-        } = CoolerMode.Off;
+        } = Switch.Disabled;
         public string SerialNumber
         {
             get;
@@ -54,59 +61,116 @@ namespace ANDOR_CS
             internal set;
 
         } = default(DeviceCpabilities);
-        public int[] TemperatureRange
+        public CameraProperties Properties
         {
             get;
             internal set;
-        } = new int[] { 0, 0 };
+        }
 
-        public Camera(int camIndex = 0)
+        private void GetCapabilities()
         {
-            try
+            SDK.AndorCapabilities caps = default(SDK.AndorCapabilities);
+            caps.ulSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(caps);
+
+            var result = SDKInit.SDKInstance.GetCapabilities(ref caps);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetCapabilities));
+            Capabilities = new DeviceCpabilities(caps);
+        }
+        private void GetCameraSerialNumber()
+        {
+            int number = -1;
+            var result = SDKInit.SDKInstance.GetCameraSerialNumber(ref number);
+
+            if (result == SDK.DRV_SUCCESS)
+                SerialNumber = number.ToString();
+
+
+        }
+        private void GetHeadModel()
+        {
+            string model = "";
+
+            var result = SDKInit.SDKInstance.GetHeadModel(ref model);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHeadModel));
+            CameraModel = model;
+        }
+        private void GetCameraProperties()
+        {
+            int min = 0;
+            int max = 0;
+            uint result = 0;
+
+            if (Capabilities.GetFunctions.HasFlag(GetFunction.TemperatureRange))
             {
-                if (camIndex < 0)
-                    throw new ArgumentException($"Camera index is out of range; Cannot be less than 0 (provided {camIndex}).");
-                if(camIndex >= GetNumberOfCameras())
-                    throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras()-1} (provided {camIndex}).");
 
-                int handle = 0;
-                var result = SDKInit.SDKInstance.GetCameraHandle(camIndex, ref handle);
-                if (result != SDK.DRV_SUCCESS)
-                    throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.GetCameraHandle)} returned error code.", result);
+                result = SDKInit.SDKInstance.GetTemperatureRange(ref min, ref max);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetTemperatureRange);
 
-                CameraHandlePtr = handle;
+            }
+
+            int h = 0;
+            int v = 0;
+
+            if (Capabilities.GetFunctions.HasFlag(GetFunction.DetectorSize))
+            {
+                result = SDKInit.SDKInstance.GetDetector(ref h, ref v);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetDetector));
                 
             }
-            catch (Exception e)
+
+            bool shutter = false;
+
+            if (Capabilities.CameraType == CameraType.iXon | Capabilities.CameraType == CameraType.iXonUltra)
             {
-                throw new AndorSDKException($"An exception was thrown while calling " +
-                    $"{nameof(SDKInit.SDKInstance.GetCameraHandle)}", e);
+                int shutterFlag = 0;
+                result = SDKInit.SDKInstance.IsInternalMechanicalShutter(ref shutterFlag);
+
+                if (result == SDK.DRV_SUCCESS)
+                    shutter = shutterFlag == 1;
+
+            }
+
+            int ADChannels = -1;
+            int amps = -1;
+            int preAmpGainMaxNumber = -1;
+
+            result = SDKInit.SDKInstance.GetNumberADChannels(ref ADChannels);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberADChannels));
+
+            result = SDKInit.SDKInstance.GetNumberAmp(ref amps);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberAmp));
+
+            result = SDKInit.SDKInstance.GetNumberPreAmpGains(ref preAmpGainMaxNumber);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberPreAmpGains));
+
+            int VSSpeedNumber = -1;
+            float speed = 0;
+            float[] speedArray = new float[VSSpeedNumber];
+
+            result = SDKInit.SDKInstance.GetNumberVSSpeeds(ref VSSpeedNumber);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberVSSpeeds));
+
+            for(int i = 0; i < VSSpeedNumber; i++)
+            {
+                result = SDKInit.SDKInstance.GetVSSpeed(i, ref speed);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetVSSpeed));
             }
 
 
-            try
+            Properties = new CameraProperties()
             {
-                var result = SDKInit.SDKInstance.Initialize(".\\");
-                if(result == SDK.DRV_SUCCESS)
-                    IsInitialized = true;
-                else
-                    throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.Initialize)} returned error code.", result);
-
-            }
-            catch (Exception e)
-            {
-                throw new AndorSDKException($"An exception was thrown while calling " +
-                    $"{nameof(SDKInit.SDKInstance.Initialize)}", e);
-            }
-
-            GetCapabilities();
-
-            FanControl(FanMode.Off);
-            CoolerControl(CoolerMode.Off);
-            GetCameraSerialNumber();
-            GetHeadModel();
-            GetTemperatureRange();
+                AllowedTemperatures = new TemperatureRange(min, max),
+                DetectorSize = new DetectorSize(h, v),
+                HasInternalMechanicalShutter = shutter,
+                ADChannelNumber = ADChannels,
+                AmpNumber = amps,
+                PreAmpGainMaximumNumber = preAmpGainMaxNumber,
+                VSSpeeds = speedArray
+                
+            };
         }
+        
+        
 
         public void SetActive()
         {
@@ -116,8 +180,9 @@ namespace ANDOR_CS
             try
             {
                 var result = SDKInit.SDKInstance.SetCurrentCamera(CameraHandlePtr);
-                if (result != SDK.DRV_SUCCESS)
-                    throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.SetCurrentCamera)} returned error code.", result);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.SetCurrentCamera));
+
+                ActiveCamera = this;
             }
             catch (Exception e)
             {
@@ -128,57 +193,65 @@ namespace ANDOR_CS
 
         public void FanControl(FanMode mode)
         {
-            var result = SDKInit.SDKInstance.SetFanMode((int)mode);
+            if (!Capabilities.Features.HasFlag(SDKFeatures.FanControl))
+                throw new AndorSDKException("Camera does not support fan controls.", new ArgumentException());
 
-            if (result != SDK.DRV_SUCCESS)
-                throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.SetFanMode)} returned error code.",
-                    result);
-            else
-                FanMode = mode;
+            if(mode == FanMode.LowSpeed && 
+                !Capabilities.Features.HasFlag(SDKFeatures.LowFanMode))
+                throw new AndorSDKException("Camera does not support low-speed fan mode.", new ArgumentException());
+
+            var result = SDKInit.SDKInstance.SetFanMode((int)mode);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.SetFanMode));
+
+            FanMode = mode;
         }
 
-        public void CoolerControl(CoolerMode mode)
+        public void CoolerControl(Switch mode)
         {
+            if(!Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
+                throw new AndorSDKException("Camera does not support cooler controls.", new ArgumentException());
+
             uint result = SDK.DRV_SUCCESS;
 
-            if (mode == CoolerMode.On)
+            if (mode == Switch.Enabled)
                 result = SDKInit.SDKInstance.CoolerON();
-            else if (mode == CoolerMode.Off)
+            else if (mode == Switch.Disabled)
                 result = SDKInit.SDKInstance.CoolerOFF();
 
-            if (result != SDK.DRV_SUCCESS)
-                throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.CoolerON)} or " +
-                    $"{nameof(SDKInit.SDKInstance.CoolerON)} returned error code.",
-                    result);
-            else
-            {
-                CoolerMode = mode;
-            }
+          ThrowIfError(result, nameof(SDKInit.SDKInstance.CoolerON) + " or " + nameof(SDKInit.SDKInstance.CoolerOFF));
+          CoolerMode = mode;
+            
         }
 
-        public void SetTemperature(int temperature, bool startCooling = false, Nullable<FanMode> mode = null)
+        public void SetTemperature(int temperature, bool startCooling = false, FanMode? mode = null)
         {
-            if ((TemperatureRange[0] != TemperatureRange[1]) &&
-                (temperature > TemperatureRange[1] ||
-                temperature < TemperatureRange[0]))
+            if(!Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
+                throw new AndorSDKException("Camera does not support temperature controls.", new ArgumentException());
+
+            if (Properties.AllowedTemperatures.Minimum >= Properties.AllowedTemperatures.Maximum)
+                throw new AndorSDKException("Valid temperature range was not received from camera.", new ArgumentNullException());
+
+            if (temperature > Properties.AllowedTemperatures.Maximum ||
+                temperature < Properties.AllowedTemperatures.Minimum )
                 throw new ArgumentOutOfRangeException($"Provided temperature ({temperature}) is out of valid range " +
-                    $"({TemperatureRange[0]}, {TemperatureRange[1]}).");
+                    $"({Properties.AllowedTemperatures.Maximum }, " +
+                     $"{Properties.AllowedTemperatures.Minimum }).");
             
             var result = SDKInit.SDKInstance.SetTemperature(temperature);
-
-            if (result != SDK.DRV_SUCCESS)
-                throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.SetTemperature)} returned error code.",
-                    result);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.SetTemperature));
 
             if (startCooling)
             {
                 FanControl(mode ?? FanMode);
-                CoolerControl(CoolerMode.On);
+                CoolerControl(Switch.Enabled);
             }
         }
 
         public TemperatureInfo GetCurrentTemperature()
         {
+            if(!Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
+                throw new AndorSDKException("Camera does not support temperature inquires.", new ArgumentException());
+
             float temp = float.NaN;
 
             TemperatureStatus status = TemperatureStatus.UnknownOrBusy;
@@ -190,29 +263,91 @@ namespace ANDOR_CS
                 throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.GetTemperatureF)} returned error code.",
                     result);
 
-            status = (TemperatureStatus)result;
+            if(result == SDK.DRV_ACQUIRING)
+                throw new AndorSDKException("Acquisition is in progress.", result);
 
+            status = (TemperatureStatus)result;
+            
             return new TemperatureInfo()
             {
                 Temperature = temp,
                 Status = status
             };
         }
-        
+
+
+        public Camera(int camIndex = 0)
+        {
+            try
+            {
+                if (camIndex < 0)
+                    throw new ArgumentException($"Camera index is out of range; Cannot be less than 0 (provided {camIndex}).");
+                if (camIndex >= GetNumberOfCameras())
+                    throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
+
+                int handle = 0;
+                var result = SDKInit.SDKInstance.GetCameraHandle(camIndex, ref handle);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetCameraHandle));
+
+                CameraHandlePtr = handle;
+
+            }
+            catch (Exception e)
+            {
+                throw new AndorSDKException($"An exception was thrown while calling " +
+                    $"{nameof(SDKInit.SDKInstance.GetCameraHandle)}", e);
+            }
+
+
+            try
+            {
+                var result = SDKInit.SDKInstance.Initialize(".\\");
+                if (result == SDK.DRV_SUCCESS)
+                {
+                    IsInitialized = true;
+                    CreatedCameras.Add(this);
+                }
+                else
+                    throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.Initialize)} returned error code.", result);
+
+            }
+            catch (Exception e)
+            {
+                throw new AndorSDKException($"An exception was thrown while calling " +
+                    $"{nameof(SDKInit.SDKInstance.Initialize)}", e);
+            }
+
+            SetActive();
+            GetCapabilities();
+            GetCameraProperties();
+            GetCameraSerialNumber();
+            GetHeadModel();
+
+            FanControl(FanMode.Off);
+            CoolerControl(Switch.Disabled);
+
+        }
+
         public void Dispose()
         {
             if (CameraHandlePtr != 0 && IsInitialized)
             {
                 try
                 {
-                    CoolerControl(CoolerMode.Off);
-                    FanControl(FanMode.Off);
+                    var oldCamera = ActiveCamera;
+
                     SetActive();
-
+                    CoolerControl(Switch.Disabled);
+                    FanControl(FanMode.Off);
+                   
                     var result = SDKInit.SDKInstance.ShutDown();
+                    ThrowIfError(result, nameof(SDKInit.SDKInstance.ShutDown));
 
-                    if (result != SDK.DRV_SUCCESS)
-                        throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.ShutDown)} returned error code.", result);
+                    CreatedCameras.Remove(this);
+
+                    if (CreatedCameras.Count == 0)
+                        ActiveCamera = null;
+                    else CreatedCameras.First().SetActive();
 
                 }
                 catch (Exception e)
@@ -223,6 +358,8 @@ namespace ANDOR_CS
 
                 
         }
+
+
 
         public static int GetNumberOfCameras()
         {
@@ -247,59 +384,8 @@ namespace ANDOR_CS
 
             return cameraCount;
         }
-
-
-        private void GetCameraSerialNumber()
-        {
-            int number = -1;
-            var result = SDKInit.SDKInstance.GetCameraSerialNumber(ref number);
-
-            if (result == SDK.DRV_SUCCESS)
-                SerialNumber = number.ToString();
-                
-
-        }
-
-        private void GetHeadModel()
-        {
-            string model = "";
-
-            var result = SDKInit.SDKInstance.GetHeadModel(ref model);
-
-            if (result != SDK.DRV_SUCCESS)
-                throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.GetHeadModel)} returned error code.",
-                    result);
-            else
-                CameraModel = model;
-        }
-
-        private void GetCapabilities()
-        {
-            SDK.AndorCapabilities caps = default(SDK.AndorCapabilities);
-            caps.ulSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(caps);
-
-            var result = SDKInit.SDKInstance.GetCapabilities(ref caps);
-
-            if (result != SDK.DRV_SUCCESS)
-                throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.GetCapabilities)} returned error code.",
-                    result);
-            else
-                Capabilities = new DeviceCpabilities(caps);           
-        }
-
-        private void GetTemperatureRange()
-        {
-            int min = int.MinValue, max = int.MaxValue;
-
-            var result = SDKInit.SDKInstance.GetTemperatureRange(ref min, ref max);
-
-            if (result != SDK.DRV_SUCCESS)
-                throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.GetTemperatureRange)} returned error code.",
-                    result);
-            else
-                TemperatureRange = new[] { min, max };
-        }
-
+               
+        
         
     }
 

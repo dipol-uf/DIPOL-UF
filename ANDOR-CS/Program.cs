@@ -16,6 +16,8 @@ namespace ANDOR_CS
     {
         static void Main(string[] args)
         {
+            //throw new AndorSDKException($"TestException in {nameof(Main)}", SDK.DRV_COFERROR);
+
             //Test();
 
             Test3();

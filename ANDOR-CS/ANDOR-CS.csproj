@@ -105,8 +105,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataStructures\CameraProperties.cs" />
     <Compile Include="Classes\EnumNames.cs" />
+    <Compile Include="DataStructures\DetectorSize.cs" />
     <Compile Include="DataStructures\DeviceCpabilities.cs" />
+    <Compile Include="DataStructures\TemperatureRange.cs" />
     <Compile Include="Enums\AcquisitionModeEnum.cs" />
     <Compile Include="Classes\AndorSDKException.cs" />
     <Compile Include="Classes\AndorSDKInitialization.cs" />
@@ -116,11 +119,13 @@
     <Compile Include="Enums\FanModeEnum.cs" />
     <Compile Include="Enums\EMGainEnum.cs" />
     <Compile Include="Enums\GetFunctionEnum.cs" />
+    <Compile Include="Enums\OutputAmplificationEnum.cs" />
     <Compile Include="Enums\PixelModeEnum.cs" />
     <Compile Include="Enums\ReadModeEnum.cs" />
     <Compile Include="Enums\SDKFeaturesEnum.cs" />
     <Compile Include="Enums\SetFunctionEnum.cs" />
     <Compile Include="Enums\TriggerModeEnum.cs" />
+    <Compile Include="Enums\VSAmplitudeEnum.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DataStructures\TemperatureInfo.cs" />
