@@ -130,7 +130,7 @@ namespace ANDOR_CS
             {
                 var x = cam.Capabilities;
 
-
+                
                 Console.WriteLine("\r\nAcquisition Modes:");
                 foreach (var val in EnumNames.GetName(typeof(AcquisitionMode), x.AcquisitionModes).Skip(1))
                     Console.WriteLine("\t> " + val);
@@ -170,8 +170,7 @@ namespace ANDOR_CS
                 foreach (var val in EnumNames.GetName(typeof(EMGain), x.EMGainFeatures).Skip(1))
                     Console.WriteLine("\t> " + val);
 
-
-
+                
             }
         }
     }
