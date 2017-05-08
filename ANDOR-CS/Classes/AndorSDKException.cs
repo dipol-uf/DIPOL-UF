@@ -23,5 +23,17 @@ namespace ANDOR_CS
         {
             ErrorCode = errorCode;
         }
+
+        public override string ToString()
+        {
+            return string.Format("{0} [{1}]", base.Message, ErrorCode);
+        }
+
+        public static void ThrowIfError(uint returnCode, string name)
+        {
+            if (returnCode != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+                throw new AndorSDKException($"{name} returned error code.",
+                    returnCode);
+        }
     }
 }
