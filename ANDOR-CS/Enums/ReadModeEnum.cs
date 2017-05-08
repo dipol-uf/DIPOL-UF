@@ -17,7 +17,7 @@ namespace ANDOR_CS.Enums
         SingleTrack = SDK.AC_READMODE_SINGLETRACK,
         FullVerticalBinning = SDK.AC_READMODE_FVB,
         MultiTrack = SDK.AC_READMODE_MULTITRACK,
-        RandomTrack = SDK.AC_READMODE_RANDOMTRACK//,
-       // MultiTrackScan = SDK.AC_READMODE_MULTITRACKSCAN
+        RandomTrack = SDK.AC_READMODE_RANDOMTRACK,
+        MultiTrackScan = SDK.AC_READMODE_MULTITRACKSCAN
     }
 }
