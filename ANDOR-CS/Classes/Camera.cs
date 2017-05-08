@@ -104,7 +104,7 @@ namespace ANDOR_CS
             {
 
                 result = SDKInit.SDKInstance.GetTemperatureRange(ref min, ref max);
-                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetTemperatureRange);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetTemperatureRange));
 
             }
 
@@ -145,15 +145,19 @@ namespace ANDOR_CS
 
             int VSSpeedNumber = -1;
             float speed = 0;
-            float[] speedArray = new float[VSSpeedNumber];
+            
 
             result = SDKInit.SDKInstance.GetNumberVSSpeeds(ref VSSpeedNumber);
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberVSSpeeds));
 
-            for(int i = 0; i < VSSpeedNumber; i++)
+            float[] speedArray = new float[VSSpeedNumber];
+
+            for (int i = 0; i < VSSpeedNumber; i++)
             {
                 result = SDKInit.SDKInstance.GetVSSpeed(i, ref speed);
                 ThrowIfError(result, nameof(SDKInit.SDKInstance.GetVSSpeed));
+
+                speedArray[i] = speed;
             }
 
 
