@@ -23,7 +23,12 @@ namespace ANDOR_CS
         private static List<Camera> CreatedCameras = new List<Camera>();
         private static Camera ActiveCamera = null;
 
-               
+        public bool IsDisposed
+        {
+            get;
+            private set;
+        } = false;
+
         public bool IsActive => ActiveCamera == this;
         public int CameraHandlePtr
         {
@@ -94,105 +99,177 @@ namespace ANDOR_CS
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHeadModel));
             CameraModel = model;
         }
+
+        /// <summary>
+        /// Determines properties of currently active camera and sets respective Camera.Properties field.
+        /// </summary>
+        /// <exception cref="AndorSDKException"/>
         private void GetCameraProperties()
         {
-            int min = 0;
-            int max = 0;
+            // To call SDK methods, current camera should be active (this.IsActive == true).
+            // If it is not the case, then either it was not set active (wrong design of program) or an error happened 
+            // while switching control to this camera (and thus behaviour is undefined)
+            if (!IsActive)
+                throw new AndorSDKException("Camera is not active. Cannnot perform this operation.", null);
+
+            // Stores return codes of ANDOR functions
             uint result = 0;
 
+            // Variables used to retrieve minimum and maximum temperature range (if applicable)
+            int min = 0;
+            int max = 0;
+            
+            // Checks if current camera supports temperature queries
             if (Capabilities.GetFunctions.HasFlag(GetFunction.TemperatureRange))
             {
-
+                // Native call to SDK
                 result = SDKInit.SDKInstance.GetTemperatureRange(ref min, ref max);
+                // If return code is not DRV_SUCCESS = (uint) 20002, throws standard AndorSDKException 
                 ThrowIfError(result, nameof(SDKInit.SDKInstance.GetTemperatureRange));
 
+                // Check if returned temperatures are valid (min <= max)
+                if (min > max)
+                    throw new AndorSDKException($"SDK function {nameof(SDKInit.SDKInstance.GetTemperatureRange)} returned invalid temperature range (should be {min} <= {max})", null);
             }
 
+            // Variable used to retrieve horizotal and vertical (maximum?) detector size in pixels (if applicable)
             int h = 0;
             int v = 0;
 
+            // Checks if current camera supports detector size queries
             if (Capabilities.GetFunctions.HasFlag(GetFunction.DetectorSize))
             {
                 result = SDKInit.SDKInstance.GetDetector(ref h, ref v);
-                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetDetector));
-                
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetDetector));                
+
+                // Checks if detector size is valid (h > 0, v > 0)
+                if ((h <= 0) | (v <= 0))
+                    throw new AndorSDKException($"SDK function {nameof(SDKInit.SDKInstance.GetDetector)} returned invalid detector size (should be {h} > 0 and {v} > 0)", null);
             }
 
+            // Variable used to store retrieved infromation about presence of internal mechanical shutter (if applicable)
             bool shutter = false;
 
+            // Internal shutters are only present in these cameras (according to documentation)
             if (Capabilities.CameraType == CameraType.iXon | Capabilities.CameraType == CameraType.iXonUltra)
             {
-                int shutterFlag = 0;
-                result = SDKInit.SDKInstance.IsInternalMechanicalShutter(ref shutterFlag);
+                // Local variable for passing as parameter to native call
 
-                if (result == SDK.DRV_SUCCESS)
-                    shutter = shutterFlag == 1;
+                int shutterFlag = 0;
+                
+                result = SDKInit.SDKInstance.IsInternalMechanicalShutter(ref shutterFlag);
+                // Here result can be DRV_NOT_AVAILABLE = (uint) 20992, which means that camera is not iXon.
+                // If this code is returned, then something went wrong while camera was initialized and camera type is incorrect
+                ThrowIfError(result, nameof(GetCameraProperties));
+                
+                // Converts int value to bool
+                shutter = shutterFlag == 1;
 
             }
 
-            int ADChannels = -1;
-            int amps = -1;
-            int preAmpGainMaxNumber = -1;
 
+
+            // Stores the number of different Analogue-Digital Converters onboard a camera
+            int ADChannels = -1;
+                        
             result = SDKInit.SDKInstance.GetNumberADChannels(ref ADChannels);
-            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberADChannels));
+            // According to documentation, this call returns always DRV_SUCCESS = (uint) 20002, 
+            // so there is no need for error-check
+            // However, it is checked that the number of AD-converters is a valid number (> 0)
+            if (ADChannels <= 0)
+                throw new AndorSDKException($"Function {nameof(SDKInit.SDKInstance.GetNumberADChannels)} returned invalid number of AD converters (returned {ADChannels} should be greater than 0).", null);
+
+            // An array of bit ranges for each available AD converter
+            int[] ADsBitRange = new int[ADChannels];
+
+            for (int ADCIndex = 0; ADCIndex < ADsBitRange.Length; ADCIndex++)
+            {
+                // Local variable that is is passed to SDK function
+                int localBitDepth = 0;
+
+                result = SDKInit.SDKInstance.GetBitDepth(ADCIndex, ref localBitDepth);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetBitDepth));
+
+                // If it is successful, asssign obtained bit depth to an element of an array
+                ADsBitRange[ADCIndex] = localBitDepth;
+            }
+
+            // Stores the number of different amplifiers installed
+            int amps = -1;
 
             result = SDKInit.SDKInstance.GetNumberAmp(ref amps);
-            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberAmp));
+            // Again, according to documentation the only return code is DRV_SUCCESS = (uint) 20002, 
+            // thus the number of amplifiers should be checked to be in a valid range (> 0)
+            if (amps <= 0)
+                throw new AndorSDKException($"Function {nameof(SDKInit.SDKInstance.GetNumberAmp)} returned invalid number of amplifiers (returned {amps} should be greater than 0).", null);
 
+
+            // Stores the (maximum) number of different pre-Amp gain settings. Depends on currently selected AD-converter and amplifier
+            int preAmpGainMaxNumber = -1;
+            
             result = SDKInit.SDKInstance.GetNumberPreAmpGains(ref preAmpGainMaxNumber);
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberPreAmpGains));
 
+
+            // Stores the number of different vertical speeds available
             int VSSpeedNumber = -1;
-            float speed = 0;
-            
 
             result = SDKInit.SDKInstance.GetNumberVSSpeeds(ref VSSpeedNumber);
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberVSSpeeds));
 
+            // Checks if number of different vertical speeds is actually greater than 0
+            if (VSSpeedNumber <= 0)
+                throw new AndorSDKException($"Function {nameof(SDKInit.SDKInstance.GetNumberVSSpeeds)} returned invalid number of available vertical speeds (returned {VSSpeedNumber} should be greater than 0).", null);
+
             float[] speedArray = new float[VSSpeedNumber];
 
-            for (int i = 0; i < VSSpeedNumber; i++)
+
+            for (int speedIndex = 0; speedIndex < VSSpeedNumber; speedIndex++)
             {
-                result = SDKInit.SDKInstance.GetVSSpeed(i, ref speed);
+                // Variable is passed to the SDK function
+                float localSpeed = 0;
+
+                result = SDKInit.SDKInstance.GetVSSpeed(speedIndex, ref localSpeed);
                 ThrowIfError(result, nameof(SDKInit.SDKInstance.GetVSSpeed));
 
-                speedArray[i] = speed;
+                // Assigns obtained speed to an array of speeds
+                speedArray[speedIndex] = localSpeed;
             }
 
-
+            // Assemples a new CameraProperties object using collected above information
             Properties = new CameraProperties()
             {
                 AllowedTemperatures = new TemperatureRange(min, max),
                 DetectorSize = new DetectorSize(h, v),
                 HasInternalMechanicalShutter = shutter,
-                ADChannelNumber = ADChannels,
+                ADConververts = ADsBitRange,
                 AmpNumber = amps,
                 PreAmpGainMaximumNumber = preAmpGainMaxNumber,
                 VSSpeeds = speedArray
                 
             };
+                        
         }
         
         
-
+        /// <summary>
+        /// Sets current camera active
+        /// </summary>
+        /// <exception cref="AndorSDKException"/>
         public void SetActive()
         {
-            if (CameraHandlePtr == 0 || !IsInitialized)
-                throw new AndorSDKException("Camera is not properly initialized.", new NullReferenceException());
+            // If camera address is invalid, throws exception
+            if (CameraHandlePtr == 0 )
+                throw new AndorSDKException($"Camera has invalid internal address of {CameraHandlePtr}.", new NullReferenceException());
 
-            try
-            {
-                var result = SDKInit.SDKInstance.SetCurrentCamera(CameraHandlePtr);
-                ThrowIfError(result, nameof(SDKInit.SDKInstance.SetCurrentCamera));
+            // Tries to make this camera active
+            var result = SDKInit.SDKInstance.SetCurrentCamera(CameraHandlePtr);
+            // If it fails, throw an exception
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.SetCurrentCamera));
 
-                ActiveCamera = this;
-            }
-            catch (Exception e)
-            {
-                throw new AndorSDKException($"An exception was thrown while calling " +
-                    $"{nameof(SDKInit.SDKInstance.SetCurrentCamera)}", e);
-            }
+            // Updates the static field of Camera class to indicate that this camera is now active
+            ActiveCamera = this;
+            
         }
 
         public void FanControl(FanMode mode)
@@ -279,111 +356,128 @@ namespace ANDOR_CS
             };
         }
 
-
+        /// <summary>
+        /// Creates a new instance of Camera class to represent a connected Andor device.
+        /// Maximum 8 cameras can be controled at the same time
+        /// </summary>
+        /// <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="Camera.GetNumberOfCameras()"/></param>
         public Camera(int camIndex = 0)
         {
-            try
-            {
-                if (camIndex < 0)
-                    throw new ArgumentException($"Camera index is out of range; Cannot be less than 0 (provided {camIndex}).");
-                if (camIndex >= GetNumberOfCameras())
-                    throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
+            // Stores return codes from SDK functions
+            uint result = 0;
 
-                int handle = 0;
-                var result = SDKInit.SDKInstance.GetCameraHandle(camIndex, ref handle);
-                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetCameraHandle));
+            // If cameraIndex is less than 0, it is out of range
+            if (camIndex < 0)
+                throw new ArgumentException($"Camera index is out of range; Cannot be less than 0 (provided {camIndex}).");
+            // If cameraIndex equals to or exceeds the number of available cameras, it is also out of range
+            if (camIndex >= GetNumberOfCameras())
+                throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
 
-                CameraHandlePtr = handle;
+            // Stores the handle (SDK internal pointer) to the camera. A unique identifier
+            int handle = 0;
+            result = SDKInit.SDKInstance.GetCameraHandle(camIndex, ref handle);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetCameraHandle));
 
-            }
-            catch (Exception e)
-            {
-                throw new AndorSDKException($"An exception was thrown while calling " +
-                    $"{nameof(SDKInit.SDKInstance.GetCameraHandle)}", e);
-            }
+            // If succede, assigns handle to Camera property
+            CameraHandlePtr = handle;
 
-
-            try
-            {
-                var result = SDKInit.SDKInstance.Initialize(".\\");
-                if (result == SDK.DRV_SUCCESS)
-                {
-                    IsInitialized = true;
-                    CreatedCameras.Add(this);
-                }
-                else
-                    throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.Initialize)} returned error code.", result);
-
-            }
-            catch (Exception e)
-            {
-                throw new AndorSDKException($"An exception was thrown while calling " +
-                    $"{nameof(SDKInit.SDKInstance.Initialize)}", e);
-            }
-
+            // Sets current camera active
             SetActive();
+
+            // Initializes current camera
+            result = SDKInit.SDKInstance.Initialize(".\\");
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.Initialize));
+
+            // If succeeded, sets IsInitialized flag to true and adds current camera to the list of initialized cameras
+            IsInitialized = true;
+            CreatedCameras.Add(this);
+            
+            // Queries capabilities of created camera. Result of this method is used later on to control 
+            // available camera settings and regimes
             GetCapabilities();
+
+            // Queries camera properties that contain information about physical regimes of camera
             GetCameraProperties();
+
+            // Gets camera serial number
             GetCameraSerialNumber();
+
+            // And model type
             GetHeadModel();
 
-            FanControl(FanMode.Off);
-            CoolerControl(Switch.Disabled);
-
+           
         }
 
+        /// <summary>
+        /// A realisation of <see cref="IDisposable.Dispose"/> method.
+        /// Frees SDK-related resources
+        /// </summary>
         public void Dispose()
         {
-            if (CameraHandlePtr != 0 && IsInitialized)
+            Dispose(true);
+            GC.SuppressFinalize(this);                
+        }
+
+        /// <summary>
+        /// A realisation of <see cref="IDisposable.Dispose"/> method.
+        /// Performs actual resources deallocation
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            // If an object is already disposed, do nothing
+            if (IsDisposed)
+                return;
+
+            // disposing == true if called from public void Dispose()
+            // disposing == false if called from Garbage Collector
+            if (disposing)
             {
-                try
+                // If camera has valid SDK pointer and is initialized
+                if (CameraHandlePtr != 0 && IsInitialized)
                 {
+                    // Saves currently active camera
                     var oldCamera = ActiveCamera;
 
+                    // Makes active camera that is going to be disposed (this)
                     SetActive();
-                    CoolerControl(Switch.Disabled);
-                    FanControl(FanMode.Off);
-                   
+
+                    // <-------------------------------------->
+                    // TO DO:
+                    // Apparently there should be some procedure to ensure that camera has appropriate temperature before disconnecting and turning fan off
+                    // <-------------------------------------->
+
+                    // ShutsDown camera
                     var result = SDKInit.SDKInstance.ShutDown();
                     ThrowIfError(result, nameof(SDKInit.SDKInstance.ShutDown));
 
+                    // If succeeded, removes camera instance from the list of cameras
                     CreatedCameras.Remove(this);
 
+                    // If there are no other cameras, 
                     if (CreatedCameras.Count == 0)
                         ActiveCamera = null;
-                    else CreatedCameras.First().SetActive();
+                    // If there are, sets active the one that was active before disposing procedure
+                    else oldCamera.SetActive();
 
-                }
-                catch (Exception e)
-                {
-                    throw new AndorSDKException("An error occured while releasing Camera resources.", e);
+                    // If disposing finishes successfully, marks this object as "disposed"
+                    this.IsDisposed = true;
+
                 }
             }
-
-                
         }
 
-
-
+        /// <summary>
+        /// Queries the number of currently connected Andor cameras
+        /// </summary>
+        /// <exception cref="AndorSDKException"/>
+        /// <returns>TNumber of detected cameras</returns>
         public static int GetNumberOfCameras()
         {
+            // Variable is passed to SDK function
             int cameraCount = -1;
-
-            try
-            {
-                var result = SDKInit.SDKInstance.GetAvailableCameras(ref cameraCount);
-                if (result != SDK.DRV_SUCCESS)
-                {
-                    cameraCount = -1;
-                    throw new AndorSDKException($"{ nameof(SDKInit.SDKInstance.GetAvailableCameras) } returned error code.",
-                        result);
-                }
-            }
-            catch (Exception e)
-            {
-                throw new AndorSDKException($"An exception was thrown while calling " +
-                    $"{nameof(SDKInit.SDKInstance.GetAvailableCameras)}", e);
-            }
+            
+            var result = SDKInit.SDKInstance.GetAvailableCameras(ref cameraCount);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetAvailableCameras));   
 
 
             return cameraCount;
