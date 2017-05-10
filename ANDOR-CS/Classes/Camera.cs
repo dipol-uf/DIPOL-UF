@@ -8,12 +8,13 @@ using ATMCD64CS;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 
+
 using SDKInit = ANDOR_CS.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
 
 using static ANDOR_CS.AndorSDKException;
 
-namespace ANDOR_CS
+namespace ANDOR_CS.Classes
 {
     /// <summary>
     /// Represents an instance of a Camera device
@@ -23,18 +24,13 @@ namespace ANDOR_CS
         private static List<Camera> CreatedCameras = new List<Camera>();
         private static Camera ActiveCamera = null;
 
-        public bool IsDisposed
-        {
-            get;
-            private set;
-        } = false;
-
         public bool IsActive => ActiveCamera == this;
-        public int CameraHandlePtr
+        //public int CameraHandlePtr
+        public SafeSDKCameraHandle CameraHandle
         {
             get;
             internal set;
-        } = 0;
+        } = null;
         public bool IsInitialized
         {
             get;
@@ -259,11 +255,11 @@ namespace ANDOR_CS
         public void SetActive()
         {
             // If camera address is invalid, throws exception
-            if (CameraHandlePtr == 0 )
-                throw new AndorSDKException($"Camera has invalid internal address of {CameraHandlePtr}.", new NullReferenceException());
+            if (CameraHandle.SDKPtr == 0 )
+                throw new AndorSDKException($"Camera has invalid internal address of {CameraHandle.SDKPtr}.", new NullReferenceException());
 
             // Tries to make this camera active
-            var result = SDKInit.SDKInstance.SetCurrentCamera(CameraHandlePtr);
+            var result = SDKInit.SDKInstance.SetCurrentCamera(CameraHandle.SDKPtr);
             // If it fails, throw an exception
             ThrowIfError(result, nameof(SDKInit.SDKInstance.SetCurrentCamera));
 
@@ -379,7 +375,7 @@ namespace ANDOR_CS
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetCameraHandle));
 
             // If succede, assigns handle to Camera property
-            CameraHandlePtr = handle;
+            CameraHandle = new SafeSDKCameraHandle(handle);
 
             // Sets current camera active
             SetActive();
@@ -413,57 +409,36 @@ namespace ANDOR_CS
         /// Frees SDK-related resources
         /// </summary>
         public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);                
-        }
-
-        /// <summary>
-        /// A realisation of <see cref="IDisposable.Dispose"/> method.
-        /// Performs actual resources deallocation
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
-            // If an object is already disposed, do nothing
-            if (IsDisposed)
-                return;
-
-            // disposing == true if called from public void Dispose()
-            // disposing == false if called from Garbage Collector
-            if (disposing)
+        {    
+            // If camera has valid SDK pointer and is initialized
+            if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
             {
-                // If camera has valid SDK pointer and is initialized
-                if (CameraHandlePtr != 0 && IsInitialized)
-                {
-                    // Saves currently active camera
-                    var oldCamera = ActiveCamera;
+                // Saves currently active camera
+                var oldCamera = ActiveCamera;
 
-                    // Makes active camera that is going to be disposed (this)
-                    SetActive();
+                // Makes active camera that is going to be disposed (this)
+                SetActive();
 
-                    // <-------------------------------------->
-                    // TO DO:
-                    // Apparently there should be some procedure to ensure that camera has appropriate temperature before disconnecting and turning fan off
-                    // <-------------------------------------->
+                // <-------------------------------------->
+                // TO DO:
+                // Apparently there should be some procedure to ensure that camera has appropriate temperature before disconnecting and turning fan off
+                // <-------------------------------------->
 
-                    // ShutsDown camera
-                    var result = SDKInit.SDKInstance.ShutDown();
-                    ThrowIfError(result, nameof(SDKInit.SDKInstance.ShutDown));
+                // ShutsDown camera
+                CameraHandle.Close();
 
-                    // If succeeded, removes camera instance from the list of cameras
-                    CreatedCameras.Remove(this);
+                // If succeeded, removes camera instance from the list of cameras
+                CreatedCameras.Remove(this);
 
-                    // If there are no other cameras, 
-                    if (CreatedCameras.Count == 0)
-                        ActiveCamera = null;
-                    // If there are, sets active the one that was active before disposing procedure
-                    else oldCamera.SetActive();
+                // If there are no other cameras, 
+                if (CreatedCameras.Count == 0)
+                    ActiveCamera = null;
+                // If there are, sets active the one that was active before disposing procedure
+                else oldCamera.SetActive();
 
-                    // If disposing finishes successfully, marks this object as "disposed"
-                    this.IsDisposed = true;
-
-                }
+               
             }
+
         }
 
         /// <summary>

@@ -10,6 +10,8 @@ using SDK = ATMCD64CS.AndorSDK;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 
+using ANDOR_CS.Classes;
+
 namespace ANDOR_CS
 {
     class Program
