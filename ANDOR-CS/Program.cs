@@ -130,6 +130,7 @@ namespace ANDOR_CS
             {
                 var x = cam.Capabilities;
 
+                cam.FanControl(FanMode.Off);
                 
                 Console.WriteLine("\r\nAcquisition Modes:");
                 foreach (var val in EnumNames.GetName(typeof(AcquisitionMode), x.AcquisitionModes).Skip(1))
