@@ -212,7 +212,17 @@ namespace ANDOR_CS.Classes
             if (amps <= 0 )
                 throw new AndorSDKException($"Function {nameof(SDKInit.SDKInstance.GetNumberAmp)} returned invalid number of amplifiers (returned {amps} should be greater than 0 and less than 2).", null);
 
-         
+            // IMPORTANT - UNDEFINED BEHAVIOUR
+
+            //string[] ampNames = new string[amps];
+
+            //for (int ampIndex = 0; ampIndex < ampNames.Length; ampIndex++)
+            //{
+            //    string locName = new string(' ', 21);
+
+            //    SDKInit.SDKInstance.GetAmpDesc(ampIndex, ref locName, locName.Length);
+            //}
+            
             // Stores the (maximum) number of different pre-Amp gain settings. Depends on currently selected AD-converter and amplifier
             int preAmpGainMaxNumber = -1;
             
