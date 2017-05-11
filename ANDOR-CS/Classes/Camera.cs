@@ -24,48 +24,61 @@ namespace ANDOR_CS.Classes
         private static List<Camera> CreatedCameras = new List<Camera>();
         private static Camera ActiveCamera = null;
 
-        public bool IsActive => ActiveCamera == this;
+        /// <summary>
+        /// Indicates if this camera is currently active
+        /// </summary>
+        public bool IsActive => ActiveCamera.CameraHandle.SDKPtr == this.CameraHandle.SDKPtr;
         //public int CameraHandlePtr
         public SafeSDKCameraHandle CameraHandle
         {
             get;
-            internal set;
+            private set;
         } = null;
         public bool IsInitialized
         {
             get;
-            internal set;
+            private set;
         } = false;
         public FanMode FanMode
         {
             get;
-            internal set;
+            private set;
         } = FanMode.Off;
         public Switch CoolerMode
         {
             get;
-            internal set;
+            private set;
         } = Switch.Disabled;
         public string SerialNumber
         {
             get;
-            internal set;
+            private set;
         } = "Unavailable";
         public string CameraModel
         {
             get;
-            internal set;
+            private set;
         } = "Unknown";
         public DeviceCpabilities Capabilities
         {
             get;
-            internal set;
+            private set;
 
         } = default(DeviceCpabilities);
         public CameraProperties Properties
         {
             get;
-            internal set;
+            private set;
+        }
+        public SoftwareVersion Software
+        {
+            get;
+            private set;
+        }
+        public HardwareVersion Hardware
+        {
+            get;
+            private set;
         }
 
         private void GetCapabilities()
@@ -143,10 +156,10 @@ namespace ANDOR_CS.Classes
                     throw new AndorSDKException($"SDK function {nameof(SDKInit.SDKInstance.GetDetector)} returned invalid detector size (should be {h} > 0 and {v} > 0)", null);
             }
 
-            // Variable used to store retrieved infromation about presence of internal mechanical shutter (if applicable)
+            // Variable used to store retrieved infromation about presence of private mechanical shutter (if applicable)
             bool shutter = false;
 
-            // Internal shutters are only present in these cameras (according to documentation)
+            // private shutters are only present in these cameras (according to documentation)
             if (Capabilities.CameraType == CameraType.iXon | Capabilities.CameraType == CameraType.iXonUltra)
             {
                 // Local variable for passing as parameter to native call
@@ -196,10 +209,10 @@ namespace ANDOR_CS.Classes
             result = SDKInit.SDKInstance.GetNumberAmp(ref amps);
             // Again, according to documentation the only return code is DRV_SUCCESS = (uint) 20002, 
             // thus the number of amplifiers should be checked to be in a valid range (> 0)
-            if (amps <= 0)
-                throw new AndorSDKException($"Function {nameof(SDKInit.SDKInstance.GetNumberAmp)} returned invalid number of amplifiers (returned {amps} should be greater than 0).", null);
+            if (amps <= 0 )
+                throw new AndorSDKException($"Function {nameof(SDKInit.SDKInstance.GetNumberAmp)} returned invalid number of amplifiers (returned {amps} should be greater than 0 and less than 2).", null);
 
-
+         
             // Stores the (maximum) number of different pre-Amp gain settings. Depends on currently selected AD-converter and amplifier
             int preAmpGainMaxNumber = -1;
             
@@ -246,7 +259,52 @@ namespace ANDOR_CS.Classes
             };
                         
         }
-        
+
+        private void GetSoftwareHardwareVersion()
+        {
+            // Stores return codes of SDK functions
+            uint result = 0;
+
+            // Variables are passed to SDK function and store version information
+            uint eprom = 0;
+            uint COF = 0;
+            uint driverVer = 0;
+            uint driverRev = 0;
+            uint DllVer = 0;
+            uint DllRev = 0;
+
+
+            result = SDKInit.SDKInstance.GetSoftwareVersion(ref eprom, ref COF, ref driverRev, ref driverVer, ref DllRev, ref DllVer);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetSoftwareVersion));
+
+            // Assigns obtained version information to the class field
+            Software = new SoftwareVersion()
+            {
+                EPROM = new Version((int)eprom, 0),
+                COFFile = new Version((int) COF, 0),
+                Driver = new Version((int)driverVer, (int)driverRev),
+                Dll = new Version((int)DllVer, (int)DllRev)
+            };
+
+            // Variables are passed to SDK function and store hardware version information
+            uint PCB = 0;
+            uint decode = 0;
+            uint dummy = 0;
+            uint firmwareVer = 0;
+            uint firmwareRev = 0;
+
+            result = SDKInit.SDKInstance.GetHardwareVersion(ref PCB, ref decode, ref dummy, ref dummy, ref firmwareVer, ref firmwareRev);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHardwareVersion));
+
+            // Assigns obtained hardware versions to the class field
+            Hardware = new HardwareVersion()
+            {
+                PCB = new Version((int)PCB, 0),
+                Decode = new Version((int)decode, 0),
+                CameraFirmware = new Version((int)firmwareVer, (int)firmwareRev)
+            };
+
+        }
         
         /// <summary>
         /// Sets current camera active
@@ -256,7 +314,7 @@ namespace ANDOR_CS.Classes
         {
             // If camera address is invalid, throws exception
             if (CameraHandle.SDKPtr == 0 )
-                throw new AndorSDKException($"Camera has invalid internal address of {CameraHandle.SDKPtr}.", new NullReferenceException());
+                throw new AndorSDKException($"Camera has invalid private address of {CameraHandle.SDKPtr}.", new NullReferenceException());
 
             // Tries to make this camera active
             var result = SDKInit.SDKInstance.SetCurrentCamera(CameraHandle.SDKPtr);
@@ -353,6 +411,21 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
+        /// Generates an instance of <see cref="AcquisitionSettings"/> that can be used to select proper settings for image
+        /// acquisition in the context of this camera
+        /// </summary>
+        /// <exception cref="AndorSDKException"/>
+        /// <returns>A template that can be used to select proper acquisition settings</returns>
+        public AcquisitionSettings GetAcquisitionSettingsTemplate()
+        {
+            if (!IsInitialized)
+                throw new AndorSDKException("Camera is not initialized properly.", new NullReferenceException());
+
+            return new AcquisitionSettings(this);
+        }
+
+
+        /// <summary>
         /// Creates a new instance of Camera class to represent a connected Andor device.
         /// Maximum 8 cameras can be controled at the same time
         /// </summary>
@@ -369,7 +442,7 @@ namespace ANDOR_CS.Classes
             if (camIndex >= GetNumberOfCameras())
                 throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
 
-            // Stores the handle (SDK internal pointer) to the camera. A unique identifier
+            // Stores the handle (SDK private pointer) to the camera. A unique identifier
             int handle = 0;
             result = SDKInit.SDKInstance.GetCameraHandle(camIndex, ref handle);
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetCameraHandle));
@@ -387,7 +460,10 @@ namespace ANDOR_CS.Classes
             // If succeeded, sets IsInitialized flag to true and adds current camera to the list of initialized cameras
             IsInitialized = true;
             CreatedCameras.Add(this);
-            
+
+            // Gets information about software and hardware used in this system
+            GetSoftwareHardwareVersion();
+
             // Queries capabilities of created camera. Result of this method is used later on to control 
             // available camera settings and regimes
             GetCapabilities();
@@ -425,7 +501,7 @@ namespace ANDOR_CS.Classes
                 // <-------------------------------------->
 
                 // ShutsDown camera
-                CameraHandle.Close();
+                CameraHandle.Dispose();
 
                 // If succeeded, removes camera instance from the list of cameras
                 CreatedCameras.Remove(this);
