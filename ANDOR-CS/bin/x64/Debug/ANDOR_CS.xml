@@ -26,24 +26,35 @@
             </summary>
             <param name="source">Parent object. Camera, to which settings should be applied.</param>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.TrySetVSSpeed(System.Int32)">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.CheckCamera">
             <summary>
-            Tries to set vertical speed
+            Checks source parent <see cref="T:ANDOR_CS.Classes.Camera"/>. If it is not initialized or active, throws exception.
             </summary>
-            <exception cref="T:ANDOR_CS.AndorSDKException"/>
             <exception cref="T:System.NullReferenceException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="P:ANDOR_CS.Classes.Camera.Properties"/>.VSSpeeds</param>
-            <returns>true if vertical speed is successfully set, false, otherwsise</returns>
+            <exception cref="T:ANDOR_CS.AndorSDKException"/>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.TrySetVSSpeed">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetVSSpeed(System.Int32)">
             <summary>
-            Tries to set vertical speed to fastest recommended speed.
+            Tries to set vertical speed. Requires camera to be active.
             </summary>
             <exception cref="T:ANDOR_CS.AndorSDKException"/>
-            <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <returns>true if vertical speed is successfully set, false, otherwsise</returns>
+            <exception cref="T:System.NotSupportedException"/>
+            <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="P:ANDOR_CS.Classes.Camera.Properties"/>.VSSpeeds</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetVSSpeed">
+            <summary>
+            Tries to set vertical speed to fastest recommended speed. Requires camera to be active.
+            </summary>
+            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.NotSupportedException"/>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetVSAmplitude(ANDOR_CS.Enums.VSAmplitude)">
+            <summary>
+            Sets the vertical clock voltage amplitude (if camera supports it).
+            </summary>
+            <param name="amplitude">New amplitude </param>
         </member>
         <member name="T:ANDOR_CS.Classes.SafeSDKCameraHandle">
             <summary>
@@ -275,9 +286,65 @@
             CMY colors
             </summary>
         </member>
+        <member name="F:ANDOR_CS.Enums.SetFunction.Unknown">
+            <summary>
+            Default state
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.SetFunction.VerticalReadoutSpeed">
+            <summary>
+            Supports changing of vertical reading speed
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.SetFunction.HorizontalReadoutSpeed">
+            <summary>
+            Supports changing of horizontal reading speed
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.SetFunction.Temperature">
+            <summary>
+            Supports temperature control
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.SetFunction.VerticalClockVoltage">
+            <summary>
+            Supports vertical clock voltage amplitude control
+            </summary>
+        </member>
         <member name="F:ANDOR_CS.Enums.TriggerMode.Bulb">
             <summary>
             WARNING! Deprecated by <see cref="F:ANDOR_CS.Enums.TriggerMode.ExternalExposure"/>
+            </summary>
+        </member>
+        <member name="T:ANDOR_CS.Enums.VSAmplitude">
+            <summary>
+            Available vertical clock voltage amplitudes to set. 
+            Not all camera support this feature, not all amplitudes may be available.
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.VSAmplitude.Normal">
+            <summary>
+            0, default
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.VSAmplitude.Plus1">
+            <summary>
+            +1
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.VSAmplitude.Plus2">
+            <summary>
+            +2
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.VSAmplitude.Plus3">
+            <summary>
+            +3
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.VSAmplitude.Plus4">
+            <summary>
+            +4
             </summary>
         </member>
         <member name="T:ANDOR_CS.AndorSDKInitialization">
