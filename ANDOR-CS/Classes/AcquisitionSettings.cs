@@ -33,6 +33,11 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         } = null;  
+        public VSAmplitude? VSAmplitude
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Constructor adds reference to parent <see cref="Camera"/> object.
@@ -44,22 +49,32 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
-        /// Tries to set vertical speed
+        /// Checks source parent <see cref="Camera"/>. If it is not initialized or active, throws exception.
         /// </summary>
-        /// <exception cref="AndorSDKException"/>
         /// <exception cref="NullReferenceException"/>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="Camera.Properties"/>.VSSpeeds</param>
-        /// <returns>true if vertical speed is successfully set, false, otherwsise</returns>
-        public bool TrySetVSSpeed(int speedIndex)
+        /// <exception cref="AndorSDKException"/>
+        private void CheckCamera()
         {
             // Checks if camera object is null
             if (source == null)
                 throw new NullReferenceException("Parent camera is null.");
 
-            // Makes sure the camera is currently active (otherwise settings will not be applied)
+            // If speed index is invalid
             if (!source.IsActive)
                 throw new AndorSDKException("Camera is not currently active.", null);
+        }
+
+        /// <summary>
+        /// Tries to set vertical speed. Requires camera to be active.
+        /// </summary>
+        /// <exception cref="AndorSDKException"/>
+        /// <exception cref="ArgumentOutOfRangeException"/>
+        /// <exception cref="NotSupportedException"/>
+        /// <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="Camera.Properties"/>.VSSpeeds</param>
+        public void SetVSSpeed(int speedIndex)
+        {
+            // Checks if Camera is OK
+            CheckCamera();
 
             // Checks if camera actually supports changing vertical readout speed
             if (source.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed))
@@ -71,38 +86,26 @@ namespace ANDOR_CS.Classes
                 if (speedIndex < 0 || speedIndex >= length)
                     throw new ArgumentOutOfRangeException($"{nameof(speedIndex)} is out of range (should be in [{0},  {length-1}]).");
 
-                // Setting the speed
-                uint result = SDKInit.SDKInstance.SetVSSpeed(speedIndex);
-                ThrowIfError(result, nameof(SDKInit.SDKInstance.SetVSSpeed));
-
                 // If success, updates VSSpeed field and 
                 VSSpeed = source.Properties.VSSpeeds[speedIndex];
                 // returns success
-                return true;
+                
             }
-            // If camera does not support thi setting
             else
-                // returns failure
-                return false;
+                throw new NotSupportedException("Camera does not support vertical readout speed control.");
+
         }
 
         /// <summary>
-        /// Tries to set vertical speed to fastest recommended speed.
+        /// Tries to set vertical speed to fastest recommended speed. Requires camera to be active.
         /// </summary>
         /// <exception cref="AndorSDKException"/>
-        /// <exception cref="NullReferenceException"/>
         /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <returns>true if vertical speed is successfully set, false, otherwsise</returns>
-        public bool TrySetVSSpeed()
+        /// <exception cref="NotSupportedException"/>
+        public void SetVSSpeed()
         {
-            // Checks if camera object is null
-            if (source == null)
-                throw new NullReferenceException("Parent camera is null.");
-
-            // If speed index is invalid
-            if (!source.IsActive)
-                throw new AndorSDKException("Camera is not currently active.", null);
-
+            // Checks if Camera is OK
+            CheckCamera();
 
             // Checks if camera actually supports changing vertical readout speed
             if (source.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed))
@@ -122,14 +125,37 @@ namespace ANDOR_CS.Classes
                     throw new ArgumentOutOfRangeException($"Fastest recommended vertical speed index({nameof(speedIndex)}) " +
                         $"is out of range (should be in [{0},  {length - 1}]).");
 
-                // Calls overloaded version of current method with obtained speedIndex as argument and returns its return value
-                return TrySetVSSpeed(speedIndex);
+                // Calls overloaded version of current method with obtained speedIndex as argument
+                SetVSSpeed(speedIndex);
 
             }
-            // If camera does not support thi setting
             else
-                // returns failure
-                return false;
+                throw new NotSupportedException("Camera does not support vertical readout speed control.");
+            
+        }
+
+        /// <summary>
+        /// Sets the vertical clock voltage amplitude (if camera supports it).
+        /// </summary>
+        /// <param name="amplitude">New amplitude </param>
+        public void SetVSAmplitude(VSAmplitude amplitude)
+        {
+            // Checks if Camera is OK
+            CheckCamera();
+
+            // Checks if Camera supports vertical clock voltage amplitude changes
+            if (source.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage))
+            {
+                VSAmplitude = amplitude;
+            }
+            else
+                throw new NotSupportedException("Camera does not support vertical clock voltage amplitude control.");
+        }
+
+
+        public void SetADConverter(int converterIndex)
+        {
+            
         }
     }
 }

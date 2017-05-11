@@ -18,6 +18,8 @@ namespace ANDOR_CS
     {
         static void Main(string[] args)
         {
+            string desc = "";
+            var result = SDKInit.SDKInstance.GetAmpDesc(0, ref desc, 21);
             //throw new AndorSDKException($"TestException in {nameof(Main)}", SDK.DRV_COFERROR);
 
             //Test();
