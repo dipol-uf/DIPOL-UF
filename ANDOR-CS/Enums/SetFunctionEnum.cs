@@ -11,13 +11,32 @@ namespace ANDOR_CS.Enums
     [Flags]
     public enum SetFunction: uint
     {
+        /// <summary>
+        /// Default state
+        /// </summary>
         Unknown = 0,
+
+        /// <summary>
+        /// Supports changing of vertical reading speed
+        /// </summary>
         VerticalReadoutSpeed =  SDK.AC_SETFUNCTION_VREADOUT,
+
+        /// <summary>
+        /// Supports changing of horizontal reading speed
+        /// </summary>
         HorizontalReadoutSpeed = SDK.AC_SETFUNCTION_HREADOUT,
+
+        /// <summary>
+        /// Supports temperature control
+        /// </summary>
         Temperature = SDK.AC_SETFUNCTION_TEMPERATURE,
         MCPGain = SDK.AC_SETFUNCTION_MCPGAIN,
         EMCCDGain = SDK.AC_SETFUNCTION_EMCCDGAIN,
         BaselineClamp =  SDK.AC_SETFUNCTION_BASELINECLAMP,
+
+        /// <summary>
+        /// Supports vertical clock voltage amplitude control
+        /// </summary>
         VerticalClockVoltage = SDK.AC_SETFUNCTION_VSAMPLITUDE,
         HighCapacityMode = SDK.AC_SETFUNCTION_HIGHCAPACITY,
         BaseLineOffset = SDK.AC_SETFUNCTION_BASELINEOFFSET,
