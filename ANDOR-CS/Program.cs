@@ -22,7 +22,7 @@ namespace ANDOR_CS
 
             //Test();
 
-            Test3();
+            Test4();
 
             
             
@@ -175,7 +175,16 @@ namespace ANDOR_CS
                 foreach (var val in EnumNames.GetName(typeof(EMGain), x.EMGainFeatures).Skip(1))
                     Console.WriteLine("\t> " + val);
 
-                
+                Console.WriteLine();
+            }
+        }
+
+        public static void Test4()
+        {
+            using (var cam = new Camera())
+            {
+                var settings = cam.GetAcquisitionSettingsTemplate();
+
             }
         }
     }

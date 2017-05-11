@@ -23,3 +23,4 @@ C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x64\Debug\atm
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x64\Debug\ATMCD64CS.dll
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x64\Debug\GetFITS.pdb
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\obj\x64\Debug\ANDOR-CS.csprojResolveAssemblyReference.cache
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x64\Debug\ANDOR_CS.xml

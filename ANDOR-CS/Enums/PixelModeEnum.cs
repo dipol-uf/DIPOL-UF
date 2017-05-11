@@ -8,6 +8,7 @@ using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Enums
 {
+    [Flags]
     public enum PixelMode : uint
     {
         /// <summary>
