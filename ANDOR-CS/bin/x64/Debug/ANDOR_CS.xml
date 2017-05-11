@@ -1,0 +1,295 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ANDOR_CS</name>
+    </assembly>
+    <members>
+        <member name="T:ANDOR_CS.Classes.AcquisitionSettings">
+            <summary>
+            Represents all possible acuisition/camera settings that can be adjusted before taking any images
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Classes.AcquisitionSettings.source">
+            <summary>
+            A reference to the parent <see cref="T:ANDOR_CS.Classes.Camera"/> object.
+            Used to perform checks of capabilities of the current camera.
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.VSSpeed">
+            <summary>
+            Stores the value of currently set vertical speed
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.#ctor(ANDOR_CS.Classes.Camera)">
+            <summary>
+            Constructor adds reference to parent <see cref="T:ANDOR_CS.Classes.Camera"/> object.
+            </summary>
+            <param name="source">Parent object. Camera, to which settings should be applied.</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.TrySetVSSpeed(System.Int32)">
+            <summary>
+            Tries to set vertical speed
+            </summary>
+            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="P:ANDOR_CS.Classes.Camera.Properties"/>.VSSpeeds</param>
+            <returns>true if vertical speed is successfully set, false, otherwsise</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.TrySetVSSpeed">
+            <summary>
+            Tries to set vertical speed to fastest recommended speed.
+            </summary>
+            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <returns>true if vertical speed is successfully set, false, otherwsise</returns>
+        </member>
+        <member name="T:ANDOR_CS.Classes.SafeSDKCameraHandle">
+            <summary>
+            A safe handle class based on <see cref="T:System.Runtime.InteropServices.SafeHandle"/> class tha uses internal <see cref="T:System.IntPtr"/> handle to store
+            intrinsic AndorSDK camera handle/pointer.
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SafeSDKCameraHandle.SDKPtr">
+            <summary>
+            A porperty with getter that returns stored raw Andor SDK camera handle
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SafeSDKCameraHandle.#ctor(System.Int32)">
+            <summary>
+            A constructor. Calls base constructor with ownsHandle = true
+            </summary>
+            <param name="handle"></param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SafeSDKCameraHandle.ReleaseHandle">
+            <summary>
+            An overriden ReleaseHandle method that performs all the cleanup procedures. 
+            Marked for safe execution
+            </summary>
+            <returns>true if cleanup finished successfully, false, otherwise, which triggers releaseHandleFailed MDA</returns>
+        </member>
+        <member name="T:ANDOR_CS.Classes.Camera">
+            <summary>
+            Represents an instance of a Camera device
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.Camera.IsActive">
+            <summary>
+            Indicates if this camera is currently active
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.GetCameraProperties">
+            <summary>
+            Determines properties of currently active camera and sets respective Camera.Properties field.
+            </summary>
+            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.SetActive">
+            <summary>
+            Sets current camera active
+            </summary>
+            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.GetAcquisitionSettingsTemplate">
+            <summary>
+            Generates an instance of <see cref="T:ANDOR_CS.Classes.AcquisitionSettings"/> that can be used to select proper settings for image
+            acquisition in the context of this camera
+            </summary>
+            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <returns>A template that can be used to select proper acquisition settings</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.#ctor(System.Int32)">
+            <summary>
+            Creates a new instance of Camera class to represent a connected Andor device.
+            Maximum 8 cameras can be controled at the same time
+            </summary>
+            <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="M:ANDOR_CS.Classes.Camera.GetNumberOfCameras"/></param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.Dispose">
+            <summary>
+            A realisation of <see cref="M:System.IDisposable.Dispose"/> method.
+            Frees SDK-related resources
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.GetNumberOfCameras">
+            <summary>
+            Queries the number of currently connected Andor cameras
+            </summary>
+            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <returns>TNumber of detected cameras</returns>
+        </member>
+        <member name="T:ANDOR_CS.DataStructures.CameraProperties">
+            <summary>
+            Stores information about camera-specific properties
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.CameraProperties.AllowedTemperatures">
+            <summary>
+            If available, stores the range of temperatures to which camera can be cooled
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.CameraProperties.DetectorSize">
+            <summary>
+            If available, stores the size of a 2D detector (in pixels)
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.CameraProperties.HasInternalMechanicalShutter">
+            <summary>
+            If available, indicates if camera has internal mechanical shutter
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.CameraProperties.ADConververts">
+            <summary>
+            An array of bit-depths for each available AD converter
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.CameraProperties.AmpNumber">
+            <summary>
+            Number of different amplifiers available
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.CameraProperties.PreAmpGainMaximumNumber">
+            <summary>
+            Maximum number of different gain settings available
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.CameraProperties.VSSpeeds">
+            <summary>
+            An array of available Vertical Speeds (in us)
+            </summary>
+        </member>
+        <member name="T:ANDOR_CS.DataStructures.HardwareVersion">
+            <summary>
+            Stoers information about currently used hardware versions
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.HardwareVersion.PCB">
+            <summary>
+            Plug-in card version
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.HardwareVersion.Decode">
+            <summary>
+            Flex 10K file version
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.HardwareVersion.CameraFirmware">
+            <summary>
+            Camera firmware version
+            </summary>
+        </member>
+        <member name="T:ANDOR_CS.DataStructures.SoftwareVersion">
+            <summary>
+            Stores information about Andor software used
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.SoftwareVersion.EPROM">
+            <summary>
+            EPROM
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.SoftwareVersion.COFFile">
+            <summary>
+            COF file
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.SoftwareVersion.Driver">
+            <summary>
+            Version of the driver
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.SoftwareVersion.Dll">
+            <summary>
+            Version of the SDK dll used
+            </summary>
+        </member>
+        <member name="T:ANDOR_CS.DataStructures.TemperatureRange">
+            <summary>
+            Stores temperature range (min, max)
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.TemperatureRange.Minimum">
+            <summary>
+            Minimum temperature
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.DataStructures.TemperatureRange.Maximum">
+            <summary>
+            Maximum temperature
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.DataStructures.TemperatureRange.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Initializes new instance of <see cref="T:ANDOR_CS.DataStructures.TemperatureRange"/>
+            </summary>
+            <param name="min">A value to store in Minimum field</param>
+            <param name="max">A value to store in Maximum field</param>
+        </member>
+        <member name="T:ANDOR_CS.EnumNames">
+            <summary>
+            Helper class that can be used to retrieve all flags set in a given <see cref="T:System.Enum"/> mask
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.EnumNames.GetName(System.Type,System.Enum)">
+            <summary>
+            Returns all flags that are set in a given <see cref="T:System.Enum"/> mask
+            </summary>
+            <param name="enumType"><see cref="T:System.Type"/> of <see cref="T:System.Enum"/></param>
+            <param name="value">Mask</param>
+            <exception cref="T:System.ArgumentException"/>
+            <returns>An array of <see cref="T:System.String"/> representations of <see cref="T:System.Enum"/> flags</returns>
+        </member>
+        <member name="F:ANDOR_CS.Enums.PixelMode.Bits8">
+            <summary>
+            8-bit mode
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.PixelMode.Bits14">
+            <summary>
+            14-bit mode
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.PixelMode.Bits16">
+            <summary>
+            16-bit mode
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.PixelMode.Bits32">
+            <summary>
+            32-bit mode
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.PixelMode.Mono">
+            <summary>
+            Grey scale
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.PixelMode.RGB">
+            <summary>
+            RGB colors
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.PixelMode.CMY">
+            <summary>
+            CMY colors
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.TriggerMode.Bulb">
+            <summary>
+            WARNING! Deprecated by <see cref="F:ANDOR_CS.Enums.TriggerMode.ExternalExposure"/>
+            </summary>
+        </member>
+        <member name="T:ANDOR_CS.AndorSDKInitialization">
+            <summary>
+            Holds a singleton instance of AndorSDK class that is used across applications.
+            Thread-safety is unknown.
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.AndorSDKInitialization.SDKInstance">
+            <summary>
+            Gets an singleton instance of a basic AndorSDK class
+            </summary>
+        </member>
+    </members>
+</doc>
