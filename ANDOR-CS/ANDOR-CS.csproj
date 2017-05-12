@@ -111,7 +111,7 @@
     <Compile Include="Classes\AcquisitionSettings.cs" />
     <Compile Include="Classes\SafeSDKCameraHandle.cs" />
     <Compile Include="DataStructures\CameraProperties.cs" />
-    <Compile Include="Classes\EnumNames.cs" />
+    <Compile Include="Classes\Extensions.cs" />
     <Compile Include="DataStructures\DetectorSize.cs" />
     <Compile Include="DataStructures\DeviceCpabilities.cs" />
     <Compile Include="DataStructures\HardwareVersion.cs" />
