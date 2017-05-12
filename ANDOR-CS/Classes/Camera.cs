@@ -21,6 +21,9 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public class Camera :IDisposable
     {
+        private static readonly int AmpDescriptorMaxLength = 21;
+        private static readonly int PreAmpGainDescriptorMaxLength = 30;
+
         private static List<Camera> CreatedCameras = new List<Camera>();
         private static Camera ActiveCamera = null;
 
@@ -179,7 +182,7 @@ namespace ANDOR_CS.Classes
 
 
             // Stores the number of different Analogue-Digital Converters onboard a camera
-            int ADChannels = -1;
+            int ADChannels = 0;
                         
             result = SDKInit.SDKInstance.GetNumberADChannels(ref ADChannels);
             // According to documentation, this call returns always DRV_SUCCESS = (uint) 20002, 
@@ -204,7 +207,7 @@ namespace ANDOR_CS.Classes
             }
 
             // Stores the number of different amplifiers installed
-            int amps = -1;
+            int amps = 0;
 
             result = SDKInit.SDKInstance.GetNumberAmp(ref amps);
             // Again, according to documentation the only return code is DRV_SUCCESS = (uint) 20002, 
@@ -212,26 +215,52 @@ namespace ANDOR_CS.Classes
             if (amps <= 0 )
                 throw new AndorSDKException($"Function {nameof(SDKInit.SDKInstance.GetNumberAmp)} returned invalid number of amplifiers (returned {amps} should be greater than 0 and less than 2).", null);
 
-            // IMPORTANT - UNDEFINED BEHAVIOUR
+            // Amplifier information array
+            Tuple<string, OutputAmplification, float>[] amplifiers = new Tuple<string, OutputAmplification, float>[amps];
 
-            //string[] ampNames = new string[amps];
+            for (int ampIndex = 0; ampIndex < amps; ampIndex++)
+            {
+                string ampName = "";
+                float speed = 0.0f;
 
-            //for (int ampIndex = 0; ampIndex < ampNames.Length; ampIndex++)
-            //{
-            //    string locName = new string(' ', 21);
+                // Retrieves amplifier name
+                result = SDKInit.SDKInstance.GetAmpDesc(ampIndex, ref ampName, AmpDescriptorMaxLength);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetAmpDesc));
 
-            //    SDKInit.SDKInstance.GetAmpDesc(ampIndex, ref locName, locName.Length);
-            //}
+                // Retrieves maximum horizontal speed
+                result = SDKInit.SDKInstance.GetAmpMaxSpeed(ampIndex, ref speed);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetAmpMaxSpeed));
+
+                // Adds obtained values to array
+                amplifiers[ampIndex] = new Tuple<string, OutputAmplification, float>(ampName, (OutputAmplification)ampIndex, speed);                
+            }
             
+
             // Stores the (maximum) number of different pre-Amp gain settings. Depends on currently selected AD-converter and amplifier
-            int preAmpGainMaxNumber = -1;
+            int preAmpGainMaxNumber = 0;
             
             result = SDKInit.SDKInstance.GetNumberPreAmpGains(ref preAmpGainMaxNumber);
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberPreAmpGains));
 
+            // Array of pre amp gain desciptions
+            string[] preAmpGainDesc = new string[preAmpGainMaxNumber];
+
+
+            for (int preAmpIndex = 0; preAmpIndex < preAmpGainMaxNumber; preAmpIndex++)
+            {
+                string desc = "";
+
+                // Retrieves decription
+                result = SDKInit.SDKInstance.GetPreAmpGainText(preAmpIndex, ref desc, PreAmpGainDescriptorMaxLength);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetPreAmpGainText));
+
+                // If success, assigns it to array
+                preAmpGainDesc[preAmpIndex] = desc;
+            }
+
 
             // Stores the number of different vertical speeds available
-            int VSSpeedNumber = -1;
+            int VSSpeedNumber = 0;
 
             result = SDKInit.SDKInstance.GetNumberVSSpeeds(ref VSSpeedNumber);
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberVSSpeeds));
@@ -240,9 +269,9 @@ namespace ANDOR_CS.Classes
             if (VSSpeedNumber <= 0)
                 throw new AndorSDKException($"Function {nameof(SDKInit.SDKInstance.GetNumberVSSpeeds)} returned invalid number of available vertical speeds (returned {VSSpeedNumber} should be greater than 0).", null);
 
+
             float[] speedArray = new float[VSSpeedNumber];
-
-
+            
             for (int speedIndex = 0; speedIndex < VSSpeedNumber; speedIndex++)
             {
                 // Variable is passed to the SDK function
@@ -261,9 +290,9 @@ namespace ANDOR_CS.Classes
                 AllowedTemperatures = new TemperatureRange(min, max),
                 DetectorSize = new DetectorSize(h, v),
                 HasInternalMechanicalShutter = shutter,
-                ADConververts = ADsBitRange,
-                AmpNumber = amps,
-                PreAmpGainMaximumNumber = preAmpGainMaxNumber,
+                ADConverters = ADsBitRange,
+                Amplifiers = amplifiers,
+                PreAmpGains = preAmpGainDesc,
                 VSSpeeds = speedArray
                 
             };

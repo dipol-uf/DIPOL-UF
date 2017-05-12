@@ -18,17 +18,16 @@ namespace ANDOR_CS
     {
         static void Main(string[] args)
         {
-            string desc = "";
-            var result = SDKInit.SDKInstance.GetAmpDesc(0, ref desc, 21);
-            //throw new AndorSDKException($"TestException in {nameof(Main)}", SDK.DRV_COFERROR);
 
-            //Test();
+            TestQuery();
 
-            Test4();
+            //Test2();
 
-            
-            
-           // Console.ReadKey();
+            //Test4();
+
+
+
+            // Console.ReadKey();
         }
 
         public static void Test()
@@ -113,18 +112,10 @@ namespace ANDOR_CS
 
         public static void Test2()
         {
-            SDK.AndorCapabilities caps = default(SDK.AndorCapabilities);
-
-            caps.ulAcqModes = 1 | 8 | 64 | 32 | 2;
-
-            DeviceCpabilities newCaps = new DeviceCpabilities(caps);
-
-            //EnumNames.GetName(typeof(int), newCaps.AcquisitionModes);
-            
-            foreach (var name in EnumNames.GetName(typeof(AcquisitionMode), newCaps.AcquisitionModes).Skip(1))
-                Console.Write(name + " ");
-
-           // Console.ReadKey();
+            using (var cam = new Camera())
+            {
+                cam.FanControl(FanMode.Off);
+            }
             
         }
 
@@ -139,42 +130,42 @@ namespace ANDOR_CS
                 var t = cam.GetCurrentTemperature();
 
                 Console.WriteLine("\r\nAcquisition Modes:");
-                foreach (var val in EnumNames.GetName(typeof(AcquisitionMode), x.AcquisitionModes).Skip(1))
+                foreach (var val in Extensions.GetEnumNames(typeof(AcquisitionMode), x.AcquisitionModes).Skip(1))
                     Console.WriteLine("\t> " + val);
 
                 Console.WriteLine("\r\nRead Modes:");
-                foreach (var val in EnumNames.GetName(typeof(ReadMode), x.ReadModes).Skip(1))
+                foreach (var val in Extensions.GetEnumNames(typeof(ReadMode), x.ReadModes).Skip(1))
                     Console.WriteLine("\t> " + val);
 
                 Console.WriteLine("\r\nFT Read Modes:");
-                foreach (var val in EnumNames.GetName(typeof(ReadMode), x.FTReadModes).Skip(1))
+                foreach (var val in Extensions.GetEnumNames(typeof(ReadMode), x.FTReadModes).Skip(1))
                     Console.WriteLine("\t> " + val);
 
                 Console.WriteLine("\r\nTrigger Modes:");
-                foreach (var val in EnumNames.GetName(typeof(TriggerMode), x.TriggerModes).Skip(1))
+                foreach (var val in Extensions.GetEnumNames(typeof(TriggerMode), x.TriggerModes).Skip(1))
                     Console.WriteLine("\t> " + val);
 
                 Console.WriteLine("\r\nCamera Type:");
                 Console.WriteLine("\t> " + x.CameraType);
 
                 Console.WriteLine("\r\nPixel Modes:");
-                foreach (var val in EnumNames.GetName(typeof(PixelMode), x.PixelModes))
+                foreach (var val in Extensions.GetEnumNames(typeof(PixelMode), x.PixelModes))
                     Console.WriteLine("\t> " + val);
 
                 Console.WriteLine("\r\nSet Functions:");
-                foreach (var val in EnumNames.GetName(typeof(SetFunction), x.SetFunctions).Skip(1))
+                foreach (var val in Extensions.GetEnumNames(typeof(SetFunction), x.SetFunctions).Skip(1))
                     Console.WriteLine("\t> " + val);
 
                 Console.WriteLine("\r\nGet Functions:");
-                foreach (var val in EnumNames.GetName(typeof(GetFunction), x.GetFunctions).Skip(1))
+                foreach (var val in Extensions.GetEnumNames(typeof(GetFunction), x.GetFunctions).Skip(1))
                     Console.WriteLine("\t> " + val);
 
                 Console.WriteLine("\r\nFeatures:");
-                foreach (var val in EnumNames.GetName(typeof(SDKFeatures), x.Features).Skip(1))
+                foreach (var val in Extensions.GetEnumNames(typeof(SDKFeatures), x.Features).Skip(1))
                     Console.WriteLine("\t> " + val);
 
                 Console.WriteLine("\r\nEM Gain:");
-                foreach (var val in EnumNames.GetName(typeof(EMGain), x.EMGainFeatures).Skip(1))
+                foreach (var val in Extensions.GetEnumNames(typeof(EMGain), x.EMGainFeatures).Skip(1))
                     Console.WriteLine("\t> " + val);
 
                 Console.WriteLine();
@@ -188,6 +179,30 @@ namespace ANDOR_CS
                 var settings = cam.GetAcquisitionSettingsTemplate();
 
             }
+        }
+
+        public static void TestGetAplifierDesc()
+        {
+            using (var cam = new Camera())
+            {
+                cam.FanControl(FanMode.Off);
+
+                string s = "";
+
+                var result = SDKInit.SDKInstance.GetAmpDesc(0, ref s, 21);
+            }
+        }
+
+        public static void TestQuery()
+        {
+            int[] arr = new int[10];
+
+            for (int i = 0; i < arr.Length; i++)
+                arr[i] = i * i;
+
+            Console.WriteLine(arr.IndexOf(0));
+            Console.WriteLine(arr.IndexOf(4));
+            Console.WriteLine(arr.IndexOf(5));
         }
     }
 }
