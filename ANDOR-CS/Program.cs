@@ -19,15 +19,7 @@ namespace ANDOR_CS
         static void Main(string[] args)
         {
 
-            TestQuery();
-
-            //Test2();
-
-            //Test4();
-
-
-
-            // Console.ReadKey();
+            TestAcquisitionSettings();
         }
 
         public static void Test()
@@ -203,6 +195,28 @@ namespace ANDOR_CS
             Console.WriteLine(arr.IndexOf(0));
             Console.WriteLine(arr.IndexOf(4));
             Console.WriteLine(arr.IndexOf(5));
+        }
+
+        public static void TestAcquisitionSettings()
+        {
+            using (var cam = new Camera())
+            {
+                cam.FanControl(FanMode.Off);
+
+                var settings = cam.GetAcquisitionSettingsTemplate();
+
+               settings.SetOutputAmplifier(OutputAmplification.ElectromMultiplication);
+               settings.SetADConverter(0);
+               foreach (var speed in settings.GetAvailableHSSpeeds())
+                    Console.WriteLine("Speed {0} has value {1}", speed.Item1 + 1, speed.Item2);
+
+                var query = settings.GetAvailableHSSpeeds();
+
+                settings.SetHSSpeed(query.First((x) => x.Item2 == query.Max((y) => y.Item2)).Item1);
+                    
+                Console.ReadKey();
+
+            }
         }
     }
 }

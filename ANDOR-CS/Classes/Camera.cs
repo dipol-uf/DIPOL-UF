@@ -232,7 +232,12 @@ namespace ANDOR_CS.Classes
                 ThrowIfError(result, nameof(SDKInit.SDKInstance.GetAmpMaxSpeed));
 
                 // Adds obtained values to array
-                amplifiers[ampIndex] = new Tuple<string, OutputAmplification, float>(ampName, (OutputAmplification)ampIndex, speed);                
+                amplifiers[ampIndex] = new Tuple<string, OutputAmplification, float>(
+                    ampName,
+                    // In case of Clara 0 corresponds to Conventional (OutputAmplification = 1) and 1 corresponds to ExtendedNIR (OutputAmplification = 2)
+                    // Adds 1 to obtained indices in case of Clara camera to store amplifier information properly
+                    (OutputAmplification) (ampIndex + (Capabilities.CameraType == CameraType.Clara ? 1 : 0)), 
+                    speed);                
             }
             
 
