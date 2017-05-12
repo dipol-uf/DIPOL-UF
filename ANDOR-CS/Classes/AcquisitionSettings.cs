@@ -29,7 +29,16 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores the value of currently set vertical speed
         /// </summary>
-        public float? VSSpeed
+        public Tuple<int, float> VSSpeed
+        {
+            get;
+            private set;
+        } = null;
+
+        /// <summary>
+        /// Stoers the value of currently set horizontal speed
+        /// </summary>
+        public Tuple<int, float> HSSpeed
         {
             get;
             private set;
@@ -61,6 +70,7 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         } = null;
+
 
 
 
@@ -121,8 +131,8 @@ namespace ANDOR_CS.Classes
                     throw new ArgumentOutOfRangeException($"{nameof(speedIndex)} is out of range (should be in [{0},  {length-1}]).");
 
                 // If success, updates VSSpeed field and 
-                VSSpeed = camera.Properties.VSSpeeds[speedIndex];
-                // returns success
+                VSSpeed = new Tuple<int, float>(speedIndex, camera.Properties.VSSpeeds[speedIndex]);
+               
                 
             }
             else
@@ -230,22 +240,117 @@ namespace ANDOR_CS.Classes
                     $"{(Enum.IsDefined(typeof(OutputAmplification), amplifier) ? Enum.GetName(typeof(OutputAmplification), amplifier) : "Unknown")}.");
 
             // Otherwise, assigns name and type of the amplifier 
-            //Amplifier = query.Select((x) => new Tuple<string, OutputAmplification>(x.Item1, x.Item2)).First();
+            var element = query.First();
 
+            Amplifier = new Tuple<string, OutputAmplification, int>(element.Item1, element.Item2, camera.Properties.Amplifiers.IndexOf(element));
+            
         }
 
-
-        public void SetHSSpeed()
+        /// <summary>
+        /// Returns a collection of available Horizonal Readout Speeds for currently selected Amplifier and AD Converter.
+        /// Requires camera to be active.
+        /// Note: <see cref="AcquisitionSettings.ADConverter"/> amd <see cref="AcquisitionSettings.Amplifier"/> should be set
+        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/> and <see cref="AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
+        /// before calling this method.
+        /// </summary>
+        /// <exception cref="NullReferenceException"/>
+        /// <exception cref="ArgumentOutOfRangeException"/>
+        /// <exception cref="NotSupportedException"/>
+        /// <exception cref="AndorSDKException"/>
+        /// <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
+        public IEnumerable<Tuple<int, float>> GetAvailableHSSpeeds()
         {
+            // Checks if camera is OK and is active
             CheckCamera(true);
 
+            // Checks if camera support horizontal speed controls
             if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
             {
-               // if(ADConverter == null || Amplifier == null)
+                // Checks if AD converter and Amplifier are already selected
+                if (ADConverter == null || Amplifier == null)
+                    throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
+
+                // Determines indexes of converter and amplifier
+                int channel = ADConverter.Item1;
+                int amp = Amplifier.Item3;
+                int nSpeeds = 0;
+
+                // Gets the number of availab;e speeds
+                var result = SDKInit.SDKInstance.GetNumberHSSpeeds(channel, amp, ref nSpeeds);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberHSSpeeds));
+
+                // Checks if obtained value is valid
+                if (nSpeeds < 0)
+                    throw new ArgumentOutOfRangeException($"Returned number of available speeds is less than 0 ({nSpeeds}).");
+
+                // Iterates through speed indexes
+                for (int speedIndex = 0; speedIndex < nSpeeds; speedIndex++)
+                {
+                    float locSpeed = 0;
+
+                    result = SDKInit.SDKInstance.GetHSSpeed(channel, amp, speedIndex, ref locSpeed);
+                    ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHSSpeed));
+
+                    // Returns speed index and speed value for evvery subsequent call
+                    yield return new Tuple<int, float>(speedIndex, locSpeed);
+                }
+               
             }
             else
                 throw new NotSupportedException("Camera does not support horizontal readout speed controls");
-       
+
+
+        }
+
+        /// <summary>
+        /// Sets Horizontal Readout Speed for currently selected Amplifier and AD Converter.
+        /// Requires camera to be active.
+        /// Note: <see cref="AcquisitionSettings.ADConverter"/> amd <see cref="AcquisitionSettings.Amplifier"/> should be set
+        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/> and <see cref="AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
+        /// before calling this method.
+        /// </summary>
+        /// <exception cref="NullReferenceException"/>
+        /// <exception cref="ArgumentOutOfRangeException"/>
+        /// <exception cref="NotSupportedException"/>
+        /// <exception cref="AndorSDKException"/>
+        /// <param name="speedIndex">Index of horizontal speed</param>
+        public void SetHSSpeed(int speedIndex)
+        {
+            // Checks if camera is OK and is active
+            CheckCamera(true);
+
+            // Checks if camera supports horizontal readout speed control
+            if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
+            {
+                // Checks if both AD converter and Amplifier are already set
+                if (ADConverter == null || Amplifier == null)
+                    throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
+
+                // Determines indexes of converter and amplifier
+                int channel = ADConverter.Item1;
+                int amp = Amplifier.Item3;
+                int nSpeeds = 0;
+
+                // Gets the number of availab;e speeds
+                var result = SDKInit.SDKInstance.GetNumberHSSpeeds(channel, amp, ref nSpeeds);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberHSSpeeds));
+
+                // Checks if speedIndex is in allowed range
+                if (speedIndex < 0 || speedIndex >= nSpeeds)
+                    throw new ArgumentOutOfRangeException($"Horizontal speed index ({speedIndex}) is out of range (should be in [{0}, {speedIndex-1}]).");
+
+                float speed = 0;
+
+                // Retrieves float value of currently selected horizontal speed
+                result = SDKInit.SDKInstance.GetHSSpeed(channel, amp, speedIndex, ref speed);
+                ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHSSpeed));
+
+                // Assigns speed index and speed value
+                HSSpeed = new Tuple<int, float>(speedIndex, speed);
+
+            }
+            else
+                throw new NotSupportedException("Camera does not support horizontal readout speed controls");       
         }
     }
 }

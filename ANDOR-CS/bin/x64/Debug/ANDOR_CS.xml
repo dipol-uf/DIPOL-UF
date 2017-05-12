@@ -20,6 +20,11 @@
             Stores the value of currently set vertical speed
             </summary>
         </member>
+        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.HSSpeed">
+            <summary>
+            Stoers the value of currently set horizontal speed
+            </summary>
+        </member>
         <member name="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter">
             <summary>
             Stores the index of currently set Analogue-Digital Converter and its bit depth.
@@ -90,6 +95,34 @@
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <param name="amplifier"></param>
         </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.GetAvailableHSSpeeds">
+            <summary>
+            Returns a collection of available Horizonal Readout Speeds for currently selected Amplifier and AD Converter.
+            Requires camera to be active.
+            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/> amd <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
+            via <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)"/> and <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)"/>
+            before calling this method.
+            </summary>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.NotSupportedException"/>
+            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)">
+            <summary>
+            Sets Horizontal Readout Speed for currently selected Amplifier and AD Converter.
+            Requires camera to be active.
+            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/> amd <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
+            via <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)"/> and <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)"/>
+            before calling this method.
+            </summary>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.NotSupportedException"/>
+            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <param name="speedIndex">Index of horizontal speed</param>
+        </member>
         <member name="T:ANDOR_CS.Classes.SafeSDKCameraHandle">
             <summary>
             A safe handle class based on <see cref="T:System.Runtime.InteropServices.SafeHandle"/> class tha uses internal <see cref="T:System.IntPtr"/> handle to store
@@ -127,6 +160,15 @@
             <param name="value">Mask</param>
             <exception cref="T:System.ArgumentException"/>
             <returns>An array of <see cref="T:System.String"/> representations of <see cref="T:System.Enum"/> flags</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Extensions.IndexOf``1(System.Collections.Generic.IEnumerable{``0},``0)">
+            <summary>
+            Returns the index of item in specified collection.
+            </summary>
+            <typeparam name="T">Any type that supports comparison using <see cref="M:System.Collections.Generic.EqualityComparer`1.Equals(`0,`0)"/></typeparam>
+            <param name="collection">Collection where to look for an item</param>
+            <param name="item">An item of which to find index</param>
+            <returns>-1 if item is not in the collection, index, otherwise</returns>
         </member>
         <member name="T:ANDOR_CS.Classes.Camera">
             <summary>
@@ -284,6 +326,26 @@
             </summary>
             <param name="min">A value to store in Minimum field</param>
             <param name="max">A value to store in Maximum field</param>
+        </member>
+        <member name="T:ANDOR_CS.Enums.OutputAmplification">
+            <summary>
+            Different type of output amplifiers. Availalbe on iXon, Clara and Newton
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.OutputAmplification.ElectromMultiplication">
+            <summary>
+            Electron multiplication. Not available for Clara 
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.OutputAmplification.Conventional">
+            <summary>
+            Standard conventional 
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.OutputAmplification.ExtendedNIR">
+            <summary>
+            Only supported by Clara
+            </summary>
         </member>
         <member name="F:ANDOR_CS.Enums.PixelMode.Bits8">
             <summary>

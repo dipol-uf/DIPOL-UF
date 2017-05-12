@@ -27,18 +27,30 @@ namespace ANDOR_CS.Classes
                         
         }
 
-        public static int IndexOf<T>(this IEnumerable<T> input, T item)
+
+        /// <summary>
+        /// Returns the index of item in specified collection.
+        /// </summary>
+        /// <typeparam name="T">Any type that supports comparison using <see cref="EqualityComparer{T}.Equals(T, T)"/></typeparam>
+        /// <param name="collection">Collection where to look for an item</param>
+        /// <param name="item">An item of which to find index</param>
+        /// <returns>-1 if item is not in the collection, index, otherwise</returns>
+        public static int IndexOf<T>(this IEnumerable<T> collection, T item)
         {
-            var enumer = input.GetEnumerator();
+            // Gets enumerator
+            var enumer = collection.GetEnumerator();
 
-            enumer.Reset();
-
+            // Default return value
             int index = -1;
 
+            // While enumerator.MoveNext() returns true
+            // Cycle loop, increment counter
             for (int counter = 0; enumer.MoveNext(); counter++)
             {
+                // If according to default comparer current element equals to item
                 if (EqualityComparer<T>.Default.Equals(enumer.Current, item))
                 {
+                    // Save the index and stop the loop
                     index = counter;
                     break;
                 }
