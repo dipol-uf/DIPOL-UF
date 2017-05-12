@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using ANDOR_CS.Enums;
+
 namespace ANDOR_CS.DataStructures
 {
     /// <summary>
@@ -41,31 +43,31 @@ namespace ANDOR_CS.DataStructures
         /// <summary>
         /// An array of bit-depths for each available AD converter
         /// </summary>
-        public int[] ADConververts
+        public int[] ADConverters
         {
             get;
             internal set;
         }
 
         /// <summary>
-        /// Number of different amplifiers available
+        /// An array of available amplifiers with respective maximum allowed horizontal speed
         /// </summary>
-        public int AmpNumber
+        public Tuple<string, OutputAmplification, float>[] Amplifiers
         {
             get;
             internal set;
         }
 
         /// <summary>
-        /// Maximum number of different gain settings available
+        /// An array of available pre amp gain settings
         /// </summary>
-        public int PreAmpGainMaximumNumber
+        public string[] PreAmpGains
         {
             get;
             internal set;
         }
 
-        /// <summary>
+          /// <summary>
         /// An array of available Vertical Speeds (in us)
         /// </summary>
         public float[] VSSpeeds

@@ -9,7 +9,7 @@
             Represents all possible acuisition/camera settings that can be adjusted before taking any images
             </summary>
         </member>
-        <member name="F:ANDOR_CS.Classes.AcquisitionSettings.source">
+        <member name="F:ANDOR_CS.Classes.AcquisitionSettings.camera">
             <summary>
             A reference to the parent <see cref="T:ANDOR_CS.Classes.Camera"/> object.
             Used to perform checks of capabilities of the current camera.
@@ -20,22 +20,38 @@
             Stores the value of currently set vertical speed
             </summary>
         </member>
+        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter">
+            <summary>
+            Stores the index of currently set Analogue-Digital Converter and its bit depth.
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.VSAmplitude">
+            <summary>
+            Stores the value of currently set vertical clock voltage amplitude
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier">
+            <summary>
+            Stores type of currentlt set Amplifier
+            </summary>
+        </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.#ctor(ANDOR_CS.Classes.Camera)">
             <summary>
             Constructor adds reference to parent <see cref="T:ANDOR_CS.Classes.Camera"/> object.
             </summary>
-            <param name="source">Parent object. Camera, to which settings should be applied.</param>
+            <param name="camera">Parent object. Camera, to which settings should be applied.</param>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.CheckCamera">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.CheckCamera(System.Boolean)">
             <summary>
-            Checks source parent <see cref="T:ANDOR_CS.Classes.Camera"/>. If it is not initialized or active, throws exception.
+            Checks camera parent <see cref="T:ANDOR_CS.Classes.Camera"/>. If it is not initialized or active, throws exception.
             </summary>
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:ANDOR_CS.AndorSDKException"/>
         </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetVSSpeed(System.Int32)">
             <summary>
-            Tries to set vertical speed. Requires camera to be active.
+            Tries to set vertical speed. 
+            Camera may not be active.
             </summary>
             <exception cref="T:ANDOR_CS.AndorSDKException"/>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
@@ -44,7 +60,8 @@
         </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetVSSpeed">
             <summary>
-            Tries to set vertical speed to fastest recommended speed. Requires camera to be active.
+            Tries to set vertical speed to fastest recommended speed. 
+            Requires camera to be active.
             </summary>
             <exception cref="T:ANDOR_CS.AndorSDKException"/>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
@@ -53,8 +70,25 @@
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetVSAmplitude(ANDOR_CS.Enums.VSAmplitude)">
             <summary>
             Sets the vertical clock voltage amplitude (if camera supports it).
+            Camera may be not active.
             </summary>
             <param name="amplitude">New amplitude </param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)">
+            <summary>
+            Sets Analogue-Digital converter.
+            Does not require camera to be active
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <param name="converterIndex"></param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)">
+            <summary>
+            Sets output amplifier. 
+            Does not require camera to be active.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <param name="amplifier"></param>
         </member>
         <member name="T:ANDOR_CS.Classes.SafeSDKCameraHandle">
             <summary>
@@ -79,6 +113,20 @@
             Marked for safe execution
             </summary>
             <returns>true if cleanup finished successfully, false, otherwise, which triggers releaseHandleFailed MDA</returns>
+        </member>
+        <member name="T:ANDOR_CS.Classes.Extensions">
+            <summary>
+            Helper class that can be used to retrieve all flags set in a given <see cref="T:System.Enum"/> mask
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Extensions.GetEnumNames(System.Type,System.Enum)">
+            <summary>
+            Returns all flags that are set in a given <see cref="T:System.Enum"/> mask
+            </summary>
+            <param name="enumType"><see cref="T:System.Type"/> of <see cref="T:System.Enum"/></param>
+            <param name="value">Mask</param>
+            <exception cref="T:System.ArgumentException"/>
+            <returns>An array of <see cref="T:System.String"/> representations of <see cref="T:System.Enum"/> flags</returns>
         </member>
         <member name="T:ANDOR_CS.Classes.Camera">
             <summary>
@@ -150,19 +198,19 @@
             If available, indicates if camera has internal mechanical shutter
             </summary>
         </member>
-        <member name="P:ANDOR_CS.DataStructures.CameraProperties.ADConververts">
+        <member name="P:ANDOR_CS.DataStructures.CameraProperties.ADConverters">
             <summary>
             An array of bit-depths for each available AD converter
             </summary>
         </member>
-        <member name="P:ANDOR_CS.DataStructures.CameraProperties.AmpNumber">
+        <member name="P:ANDOR_CS.DataStructures.CameraProperties.Amplifiers">
             <summary>
-            Number of different amplifiers available
+            An array of available amplifiers with respective maximum allowed horizontal speed
             </summary>
         </member>
-        <member name="P:ANDOR_CS.DataStructures.CameraProperties.PreAmpGainMaximumNumber">
+        <member name="P:ANDOR_CS.DataStructures.CameraProperties.PreAmpGains">
             <summary>
-            Maximum number of different gain settings available
+            An array of available pre amp gain settings
             </summary>
         </member>
         <member name="P:ANDOR_CS.DataStructures.CameraProperties.VSSpeeds">
@@ -236,20 +284,6 @@
             </summary>
             <param name="min">A value to store in Minimum field</param>
             <param name="max">A value to store in Maximum field</param>
-        </member>
-        <member name="T:ANDOR_CS.EnumNames">
-            <summary>
-            Helper class that can be used to retrieve all flags set in a given <see cref="T:System.Enum"/> mask
-            </summary>
-        </member>
-        <member name="M:ANDOR_CS.EnumNames.GetName(System.Type,System.Enum)">
-            <summary>
-            Returns all flags that are set in a given <see cref="T:System.Enum"/> mask
-            </summary>
-            <param name="enumType"><see cref="T:System.Type"/> of <see cref="T:System.Enum"/></param>
-            <param name="value">Mask</param>
-            <exception cref="T:System.ArgumentException"/>
-            <returns>An array of <see cref="T:System.String"/> representations of <see cref="T:System.Enum"/> flags</returns>
         </member>
         <member name="F:ANDOR_CS.Enums.PixelMode.Bits8">
             <summary>
