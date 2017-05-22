@@ -224,23 +224,33 @@ namespace ANDOR_CS
 
                 settings.SetAcquisitionMode(AcquisitionMode.SingleScan);
                 settings.SetReadoutMode(ReadMode.FullImage);
+                settings.SetTriggerMode(TriggerMode.Internal);
 
-                settings.SetExposureTime(1.0f);
+                settings.SetImageArea(new Rectangle(new Point2D(1, 1), cam.Properties.DetectorSize));
 
+                settings.SetExposureTime(10.0f);
+
+                cam.AcquisitionStarted += (c, e) => Console.WriteLine("Acquisition started on camera {0}", (c as Camera).CameraModel);
+                cam.AcquisitionStatusChecked += (c, e) => Console.WriteLine("Status checked at {0:hh MM ss.fff}", DateTime.Now);
+                cam.AcquisitionFinished += (c, e) => Console.WriteLine("Acquisition finished on camera {0}", (c as Camera).CameraModel);
                 var result = settings.ApplySettings();
 
                 Console.WriteLine();
 
                 foreach (var r in result)
                     Console.WriteLine(r);
-                var res = SDKInit.SDKInstance.SetImage(1, 1, 1, cam.Properties.DetectorSize.Horizontal, 1, cam.Properties.DetectorSize.Vertical);
-                res = SDKInit.SDKInstance.StartAcquisition();
+
+                // var res = SDKInit.SDKInstance.StartAcquisition();
+
+                var task = cam.StartAcquistionAsync();
+
+                task.Wait();
 
                 System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2.0f));
 
                 float[] array = new float[cam.Properties.DetectorSize.Horizontal * cam.Properties.DetectorSize.Vertical];
 
-                res = SDKInit.SDKInstance.GetAcquiredFloatData(array, (uint)array.Length);
+                uint res = SDKInit.SDKInstance.GetAcquiredFloatData(array, (uint)array.Length);
 
                 Console.ReadKey();
 

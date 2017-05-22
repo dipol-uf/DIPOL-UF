@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using ATMCD64CS;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
-
+using ANDOR_CS.Events;
 
 using SDKInit = ANDOR_CS.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
@@ -19,15 +19,16 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Represents an instance of a Camera device
     /// </summary>
-    public class Camera :IDisposable
+    public class Camera : IDisposable
     {
         private static readonly int AmpDescriptorMaxLength = 21;
         private static readonly int PreAmpGainDescriptorMaxLength = 30;
+        private static readonly int StatusCheckTimeOutMS = 100;
 
         private static List<Camera> CreatedCameras = new List<Camera>();
         private static Camera ActiveCamera = null;
 
-        
+
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
@@ -84,6 +85,19 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         }
+
+        public bool IsAcquiring
+        {
+            get;
+            private set;
+        } = false;
+
+
+        public delegate void AcquisitionStatusEvent(object sender, AcquisitionStatusEventArgs e);
+
+        public event AcquisitionStatusEvent AcquisitionStarted;
+        public event AcquisitionStatusEvent AcquisitionFinished;
+        public event AcquisitionStatusEvent AcquisitionStatusChecked;
 
         private void GetCapabilities()
         {
@@ -294,7 +308,7 @@ namespace ANDOR_CS.Classes
             Properties = new CameraProperties()
             {
                 AllowedTemperatures = new TemperatureRange(min, max),
-                DetectorSize = new DetectorSize(h, v),
+                DetectorSize = new Size(h, v),
                 HasInternalMechanicalShutter = shutter,
                 ADConverters = ADsBitRange,
                 Amplifiers = amplifiers,
@@ -447,12 +461,9 @@ namespace ANDOR_CS.Classes
                 throw new AndorSDKException("Acquisition is in progress.", result);
 
             status = (TemperatureStatus)result;
+
+            return new TemperatureInfo(temp, status);
             
-            return new TemperatureInfo()
-            {
-                Temperature = temp,
-                Status = status
-            };
         }
 
         /// <summary>
@@ -580,6 +591,34 @@ namespace ANDOR_CS.Classes
         }
                
         
+        public async Task StartAcquistionAsync()
+        {
+            uint result = SDKInit.SDKInstance.StartAcquisition();
+
+            if (result == SDK.DRV_SUCCESS)
+            {
+                IsAcquiring = true;
+
+                AcquisitionStarted?.Invoke(this, new AcquisitionStatusEventArgs());
+
+                int status = (int)SDK.DRV_ACQUIRING;
+
+                while (status == SDK.DRV_ACQUIRING)
+                {
+                    System.Threading.Thread.Sleep(StatusCheckTimeOutMS);
+                    result = SDKInit.SDKInstance.GetStatus(ref status);
+
+                    AcquisitionStatusChecked?.Invoke(this, new AcquisitionStatusEventArgs());
+                }
+
+                IsAcquiring = false;
+
+                AcquisitionFinished?.Invoke(this, new AcquisitionStatusEventArgs());
+            }
+
+            return;
+
+        }
         
     }
 
