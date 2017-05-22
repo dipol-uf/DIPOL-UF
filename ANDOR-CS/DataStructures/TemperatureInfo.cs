@@ -11,8 +11,22 @@ namespace ANDOR_CS.DataStructures
 
     public struct TemperatureInfo
     {
-        public float Temperature;
-        public TemperatureStatus Status;
+        public float Temperature
+        {
+            get;
+            private set;
+        }
+        public TemperatureStatus Status
+        {
+            get;
+            private set;
+        }
+
+        public TemperatureInfo(float temperature, TemperatureStatus status)
+        {
+            Temperature = temperature;
+            Status = status;
+        }
             
     }
 }
