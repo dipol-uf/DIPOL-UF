@@ -27,7 +27,6 @@ namespace ANDOR_CS.Classes
         private static List<Camera> CreatedCameras = new List<Camera>();
         private static Camera ActiveCamera = null;
 
-        
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
