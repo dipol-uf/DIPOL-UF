@@ -40,6 +40,26 @@
             Stores type of currentlt set Amplifier
             </summary>
         </member>
+        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.PreAmpGain">
+            <summary>
+            Stores type of currently set PreAmp Gain
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.AcquisitionMode">
+            <summary>
+            Stores currently set acquisition mode
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.ReadMode">
+            <summary>
+            Stores currently set read mode
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.ExposureTime">
+            <summary>
+            Stores exposure time
+            </summary>
+        </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.#ctor(ANDOR_CS.Classes.Camera)">
             <summary>
             Constructor adds reference to parent <see cref="T:ANDOR_CS.Classes.Camera"/> object.
@@ -52,6 +72,11 @@
             </summary>
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:ANDOR_CS.AndorSDKException"/>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.ApplySettings">
+            <summary>
+            Applys currenlty selected settings to the camera.
+            </summary>
         </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetVSSpeed(System.Int32)">
             <summary>
@@ -106,22 +131,54 @@
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <exception cref="T:System.NotSupportedException"/>
-            <exception cref="T:ANDOR_CS.AndorSDKException"/>
             <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
         </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)">
             <summary>
             Sets Horizontal Readout Speed for currently selected Amplifier and AD Converter.
             Requires camera to be active.
-            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/> amd <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
+            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/> and <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
             via <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)"/> and <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)"/>
             before calling this method.
             </summary>
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <exception cref="T:System.NotSupportedException"/>
-            <exception cref="T:ANDOR_CS.AndorSDKException"/>
             <param name="speedIndex">Index of horizontal speed</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.GetAvailablePreAmpGain">
+            <summary>
+            Returns a collection of available PreAmp gains for currently selected HSSpeed, Amplifier, Converter.
+            Requires camera to be active.
+            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/>, <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.HSSpeed"/>
+            and <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
+            via <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)"/>, <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)"/>
+            and <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)"/>.
+            </summary>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.NotSupportedException"/>
+            <returns>Available PreAmp gains</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetPreAmpGain(System.Int32)">
+            <summary>
+            Sets PreAmp gain for currently selected HSSpeed, Amplifier, Converter.
+            Requires camera to be active.
+            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/>, <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.HSSpeed"/>
+            and <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
+            via <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)"/>, <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)"/>
+            and <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)"/>.
+            </summary>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <param name="gainIndex">Index of gain</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetAcquisitionMode(ANDOR_CS.Enums.AcquisitionMode)">
+            <summary>
+            Sets acquisition mode. 
+            Camera may be inactive.
+            </summary>
+            <exception cref="T:System.NotSupportedException"/>
+            <param name="mode">Acquisition mode</param>
         </member>
         <member name="T:ANDOR_CS.Classes.SafeSDKCameraHandle">
             <summary>
@@ -327,6 +384,56 @@
             <param name="min">A value to store in Minimum field</param>
             <param name="max">A value to store in Maximum field</param>
         </member>
+        <member name="T:ANDOR_CS.Enums.AcquisitionMode">
+            <summary>
+            Acquisition modes
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.AcquisitionMode.Unknown">
+            <summary>
+            Default mode
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.AcquisitionMode.SingleScan">
+            <summary>
+            Single Scan
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.AcquisitionMode.RunTillAbort">
+            <summary>
+            Run till abort or Video
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.AcquisitionMode.Accumulation">
+            <summary>
+            Accumulation
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.AcquisitionMode.Kinetic">
+            <summary>
+            Kinetic series
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.AcquisitionMode.FrameTransfer">
+            <summary>
+            Frame transfer
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.AcquisitionMode.FastKinetics">
+            <summary>
+            Fast kinetics
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.AcquisitionMode.Overlap">
+            <summary>
+            Overlap
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.AcquisitionMode.UnspecifiedMode">
+            <summary>
+            Undocumented
+            </summary>
+        </member>
         <member name="T:ANDOR_CS.Enums.OutputAmplification">
             <summary>
             Different type of output amplifiers. Availalbe on iXon, Clara and Newton
@@ -405,6 +512,11 @@
         <member name="F:ANDOR_CS.Enums.SetFunction.VerticalClockVoltage">
             <summary>
             Supports vertical clock voltage amplitude control
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.SetFunction.PreAmpGain">
+            <summary>
+            Supports Pre Amp Gain control
             </summary>
         </member>
         <member name="F:ANDOR_CS.Enums.TriggerMode.Bulb">

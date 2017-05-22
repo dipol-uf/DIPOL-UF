@@ -122,7 +122,7 @@
     <Compile Include="Classes\AndorSDKInitialization.cs" />
     <Compile Include="Classes\Camera.cs" />
     <Compile Include="Enums\CameraTypeEnum.cs" />
-    <Compile Include="Enums\CoolerModeEnum.cs" />
+    <Compile Include="Enums\SwitchEnum.cs" />
     <Compile Include="Enums\FanModeEnum.cs" />
     <Compile Include="Enums\EMGainEnum.cs" />
     <Compile Include="Enums\GetFunctionEnum.cs" />
