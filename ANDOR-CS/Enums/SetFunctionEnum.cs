@@ -40,6 +40,10 @@ namespace ANDOR_CS.Enums
         VerticalClockVoltage = SDK.AC_SETFUNCTION_VSAMPLITUDE,
         HighCapacityMode = SDK.AC_SETFUNCTION_HIGHCAPACITY,
         BaseLineOffset = SDK.AC_SETFUNCTION_BASELINEOFFSET,
+
+        /// <summary>
+        /// Supports Pre Amp Gain control
+        /// </summary>
         PreAmpGain = SDK.AC_SETFUNCTION_PREAMPGAIN,
         CropMode = SDK.AC_SETFUNCTION_CROPMODE,
         DMAPArameters = SDK.AC_SETFUNCTION_DMAPARAMETERS,
