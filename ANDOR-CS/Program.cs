@@ -213,7 +213,35 @@ namespace ANDOR_CS
                 var query = settings.GetAvailableHSSpeeds();
 
                 settings.SetHSSpeed(query.First((x) => x.Item2 == query.Max((y) => y.Item2)).Item1);
-                    
+
+                foreach (var gain in settings.GetAvailablePreAmpGain())
+                    Console.WriteLine("Gain {0} has name {1}", gain.Item1 + 1, gain.Item2);
+
+                settings.SetVSSpeed();
+                settings.SetVSAmplitude(VSAmplitude.Normal);
+
+                settings.SetPreAmpGain(settings.GetAvailablePreAmpGain().First().Item1);
+
+                settings.SetAcquisitionMode(AcquisitionMode.SingleScan);
+                settings.SetReadoutMode(ReadMode.FullImage);
+
+                settings.SetExposureTime(1.0f);
+
+                var result = settings.ApplySettings();
+
+                Console.WriteLine();
+
+                foreach (var r in result)
+                    Console.WriteLine(r);
+                var res = SDKInit.SDKInstance.SetImage(1, 1, 1, cam.Properties.DetectorSize.Horizontal, 1, cam.Properties.DetectorSize.Vertical);
+                res = SDKInit.SDKInstance.StartAcquisition();
+
+                System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2.0f));
+
+                float[] array = new float[cam.Properties.DetectorSize.Horizontal * cam.Properties.DetectorSize.Vertical];
+
+                res = SDKInit.SDKInstance.GetAcquiredFloatData(array, (uint)array.Length);
+
                 Console.ReadKey();
 
             }
