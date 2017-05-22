@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using ANDOR_CS.Enums;
+using ANDOR_CS.DataStructures;
 
 using SDKInit = ANDOR_CS.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
@@ -20,27 +21,6 @@ namespace ANDOR_CS.Classes
     public class AcquisitionSettings
     {
 
-        private static readonly Tuple<AcquisitionMode, int>[] AcquisitionModeTable = 
-         {
-            new Tuple<AcquisitionMode, int>(Enums.AcquisitionMode.SingleScan, 1),
-            new Tuple<AcquisitionMode, int>(Enums.AcquisitionMode.Accumulation, 2),
-            new Tuple<AcquisitionMode, int>(Enums.AcquisitionMode.Kinetic, 3),
-            new Tuple<AcquisitionMode, int>(Enums.AcquisitionMode.FastKinetics, 4),
-            new Tuple<AcquisitionMode, int>(Enums.AcquisitionMode.RunTillAbort, 5)
-        };
-
-        private static readonly Tuple<ReadMode, int>[] ReadModeTable =
-        {
-            new Tuple<ReadMode, int>(Enums.ReadMode.FullVerticalBinning, 0),
-            new Tuple<ReadMode, int>(Enums.ReadMode.MultiTrack, 1),
-            new Tuple<ReadMode, int>(Enums.ReadMode.RandomTrack, 2),
-            new Tuple<ReadMode, int>(Enums.ReadMode.SingleTrack,3),
-            new Tuple<ReadMode, int>(Enums.ReadMode.FullImage, 4),
-            new Tuple<ReadMode, int>(Enums.ReadMode.SubImage, 5)
-        };
-
-
- 
         /// <summary>
         /// A reference to the parent <see cref="Camera"/> object.
         /// Used to perform checks of capabilities of the current camera.
@@ -105,7 +85,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores currently set acquisition mode
         /// </summary>
-        public Tuple<int, AcquisitionMode> AcquisitionMode
+        public AcquisitionMode? AcquisitionMode
         {
             get;
             private set;
@@ -114,7 +94,16 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores currently set read mode
         /// </summary>
-        public Tuple<int, ReadMode> ReadMode
+        public ReadMode? ReadMode
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Stores currently set trigger mode
+        /// </summary>
+        public TriggerMode? TriggerMode
         {
             get;
             private set;
@@ -129,6 +118,14 @@ namespace ANDOR_CS.Classes
             private set;
         } = null;
 
+        /// <summary>
+        /// Stoers seleced image area - part of the CCD from where data should be collected
+        /// </summary>
+        public Rectangle? ImageArea
+        {
+            get;
+            private set;
+        } = null;
 
         /// <summary>
         /// Constructor adds reference to parent <see cref="Camera"/> object.
@@ -138,8 +135,7 @@ namespace ANDOR_CS.Classes
         {
             this.camera = camera;
         }
-
-
+        
 
         /// <summary>
         /// Checks camera parent <see cref="Camera"/>. If it is not initialized or active, throws exception.
@@ -217,23 +213,42 @@ namespace ANDOR_CS.Classes
                 output.Add(new Tuple<string, bool, uint>("PreAmp Gain", result == SDK.DRV_SUCCESS, result));
             }
 
-            if (AcquisitionMode != null)
+
+            if (ImageArea.HasValue)
             {
-                result = SDKInit.SDKInstance.SetAcquisitionMode(AcquisitionMode.Item1);
+                result = SDKInit.SDKInstance.SetImage(1, 1, ImageArea.Value.X1, ImageArea.Value.X2, ImageArea.Value.Y1, ImageArea.Value.Y2);
+
+
+                output.Add(new Tuple<string, bool, uint>("Image", result == SDK.DRV_SUCCESS, result));
+            }
+
+            if (AcquisitionMode.HasValue)
+            {
+                result = SDKInit.SDKInstance.SetAcquisitionMode(EnumConverter.AcquisitionModeTable[AcquisitionMode.Value]);
 
                 output.Add(new Tuple<string, bool, uint>("Acquisition mode", result == SDK.DRV_SUCCESS, result));
             }
             else throw new ArgumentNullException("Acquisition mode should be set before applying settings.");
 
 
-            if (ReadMode != null)
+            if (ReadMode.HasValue)
             {
-                result = SDKInit.SDKInstance.SetReadMode(ReadMode.Item1);
+                result = SDKInit.SDKInstance.SetReadMode(EnumConverter.ReadModeTable[ReadMode.Value]);
 
                 output.Add(new Tuple<string, bool, uint>("Read mode", result == SDK.DRV_SUCCESS, result));
 
             }
             else throw new ArgumentNullException("Read mode should be set before applying settings.");
+
+
+            if (TriggerMode.HasValue)
+            {
+                result = SDKInit.SDKInstance.SetTriggerMode(EnumConverter.TriggerModeTable[TriggerMode.Value]);
+
+                output.Add(new Tuple<string, bool, uint>("Trigger mode", result == SDK.DRV_SUCCESS, result));
+
+            }
+            else throw new ArgumentNullException("Trigger mode should be set before applying settings.");
 
             if (ExposureTime.HasValue)
             {
@@ -243,6 +258,7 @@ namespace ANDOR_CS.Classes
             }
             else throw new ArgumentNullException("Exposure time should be set before applying settings.");
 
+            
             return output;
         }
 
@@ -268,13 +284,13 @@ namespace ANDOR_CS.Classes
 
                 // If speed index is invalid
                 if (speedIndex < 0 || speedIndex >= length)
-                    throw new ArgumentOutOfRangeException($"{nameof(speedIndex)} is out of range (should be in [{0},  {length-1}]).");
+                    throw new ArgumentOutOfRangeException($"{nameof(speedIndex)} is out of range (should be in [{0},  {length - 1}]).");
 
-                
+
                 // If success, updates VSSpeed field and 
                 VSSpeed = new Tuple<int, float>(speedIndex, camera.Properties.VSSpeeds[speedIndex]);
-               
-                
+
+
             }
             else
                 throw new NotSupportedException("Camera does not support vertical readout speed control.");
@@ -317,7 +333,7 @@ namespace ANDOR_CS.Classes
             }
             else
                 throw new NotSupportedException("Camera does not support vertical readout speed control.");
-            
+
         }
 
         /// <summary>
@@ -338,7 +354,7 @@ namespace ANDOR_CS.Classes
             else
                 throw new NotSupportedException("Camera does not support vertical clock voltage amplitude control.");
         }
-        
+
         /// <summary>
         /// Sets Analogue-Digital converter.
         /// Does not require camera to be active
@@ -384,7 +400,7 @@ namespace ANDOR_CS.Classes
             var element = query.First();
 
             Amplifier = new Tuple<string, OutputAmplification, int>(element.Item1, element.Item2, camera.Properties.Amplifiers.IndexOf(element));
-            
+
         }
 
         /// <summary>
@@ -434,7 +450,7 @@ namespace ANDOR_CS.Classes
                     // Returns speed index and speed value for evvery subsequent call
                     yield return new Tuple<int, float>(speedIndex, locSpeed);
                 }
-               
+
             }
             else
                 throw new NotSupportedException("Camera does not support horizontal readout speed controls.");
@@ -476,7 +492,7 @@ namespace ANDOR_CS.Classes
 
                 // Checks if speedIndex is in allowed range
                 if (speedIndex < 0 || speedIndex >= nSpeeds)
-                    throw new ArgumentOutOfRangeException($"Horizontal speed index ({speedIndex}) is out of range (should be in [{0}, {speedIndex-1}]).");
+                    throw new ArgumentOutOfRangeException($"Horizontal speed index ({speedIndex}) is out of range (should be in [{0}, {speedIndex - 1}]).");
 
                 float speed = 0;
 
@@ -489,7 +505,7 @@ namespace ANDOR_CS.Classes
 
             }
             else
-                throw new NotSupportedException("Camera does not support horizontal readout speed controls");       
+                throw new NotSupportedException("Camera does not support horizontal readout speed controls");
         }
 
         /// <summary>
@@ -597,6 +613,7 @@ namespace ANDOR_CS.Classes
         /// Camera may be inactive.
         /// </summary>
         /// <exception cref="NotSupportedException"/>
+        /// <exception cref="InvalidOperationException"/>
         /// <param name="mode">Acquisition mode</param>
         public void SetAcquisitionMode(AcquisitionMode mode)
         {
@@ -605,20 +622,44 @@ namespace ANDOR_CS.Classes
 
             // Checks if camera supports specifed mode
             if (!camera.Capabilities.AcquisitionModes.HasFlag(mode))
-                throw new NotSupportedException($"Camera does not support specified regime ({Extensions.GetEnumNames(typeof(AcquisitionMode), mode).First()})");
+                throw new NotSupportedException($"Camera does not support specified regime ({Extensions.GetEnumNames(typeof(AcquisitionMode), mode).FirstOrDefault()})");
 
-            // Deternines SDK index of mode
-            int index = AcquisitionModeTable.Where((x) => x.Item1 == mode).FirstOrDefault().Item2;
+            // If there are no matches in the pre-defined table, then this mode cannot be set explicitly
+            if (!EnumConverter.AcquisitionModeTable.ContainsKey(mode))
+                throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({Extensions.GetEnumNames(typeof(AcquisitionMode), mode).FirstOrDefault()})");
 
-            AcquisitionMode = new Tuple<int, Enums.AcquisitionMode>(index, mode);
+            AcquisitionMode = mode;
         }
 
+        /// <summary>
+        /// Sets trigger mode. 
+        /// Camera may be inactive.
+        /// </summary>
+        /// <exception cref="NotSupportedException"/>
+        /// <exception cref="InvalidOperationException"/>
+        /// <param name="mode">Trigger mode</param>
+        public void SetTriggerMode(TriggerMode mode)
+        {
+            // Checks if camera is OK
+            CheckCamera(false);
+
+            // Checks if camera supports specifed mode
+            if (!camera.Capabilities.TriggerModes.HasFlag(mode))
+                throw new NotSupportedException($"Camera does not support specified regime ({Extensions.GetEnumNames(typeof(TriggerMode), mode).FirstOrDefault()})");
+
+            // If there are no matches in the pre-defined table, then this mode cannot be set explicitly
+            if (!EnumConverter.TriggerModeTable.ContainsKey(mode))
+                throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({Extensions.GetEnumNames(typeof(TriggerMode), mode).FirstOrDefault()})");
+
+            TriggerMode = mode;
+        }
 
         /// <summary>
         /// Sets read mode.
         /// Camera may be inactive.
         /// </summary>
         /// <exception cref="NotSupportedException"/>
+        /// <exception cref="InvalidOperationException"/>
         /// <param name="mode">Read mode</param>
         public void SetReadoutMode(ReadMode mode)
         {
@@ -627,12 +668,14 @@ namespace ANDOR_CS.Classes
 
             // Checks if camera support read mode control
             if(!camera.Capabilities.ReadModes.HasFlag(mode))
-                throw new NotSupportedException($"Camera does not support specified regime ({Extensions.GetEnumNames(typeof(ReadMode), mode).First()})");
+                throw new NotSupportedException($"Camera does not support specified regime ({Extensions.GetEnumNames(typeof(ReadMode), mode).FirstOrDefault()})");
 
-            // Determines SDK index of mode
-            int index = ReadModeTable.Where((x) => x.Item1 == mode).FirstOrDefault().Item2;
+            // If there are no matches in the pre-defiend table, then this mode cannot be set explicitly
+            if (!EnumConverter.ReadModeTable.ContainsKey(mode))
+                throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({Extensions.GetEnumNames(typeof(ReadMode), mode).FirstOrDefault()})");
 
-            ReadMode = new Tuple<int, Enums.ReadMode>(index, mode);
+
+            ReadMode = mode;
         }
 
         /// <summary>
@@ -649,6 +692,35 @@ namespace ANDOR_CS.Classes
 
 
             ExposureTime = time;
+        }
+
+        /// <summary>
+        /// Sets image area.
+        /// Camera may be inactive.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException"/>
+        /// <param name="area">Image rectangle</param>
+        public void SetImageArea(Rectangle area)
+        {
+            CheckCamera(false);
+
+            if (area.X1 <= 0 || area.Y1 <= 0)
+                throw new ArgumentOutOfRangeException($"Start position of rectangel cannot be to the lower-left of {new Point2D(1,1)} (provided {area.Start}).");
+
+
+
+            if (camera.Capabilities.GetFunctions.HasFlag(GetFunction.DetectorSize))
+            {
+                var size = camera.Properties.DetectorSize;
+
+                if (area.X2 > size.Horizontal)
+                    throw new ArgumentOutOfRangeException($"Right boundary exceeds CCD size ({area.X2} >= {size.Horizontal}).");
+
+                if(area.Y2 > size.Vertical)
+                    throw new ArgumentOutOfRangeException($"Top boundary exceeds CCD size ({area.Y2} >= {size.Vertical}).");
+            }
+
+            ImageArea = area;
         }
     }
 }

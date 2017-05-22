@@ -25,7 +25,7 @@ namespace ANDOR_CS.DataStructures
         /// <summary>
         /// If available, stores the size of a 2D detector (in pixels)
         /// </summary>
-        public DetectorSize DetectorSize
+        public Size DetectorSize
         {
             get;
             internal set;
