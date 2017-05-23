@@ -77,12 +77,12 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         }
-        public SoftwareVersion Software
+        public (Version EPROM, Version COFFile, Version Driver, Version Dll) Software
         {
             get;
             private set;
         }
-        public HardwareVersion Hardware
+        public (Version PCB, Version Decode, Version CameraFirmware) Hardware
         {
             get;
             private set;
@@ -246,7 +246,7 @@ namespace ANDOR_CS.Classes
                 throw new AndorSDKException($"Function {nameof(SDKInit.SDKInstance.GetNumberAmp)} returned invalid number of amplifiers (returned {amps} should be greater than 0 and less than 2).", null);
 
             // Amplifier information array
-            Tuple<string, OutputAmplification, float>[] amplifiers = new Tuple<string, OutputAmplification, float>[amps];
+            (string Name, OutputAmplification Amplifier, float MaxSpeed)[] amplifiers = new (string Name, OutputAmplification Amplifier, float MaxSpeed)[amps];
 
             for (int ampIndex = 0; ampIndex < amps; ampIndex++)
             {
@@ -262,12 +262,12 @@ namespace ANDOR_CS.Classes
                 ThrowIfError(result, nameof(SDKInit.SDKInstance.GetAmpMaxSpeed));
 
                 // Adds obtained values to array
-                amplifiers[ampIndex] = new Tuple<string, OutputAmplification, float>(
-                    ampName,
+                amplifiers[ampIndex] = (
+                    Name: ampName,
                     // In case of Clara 0 corresponds to Conventional (OutputAmplification = 1) and 1 corresponds to ExtendedNIR (OutputAmplification = 2)
                     // Adds 1 to obtained indices in case of Clara camera to store amplifier information properly
-                    (OutputAmplification) (ampIndex + (Capabilities.CameraType == CameraType.Clara ? 1 : 0)), 
-                    speed);                
+                    Amplifier: (OutputAmplification) (ampIndex + (Capabilities.CameraType == CameraType.Clara ? 1 : 0)), 
+                    MaxSpeed: speed);                
             }
             
 
@@ -355,13 +355,12 @@ namespace ANDOR_CS.Classes
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetSoftwareVersion));
 
             // Assigns obtained version information to the class field
-            Software = new SoftwareVersion()
-            {
-                EPROM = new Version((int)eprom, 0),
-                COFFile = new Version((int) COF, 0),
-                Driver = new Version((int)driverVer, (int)driverRev),
-                Dll = new Version((int)DllVer, (int)DllRev)
-            };
+            Software = (
+                EPROM: new Version((int)eprom, 0),
+                COFFile: new Version((int) COF, 0),
+                Driver: new Version((int)driverVer, (int)driverRev),
+                Dll: new Version((int)DllVer, (int)DllRev)
+            );
 
             // Variables are passed to SDK function and store hardware version information
             uint PCB = 0;
@@ -374,12 +373,11 @@ namespace ANDOR_CS.Classes
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHardwareVersion));
 
             // Assigns obtained hardware versions to the class field
-            Hardware = new HardwareVersion()
-            {
-                PCB = new Version((int)PCB, 0),
-                Decode = new Version((int)decode, 0),
-                CameraFirmware = new Version((int)firmwareVer, (int)firmwareRev)
-            };
+            Hardware = (
+                PCB: new Version((int)PCB, 0),
+                Decode: new Version((int)decode, 0),
+                CameraFirmware: new Version((int)firmwareVer, (int)firmwareRev)
+            );
 
         }
         

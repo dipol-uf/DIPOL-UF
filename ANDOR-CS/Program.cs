@@ -69,7 +69,7 @@ namespace ANDOR_CS
                 foreach (var r in result)
                     Console.WriteLine(r);
 
-                Console.WriteLine($"\r\nExposure: {timing.ExposureTime}\t Accumulation: {timing.AccumulateCycleTime}\t Kinetic: {timing.KineticCycleTime}");
+                Console.WriteLine($"\r\nExposure: {timing.ExposureTime}\t Accumulation: {timing.AccumulationCycleTime}\t Kinetic: {timing.KineticCycleTime}");
 
                 if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
                 {
