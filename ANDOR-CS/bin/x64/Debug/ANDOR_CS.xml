@@ -301,6 +301,13 @@
             </summary>
             <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
         </member>
+        <member name="M:ANDOR_CS.Classes.Camera.GetStatus">
+            <summary>
+            Gets current status of the camera
+            </summary>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
+            <returns>Camera status</returns>
+        </member>
         <member name="M:ANDOR_CS.Classes.Camera.GetAcquisitionSettingsTemplate">
             <summary>
             Generates an instance of <see cref="T:ANDOR_CS.Classes.AcquisitionSettings"/> that can be used to select proper settings for image
@@ -636,7 +643,12 @@
             Time stamp of the event
             </summary>
         </member>
-        <member name="M:ANDOR_CS.Events.AcquisitionStatusEventArgs.#ctor">
+        <member name="P:ANDOR_CS.Events.AcquisitionStatusEventArgs.Status">
+            <summary>
+            Camera status at the moment of the event
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Events.AcquisitionStatusEventArgs.#ctor(ANDOR_CS.Enums.CameraStatus)">
             <summary>
             Default constructor
             </summary>
