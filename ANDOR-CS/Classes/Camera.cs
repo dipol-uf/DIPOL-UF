@@ -496,10 +496,19 @@ namespace ANDOR_CS.Classes
 
             float temp = float.NaN;
 
-            TemperatureStatus status = TemperatureStatus.UnknownOrBusy;
+            TemperatureStatus status = TemperatureStatus.Off;
 
             var result = SDKInit.SDKInstance.GetTemperatureF(ref temp);
-            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetTemperatureF));
+            switch (result)
+            {
+                case SDK.DRV_ACQUIRING:
+                    throw new AcquisitionInProgressException("Camera is in acquisition mode.");
+                case SDK.DRV_NOT_INITIALIZED:
+                    throw new AndorSDKException("Camera is not initialized.", result);
+                case SDK.DRV_ERROR_ACK:
+                    throw new AndorSDKException("Communication error.", result);
+
+            }
 
             status = (TemperatureStatus)result;
 
