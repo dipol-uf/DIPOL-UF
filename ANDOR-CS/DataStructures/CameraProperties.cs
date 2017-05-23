@@ -52,7 +52,7 @@ namespace ANDOR_CS.DataStructures
         /// <summary>
         /// An array of available amplifiers with respective maximum allowed horizontal speed
         /// </summary>
-        public Tuple<string, OutputAmplification, float>[] Amplifiers
+        public (string Name, OutputAmplification Amplifier, float MaxSpeed)[] Amplifiers
         {
             get;
             internal set;

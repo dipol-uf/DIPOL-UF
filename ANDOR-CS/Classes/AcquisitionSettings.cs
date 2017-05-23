@@ -32,18 +32,16 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores the value of currently set vertical speed
         /// </summary>
-        public Tuple<int, float> VSSpeed
+        public (int Index, float Speed)? VSSpeed
         {
             get;
             private set;
         } = null;
 
-
-
         /// <summary>
         /// Stoers the value of currently set horizontal speed
         /// </summary>
-        public Tuple<int, float> HSSpeed
+        public (int Index, float Speed)? HSSpeed
         {
             get;
             private set;
@@ -52,7 +50,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores the index of currently set Analogue-Digital Converter and its bit depth.
         /// </summary>
-        public Tuple<int, int> ADConverter
+        public (int Index, int BitDepth)? ADConverter
         {
             get;
             private set;
@@ -70,7 +68,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores type of currentlt set Amplifier
         /// </summary>
-        public Tuple<string, OutputAmplification, int> Amplifier
+        public (string Name, OutputAmplification Amplifier, int Index)? Amplifier
         {
             get;
             private set;
@@ -79,11 +77,11 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores type of currently set PreAmp Gain
         /// </summary>
-        public Tuple<int, string> PreAmpGain
+        public (int Index, string Name)? PreAmpGain
         {
             get;
             private set;
-        }
+        } = null;
 
         /// <summary>
         /// Stores currently set acquisition mode
@@ -165,55 +163,56 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="ArgumentNullException"/>
         /// <returns>Result of application of each non-null setting</returns>
-        public List<Tuple<string, bool, uint>> ApplySettings(out ActualTiming timing)
+        public List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
+            out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime) timing)
         {
-            List<Tuple<string, bool, uint>> output = new List<Tuple<string, bool, uint>>();
+            List<(string Option, bool Success, uint ReturnCode)> output = new List<(string Option, bool Success, uint ReturnCode)>();
 
             CheckCamera(true);
 
             uint result = 0;
 
 
-            if (VSSpeed != null)
+            if (VSSpeed.HasValue)
             {
-                result = SDKInit.SDKInstance.SetVSSpeed(VSSpeed.Item1);
+                result = SDKInit.SDKInstance.SetVSSpeed(VSSpeed.Value.Index);
 
-                output.Add(new Tuple<string, bool, uint>("VS Speed", result == SDK.DRV_SUCCESS, result));
+                output.Add(("VS Speed", result == SDK.DRV_SUCCESS, result));
             }
 
-            if (VSAmplitude != null)
+            if (VSAmplitude.HasValue)
             {
                 result = SDKInit.SDKInstance.SetVSAmplitude((int)VSAmplitude);
 
-                output.Add(new Tuple<string, bool, uint>("VS Amplitude", result == SDK.DRV_SUCCESS, result));
+                output.Add(("VS Amplitude", result == SDK.DRV_SUCCESS, result));
             }
 
-            if (ADConverter != null)
+            if (ADConverter.HasValue)
             {
-                result = SDKInit.SDKInstance.SetADChannel(ADConverter.Item1);
+                result = SDKInit.SDKInstance.SetADChannel(ADConverter.Value.Index);
 
-                output.Add(new Tuple<string, bool, uint>("AD Converter", result == SDK.DRV_SUCCESS, result));
+                output.Add(("AD Converter", result == SDK.DRV_SUCCESS, result));
             }
 
-            if (Amplifier != null)
+            if (Amplifier.HasValue)
             {
-                result = SDKInit.SDKInstance.SetOutputAmplifier(Amplifier.Item3);
+                result = SDKInit.SDKInstance.SetOutputAmplifier(Amplifier.Value.Index);
 
-                output.Add(new Tuple<string, bool, uint>("Amplifier", result == SDK.DRV_SUCCESS, result));
+                output.Add(("Amplifier", result == SDK.DRV_SUCCESS, result));
             }
 
-            if (HSSpeed != null)
+            if (HSSpeed.HasValue)
             {
-                result = SDKInit.SDKInstance.SetHSSpeed(Amplifier?.Item3 ?? 0, HSSpeed.Item1);
+                result = SDKInit.SDKInstance.SetHSSpeed(Amplifier?.Item3 ?? 0, HSSpeed.Value.Index);
 
-                output.Add(new Tuple<string, bool, uint>("HS Speed", result == SDK.DRV_SUCCESS, result));
+                output.Add(("HS Speed", result == SDK.DRV_SUCCESS, result));
             }
 
-            if (PreAmpGain != null)
+            if (PreAmpGain.HasValue)
             {
-                result = SDKInit.SDKInstance.SetPreAmpGain(PreAmpGain.Item1);
+                result = SDKInit.SDKInstance.SetPreAmpGain(PreAmpGain.Value.Index);
 
-                output.Add(new Tuple<string, bool, uint>("PreAmp Gain", result == SDK.DRV_SUCCESS, result));
+                output.Add(("PreAmp Gain", result == SDK.DRV_SUCCESS, result));
             }
 
 
@@ -222,14 +221,14 @@ namespace ANDOR_CS.Classes
                 result = SDKInit.SDKInstance.SetImage(1, 1, ImageArea.Value.X1, ImageArea.Value.X2, ImageArea.Value.Y1, ImageArea.Value.Y2);
 
 
-                output.Add(new Tuple<string, bool, uint>("Image", result == SDK.DRV_SUCCESS, result));
+                output.Add(("Image", result == SDK.DRV_SUCCESS, result));
             }
 
             if (AcquisitionMode.HasValue)
             {
                 result = SDKInit.SDKInstance.SetAcquisitionMode(EnumConverter.AcquisitionModeTable[AcquisitionMode.Value]);
 
-                output.Add(new Tuple<string, bool, uint>("Acquisition mode", result == SDK.DRV_SUCCESS, result));
+                output.Add(("Acquisition mode", result == SDK.DRV_SUCCESS, result));
             }
             else throw new ArgumentNullException("Acquisition mode should be set before applying settings.");
 
@@ -238,7 +237,7 @@ namespace ANDOR_CS.Classes
             {
                 result = SDKInit.SDKInstance.SetReadMode(EnumConverter.ReadModeTable[ReadMode.Value]);
 
-                output.Add(new Tuple<string, bool, uint>("Read mode", result == SDK.DRV_SUCCESS, result));
+                output.Add(("Read mode", result == SDK.DRV_SUCCESS, result));
 
             }
             else throw new ArgumentNullException("Read mode should be set before applying settings.");
@@ -248,7 +247,7 @@ namespace ANDOR_CS.Classes
             {
                 result = SDKInit.SDKInstance.SetTriggerMode(EnumConverter.TriggerModeTable[TriggerMode.Value]);
 
-                output.Add(new Tuple<string, bool, uint>("Trigger mode", result == SDK.DRV_SUCCESS, result));
+                output.Add(("Trigger mode", result == SDK.DRV_SUCCESS, result));
 
             }
             else throw new ArgumentNullException("Trigger mode should be set before applying settings.");
@@ -257,7 +256,7 @@ namespace ANDOR_CS.Classes
             {
                 result = SDKInit.SDKInstance.SetExposureTime(ExposureTime.Value);
 
-                output.Add(new Tuple<string, bool, uint>("Exposure time", result == SDK.DRV_SUCCESS, result));
+                output.Add(("Exposure time", result == SDK.DRV_SUCCESS, result));
             }
             else throw new ArgumentNullException("Exposure time should be set before applying settings.");
 
@@ -268,7 +267,7 @@ namespace ANDOR_CS.Classes
             result = SDKInit.SDKInstance.GetAcquisitionTimings(ref expTime, ref accTime, ref kinTime);
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetAcquisitionTimings));
 
-            timing = new ActualTiming(expTime, accTime, kinTime);
+            timing = (ExposureTime: expTime, AccumulationCycleTime: accTime, KineticCycleTime: kinTime);
 
             return output;
         }
@@ -299,7 +298,7 @@ namespace ANDOR_CS.Classes
 
 
                 // If success, updates VSSpeed field and 
-                VSSpeed = new Tuple<int, float>(speedIndex, camera.Properties.VSSpeeds[speedIndex]);
+                VSSpeed = (Index: speedIndex, Speed: camera.Properties.VSSpeeds[speedIndex]);
 
 
             }
@@ -381,7 +380,7 @@ namespace ANDOR_CS.Classes
                 throw new ArgumentOutOfRangeException($"AD converter index {converterIndex} if out of range " +
                     $"(should be in [{0}, {camera.Properties.ADConverters.Length - 1}]).");
 
-            ADConverter = new Tuple<int, int>(converterIndex, camera.Properties.ADConverters[converterIndex]);
+            ADConverter = (Index: converterIndex, BitDepth: camera.Properties.ADConverters[converterIndex]);
 
         }
 
@@ -410,7 +409,7 @@ namespace ANDOR_CS.Classes
             // Otherwise, assigns name and type of the amplifier 
             var element = query.First();
 
-            Amplifier = new Tuple<string, OutputAmplification, int>(element.Item1, element.Item2, camera.Properties.Amplifiers.IndexOf(element));
+            Amplifier = (Name: element.Item1, Amplifier: element.Item2, Index: camera.Properties.Amplifiers.IndexOf(element));
 
         }
 
@@ -425,7 +424,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <exception cref="NotSupportedException"/>
         /// <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
-        public IEnumerable<Tuple<int, float>> GetAvailableHSSpeeds()
+        public IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds()
         {
             // Checks if camera is OK and is active
             CheckCamera(true);
@@ -438,8 +437,8 @@ namespace ANDOR_CS.Classes
                     throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
 
                 // Determines indexes of converter and amplifier
-                int channel = ADConverter.Item1;
-                int amp = Amplifier.Item3;
+                int channel = ADConverter.Value.Index;
+                int amp = Amplifier.Value.Index;
                 int nSpeeds = 0;
 
                 // Gets the number of availab;e speeds
@@ -459,7 +458,7 @@ namespace ANDOR_CS.Classes
                     ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHSSpeed));
 
                     // Returns speed index and speed value for evvery subsequent call
-                    yield return new Tuple<int, float>(speedIndex, locSpeed);
+                    yield return (Index: speedIndex, Speed: locSpeed);
                 }
 
             }
@@ -493,8 +492,8 @@ namespace ANDOR_CS.Classes
                     throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
 
                 // Determines indexes of converter and amplifier
-                int channel = ADConverter.Item1;
-                int amp = Amplifier.Item3;
+                int channel = ADConverter.Value.Index;
+                int amp = Amplifier.Value.Index;
                 int nSpeeds = 0;
 
                 // Gets the number of availab;e speeds
@@ -512,7 +511,7 @@ namespace ANDOR_CS.Classes
                 ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHSSpeed));
 
                 // Assigns speed index and speed value
-                HSSpeed = new Tuple<int, float>(speedIndex, speed);
+                HSSpeed = (Index: speedIndex, Speed: speed);
 
             }
             else
@@ -530,7 +529,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="NotSupportedException"/>
         /// <returns>Available PreAmp gains</returns>
-        public IEnumerable<Tuple<int, string>> GetAvailablePreAmpGain()
+        public IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain()
         {
             // Checks if camera is OK and is active
             CheckCamera(true);
@@ -545,9 +544,9 @@ namespace ANDOR_CS.Classes
 
 
                 // Stores indexes of ADConverter, Amplifier and Horizontal Speed
-                int channel = ADConverter.Item1;
-                int amp = Amplifier.Item3;
-                int speed = HSSpeed.Item1;
+                int channel = ADConverter.Value.Index;
+                int amp = Amplifier.Value.Index;
+                int speed = HSSpeed.Value.Index;
 
                 // Total number of gain settings available
                 int gainNumber = camera.Properties.PreAmpGains.Length;
@@ -562,7 +561,7 @@ namespace ANDOR_CS.Classes
 
                     // If status of a certain combination of settings is 1, return it
                     if (status == 1)
-                        yield return new Tuple<int, string>(gainIndex, camera.Properties.PreAmpGains[gainIndex]);
+                        yield return (Index: gainIndex, Name: camera.Properties.PreAmpGains[gainIndex]);
                 }
 
             }
@@ -596,9 +595,9 @@ namespace ANDOR_CS.Classes
 
 
                 // Stores indexes of ADConverter, Amplifier and Horizontal Speed
-                int channel = ADConverter.Item1;
-                int amp = Amplifier.Item3;
-                int speed = HSSpeed.Item1;
+                int channel = ADConverter.Value.Index;
+                int amp = Amplifier.Value.Index;
+                int speed = HSSpeed.Value.Index;
 
                 // Total number of gain settings available
                 int gainNumber = camera.Properties.PreAmpGains.Length;
@@ -615,7 +614,7 @@ namespace ANDOR_CS.Classes
                 if (status != 1)
                     throw new ArgumentOutOfRangeException($"Pre amp gain index ({gainIndex}) is out of range.");
 
-                PreAmpGain = new Tuple<int, string>(gainIndex, camera.Properties.PreAmpGains[gainIndex]);
+                PreAmpGain = (Index: gainIndex, Name: camera.Properties.PreAmpGains[gainIndex]);
             }
         }
 
