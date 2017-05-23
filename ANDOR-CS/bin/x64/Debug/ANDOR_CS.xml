@@ -81,7 +81,7 @@
             Checks camera parent <see cref="T:ANDOR_CS.Classes.Camera"/>. If it is not initialized or active, throws exception.
             </summary>
             <exception cref="T:System.NullReferenceException"/>
-            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
         </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.ApplySettings">
             <summary>
@@ -95,7 +95,7 @@
             Tries to set vertical speed. 
             Camera may not be active.
             </summary>
-            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <exception cref="T:System.NotSupportedException"/>
             <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="P:ANDOR_CS.Classes.Camera.Properties"/>.VSSpeeds</param>
@@ -105,7 +105,7 @@
             Tries to set vertical speed to fastest recommended speed. 
             Requires camera to be active.
             </summary>
-            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <exception cref="T:System.NotSupportedException"/>
         </member>
@@ -284,24 +284,29 @@
             Indicates if this camera is currently active
             </summary>
         </member>
+        <member name="P:ANDOR_CS.Classes.Camera.IsAcquiring">
+            <summary>
+            Indicates if camera is in process of acquisition
+            </summary>
+        </member>
         <member name="M:ANDOR_CS.Classes.Camera.GetCameraProperties">
             <summary>
             Determines properties of currently active camera and sets respective Camera.Properties field.
             </summary>
-            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.SetActive">
             <summary>
             Sets current camera active
             </summary>
-            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.GetAcquisitionSettingsTemplate">
             <summary>
             Generates an instance of <see cref="T:ANDOR_CS.Classes.AcquisitionSettings"/> that can be used to select proper settings for image
             acquisition in the context of this camera
             </summary>
-            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
             <returns>A template that can be used to select proper acquisition settings</returns>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.#ctor(System.Int32)">
@@ -321,8 +326,16 @@
             <summary>
             Queries the number of currently connected Andor cameras
             </summary>
-            <exception cref="T:ANDOR_CS.AndorSDKException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
             <returns>TNumber of detected cameras</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.StartAcquistionAsync(System.Int32)">
+            <summary>
+            Starts process of acquisition asynchronously.
+            </summary>
+            <exception cref="T:ANDOR_CS.Exceptions.AcquisitionInProgressException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
+            <returns>Task that can be queried for execution status.</returns>
         </member>
         <member name="T:ANDOR_CS.DataStructures.CameraProperties">
             <summary>
@@ -611,6 +624,21 @@
         <member name="P:ANDOR_CS.AndorSDKInitialization.SDKInstance">
             <summary>
             Gets an singleton instance of a basic AndorSDK class
+            </summary>
+        </member>
+        <member name="T:ANDOR_CS.Events.AcquisitionStatusEventArgs">
+            <summary>
+            Stores the event arguments for all Acquisition-based events
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Events.AcquisitionStatusEventArgs.EventTime">
+            <summary>
+            Time stamp of the event
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Events.AcquisitionStatusEventArgs.#ctor">
+            <summary>
+            Default constructor
             </summary>
         </member>
     </members>

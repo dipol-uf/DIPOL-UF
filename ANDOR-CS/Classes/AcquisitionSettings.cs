@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
+using ANDOR_CS.Exceptions;
 
 using SDKInit = ANDOR_CS.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
 
-using static ANDOR_CS.AndorSDKException;
+using static ANDOR_CS.Exceptions.AndorSDKException;
 
 
 namespace ANDOR_CS.Classes
