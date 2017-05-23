@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ANDOR_CS
+namespace ANDOR_CS.Exceptions
 {
     public class AndorSDKException : Exception
     {

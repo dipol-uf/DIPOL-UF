@@ -242,9 +242,7 @@ namespace ANDOR_CS
 
                 // var res = SDKInit.SDKInstance.StartAcquisition();
 
-                var task = cam.StartAcquistionAsync();
-
-                task.Wait();
+                cam.StartAcquistionAsync().Wait();
 
                 System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2.0f));
 
