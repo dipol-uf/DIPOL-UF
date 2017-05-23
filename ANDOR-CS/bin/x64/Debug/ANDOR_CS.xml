@@ -83,7 +83,7 @@
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.ApplySettings">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.ApplySettings(ANDOR_CS.DataStructures.ActualTiming@)">
             <summary>
             Applys currenlty selected settings to the camera.
             </summary>
