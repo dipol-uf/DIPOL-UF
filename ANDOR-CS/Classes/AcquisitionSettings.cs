@@ -39,6 +39,7 @@ namespace ANDOR_CS.Classes
         } = null;
 
 
+
         /// <summary>
         /// Stoers the value of currently set horizontal speed
         /// </summary>

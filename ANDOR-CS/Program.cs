@@ -25,7 +25,7 @@ namespace ANDOR_CS
        
         public static void TestAcquisitionSettings()
         {
-            using (var cam = new Camera())
+            using (var cam = new Camera()) 
             {
                 cam.FanControl(FanMode.Off);
 
