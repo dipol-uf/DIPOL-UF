@@ -38,6 +38,7 @@ namespace ANDOR_CS.Classes
             private set;
         } = null;
 
+
         /// <summary>
         /// Stoers the value of currently set horizontal speed
         /// </summary>
@@ -163,7 +164,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="ArgumentNullException"/>
         /// <returns>Result of application of each non-null setting</returns>
-        public List<Tuple<string, bool, uint>> ApplySettings()
+        public List<Tuple<string, bool, uint>> ApplySettings(out ActualTiming timing)
         {
             List<Tuple<string, bool, uint>> output = new List<Tuple<string, bool, uint>>();
 
@@ -259,7 +260,15 @@ namespace ANDOR_CS.Classes
             }
             else throw new ArgumentNullException("Exposure time should be set before applying settings.");
 
-            
+            float expTime = 0f;
+            float accTime = 0f;
+            float kinTime = 0f;
+
+            result = SDKInit.SDKInstance.GetAcquisitionTimings(ref expTime, ref accTime, ref kinTime);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetAcquisitionTimings));
+
+            timing = new ActualTiming(expTime, accTime, kinTime);
+
             return output;
         }
 
