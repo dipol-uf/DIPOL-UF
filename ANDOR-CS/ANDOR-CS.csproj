@@ -111,15 +111,12 @@
     <Compile Include="Classes\AcquisitionSettings.cs" />
     <Compile Include="Classes\EnumConverter.cs" />
     <Compile Include="Classes\SafeSDKCameraHandle.cs" />
-    <Compile Include="DataStructures\ActualTiming.cs" />
     <Compile Include="DataStructures\CameraProperties.cs" />
     <Compile Include="Classes\Extensions.cs" />
     <Compile Include="DataStructures\Size.cs" />
     <Compile Include="DataStructures\DeviceCpabilities.cs" />
-    <Compile Include="DataStructures\HardwareVersion.cs" />
     <Compile Include="DataStructures\Point2D.cs" />
     <Compile Include="DataStructures\Rectangle.cs" />
-    <Compile Include="DataStructures\SoftwareVersion.cs" />
     <Compile Include="DataStructures\TemperatureRange.cs" />
     <Compile Include="Enums\AcquisitionModeEnum.cs" />
     <Compile Include="Enums\CameraStatusEnum.cs" />
