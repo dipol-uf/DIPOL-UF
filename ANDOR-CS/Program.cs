@@ -62,17 +62,22 @@ namespace ANDOR_CS
                 cam.AcquisitionStatusChecked += (c, e) =>  Console.Write("\rAcquiring {0}{1}", new string('.', 1 + (counter++ %3)), new string(' ', 3 - (counter % 3)));
                 cam.AcquisitionFinished += (c, e) => Console.WriteLine("\r\nAcquisition finished on camera {0}", (c as Camera).CameraModel);
 
-                var result = settings.ApplySettings();
+                var result = settings.ApplySettings(out var timing);
 
                 Console.WriteLine();
 
                 foreach (var r in result)
                     Console.WriteLine(r);
 
-                var temp = cam.GetCurrentTemperature();
-                
-                Console.WriteLine($"\r\nTemp: {Extensions.GetEnumNames(typeof(TemperatureStatus), temp.Status).First()}\t{temp.Temperature} degrees");
-                
+                Console.WriteLine($"\r\nExposure: {timing.ExposureTime}\t Accumulation: {timing.AccumulateCycleTime}\t Kinetic: {timing.KineticCycleTime}");
+
+                if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
+                {
+                    var temp = cam.GetCurrentTemperature();
+
+                    Console.WriteLine($"\r\nTemp: {Extensions.GetEnumNames(typeof(TemperatureStatus), temp.Status).First()}\t{temp.Temperature} degrees");
+                }
+
                 cam.StartAcquistionAsync().Wait();                                
 
                 float[] array = new float[cam.Properties.DetectorSize.Horizontal * cam.Properties.DetectorSize.Vertical];
