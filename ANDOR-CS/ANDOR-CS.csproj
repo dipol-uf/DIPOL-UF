@@ -121,7 +121,9 @@
     <Compile Include="DataStructures\SoftwareVersion.cs" />
     <Compile Include="DataStructures\TemperatureRange.cs" />
     <Compile Include="Enums\AcquisitionModeEnum.cs" />
-    <Compile Include="Classes\AndorSDKException.cs" />
+    <Compile Include="Enums\CameraStatusEnum.cs" />
+    <Compile Include="Exceptions\AcquisitionInProgressException.cs" />
+    <Compile Include="Exceptions\AndorSDKException.cs" />
     <Compile Include="Classes\AndorSDKInitialization.cs" />
     <Compile Include="Classes\Camera.cs" />
     <Compile Include="Enums\CameraTypeEnum.cs" />

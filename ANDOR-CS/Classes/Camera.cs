@@ -8,11 +8,13 @@ using ATMCD64CS;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
+using ANDOR_CS.Exceptions;
 
 using SDKInit = ANDOR_CS.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
 
-using static ANDOR_CS.AndorSDKException;
+using static ANDOR_CS.Exceptions.AndorSDKException;
+using static ANDOR_CS.Exceptions.AcquisitionInProgressException;
 
 namespace ANDOR_CS.Classes
 {
@@ -21,9 +23,9 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public class Camera : IDisposable
     {
-        private static readonly int AmpDescriptorMaxLength = 21;
-        private static readonly int PreAmpGainDescriptorMaxLength = 30;
-        private static readonly int StatusCheckTimeOutMS = 100;
+        private const int AmpDescriptorMaxLength = 21;
+        private const int PreAmpGainDescriptorMaxLength = 30;
+        private const int StatusCheckTimeOutMS = 100;
 
         private static List<Camera> CreatedCameras = new List<Camera>();
         private static Camera ActiveCamera = null;
@@ -86,6 +88,9 @@ namespace ANDOR_CS.Classes
             private set;
         }
 
+        /// <summary>
+        /// Indicates if camera is in process of acquisition
+        /// </summary>
         public bool IsAcquiring
         {
             get;
@@ -93,14 +98,17 @@ namespace ANDOR_CS.Classes
         } = false;
 
 
-        public delegate void AcquisitionStatusEvent(object sender, AcquisitionStatusEventArgs e);
+        public delegate void AcquisitionStatusEventHandler(object sender, AcquisitionStatusEventArgs e);
 
-        public event AcquisitionStatusEvent AcquisitionStarted;
-        public event AcquisitionStatusEvent AcquisitionFinished;
-        public event AcquisitionStatusEvent AcquisitionStatusChecked;
+        public event AcquisitionStatusEventHandler AcquisitionStarted;
+        public event AcquisitionStatusEventHandler AcquisitionFinished;
+        public event AcquisitionStatusEventHandler AcquisitionStatusChecked;
+        public event AcquisitionStatusEventHandler AcquisitionErrorReturned;
 
         private void GetCapabilities()
         {
+            ThrowIfAcquiring(this);
+
             SDK.AndorCapabilities caps = default(SDK.AndorCapabilities);
             caps.ulSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(caps);
 
@@ -110,6 +118,8 @@ namespace ANDOR_CS.Classes
         }
         private void GetCameraSerialNumber()
         {
+            ThrowIfAcquiring(this);
+
             int number = -1;
             var result = SDKInit.SDKInstance.GetCameraSerialNumber(ref number);
 
@@ -120,6 +130,8 @@ namespace ANDOR_CS.Classes
         }
         private void GetHeadModel()
         {
+            ThrowIfAcquiring(this);
+
             string model = "";
 
             var result = SDKInit.SDKInstance.GetHeadModel(ref model);
@@ -133,6 +145,9 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSDKException"/>
         private void GetCameraProperties()
         {
+            // Checks if acquisition is in progress; throws exception
+            ThrowIfAcquiring(this);
+
             // To call SDK methods, current camera should be active (this.IsActive == true).
             // If it is not the case, then either it was not set active (wrong design of program) or an error happened 
             // while switching control to this camera (and thus behaviour is undefined)
@@ -321,6 +336,9 @@ namespace ANDOR_CS.Classes
 
         private void GetSoftwareHardwareVersion()
         {
+            // Checks if acquisition is in progress; throws exception
+            ThrowIfAcquiring(this);
+
             // Stores return codes of SDK functions
             uint result = 0;
 
@@ -371,6 +389,9 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSDKException"/>
         public void SetActive()
         {
+            // Checks if acquisition is in progress; throws exception
+            ThrowIfAcquiring(this);
+
             // If camera address is invalid, throws exception
             if (CameraHandle.SDKPtr == 0 )
                 throw new AndorSDKException($"Camera has invalid private address of {CameraHandle.SDKPtr}.", new NullReferenceException());
@@ -385,8 +406,26 @@ namespace ANDOR_CS.Classes
             
         }
 
+        /// <summary>
+        /// Gets current status of the camera
+        /// </summary>
+        /// <exception cref="AndorSDKException"/>
+        /// <returns>Camera status</returns>
+        public CameraStatus GetStatus()
+        {
+            int status = 0;
+
+            uint result = SDKInit.SDKInstance.GetStatus(ref status);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetStatus));
+
+            return (CameraStatus)status;
+        }
+
         public void FanControl(FanMode mode)
         {
+            // Checks if acquisition is in progress; throws exception
+            ThrowIfAcquiring(this);
+
             if (!Capabilities.Features.HasFlag(SDKFeatures.FanControl))
                 throw new AndorSDKException("Camera does not support fan controls.", new ArgumentException());
 
@@ -402,7 +441,10 @@ namespace ANDOR_CS.Classes
 
         public void CoolerControl(Switch mode)
         {
-            if(!Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
+            // Checks if acquisition is in progress; throws exception
+            ThrowIfAcquiring(this);
+
+            if (!Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
                 throw new AndorSDKException("Camera does not support cooler controls.", new ArgumentException());
 
             uint result = SDK.DRV_SUCCESS;
@@ -419,7 +461,10 @@ namespace ANDOR_CS.Classes
 
         public void SetTemperature(int temperature, bool startCooling = false, FanMode? mode = null)
         {
-            if(!Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
+            // Checks if acquisition is in progress; throws exception
+            ThrowIfAcquiring(this);
+
+            if (!Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
                 throw new AndorSDKException("Camera does not support temperature controls.", new ArgumentException());
 
             if (Properties.AllowedTemperatures.Minimum >= Properties.AllowedTemperatures.Maximum)
@@ -443,7 +488,10 @@ namespace ANDOR_CS.Classes
 
         public TemperatureInfo GetCurrentTemperature()
         {
-            if(!Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
+            // Checks if acquisition is in progress; throws exception
+            ThrowIfAcquiring(this);
+
+            if (!Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
                 throw new AndorSDKException("Camera does not support temperature inquires.", new ArgumentException());
 
             float temp = float.NaN;
@@ -451,14 +499,7 @@ namespace ANDOR_CS.Classes
             TemperatureStatus status = TemperatureStatus.UnknownOrBusy;
 
             var result = SDKInit.SDKInstance.GetTemperatureF(ref temp);
-
-            if(result == SDK.DRV_NOT_INITIALIZED || 
-                result == SDK.DRV_ERROR_ACK)
-                throw new AndorSDKException($"{nameof(SDKInit.SDKInstance.GetTemperatureF)} returned error code.",
-                    result);
-
-            if(result == SDK.DRV_ACQUIRING)
-                throw new AndorSDKException("Acquisition is in progress.", result);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetTemperatureF));
 
             status = (TemperatureStatus)result;
 
@@ -590,36 +631,61 @@ namespace ANDOR_CS.Classes
             return cameraCount;
         }
                
-        
-        public async Task StartAcquistionAsync()
+        /// <summary>
+        /// Starts process of acquisition asynchronously.
+        /// </summary>
+        /// <exception cref="AcquisitionInProgressException"/>
+        /// <exception cref="AndorSDKException"/>
+        /// <returns>Task that can be queried for execution status.</returns>
+        public async Task StartAcquistionAsync(int timeout = StatusCheckTimeOutMS)
         {
-            uint result = SDKInit.SDKInstance.StartAcquisition();
+            // Checks if acquisition is in progress; throws exception
+            ThrowIfAcquiring(this);
 
-            if (result == SDK.DRV_SUCCESS)
+            if (GetStatus() != CameraStatus.Idle)
+                throw new AndorSDKException("Camera is not in the idle mode.", null);
+
+            await Task.Run(() =>
             {
-                IsAcquiring = true;
-
-                AcquisitionStarted?.Invoke(this, new AcquisitionStatusEventArgs());
-
-                int status = (int)SDK.DRV_ACQUIRING;
-
-                while (status == SDK.DRV_ACQUIRING)
+                try
                 {
-                    System.Threading.Thread.Sleep(StatusCheckTimeOutMS);
-                    result = SDKInit.SDKInstance.GetStatus(ref status);
+                    uint result = SDKInit.SDKInstance.StartAcquisition();
 
-                    AcquisitionStatusChecked?.Invoke(this, new AcquisitionStatusEventArgs());
+                    if (result == SDK.DRV_SUCCESS)
+                    {
+                        IsAcquiring = true;
+
+                        OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus()));
+
+                        var status = CameraStatus.Acquiring;
+
+                        while ((status = GetStatus()) == CameraStatus.Acquiring)
+                        {
+                            OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status));
+
+                            System.Threading.Thread.Sleep(StatusCheckTimeOutMS);
+                                                        
+                        }
+
+                        if (status != CameraStatus.Idle)
+                            OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(status));
+                    }
                 }
+                finally
+                {
+                    IsAcquiring = false;
 
-                IsAcquiring = false;
-
-                AcquisitionFinished?.Invoke(this, new AcquisitionStatusEventArgs());
-            }
-
-            return;
+                    OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus()));
+                }
+            });
 
         }
-        
+
+
+        protected virtual void OnAcquisitionStarted(AcquisitionStatusEventArgs e) =>  AcquisitionStarted?.Invoke(this, e);
+        protected virtual void OnAcquisitionStatusChecked(AcquisitionStatusEventArgs e) => AcquisitionStatusChecked?.Invoke(this, e);
+        protected virtual void OnAcquisitionFinished(AcquisitionStatusEventArgs e) => AcquisitionFinished?.Invoke(this, e);
+        protected virtual void OnAcquisitionErrorReturned(AcquisitionStatusEventArgs e) => AcquisitionErrorReturned?.Invoke(this, e);
     }
 
 }
