@@ -83,7 +83,7 @@
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.ApplySettings(ANDOR_CS.DataStructures.ActualTiming@)">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.ApplySettings(System.@)">
             <summary>
             Applys currenlty selected settings to the camera.
             </summary>
@@ -382,51 +382,6 @@
         <member name="P:ANDOR_CS.DataStructures.CameraProperties.VSSpeeds">
             <summary>
             An array of available Vertical Speeds (in us)
-            </summary>
-        </member>
-        <member name="T:ANDOR_CS.DataStructures.HardwareVersion">
-            <summary>
-            Stoers information about currently used hardware versions
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.DataStructures.HardwareVersion.PCB">
-            <summary>
-            Plug-in card version
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.DataStructures.HardwareVersion.Decode">
-            <summary>
-            Flex 10K file version
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.DataStructures.HardwareVersion.CameraFirmware">
-            <summary>
-            Camera firmware version
-            </summary>
-        </member>
-        <member name="T:ANDOR_CS.DataStructures.SoftwareVersion">
-            <summary>
-            Stores information about Andor software used
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.DataStructures.SoftwareVersion.EPROM">
-            <summary>
-            EPROM
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.DataStructures.SoftwareVersion.COFFile">
-            <summary>
-            COF file
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.DataStructures.SoftwareVersion.Driver">
-            <summary>
-            Version of the driver
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.DataStructures.SoftwareVersion.Dll">
-            <summary>
-            Version of the SDK dll used
             </summary>
         </member>
         <member name="T:ANDOR_CS.DataStructures.TemperatureRange">
