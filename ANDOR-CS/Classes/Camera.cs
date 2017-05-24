@@ -15,6 +15,7 @@ using SDK = ATMCD64CS.AndorSDK;
 
 using static ANDOR_CS.Exceptions.AndorSDKException;
 using static ANDOR_CS.Exceptions.AcquisitionInProgressException;
+using static ANDOR_CS.Exceptions.TemperatureCycleInProgressException;
 
 namespace ANDOR_CS.Classes
 {
@@ -30,6 +31,7 @@ namespace ANDOR_CS.Classes
         private static List<Camera> CreatedCameras = new List<Camera>();
         private static Camera ActiveCamera = null;
 
+        private Task CoolingBackgroundTask = null;
 
         /// <summary>
         /// Indicates if this camera is currently active
@@ -97,6 +99,11 @@ namespace ANDOR_CS.Classes
             private set;
         } = false;
 
+        public bool IsInTemperatureCycle
+        {
+            get;
+            private set;
+        } = false;
 
         public delegate void AcquisitionStatusEventHandler(object sender, AcquisitionStatusEventArgs e);
 
@@ -322,7 +329,7 @@ namespace ANDOR_CS.Classes
             // Assemples a new CameraProperties object using collected above information
             Properties = new CameraProperties()
             {
-                AllowedTemperatures = new TemperatureRange(min, max),
+                AllowedTemperatures = (Minimum: min, Maximum: max),
                 DetectorSize = new Size(h, v),
                 HasInternalMechanicalShutter = shutter,
                 ADConverters = ADsBitRange,
@@ -380,7 +387,15 @@ namespace ANDOR_CS.Classes
             );
 
         }
-        
+
+
+        protected virtual void OnAcquisitionStarted(AcquisitionStatusEventArgs e) => AcquisitionStarted?.Invoke(this, e);
+        protected virtual void OnAcquisitionStatusChecked(AcquisitionStatusEventArgs e) => AcquisitionStatusChecked?.Invoke(this, e);
+        protected virtual void OnAcquisitionFinished(AcquisitionStatusEventArgs e) => AcquisitionFinished?.Invoke(this, e);
+        protected virtual void OnAcquisitionErrorReturned(AcquisitionStatusEventArgs e) => AcquisitionErrorReturned?.Invoke(this, e);
+
+
+
         /// <summary>
         /// Sets current camera active
         /// </summary>
@@ -457,7 +472,7 @@ namespace ANDOR_CS.Classes
             
         }
 
-        public void SetTemperature(int temperature, bool startCooling = false, FanMode? mode = null)
+        public void SetTemperature(int temperature)
         {
             // Checks if acquisition is in progress; throws exception
             ThrowIfAcquiring(this);
@@ -477,14 +492,9 @@ namespace ANDOR_CS.Classes
             var result = SDKInit.SDKInstance.SetTemperature(temperature);
             ThrowIfError(result, nameof(SDKInit.SDKInstance.SetTemperature));
 
-            if (startCooling)
-            {
-                FanControl(mode ?? FanMode);
-                CoolerControl(Switch.Enabled);
-            }
         }
 
-        public TemperatureInfo GetCurrentTemperature()
+        public (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
         {
             // Checks if acquisition is in progress; throws exception
             ThrowIfAcquiring(this);
@@ -510,7 +520,7 @@ namespace ANDOR_CS.Classes
 
             status = (TemperatureStatus)result;
 
-            return new TemperatureInfo(temp, status);
+            return (Status: status, Temperature: temp);
             
         }
 
@@ -527,8 +537,7 @@ namespace ANDOR_CS.Classes
 
             return new AcquisitionSettings(this);
         }
-
-
+        
         /// <summary>
         /// Creates a new instance of Camera class to represent a connected Andor device.
         /// Maximum 8 cameras can be controled at the same time
@@ -621,23 +630,7 @@ namespace ANDOR_CS.Classes
 
         }
 
-        /// <summary>
-        /// Queries the number of currently connected Andor cameras
-        /// </summary>
-        /// <exception cref="AndorSDKException"/>
-        /// <returns>TNumber of detected cameras</returns>
-        public static int GetNumberOfCameras()
-        {
-            // Variable is passed to SDK function
-            int cameraCount = -1;
-            
-            var result = SDKInit.SDKInstance.GetAvailableCameras(ref cameraCount);
-            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetAvailableCameras));   
-
-
-            return cameraCount;
-        }
-               
+         
         /// <summary>
         /// Starts process of acquisition asynchronously.
         /// </summary>
@@ -648,11 +641,12 @@ namespace ANDOR_CS.Classes
         {
             // Checks if acquisition is in progress; throws exception
             ThrowIfAcquiring(this);
+            ThrowIfTempCycle(this);
 
             if (GetStatus() != CameraStatus.Idle)
                 throw new AndorSDKException("Camera is not in the idle mode.", null);
 
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 try
                 {
@@ -670,7 +664,7 @@ namespace ANDOR_CS.Classes
                         {
                             OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status));
 
-                            System.Threading.Thread.Sleep(StatusCheckTimeOutMS);
+                            await Task.Delay(StatusCheckTimeOutMS);
                                                         
                         }
 
@@ -687,12 +681,26 @@ namespace ANDOR_CS.Classes
             });
 
         }
+               
 
 
-        protected virtual void OnAcquisitionStarted(AcquisitionStatusEventArgs e) =>  AcquisitionStarted?.Invoke(this, e);
-        protected virtual void OnAcquisitionStatusChecked(AcquisitionStatusEventArgs e) => AcquisitionStatusChecked?.Invoke(this, e);
-        protected virtual void OnAcquisitionFinished(AcquisitionStatusEventArgs e) => AcquisitionFinished?.Invoke(this, e);
-        protected virtual void OnAcquisitionErrorReturned(AcquisitionStatusEventArgs e) => AcquisitionErrorReturned?.Invoke(this, e);
+
+        /// <summary>
+        /// Queries the number of currently connected Andor cameras
+        /// </summary>
+        /// <exception cref="AndorSDKException"/>
+        /// <returns>TNumber of detected cameras</returns>
+        public static int GetNumberOfCameras()
+        {
+            // Variable is passed to SDK function
+            int cameraCount = -1;
+
+            var result = SDKInit.SDKInstance.GetAvailableCameras(ref cameraCount);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetAvailableCameras));
+
+
+            return cameraCount;
+        }
     }
 
 }

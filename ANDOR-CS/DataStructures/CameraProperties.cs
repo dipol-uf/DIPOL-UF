@@ -16,7 +16,7 @@ namespace ANDOR_CS.DataStructures
         /// <summary>
         /// If available, stores the range of temperatures to which camera can be cooled
         /// </summary>
-        public TemperatureRange AllowedTemperatures
+        public (float Minimum, float Maximum) AllowedTemperatures
         {
             get;
             internal set;
