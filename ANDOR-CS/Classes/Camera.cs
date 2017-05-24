@@ -33,6 +33,29 @@ namespace ANDOR_CS.Classes
         private static List<Camera> CreatedCameras = new List<Camera>();
         private static Camera ActiveCamera = null;
 
+        /// <summary>
+        /// Backend field. Indicates if acquisition is in progress.
+        /// Volatile, atomic read/write.
+        /// </summary>
+        private volatile bool isAcquiring = false;
+        /// <summary>
+        /// Backend field. Indicates if temperature cycle is in progress.
+        /// Volatile, atomic read/write.
+        /// </summary>
+        private volatile bool isInTemperatureCycle = false;
+        /// <summary>
+        /// Backend field. Indicates if acquisition is launched from async task.
+        /// With async acquisition camera is able to properly fire all events.
+        /// Volatile, atomic read/write.
+        /// </summary>
+        private volatile bool isAsyncAcquisition = false;
+        /// <summary>
+        /// Backend field. Indicates if temperature cycle is launched from async task.
+        /// With async temperature cycle camera is able to properly fire all events.
+        /// Volatile, atomic read/write.
+        /// </summary>
+        private volatile bool isAsyncTemperatureCycle = false;
+
         private Task TemperatureMonitorWorker = null;
         private CancellationTokenSource TemperatureMonitorCanellationSource = new CancellationTokenSource();
 
@@ -93,35 +116,100 @@ namespace ANDOR_CS.Classes
             private set;
         }
 
+
         /// <summary>
-        /// Indicates if camera is in process of acquisition
+        /// Indicates if camera is in process of image acquisition.
         /// </summary>
         public bool IsAcquiring
         {
-            get;
-            private set;
-        } = false;
-
+            get => isAcquiring;
+            set => isAcquiring = value;
+        }
+        /// <summary>
+        /// Indicates of camera is in temperature cycle.
+        /// </summary>
         public bool IsInTemperatureCycle
         {
-            get;
-            private set;
-        } = false;
+            get => isInTemperatureCycle;
+            set => isInTemperatureCycle = value;
+        }
+        /// <summary>
+        /// Indicates if acquisition is launched from async method and
+        /// camera is able to properly fire all events.
+        /// </summary>
+        public bool IsAsyncAcquisition
+        {
+            get => isAsyncAcquisition;
+            set => isAsyncAcquisition = value;
+        }
+        /// <summary>
+        /// Indicates if temperature cycle is launched from async method and
+        /// camera is able to properly fire all events.
+        /// </summary>
+        public bool IsAsyncTemperatureCycle
+        {
+            get => isAsyncTemperatureCycle;
+            set => isAsyncTemperatureCycle = value;
+        }
 
+        /// <summary>
+        /// Handles all events related to acquisition of image process.
+        /// </summary>
+        /// <param name="sender">A <see cref="Camera"/> type source</param>
+        /// <param name="e">Event arguments</param>
         public delegate void AcquisitionStatusEventHandler(object sender, AcquisitionStatusEventArgs e);
+        /// <summary>
+        /// Handles all events related to temperature cycle.
+        /// </summary>
+        /// <param name="sender">A <see cref="Camera"/> type source</param>
+        /// <param name="e">Event arguments</param>
         public delegate void TemperatureStatusEventHandler(object sender, TemperatureStatusEventArgs e);
 
+        /// <summary>
+        /// Fires when acquisition is started.
+        /// </summary>
         public event AcquisitionStatusEventHandler AcquisitionStarted;
+        /// <summary>
+        /// Fires when acquisition is finished.
+        /// </summary>
         public event AcquisitionStatusEventHandler AcquisitionFinished;
+        /// <summary>
+        /// Fires when acquisition status is asynchronously checked
+        /// </summary>
         public event AcquisitionStatusEventHandler AcquisitionStatusChecked;
+        /// <summary>
+        /// Fires when an exception is thrown in a background asynchronous task
+        /// </summary>
         public event AcquisitionStatusEventHandler AcquisitionErrorReturned;
+        /// <summary>
+        /// Fires when acquisition is aborted manually
+        /// </summary>
+        public event AcquisitionStatusEventHandler AcquisitionAborted;
 
+        /// <summary>
+        /// Fires when backround task acsynchronously checks temperature
+        /// </summary>
         public event TemperatureStatusEventHandler TemperatureStatusChecked;
 
+        /// <summary>
+        /// Fires when temperature is asynchronously checked during cooling process
+        /// </summary>
         public event TemperatureStatusEventHandler CoolingTemperatureChecked;
+        /// <summary>
+        /// Firs when cooling is started
+        /// </summary>
         public event TemperatureStatusEventHandler CoolingStarted;
+        /// <summary>
+        /// Fires when cooling is finished
+        /// </summary>
         public event TemperatureStatusEventHandler CoolingFinished;
+        /// <summary>
+        /// Fires when cooling is aborted manually
+        /// </summary>
         public event TemperatureStatusEventHandler CoolingAborted;
+        /// <summary>
+        /// Fires when an exception is thrown in a background asynchronous task.
+        /// </summary>
         public event TemperatureStatusEventHandler CoolingErrorReturned;
 
         private void GetCapabilities()
@@ -416,10 +504,31 @@ namespace ANDOR_CS.Classes
 
         }
 
+        /// <summary>
+        /// Fires <see cref="AcquisitionStarted"/> event.
+        /// </summary>
+        /// <param name="e">Status of camera at the beginning of acquisition</param>
         protected virtual void OnAcquisitionStarted(AcquisitionStatusEventArgs e) => AcquisitionStarted?.Invoke(this, e);
+        /// <summary>
+        /// Fires <see cref="AcquisitionStatusChecked"/> event.
+        /// </summary>
+        /// <param name="e">Status of camera during acquisition</param>
         protected virtual void OnAcquisitionStatusChecked(AcquisitionStatusEventArgs e) => AcquisitionStatusChecked?.Invoke(this, e);
+        /// <summary>
+        /// Fires <see cref="AcquisitionFinished"/> event.
+        /// </summary>
+        /// <param name="e">Status of camera at the end of acquisition</param>
         protected virtual void OnAcquisitionFinished(AcquisitionStatusEventArgs e) => AcquisitionFinished?.Invoke(this, e);
+        /// <summary>
+        /// Fires <see cref="AcquisitionErrorReturned"/> event.
+        /// </summary>
+        /// <param name="e">Status of camera when exception was thrown</param>
         protected virtual void OnAcquisitionErrorReturned(AcquisitionStatusEventArgs e) => AcquisitionErrorReturned?.Invoke(this, e);
+        /// <summary>
+        /// Fires <see cref="AcquisitionAborted"/> event.
+        /// </summary>
+        /// <param name="e">Status of camera when abortion happeed</param>
+        protected virtual void OnAcquisitionAborted(AcquisitionStatusEventArgs e) => AcquisitionAborted?.Invoke(this, e);
         protected virtual void OnTemperatureStatusChecked(TemperatureStatusEventArgs e) => TemperatureStatusChecked?.Invoke(this, e);
         protected virtual void OnCoolingTemperatureChecked(TemperatureStatusEventArgs e) => CoolingTemperatureChecked?.Invoke(this, e);
         protected virtual void OnCoolingStarted(TemperatureStatusEventArgs e) => CoolingStarted?.Invoke(this, e);
@@ -458,12 +567,30 @@ namespace ANDOR_CS.Classes
         /// <returns>Camera status</returns>
         public CameraStatus GetStatus()
         {
+            // Used to query status of the camera
             int status = 0;
 
-            uint result = SDKInit.SDKInstance.GetStatus(ref status);
-            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetStatus));
+            // Queries status, throws exception if error happened
+            ThrowIfError(SDKInit.SDKInstance.GetStatus(ref status), nameof(SDKInit.SDKInstance.GetStatus));
 
-            return (CameraStatus)status;
+            // Converts status to enum
+            var camStatus = (CameraStatus)status;
+
+            // If acquisition is started without background task, camera instance 
+            // is in acquisition state, but actual camera returns status that is different
+            // from "Acquiring", then updates status, acknowledging end of acquisition 
+            // end firing AcquisitioFinished event.
+            // Without this call there is no way to synchronously update instance of camera class
+            // when real acquisition on camera finished.
+            if (IsAcquiring &&
+                !IsAsyncAcquisition &&
+                camStatus != CameraStatus.Acquiring)
+            {
+                IsAcquiring = false;
+                OnAcquisitionFinished(new AcquisitionStatusEventArgs(camStatus, false));
+            }
+
+            return camStatus;
         }
 
         public void FanControl(FanMode mode)
@@ -499,9 +626,10 @@ namespace ANDOR_CS.Classes
             else if (mode == Switch.Disabled)
                 result = SDKInit.SDKInstance.CoolerOFF();
 
-          ThrowIfError(result, nameof(SDKInit.SDKInstance.CoolerON) + " or " + nameof(SDKInit.SDKInstance.CoolerOFF));
-          CoolerMode = mode;
-            
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.CoolerON) + " or " + nameof(SDKInit.SDKInstance.CoolerOFF));
+            CoolerMode = mode;
+
+          
         }
 
         public void SetTemperature(int temperature)
@@ -550,8 +678,67 @@ namespace ANDOR_CS.Classes
 
             var status = (TemperatureStatus)result;
 
+            if (!IsAsyncTemperatureCycle && 
+                IsInTemperatureCycle &&
+                status != TemperatureStatus.NotReached)
+                IsInTemperatureCycle = false;
+
             return (Status: status, Temperature: temp);
-            
+
+        }
+
+        /// <summary>
+        /// Starts acquisition of the image. Does not block current thread.
+        /// To monitor acquisition progress, use <see cref="GetStatus"/>.
+        /// Fires <see cref="OnAcquisitionStarted(AcquisitionStatusEventArgs)"/> 
+        /// with <see cref="AcquisitionStatusEventArgs.IsAsync"/> = false.
+        /// NOTE: this method is not recommended. Consider using async version
+        /// <see cref="StartAcquistionAsync(CancellationToken, int)"/>.
+        /// Async version allows <see cref="Camera"/> to properly monitor acquisition progress.
+        /// </summary>
+        /// <exception cref="AcquisitionInProgressException"/>
+        /// <exception cref="AndorSDKException"/>
+        public void StartAcquisition()
+        {
+            // If acquisition is already in progress, throw exception
+            ThrowIfAcquiring(this);
+
+            // Starts acquisition
+            ThrowIfError(SDKInit.SDKInstance.StartAcquisition(), nameof(SDKInit.SDKInstance.StartAcquisition));
+
+            // Fires event
+            OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
+
+            // Marks camera as in process of acquiring
+            IsAcquiring = true;
+        }
+
+        /// <summary>
+        /// A synchronous way to manually abort acquisition.
+        /// NOTE: if called while async acquisition is in progress, throws
+        /// <see cref="TaskCanceledException"/>. To cancel async acquisition, use 
+        /// <see cref="CancellationToken"/>.
+        /// </summary>
+        /// <exception cref="AndorSDKException"/>
+        /// <exception cref="TaskCanceledException"/>
+        public void AbortAcquisition()
+        {
+            // If there is no acquisition, throws exception
+            if (!IsAcquiring)
+                throw new AndorSDKException("Acquisition abort attemted while there is no acquisition in proress.", null);
+
+            // If called on async acquisition, throws exception
+            if (IsAcquiring && IsAsyncAcquisition)
+                throw new TaskCanceledException($"{nameof(AbortAcquisition)} was called while asynchronous monitor is active. Use {nameof(CancellationToken)} instead.");
+
+            // Tries to abort acquisition
+            ThrowIfError(SDKInit.SDKInstance.AbortAcquisition(), nameof(SDKInit.SDKInstance.AbortAcquisition));
+
+            // Fires AcquisitionAborted event
+            OnAcquisitionAborted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
+
+            // Marks the end of acquisition
+            IsAcquiring = false;
         }
 
         public void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMS)
@@ -691,58 +878,79 @@ namespace ANDOR_CS.Classes
          
         /// <summary>
         /// Starts process of acquisition asynchronously.
+        /// This is the preferred way to acquire images from camera.
+        /// To run synchronously, call i.e. <see cref="Task.Wait()"/> on the returned task.
         /// </summary>
+        /// <param name="token">Cancellation token that can be used to abort process.</param>
+        /// <param name="timeout">Time interval in ms between subsequent camera status queries.</param>
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSDKException"/>
         /// <returns>Task that can be queried for execution status.</returns>
-        public async Task StartAcquistionAsync(int timeout = StatusCheckTimeOutMS)
+        public async Task StartAcquistionAsync(CancellationToken token, int timeout = StatusCheckTimeOutMS)
         {
             // Checks if acquisition is in progress; throws exception
             ThrowIfAcquiring(this);
-            ThrowIfTempCycle(this);
-
+            
+            // If camera is not idle, cannot start acquisition
             if (GetStatus() != CameraStatus.Idle)
                 throw new AndorSDKException("Camera is not in the idle mode.", null);
 
             CameraStatus status = CameraStatus.Acquiring;
 
-            await Task.Run(() =>
-            {
+            //await Task.Run(() =>
+           // {
                 try
                 {
-                    uint result = SDKInit.SDKInstance.StartAcquisition();
+                    // Marks acuisition asynchronous
+                    IsAsyncAcquisition = true;
 
-                    if (result == SDK.DRV_SUCCESS)
+                    // Start scquisition
+                    StartAcquisition();
+                                    
+                    status = GetStatus();
+                    
+                    // While status is acquiring
+                    while ((status = GetStatus()) == CameraStatus.Acquiring)
                     {
-                        IsAcquiring = true;
-
-                        OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus()));
-
-                        while ((status = GetStatus()) == CameraStatus.Acquiring)
+                        // Fires AcquisitionStatusChecked event
+                        OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, true));
+                        // If task is aborted
+                        if (token.IsCancellationRequested)
                         {
-                            OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status));
-
-                            Task.Delay(StatusCheckTimeOutMS).Wait();
-
+                            // Aborts
+                            AbortAcquisition();
+                            // Exits wait loop
+                            break;
                         }
-
-                        if (status != CameraStatus.Idle)
-                            throw new AndorSDKException($"Acquisiotn finished with non-Idle status ({status}).", null);
+                       
+                        // Waits for specified amount of time before checking status again
+                        await Task.Delay(StatusCheckTimeOutMS);//.Wait();
 
                     }
+
+                    // If after end of acquisition camera status is not idle, throws exception
+                    if (!token.IsCancellationRequested && status != CameraStatus.Idle)
+                        throw new AndorSDKException($"Acquisiotn finished with non-Idle status ({status}).", null);
+
+                    
                 }
+                // If there were exceptions during status checking loop
                 catch (Exception e)
                 {
-                    OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(status));
+                    // Fire event
+                    OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(status, true));
+                    // re-throw received exception
                     throw;
                 }
+                // Ensures that acquisition is properly finished and event is fired
                 finally
                 {
                     IsAcquiring = false;
-
-                    OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus()));
+                    IsAsyncAcquisition = false;
+                    OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus(), true));
+                    
                 }
-            });
+            //});
 
         }
 
