@@ -14,7 +14,8 @@ namespace ANDOR_CS.Exceptions
             base(message)
         { }
 
-        public static void ThrowIfAcquiring(Camera cam)
+        public static void ThrowIfAcquiring(Camera cam) 
+            
         {
             if (cam.IsAcquiring)
                 throw new AcquisitionInProgressException("Camera is acquiring image(s) at the moment.");

@@ -78,7 +78,7 @@ namespace ANDOR_CS
                     Console.WriteLine($"\r\nTemp: {Extensions.GetEnumNames(typeof(TemperatureStatus), temp.Status).First()}\t{temp.Temperature} degrees");
                 }
 
-                cam.StartAcquistionAsync().Wait();                                
+                cam.StartAcquistionAsync(new System.Threading.CancellationTokenSource().Token).Wait();                                
 
                 float[] array = new float[cam.Properties.DetectorSize.Horizontal * cam.Properties.DetectorSize.Vertical];
 
