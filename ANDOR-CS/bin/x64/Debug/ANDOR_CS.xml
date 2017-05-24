@@ -555,15 +555,29 @@
             +4
             </summary>
         </member>
-        <member name="T:ANDOR_CS.AndorSDKInitialization">
+        <member name="T:ANDOR_CS.Events.TemperatureStatusEventArgs">
             <summary>
-            Holds a singleton instance of AndorSDK class that is used across applications.
-            Thread-safety is unknown.
+            Stores the event arguments for all Acquisition-based events
             </summary>
         </member>
-        <member name="P:ANDOR_CS.AndorSDKInitialization.SDKInstance">
+        <member name="P:ANDOR_CS.Events.TemperatureStatusEventArgs.EventTime">
             <summary>
-            Gets an singleton instance of a basic AndorSDK class
+            Time stamp of the event
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Events.TemperatureStatusEventArgs.Temperature">
+            <summary>
+            Camera temperature.
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Events.TemperatureStatusEventArgs.Status">
+            <summary>
+            Camera status at the moment of the event
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Events.TemperatureStatusEventArgs.#ctor(ANDOR_CS.Enums.TemperatureStatus,System.Single)">
+            <summary>
+            Default constructor
             </summary>
         </member>
         <member name="T:ANDOR_CS.Events.AcquisitionStatusEventArgs">
@@ -584,6 +598,17 @@
         <member name="M:ANDOR_CS.Events.AcquisitionStatusEventArgs.#ctor(ANDOR_CS.Enums.CameraStatus)">
             <summary>
             Default constructor
+            </summary>
+        </member>
+        <member name="T:ANDOR_CS.AndorSDKInitialization">
+            <summary>
+            Holds a singleton instance of AndorSDK class that is used across applications.
+            Thread-safety is unknown.
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.AndorSDKInitialization.SDKInstance">
+            <summary>
+            Gets an singleton instance of a basic AndorSDK class
             </summary>
         </member>
     </members>
