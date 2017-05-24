@@ -18,8 +18,8 @@ namespace ANDOR_CS
     {
         static void Main(string[] args)
         {
-
-            TestAcquisitionSettings();
+            TestTemperature();
+            //TestAcquisitionSettings();
         }
 
        
@@ -92,183 +92,208 @@ namespace ANDOR_CS
             
         }
 
+        public static void TestTemperature()
+        {
+            using (var cam = new Camera())
+            {
+                cam.FanControl(FanMode.Off);
 
+                cam.CoolingTemperatureChecked += (sender, e) =>
+                {
+                    Console.Write("[{0:hh-MM-ss.fff}] {1:F2}",
+                      e.EventTime, e.Temperature);
 
-#region MISC
-        //public static void Test()
-        //{
-        //    using (var cam = new Camera())
-        //    {
-        //        var temp1 = cam.GetCurrentTemperature();
-        //        uint result = 0;
-        //        result = SDKInit.SDKInstance.SetVSSpeed(1);
-        //        // EM-amp
-        //        result = SDKInit.SDKInstance.SetHSSpeed(1, 1);
+                    foreach (var name in Extensions.GetEnumNames(typeof(TemperatureStatus), e.Status))
+                        Console.Write($" {name}");
+                    Console.WriteLine();
+                };
+                System.Threading.CancellationTokenSource source = new System.Threading.CancellationTokenSource();
 
-        //        // Frame transfer ON
-        //        result = SDKInit.SDKInstance.SetFrameTransferMode(1);
+                var task = cam.StartCoolingCycle(10, FanMode.LowSpeed, source.Token, 500);
 
-        //        // Single Scan
-        //        result = SDKInit.SDKInstance.SetAcquisitionMode(3);
+               
 
-        //        int n = 3;
-        //        // 3 images in a series
-        //        result = SDKInit.SDKInstance.SetNumberKinetics(n);
+                task.Wait();
 
-        //        // No accumulation
-        //        result = SDKInit.SDKInstance.SetNumberAccumulations(1);
+               
+            }
+        }
 
-        //        result = SDKInit.SDKInstance.SetExposureTime(1.0f);
+            #region MISC
+            //public static void Test()
+            //{
+            //    using (var cam = new Camera())
+            //    {
+            //        var temp1 = cam.GetCurrentTemperature();
+            //        uint result = 0;
+            //        result = SDKInit.SDKInstance.SetVSSpeed(1);
+            //        // EM-amp
+            //        result = SDKInit.SDKInstance.SetHSSpeed(1, 1);
 
-        //        // Image
-        //        result = SDKInit.SDKInstance.SetReadMode(4);
+            //        // Frame transfer ON
+            //        result = SDKInit.SDKInstance.SetFrameTransferMode(1);
 
-        //        int x = 0, y = 0;
-        //        result = SDKInit.SDKInstance.GetDetector(ref x, ref y);
+            //        // Single Scan
+            //        result = SDKInit.SDKInstance.SetAcquisitionMode(3);
 
-        //        result = SDKInit.SDKInstance.SetImage(1, 1, 1, x, 1, y);
+            //        int n = 3;
+            //        // 3 images in a series
+            //        result = SDKInit.SDKInstance.SetNumberKinetics(n);
 
-        //        var now = DateTime.Now;
-        //        result = SDKInit.SDKInstance.StartAcquisition();
-        //        result = SDKInit.SDKInstance.WaitForAcquisition();
+            //        // No accumulation
+            //        result = SDKInit.SDKInstance.SetNumberAccumulations(1);
 
-        //        System.Threading.Thread.Sleep(5000);
+            //        result = SDKInit.SDKInstance.SetExposureTime(1.0f);
 
-        //        //result = SDKInit.SDKInstance.SaveAsSif(".\\test.sif");
+            //        // Image
+            //        result = SDKInit.SDKInstance.SetReadMode(4);
 
-        //        //result = SDKInit.SDKInstance.SaveAsRaw(".\\test.raw", 3);
+            //        int x = 0, y = 0;
+            //        result = SDKInit.SDKInstance.GetDetector(ref x, ref y);
 
-        //        //result = SDKInit.SDKInstance.SaveAsFITS(".\\test.fits", 2);
+            //        result = SDKInit.SDKInstance.SetImage(1, 1, 1, x, 1, y);
 
-        //        float[] array = new float[x * y * n];
+            //        var now = DateTime.Now;
+            //        result = SDKInit.SDKInstance.StartAcquisition();
+            //        result = SDKInit.SDKInstance.WaitForAcquisition();
 
-        //        result = SDKInit.SDKInstance.GetAcquiredFloatData(array, (uint)array.Length);
+            //        System.Threading.Thread.Sleep(5000);
 
-        //        var imgData = GetImage(array.Take(x * y).Select((p) => (double)p).ToArray(), x, y);
+            //        //result = SDKInit.SDKInstance.SaveAsSif(".\\test.sif");
 
-        //        List<GetFITS.Keyword> keys = new List<GetFITS.Keyword>();
-        //        keys.Add(new GetFITS.Keyword("TIME", GetFITS.KeywordType.String, now.ToString("yyyy-MM-dd hh:mm:ss.ffffff"), "Custom keyword"));
+            //        //result = SDKInit.SDKInstance.SaveAsRaw(".\\test.raw", 3);
 
-        //        var block = GetFITS.FITSBlock.FITSFromImage(imgData, GetFITS.PixType.FLOAT_32, keys);
+            //        //result = SDKInit.SDKInstance.SaveAsFITS(".\\test.fits", 2);
 
-        //        using (var file = GetFITS.FITSFile.CreateNew(new System.IO.FileStream("newfits.fits", System.IO.FileMode.OpenOrCreate)))
-        //        {
-        //            file.AssignHDUs(block);
+            //        float[] array = new float[x * y * n];
 
-        //            file.WriteToStream();
-        //        }
+            //        result = SDKInit.SDKInstance.GetAcquiredFloatData(array, (uint)array.Length);
 
-        //        Console.WriteLine(result == SDK.DRV_SUCCESS ? "Success!" : "Failed!");
+            //        var imgData = GetImage(array.Take(x * y).Select((p) => (double)p).ToArray(), x, y);
 
-        //    }
+            //        List<GetFITS.Keyword> keys = new List<GetFITS.Keyword>();
+            //        keys.Add(new GetFITS.Keyword("TIME", GetFITS.KeywordType.String, now.ToString("yyyy-MM-dd hh:mm:ss.ffffff"), "Custom keyword"));
 
-        //}
+            //        var block = GetFITS.FITSBlock.FITSFromImage(imgData, GetFITS.PixType.FLOAT_32, keys);
 
-        //public static double[,] GetImage(double[] data, int n, int m)
-        //{
-        //    double[,] result = new double[n, m];
+            //        using (var file = GetFITS.FITSFile.CreateNew(new System.IO.FileStream("newfits.fits", System.IO.FileMode.OpenOrCreate)))
+            //        {
+            //            file.AssignHDUs(block);
 
-        //    for (int i = 0; i < n; i++)
-        //        for (int j = 0; j < m; j++)
-        //            result[i, j] = data[j + m * i];
+            //            file.WriteToStream();
+            //        }
 
-        //    return result;
-        //}
+            //        Console.WriteLine(result == SDK.DRV_SUCCESS ? "Success!" : "Failed!");
 
-        //public static void Test2()
-        //{
-        //    using (var cam = new Camera())
-        //    {
-        //        cam.FanControl(FanMode.Off);
-        //    }
+            //    }
 
-        //}
+            //}
 
-        //public static void Test3()
-        //{
-        //    using (Camera cam = new Camera())
-        //    {
-        //        var x = cam.Capabilities;
+            //public static double[,] GetImage(double[] data, int n, int m)
+            //{
+            //    double[,] result = new double[n, m];
 
-        //        cam.FanControl(FanMode.Off);
+            //    for (int i = 0; i < n; i++)
+            //        for (int j = 0; j < m; j++)
+            //            result[i, j] = data[j + m * i];
 
-        //        var t = cam.GetCurrentTemperature();
+            //    return result;
+            //}
 
-        //        Console.WriteLine("\r\nAcquisition Modes:");
-        //        foreach (var val in Extensions.GetEnumNames(typeof(AcquisitionMode), x.AcquisitionModes).Skip(1))
-        //            Console.WriteLine("\t> " + val);
+            //public static void Test2()
+            //{
+            //    using (var cam = new Camera())
+            //    {
+            //        cam.FanControl(FanMode.Off);
+            //    }
 
-        //        Console.WriteLine("\r\nRead Modes:");
-        //        foreach (var val in Extensions.GetEnumNames(typeof(ReadMode), x.ReadModes).Skip(1))
-        //            Console.WriteLine("\t> " + val);
+            //}
 
-        //        Console.WriteLine("\r\nFT Read Modes:");
-        //        foreach (var val in Extensions.GetEnumNames(typeof(ReadMode), x.FTReadModes).Skip(1))
-        //            Console.WriteLine("\t> " + val);
+            //public static void Test3()
+            //{
+            //    using (Camera cam = new Camera())
+            //    {
+            //        var x = cam.Capabilities;
 
-        //        Console.WriteLine("\r\nTrigger Modes:");
-        //        foreach (var val in Extensions.GetEnumNames(typeof(TriggerMode), x.TriggerModes).Skip(1))
-        //            Console.WriteLine("\t> " + val);
+            //        cam.FanControl(FanMode.Off);
 
-        //        Console.WriteLine("\r\nCamera Type:");
-        //        Console.WriteLine("\t> " + x.CameraType);
+            //        var t = cam.GetCurrentTemperature();
 
-        //        Console.WriteLine("\r\nPixel Modes:");
-        //        foreach (var val in Extensions.GetEnumNames(typeof(PixelMode), x.PixelModes))
-        //            Console.WriteLine("\t> " + val);
+            //        Console.WriteLine("\r\nAcquisition Modes:");
+            //        foreach (var val in Extensions.GetEnumNames(typeof(AcquisitionMode), x.AcquisitionModes).Skip(1))
+            //            Console.WriteLine("\t> " + val);
 
-        //        Console.WriteLine("\r\nSet Functions:");
-        //        foreach (var val in Extensions.GetEnumNames(typeof(SetFunction), x.SetFunctions).Skip(1))
-        //            Console.WriteLine("\t> " + val);
+            //        Console.WriteLine("\r\nRead Modes:");
+            //        foreach (var val in Extensions.GetEnumNames(typeof(ReadMode), x.ReadModes).Skip(1))
+            //            Console.WriteLine("\t> " + val);
 
-        //        Console.WriteLine("\r\nGet Functions:");
-        //        foreach (var val in Extensions.GetEnumNames(typeof(GetFunction), x.GetFunctions).Skip(1))
-        //            Console.WriteLine("\t> " + val);
+            //        Console.WriteLine("\r\nFT Read Modes:");
+            //        foreach (var val in Extensions.GetEnumNames(typeof(ReadMode), x.FTReadModes).Skip(1))
+            //            Console.WriteLine("\t> " + val);
 
-        //        Console.WriteLine("\r\nFeatures:");
-        //        foreach (var val in Extensions.GetEnumNames(typeof(SDKFeatures), x.Features).Skip(1))
-        //            Console.WriteLine("\t> " + val);
+            //        Console.WriteLine("\r\nTrigger Modes:");
+            //        foreach (var val in Extensions.GetEnumNames(typeof(TriggerMode), x.TriggerModes).Skip(1))
+            //            Console.WriteLine("\t> " + val);
 
-        //        Console.WriteLine("\r\nEM Gain:");
-        //        foreach (var val in Extensions.GetEnumNames(typeof(EMGain), x.EMGainFeatures).Skip(1))
-        //            Console.WriteLine("\t> " + val);
+            //        Console.WriteLine("\r\nCamera Type:");
+            //        Console.WriteLine("\t> " + x.CameraType);
 
-        //        Console.WriteLine();
-        //    }
-        //}
+            //        Console.WriteLine("\r\nPixel Modes:");
+            //        foreach (var val in Extensions.GetEnumNames(typeof(PixelMode), x.PixelModes))
+            //            Console.WriteLine("\t> " + val);
 
-        //public static void Test4()
-        //{
-        //    using (var cam = new Camera())
-        //    {
-        //        var settings = cam.GetAcquisitionSettingsTemplate();
+            //        Console.WriteLine("\r\nSet Functions:");
+            //        foreach (var val in Extensions.GetEnumNames(typeof(SetFunction), x.SetFunctions).Skip(1))
+            //            Console.WriteLine("\t> " + val);
 
-        //    }
-        //}
+            //        Console.WriteLine("\r\nGet Functions:");
+            //        foreach (var val in Extensions.GetEnumNames(typeof(GetFunction), x.GetFunctions).Skip(1))
+            //            Console.WriteLine("\t> " + val);
 
-        //public static void TestGetAplifierDesc()
-        //{
-        //    using (var cam = new Camera())
-        //    {
-        //        cam.FanControl(FanMode.Off);
+            //        Console.WriteLine("\r\nFeatures:");
+            //        foreach (var val in Extensions.GetEnumNames(typeof(SDKFeatures), x.Features).Skip(1))
+            //            Console.WriteLine("\t> " + val);
 
-        //        string s = "";
+            //        Console.WriteLine("\r\nEM Gain:");
+            //        foreach (var val in Extensions.GetEnumNames(typeof(EMGain), x.EMGainFeatures).Skip(1))
+            //            Console.WriteLine("\t> " + val);
 
-        //        var result = SDKInit.SDKInstance.GetAmpDesc(0, ref s, 21);
-        //    }
-        //}
+            //        Console.WriteLine();
+            //    }
+            //}
 
-        //public static void TestQuery()
-        //{
-        //    int[] arr = new int[10];
+            //public static void Test4()
+            //{
+            //    using (var cam = new Camera())
+            //    {
+            //        var settings = cam.GetAcquisitionSettingsTemplate();
 
-        //    for (int i = 0; i < arr.Length; i++)
-        //        arr[i] = i * i;
+            //    }
+            //}
 
-        //    Console.WriteLine(arr.IndexOf(0));
-        //    Console.WriteLine(arr.IndexOf(4));
-        //    Console.WriteLine(arr.IndexOf(5));
-        //}
-#endregion 
-    }
+            //public static void TestGetAplifierDesc()
+            //{
+            //    using (var cam = new Camera())
+            //    {
+            //        cam.FanControl(FanMode.Off);
+
+            //        string s = "";
+
+            //        var result = SDKInit.SDKInstance.GetAmpDesc(0, ref s, 21);
+            //    }
+            //}
+
+            //public static void TestQuery()
+            //{
+            //    int[] arr = new int[10];
+
+            //    for (int i = 0; i < arr.Length; i++)
+            //        arr[i] = i * i;
+
+            //    Console.WriteLine(arr.IndexOf(0));
+            //    Console.WriteLine(arr.IndexOf(4));
+            //    Console.WriteLine(arr.IndexOf(5));
+            //}
+            #endregion
+        }
 }

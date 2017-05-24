@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using ATMCD64CS;
@@ -27,11 +28,13 @@ namespace ANDOR_CS.Classes
         private const int AmpDescriptorMaxLength = 21;
         private const int PreAmpGainDescriptorMaxLength = 30;
         private const int StatusCheckTimeOutMS = 100;
+        private const int TempCheckTimeOutMS = 5000;
 
         private static List<Camera> CreatedCameras = new List<Camera>();
         private static Camera ActiveCamera = null;
 
-        private Task CoolingBackgroundTask = null;
+        private Task TemperatureMonitorWorker = null;
+        private CancellationTokenSource TemperatureMonitorCanellationSource = new CancellationTokenSource();
 
         /// <summary>
         /// Indicates if this camera is currently active
@@ -106,11 +109,20 @@ namespace ANDOR_CS.Classes
         } = false;
 
         public delegate void AcquisitionStatusEventHandler(object sender, AcquisitionStatusEventArgs e);
+        public delegate void TemperatureStatusEventHandler(object sender, TemperatureStatusEventArgs e);
 
         public event AcquisitionStatusEventHandler AcquisitionStarted;
         public event AcquisitionStatusEventHandler AcquisitionFinished;
         public event AcquisitionStatusEventHandler AcquisitionStatusChecked;
         public event AcquisitionStatusEventHandler AcquisitionErrorReturned;
+
+        public event TemperatureStatusEventHandler TemperatureStatusChecked;
+
+        public event TemperatureStatusEventHandler CoolingTemperatureChecked;
+        public event TemperatureStatusEventHandler CoolingStarted;
+        public event TemperatureStatusEventHandler CoolingFinished;
+        public event TemperatureStatusEventHandler CoolingAborted;
+        public event TemperatureStatusEventHandler CoolingErrorReturned;
 
         private void GetCapabilities()
         {
@@ -388,12 +400,32 @@ namespace ANDOR_CS.Classes
 
         }
 
+        private void TemperatureMonitorCycler(CancellationToken token, int delay)
+        {
+            while (true)
+            {
+                if (token.IsCancellationRequested)
+                    return;
+
+                (var status, var temp) = GetCurrentTemperature();
+
+                OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
+
+                Task.Delay(delay).Wait();
+            }
+
+        }
 
         protected virtual void OnAcquisitionStarted(AcquisitionStatusEventArgs e) => AcquisitionStarted?.Invoke(this, e);
         protected virtual void OnAcquisitionStatusChecked(AcquisitionStatusEventArgs e) => AcquisitionStatusChecked?.Invoke(this, e);
         protected virtual void OnAcquisitionFinished(AcquisitionStatusEventArgs e) => AcquisitionFinished?.Invoke(this, e);
         protected virtual void OnAcquisitionErrorReturned(AcquisitionStatusEventArgs e) => AcquisitionErrorReturned?.Invoke(this, e);
-
+        protected virtual void OnTemperatureStatusChecked(TemperatureStatusEventArgs e) => TemperatureStatusChecked?.Invoke(this, e);
+        protected virtual void OnCoolingTemperatureChecked(TemperatureStatusEventArgs e) => CoolingTemperatureChecked?.Invoke(this, e);
+        protected virtual void OnCoolingStarted(TemperatureStatusEventArgs e) => CoolingStarted?.Invoke(this, e);
+        protected virtual void OnCoolingFinished(TemperatureStatusEventArgs e) => CoolingFinished?.Invoke(this, e);
+        protected virtual void OnCoolingAborted(TemperatureStatusEventArgs e) => CoolingAborted?.Invoke(this, e);
+        protected virtual void OnCoolingErrorReturned(TemperatureStatusEventArgs e) => CoolingErrorReturned?.Invoke(this, e);
 
 
         /// <summary>
@@ -440,11 +472,11 @@ namespace ANDOR_CS.Classes
             ThrowIfAcquiring(this);
 
             if (!Capabilities.Features.HasFlag(SDKFeatures.FanControl))
-                throw new AndorSDKException("Camera does not support fan controls.", new ArgumentException());
+                throw new NotSupportedException("Camera does not support fan controls.");
 
             if(mode == FanMode.LowSpeed && 
                 !Capabilities.Features.HasFlag(SDKFeatures.LowFanMode))
-                throw new AndorSDKException("Camera does not support low-speed fan mode.", new ArgumentException());
+                throw new NotSupportedException("Camera does not support low-speed fan mode.");
 
             var result = SDKInit.SDKInstance.SetFanMode((int)mode);
             ThrowIfError(result, nameof(SDKInit.SDKInstance.SetFanMode));
@@ -486,8 +518,8 @@ namespace ANDOR_CS.Classes
             if (temperature > Properties.AllowedTemperatures.Maximum ||
                 temperature < Properties.AllowedTemperatures.Minimum )
                 throw new ArgumentOutOfRangeException($"Provided temperature ({temperature}) is out of valid range " +
-                    $"({Properties.AllowedTemperatures.Maximum }, " +
-                     $"{Properties.AllowedTemperatures.Minimum }).");
+                    $"({Properties.AllowedTemperatures.Minimum }, " +
+                     $"{Properties.AllowedTemperatures.Maximum }).");
             
             var result = SDKInit.SDKInstance.SetTemperature(temperature);
             ThrowIfError(result, nameof(SDKInit.SDKInstance.SetTemperature));
@@ -504,8 +536,6 @@ namespace ANDOR_CS.Classes
 
             float temp = float.NaN;
 
-            TemperatureStatus status = TemperatureStatus.Off;
-
             var result = SDKInit.SDKInstance.GetTemperatureF(ref temp);
             switch (result)
             {
@@ -518,10 +548,38 @@ namespace ANDOR_CS.Classes
 
             }
 
-            status = (TemperatureStatus)result;
+            var status = (TemperatureStatus)result;
 
             return (Status: status, Temperature: temp);
             
+        }
+
+        public void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMS)
+        {
+            if (mode == Switch.Enabled)
+            {
+                if (!Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
+                    throw new NotSupportedException("Camera dose not support temperature queries.");
+
+                if (TemperatureMonitorWorker == null ||
+                    TemperatureMonitorWorker.Status == TaskStatus.Canceled ||
+                    TemperatureMonitorWorker.Status == TaskStatus.RanToCompletion ||
+                    TemperatureMonitorWorker.Status == TaskStatus.Faulted)
+                    TemperatureMonitorWorker = Task.Factory.StartNew(
+                        () => TemperatureMonitorCycler(TemperatureMonitorCanellationSource.Token, timeout),
+                        TemperatureMonitorCanellationSource.Token);
+
+                if (TemperatureMonitorWorker.Status == TaskStatus.Created)
+                    TemperatureMonitorWorker.Start();
+                
+            }
+            if (mode == Switch.Disabled)
+            {
+                if (TemperatureMonitorWorker?.Status == TaskStatus.Running ||
+                    TemperatureMonitorWorker?.Status == TaskStatus.WaitingForActivation ||
+                    TemperatureMonitorWorker?.Status == TaskStatus.WaitingToRun)
+                    TemperatureMonitorCanellationSource.Cancel();
+            }
         }
 
         /// <summary>
@@ -646,7 +704,9 @@ namespace ANDOR_CS.Classes
             if (GetStatus() != CameraStatus.Idle)
                 throw new AndorSDKException("Camera is not in the idle mode.", null);
 
-            await Task.Run(async () =>
+            CameraStatus status = CameraStatus.Acquiring;
+
+            await Task.Run(() =>
             {
                 try
                 {
@@ -658,19 +718,23 @@ namespace ANDOR_CS.Classes
 
                         OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus()));
 
-                        var status = CameraStatus.Acquiring;
-
                         while ((status = GetStatus()) == CameraStatus.Acquiring)
                         {
                             OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status));
 
-                            await Task.Delay(StatusCheckTimeOutMS);
-                                                        
+                            Task.Delay(StatusCheckTimeOutMS).Wait();
+
                         }
 
                         if (status != CameraStatus.Idle)
-                            OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(status));
+                            throw new AndorSDKException($"Acquisiotn finished with non-Idle status ({status}).", null);
+
                     }
+                }
+                catch (Exception e)
+                {
+                    OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(status));
+                    throw;
                 }
                 finally
                 {
@@ -681,9 +745,79 @@ namespace ANDOR_CS.Classes
             });
 
         }
-               
 
 
+        public async Task StartCoolingCycle(
+            int targetTemperature, 
+            FanMode desiredMode,
+            CancellationToken token,
+            int timeout = TempCheckTimeOutMS
+            )
+        {
+            // Checks if acquisition is in progress; throws exception
+            ThrowIfAcquiring(this);
+
+            SetTemperature(targetTemperature);
+
+            var oldFanMode = FanMode;
+
+            try
+            {
+                FanControl(desiredMode);
+            }
+            catch (NotSupportedException e)
+            {
+                if (desiredMode == FanMode.LowSpeed && Capabilities.Features.HasFlag(SDKFeatures.FanControl))
+                    FanControl(FanMode.FullSpeed);
+                else
+                    throw;
+            }
+            
+            (var status, var temp) = GetCurrentTemperature();
+
+            try
+            {
+                OnCoolingStarted(new TemperatureStatusEventArgs(status, temp));
+                IsInTemperatureCycle = true;
+                CoolerControl(Switch.Enabled);
+
+                await Task.Factory.StartNew(() =>
+                {
+
+                    while (status.HasFlag(TemperatureStatus.NotReached))
+                    {
+                        if (token.IsCancellationRequested)
+                        {
+                            OnCoolingAborted(new TemperatureStatusEventArgs(status, temp));
+                            break;
+                        }
+
+                        (status, temp) = GetCurrentTemperature();
+
+                        OnCoolingTemperatureChecked(new TemperatureStatusEventArgs(status, temp));
+
+                        Task.Delay(timeout).Wait();
+                    }
+
+                });
+            }
+            catch (Exception e)
+            {
+                OnCoolingErrorReturned(new TemperatureStatusEventArgs(status, temp));
+                throw;
+            }
+            finally
+            {
+                CoolerControl(Switch.Disabled);
+
+                if (Capabilities.Features.HasFlag(SDKFeatures.FanControl))
+                    FanControl(oldFanMode);
+
+                IsInTemperatureCycle = false;
+
+                OnCoolingFinished(new TemperatureStatusEventArgs(status, temp));
+            }
+        }
 
         /// <summary>
         /// Queries the number of currently connected Andor cameras
