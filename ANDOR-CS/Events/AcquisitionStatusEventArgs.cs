@@ -33,14 +33,24 @@ namespace ANDOR_CS.Events
         }
 
         /// <summary>
+        /// Indicates if event is received from asynchronous task.
+        /// </summary>
+        public bool IsAsync
+        {
+            get;
+            private set;
+        }
+
+
+        /// <summary>
         /// Default constructor
         /// </summary>
-        public AcquisitionStatusEventArgs(CameraStatus status)
+        public AcquisitionStatusEventArgs(CameraStatus status, bool isAsync)
             : base()
         {
             EventTime = DateTime.Now;
-
             Status = status;
+            IsAsync = isAsync;
         }
     }
 }
