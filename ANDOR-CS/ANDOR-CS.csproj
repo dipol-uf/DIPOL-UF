@@ -119,6 +119,7 @@
     <Compile Include="DataStructures\Rectangle.cs" />
     <Compile Include="Enums\AcquisitionModeEnum.cs" />
     <Compile Include="Enums\CameraStatusEnum.cs" />
+    <Compile Include="Events\TemperatureStatusEventArgs.cs" />
     <Compile Include="Exceptions\TemperatureCycleInProgressException.cs" />
     <Compile Include="Exceptions\AcquisitionInProgressException.cs" />
     <Compile Include="Exceptions\AndorSDKException.cs" />
