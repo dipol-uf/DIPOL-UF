@@ -632,13 +632,19 @@ namespace ANDOR_CS.Classes
         public void CoolerControl(Switch mode)
         {
             // Checks if acquisition is in progress; throws exception
-            ThrowIfAcquiring(this);
+            //ThrowIfAcquiring(this);
 
             if (!Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
                 throw new AndorSDKException("Camera does not support cooler controls.", new ArgumentException());
 
+            if (IsInTemperatureCycle &&
+                IsAsyncTemperatureCycle &&
+                mode == Switch.Disabled)
+                throw new TaskCanceledException("Camera is in process of async cooling. Cannot control cooler synchronously.");
+
             uint result = SDK.DRV_SUCCESS;
 
+            
             if (mode == Switch.Enabled)
                 result = SDKInit.SDKInstance.CoolerON();
             else if (mode == Switch.Disabled)
@@ -646,8 +652,15 @@ namespace ANDOR_CS.Classes
 
             ThrowIfError(result, nameof(SDKInit.SDKInstance.CoolerON) + " or " + nameof(SDKInit.SDKInstance.CoolerOFF));
             CoolerMode = mode;
+                
+            var status = GetCurrentTemperature();
 
-          
+            if (mode == Switch.Enabled)
+                OnCoolingStarted(new TemperatureStatusEventArgs(status.Status, status.Temperature));
+            else
+                OnCoolingFinished(new TemperatureStatusEventArgs(status.Status, status.Temperature));
+            
+
         }
 
         public void SetTemperature(int temperature)
@@ -745,10 +758,9 @@ namespace ANDOR_CS.Classes
             if (!IsAcquiring)
                 throw new AndorSDKException("Acquisition abort attemted while there is no acquisition in proress.", null);
 
-            // If called on async acquisition, throws exception
-            if (IsAcquiring && IsAsyncAcquisition)
-                throw new TaskCanceledException($"{nameof(AbortAcquisition)} was called while asynchronous monitor is active. Use {nameof(CancellationToken)} instead.");
-
+            if (isAsyncAcquisition)
+                throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
+            
             // Tries to abort acquisition
             ThrowIfError(SDKInit.SDKInstance.AbortAcquisition(), nameof(SDKInit.SDKInstance.AbortAcquisition));
 
@@ -973,7 +985,7 @@ namespace ANDOR_CS.Classes
         }
 
 
-        public async Task StartCoolingCycle(
+        public async Task StartCoolingCycleAsync(
             int targetTemperature, 
             FanMode desiredMode,
             CancellationToken token,
@@ -981,7 +993,10 @@ namespace ANDOR_CS.Classes
             )
         {
             // Checks if acquisition is in progress; throws exception
-            ThrowIfAcquiring(this);
+            //ThrowIfAcquiring(this);
+
+            if (IsInTemperatureCycle)
+                throw new TemperatureCycleInProgressException("Cooling is already in process.");
 
             SetTemperature(targetTemperature);
 
@@ -1003,14 +1018,11 @@ namespace ANDOR_CS.Classes
 
             try
             {
-                OnCoolingStarted(new TemperatureStatusEventArgs(status, temp));
                 IsInTemperatureCycle = true;
+                IsAsyncTemperatureCycle = true;
                 CoolerControl(Switch.Enabled);
 
-                await Task.Factory.StartNew(() =>
-                {
-
-                    while (status.HasFlag(TemperatureStatus.NotReached))
+                while (((status, temp) = GetCurrentTemperature()).Item1.HasFlag(TemperatureStatus.NotReached))
                     {
                         if (token.IsCancellationRequested)
                         {
@@ -1018,14 +1030,12 @@ namespace ANDOR_CS.Classes
                             break;
                         }
 
-                        (status, temp) = GetCurrentTemperature();
-
                         OnCoolingTemperatureChecked(new TemperatureStatusEventArgs(status, temp));
 
-                        Task.Delay(timeout).Wait();
+                        await Task.Delay(timeout);
                     }
 
-                });
+                
             }
             catch (Exception e)
             {
@@ -1034,14 +1044,15 @@ namespace ANDOR_CS.Classes
             }
             finally
             {
-                CoolerControl(Switch.Disabled);
+               
 
                 if (Capabilities.Features.HasFlag(SDKFeatures.FanControl))
                     FanControl(oldFanMode);
 
                 IsInTemperatureCycle = false;
-
-                OnCoolingFinished(new TemperatureStatusEventArgs(status, temp));
+                IsAsyncTemperatureCycle = true;
+                CoolerControl(Switch.Disabled);
+                
             }
         }
 
