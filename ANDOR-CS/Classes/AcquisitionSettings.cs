@@ -146,6 +146,18 @@ namespace ANDOR_CS.Classes
             private set;
         } = null;
 
+        public (int Frames, float Time)? AccumulateCycle
+        {
+            get;
+            private set;
+        } = null;
+
+        public (int Frames, float Time)? KineticCycle
+        {
+            get;
+            private set;
+        } = null;
+
         /// <summary>
         /// Constructor adds reference to parent <see cref="Camera"/> object.
         /// </summary>
@@ -244,7 +256,20 @@ namespace ANDOR_CS.Classes
 
             if (AcquisitionMode.HasValue)
             {
-                result = SDKInit.SDKInstance.SetAcquisitionMode(EnumConverter.AcquisitionModeTable[AcquisitionMode.Value]);
+                var mode = AcquisitionMode.Value;
+
+                if (mode.HasFlag(Enums.AcquisitionMode.FrameTransfer))
+                {
+                    result = SDKInit.SDKInstance.SetFrameTransferMode(1);
+                    ThrowIfError(result, nameof(SDKInit.SDKInstance.SetFrameTransferMode));
+                    mode ^= Enums.AcquisitionMode.FrameTransfer;
+
+                    output.Add(("Frame transfer", result == SDK.DRV_SUCCESS, result));
+                }
+                else
+                    ThrowIfError(SDKInit.SDKInstance.SetFrameTransferMode(0), nameof(SDKInit.SDKInstance.SetFrameTransferMode));
+
+                result = SDKInit.SDKInstance.SetAcquisitionMode(EnumConverter.AcquisitionModeTable[mode]);
 
                 output.Add(("Acquisition mode", result == SDK.DRV_SUCCESS, result));
             }
@@ -276,7 +301,10 @@ namespace ANDOR_CS.Classes
 
                 output.Add(("Exposure time", result == SDK.DRV_SUCCESS, result));
             }
-            else throw new ArgumentNullException("Exposure time should be set before applying settings.");
+            else if(AcquisitionMode != Enums.AcquisitionMode.Accumulation)
+            {
+                throw new ArgumentNullException("Exposure time should be set before applying settings.");
+            }
 
             float expTime = 0f;
             float accTime = 0f;
@@ -647,11 +675,13 @@ namespace ANDOR_CS.Classes
         {
             // Checks if camera is OK
             CheckCamera(false);
+                       
 
             // Checks if camera supports specifed mode
             if (!camera.Capabilities.AcquisitionModes.HasFlag(mode))
                 throw new NotSupportedException($"Camera does not support specified regime ({Extensions.GetEnumNames(typeof(AcquisitionMode), mode).FirstOrDefault()})");
 
+            
             // If there are no matches in the pre-defined table, then this mode cannot be set explicitly
             if (!EnumConverter.AcquisitionModeTable.ContainsKey(mode))
                 throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({Extensions.GetEnumNames(typeof(AcquisitionMode), mode).FirstOrDefault()})");
@@ -750,5 +780,36 @@ namespace ANDOR_CS.Classes
 
             ImageArea = area;
         }
+
+        public void SetAccumulationCycle(int number, float time)
+        {
+            if (!AcquisitionMode.HasValue ||
+                AcquisitionMode.Value != Enums.AcquisitionMode.Accumulation ||
+                AcquisitionMode.Value != Enums.AcquisitionMode.Kinetic ||
+                AcquisitionMode.Value != Enums.AcquisitionMode.FastKinetics)
+                throw new ArgumentException($"Current {nameof(AcquisitionMode)} ({AcquisitionMode}) does not support accumulation.");
+
+            ThrowIfError(SDKInit.SDKInstance.SetNumberAccumulations(number), nameof(SDKInit.SDKInstance.SetNumberAccumulations));
+            ThrowIfError(SDKInit.SDKInstance.SetAccumulationCycleTime(time), nameof(SDKInit.SDKInstance.SetAccumulationCycleTime));
+
+            AccumulateCycle = (Frames: number, Time: time);
+
+        }
+
+        public void SetKineticCycle(int number, float time)
+        {
+            if (!AcquisitionMode.HasValue ||
+                AcquisitionMode.Value != Enums.AcquisitionMode.RunTillAbort ||
+                AcquisitionMode.Value != Enums.AcquisitionMode.Kinetic ||
+                AcquisitionMode.Value != Enums.AcquisitionMode.FastKinetics)
+                throw new ArgumentException($"Current {nameof(AcquisitionMode)} ({AcquisitionMode}) does not support kinetic cycle.");
+
+            ThrowIfError(SDKInit.SDKInstance.SetNumberKinetics(number), nameof(SDKInit.SDKInstance.SetNumberKinetics));
+            ThrowIfError(SDKInit.SDKInstance.SetKineticCycleTime(time), nameof(SDKInit.SDKInstance.SetKineticCycleTime));
+
+            KineticCycle = (Frames: number, Time: time);
+
+        }
+
     }
 }

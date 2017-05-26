@@ -31,10 +31,6 @@ namespace ANDOR_CS.Enums
     [Flags]
     public enum AcquisitionMode : uint
     {
-        /// <summary>
-        /// Default mode
-        /// </summary>
-        Unknown = 0,
 
         /// <summary>
         /// Single Scan
