@@ -28,10 +28,6 @@ namespace ANDOR_CS.Enums
     [Flags]
     public enum SetFunction: uint
     {
-        /// <summary>
-        /// Default state
-        /// </summary>
-        Unknown = 0,
 
         /// <summary>
         /// Supports changing of vertical reading speed

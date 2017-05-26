@@ -558,11 +558,6 @@
             Acquisition modes
             </summary>
         </member>
-        <member name="F:ANDOR_CS.Enums.AcquisitionMode.Unknown">
-            <summary>
-            Default mode
-            </summary>
-        </member>
         <member name="F:ANDOR_CS.Enums.AcquisitionMode.SingleScan">
             <summary>
             Single Scan
@@ -656,11 +651,6 @@
         <member name="F:ANDOR_CS.Enums.PixelMode.CMY">
             <summary>
             CMY colors
-            </summary>
-        </member>
-        <member name="F:ANDOR_CS.Enums.SetFunction.Unknown">
-            <summary>
-            Default state
             </summary>
         </member>
         <member name="F:ANDOR_CS.Enums.SetFunction.VerticalReadoutSpeed">
