@@ -18,14 +18,14 @@ namespace ANDOR_CS
     {
         static void Main(string[] args)
         {
-            var e = ANDOR_CS.Enums.SDKFeatures.CameraLink | SDKFeatures.CountConvert;
+           // var e = ANDOR_CS.Enums.SDKFeatures.CameraLink | SDKFeatures.CountConvert;
 
-            e ^= SDKFeatures.CameraLink;
+           // e ^= SDKFeatures.CameraLink;
 
 
             
             //TestTemperature();
-            //TestMonitor();
+            TestMonitor();
             //TestAcquisitionSettings();
         }
 
@@ -145,19 +145,19 @@ namespace ANDOR_CS
             {
                 cam.FanControl(FanMode.Off);
 
-                //cam.CoolerControl(Switch.Disabled);
+                cam.CoolerControl(Switch.Disabled);
 
-                //cam.TemperatureStatusChecked += (sender, e) =>
-                //{
-                //    Console.Write("[{0:hh-mm-ss.fff}] {1:F2}",
-                //      e.EventTime, e.Temperature);
+                cam.TemperatureStatusChecked += (sender, e) =>
+                {
+                    Console.Write("[{0:hh-mm-ss.fff}] {1:F2}",
+                      e.EventTime, e.Temperature);
 
-                //    foreach (var name in Extensions.GetEnumNames(typeof(TemperatureStatus), e.Status))
-                //        Console.Write($" {name}");
-                //    Console.WriteLine();
-                //};
+                    foreach (var name in Extensions.GetEnumNames(typeof(TemperatureStatus), e.Status))
+                        Console.Write($" {name}");
+                    Console.WriteLine();
+                };
 
-                //cam.TemperatureMonitor(Switch.Enabled, 500);
+                cam.TemperatureMonitor(Switch.Enabled, 500);
 
                 Console.ReadKey();
 
