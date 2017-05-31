@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using SDKInit = ANDOR_CS.AndorSDKInitialization;
+using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
 
 using ANDOR_CS.Enums;
@@ -25,20 +25,21 @@ namespace ANDOR_CS
 
             
             //TestTemperature();
-            TestMonitor();
-            //TestAcquisitionSettings();
+            //TestMonitor();
+            TestAcquisitionSettings();
         }
 
        
         public static void TestAcquisitionSettings()
         {
+            
             using (var cam = new Camera()) 
             {
-                cam.FanControl(FanMode.Off);
+               cam.FanControl(FanMode.Off);
 
-                var settings = cam.GetAcquisitionSettingsTemplate();
+               var settings = cam.GetAcquisitionSettingsTemplate();
 
-               settings.SetOutputAmplifier(OutputAmplification.ElectromMultiplication);
+               settings.SetOutputAmplifier(OutputAmplification.ElectronMultiplication);
                settings.SetADConverter(0);
                foreach (var speed in settings.GetAvailableHSSpeeds())
                     Console.WriteLine("Speed {0} has value {1}", speed.Item1 + 1, speed.Item2);
@@ -61,7 +62,7 @@ namespace ANDOR_CS
 
                 settings.SetImageArea(new Rectangle(new Point2D(1, 1), cam.Properties.DetectorSize));
 
-                settings.SetExposureTime(2.0f);
+                settings.SetExposureTime(10.0f);
 
                 int counter = 0;
 
@@ -90,7 +91,7 @@ namespace ANDOR_CS
 
                 
 
-                var task = cam.StartAcquistionAsync(source.Token);
+                var task = cam.StartAcquistionAsync(source.Token, 1000);
 
                 task.Wait();
 

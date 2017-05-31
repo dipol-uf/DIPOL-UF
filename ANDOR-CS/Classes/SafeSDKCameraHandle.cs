@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 
 using System.Runtime.ConstrainedExecution;
 
-using SDKInit = ANDOR_CS.AndorSDKInitialization;
+using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 
 namespace ANDOR_CS.Classes
 {

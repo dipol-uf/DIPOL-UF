@@ -26,7 +26,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
 
-using SDKInit = ANDOR_CS.AndorSDKInitialization;
+using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
 
 using static ANDOR_CS.Exceptions.AndorSDKException;
@@ -57,7 +57,7 @@ namespace ANDOR_CS.Classes
         } = null;
 
         /// <summary>
-        /// Stoers the value of currently set horizontal speed
+        /// Stores the value of currently set horizontal speed
         /// </summary>
         public (int Index, float Speed)? HSSpeed
         {
@@ -447,7 +447,7 @@ namespace ANDOR_CS.Classes
                         where amp.Item2 == amplifier
                         select amp;
 
-            // If no mathces found, throws ana excepetion
+            // If no mathces found, throws an exception
             if (query.Count() == 0)
                 throw new ArgumentOutOfRangeException($"Provided amplifier i sout of range " +
                     $"{(Enum.IsDefined(typeof(OutputAmplification), amplifier) ? Enum.GetName(typeof(OutputAmplification), amplifier) : "Unknown")}.");
@@ -462,7 +462,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Returns a collection of available Horizonal Readout Speeds for currently selected Amplifier and AD Converter.
         /// Requires camera to be active.
-        /// Note: <see cref="AcquisitionSettings.ADConverter"/> amd <see cref="AcquisitionSettings.Amplifier"/> should be set
+        /// Note: <see cref="AcquisitionSettings.ADConverter"/> and <see cref="AcquisitionSettings.Amplifier"/> should be set
         /// via <see cref="AcquisitionSettings.SetADConverter(int)"/> and <see cref="AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
         /// before calling this method.
         /// </summary>
