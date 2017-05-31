@@ -31,7 +31,7 @@ namespace ANDOR_CS.Enums
         /// <summary>
         /// Electron multiplication. Not available for Clara 
         /// </summary>
-        ElectromMultiplication = 0,
+        ElectronMultiplication = 0,
 
         /// <summary>
         /// Standard conventional 
