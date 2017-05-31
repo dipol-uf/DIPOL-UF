@@ -29,7 +29,7 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
 
-using SDKInit = ANDOR_CS.AndorSDKInitialization;
+using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
 
 using static ANDOR_CS.Exceptions.AndorSDKException;
@@ -81,7 +81,6 @@ namespace ANDOR_CS.Classes
         /// Indicates if this camera is currently active
         /// </summary>
         public bool IsActive => ActiveCamera.CameraHandle.SDKPtr == this.CameraHandle.SDKPtr;
-        //public int CameraHandlePtr
         public SafeSDKCameraHandle CameraHandle
         {
             get;
