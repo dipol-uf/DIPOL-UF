@@ -22,7 +22,7 @@
         </member>
         <member name="P:ANDOR_CS.Classes.AcquisitionSettings.HSSpeed">
             <summary>
-            Stoers the value of currently set horizontal speed
+            Stores the value of currently set horizontal speed
             </summary>
         </member>
         <member name="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter">
@@ -136,7 +136,7 @@
             <summary>
             Returns a collection of available Horizonal Readout Speeds for currently selected Amplifier and AD Converter.
             Requires camera to be active.
-            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/> amd <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
+            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/> and <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
             via <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)"/> and <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)"/>
             before calling this method.
             </summary>
@@ -273,6 +273,17 @@
             <param name="collection">Collection where to look for an item</param>
             <param name="item">An item of which to find index</param>
             <returns>-1 if item is not in the collection, index, otherwise</returns>
+        </member>
+        <member name="T:ANDOR_CS.Classes.AndorSDKInitialization">
+            <summary>
+            Holds a singleton instance of AndorSDK class that is used across applications.
+            Thread-safety is unknown.
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance">
+            <summary>
+            Gets an singleton instance of a basic AndorSDK class
+            </summary>
         </member>
         <member name="T:ANDOR_CS.Classes.Camera">
             <summary>
@@ -603,7 +614,7 @@
             Different type of output amplifiers. Availalbe on iXon, Clara and Newton
             </summary>
         </member>
-        <member name="F:ANDOR_CS.Enums.OutputAmplification.ElectromMultiplication">
+        <member name="F:ANDOR_CS.Enums.OutputAmplification.ElectronMultiplication">
             <summary>
             Electron multiplication. Not available for Clara 
             </summary>
@@ -762,17 +773,6 @@
         <member name="M:ANDOR_CS.Events.AcquisitionStatusEventArgs.#ctor(ANDOR_CS.Enums.CameraStatus,System.Boolean)">
             <summary>
             Default constructor
-            </summary>
-        </member>
-        <member name="T:ANDOR_CS.AndorSDKInitialization">
-            <summary>
-            Holds a singleton instance of AndorSDK class that is used across applications.
-            Thread-safety is unknown.
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.AndorSDKInitialization.SDKInstance">
-            <summary>
-            Gets an singleton instance of a basic AndorSDK class
             </summary>
         </member>
     </members>

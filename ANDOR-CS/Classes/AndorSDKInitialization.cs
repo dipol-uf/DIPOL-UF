@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ANDOR_CS
+namespace ANDOR_CS.Classes
 {
     /// <summary>
     /// Holds a singleton instance of AndorSDK class that is used across applications.
@@ -55,9 +55,9 @@ namespace ANDOR_CS
                 {
                     semaphore.Wait();
                     entered = true;
-                    Console.ForegroundColor = ConsoleColor.DarkGreen;
-                    Console.WriteLine($"Semaphore entered. ({handle.ToString("X8")})");
-                    Console.ForegroundColor = ConsoleColor.White;
+                    //Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    //Console.WriteLine($"Semaphore entered. ({handle.ToString("X8")})");
+                    //Console.ForegroundColor = ConsoleColor.White;
 
                     return _SDKInstance;
                 }
@@ -67,15 +67,15 @@ namespace ANDOR_CS
                     {
                         semaphore.Release();
                         entered = true;
-                        Console.ForegroundColor = ConsoleColor.DarkGreen;
-                        Console.WriteLine($"Semaphore left.    ({handle.ToString("X8")})");
-                        Console.ForegroundColor = ConsoleColor.White;
+                        //Console.ForegroundColor = ConsoleColor.DarkGreen;
+                        //Console.WriteLine($"Semaphore left.    ({handle.ToString("X8")})");
+                        //Console.ForegroundColor = ConsoleColor.White;
                     }
                     else
                     {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine($"Semaphore was not entered!. ({handle.ToString("X8")})");
-                        Console.ForegroundColor = ConsoleColor.White;
+                        //Console.ForegroundColor = ConsoleColor.Red;
+                        //Console.WriteLine($"Semaphore was not entered!. ({handle.ToString("X8")})");
+                        //Console.ForegroundColor = ConsoleColor.White;
                     }
                 }
             }
