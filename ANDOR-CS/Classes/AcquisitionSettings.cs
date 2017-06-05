@@ -147,8 +147,7 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         } = null;
-
-        
+                
         public (int Frames, float Time)? AccumulateCycle
         {
             get;
@@ -160,6 +159,12 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         } = null;
+
+        public int? EMCCDGain
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Constructor adds reference to parent <see cref="Camera"/> object.
@@ -303,9 +308,59 @@ namespace ANDOR_CS.Classes
 
                 output.Add(("Exposure time", result == SDK.DRV_SUCCESS, result));
             }
-            else if(AcquisitionMode != Enums.AcquisitionMode.Accumulation)
+            else throw new ArgumentNullException("Exposure time should be set before applying settings.");
+
+            if (AcquisitionMode.HasValue && AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Accumulation))
             {
-                throw new ArgumentNullException("Exposure time should be set before applying settings.");
+                if(!AccumulateCycle.HasValue)
+                    throw new ArgumentNullException($"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
+
+                result = SDKInit.SDKInstance.SetNumberAccumulations(AccumulateCycle.Value.Frames);
+               // ThrowIfError(result, nameof(SDKInit.SDKInstance.SetNumberAccumulations));
+                output.Add(("Number of accumulations", result == SDK.DRV_SUCCESS, result));
+
+               
+                result = SDKInit.SDKInstance.SetAccumulationCycleTime(AccumulateCycle.Value.Time);
+                //ThrowIfError(result, nameof(SDKInit.SDKInstance.SetAccumulationCycleTime));
+                output.Add(("Accumulation cycle time", result == SDK.DRV_SUCCESS, result));
+
+            }
+            
+
+            if (AcquisitionMode.HasValue && AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Kinetic))
+            {
+                if (!AccumulateCycle.HasValue)
+                    throw new ArgumentNullException($"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
+                if(!KineticCycle.HasValue)
+                    throw new ArgumentNullException($"Kinetic cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
+
+                result = SDKInit.SDKInstance.SetNumberAccumulations(AccumulateCycle.Value.Frames);
+                //ThrowIfError(result, nameof(SDKInit.SDKInstance.SetNumberAccumulations));
+                output.Add(("Number of accumulations", result == SDK.DRV_SUCCESS, result));
+
+
+                result = SDKInit.SDKInstance.SetAccumulationCycleTime(AccumulateCycle.Value.Time);
+                //ThrowIfError(result, nameof(SDKInit.SDKInstance.SetAccumulationCycleTime));
+                output.Add(("Accumulation cycle time", result == SDK.DRV_SUCCESS, result));
+
+                result = SDKInit.SDKInstance.SetNumberKinetics(KineticCycle.Value.Frames);
+                //ThrowIfError(result, nameof(SDKInit.SDKInstance.SetNumberKinetics));
+                output.Add(("Number of kinetics", result == SDK.DRV_SUCCESS, result));
+
+
+                result = SDKInit.SDKInstance.SetKineticCycleTime(KineticCycle.Value.Time);
+                //ThrowIfError(result, nameof(SDKInit.SDKInstance.SetKineticCycleTime));
+                output.Add(("Kinetic cycle time", result == SDK.DRV_SUCCESS, result));
+            }
+
+            if (EMCCDGain.HasValue)
+            {
+                if (!Amplifier.HasValue || !Amplifier.Value.Amplifier.HasFlag(OutputAmplification.Conventional))
+                    throw new ArgumentNullException($"Amplifier should be set to {OutputAmplification.Conventional}");
+
+                result = SDKInit.SDKInstance.SetEMCCDGain(EMCCDGain.Value);
+                //ThrowIfError(result, nameof(SDKInit.SDKInstance.SetEMCCDGain));
+                output.Add(("EMCCDGain", result == SDK.DRV_SUCCESS, result));
             }
 
             float expTime = 0f;
@@ -783,6 +838,29 @@ namespace ANDOR_CS.Classes
             ImageArea = area;
         }
 
+        public void SetEMCCDGain(int gain)
+        {
+            if (!Amplifier.HasValue || !Amplifier.Value.Amplifier.HasFlag(OutputAmplification.ElectronMultiplication))
+                throw new NullReferenceException($"Amplifier should be set to {OutputAmplification.Conventional} before accessing EMCCDGain.");
+
+            var range = GetAvailableEMCCDGain();
+
+            if (gain > range.High || gain < range.Low)
+                throw new ArgumentOutOfRangeException($"Gain is out of range. (Provided value {gain} should be in [{range.Low}, {range.High}].)");
+
+            EMCCDGain = gain;
+        }
+
+        public (int Low, int High) GetAvailableEMCCDGain()
+        {
+            (int Low, int High) output = (0, 0);
+
+            var result = SDKInit.SDKInstance.GetEMGainRange(ref output.Low, ref output.High);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetEMGainRange));
+
+            return output;
+        }
+
         public void SetAccumulationCycle(int number, float time)
         {
             if (!AcquisitionMode.HasValue ||
@@ -1074,6 +1152,58 @@ namespace ANDOR_CS.Classes
                     // Simulate function call
                     Console.WriteLine("SetImageArea({{{0}}});", mode);
                 }
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "AccumulateCycle")).Count() == 1)
+            {
+                element = query.First();
+
+                var value1 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Frames")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+
+                var value2 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Time")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+
+                if (value1 != null && value2 != null)
+                {
+                    int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+                    float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+                    // Simulate function call
+                    Console.WriteLine("SetAccumulationCycle({0}, {1})", number, time);
+                }
+
+
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "KineticCycle")).Count() == 1)
+            {
+                element = query.First();
+
+                var value1 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Frames")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+
+                var value2 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Time")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+
+                if (value1 != null && value2 != null)
+                {
+                    int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+                    float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+                    // Simulate function call
+                    Console.WriteLine("SetKineticCycle({0}, {1})", number, time);
+                }
+
+
             }
         }
 

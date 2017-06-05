@@ -176,6 +176,8 @@ namespace ANDOR_CS
             {
                 settings.Serialize(str, "Camera 1");
                 str.Position = 0;
+
+              
                 settings.Deserialize(str);
             }
             //Console.WriteLine(Extensions.XmlWriteValueTuple(settings.Amplifier));
