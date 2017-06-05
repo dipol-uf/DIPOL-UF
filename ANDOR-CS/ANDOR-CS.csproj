@@ -94,9 +94,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\ATMCD64CS.dll</HintPath>
     </Reference>
-    <Reference Include="GetFITS, Version=1.0.6334.27520, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\FITS\GetFITS\bin\x64\Debug\GetFITS.dll</HintPath>
+    <Reference Include="Image">
+      <HintPath>..\..\FITS\Image\bin\Debug\Image.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
