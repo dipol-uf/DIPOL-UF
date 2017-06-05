@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
@@ -18,15 +19,15 @@ namespace ANDOR_CS
     {
         static void Main(string[] args)
         {
-           // var e = ANDOR_CS.Enums.SDKFeatures.CameraLink | SDKFeatures.CountConvert;
+            // var e = ANDOR_CS.Enums.SDKFeatures.CameraLink | SDKFeatures.CountConvert;
 
-           // e ^= SDKFeatures.CameraLink;
+            // e ^= SDKFeatures.CameraLink;
 
-
+            SerializationTest();
             
             //TestTemperature();
             //TestMonitor();
-            TestAcquisitionSettings();
+            //TestAcquisitionSettings();
         }
 
        
@@ -163,6 +164,33 @@ namespace ANDOR_CS
                 Console.ReadKey();
 
             }
+        }
+
+        public static void SerializationTest()
+        {
+
+
+            var settings = new AcquisitionSettings();
+
+            using (var str = new MemoryStream(2600))
+            {
+                settings.Serialize(str, "Camera 1");
+                str.Position = 0;
+                settings.Deserialize(str);
+            }
+            //Console.WriteLine(Extensions.XmlWriteValueTuple(settings.Amplifier));
+            //var ser = new System.Runtime.Serialization.DataContractSerializer(settings.GetType());
+
+            //System.Xml.XmlWriterSettings s = new System.Xml.XmlWriterSettings() { Indent = true };
+
+            //using (var str = System.Xml.XmlWriter.Create("test.dat", s))
+            //{
+            //    ser.WriteObject(str, settings);
+            //}
+            ////ser.Serialize(Console.Out, settings);
+
+            //Console.WriteLine();
+            Console.ReadKey();
         }
 
         #region MISC
