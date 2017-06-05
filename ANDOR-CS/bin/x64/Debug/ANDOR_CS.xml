@@ -227,6 +227,11 @@
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <param name="area">Image rectangle</param>
         </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.#ctor">
+            <summary>
+            SERIALIZATION TEST CONSTRUCTOR; DO NOT USE
+            </summary>
+        </member>
         <member name="T:ANDOR_CS.Classes.SafeSDKCameraHandle">
             <summary>
             A safe handle class based on <see cref="T:System.Runtime.InteropServices.SafeHandle"/> class tha uses internal <see cref="T:System.IntPtr"/> handle to store
