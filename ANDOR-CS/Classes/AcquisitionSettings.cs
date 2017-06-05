@@ -201,7 +201,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="ArgumentNullException"/>
         /// <returns>Result of application of each non-null setting</returns>
         public List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
-            out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime) timing)
+            out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
         {
             List<(string Option, bool Success, uint ReturnCode)> output = new List<(string Option, bool Success, uint ReturnCode)>();
 
@@ -310,7 +310,7 @@ namespace ANDOR_CS.Classes
             }
             else throw new ArgumentNullException("Exposure time should be set before applying settings.");
 
-            if (AcquisitionMode.HasValue && AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Accumulation))
+            if (AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Accumulation))
             {
                 if(!AccumulateCycle.HasValue)
                     throw new ArgumentNullException($"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
@@ -327,7 +327,7 @@ namespace ANDOR_CS.Classes
             }
             
 
-            if (AcquisitionMode.HasValue && AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Kinetic))
+            if (AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Kinetic))
             {
                 if (!AccumulateCycle.HasValue)
                     throw new ArgumentNullException($"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
@@ -366,11 +366,17 @@ namespace ANDOR_CS.Classes
             float expTime = 0f;
             float accTime = 0f;
             float kinTime = 0f;
+            int size = 0;
 
             result = SDKInit.SDKInstance.GetAcquisitionTimings(ref expTime, ref accTime, ref kinTime);
             ThrowIfError(result, nameof(SDKInit.SDKInstance.GetAcquisitionTimings));
 
-            timing = (ExposureTime: expTime, AccumulationCycleTime: accTime, KineticCycleTime: kinTime);
+            result = SDKInit.SDKInstance.GetSizeOfCircularBuffer(ref size);
+            ThrowIfError(result, nameof(SDKInit.SDKInstance.GetSizeOfCircularBuffer));
+
+            timing = (ExposureTime: expTime, AccumulationCycleTime: accTime, KineticCycleTime: kinTime, BufferSize: size);
+
+            camera.CurrentSettings = this;
 
             return output;
         }
@@ -864,8 +870,8 @@ namespace ANDOR_CS.Classes
         public void SetAccumulationCycle(int number, float time)
         {
             if (!AcquisitionMode.HasValue ||
-                AcquisitionMode.Value != Enums.AcquisitionMode.Accumulation ||
-                AcquisitionMode.Value != Enums.AcquisitionMode.Kinetic ||
+                AcquisitionMode.Value != Enums.AcquisitionMode.Accumulation &&
+                AcquisitionMode.Value != Enums.AcquisitionMode.Kinetic &&
                 AcquisitionMode.Value != Enums.AcquisitionMode.FastKinetics)
                 throw new ArgumentException($"Current {nameof(AcquisitionMode)} ({AcquisitionMode}) does not support accumulation.");
 
@@ -879,8 +885,8 @@ namespace ANDOR_CS.Classes
         public void SetKineticCycle(int number, float time)
         {
             if (!AcquisitionMode.HasValue ||
-                AcquisitionMode.Value != Enums.AcquisitionMode.RunTillAbort ||
-                AcquisitionMode.Value != Enums.AcquisitionMode.Kinetic ||
+                AcquisitionMode.Value != Enums.AcquisitionMode.RunTillAbort &&
+                AcquisitionMode.Value != Enums.AcquisitionMode.Kinetic &&
                 AcquisitionMode.Value != Enums.AcquisitionMode.FastKinetics)
                 throw new ArgumentException($"Current {nameof(AcquisitionMode)} ({AcquisitionMode}) does not support kinetic cycle.");
 
@@ -1001,8 +1007,7 @@ namespace ANDOR_CS.Classes
                 {
                     int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
 
-                    // Simulate function call
-                    Console.WriteLine("SetVSSpeed({0});", index);
+                    SetVSSpeed(index);
                 }
             }
 
@@ -1015,8 +1020,7 @@ namespace ANDOR_CS.Classes
                 {
                     Enums.VSAmplitude vsAmp = (Enums.VSAmplitude)Enum.Parse(typeof(Enums.VSAmplitude), value);
 
-                    // Simulate function call
-                    Console.WriteLine("SetVSAmplitude({0});", vsAmp);
+                    SetVSAmplitude(vsAmp);
                 }
             }
 
@@ -1032,8 +1036,7 @@ namespace ANDOR_CS.Classes
                 {
                     int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
 
-                    // Simulate function call
-                    Console.WriteLine("SetADConverter({0});", index);
+                    SetADConverter(index);
                 }
             }
 
@@ -1049,8 +1052,7 @@ namespace ANDOR_CS.Classes
                 {
                     var amp = (Enums.OutputAmplification)Enum.Parse(typeof(Enums.OutputAmplification), value);
 
-                    // Simulate function call
-                    Console.WriteLine("SetOutputAmplifier({0});", amp);
+                    SetOutputAmplifier(amp);
                 }
             }
 
@@ -1067,8 +1069,7 @@ namespace ANDOR_CS.Classes
                 {
                     int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
 
-                    // Simulate function call
-                    Console.WriteLine("SetHSSpeed({0});", index);
+                    SetHSSpeed(index);
                 }
             }
 
@@ -1084,8 +1085,7 @@ namespace ANDOR_CS.Classes
                 {
                     int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
 
-                    // Simulate function call
-                    Console.WriteLine("SetPreAmpGain({0});", index);
+                    SetPreAmpGain(index);
                 }
             }
 
@@ -1097,8 +1097,7 @@ namespace ANDOR_CS.Classes
                 {
                     var mode = (Enums.AcquisitionMode)Enum.Parse(typeof(Enums.AcquisitionMode), value);
 
-                    // Simulate function call
-                    Console.WriteLine("SetAcquisitionMode({0});", mode);
+                    SetAcquisitionMode(mode);
                 }
             }
 
@@ -1110,8 +1109,7 @@ namespace ANDOR_CS.Classes
                 {
                     var mode = (Enums.ReadMode)Enum.Parse(typeof(Enums.ReadMode), value);
 
-                    // Simulate function call
-                    Console.WriteLine("SetReadoutMode({0});", mode);
+                    SetReadoutMode(mode);
                 }
             }
 
@@ -1123,8 +1121,7 @@ namespace ANDOR_CS.Classes
                 {
                     var mode = (Enums.TriggerMode)Enum.Parse(typeof(Enums.TriggerMode), value);
 
-                    // Simulate function call
-                    Console.WriteLine("SetTriggerMode({0});", mode);
+                    SetTriggerMode(mode);
                 }
             }
 
@@ -1134,10 +1131,9 @@ namespace ANDOR_CS.Classes
 
                 if (value != null)
                 {
-                    var mode = System.Single.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+                    var time = System.Single.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
 
-                    // Simulate function call
-                    Console.WriteLine("SetExposureTime({0});", mode);
+                    SetExposureTime(time);
                 }
             }
 
@@ -1147,10 +1143,9 @@ namespace ANDOR_CS.Classes
 
                 if (value != null)
                 {
-                    var mode = Rectangle.Parse(value);
+                    var rect  = Rectangle.Parse(value);
 
-                    // Simulate function call
-                    Console.WriteLine("SetImageArea({{{0}}});", mode);
+                    SetImageArea(rect);
                 }
             }
 
@@ -1173,8 +1168,7 @@ namespace ANDOR_CS.Classes
                     int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
                     float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
 
-                    // Simulate function call
-                    Console.WriteLine("SetAccumulationCycle({0}, {1})", number, time);
+                    SetAccumulationCycle(number, time);
                 }
 
 
@@ -1199,8 +1193,7 @@ namespace ANDOR_CS.Classes
                     int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
                     float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
 
-                    // Simulate function call
-                    Console.WriteLine("SetKineticCycle({0}, {1})", number, time);
+                    SetKineticCycle(number, time);
                 }
 
 
