@@ -23,11 +23,12 @@ namespace ANDOR_CS
 
             // e ^= SDKFeatures.CameraLink;
 
-            SerializationTest();
-            
+            //SerializationTest();
+
             //TestTemperature();
             //TestMonitor();
-            //TestAcquisitionSettings();
+            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+            TestAcquisitionSettings();
         }
 
        
@@ -40,9 +41,9 @@ namespace ANDOR_CS
 
                var settings = cam.GetAcquisitionSettingsTemplate();
 
-               settings.SetOutputAmplifier(OutputAmplification.ElectronMultiplication);
-               settings.SetADConverter(0);
-               foreach (var speed in settings.GetAvailableHSSpeeds())
+                settings.SetOutputAmplifier(OutputAmplification.ElectronMultiplication);
+                settings.SetADConverter(0);
+                foreach (var speed in settings.GetAvailableHSSpeeds())
                     Console.WriteLine("Speed {0} has value {1}", speed.Item1 + 1, speed.Item2);
 
                 var query = settings.GetAvailableHSSpeeds();
@@ -57,22 +58,53 @@ namespace ANDOR_CS
 
                 settings.SetPreAmpGain(settings.GetAvailablePreAmpGain().First().Item1);
 
-                settings.SetAcquisitionMode(AcquisitionMode.SingleScan);
+                settings.SetAcquisitionMode(AcquisitionMode.Kinetic);
                 settings.SetReadoutMode(ReadMode.FullImage);
                 settings.SetTriggerMode(TriggerMode.Internal);
 
                 settings.SetImageArea(new Rectangle(new Point2D(1, 1), cam.Properties.DetectorSize));
 
-                settings.SetExposureTime(10.0f);
+                settings.SetExposureTime(0.1f);
+
+                settings.SetAccumulationCycle(1, 0);
+                settings.SetKineticCycle(70, 0);
+
+                //using (var str = new FileStream("debug_settings.acs", FileMode.Op))
+                //{
+                //    settings.Deserialize(str);
+                //}
 
                 int counter = 0;
 
+                DateTime timeStamp = DateTime.Now;
+                TimeSpan delay = TimeSpan.MinValue;
+
                 cam.AcquisitionStarted += (c, e) => Console.WriteLine("\r\nAcquisition started on camera {0}. Async: {1}; Acquiring: {2} Flag: {3}", (c as Camera).CameraModel, (c as Camera).IsAsyncAcquisition, (c as Camera).IsAcquiring, e.IsAsync);
-                cam.AcquisitionStatusChecked += (c, e) =>  Console.Write("\rAcquiring  Async: {0}; Acquiring: {1}; Flag: {2} {3}{4}", (c as Camera).IsAsyncAcquisition, (c as Camera).IsAcquiring, e.IsAsync, new string('.', 1 + (counter++ %3)), new string(' ', 3 - (counter % 3)));
+               // cam.AcquisitionStatusChecked += (c, e) =>  Console.Write("\rAcquiring  Async: {0}; Acquiring: {1}; Flag: {2} {3}{4}", (c as Camera).IsAsyncAcquisition, (c as Camera).IsAcquiring, e.IsAsync, new string('.', 1 + (counter++ %3)), new string(' ', 3 - (counter % 3)));
                 cam.AcquisitionFinished += (c, e) => Console.WriteLine("\r\nAcquisition finished on camera {0}. Async: {1}; Acquiring: {2}; Flag: {3}", (c as Camera).CameraModel, (c as Camera).IsAsyncAcquisition, (c as Camera).IsAcquiring, e.IsAsync);
                 cam.AcquisitionAborted += (c, e) => Console.WriteLine("\r\nAcquisition aborted on camera {0}. Async: {1}; Acquiring: {2}; Flag: {3}", (c as Camera).CameraModel, (c as Camera).IsAsyncAcquisition, (c as Camera).IsAcquiring, e.IsAsync);
 
                 var result = settings.ApplySettings(out var timing);
+                var q = cam.GetOldestImages();
+
+                cam.AcquisitionStarted += (c, e) => timeStamp = e.EventTime;
+                cam.AcquisitionFinished += (c, e) => delay = e.EventTime - timeStamp;
+                cam.AcquisitionStatusChecked += (c, e) =>
+                {
+                    int n = 0;
+                    int n1 = 0, n2 = 0;
+
+                    Int32[] tempArr = new Int32[512 * 512];
+                    
+                    SDKInit.SDKInstance.GetTotalNumberImagesAcquired(ref n);
+                    SDKInit.SDKInstance.GetNumberNewImages(ref n1, ref n2);
+                                                  
+                    Console.WriteLine("{0}\t{1}\t{2}\t{3}", n, tempArr.Max(), n1, n2);
+
+                   
+                };
+
+              
 
                 Console.WriteLine();
 
@@ -90,17 +122,46 @@ namespace ANDOR_CS
 
                 var source = new System.Threading.CancellationTokenSource();
 
-                
 
-                var task = cam.StartAcquistionAsync(source.Token, 1000);
+
+                //var monitor = Task.Run(() =>
+                //{
+                //    for (int i = 0; i < 800; i++)
+                //    {
+                //        System.Threading.Tasks.Task.Delay(50);
+                //        Console.WriteLine(cam.GetStatus());
+                //    }
+                //});
+
+                var task = cam.StartAcquistionAsync(source.Token, 5);
+
 
                 task.Wait();
 
+                var testA = q.ToArray();
+                //task = cam.StartAcquistionAsync(source.Token, 5);
+                //task.Wait();
+
+                Console.WriteLine(delay);
+
+                //monitor.Wait();
                 float[] array = new float[cam.Properties.DetectorSize.Horizontal * cam.Properties.DetectorSize.Vertical];
 
-                uint res = SDKInit.SDKInstance.GetAcquiredFloatData(array, (uint)array.Length);
+                SDKInit.SDKInstance.GetAcquiredFloatData(array, (uint)array.Length);
+               
 
-                Console.WriteLine(res == SDK.DRV_SUCCESS ? "Success!" : "Failure!");
+                
+                int temp2 = 0;
+
+                SDKInit.SDKInstance.GetTotalNumberImagesAcquired(ref temp2);
+
+                int start = 0, stop = 0;
+
+                SDKInit.SDKInstance.GetNumberAvailableImages(ref start, ref stop);
+
+                
+
+               // Console.WriteLine(res == SDK.DRV_SUCCESS ? "Success!" : "Failure!");
                 Console.ReadKey();
 
             }
