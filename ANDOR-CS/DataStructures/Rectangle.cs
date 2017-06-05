@@ -77,6 +77,24 @@ namespace ANDOR_CS.DataStructures
             this.start = start;
             end = start - new Point2D(1, 1) +  size;
         }
+
+        public override string ToString()
+        {
+            return String.Format("{0}, {1}, {2}, {3}", X1, Y1, X2, Y2);
+        }
+
+        public static Rectangle Parse(string source)
+        {
+            var split = source.Trim().Split(',');
+
+            if (split.Length != 4)
+                throw new ArgumentException($"String {source} cannot be parsed into {typeof(Rectangle)}.");
+
+
+            var coords = split.Select(s => int.Parse(s, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo)).ToArray();
+
+            return new Rectangle(coords[0], coords[1], coords[2], coords[3]);
+        }
     }
 
 }
