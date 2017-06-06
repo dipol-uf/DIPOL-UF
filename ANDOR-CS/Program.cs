@@ -26,9 +26,9 @@ namespace ANDOR_CS
             //SerializationTest();
 
             //TestTemperature();
-            //TestMonitor();
-            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
-            TestAcquisitionSettings();
+            TestMonitor();
+            //System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+            //TestAcquisitionSettings();
         }
 
        
@@ -43,15 +43,15 @@ namespace ANDOR_CS
 
                 settings.SetOutputAmplifier(OutputAmplification.ElectronMultiplication);
                 settings.SetADConverter(0);
-                foreach (var speed in settings.GetAvailableHSSpeeds())
-                    Console.WriteLine("Speed {0} has value {1}", speed.Item1 + 1, speed.Item2);
+                //foreach (var speed in settings.GetAvailableHSSpeeds())
+                //    Console.WriteLine("Speed {0} has value {1}", speed.Item1 + 1, speed.Item2);
 
                 var query = settings.GetAvailableHSSpeeds();
 
                 settings.SetHSSpeed(query.First().Item1);
 
-                foreach (var gain in settings.GetAvailablePreAmpGain())
-                    Console.WriteLine("Gain {0} has name {1}", gain.Item1 + 1, gain.Item2);
+                //foreach (var gain in settings.GetAvailablePreAmpGain())
+                //    Console.WriteLine("Gain {0} has name {1}", gain.Item1 + 1, gain.Item2);
 
                 settings.SetVSSpeed();
                 settings.SetVSAmplitude(VSAmplitude.Normal);
@@ -169,46 +169,48 @@ namespace ANDOR_CS
             
         }
 
-        public static void TestTemperature()
-        {
-            using (var cam = new Camera())
-            {
-                cam.FanControl(FanMode.Off);
+        //public static void TestTemperature()
+        //{
+        //    using (var cam = new Camera())
+        //    {
+        //        cam.FanControl(FanMode.Off);
 
-                Console.WriteLine(cam.GetCurrentTemperature());
+        //        Console.WriteLine(cam.GetCurrentTemperature());
 
-                cam.CoolingTemperatureChecked += (sender, e) =>
-                {
-                    Console.Write("[{0:hh-mm-ss.fff}] {1:F2}",
-                      e.EventTime, e.Temperature);
+        //        cam.CoolingTemperatureChecked += (sender, e) =>
+        //        {
+        //            Console.Write("[{0:hh-mm-ss.fff}] {1:F2}",
+        //              e.EventTime, e.Temperature);
 
-                    foreach (var name in Extensions.GetEnumNames(typeof(TemperatureStatus), e.Status))
-                        Console.Write($" {name}");
-                    Console.WriteLine();
-                };
-                System.Threading.CancellationTokenSource source = new System.Threading.CancellationTokenSource();
+        //            foreach (var name in Extensions.GetEnumNames(typeof(TemperatureStatus), e.Status))
+        //                Console.Write($" {name}");
+        //            Console.WriteLine();
+        //        };
+        //        System.Threading.CancellationTokenSource source = new System.Threading.CancellationTokenSource();
 
-                var task = cam.StartCoolingCycleAsync(0, FanMode.LowSpeed, source.Token, 500);
+        //        var task = cam.StartCoolingCycleAsync(0, FanMode.LowSpeed, source.Token, 500);
 
 
-                task.Wait();
+        //        task.Wait();
 
-                //System.Threading.Thread.Sleep(15000);
+        //        System.Threading.Thread.Sleep(15000);
 
-                //source.Cancel();
-                
+        //        source.Cancel();
 
-                Console.ReadKey();
-            }
-        }
+
+        //        Console.ReadKey();
+        //    }
+        //}
 
         public static void TestMonitor()
         {
             using (var cam = new Camera())
             {
-                cam.FanControl(FanMode.Off);
+                cam.FanControl(FanMode.LowSpeed);
+                cam.SetTemperature(-20);
+                cam.CoolerControl(Switch.Enabled);
 
-                cam.CoolerControl(Switch.Disabled);
+               
 
                 cam.TemperatureStatusChecked += (sender, e) =>
                 {
@@ -221,8 +223,15 @@ namespace ANDOR_CS
                 };
 
                 cam.TemperatureMonitor(Switch.Enabled, 500);
+               
+                Console.ReadKey();
+
+                cam.SetTemperature(-10);
 
                 Console.ReadKey();
+
+
+                cam.CoolerControl(Switch.Disabled);
 
             }
         }
