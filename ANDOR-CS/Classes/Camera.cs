@@ -216,22 +216,27 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Fires when temperature is asynchronously checked during cooling process
         /// </summary>
+        [Obsolete("Obsolete event", true)]
         public event TemperatureStatusEventHandler CoolingTemperatureChecked;
         /// <summary>
         /// Firs when cooling is started
         /// </summary>
+        [Obsolete("Obsolete event", true)]
         public event TemperatureStatusEventHandler CoolingStarted;
         /// <summary>
         /// Fires when cooling is finished
         /// </summary>
+        [Obsolete("Obsolete event", true)]
         public event TemperatureStatusEventHandler CoolingFinished;
         /// <summary>
         /// Fires when cooling is aborted manually
         /// </summary>
+        [Obsolete("Obsolete event", true)]
         public event TemperatureStatusEventHandler CoolingAborted;
         /// <summary>
         /// Fires when an exception is thrown in a background asynchronous task.
         /// </summary>
+        [Obsolete("Obsolete event", true)]
         public event TemperatureStatusEventHandler CoolingErrorReturned;
 
         private void GetCapabilities()
@@ -826,12 +831,15 @@ namespace ANDOR_CS.Classes
         {
             // Stores return codes from SDK functions
             uint result = 0;
+            int n = GetNumberOfCameras();
+            if (n < 0)
+                throw new AndorSDKException("No ANDOR-compatible cameras found.", null);
 
             // If cameraIndex is less than 0, it is out of range
             if (camIndex < 0)
                 throw new ArgumentException($"Camera index is out of range; Cannot be less than 0 (provided {camIndex}).");
             // If cameraIndex equals to or exceeds the number of available cameras, it is also out of range
-            if (camIndex >= GetNumberOfCameras())
+            if (camIndex >= n)
                 throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
 
             // Stores the handle (SDK private pointer) to the camera. A unique identifier
@@ -869,6 +877,9 @@ namespace ANDOR_CS.Classes
             // And model type
             GetHeadModel();
 
+            //if (Capabilities.Features.HasFlag(SDKFeatures.FanControl))
+            //    FanControl(FanMode.Off);
+
            
         }
 
@@ -886,11 +897,6 @@ namespace ANDOR_CS.Classes
 
                 // Makes active camera that is going to be disposed (this)
                 SetActive();
-
-                // <-------------------------------------->
-                // TO DO:
-                // Apparently there should be some procedure to ensure that camera has appropriate temperature before disconnecting and turning fan off
-                // <-------------------------------------->
 
                 // ShutsDown camera
                 CameraHandle.Dispose();
@@ -988,7 +994,7 @@ namespace ANDOR_CS.Classes
 
         }
 
-
+        [Obsolete("Do not use this method, it is deprecated. Use serial tempearture controls.",true)]
         public async Task StartCoolingCycleAsync(
             int targetTemperature, 
             FanMode desiredMode,
