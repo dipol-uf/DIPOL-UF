@@ -24,80 +24,80 @@ namespace DIPOL_UF.Windows
     {
         private const int TimeOut = 10000;
 
-        private Camera[] DetectedCameras;
+        private Camera[] returnArary;
+
+        private List<Camera> DetectedCameras = new List<Camera>();
 
         public CameraLoader(ref Camera[] cameras)
         {
             InitializeComponent();
 
-            DetectedCameras = cameras;
+            returnArary = cameras;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            //int n = Camera.GetNumberOfCameras();
+            InstructionTextBox.Text = "Waiting for cameras...";
 
-            //if (n < 1)
-            //{
-            //    MessageBox.Show(
-            //        this,
-            //        "Make sure your camera is properly connected and drivers are up to date.",
-            //        "No ANDOR - compatible cameras detected.",
-            //        MessageBoxButton.OK,
-            //        MessageBoxImage.Error,
-            //        MessageBoxResult.OK);
-            //    Close();
-            //}
+            int n = Camera.GetNumberOfCameras();
 
-            //var progress = new ProgressWindow(false, n, 0);
-            //progress.DisplayedTitleText = "Checking available cameras...";
-            //progress.DisplayPercents = false;
-            //progress.IsIndereminate = true;
+            if (n < 1)
+            {
+                MessageBox.Show(
+                    this,
+                    "Make sure your camera is properly connected and drivers are up to date.",
+                    "No ANDOR-compatible cameras detected.",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error,
+                    MessageBoxResult.OK);
+                Close();
+            }
+            else
+            {
+                var progress = new ProgressWindow(false, n, 0);
+                progress.DisplayedTitleText = "Checking available cameras...";
+                progress.DisplayPercents = false;
+                progress.IsIndereminate = true;
 
-            //var task = Task<List<Camera>>.Run<List<Camera>>(() => LoadCameras(n, progress));
+                var task = Task.Run(() => LoadCameras(n, progress));
 
-            //progress.ShowDialog();                       
+                progress.ShowDialog();
 
-            //task.Wait();
+                task.Wait();
 
-
-            //List<Camera> cams = task.Result;
-
-
-            //if (cams.Count < 1)
-            //{
-            //    MessageBox.Show(
-            //       this,
-            //       $"We detected at least {n} cameras, connected to this computer, but were unable to connect to any of these. Make sure no other software is currently using these cameras.",
-            //       $"None of {n} detected cameras are responding.",
-            //       MessageBoxButton.OK,
-            //       MessageBoxImage.Error,
-            //       MessageBoxResult.OK);
-
-            //    Close();
-            //}
-
-            //foreach (
-            //    var cameraEntry
-            //    in
-            //        from camera
-            //        in cams
-            //        select new ListBoxItem()
-            //        {
-            //            Content = $"{camera.Capabilities.CameraType} - {camera.CameraModel}"
-            //        }
-            //    )
-            //    CameraList.Items.Add(cameraEntry);
+               DetectedCameras = task.Result;
 
 
+                if (DetectedCameras.Where(c => c != null).Count() < 1)
+                {
+                    MessageBox.Show(
+                       this,
+                       $"We detected at least {n} camera(s), connected to this computer, but were unable to connect to any of these. Make sure no other software is currently using these cameras.",
+                       $"None of {n} detected cameras are responding.",
+                       MessageBoxButton.OK,
+                       MessageBoxImage.Error,
+                       MessageBoxResult.OK);
 
-            var source = new System.Collections.ObjectModel.ObservableCollection<string>();
-            source.Add("A");
-            source.Add("B");
-            CameraList.ItemsSource = source;
+                    Close();
+                }
+                else
+                {
+                    foreach (
+                        var cameraEntry
+                        in
+                            from camera
+                            in DetectedCameras
+                            select new ListBoxItem()
+                            {
+                                Content = $"{camera.Capabilities.CameraType} - {camera.CameraModel} ({camera.SerialNumber})"
+                            }
+                        )
+                        CameraList.Items.Add(cameraEntry);
 
-           
-
+                    InstructionTextBox.Text = "Select camera(s) you would like to use. ";
+                }
+            }
+            
         }
 
         private List<Camera> LoadCameras(int n, ProgressWindow progress)
@@ -105,14 +105,27 @@ namespace DIPOL_UF.Windows
            
             List<Camera> result = new List<Camera>();
 
-            
+
             for (int i = 0; i < n; i++)
             {
                 Dispatcher.Invoke(() => progress.DisplayedCommentText = "Checking camera...");
 
                 Camera localCam = null;
 
-                var task = Task<Camera>.Run<Camera>(() => new Camera(i));
+                var task = Task<Camera>.Run<Camera>(() =>
+                {
+                    Camera cam = null;
+
+                    try
+                    {
+                        cam = new Camera(i);
+                    }
+                    catch (Exception e)
+                    { }
+
+                    return cam;
+                }
+                );
 
                 if (task.Wait(TimeOut) && !task.IsFaulted)
                 {
@@ -136,22 +149,32 @@ namespace DIPOL_UF.Windows
             
         }
 
-        private void CameraList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+      
+        private void CameraList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed)
+            if (sender is ListBox list)
             {
-                if (sender is ListBox box)
-                {
-                    
-                    
-                         var source = new System.Collections.ObjectModel.ObservableCollection<DIPOL_UF.Classes.CameraListItem>();
-                    source.Add(new Classes.CameraListItem(1, false, "NAME2"));
-                    source.Add(new Classes.CameraListItem(2, false, "NAME3"));
+                int n = list.SelectedItems.Count;
 
-                    box.ItemsSource = source;
-                    box.UpdateLayout();
-                }
+                if (n == 0)
+                    InstructionTextBox.Text = "No camera is selected.";
+                else 
+                    InstructionTextBox.Text = $"Selected {n} device(s).";
             }
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            returnArary= null;
+
+            Close();
+        }
+
+        private void SubmitButton_Click(object sender, RoutedEventArgs e)
+        {
+            var selection = CameraList.SelectedItems;
+
+            Close();
         }
     }
 }
