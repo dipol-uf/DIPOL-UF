@@ -24,6 +24,8 @@ namespace DIPOL_UF
     /// </summary>
     public partial class DipolMainWindow : Window
     {
+        private Camera[] ConnectedCameras = null;
+
         public DipolMainWindow()
         {
             InitializeComponent();
@@ -31,20 +33,27 @@ namespace DIPOL_UF
         }
 
         private void Window_ContentRendered(object sender, EventArgs e)
-        {
-            Camera[] selected = null;
+        {            
 
-            var loader = new CameraLoader(ref selected);
-
-            loader.Topmost = true;
-            loader.ShowDialog();
-
+            
 
         }
 
         private void Window_Closed(object sender, EventArgs e)
         {
+            if (ConnectedCameras != null)
+                foreach (var cam in ConnectedCameras)
+                    cam?.Dispose();
+
             Application.Current.Shutdown();
+        }
+
+        private void DeviceControl_LocalDevices_Click(object sender, RoutedEventArgs e)
+        {
+            var loader = new CameraLoader();
+            loader.Owner = this;
+            loader.Topmost = true;
+            ConnectedCameras = loader.ShowDialogAndWait().ToArray();
         }
     }
 }

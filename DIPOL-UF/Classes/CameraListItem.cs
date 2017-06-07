@@ -14,22 +14,15 @@ namespace DIPOL_UF.Classes
             set;
         }
 
-        public bool Checked
-        {
-            get;
-            set;
-        }
-
         public string Name
         {
             get;
             set;
         }
 
-        public CameraListItem(int index, bool check, string name)
+        public CameraListItem(int index, string name)
         {
             Index = index;
-            Checked = check;
             Name = name;
         }
     }

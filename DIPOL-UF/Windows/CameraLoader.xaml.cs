@@ -15,6 +15,8 @@ using System.Windows.Shapes;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
 
+using DIPOL_UF.Classes;
+
 namespace DIPOL_UF.Windows
 {
     /// <summary>
@@ -23,16 +25,13 @@ namespace DIPOL_UF.Windows
     public partial class CameraLoader : Window
     {
         private const int TimeOut = 10000;
-
-        private Camera[] returnArary;
-
+  
         private List<Camera> DetectedCameras = new List<Camera>();
+        private IEnumerable<int> SelectedCameraIndexes = null;
 
-        public CameraLoader(ref Camera[] cameras)
+        public CameraLoader()
         {
-            InitializeComponent();
-
-            returnArary = cameras;
+            InitializeComponent();           
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -40,6 +39,9 @@ namespace DIPOL_UF.Windows
             InstructionTextBox.Text = "Waiting for cameras...";
 
             int n = Camera.GetNumberOfCameras();
+            
+            // DEBUG CHANGES MADE HERE
+            n = 3;
 
             if (n < 1)
             {
@@ -68,17 +70,27 @@ namespace DIPOL_UF.Windows
                DetectedCameras = task.Result;
 
 
+               
                 if (DetectedCameras.Where(c => c != null).Count() < 1)
                 {
-                    MessageBox.Show(
-                       this,
-                       $"We detected at least {n} camera(s), connected to this computer, but were unable to connect to any of these. Make sure no other software is currently using these cameras.",
-                       $"None of {n} detected cameras are responding.",
-                       MessageBoxButton.OK,
-                       MessageBoxImage.Error,
-                       MessageBoxResult.OK);
 
-                    Close();
+                    // DEBUG CHANGES MADE HERE
+                    //MessageBox.Show(
+                    //   this,
+                    //   $"We detected at least {n} camera(s), connected to this computer, but were unable to connect to any of these. Make sure no other software is currently using these cameras.",
+                    //   $"None of {n} detected cameras are responding.",
+                    //   MessageBoxButton.OK,
+                    //   MessageBoxImage.Error,
+                    //   MessageBoxResult.OK);
+
+                    //Close();
+
+                    CameraList.Items.Add(new CameraListItem(1, "Cam 1"));
+                    CameraList.Items.Add(new CameraListItem(2, "Cam 2"));
+                    CameraList.Items.Add(new CameraListItem(3, "Cam 3"));
+
+                    InstructionTextBox.Text = "Select camera(s) you would like to use. ";
+
                 }
                 else
                 {
@@ -87,10 +99,7 @@ namespace DIPOL_UF.Windows
                         in
                             from camera
                             in DetectedCameras
-                            select new ListBoxItem()
-                            {
-                                Content = $"{camera.Capabilities.CameraType} - {camera.CameraModel} ({camera.SerialNumber})"
-                            }
+                            select  $"{camera.Capabilities.CameraType} - {camera.CameraModel} ({camera.SerialNumber})"                            
                         )
                         CameraList.Items.Add(cameraEntry);
 
@@ -116,12 +125,12 @@ namespace DIPOL_UF.Windows
                 {
                     Camera cam = null;
 
-                    try
-                    {
-                        cam = new Camera(i);
-                    }
-                    catch (Exception e)
-                    { }
+                    //try
+                    //{
+                    //    cam = new Camera(i);
+                    //}
+                    //catch (Exception e)
+                    //{ }
 
                     return cam;
                 }
@@ -149,7 +158,6 @@ namespace DIPOL_UF.Windows
             
         }
 
-      
         private void CameraList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender is ListBox list)
@@ -163,18 +171,47 @@ namespace DIPOL_UF.Windows
             }
         }
 
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            returnArary= null;
-
-            Close();
-        }
-
         private void SubmitButton_Click(object sender, RoutedEventArgs e)
         {
-            var selection = CameraList.SelectedItems;
+            SelectedCameraIndexes = CameraList.SelectedItems.Cast<CameraListItem>().Select(item => item.Index - 1).OrderBy((item) => item);
 
-            Close();
+            DialogResult = true;
+           
         }
+
+        public IEnumerable<Camera> ShowDialogAndWait()
+        {
+            var result = ShowDialog();
+
+            try
+            {
+                if (result ?? false)
+                    return from index
+                            in SelectedCameraIndexes
+                           select DetectedCameras[index];
+                else
+                    return null;
+            }
+            finally
+            {
+                List<Task> nonUsedCamerasCleaning = new List<Task>();
+
+                for (int ind = 0; ind < DetectedCameras.Count; ind++)
+                {
+                    if (!SelectedCameraIndexes.Contains(ind))
+                    {
+                       nonUsedCamerasCleaning.Add(Task.Factory.StartNew((locInd) =>DetectedCameras[(int)locInd]?.Dispose(), ind));
+                    }
+                }
+
+                Owner.Closed += (sender, e) =>
+                {
+                    Task.WaitAll(nonUsedCamerasCleaning.ToArray());
+                };
+                
+            }
+        }
+
+
     }
 }

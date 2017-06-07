@@ -20,7 +20,10 @@
                  SelectionMode="Multiple" SelectionChanged="CameraList_SelectionChanged" >
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding}" Margin="5,0,0,0"/>
+                    <StackPanel Orientation="Horizontal" Margin="5,0,0,0">
+                        <TextBlock Text="{Binding Index}" Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding Name}" Margin="10,0,0,0"/>
+                    </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
@@ -32,7 +35,7 @@
             <Button Name="SubmitButton"  HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="25" Grid.Column="0" IsDefault="True" Click="SubmitButton_Click">
                 Add selection
             </Button>
-            <Button Name="CancelButton"  HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="25" Grid.Column="1" IsCancel="True" Click="CancelButton_Click">
+            <Button Name="CancelButton"  HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Height="25" Grid.Column="1" IsCancel="True">
                 Cancel
             </Button>
         </Grid>

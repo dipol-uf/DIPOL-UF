@@ -13,9 +13,11 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <Menu Name="MainMenu" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="auto" MinHeight="25" MaxHeight="40">
-            <MenuItem Header="Temperature _Control">
-                
+        <Menu Name="MainMenu" Grid.Row="0" HorizontalAlignment="Stretch" VerticalContentAlignment="Bottom" Height="auto">
+            <MenuItem Header="_Temperature Control" VerticalAlignment="Stretch" Margin="2,0" Padding="6,5"/>
+            <MenuItem Header="_Device Control" VerticalAlignment="Stretch" Margin="2,0" Padding="6,5">
+                <MenuItem Name="DeviceControl_LocalDevices" Header="Detect _local devices" Click="DeviceControl_LocalDevices_Click"/>
+                <MenuItem Name="DeviceControl_NetworkDevices" Header="Detect _network devices" IsEnabled="False"/>
             </MenuItem>
         </Menu>
     </Grid>
