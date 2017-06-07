@@ -25,6 +25,7 @@ using ANDOR_CS.Classes;
 
 namespace ANDOR_CS.Exceptions
 {
+    [Obsolete("Obsolete temperature cycle exception", true)]
     public class TemperatureCycleInProgressException : Exception
     {
         public TemperatureCycleInProgressException(string message) :
@@ -33,8 +34,8 @@ namespace ANDOR_CS.Exceptions
 
         public static void ThrowIfTempCycle(Camera cam)
         {
-            if (cam.IsInTemperatureCycle)
-                throw new AcquisitionInProgressException("Camera is in temperature cycle at the moment.");
+            //if (cam.IsInTemperatureCycle)
+            //    throw new AcquisitionInProgressException("Camera is in temperature cycle at the moment.");
         }
         
     }

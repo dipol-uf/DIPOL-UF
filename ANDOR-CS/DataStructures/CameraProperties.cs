@@ -92,5 +92,11 @@ namespace ANDOR_CS.DataStructures
             get;
             internal set;
         }
+
+        public (int Low, int High) EMCCDGainRange
+        {
+            get;
+            internal set;
+        }
     }
 }

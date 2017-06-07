@@ -31,55 +31,162 @@ namespace ANDOR_CS.Classes
     public static class AndorSDKInitialization
     {
 
-        private static Random R = new Random();
-        private static ATMCD64CS.AndorSDK _SDKInstance = new ATMCD64CS.AndorSDK();
+        //private static ATMCD64CS.AndorSDK _SDKInstance
 
-        private static System.Threading.SemaphoreSlim semaphore = new System.Threading.SemaphoreSlim(1, 1);
+       // private static System.Threading.SemaphoreSlim semaphore = new System.Threading.SemaphoreSlim(1, 1);
+        private static volatile System.Threading.SemaphoreSlim locker = new System.Threading.SemaphoreSlim(1, 1);
 
         /// <summary>
         /// Gets an singleton instance of a basic AndorSDK class
         /// </summary>
         public static ATMCD64CS.AndorSDK SDKInstance
         {
-            get
-            {
-                byte[] arr = new byte[4];
+            get;
+            private set;
 
-                R.NextBytes(arr);
+        } = new ATMCD64CS.AndorSDK();
 
-                int handle = BitConverter.ToInt32(arr, 0);
+        //public static void Lock() => locker.Wait();
 
-                bool entered = false;
+        //public static void Release() => locker.Release();
 
-                try
-                {
-                    semaphore.Wait();
-                    entered = true;
-                    //Console.ForegroundColor = ConsoleColor.DarkGreen;
-                    //Console.WriteLine($"Semaphore entered. ({handle.ToString("X8")})");
-                    //Console.ForegroundColor = ConsoleColor.White;
+        public delegate uint AndorSDK<T1>(ref T1 p1);
+        public delegate uint AndorSDK<in T1, T2>(T1 p1, ref T2 p2);
+        public delegate uint AndorSDK<in T1, in T2, T3>(T1 p1, T2 p2, ref T3 p3);
+        //public delegate uint AndorSDK<T1, T2, T3>(T1 p1, ref T2 p2, ref T3 p3);
 
-                    return _SDKInstance;
-                }
-                finally
-                {
-                    if (entered)
-                    {
-                        semaphore.Release();
-                        entered = true;
-                        //Console.ForegroundColor = ConsoleColor.DarkGreen;
-                        //Console.WriteLine($"Semaphore left.    ({handle.ToString("X8")})");
-                        //Console.ForegroundColor = ConsoleColor.White;
-                    }
-                    else
-                    {
-                        //Console.ForegroundColor = ConsoleColor.Red;
-                        //Console.WriteLine($"Semaphore was not entered!. ({handle.ToString("X8")})");
-                        //Console.ForegroundColor = ConsoleColor.White;
-                    }
-                }
-            }
+        /// <summary>
+        /// Task-safely invokes SDK method with one output ref parameter
+        /// </summary>
+        /// <typeparam name="T1">Type of first parameter</typeparam>
+        /// <param name="method"><see cref="SDKInstance"/> method to invoke</param>
+        /// <param name="p1">Stores result of the function call</param>
+        /// <returns>Return code</returns>
+        public static uint Call<T1>(AndorSDK<T1> method, out T1 p1)
+        {
+            // Stores return code
+            uint result = 0;
+
+            p1 = default(T1);
+
+            // Waits until SDKInstance is available
+            locker.Wait();
             
-        } 
+            // Calls function
+            result = method(ref p1);
+            
+            // Releases semaphore
+            locker.Release();
+            
+            return result;
+        }
+
+        /// <summary>
+        /// Task-safely invokes SDK method with oneinput and one output ref parameter
+        /// </summary>
+        /// <typeparam name="T1">Type of first parameter</typeparam>
+        /// <typeparam name="T2">Type of second parameter</typeparam>
+        /// <param name="method"><see cref="SDKInstance"/> method to invoke</param>
+        /// <param name="p1">Inpput argument of the method</param>
+        /// <param name="p2">Stores result of the function call</param>
+        /// <returns>Return code</returns>
+        public static uint Call<T1, T2>(AndorSDK<T1, T2> method, T1 p1, out T2 p2)
+        {
+            // Stores return code
+            uint result = 0;
+            p2 = default(T2);
+                
+            // Waits until SDKInstance is available
+            locker.Wait();
+
+            // Calls function
+            result = method(p1, ref p2);
+
+            // Releases semaphore
+            locker.Release();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Task-safely invokes SDK method with oneinput and one output ref parameter
+        /// </summary>
+        /// <typeparam name="T1">Type of first parameter</typeparam>
+        /// <typeparam name="T2">Type of second parameter</typeparam>
+        /// <typeparam name="T3">Type of third parameter</typeparam>
+        /// <param name="method"><see cref="SDKInstance"/> method to invoke</param>
+        /// <param name="p1">First inpput argument of the method</param>
+        /// <param name="p2">Second inpput argument of the method</param>
+        /// <param name="p3">Stores result of the function call</param>
+        /// <returns>Return code</returns>
+        public static uint Call<T1, T2, T3>(AndorSDK<T1, T2, T3> method, T1 p1, T2 p2, out T3 p3)
+        {
+            // Stores return code
+            uint result = 0;
+            p3 = default(T3);
+           
+            // Waits until SDKInstance is available
+            locker.Wait();
+
+            // Calls function
+            result = method(p1, p2, ref p3);
+
+            // Releases semaphore
+            locker.Release();
+
+            return result;
+        }
+
+        public static uint Call<T1>(Func<T1, uint> method, T1 p1)
+        {
+            // Stores return code
+            uint result = 0;
+
+
+            // Waits until SDKInstance is available
+            locker.Wait();
+
+            // Calls function
+            result = method(p1);
+
+            // Releases semaphore
+            locker.Release();
+
+            return result;
+        }
+
+        public static uint Call(Func<uint> method)
+        {
+            // Stores return code
+            uint result = 0;
+
+            // Waits until SDKInstance is available
+            locker.Wait();
+
+            // Calls function
+            result = method();
+
+            // Releases semaphore
+            locker.Release();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Manually waits while other tasks access SDK instance
+        /// </summary>
+        internal static void LockManually()
+        {
+            locker.Wait();
+        }
+
+        /// <summary>
+        /// Manually releases semaphore and allows other tasks to call SDK functions
+        /// </summary>
+        internal static void ReleaseManually()
+        {
+            locker.Release();
+        }
+
     }
 }
