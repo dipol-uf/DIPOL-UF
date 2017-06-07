@@ -19,16 +19,7 @@ namespace ANDOR_CS
     {
         static void Main(string[] args)
         {
-            // var e = ANDOR_CS.Enums.SDKFeatures.CameraLink | SDKFeatures.CountConvert;
-
-            // e ^= SDKFeatures.CameraLink;
-
-            //SerializationTest();
-
-            //TestTemperature();
-            TestMonitor();
-            //System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
-            //TestAcquisitionSettings();
+            TestAcquisitionSettings();
         }
 
        
@@ -67,7 +58,7 @@ namespace ANDOR_CS
                 settings.SetExposureTime(0.1f);
 
                 settings.SetAccumulationCycle(1, 0);
-                settings.SetKineticCycle(70, 0);
+                settings.SetKineticCycle(40, 0);
 
                 //using (var str = new FileStream("debug_settings.acs", FileMode.Op))
                 //{
@@ -94,12 +85,12 @@ namespace ANDOR_CS
                     int n = 0;
                     int n1 = 0, n2 = 0;
 
-                    Int32[] tempArr = new Int32[512 * 512];
+                   // Int32[] tempArr = new Int32[512 * 512];
                     
-                    SDKInit.SDKInstance.GetTotalNumberImagesAcquired(ref n);
-                    SDKInit.SDKInstance.GetNumberNewImages(ref n1, ref n2);
+                    //SDKInit.SDKInstance.GetTotalNumberImagesAcquired(ref n);
+                    //SDKInit.SDKInstance.GetNumberNewImages(ref n1, ref n2);
                                                   
-                    Console.WriteLine("{0}\t{1}\t{2}\t{3}", n, tempArr.Max(), n1, n2);
+                    //Console.WriteLine("{0}\t{1}\t{2}\t{3}", n, tempArr.Max(), n1, n2);
 
                    
                 };
@@ -169,64 +160,32 @@ namespace ANDOR_CS
             
         }
 
-        //public static void TestTemperature()
-        //{
-        //    using (var cam = new Camera())
-        //    {
-        //        cam.FanControl(FanMode.Off);
-
-        //        Console.WriteLine(cam.GetCurrentTemperature());
-
-        //        cam.CoolingTemperatureChecked += (sender, e) =>
-        //        {
-        //            Console.Write("[{0:hh-mm-ss.fff}] {1:F2}",
-        //              e.EventTime, e.Temperature);
-
-        //            foreach (var name in Extensions.GetEnumNames(typeof(TemperatureStatus), e.Status))
-        //                Console.Write($" {name}");
-        //            Console.WriteLine();
-        //        };
-        //        System.Threading.CancellationTokenSource source = new System.Threading.CancellationTokenSource();
-
-        //        var task = cam.StartCoolingCycleAsync(0, FanMode.LowSpeed, source.Token, 500);
-
-
-        //        task.Wait();
-
-        //        System.Threading.Thread.Sleep(15000);
-
-        //        source.Cancel();
-
-
-        //        Console.ReadKey();
-        //    }
-        //}
-
+        
         public static void TestMonitor()
         {
             using (var cam = new Camera())
             {
                 cam.FanControl(FanMode.LowSpeed);
-                cam.SetTemperature(-20);
+                cam.SetTemperature(-10);
                 cam.CoolerControl(Switch.Enabled);
 
                
 
                 cam.TemperatureStatusChecked += (sender, e) =>
                 {
-                    Console.Write("[{0:hh-mm-ss.fff}] {1:F2}",
+                    Console.Write("\r[{0:hh-mm-ss.fff}] {1:F2}",
                       e.EventTime, e.Temperature);
 
                     foreach (var name in Extensions.GetEnumNames(typeof(TemperatureStatus), e.Status))
                         Console.Write($" {name}");
-                    Console.WriteLine();
+                    //Console.WriteLine();
                 };
 
-                cam.TemperatureMonitor(Switch.Enabled, 500);
+                cam.TemperatureMonitor(Switch.Enabled, 250);
                
                 Console.ReadKey();
 
-                cam.SetTemperature(-10);
+                cam.SetTemperature(10);
 
                 Console.ReadKey();
 
@@ -262,6 +221,24 @@ namespace ANDOR_CS
             ////ser.Serialize(Console.Out, settings);
 
             //Console.WriteLine();
+            Console.ReadKey();
+        }
+
+        public static void TestParallel(int N = 10)
+        {
+            Task[] task = new Task[N];
+
+            for (int i = 0; i < N; i++)
+                task[i] = Task.Run(() =>
+                {
+                    int num = 0;
+                    SDKInit.Call(SDKInit.SDKInstance.GetNumberDevices, out num);
+                    Console.WriteLine($"{num}");
+                }
+                );
+
+            Task.WaitAll(task);
+
             Console.ReadKey();
         }
 

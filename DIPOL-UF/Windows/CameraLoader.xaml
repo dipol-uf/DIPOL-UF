@@ -16,17 +16,14 @@
         </Grid.RowDefinitions>
         <TextBlock Name="InstructionTextBox" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="5"/>
 
-        <ListBox Name="CameraList" Grid.Row="1" HorizontalAlignment ="Stretch" VerticalAlignment="Stretch" Margin="10" MouseDoubleClick="CameraList_MouseDoubleClick" >
+        <ListBox Name="CameraList" Grid.Row="1" HorizontalAlignment ="Stretch" VerticalAlignment="Stretch" Margin="10" MouseDoubleClick="CameraList_MouseDoubleClick" 
+                 SelectionMode="Multiple" >
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Horizontal"
-                                DockPanel.Dock ="Left" Margin="2" Width="Auto" HorizontalAlignment="Stretch">
-                        <CheckBox IsChecked="{Binding Checked}" Width="15" VerticalAlignment="Center" IsHitTestVisible="False" Focusable="False"/>
-                        <TextBlock Text="{Binding Index}" Width="25" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>
-                        <TextBlock Text="{Binding Name}" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
-                    </StackPanel>
+                    <TextBlock Text="{Binding}" Margin="5,0,0,0"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+
     </Grid>
 </Window>

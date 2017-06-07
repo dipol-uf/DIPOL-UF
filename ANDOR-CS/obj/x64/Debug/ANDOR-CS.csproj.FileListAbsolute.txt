@@ -15,13 +15,13 @@ C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x64\Debug\ATM
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x64\Debug\GetFITS.pdb
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x64\Debug\ANDOR_CS.xml
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x64\Debug\atmcd64d.dll
-C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x64\Debug\ANDOR_CS.dll.config
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x64\Debug\ANDOR_CS.xml
-C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x64\Debug\ANDOR_CS.dll
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x64\Debug\ANDOR_CS.pdb
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x64\Debug\ATMCD64CS.dll
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x64\Debug\Image.dll
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x64\Debug\Image.pdb
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\obj\x64\Debug\ANDOR-CS.csprojResolveAssemblyReference.cache
-C:\Andor_programs\Projects\ANDOR\ANDOR-CS\obj\x64\Debug\ANDOR_CS.dll
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\obj\x64\Debug\ANDOR_CS.pdb
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x64\Debug\ANDOR_CS.exe.config
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x64\Debug\ANDOR_CS.exe
+C:\Andor_programs\Projects\ANDOR\ANDOR-CS\obj\x64\Debug\ANDOR_CS.exe

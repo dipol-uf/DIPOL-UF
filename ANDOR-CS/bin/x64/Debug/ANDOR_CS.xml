@@ -76,7 +76,7 @@
             </summary>
             <param name="camera">Parent object. Camera, to which settings should be applied.</param>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.CheckCamera(System.Boolean)">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.CheckCamera">
             <summary>
             Checks camera parent <see cref="T:ANDOR_CS.Classes.Camera"/>. If it is not initialized or active, throws exception.
             </summary>
@@ -290,6 +290,49 @@
             Gets an singleton instance of a basic AndorSDK class
             </summary>
         </member>
+        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``1(ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0},``0@)">
+            <summary>
+            Task-safely invokes SDK method with one output ref parameter
+            </summary>
+            <typeparam name="T1">Type of first parameter</typeparam>
+            <param name="method"><see cref="P:ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance"/> method to invoke</param>
+            <param name="p1">Stores result of the function call</param>
+            <returns>Return code</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``2(ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0,``1},``0,``1@)">
+            <summary>
+            Task-safely invokes SDK method with oneinput and one output ref parameter
+            </summary>
+            <typeparam name="T1">Type of first parameter</typeparam>
+            <typeparam name="T2">Type of second parameter</typeparam>
+            <param name="method"><see cref="P:ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance"/> method to invoke</param>
+            <param name="p1">Inpput argument of the method</param>
+            <param name="p2">Stores result of the function call</param>
+            <returns>Return code</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``3(ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0,``1,``2},``0,``1,``2@)">
+            <summary>
+            Task-safely invokes SDK method with oneinput and one output ref parameter
+            </summary>
+            <typeparam name="T1">Type of first parameter</typeparam>
+            <typeparam name="T2">Type of second parameter</typeparam>
+            <typeparam name="T3">Type of third parameter</typeparam>
+            <param name="method"><see cref="P:ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance"/> method to invoke</param>
+            <param name="p1">First inpput argument of the method</param>
+            <param name="p2">Second inpput argument of the method</param>
+            <param name="p3">Stores result of the function call</param>
+            <returns>Return code</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.LockManually">
+            <summary>
+            Manually waits while other tasks access SDK instance
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.ReleaseManually">
+            <summary>
+            Manually releases semaphore and allows other tasks to call SDK functions
+            </summary>
+        </member>
         <member name="T:ANDOR_CS.Classes.Camera">
             <summary>
             Represents an instance of a Camera device
@@ -324,6 +367,11 @@
         <member name="P:ANDOR_CS.Classes.Camera.IsActive">
             <summary>
             Indicates if this camera is currently active
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.Camera.CurrentSettings">
+            <summary>
+            Curently set acquisition regime
             </summary>
         </member>
         <member name="P:ANDOR_CS.Classes.Camera.IsAcquiring">
@@ -417,11 +465,43 @@
             Fires when an exception is thrown in a background asynchronous task.
             </summary>
         </member>
+        <member name="M:ANDOR_CS.Classes.Camera.GetCapabilities">
+            <summary>
+            Retrieves camera's capabilities
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.GetCameraSerialNumber">
+            <summary>
+            Retrieves camera's serial number
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.GetHeadModel">
+            <summary>
+            Retrieves camera's model
+            </summary>
+        </member>
         <member name="M:ANDOR_CS.Classes.Camera.GetCameraProperties">
             <summary>
             Determines properties of currently active camera and sets respective Camera.Properties field.
             </summary>
             <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AcquisitionInProgressException"/>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.GetSoftwareHardwareVersion">
+            <summary>
+            Retrieves software/hardware versions
+            </summary>
+            <exception cref="T:ANDOR_CS.Exceptions.AcquisitionInProgressException"/>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.SetActiveAndLock">
+            <summary>
+            Sets curernt camera active and locks it, preventing any further switches
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.ReleaseLock">
+            <summary>
+            Releases current camera, allowing to switch to another device
+            </summary>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.OnAcquisitionStarted(ANDOR_CS.Events.AcquisitionStatusEventArgs)">
             <summary>
@@ -466,6 +546,37 @@
             <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
             <returns>Camera status</returns>
         </member>
+        <member name="M:ANDOR_CS.Classes.Camera.FanControl(ANDOR_CS.Enums.FanMode)">
+            <summary>
+            Sets fan mode
+            </summary>
+            <param name="mode">Desired fan mode</param>
+            <exception cref="T:System.NotSupportedException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AcquisitionInProgressException"/>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.CoolerControl(ANDOR_CS.Enums.Switch)">
+            <summary>
+            Controls cooler regime
+            </summary>
+            <param name="mode">Desired mode</param>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.SetTemperature(System.Int32)">
+            <summary>
+            Sets target cooling temperature
+            </summary>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
+            <exception cref="T:ANDOR_CS.Exceptions.AcquisitionInProgressException"/>
+            <param name="temperature">Temperature</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.GetCurrentTemperature">
+            <summary>
+            Returns current camera temperature and temperature status
+            </summary>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
+            <returns>Temperature status and temperature in degrees</returns>
+        </member>
         <member name="M:ANDOR_CS.Classes.Camera.StartAcquisition">
             <summary>
             Starts acquisition of the image. Does not block current thread.
@@ -488,6 +599,14 @@
             </summary>
             <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
             <exception cref="T:System.Threading.Tasks.TaskCanceledException"/>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.TemperatureMonitor(ANDOR_CS.Enums.Switch,System.Int32)">
+            <summary>
+            Enables or disables background temperature monitor
+            </summary>
+            <exception cref="T:System.NotSupportedException"/>
+            <param name="mode">Regime</param>
+            <param name="timeout">Time interval between checks</param>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.GetAcquisitionSettingsTemplate">
             <summary>
