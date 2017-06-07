@@ -91,9 +91,9 @@ namespace DIPOL_UF.Windows
 
 
 
-            var source = new System.Collections.ObjectModel.ObservableCollection<DIPOL_UF.Classes.CameraListItem>();
-            source.Add(new Classes.CameraListItem(1, false, "NAME"));
-            source.Add(new Classes.CameraListItem(2, false, "NAME2"));
+            var source = new System.Collections.ObjectModel.ObservableCollection<string>();
+            source.Add("A");
+            source.Add("B");
             CameraList.ItemsSource = source;
 
            
