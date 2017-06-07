@@ -2,12 +2,10 @@ C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\atmcd64d.dll
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\DIPOL-UF.exe.config
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\DIPOL-UF.exe
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\DIPOL-UF.pdb
-C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\ANDOR_CS.dll
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\ATMCD64CS.dll
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\Image.dll
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\ANDOR_CS.pdb
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\ANDOR_CS.xml
-C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\ANDOR_CS.dll.config
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\Image.pdb
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\obj\x64\Debug\App.g.cs
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\obj\x64\Debug\DipolMainWindow.g.cs
@@ -25,3 +23,5 @@ C:\Andor_programs\Projects\ANDOR\DIPOL-UF\obj\x64\Debug\DIPOL-UF.pdb
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\obj\x64\Debug\DIPOL-UF.csprojResolveAssemblyReference.cache
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\obj\x64\Debug\Windows\ProgressWindow.g.cs
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\obj\x64\Debug\Windows\ProgressWindow.baml
+C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\ANDOR_CS.exe
+C:\Andor_programs\Projects\ANDOR\DIPOL-UF\bin\x64\Debug\ANDOR_CS.exe.config
