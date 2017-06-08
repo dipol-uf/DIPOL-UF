@@ -43,7 +43,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Represents an instance of a Camera device
     /// </summary>
-    public class Camera : IDisposable
+    public class Camera : ANDOR_CS.Interfaces.ICameraControl
     {
         private const int AmpDescriptorMaxLength = 21;
         private const int PreAmpGainDescriptorMaxLength = 30;
@@ -92,6 +92,7 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         } = null;
+
         public bool IsInitialized
         {
             get;
@@ -107,6 +108,17 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         } = Switch.Disabled;
+        public (
+            ShutterMode Internal, 
+            ShutterMode? External, 
+            TTLShutterSignal Type,
+            int OpenTime,
+            int CloseTime
+            ) Shutter
+        {
+            get;
+            private set;
+        }
         public string SerialNumber
         {
             get;
@@ -874,6 +886,53 @@ namespace ANDOR_CS.Classes
 
                 var result = Call(SDKInstance.SetTemperature, temperature);
                 ThrowIfError(result, nameof(SDKInstance.SetTemperature));
+            }
+            finally
+            {
+                ReleaseLock();
+            }
+        }
+
+        public void ShutterControl(            
+            int clTime,
+            int opTime,
+            ShutterMode inter,           
+            ShutterMode exter = ShutterMode.FullyAuto,
+            TTLShutterSignal type = TTLShutterSignal.Low)
+        {
+            if (clTime < 0)
+                throw new ArgumentOutOfRangeException($"Closing time cannot be less than 0 (should be {clTime} > {0}).");
+
+            if (opTime < 0)
+                throw new ArgumentOutOfRangeException($"Opening time cannot be less than 0 (should be {opTime} > {0}).");
+
+            try
+            {
+                SetActiveAndLock();
+
+                if (!Capabilities.Features.HasFlag(SDKFeatures.Shutter))
+                    throw new AndorSDKException("Camera does not support shutter control.", null);
+
+                if (Capabilities.Features.HasFlag(SDKFeatures.ShutterEx))
+                {
+                    LockManually();
+                    var result = SDKInstance.SetShutterEx((int)type, (int)inter, clTime, opTime, (int)exter);
+                    ReleaseManually();
+
+                    ThrowIfError(result, nameof(SDKInstance.SetShutterEx));
+
+                    Shutter = ( Internal: inter, External: exter, Type: type, OpenTime: opTime, CloseTime: clTime);
+                }
+                else
+                {
+                    LockManually();
+                    var result = SDKInstance.SetShutter((int)type, (int)inter, clTime, opTime);
+                    ReleaseManually();
+
+                    ThrowIfError(result, nameof(SDKInstance.SetShutter));
+
+                    Shutter = (Internal: inter, External: null, Type: type, OpenTime: opTime, CloseTime: clTime);
+                }
             }
             finally
             {
