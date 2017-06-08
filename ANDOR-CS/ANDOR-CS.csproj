@@ -122,6 +122,8 @@
     <Compile Include="DataStructures\Rectangle.cs" />
     <Compile Include="Enums\AcquisitionModeEnum.cs" />
     <Compile Include="Enums\CameraStatusEnum.cs" />
+    <Compile Include="Enums\ShutterModeEnum.cs" />
+    <Compile Include="Enums\TTLShutterSignalEnum.cs" />
     <Compile Include="Events\TemperatureStatusEventArgs.cs" />
     <Compile Include="Exceptions\TemperatureCycleInProgressException.cs" />
     <Compile Include="Exceptions\AcquisitionInProgressException.cs" />
@@ -141,6 +143,7 @@
     <Compile Include="Enums\TriggerModeEnum.cs" />
     <Compile Include="Enums\VSAmplitudeEnum.cs" />
     <Compile Include="Events\AcquisitionStatusEventArgs.cs" />
+    <Compile Include="Interfaces\ICameraControl.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Enums\TemperatureStatusEnum.cs" />

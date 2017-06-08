@@ -24,7 +24,7 @@ namespace DIPOL_UF
     /// </summary>
     public partial class DipolMainWindow : Window
     {
-        private Camera[] ConnectedCameras = null;
+        private List<Camera> ConnectedCameras = null;
 
         public DipolMainWindow()
         {
@@ -53,7 +53,7 @@ namespace DIPOL_UF
             var loader = new CameraLoader();
             loader.Owner = this;
             loader.Topmost = true;
-            ConnectedCameras = loader.ShowDialogAndWait().ToArray();
+            ConnectedCameras = loader.ShowDialogAndWait().ToList();
         }
     }
 }
