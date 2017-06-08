@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DIPOL_UF"
         mc:Ignorable="d"
         Title="Dipol-UF" Height="768" Width="1024" HorizontalContentAlignment="Stretch" MinWidth="800" MinHeight="600"
-        ContentRendered="Window_ContentRendered" Closed="Window_Closed">
+        Closed="Window_Closed">
     <Grid Name="MainLayoutGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
