@@ -41,7 +41,7 @@ namespace DIPOL_UF.Windows
             int n = Camera.GetNumberOfCameras();
             
             // DEBUG CHANGES MADE HERE
-            n = 3;
+            //n = 3;
 
             if (n < 1)
             {
@@ -67,41 +67,51 @@ namespace DIPOL_UF.Windows
 
                 task.Wait();
 
-               DetectedCameras = task.Result;
 
 
-               
+                DetectedCameras = task.Result;
+                int connectedCams = DetectedCameras.Count(cm => cm != null);
+
+                DetectedCameras = DetectedCameras
+                    .Where(cm => cm != null)
+                    .OrderBy(cm => { return int.TryParse(cm.SerialNumber, out int num) ? num : 0; })
+                    .ToList();
+
                 if (DetectedCameras.Where(c => c != null).Count() < 1)
                 {
 
                     // DEBUG CHANGES MADE HERE
-                    //MessageBox.Show(
-                    //   this,
-                    //   $"We detected at least {n} camera(s), connected to this computer, but were unable to connect to any of these. Make sure no other software is currently using these cameras.",
-                    //   $"None of {n} detected cameras are responding.",
-                    //   MessageBoxButton.OK,
-                    //   MessageBoxImage.Error,
-                    //   MessageBoxResult.OK);
+                    MessageBox.Show(
+                       this,
+                       $"We detected at least {n} camera(s), connected to this computer, but were unable to connect to any of these. Make sure no other software is currently using these cameras.",
+                       $"None of {n} detected cameras are responding.",
+                       MessageBoxButton.OK,
+                       MessageBoxImage.Error,
+                       MessageBoxResult.OK);
 
-                    //Close();
+                    Close();
 
-                    CameraList.Items.Add(new CameraListItem(1, "Cam 1"));
-                    CameraList.Items.Add(new CameraListItem(2, "Cam 2"));
-                    CameraList.Items.Add(new CameraListItem(3, "Cam 3"));
+                    //CameraList.Items.Add(new CameraListItem(1, "Cam 1"));
+                    //CameraList.Items.Add(new CameraListItem(2, "Cam 2"));
+                    //CameraList.Items.Add(new CameraListItem(3, "Cam 3"));
 
                     InstructionTextBox.Text = "Select camera(s) you would like to use. ";
 
                 }
                 else
                 {
+                    int locIndex = 1;
+
                     foreach (
                         var cameraEntry
                         in
-                            from camera
+                            from orderedCams
                             in DetectedCameras
-                            select  $"{camera.Capabilities.CameraType} - {camera.CameraModel} ({camera.SerialNumber})"                            
+                            select $"{orderedCams.Capabilities.CameraType} {orderedCams.CameraModel} ({orderedCams.SerialNumber})"                            
+                            
                         )
-                        CameraList.Items.Add(cameraEntry);
+                        CameraList.Items.Add(new CameraListItem(locIndex++, cameraEntry));
+                    
 
                     InstructionTextBox.Text = "Select camera(s) you would like to use. ";
                 }
@@ -117,7 +127,8 @@ namespace DIPOL_UF.Windows
 
             for (int i = 0; i < n; i++)
             {
-                Dispatcher.Invoke(() => progress.DisplayedCommentText = "Checking camera...");
+                if(i == 0)
+                    Dispatcher.Invoke(() => progress.DisplayedCommentText = "Checking camera...");
 
                 Camera localCam = null;
 
@@ -125,12 +136,12 @@ namespace DIPOL_UF.Windows
                 {
                     Camera cam = null;
 
-                    //try
-                    //{
-                    //    cam = new Camera(i);
-                    //}
-                    //catch (Exception e)
-                    //{ }
+                    try
+                    {
+                        cam = new Camera(i);
+                    }
+                    catch (Exception e)
+                    { }
 
                     return cam;
                 }
@@ -148,7 +159,7 @@ namespace DIPOL_UF.Windows
                 Dispatcher.Invoke(() =>
                 {
                     progress.IncrementStep();
-                    progress.DisplayedCommentText = localCam == null ? "Camera is unavailable" : $"Found camera {localCam.Capabilities.CameraType} {localCam.CameraModel}";
+                    progress.DisplayedCommentText = localCam == null ? "Camera is unavailable" : $"Found camera {localCam.Capabilities.CameraType} {localCam.CameraModel} ({localCam.SerialNumber})";
                 });
             }
             Task.Delay(1500).Wait();
@@ -173,7 +184,7 @@ namespace DIPOL_UF.Windows
 
         private void SubmitButton_Click(object sender, RoutedEventArgs e)
         {
-            SelectedCameraIndexes = CameraList.SelectedItems.Cast<CameraListItem>().Select(item => item.Index - 1).OrderBy((item) => item);
+            SelectedCameraIndexes = CameraList.SelectedItems.Cast<CameraListItem>().Select(item => item.Index - 1).OrderBy((item) => item).ToList();
 
             DialogResult = true;
            
@@ -195,14 +206,16 @@ namespace DIPOL_UF.Windows
             finally
             {
                 List<Task> nonUsedCamerasCleaning = new List<Task>();
+                
+                if (SelectedCameraIndexes == null)
+                    foreach (var cam in DetectedCameras)
+                        nonUsedCamerasCleaning.Add(Task.Factory.StartNew(() => cam?.Dispose()));
+                else
+                    for (int ind = 0; ind < DetectedCameras.Count; ind++)
+                        if (!SelectedCameraIndexes.Contains(ind))
+                           nonUsedCamerasCleaning.Add(Task.Factory.StartNew((locInd) => DetectedCameras[(int)locInd]?.Dispose(), ind));
 
-                for (int ind = 0; ind < DetectedCameras.Count; ind++)
-                {
-                    if (!SelectedCameraIndexes.Contains(ind))
-                    {
-                       nonUsedCamerasCleaning.Add(Task.Factory.StartNew((locInd) =>DetectedCameras[(int)locInd]?.Dispose(), ind));
-                    }
-                }
+
 
                 Owner.Closed += (sender, e) =>
                 {

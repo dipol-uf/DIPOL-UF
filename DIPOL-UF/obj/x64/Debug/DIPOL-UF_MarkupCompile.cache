@@ -4,17 +4,17 @@
 exe
 C#
 .cs
-C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\obj\x64\Debug\
+C:\Andor_programs\Projects\ANDOR\DIPOL-UF\obj\x64\Debug\
 DIPOL_UF
 none
 false
 DEBUG;TRACE
 
-4386526807
+4324320037
 
-9-715877088
-14-1089420901
+14791284219
+14379536152
 App.xaml;DipolMainWindow.xaml;Windows\CameraLoader.xaml;Windows\ProgressWindow.xaml;
 
-False
+True
 
