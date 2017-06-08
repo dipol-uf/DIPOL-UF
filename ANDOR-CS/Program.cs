@@ -19,148 +19,148 @@ namespace ANDOR_CS
     {
         static void Main(string[] args)
         {
-            TestAcquisitionSettings();
+            //var t = System.Diagnostics.Stopwatch.StartNew();
+
+            //WriteToDiskTest(1000);
+
+            //t.Stop();
+
+            //Console.WriteLine("Total time {0:F6}", t.ElapsedMilliseconds / 1000.0);
+
+            //Console.ReadKey();
+
+            
+
+                TestAcquisitionSettings();
+
+              
+
         }
 
-       
         public static void TestAcquisitionSettings()
         {
-            
-            using (var cam = new Camera()) 
+
+            using (var cam = new Camera())
             {
-               cam.FanControl(FanMode.Off);
+                cam.FanControl(FanMode.Off);
 
-               var settings = cam.GetAcquisitionSettingsTemplate();
+                var settings = cam.GetAcquisitionSettingsTemplate();
 
-                settings.SetOutputAmplifier(OutputAmplification.ElectronMultiplication);
+                settings.SetAcquisitionMode(AcquisitionMode.SingleScan);
+
+                settings.SetOutputAmplifier(OutputAmplification.Conventional);
                 settings.SetADConverter(0);
                 //foreach (var speed in settings.GetAvailableHSSpeeds())
                 //    Console.WriteLine("Speed {0} has value {1}", speed.Item1 + 1, speed.Item2);
 
                 var query = settings.GetAvailableHSSpeeds();
 
-                settings.SetHSSpeed(query.First().Item1);
+                settings.SetHSSpeed(1);
+                settings.SetVSSpeed(4);
 
-                //foreach (var gain in settings.GetAvailablePreAmpGain())
-                //    Console.WriteLine("Gain {0} has name {1}", gain.Item1 + 1, gain.Item2);
+                settings.SetExposureTime(0.5f);
 
-                settings.SetVSSpeed();
-                settings.SetVSAmplitude(VSAmplitude.Normal);
+                settings.SetImageArea(new Rectangle(1, 1, 512, 512));
 
-                settings.SetPreAmpGain(settings.GetAvailablePreAmpGain().First().Item1);
-
-                settings.SetAcquisitionMode(AcquisitionMode.Kinetic);
                 settings.SetReadoutMode(ReadMode.FullImage);
+
                 settings.SetTriggerMode(TriggerMode.Internal);
 
-                settings.SetImageArea(new Rectangle(new Point2D(1, 1), cam.Properties.DetectorSize));
+                var output = settings.ApplySettings(out (float, float, float, int) timing);
 
-                settings.SetExposureTime(0.1f);
+                foreach (var o in output)
+                    Console.WriteLine(o);
 
-                settings.SetAccumulationCycle(1, 0);
-                settings.SetKineticCycle(40, 0);
 
-                //using (var str = new FileStream("debug_settings.acs", FileMode.Op))
-                //{
-                //    settings.Deserialize(str);
-                //}
+                Console.WriteLine(timing);
 
-                int counter = 0;
+                int n = 10;
 
-                DateTime timeStamp = DateTime.Now;
-                TimeSpan delay = TimeSpan.MinValue;
+                List<float[]> images = new List<float[]>(n);
 
-                cam.AcquisitionStarted += (c, e) => Console.WriteLine("\r\nAcquisition started on camera {0}. Async: {1}; Acquiring: {2} Flag: {3}", (c as Camera).CameraModel, (c as Camera).IsAsyncAcquisition, (c as Camera).IsAcquiring, e.IsAsync);
-               // cam.AcquisitionStatusChecked += (c, e) =>  Console.Write("\rAcquiring  Async: {0}; Acquiring: {1}; Flag: {2} {3}{4}", (c as Camera).IsAsyncAcquisition, (c as Camera).IsAcquiring, e.IsAsync, new string('.', 1 + (counter++ %3)), new string(' ', 3 - (counter % 3)));
-                cam.AcquisitionFinished += (c, e) => Console.WriteLine("\r\nAcquisition finished on camera {0}. Async: {1}; Acquiring: {2}; Flag: {3}", (c as Camera).CameraModel, (c as Camera).IsAsyncAcquisition, (c as Camera).IsAcquiring, e.IsAsync);
-                cam.AcquisitionAborted += (c, e) => Console.WriteLine("\r\nAcquisition aborted on camera {0}. Async: {1}; Acquiring: {2}; Flag: {3}", (c as Camera).CameraModel, (c as Camera).IsAsyncAcquisition, (c as Camera).IsAcquiring, e.IsAsync);
+                for (int i = 0; i < n; i++)
+                    images.Add(new float[cam.Properties.DetectorSize.Horizontal * cam.Properties.DetectorSize.Vertical]);
 
-                var result = settings.ApplySettings(out var timing);
-                var q = cam.GetOldestImages();
+                TimeSpan span = default(TimeSpan);
+                DateTime startTime = DateTime.Now;
 
-                cam.AcquisitionStarted += (c, e) => timeStamp = e.EventTime;
-                cam.AcquisitionFinished += (c, e) => delay = e.EventTime - timeStamp;
-                cam.AcquisitionStatusChecked += (c, e) =>
+                cam.AcquisitionStarted += (c, e) =>
+               {
+                   startTime = e.EventTime;
+                   Console.WriteLine("Acquisition started  on {0:hh-mm-ss.ffffff}", e.EventTime);
+               };
+                cam.AcquisitionFinished += (c, e) =>
                 {
-                    int n = 0;
-                    int n1 = 0, n2 = 0;
-
-                   // Int32[] tempArr = new Int32[512 * 512];
-                    
-                    //SDKInit.SDKInstance.GetTotalNumberImagesAcquired(ref n);
-                    //SDKInit.SDKInstance.GetNumberNewImages(ref n1, ref n2);
-                                                  
-                    //Console.WriteLine("{0}\t{1}\t{2}\t{3}", n, tempArr.Max(), n1, n2);
-
-                   
+                    span = e.EventTime - startTime;
+                    Console.WriteLine("Acquisition finished on {0:hh-mm-ss.ffffff}", e.EventTime);
                 };
 
-              
-
-                Console.WriteLine();
-
-                foreach (var r in result)
-                    Console.WriteLine(r);
-
-                Console.WriteLine($"\r\nExposure: {timing.ExposureTime}\t Accumulation: {timing.AccumulationCycleTime}\t Kinetic: {timing.KineticCycleTime}");
-
-                if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
+                while (true)
                 {
-                    var temp = cam.GetCurrentTemperature();
+                    Console.WriteLine("----------------------------------------\r\n");
 
-                    Console.WriteLine($"\r\nTemp: {Extensions.GetEnumNames(typeof(TemperatureStatus), temp.Status).First()}\t{temp.Temperature} degrees");
+                    var t = System.Diagnostics.Stopwatch.StartNew();
+                    var cancel = new System.Threading.CancellationTokenSource();
+                    for (int i = 0; i < n; i++)
+                    {
+
+
+                        Console.WriteLine($"\r\nExposure {i + 1}");
+
+                        cam.StartAcquistionAsync(cancel.Token, 5).Wait();
+                        //Task.Delay(100).Wait();
+                        Console.WriteLine("Exposure time {0:F6}", span.TotalMilliseconds / 1000.0);
+
+                        ANDOR_CS.Exceptions.AndorSDKException.ThrowIfError(SDKInit.SDKInstance.GetAcquiredFloatData(images[i], (uint)images[i].Length), "");
+                    }
+                    t.Stop();
+
+                    Console.WriteLine("{0:F4} s", t.ElapsedMilliseconds / 1000.0);
+                    var key = Console.ReadKey();
+
+                    if (key.Key == ConsoleKey.Escape)
+                        break;
                 }
 
-                var source = new System.Threading.CancellationTokenSource();
-
-
-
-                //var monitor = Task.Run(() =>
-                //{
-                //    for (int i = 0; i < 800; i++)
-                //    {
-                //        System.Threading.Tasks.Task.Delay(50);
-                //        Console.WriteLine(cam.GetStatus());
-                //    }
-                //});
-
-                var task = cam.StartAcquistionAsync(source.Token, 5);
-
-
-                task.Wait();
-
-                var testA = q.ToArray();
-                //task = cam.StartAcquistionAsync(source.Token, 5);
-                //task.Wait();
-
-                Console.WriteLine(delay);
-
-                //monitor.Wait();
-                float[] array = new float[cam.Properties.DetectorSize.Horizontal * cam.Properties.DetectorSize.Vertical];
-
-                SDKInit.SDKInstance.GetAcquiredFloatData(array, (uint)array.Length);
-               
-
-                
-                int temp2 = 0;
-
-                SDKInit.SDKInstance.GetTotalNumberImagesAcquired(ref temp2);
-
-                int start = 0, stop = 0;
-
-                SDKInit.SDKInstance.GetNumberAvailableImages(ref start, ref stop);
-
-                
-
-               // Console.WriteLine(res == SDK.DRV_SUCCESS ? "Success!" : "Failure!");
-                Console.ReadKey();
-
             }
-
-            
         }
 
-        
+        public static void WriteToDiskTest(int n = 10)
+        {
+            UInt16[] arr = new UInt16[512 * 512];
+            Random r = new Random();
+
+            for (int i = 0; i < arr.Length; i++)
+                arr[i] = (UInt16)r.Next(500, 1000);
+
+            byte[][] bytes = new byte[n][];
+
+            for (int i = 0; i < n; i++)
+                bytes[i] = new byte[arr.Length * 2];
+
+            var t = System.Diagnostics.Stopwatch.StartNew();
+
+           //for (int i = 0; i < n; i++)
+            Parallel.For(0, n, (i) =>
+            {
+                for (int k = 0; k < arr.Length; k++)
+                {
+                    var temp = BitConverter.GetBytes(arr[k]);
+                    bytes[i][2 * k] = temp[0];
+                    bytes[i][2 * k + 1] = temp[1];
+                }
+
+                using (var str = new FileStream($@".\Output\file_{i + 1}.dat", FileMode.OpenOrCreate))
+                    str.Write(bytes[i], 0, bytes[i].Length);
+
+            }
+            );
+            t.Stop();
+
+            Console.WriteLine("Writing time {0:F6}", t.ElapsedMilliseconds / 1000.0);
+            Console.WriteLine("Writing time per file, avg {0:F6}", t.ElapsedMilliseconds / 1000.0 / n);
+        }
+  
         public static void TestMonitor()
         {
             using (var cam = new Camera())

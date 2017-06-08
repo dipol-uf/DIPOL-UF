@@ -86,7 +86,25 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
-        public bool IsActive => ActiveCamera?.CameraHandle.SDKPtr == this.CameraHandle.SDKPtr;
+        public bool IsActive
+        {
+            get
+            {
+                try
+                {
+                    if(LockDepth == 0)
+                        ActivityLocker.Wait();
+
+                    LockDepth++;
+                    return Call(SDKInstance.GetCurrentCamera, out int handle) == SDK.DRV_SUCCESS ? handle == CameraHandle.SDKPtr : false;
+                }
+                finally
+                {
+                    ReleaseLock();
+                }
+            }
+        }
+                           
         public SafeSDKCameraHandle CameraHandle
         {
             get;
@@ -716,7 +734,9 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSDKException"/>
         public void SetActive()
         {
-            if (!IsActive)
+            Call(SDKInstance.GetCurrentCamera, out int handle);
+
+            //if (!IsActive)
             {
                 // If camera address is invalid, throws exception
                 if (CameraHandle.SDKPtr == 0)
@@ -728,7 +748,7 @@ namespace ANDOR_CS.Classes
                 ThrowIfError(result, nameof(SDKInstance.SetCurrentCamera));
 
                 // Updates the static field of Camera class to indicate that this camera is now active
-                ActiveCamera = this;
+                //ActiveCamera = this;
             }
         }
 
@@ -1195,6 +1215,8 @@ namespace ANDOR_CS.Classes
             // If camera has valid SDK pointer and is initialized
             if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
             {
+                Console.WriteLine($"Disposing camera {this.SerialNumber}");
+
                 // Saves currently active camera
                 var oldCamera = ActiveCamera;
 
@@ -1213,12 +1235,14 @@ namespace ANDOR_CS.Classes
                 }
                 finally
                 {
-                    ReleaseLock();
+                   
                     // If there are no other cameras, 
                     if (CreatedCameras.Count == 0)
                         ActiveCamera = null;
                     // If there are, sets active the one that was active before disposing procedure
-                    else oldCamera.SetActive();
+                    else oldCamera?.SetActive();
+
+                    ReleaseLock();
                 }
                
             }

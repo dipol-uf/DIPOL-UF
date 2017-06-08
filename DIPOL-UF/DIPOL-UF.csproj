@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\CameraListItem.cs" />
+    <Compile Include="EventArgs\CameraEventArgs.cs" />
     <Compile Include="Windows\CameraLoader.xaml.cs">
       <DependentUpon>CameraLoader.xaml</DependentUpon>
     </Compile>
