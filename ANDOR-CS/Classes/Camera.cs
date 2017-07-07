@@ -1400,43 +1400,7 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        public IEnumerable<Int32[]> GetOldestImages()
-        {
-            int current = 0;
-            int n1 = 0;
-            int n2 = 0;
-
-            Int32[] currentImage = new Int32[CurrentSettings.ImageArea.Value.Width * CurrentSettings.ImageArea.Value.Height];
-
-            while (current < 1 * (CurrentSettings.KineticCycle?.Frames ?? 1))
-            {
-                uint result = SDKInit.SDKInstance.GetNumberNewImages(ref n1, ref n2);
-                if (n1 > current)
-                {
-                    currentImage = new Int32[CurrentSettings.ImageArea.Value.Width * CurrentSettings.ImageArea.Value.Height];
-
-                    result = SDKInit.SDKInstance.GetOldestImage(currentImage, (uint)currentImage.Length);
-
-                    if (result == SDK.DRV_SUCCESS)
-                         current = n1;
-                    
-                }
-
-                yield return currentImage;
-            }
-        }
-
-        private static RawImageStorage.Image32 DataToImage(float[] data, int height, int width)
-        {
-            float[,] buffer = new float[height, width];
-
-            for (int i = 0; i < height; i++)
-                for (int j = 0; j < width; j++)
-                    buffer[i, j] = data[j + i * width];
-
-            return new RawImageStorage.Image32(buffer);
-
-        }
+        
 
         /// <summary>
         /// Queries the number of currently connected Andor cameras
@@ -1453,6 +1417,14 @@ namespace ANDOR_CS.Classes
 
             return cameraCount;
         }
+
+        /// <summary>
+        /// Generates an interface for debug purposes 
+        /// Does not requrire real camera
+        /// </summary>
+        /// <returns></returns>
+        public static Interfaces.ICameraControl GetDebugInterface() => new DebugCamera();
+        
     }
 
 }
