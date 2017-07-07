@@ -15,6 +15,7 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,28 +24,30 @@ using System.Threading.Tasks;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
+using ANDOR_CS.Interfaces;
 
-namespace ANDOR_CS.Interfaces
+namespace ANDOR_CS.Classes
 {
-    public interface ICameraControl : IDisposable
+    public class DebugCamera :ICameraControl
     {
-        DeviceCpabilities Capabilities { get; }
+        public DeviceCpabilities Capabilities => default(DeviceCpabilities);
 
-        CameraProperties Properties { get; }
+        public CameraProperties Properties => default(CameraProperties);
 
-        bool IsActive { get; }
-      
-        bool IsInitialized { get; }
-        
-        string SerialNumber { get; }
+        public bool IsActive => true;
 
-        string CameraModel { get; }
+        public bool IsInitialized => true;
 
-        FanMode FanMode { get; }
-         
-        Switch CoolerMode { get; }
+        public string SerialNumber => "0000";
 
-        CameraStatus GetStatus();
+        public string CameraModel => "DEBUG-CAMERA-INTERFACE";
 
+        public FanMode FanMode => FanMode.Off;
+
+        public Switch CoolerMode => Switch.Disabled;
+
+        public CameraStatus GetStatus() => CameraStatus.Idle;
+
+        public void Dispose() => Console.Error.WriteLine("Debug camera disposed");
     }
 }
