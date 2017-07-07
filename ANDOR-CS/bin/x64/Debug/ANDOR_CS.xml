@@ -648,6 +648,13 @@
             <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
             <returns>TNumber of detected cameras</returns>
         </member>
+        <member name="M:ANDOR_CS.Classes.Camera.GetDebugInterface">
+            <summary>
+            Generates an interface for debug purposes 
+            Does not requrire real camera
+            </summary>
+            <returns></returns>
+        </member>
         <member name="T:ANDOR_CS.DataStructures.CameraProperties">
             <summary>
             Stores information about camera-specific properties

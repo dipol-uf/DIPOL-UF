@@ -112,6 +112,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\AcquisitionSettings.cs" />
+    <Compile Include="Classes\DebugCamera.cs" />
     <Compile Include="Classes\EnumConverter.cs" />
     <Compile Include="Classes\SafeSDKCameraHandle.cs" />
     <Compile Include="DataStructures\CameraProperties.cs" />
