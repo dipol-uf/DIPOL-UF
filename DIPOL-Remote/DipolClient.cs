@@ -21,9 +21,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.ServiceModel;
+
 namespace DIPOL_Remote
 {
     public class DipolClient
     {
+        private IRemoteControl remote = null;
+
+        public IRemoteControl Remote => remote;
+
+        private static readonly Uri endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
+
+        public DipolClient()
+        {
+            remote = new ChannelFactory<IRemoteControl>(new NetTcpBinding(), new EndpointAddress(endpoint)).CreateChannel();
+        }
+
+        public void Dispose()
+        {
+            (remote as ICommunicationObject)?.Close();
+        }
     }
 }

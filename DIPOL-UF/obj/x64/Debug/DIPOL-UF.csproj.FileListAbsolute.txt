@@ -75,3 +75,5 @@ E:\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\obj\x64\Debug\DIPOL_UF.Proper
 E:\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\obj\x64\Debug\DIPOL-UF.csproj.GenerateResource.Cache
 E:\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\obj\x64\Debug\DIPOL-UF.exe
 E:\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\obj\x64\Debug\DIPOL-UF.pdb
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\bin\x64\Debug\DIPOL-Remote.dll
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\bin\x64\Debug\DIPOL-Remote.pdb
