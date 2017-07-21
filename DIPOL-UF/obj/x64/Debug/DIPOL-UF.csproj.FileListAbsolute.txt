@@ -29,11 +29,9 @@ C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\bin\x64\Debug\DIP
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\bin\x64\Debug\DIPOL-UF.pdb
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\bin\x64\Debug\ANDOR_CS.exe
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\bin\x64\Debug\ATMCD64CS.dll
-C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\bin\x64\Debug\Image.dll
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\bin\x64\Debug\ANDOR_CS.pdb
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\bin\x64\Debug\ANDOR_CS.xml
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\bin\x64\Debug\ANDOR_CS.exe.config
-C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\bin\x64\Debug\Image.pdb
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\obj\x64\Debug\DIPOL-UF.csprojResolveAssemblyReference.cache
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\obj\x64\Debug\App.g.cs
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-UF\obj\x64\Debug\DipolMainWindow.g.cs

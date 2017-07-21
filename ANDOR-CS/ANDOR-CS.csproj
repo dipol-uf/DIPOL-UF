@@ -172,5 +172,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DIPOL-Remote\DIPOL-Remote.csproj">
+      <Project>{355d3461-6989-4022-9fde-b2bea3581590}</Project>
+      <Name>DIPOL-Remote</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
