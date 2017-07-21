@@ -29,20 +29,31 @@ namespace DIPOL_Remote
         ConcurrencyMode = ConcurrencyMode.Multiple, 
         InstanceContextMode = InstanceContextMode.PerSession,
         UseSynchronizationContext = true)]
-    public class RemoteControl : IRemoteControl
+    public class RemoteControl : IRemoteControl, IDisposable
     {
-        internal 
+        internal string sessionID = "";
         public RemoteControl()
         {
+            sessionID = Guid.NewGuid().ToString("N");
             Console.WriteLine("Constructor invoked.");
+
         }
 
         [OperationBehavior]
-        public bool Connect()
+        public string Connect()
         {
             Console.WriteLine("Connection initialized.");
 
-            return true;
+            return sessionID;
         }
+
+        [OperationBehavior]
+        public void Disconnect()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        { }
     }
 }

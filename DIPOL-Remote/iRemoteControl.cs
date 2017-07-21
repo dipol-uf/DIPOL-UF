@@ -29,6 +29,9 @@ namespace DIPOL_Remote
     public interface IRemoteControl
     {
         [OperationContract(IsInitiating = true, IsOneWay = false)]
-        bool Connect();
+        string Connect();
+
+        [OperationContract(IsTerminating = true, IsOneWay = false)]
+        void Disconnect();
     }
 }
