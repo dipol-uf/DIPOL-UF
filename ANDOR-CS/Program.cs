@@ -19,6 +19,11 @@ namespace ANDOR_CS
     {
         static void Main(string[] args)
         {
+            var host = new DIPOL_Remote.DipolHost();
+            host.Host();
+            Console.ReadKey();
+            host.Dispose();
+
             //var t = System.Diagnostics.Stopwatch.StartNew();
 
             //WriteToDiskTest(1000);
@@ -31,7 +36,7 @@ namespace ANDOR_CS
 
             
 
-                TestAcquisitionSettings();
+               // TestAcquisitionSettings();
 
               
 
