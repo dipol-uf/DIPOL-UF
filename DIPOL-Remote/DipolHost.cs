@@ -39,7 +39,7 @@ namespace DIPOL_Remote
         }
 
         public void Host() => host?.Open();
-
+        
         public void Dispose()
         {
             host?.Close();
