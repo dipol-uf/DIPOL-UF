@@ -28,32 +28,64 @@ namespace DIPOL_Remote
     [ServiceBehavior(
         ConcurrencyMode = ConcurrencyMode.Multiple, 
         InstanceContextMode = InstanceContextMode.PerSession,
-        UseSynchronizationContext = true)]
+        UseSynchronizationContext = true,
+        IncludeExceptionDetailInFaults = true)]
     public class RemoteControl : IRemoteControl, IDisposable
     {
-        internal string sessionID = "";
+        private string sessionID = "";
+        private bool IsDisposing = false;
+        private OperationContext context;
+
+        public static System.Collections.Concurrent.ConcurrentBag<RemoteControl> ServiceInstances = 
+            new System.Collections.Concurrent.ConcurrentBag<RemoteControl>();
+
         public RemoteControl()
         {
             sessionID = Guid.NewGuid().ToString("N");
             Console.WriteLine("Constructor invoked.");
 
         }
+                
+        public string SessionID
+        {
+            [OperationBehavior]
+            get => sessionID;
+            
+        }
 
         [OperationBehavior]
-        public string Connect()
+        public void Connect()
         {
+            context = OperationContext.Current;
+            ServiceInstances.Add(this);
             Console.WriteLine("Connection initialized.");
-
-            return sessionID;
         }
 
         [OperationBehavior]
         public void Disconnect()
         {
+            IsDisposing = true;
             Dispose();
         }
 
         public void Dispose()
-        { }
+        {
+            Console.WriteLine("In dispose");
+            if(IsDisposing)
+                Console.WriteLine("Disposing...");
+        }
+
+        [OperationBehavior]
+        public int GetNumberOfCameras()
+        {
+            return 3;
+        }
+
+        public void SendToClient()
+        {
+            Console.WriteLine(context == null);
+            context.GetCallbackChannel<IRemoteCallback>().SendToClient("Hello from service");
+        }
+
     }
 }
