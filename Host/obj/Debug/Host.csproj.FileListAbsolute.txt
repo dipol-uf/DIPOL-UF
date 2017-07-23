@@ -1,0 +1,9 @@
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Host\bin\Debug\Host.exe.config
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Host\bin\Debug\Host.exe
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Host\bin\Debug\Host.pdb
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Host\bin\Debug\DIPOL-Remote.dll
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Host\bin\Debug\DIPOL-Remote.pdb
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Host\obj\Debug\Host.csprojResolveAssemblyReference.cache
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Host\obj\Debug\Host.exe
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Host\obj\Debug\Host.pdb
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Host\bin\Debug\atmcd64d.dll
