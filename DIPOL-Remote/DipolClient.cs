@@ -28,6 +28,7 @@ namespace DIPOL_Remote
     public class DipolClient
     {
         private IRemoteControl remote = null;
+        private InstanceContext context = new InstanceContext(new RemoteCallbackHandler());
 
         public IRemoteControl Remote => remote;
 
@@ -35,7 +36,11 @@ namespace DIPOL_Remote
 
         public DipolClient()
         {
-            remote = new ChannelFactory<IRemoteControl>(new NetTcpBinding(), new EndpointAddress(endpoint)).CreateChannel();
+            remote = new DuplexChannelFactory<IRemoteControl>(
+                context, 
+                new NetTcpBinding(), 
+                new EndpointAddress(endpoint)).CreateChannel();
+            
         }
 
         public void Dispose()
