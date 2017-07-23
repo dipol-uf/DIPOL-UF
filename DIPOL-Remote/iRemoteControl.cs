@@ -25,13 +25,24 @@ using System.ServiceModel;
 
 namespace DIPOL_Remote
 {
-    [ServiceContract(SessionMode = SessionMode.Required)]
+    [ServiceContract(SessionMode = SessionMode.Required,
+        CallbackContract = typeof(IRemoteCallback))]
     public interface IRemoteControl
     {
+        string SessionID
+        {
+            [OperationContract(IsOneWay = false)]
+            get;
+        }
+
         [OperationContract(IsInitiating = true, IsOneWay = false)]
-        string Connect();
+        void Connect();
 
         [OperationContract(IsTerminating = true, IsOneWay = false)]
         void Disconnect();
+
+        [OperationContract(IsOneWay = false)]
+        int GetNumberOfCameras();
+        
     }
 }

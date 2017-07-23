@@ -44,9 +44,17 @@
   <ItemGroup>
     <Compile Include="DipolClient.cs" />
     <Compile Include="DipolHost.cs" />
+    <Compile Include="IRemoteCallback.cs" />
     <Compile Include="IRemoteControl.cs" />
+    <Compile Include="RemoteCallbackHandler.cs" />
     <Compile Include="RemoteControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ANDOR-CS\ANDOR-CS.csproj">
+      <Project>{d1e8b17d-4c59-42dd-87bd-f111df8e631d}</Project>
+      <Name>ANDOR-CS</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
