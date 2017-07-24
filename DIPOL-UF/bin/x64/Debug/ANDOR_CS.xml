@@ -633,6 +633,7 @@
             </summary>
             <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
             <exception cref="T:System.ArgumentException"/>
+            <exception cref="T:System.InvalidOperationException"/>
             <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="M:ANDOR_CS.Classes.Camera.GetNumberOfCameras"/></param>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.Dispose">
