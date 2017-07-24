@@ -25,10 +25,10 @@ using System.Runtime.Serialization;
 
 namespace ANDOR_CS.Exceptions
 {
-    [DataContract]
+   
     public class AndorSDKException : Exception
     {
-        [DataMember]
+        
         public uint ErrorCode
         {
             get;

@@ -61,7 +61,7 @@ namespace DIPOL_Remote
         /// </summary>
         /// <returns></returns>
         [OperationContract(IsOneWay = false)]
-        [FaultContract(typeof(ANDOR_CS.Exceptions.AndorSDKException))]
+        [FaultContract(typeof(AndorSDKServiceException))]
         [FaultContract(typeof(ServiceException))]
         int GetNumberOfCameras();
         
