@@ -15,9 +15,8 @@ namespace DIPOL_Remote.Faults
         public static readonly FaultReason CameraCommunicationReason
             = new FaultReason($"Error occured while communicating with {nameof(ANDOR_CS.Classes.Camera)} object.");
 
-        public static readonly FaultReason CameraCommunicationReason
-            = new FaultReason($"Error occured while communicating with {nameof(ANDOR_CS.Classes.Camera)} object.");
-
+        public static readonly FaultReason GeneralServiceErrorReason
+            = new FaultReason("General error occured while communicating with service.");
 
         [DataMember(IsRequired = true, Order = 0)]
         public string Message;
