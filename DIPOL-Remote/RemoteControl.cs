@@ -43,6 +43,8 @@ namespace DIPOL_Remote
         IncludeExceptionDetailInFaults = true)]
     public class RemoteControl : IRemoteControl, IDisposable
     {
+        private static readonly int MaxTryAddAttempts = 10;
+
         /// <summary>
         /// Unique ID of the current session
         /// </summary>
@@ -58,6 +60,11 @@ namespace DIPOL_Remote
         private static ConcurrentDictionary<string, RemoteControl> serviceInstances 
             = new ConcurrentDictionary<string, RemoteControl>();
 
+        /// <summary>
+        /// Thread-safe collection of active remote cameras.
+        /// </summary>
+        private static ConcurrentDictionary<int, (string SessionID, Camera Camera)> activeCameras
+            = new ConcurrentDictionary<int, (string SessionID, Camera Camera)>();
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -84,6 +91,11 @@ namespace DIPOL_Remote
             get => serviceInstances as IReadOnlyDictionary<string, RemoteControl>;
         }
 
+        public static IReadOnlyDictionary<int, (string SessionID, Camera Camera)> ActiveCameras
+        {
+            get => activeCameras as IReadOnlyDictionary<int, (string SessionID, Camera Camera)>;
+        }
+
         /// <summary>
         /// Entry point of any connection.
         /// </summary>
@@ -95,19 +107,23 @@ namespace DIPOL_Remote
             // Assigns session ID
             sessionID = Guid.NewGuid().ToString("N");
 
-            int maxTry = 100;
+            
             int count = 0;
             // Stores current instance of service class into collection
-            while(!serviceInstances.TryAdd(sessionID, this) & count++ < maxTry)
-                sessionID = Guid.NewGuid().ToString("N");
 
-            if (count >= maxTry)
+            for(;
+                !serviceInstances.TryAdd(sessionID, this) & count < MaxTryAddAttempts;
+                count++)
+                sessionID = Guid.NewGuid().ToString("N");
+           
+
+            if (count >= MaxTryAddAttempts)
                 throw new FaultException<ServiceException>(
                     new ServiceException()
                     {
                         Message = "Initialization of connection failed.",
                         Details = "Unable to generate unique session ID. " +
-                        "Failed to add current session to the pool of active sessions",
+                        "Failed to add current session to the pool of active sessions.",
                         MethodName = nameof(serviceInstances.TryAdd)
                     }, 
                     new FaultReason("Connection was not properly initialized.")
@@ -129,6 +145,7 @@ namespace DIPOL_Remote
         /// </summary>
         public void Dispose()
         {
+            
             serviceInstances.TryRemove(sessionID, out _);
         }
 
@@ -170,6 +187,39 @@ namespace DIPOL_Remote
 
             }
             
+        }
+
+        [OperationBehavior]
+        public void CreateCamera(int camIndex = 0)
+        {
+            // Prevents from creating the same camera
+            //if (ActiveCameras.Count(item => item.Value.Camera.CameraIndex == camIndex) != 0)
+            //    throw new Exception();
+
+            Camera camera = null;
+
+            try
+            {
+                camera = new Camera(camIndex);
+            }
+            catch (Exception e)
+            {
+
+            }
+
+
+            int count = 0;
+            for (; 
+                !activeCameras.TryAdd(
+                    activeCameras.Count + 1, 
+                    (SessionID: SessionID, Camera: camera))
+                & count < MaxTryAddAttempts; 
+                count++)
+                continue;
+
+            if (count >= MaxTryAddAttempts)
+                throw new Exception();
+
         }
 
         public void SendToClient()

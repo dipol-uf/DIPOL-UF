@@ -34,3 +34,5 @@ C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x64\Debug\ATM
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\obj\x64\Debug\ANDOR-CS.csprojResolveAssemblyReference.cache
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\obj\x64\Debug\ANDOR_CS.dll
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\obj\x64\Debug\ANDOR_CS.pdb
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x64\Debug\ANDOR_CS.dll.CodeAnalysisLog.xml
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x64\Debug\ANDOR_CS.dll.lastcodeanalysissucceeded
