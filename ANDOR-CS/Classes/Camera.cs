@@ -184,6 +184,7 @@ namespace ANDOR_CS.Classes
             private set;
         } = -1;
 
+        
         /// <summary>
         /// Curently set acquisition regime
         /// </summary>

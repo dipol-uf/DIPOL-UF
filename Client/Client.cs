@@ -11,17 +11,17 @@ namespace Client
         static void Main(string[] args)
         {
             var client = new DIPOL_Remote.Classes.DipolClient();
-            client.Remote.Connect();
+            client.Connect();
 
-            Console.WriteLine("Session ID {0}", client.Remote.SessionID);
+            Console.WriteLine("Session ID {0}", client);
 
-            Console.WriteLine($"Number of available cameras: {client.Remote.GetNumberOfCameras()}");
+            Console.WriteLine($"Number of available cameras: {client.GetNumberOfCameras()}");
 
-            client.Remote.CreateCamera();
+            client.CreateRemoteCamera();
 
             Console.ReadKey();
 
-            client.Remote.Disconnect();
+            client.Disconnect();
 
             client.Dispose();
         }
