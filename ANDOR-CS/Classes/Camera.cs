@@ -1150,6 +1150,8 @@ namespace ANDOR_CS.Classes
         /// Creates a new instance of Camera class to represent a connected Andor device.
         /// Maximum 8 cameras can be controled at the same time
         /// </summary>
+        /// <exception cref="AndorSDKException"/>
+        /// <exception cref="ArgumentException"/>
         /// <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="Camera.GetNumberOfCameras()"/></param>
         public Camera(int camIndex = 0)
         {
@@ -1165,6 +1167,9 @@ namespace ANDOR_CS.Classes
             // If cameraIndex equals to or exceeds the number of available cameras, it is also out of range
             if (camIndex >= n)
                 throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
+            // If camera with such index is already in use, throws exception
+            if (CreatedCameras.Count(cam => cam.CameraIndex == camIndex) != 0)
+                throw new ArgumentException($"Camera with index {camIndex} is already created.");
 
             // Stores the handle (SDK private pointer) to the camera. A unique identifier
             result =Call(SDKInstance.GetCameraHandle, camIndex, out int handle);
