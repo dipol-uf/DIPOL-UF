@@ -15,6 +15,8 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
+//#define NO_ACTUAL_CAMERA
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -126,7 +128,7 @@ namespace DIPOL_Remote
                         "Failed to add current session to the pool of active sessions.",
                         MethodName = nameof(serviceInstances.TryAdd)
                     }, 
-                    new FaultReason("Connection was not properly initialized.")
+                    ServiceException.GeneralServiceErrorReason
                     );
 
         }
@@ -160,10 +162,13 @@ namespace DIPOL_Remote
         {
             try
             {
+               // Trys to retrieve the number of available cameras
                 return Camera.GetNumberOfCameras();
             }
+            // If method fails and Andor-related exception is thrown
             catch (AndorSDKException andorEx)
             {
+                // rethrow it, wrapped in FaultException<>, to the client side
                 throw new FaultException<AndorSDKServiceException>(
                     new AndorSDKServiceException()
                     {
@@ -174,13 +179,15 @@ namespace DIPOL_Remote
                     },
                     ServiceException.CameraCommunicationReason);
             }
-            catch (Exception e)
+            // If failure is not realted to Andor API
+            catch (Exception ex)
             {
+                // rethrow it, wrapped in FaultException<>, to the client side
                 throw new FaultException<ServiceException>(
                     new ServiceException()
                     {
                         Message = "Failed retrieving number of available cameras.",
-                        Details = e.Message,
+                        Details = ex.Message,
                         MethodName = nameof(Camera.GetNumberOfCameras)
                     },
                     ServiceException.CameraCommunicationReason);
@@ -192,22 +199,47 @@ namespace DIPOL_Remote
         [OperationBehavior]
         public void CreateCamera(int camIndex = 0)
         {
-            // Prevents from creating the same camera
-            //if (ActiveCameras.Count(item => item.Value.Camera.CameraIndex == camIndex) != 0)
-            //    throw new Exception();
-
+           
             Camera camera = null;
 
             try
             {
+                // Tries to create new remote camera
+#if NO_ACTUAL_CAMERA
+                camera = Camera.GetDebugInterface();
+                
+#else
                 camera = new Camera(camIndex);
+#endif
             }
-            catch (Exception e)
+            // Andor-related exception
+            catch (AndorSDKException andorEx)
             {
-
+                throw new FaultException<AndorSDKServiceException>(
+                    new AndorSDKServiceException()
+                    {
+                        Message = "Failed to create new remote camera.",
+                        Details = andorEx.Message,
+                        ErrorCode = andorEx.ErrorCode,
+                        MethodName = nameof(Camera)
+                    },
+                    ServiceException.CameraCommunicationReason);
+            }
+            // Other possible exceptions
+            catch (Exception ex)
+            {
+                throw new FaultException<ServiceException>(
+                    new ServiceException()
+                    {
+                        Message = "Failed to create new remote camera.",
+                        Details = ex.Message,
+                        MethodName = nameof(Camera)
+                    },
+                    ServiceException.CameraCommunicationReason);
             }
 
-
+            // Tries to add created camera to te dictionary of
+            // active cameras.
             int count = 0;
             for (; 
                 !activeCameras.TryAdd(
@@ -217,8 +249,20 @@ namespace DIPOL_Remote
                 count++)
                 continue;
 
+            // If number of attempts exceeds limit
             if (count >= MaxTryAddAttempts)
-                throw new Exception();
+            {
+                // Clena & and throw exception
+                camera.Dispose();
+                throw new  FaultException<ServiceException>(
+                    new ServiceException()
+                    {
+                        Message = "Failed to add new remote camera to the dictionary.",
+                        Details = "Several unsuccessful attemps were made to add new camera to the list of exising ones.",
+                        MethodName = nameof(activeCameras.TryAdd)
+                    },
+                    ServiceException.GeneralServiceErrorReason);
+            }
 
         }
 
