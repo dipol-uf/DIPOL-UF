@@ -30,6 +30,7 @@ using ANDOR_CS.Exceptions;
 
 using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
+using ICameraControl = ANDOR_CS.Interfaces.ICameraControl;
 
 using static ANDOR_CS.Exceptions.AndorSDKException;
 using static ANDOR_CS.Exceptions.AcquisitionInProgressException;
@@ -41,14 +42,15 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Represents an instance of a Camera device
     /// </summary>
-    public class Camera : ANDOR_CS.Interfaces.ICameraControl
+    public class Camera : ICameraControl
     {
         private const int AmpDescriptorMaxLength = 21;
         private const int PreAmpGainDescriptorMaxLength = 30;
         private const int StatusCheckTimeOutMS = 100;
         private const int TempCheckTimeOutMS = 5000;
 
-        private static ConcurrentDictionary<int, Camera> CreatedCameras = new ConcurrentDictionary<int, Camera>();
+        private static ConcurrentDictionary<int, ICameraControl> CreatedCameras 
+            = new ConcurrentDictionary<int, ICameraControl>();
         private static Camera ActiveCamera = null;
 
         private static volatile SemaphoreSlim ActivityLocker = new SemaphoreSlim(1, 1);
@@ -85,8 +87,8 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Read-only collection of all local cameras in use.
         /// </summary>
-        public IReadOnlyDictionary<int, Camera> CamerasInUse 
-            => CreatedCameras as IReadOnlyDictionary<int, Camera>;
+        public IReadOnlyDictionary<int, ICameraControl> CamerasInUse 
+            => CreatedCameras as IReadOnlyDictionary<int, ICameraControl>;
 
         /// <summary>
         /// Indicates if this camera is currently active
@@ -1445,7 +1447,8 @@ namespace ANDOR_CS.Classes
         /// Does not requrire real camera
         /// </summary>
         /// <returns></returns>
-        public static Interfaces.ICameraControl GetDebugInterface() => new DebugCamera();
+        public static Interfaces.ICameraControl GetDebugInterface(int camIndex = 0) 
+            => new DebugCamera(camIndex);
         
     }
 
