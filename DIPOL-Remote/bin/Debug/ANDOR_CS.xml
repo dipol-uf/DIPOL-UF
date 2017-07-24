@@ -364,9 +364,19 @@
             Volatile, atomic read/write.
             </summary>
         </member>
+        <member name="P:ANDOR_CS.Classes.Camera.CamerasInUse">
+            <summary>
+            Read-only collection of all local cameras in use.
+            </summary>
+        </member>
         <member name="P:ANDOR_CS.Classes.Camera.IsActive">
             <summary>
             Indicates if this camera is currently active
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.Camera.CameraIndex">
+            <summary>
+            Andor SDK unique index of camera; passed to constructor
             </summary>
         </member>
         <member name="P:ANDOR_CS.Classes.Camera.CurrentSettings">
@@ -621,6 +631,8 @@
             Creates a new instance of Camera class to represent a connected Andor device.
             Maximum 8 cameras can be controled at the same time
             </summary>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
+            <exception cref="T:System.ArgumentException"/>
             <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="M:ANDOR_CS.Classes.Camera.GetNumberOfCameras"/></param>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.Dispose">

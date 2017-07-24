@@ -25,7 +25,7 @@ using System.ServiceModel;
 
 namespace DIPOL_Remote
 {
-    public class DipolClient
+    public class DipolClient : IDisposable
     {
         private IRemoteControl remote = null;
         private InstanceContext context = new InstanceContext(new RemoteCallbackHandler());
