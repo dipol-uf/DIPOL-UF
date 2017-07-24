@@ -70,6 +70,7 @@ namespace DIPOL_Remote.Interfaces
         [FaultContract(typeof(ServiceException))]
         void CreateCamera(int camIndex = 0);
 
-        
+        [OperationContract(IsOneWay = false)]
+        int[] GetCamerasInUse();
     }
 }

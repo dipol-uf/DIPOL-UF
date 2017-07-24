@@ -72,6 +72,7 @@ namespace DIPOL_Remote.Classes
         /// </summary>
         private static ConcurrentDictionary<int, (string SessionID, ICameraControl Camera)> activeCameras
             = new ConcurrentDictionary<int, (string SessionID, ICameraControl Camera)>();
+
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -266,14 +267,13 @@ namespace DIPOL_Remote.Classes
                     },
                     ServiceException.GeneralServiceErrorReason);
             }
+
+            
                              
         }
 
-        public void SendToClient()
-        {
-            Console.WriteLine(context == null);
-            context.GetCallbackChannel<IRemoteCallback>().SendToClient("Hello from service");
-        }
-
+        [OperationBehavior]
+        public int[] GetCamerasInUse()
+            => activeCameras.Select(item => item.Value.Camera.CameraIndex).ToArray();
     }
 }
