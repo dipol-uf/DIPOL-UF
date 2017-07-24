@@ -10,7 +10,7 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            var client = new DIPOL_Remote.DipolClient();
+            var client = new DIPOL_Remote.Classes.DipolClient();
             client.Remote.Connect();
 
             Console.WriteLine("Session ID {0}", client.Remote.SessionID);
