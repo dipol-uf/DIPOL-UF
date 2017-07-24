@@ -23,25 +23,46 @@ using System.Threading.Tasks;
 
 using System.ServiceModel;
 
+using DIPOL_Remote.Faults;
+
 namespace DIPOL_Remote
 {
+    /// <summary>
+    /// Interface used to communicate with DIPOL service.
+    /// </summary>
     [ServiceContract(SessionMode = SessionMode.Required,
         CallbackContract = typeof(IRemoteCallback))]
     public interface IRemoteControl
     {
+        /// <summary>
+        /// Unique ID of the session 
+        /// </summary>
         string SessionID
         {
             [OperationContract(IsOneWay = false)]
             get;
         }
 
+        /// <summary>
+        /// Entry point of the connection
+        /// </summary>
         [OperationContract(IsInitiating = true, IsOneWay = false)]
+        [FaultContract(typeof(ServiceException))]
         void Connect();
 
+        /// <summary>
+        /// Exit point of the connection. Frees resources
+        /// </summary>
         [OperationContract(IsTerminating = true, IsOneWay = false)]
         void Disconnect();
 
+        /// <summary>
+        /// Returns number of available cameras
+        /// </summary>
+        /// <returns></returns>
         [OperationContract(IsOneWay = false)]
+        [FaultContract(typeof(ANDOR_CS.Exceptions.AndorSDKException))]
+        [FaultContract(typeof(ServiceException))]
         int GetNumberOfCameras();
         
     }

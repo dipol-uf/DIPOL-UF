@@ -2,8 +2,12 @@ C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\Client.ex
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\Client.exe
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\Client.pdb
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\DIPOL-Remote.dll
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\ANDOR_CS.dll
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\ATMCD64CS.dll
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\DIPOL-Remote.pdb
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\ANDOR_CS.pdb
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\ANDOR_CS.xml
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\ANDOR_CS.dll.config
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\obj\Debug\Client.csprojResolveAssemblyReference.cache
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\obj\Debug\Client.exe
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\obj\Debug\Client.pdb
-C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\atmcd64d.dll
