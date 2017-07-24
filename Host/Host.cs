@@ -14,8 +14,10 @@ namespace Host
             host.Host();
 
             Console.ReadKey();
-            Console.WriteLine($"Service instances: {DIPOL_Remote.RemoteControl.ServiceInstances.Count}");
-            DIPOL_Remote.RemoteControl.ServiceInstances.First().SendToClient();
+            Console.WriteLine($"Service instances: {DIPOL_Remote.RemoteControl.ActiveConnections.Count}");
+            for(int i = 0; i < 5; i++)
+                DIPOL_Remote.RemoteControl.ActiveConnections.First().Value.SendToClient();
+
             Console.ReadKey();
             host.Dispose();
         }
