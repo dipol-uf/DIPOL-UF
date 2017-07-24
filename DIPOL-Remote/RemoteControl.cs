@@ -31,6 +31,8 @@ using DIPOL_Remote.Faults;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
 
+using ICameraControl = ANDOR_CS.Interfaces.ICameraControl;
+
 namespace DIPOL_Remote
 {
     /// <summary>
@@ -65,8 +67,8 @@ namespace DIPOL_Remote
         /// <summary>
         /// Thread-safe collection of active remote cameras.
         /// </summary>
-        private static ConcurrentDictionary<int, (string SessionID, Camera Camera)> activeCameras
-            = new ConcurrentDictionary<int, (string SessionID, Camera Camera)>();
+        private static ConcurrentDictionary<int, (string SessionID, ICameraControl Camera)> activeCameras
+            = new ConcurrentDictionary<int, (string SessionID, ICameraControl Camera)>();
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -88,15 +90,13 @@ namespace DIPOL_Remote
         /// <summary>
         /// Interface to collection of all active <see cref="RemoteControl"/> service instances.
         /// </summary>
-        public static IReadOnlyDictionary<string, RemoteControl> ActiveConnections
-        {
-            get => serviceInstances as IReadOnlyDictionary<string, RemoteControl>;
-        }
+        public static IReadOnlyDictionary<string, RemoteControl> ActiveConnections 
+            => serviceInstances as IReadOnlyDictionary<string, RemoteControl>;
+        
 
-        public static IReadOnlyDictionary<int, (string SessionID, Camera Camera)> ActiveCameras
-        {
-            get => activeCameras as IReadOnlyDictionary<int, (string SessionID, Camera Camera)>;
-        }
+        public static IReadOnlyDictionary<int, (string SessionID, ICameraControl Camera)> ActiveCameras
+            => activeCameras as IReadOnlyDictionary<int, (string SessionID, ICameraControl Camera)>;
+        
 
         /// <summary>
         /// Entry point of any connection.
