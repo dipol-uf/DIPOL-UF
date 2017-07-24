@@ -46,7 +46,18 @@ namespace ANDOR_CS.Classes
 
         public Switch CoolerMode => Switch.Disabled;
 
+        public int CameraIndex
+        {
+            get;
+            private set;
+        }
+
         public CameraStatus GetStatus() => CameraStatus.Idle;
+
+        public DebugCamera(int camIndex)
+        {
+            CameraIndex = camIndex;
+        }
 
         public void Dispose() => Console.Error.WriteLine("Debug camera disposed");
     }
