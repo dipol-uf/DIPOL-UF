@@ -11,4 +11,3 @@ C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\ANDOR_CS.
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\obj\Debug\Client.csprojResolveAssemblyReference.cache
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\obj\Debug\Client.exe
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\obj\Debug\Client.pdb
-C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\Client\bin\Debug\atmcd64d.dll

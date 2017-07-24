@@ -168,6 +168,11 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         }
+        public int CameraIndex
+        {
+            get;
+            set;
+        } = -1;
 
         /// <summary>
         /// Curently set acquisition regime
@@ -1179,6 +1184,8 @@ namespace ANDOR_CS.Classes
                 // If succeeded, sets IsInitialized flag to true and adds current camera to the list of initialized cameras
                 IsInitialized = true;
                 CreatedCameras.Add(this);
+
+                CameraIndex = camIndex;
 
                 // Gets information about software and hardware used in this system
                 GetSoftwareHardwareVersion();
