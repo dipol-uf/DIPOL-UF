@@ -32,7 +32,8 @@ namespace DIPOL_Remote.Classes
         private IRemoteControl remote = null;
         private InstanceContext context = new InstanceContext(new RemoteCallbackHandler());
 
-        public IRemoteControl Remote => remote;
+        private IRemoteControl Remote
+            => remote ?? throw CommunicationException;
 
         private static readonly Uri endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
 
@@ -45,9 +46,33 @@ namespace DIPOL_Remote.Classes
             
         }
 
+        public void Connect()
+            => Remote.Connect();
+
+        public void Disconnect()
+            => Remote.Disconnect();
+
+        public int GetNumberOfCameras()
+            => Remote.GetNumberOfCameras();
+
+        public int[] ActiveRemoteCameras()
+            => Remote.GetCamerasInUse();
+
+        public RemoteCamera CreateRemoteCamera(int camIndex = 0)
+        {
+            if (Remote.GetCamerasInUse().Contains(camIndex))
+                throw new ArgumentException($"Camera with index {camIndex} is already in use.");
+            Remote.CreateCamera(camIndex);
+            return new RemoteCamera(Remote, camIndex);
+        }
+
         public void Dispose()
         {
             (remote as ICommunicationObject)?.Close();
         }
+
+        private static CommunicationException CommunicationException
+            => new CommunicationException("Connection to service is not established yet.");
+        
     }
 }
