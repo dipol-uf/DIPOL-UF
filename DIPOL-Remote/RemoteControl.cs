@@ -129,36 +129,47 @@ namespace DIPOL_Remote
         /// </summary>
         public void Dispose()
         {
-
+            serviceInstances.TryRemove(sessionID, out _);
         }
 
         /// <summary>
-        /// Returns number of available cameras
+        /// Returns number of available cameras.
         /// </summary>
-        /// <returns></returns>
+        /// <exception cref="FaultException{AndorSDKException}"/>
+        /// <exception cref="FaultException{ServiceException}"/>
+        /// <returns>Number of available remote cameras</returns>
         [OperationBehavior]
         public int GetNumberOfCameras()
         {
             try
             {
-                throw new ArgumentException();
+                return Camera.GetNumberOfCameras();
             }
-            catch (AndorSDKException e1)
+            catch (AndorSDKException andorEx)
             {
-                throw new FaultException<AndorSDKException>(e1);
+                throw new FaultException<AndorSDKServiceException>(
+                    new AndorSDKServiceException()
+                    {
+                        Message = "Failed retrieving number of available cameras.",
+                        Details = andorEx.Message,
+                        ErrorCode = andorEx.ErrorCode,
+                        MethodName = nameof(Camera.GetNumberOfCameras)
+                    },
+                    ServiceException.CameraCommunicationReason);
             }
             catch (Exception e)
             {
                 throw new FaultException<ServiceException>(
                     new ServiceException()
                     {
-                        Message = "Something happened",
-                        Details = e.Message
+                        Message = "Failed retrieving number of available cameras.",
+                        Details = e.Message,
+                        MethodName = nameof(Camera.GetNumberOfCameras)
                     },
-                    new FaultReason($"Error occured while communicating with {nameof(Camera)} class."));
+                    ServiceException.CameraCommunicationReason);
 
             }
-            return 3;
+            
         }
 
         public void SendToClient()
