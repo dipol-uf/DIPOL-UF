@@ -21,7 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="DipolClient.cs" />
     <Compile Include="DipolHost.cs" />
+    <Compile Include="Faults\AndorSDKServiceException.cs" />
     <Compile Include="Faults\ServiceException.cs" />
     <Compile Include="IRemoteCallback.cs" />
     <Compile Include="IRemoteControl.cs" />
