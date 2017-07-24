@@ -84,6 +84,11 @@ namespace ANDOR_CS.Classes
         private volatile int LockDepth = 0;
 
         /// <summary>
+        /// Read-only collection of all local cameras in use.
+        /// </summary>
+        public IReadOnlyList<Camera> CamerasInUse => CreatedCameras as IReadOnlyList<Camera>;
+
+        /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
         public bool IsActive
@@ -168,10 +173,13 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         }
+        /// <summary>
+        /// Andor SDK unique index of camera; passed to constructor
+        /// </summary>
         public int CameraIndex
         {
             get;
-            set;
+            private set;
         } = -1;
 
         /// <summary>
@@ -1158,7 +1166,7 @@ namespace ANDOR_CS.Classes
             // Stores return codes from SDK functions
             uint result = 0;
             int n = GetNumberOfCameras();
-            if (n < 0)
+            if (n == 0)
                 throw new AndorSDKException("No ANDOR-compatible cameras found.", null);
 
             // If cameraIndex is less than 0, it is out of range
