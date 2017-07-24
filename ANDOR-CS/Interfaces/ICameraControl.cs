@@ -44,7 +44,9 @@ namespace ANDOR_CS.Interfaces
          
         Switch CoolerMode { get; }
 
-        CameraStatus GetStatus();
+        int CameraIndex { get; }
+
+        CameraStatus GetStatus();        
 
     }
 }
