@@ -661,7 +661,7 @@
             <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
             <returns>TNumber of detected cameras</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.Camera.GetDebugInterface">
+        <member name="M:ANDOR_CS.Classes.Camera.GetDebugInterface(System.Int32)">
             <summary>
             Generates an interface for debug purposes 
             Does not requrire real camera
