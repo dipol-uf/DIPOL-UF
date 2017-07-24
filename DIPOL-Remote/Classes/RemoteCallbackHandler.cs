@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 using System.ServiceModel;
 
-namespace DIPOL_Remote
+using DIPOL_Remote.Interfaces;
+
+namespace DIPOL_Remote.Classes
 {
     [CallbackBehavior(ConcurrencyMode = ConcurrencyMode.Multiple,
         IncludeExceptionDetailInFaults = true)]

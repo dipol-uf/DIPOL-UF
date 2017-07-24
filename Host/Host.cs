@@ -10,14 +10,12 @@ namespace Host
     {
         static void Main(string[] args)
         {
-            var host = new DIPOL_Remote.DipolHost();
+            var host = new DIPOL_Remote.Classes.DipolHost();
             host.Host();
 
             Console.ReadKey();
-            Console.WriteLine($"Service instances: {DIPOL_Remote.RemoteControl.ActiveConnections.Count}");
-            for(int i = 0; i < 5; i++)
-                DIPOL_Remote.RemoteControl.ActiveConnections.First().Value.SendToClient();
-
+            Console.WriteLine($"Service instances: {DIPOL_Remote.Classes.RemoteControl.ActiveConnections.Count}");
+          
             Console.ReadKey();
             host.Dispose();
         }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using System.ServiceModel;
 
-namespace DIPOL_Remote
+namespace DIPOL_Remote.Interfaces
 {
     public interface IRemoteCallback
     {
