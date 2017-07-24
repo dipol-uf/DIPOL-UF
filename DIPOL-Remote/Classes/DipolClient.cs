@@ -23,7 +23,9 @@ using System.Threading.Tasks;
 
 using System.ServiceModel;
 
-namespace DIPOL_Remote
+using DIPOL_Remote.Interfaces;
+
+namespace DIPOL_Remote.Classes
 {
     public class DipolClient : IDisposable
     {

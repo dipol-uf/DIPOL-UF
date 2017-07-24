@@ -25,7 +25,7 @@ using System.ServiceModel;
 
 using DIPOL_Remote.Faults;
 
-namespace DIPOL_Remote
+namespace DIPOL_Remote.Interfaces
 {
     /// <summary>
     /// Interface used to communicate with DIPOL service.

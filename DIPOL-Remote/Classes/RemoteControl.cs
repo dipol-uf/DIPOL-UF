@@ -15,7 +15,7 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-//#define NO_ACTUAL_CAMERA
+#define NO_ACTUAL_CAMERA
 
 using System;
 using System.Collections.Generic;
@@ -33,7 +33,9 @@ using ANDOR_CS.Exceptions;
 
 using ICameraControl = ANDOR_CS.Interfaces.ICameraControl;
 
-namespace DIPOL_Remote
+using DIPOL_Remote.Interfaces;
+
+namespace DIPOL_Remote.Classes
 {
     /// <summary>
     /// Implementation of <see cref="IRemoteControl"/> service interface.
@@ -200,13 +202,13 @@ namespace DIPOL_Remote
         public void CreateCamera(int camIndex = 0)
         {
            
-            Camera camera = null;
+            ICameraControl camera = null;
 
             try
             {
                 // Tries to create new remote camera
 #if NO_ACTUAL_CAMERA
-                camera = Camera.GetDebugInterface();
+                camera = Camera.GetDebugInterface(camIndex);
                 
 #else
                 camera = new Camera(camIndex);
