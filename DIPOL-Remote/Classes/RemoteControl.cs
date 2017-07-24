@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.ServiceModel;
+using System.Reflection;
 
 using DIPOL_Remote.Faults;
 
@@ -265,7 +266,7 @@ namespace DIPOL_Remote.Classes
                     },
                     ServiceException.GeneralServiceErrorReason);
             }
-
+                             
         }
 
         public void SendToClient()
