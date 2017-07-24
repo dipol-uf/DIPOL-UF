@@ -18,12 +18,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using ATMCD64CS;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
@@ -34,7 +33,6 @@ using SDK = ATMCD64CS.AndorSDK;
 
 using static ANDOR_CS.Exceptions.AndorSDKException;
 using static ANDOR_CS.Exceptions.AcquisitionInProgressException;
-using static ANDOR_CS.Exceptions.TemperatureCycleInProgressException;
 
 using static ANDOR_CS.Classes.AndorSDKInitialization;
 
@@ -50,7 +48,7 @@ namespace ANDOR_CS.Classes
         private const int StatusCheckTimeOutMS = 100;
         private const int TempCheckTimeOutMS = 5000;
 
-        private static List<Camera> CreatedCameras = new List<Camera>();
+        private static ConcurrentDictionary<int, Camera> CreatedCameras = new ConcurrentDictionary<int, Camera>();
         private static Camera ActiveCamera = null;
 
         private static volatile SemaphoreSlim ActivityLocker = new SemaphoreSlim(1, 1);
@@ -79,14 +77,16 @@ namespace ANDOR_CS.Classes
         private volatile bool isAsyncTemperatureCycle = false;
 
         private Task TemperatureMonitorWorker = null;
-        private CancellationTokenSource TemperatureMonitorCanellationSource = new CancellationTokenSource();
+        private CancellationTokenSource TemperatureMonitorCanellationSource 
+            = new CancellationTokenSource();
 
         private volatile int LockDepth = 0;
 
         /// <summary>
         /// Read-only collection of all local cameras in use.
         /// </summary>
-        public IReadOnlyList<Camera> CamerasInUse => CreatedCameras as IReadOnlyList<Camera>;
+        public IReadOnlyDictionary<int, Camera> CamerasInUse 
+            => CreatedCameras as IReadOnlyDictionary<int, Camera>;
 
         /// <summary>
         /// Indicates if this camera is currently active
@@ -1160,6 +1160,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AndorSDKException"/>
         /// <exception cref="ArgumentException"/>
+        /// <exception cref="InvalidOperationException"/>
         /// <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="Camera.GetNumberOfCameras()"/></param>
         public Camera(int camIndex = 0)
         {
@@ -1176,11 +1177,11 @@ namespace ANDOR_CS.Classes
             if (camIndex >= n)
                 throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
             // If camera with such index is already in use, throws exception
-            if (CreatedCameras.Count(cam => cam.CameraIndex == camIndex) != 0)
+            if (CreatedCameras.Count(cam => cam.Value.CameraIndex == camIndex) != 0)
                 throw new ArgumentException($"Camera with index {camIndex} is already created.");
 
             // Stores the handle (SDK private pointer) to the camera. A unique identifier
-            result =Call(SDKInstance.GetCameraHandle, camIndex, out int handle);
+            result = Call(SDKInstance.GetCameraHandle, camIndex, out int handle);
             ThrowIfError(result, nameof(SDKInstance.GetCameraHandle));
 
             // If succede, assigns handle to Camera property
@@ -1196,8 +1197,9 @@ namespace ANDOR_CS.Classes
 
                 // If succeeded, sets IsInitialized flag to true and adds current camera to the list of initialized cameras
                 IsInitialized = true;
-                CreatedCameras.Add(this);
-
+                if (!CreatedCameras.TryAdd(CameraHandle.SDKPtr, this))
+                    throw new InvalidOperationException("Failed to add camera to the concurrent dictionary");
+                
                 CameraIndex = camIndex;
 
                 // Gets information about software and hardware used in this system
@@ -1249,7 +1251,7 @@ namespace ANDOR_CS.Classes
                     CameraHandle.Dispose();
 
                     // If succeeded, removes camera instance from the list of cameras
-                    CreatedCameras.Remove(this);
+                    CreatedCameras.TryRemove(CameraHandle.SDKPtr, out _);
 
                    
                 }
