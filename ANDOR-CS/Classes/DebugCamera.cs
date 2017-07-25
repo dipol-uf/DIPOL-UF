@@ -57,8 +57,11 @@ namespace ANDOR_CS.Classes
         public DebugCamera(int camIndex)
         {
             CameraIndex = camIndex;
+            Console.WriteLine($"DebugCamera {camIndex} created.");
         }
 
-        public void Dispose() => Console.Error.WriteLine("Debug camera disposed");
+        public void Dispose() 
+            => Console.WriteLine($"DebugCamera {CameraIndex} disposed");
+
     }
 }
