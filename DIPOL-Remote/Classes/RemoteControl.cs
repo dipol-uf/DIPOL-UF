@@ -97,7 +97,9 @@ namespace DIPOL_Remote.Classes
         public static IReadOnlyDictionary<string, RemoteControl> ActiveConnections 
             => serviceInstances as IReadOnlyDictionary<string, RemoteControl>;
         
-
+        /// <summary>
+        /// Interface to collectio of all active cameras of all sessions
+        /// </summary>
         public static IReadOnlyDictionary<int, (string SessionID, ICameraControl Camera)> ActiveCameras
             => activeCameras as IReadOnlyDictionary<int, (string SessionID, ICameraControl Camera)>;
         
@@ -151,20 +153,18 @@ namespace DIPOL_Remote.Classes
         /// </summary>
         public void Dispose()
         {
-            var localCams = from item
-                            in activeCameras
-                            where item.Value.SessionID == SessionID
-                            select item.Key;
-
+            // Select all cameras that are created from this session
             foreach (var key in
                 from item
                 in activeCameras
                 where item.Value.SessionID == SessionID
                 select item.Key)
+                // Remove these cameras from te collection
                 if (activeCameras.TryRemove(key, out (string SessionID, ICameraControl Camera) camInfo))
+                    // If successful, dispose camera instance
                     camInfo.Camera.Dispose();
 
-
+            // Remove this service from collection
             serviceInstances.TryRemove(sessionID, out _);
         }
 
