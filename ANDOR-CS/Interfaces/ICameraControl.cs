@@ -28,7 +28,7 @@ namespace ANDOR_CS.Interfaces
 {
     public interface ICameraControl : IDisposable
     {
-        DeviceCpabilities Capabilities { get; }
+        DeviceCapabilities Capabilities { get; }
 
         CameraProperties Properties { get; }
 

@@ -154,12 +154,12 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         } = "Unknown";
-        public DeviceCpabilities Capabilities
+        public DeviceCapabilities Capabilities
         {
             get;
             private set;
 
-        } = default(DeviceCpabilities);
+        } = default(DeviceCapabilities);
         public CameraProperties Properties
         {
             get;
@@ -323,7 +323,7 @@ namespace ANDOR_CS.Classes
                 ThrowIfError(result, nameof(SDKInit.SDKInstance.GetCapabilities));
 
                 // Assigns current camera's property
-                Capabilities = new DeviceCpabilities(caps);
+                Capabilities = new DeviceCapabilities(caps);
             }
             finally
             {

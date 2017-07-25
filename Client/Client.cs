@@ -4,34 +4,39 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using ANDOR_CS.DataStructures;
+
 namespace Client
 {
     class Client
     {
         static void Main(string[] args)
         {
-            var client = new DIPOL_Remote.Classes.DipolClient();
-            client.Connect();
+         
 
-            Console.WriteLine("Session ID {0}", client.SessionID);
+            using (var client = new DIPOL_Remote.Classes.DipolClient())
+            {
+                client.Connect();
 
-            Console.WriteLine($"Number of available cameras: {client.GetNumberOfCameras()}");
+                Console.WriteLine("Session ID {0}", client.SessionID);
 
-            var cam1 = client.CreateRemoteCamera(0);
-            var cam2 = client.CreateRemoteCamera(1);
+                Console.WriteLine($"Number of available cameras: {client.GetNumberOfCameras()}");
 
-            Console.ReadKey();
-            Console.WriteLine(client.ActiveRemoteCameras().Length);
-            cam2.Dispose();
-            Console.WriteLine(client.ActiveRemoteCameras().Length);
-            cam1.Dispose();
-            Console.WriteLine(client.ActiveRemoteCameras().Length);
+                var cam1 = client.CreateRemoteCamera(0);
+                var cam2 = client.CreateRemoteCamera(1);
+
+                Console.ReadKey();
+                Console.WriteLine(client.ActiveRemoteCameras().Length);
+                cam2.Dispose();
+                Console.WriteLine(client.ActiveRemoteCameras().Length);
+                cam1.Dispose();
+                Console.WriteLine(client.ActiveRemoteCameras().Length);
 
 
-            Console.ReadKey();
-            client.Disconnect();
+                Console.ReadKey();
+                client.Disconnect();
 
-            client.Dispose();
+            }
         }
     }
 }

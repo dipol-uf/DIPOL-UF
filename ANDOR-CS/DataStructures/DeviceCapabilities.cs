@@ -28,7 +28,7 @@ using ANDOR_CS.Enums;
 
 namespace ANDOR_CS.DataStructures
 {
-    public struct DeviceCpabilities
+    public struct DeviceCapabilities
     {
         public AcquisitionMode AcquisitionModes
         {
@@ -73,7 +73,8 @@ namespace ANDOR_CS.DataStructures
         public SDKFeatures Features
         {
             get;
-            internal set;
+            // internal set;
+            set;
         }
         public uint PCICardMaxSpeed
         {
@@ -86,7 +87,7 @@ namespace ANDOR_CS.DataStructures
             internal set;
         }
 
-        public DeviceCpabilities(AndorSDK.AndorCapabilities capabilities)
+        public DeviceCapabilities(AndorSDK.AndorCapabilities capabilities)
         {
             AcquisitionModes = (AcquisitionMode)capabilities.ulAcqModes;
             ReadModes = (ReadMode)capabilities.ulReadModes;
@@ -100,5 +101,6 @@ namespace ANDOR_CS.DataStructures
             EMGainFeatures = (EMGain)capabilities.ulEMGainCapability;
             FTReadModes = (ReadMode)capabilities.ulFTReadModes;
         }
+
     }
 }

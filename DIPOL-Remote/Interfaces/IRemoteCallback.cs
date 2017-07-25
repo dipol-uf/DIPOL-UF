@@ -13,5 +13,8 @@ namespace DIPOL_Remote.Interfaces
     {
         [OperationContract(IsOneWay = true)]
         void SendToClient(string m);
+
+        [OperationContract(IsOneWay = true)]
+        void NotifyRemotePropertyChanged(int camIndex, string session, string proeprty);
     }
 }
