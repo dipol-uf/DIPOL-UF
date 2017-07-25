@@ -151,7 +151,20 @@ namespace DIPOL_Remote.Classes
         /// </summary>
         public void Dispose()
         {
-            
+            var localCams = from item
+                            in activeCameras
+                            where item.Value.SessionID == SessionID
+                            select item.Key;
+
+            foreach (var key in
+                from item
+                in activeCameras
+                where item.Value.SessionID == SessionID
+                select item.Key)
+                if (activeCameras.TryRemove(key, out (string SessionID, ICameraControl Camera) camInfo))
+                    camInfo.Camera.Dispose();
+
+
             serviceInstances.TryRemove(sessionID, out _);
         }
 
@@ -166,8 +179,13 @@ namespace DIPOL_Remote.Classes
         {
             try
             {
-               // Trys to retrieve the number of available cameras
+#if NO_ACTUAL_CAMERA
+                return 3;
+#else
+                // Trys to retrieve the number of available cameras
                 return Camera.GetNumberOfCameras();
+#endif
+
             }
             // If method fails and Andor-related exception is thrown
             catch (AndorSDKException andorEx)
@@ -242,38 +260,45 @@ namespace DIPOL_Remote.Classes
                     ServiceException.CameraCommunicationReason);
             }
 
-            // Tries to add created camera to te dictionary of
-            // active cameras.
-            int count = 0;
-            for (; 
-                !activeCameras.TryAdd(
-                    activeCameras.Count + 1, 
-                    (SessionID: SessionID, Camera: camera))
-                & count < MaxTryAddAttempts; 
-                count++)
-                continue;
+         
 
-            // If number of attempts exceeds limit
-            if (count >= MaxTryAddAttempts)
+            if(!activeCameras.TryAdd(camera.CameraIndex, (sessionID, camera)))
             {
                 // Clena & and throw exception
                 camera.Dispose();
-                throw new  FaultException<ServiceException>(
+                throw new FaultException<ServiceException>(
                     new ServiceException()
                     {
                         Message = "Failed to add new remote camera to the dictionary.",
-                        Details = "Several unsuccessful attemps were made to add new camera to the list of exising ones.",
+                        Details = "Camera with this index may already exist.",
                         MethodName = nameof(activeCameras.TryAdd)
                     },
                     ServiceException.GeneralServiceErrorReason);
             }
 
-            
+                       
                              
         }
 
         [OperationBehavior]
+        public void RemoveCamera(int camIndex)
+        {
+            if (ActiveCameras.TryGetValue(
+                camIndex,
+                out (string SessionID, ICameraControl Camera) camInfo))
+                if (camInfo.SessionID == SessionID)
+                {
+                    camInfo.Camera.Dispose();
+                    activeCameras.TryRemove(camIndex, out _);
+                }
+                else
+                    throw new FaultException();
+
+                        
+        }
+
+        [OperationBehavior]
         public int[] GetCamerasInUse()
-            => activeCameras.Select(item => item.Value.Camera.CameraIndex).ToArray();
+            => activeCameras.Keys.ToArray();
     }
 }

@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\CameraPropertiesPack.cs" />
     <Compile Include="Classes\DipolClient.cs" />
     <Compile Include="Classes\DipolHost.cs" />
     <Compile Include="Classes\RemoteCamera.cs" />

@@ -74,7 +74,7 @@ namespace DIPOL_Remote.Classes
 
         internal RemoteCamera(IRemoteControl sessionInstance, int camIndex)
         {
-            session = sessionInstance;
+            session = sessionInstance ?? throw new ArgumentNullException("Session cannot be null.");
             CameraIndex = camIndex;
         }
 
@@ -84,7 +84,7 @@ namespace DIPOL_Remote.Classes
 
         public void Dispose()
         {
-
+            session.RemoveCamera(CameraIndex);
         }
 
     }

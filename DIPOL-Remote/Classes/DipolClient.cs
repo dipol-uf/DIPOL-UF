@@ -29,13 +29,16 @@ namespace DIPOL_Remote.Classes
 {
     public class DipolClient : IDisposable
     {
+        private static readonly Uri endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
+
         private IRemoteControl remote = null;
         private InstanceContext context = new InstanceContext(new RemoteCallbackHandler());
 
         private IRemoteControl Remote
             => remote ?? throw CommunicationException;
 
-        private static readonly Uri endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
+        public string SessionID
+            => Remote.SessionID;
 
         public DipolClient()
         {
