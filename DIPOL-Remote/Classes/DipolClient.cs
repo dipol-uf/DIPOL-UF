@@ -45,7 +45,7 @@ namespace DIPOL_Remote.Classes
             remote = new DuplexChannelFactory<IRemoteControl>(
                 context, 
                 new NetTcpBinding(), 
-                new EndpointAddress(endpoint)).CreateChannel();
+                new EndpointAddress(endpoint)).CreateChannel();            
             
         }
 
