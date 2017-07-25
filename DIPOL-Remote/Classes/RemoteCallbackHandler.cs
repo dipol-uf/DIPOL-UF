@@ -14,12 +14,19 @@ namespace DIPOL_Remote.Classes
         IncludeExceptionDetailInFaults = true)]
     class RemoteCallbackHandler : IRemoteCallback
     {
+
         public RemoteCallbackHandler()
         {
             Console.WriteLine("Remote control handler created");
         }
+
+        public void NotifyRemotePropertyChanged(int camIndex, string session, string property)
+            => RemoteCamera.NotifyRemotePropertyChanged(camIndex, session, property);
+
+
         public void SendToClient(string m)
         {
+
             Console.WriteLine($"From service \"{m}\"");
         }
     }
