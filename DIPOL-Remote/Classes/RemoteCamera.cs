@@ -16,7 +16,6 @@ namespace DIPOL_Remote.Classes
     {
         private IRemoteControl session;
 
-
         public DeviceCpabilities Capabilities
         {
             get;
@@ -65,6 +64,7 @@ namespace DIPOL_Remote.Classes
             private set;
         }
 
+        // Property is client-side
         public int CameraIndex
         {
             get;
