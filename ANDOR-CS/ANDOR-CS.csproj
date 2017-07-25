@@ -118,7 +118,7 @@
     <Compile Include="DataStructures\CameraProperties.cs" />
     <Compile Include="Classes\Extensions.cs" />
     <Compile Include="DataStructures\Size.cs" />
-    <Compile Include="DataStructures\DeviceCpabilities.cs" />
+    <Compile Include="DataStructures\DeviceCapabilities.cs" />
     <Compile Include="DataStructures\Point2D.cs" />
     <Compile Include="DataStructures\Rectangle.cs" />
     <Compile Include="Enums\AcquisitionModeEnum.cs" />

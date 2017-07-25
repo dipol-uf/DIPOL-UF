@@ -264,7 +264,7 @@ namespace DIPOL_Remote.Classes
 
             if(!activeCameras.TryAdd(camera.CameraIndex, (sessionID, camera)))
             {
-                // Clena & and throw exception
+                // Clean & and throw exception
                 camera.Dispose();
                 throw new FaultException<ServiceException>(
                     new ServiceException()
@@ -276,8 +276,15 @@ namespace DIPOL_Remote.Classes
                     ServiceException.GeneralServiceErrorReason);
             }
 
-                       
-                             
+#if NO_ACTUAL_CAMERA
+            (camera as DebugCamera).PropertyChanged += (sender, e)
+                => context.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemotePropertyChanged(
+                    (camera as DebugCamera).CameraIndex,
+                    SessionID,
+                    e.PropertyName);
+#endif
+
         }
 
         [OperationBehavior]

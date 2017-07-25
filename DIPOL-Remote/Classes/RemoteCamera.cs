@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +17,11 @@ namespace DIPOL_Remote.Classes
     {
         private IRemoteControl session;
 
-        public DeviceCpabilities Capabilities
+        private ConcurrentDictionary<int, ICameraControl> remoteCameras
+            = new ConcurrentDictionary<int, ICameraControl>();
+
+
+        public DeviceCapabilities Capabilities
         {
             get;
             private set;
@@ -76,6 +81,8 @@ namespace DIPOL_Remote.Classes
         {
             session = sessionInstance ?? throw new ArgumentNullException("Session cannot be null.");
             CameraIndex = camIndex;
+
+            remoteCameras.TryAdd(camIndex, this);
         }
 
 
@@ -85,6 +92,13 @@ namespace DIPOL_Remote.Classes
         public void Dispose()
         {
             session.RemoveCamera(CameraIndex);
+            remoteCameras.TryRemove(CameraIndex, out _);
+        }
+
+
+        public static void NotifyRemotePropertyChanged(int camIndex, string sessionID, string property)
+        {
+            Console.WriteLine($"Property {property} of camera {camIndex} changed in session {sessionID}.");
         }
 
     }
