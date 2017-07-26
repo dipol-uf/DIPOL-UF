@@ -1240,8 +1240,6 @@ namespace ANDOR_CS.Classes
             // If camera has valid SDK pointer and is initialized
             if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
             {
-                Console.WriteLine($"Disposing camera {this.SerialNumber}");
-
                 // Saves currently active camera
                 var oldCamera = ActiveCamera;
 
