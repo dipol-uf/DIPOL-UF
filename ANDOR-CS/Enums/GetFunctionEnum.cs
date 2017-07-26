@@ -16,30 +16,41 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Enums
 {
     [Flags]
+    [DataContract]
     public enum GetFunction : uint
     {
+        [EnumMember]
         Unknown = 0,
+        [EnumMember]
         Temperature =  SDK.AC_GETFUNCTION_TEMPERATURE,
+        [EnumMember]
         TemperatureRange = SDK.AC_GETFUNCTION_TEMPERATURERANGE,
+        [EnumMember]
         DetectorSize = SDK.AC_GETFUNCTION_DETECTORSIZE,
+        [EnumMember]
         MCPGain = SDK.AC_GETFUNCTION_MCPGAIN,
+        [EnumMember]
         EMCCDGain = SDK.AC_GETFUNCTION_EMCCDGAIN,
+        [EnumMember]
         GateMode = SDK.AC_GETFUNCTION_GATEMODE,
+        [EnumMember]
         DDGTimes = SDK.AC_GETFUNCTION_DDGTIMES,
+        [EnumMember]
         DDGIntegrateOnChip = SDK.AC_GETFUNCTION_IOC,
+        [EnumMember]
         Intelligate = SDK.AC_GETFUNCTION_INTELLIGATE,
+        [EnumMember]
         InsertionDelay = SDK.AC_GETFUNCTION_INSERTION_DELAY,
+        [EnumMember]
         PhosphorStatus = SDK.AC_GETFUNCTION_PHOSPHORSTATUS,
+        [EnumMember]
         BaselineClamp = SDK.AC_GETFUNCTION_BASELINECLAMP
     }
 }

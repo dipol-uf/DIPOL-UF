@@ -172,6 +172,21 @@ namespace ANDOR_CS.Classes
         public DebugCamera(int camIndex)
         {
             CameraIndex = camIndex;
+            SerialNumber = "XYZ-1234";
+            Capabilities = new DeviceCapabilities()
+            {
+                CameraType = CameraType.iXonUltra
+            };
+            Properties = new CameraProperties()
+            {
+                DetectorSize = new Size(256, 512)
+            };
+            IsActive = true;
+            IsInitialized = true;
+            CameraModel = "DEBUG-CAMERA-INTERFACE";
+            FanMode = FanMode.Off;
+            CoolerMode = Switch.Disabled;
+            
             Console.WriteLine($"DebugCamera {camIndex} created.");
         }
 

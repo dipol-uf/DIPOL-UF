@@ -15,41 +15,61 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Enums
 {
+    [DataContract]
     public enum CameraType : uint
     {
-        
+
+        [EnumMember]
         PDA = SDK.AC_CAMERATYPE_PDA,
+        [EnumMember]
         iXon = SDK.AC_CAMERATYPE_IXON,
+        [EnumMember]
         ICCD = SDK.AC_CAMERATYPE_ICCD,
+        [EnumMember]
         EMCCD = SDK.AC_CAMERATYPE_EMCCD,
+        [EnumMember]
         CCD = SDK.AC_CAMERATYPE_CCD,
+        [EnumMember]
         iStar = SDK.AC_CAMERATYPE_ISTAR,
+        [EnumMember]
         ThirdPartyVideo = SDK.AC_CAMERATYPE_VIDEO,
+        [EnumMember]
         iDus = SDK.AC_CAMERATYPE_IDUS,
+        [EnumMember]
         Newton = SDK.AC_CAMERATYPE_NEWTON,
+        [EnumMember]
         Surcam = SDK.AC_CAMERATYPE_SURCAM,
+        [EnumMember]
         USBICCD = SDK.AC_CAMERATYPE_USBICCD,
+        [EnumMember]
         Luca = SDK.AC_CAMERATYPE_LUCA,
+        [EnumMember]
         Reserved = SDK.AC_CAMERATYPE_RESERVED,
+        [EnumMember]
         iKon = SDK.AC_CAMERATYPE_IKON,
+        [EnumMember]
         InGaAs = SDK.AC_CAMERATYPE_INGAAS,
+        [EnumMember]
         iVac = SDK.AC_CAMERATYPE_IVAC,
+        [EnumMember]
         Clara = SDK.AC_CAMERATYPE_CLARA,
+        [EnumMember]
         USBiStar = SDK.AC_CAMERATYPE_USBISTAR,
+        [EnumMember]
         iXonUltra = SDK.AC_CAMERATYPE_IXONULTRA,
+        [EnumMember]
         iVacCCD = SDK.AC_CAMERATYPE_IVAC_CCD,
+        [EnumMember]
         iKonXL = SDK.AC_CAMERATYPE_IKONXL,
+        [EnumMember]
         iStarSCMOS = SDK.AC_CAMERATYPE_ISTAR_SCMOS,
+        [EnumMember]
         iKonLR = 31 //SDK.AC_CAMERATYPE_IKONLR
     }
 }

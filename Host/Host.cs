@@ -19,7 +19,7 @@ namespace Host
 
                 Console.ReadKey();
                 Console.WriteLine($"Service instances: {DIPOL_Remote.Classes.RemoteControl.ActiveConnections.Count}");
-                DIPOL_Remote.Classes.RemoteControl.ActiveCameras.TryGetValue(0, out (string, ANDOR_CS.Interfaces.ICameraControl) result);
+                DIPOL_Remote.Classes.RemoteControl.ActiveCameras.TryGetValue(0, out (string, ANDOR_CS.Classes.CameraBase) result);
                 (result.Item2 as ANDOR_CS.Classes.DebugCamera).CameraModel = "123";
                 DIPOL_Remote.Classes.RemoteControl.ActiveCameras.TryGetValue(1, out result);
                 (result.Item2 as ANDOR_CS.Classes.DebugCamera).CameraModel = "456";

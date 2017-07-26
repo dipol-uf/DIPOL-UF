@@ -31,8 +31,8 @@ using DIPOL_Remote.Faults;
 
 using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
-
-using ICameraControl = ANDOR_CS.Interfaces.ICameraControl;
+using ANDOR_CS.DataStructures;
+using ANDOR_CS.Enums;
 
 using DIPOL_Remote.Interfaces;
 
@@ -70,8 +70,8 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Thread-safe collection of active remote cameras.
         /// </summary>
-        private static ConcurrentDictionary<int, (string SessionID, ICameraControl Camera)> activeCameras
-            = new ConcurrentDictionary<int, (string SessionID, ICameraControl Camera)>();
+        private static ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
+            = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
 
         /// <summary>
         /// Default constructor
@@ -100,8 +100,8 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Interface to collectio of all active cameras of all sessions
         /// </summary>
-        public static IReadOnlyDictionary<int, (string SessionID, ICameraControl Camera)> ActiveCameras
-            => activeCameras as IReadOnlyDictionary<int, (string SessionID, ICameraControl Camera)>;
+        public static IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)> ActiveCameras
+            => activeCameras as IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)>;
         
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace DIPOL_Remote.Classes
                 where item.Value.SessionID == SessionID
                 select item.Key)
                 // Remove these cameras from te collection
-                if (activeCameras.TryRemove(key, out (string SessionID, ICameraControl Camera) camInfo))
+                if (activeCameras.TryRemove(key, out (string SessionID, CameraBase Camera) camInfo))
                     // If successful, dispose camera instance
                     camInfo.Camera.Dispose();
 
@@ -214,9 +214,8 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void CreateCamera(int camIndex = 0)
         {
-           
-            ICameraControl camera = null;
 
+            CameraBase camera;
             try
             {
                 // Tries to create new remote camera
@@ -316,13 +315,36 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public string GetSerialNumber(int camIndex)
             => GetCameraSafe(sessionID, camIndex).SerialNumber;
-        
 
-        private ICameraControl GetCameraSafe(string session, int camIndex)
+        [OperationBehavior]
+        public CameraProperties GetProperties(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).Properties;
+
+        [OperationBehavior]
+        public bool GetIsInitialized(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).IsInitialized;
+
+        [OperationBehavior]
+        public FanMode GetFanMode(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).FanMode;
+
+        [OperationBehavior]
+        public Switch GetCoolerMode(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).CoolerMode;
+
+        [OperationBehavior]
+        public DeviceCapabilities GetCapabilities(int camIndex)
+           => GetCameraSafe(sessionID, camIndex).Capabilities;
+
+        [OperationBehavior]
+        public CameraStatus CallGetStatus(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).GetStatus();
+
+        private CameraBase GetCameraSafe(string session, int camIndex)
         {
             if (ActiveCameras.TryGetValue(
                 camIndex,
-                out (string SessionID, ICameraControl Camera) camInfo))
+                out (string SessionID, CameraBase Camera) camInfo))
 
                 if (camInfo.SessionID == SessionID)
                     return camInfo.Camera;

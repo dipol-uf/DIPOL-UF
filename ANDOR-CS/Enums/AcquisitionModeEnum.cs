@@ -16,10 +16,7 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 using SDK = ATMCD64CS.AndorSDK;
 
@@ -29,47 +26,56 @@ namespace ANDOR_CS.Enums
     /// Acquisition modes
     /// </summary>
     [Flags]
+    [DataContract]
     public enum AcquisitionMode : uint
     {
 
         /// <summary>
         /// Single Scan
         /// </summary>
+        [EnumMember]
         SingleScan = SDK.AC_ACQMODE_SINGLE,
 
         /// <summary>
         /// Run till abort or Video
         /// </summary>
+        [EnumMember]
         RunTillAbort = SDK.AC_ACQMODE_VIDEO,
 
         /// <summary>
         /// Accumulation
         /// </summary>
+        [EnumMember]
         Accumulation = SDK.AC_ACQMODE_ACCUMULATE,
 
         /// <summary>
         /// Kinetic series
         /// </summary>
+        [EnumMember]
         Kinetic = SDK.AC_ACQMODE_KINETIC,
 
         /// <summary>
         /// Frame transfer
         /// </summary>
+        [EnumMember]
         FrameTransfer = SDK.AC_ACQMODE_FRAMETRANSFER,
 
         /// <summary>
         /// Fast kinetics
         /// </summary>
+        [EnumMember]
         FastKinetics = SDK.AC_ACQMODE_FASTKINETICS,
 
         /// <summary>
         /// Overlap
         /// </summary>
+        [EnumMember]
         Overlap = SDK.AC_ACQMODE_OVERLAP,
 
         /// <summary>
         /// Undocumented
         /// </summary>
+        [EnumMember]
         UnspecifiedMode = 1 << 7
     }
 }

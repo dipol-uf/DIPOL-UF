@@ -25,6 +25,9 @@ using System.ServiceModel;
 
 using DIPOL_Remote.Faults;
 
+using ANDOR_CS.Enums;
+using ANDOR_CS.DataStructures;
+
 namespace DIPOL_Remote.Interfaces
 {
     /// <summary>
@@ -32,6 +35,22 @@ namespace DIPOL_Remote.Interfaces
     /// </summary>
     [ServiceContract(SessionMode = SessionMode.Required,
         CallbackContract = typeof(IRemoteCallback))]
+    [ServiceKnownType(typeof(CameraProperties))]
+    [ServiceKnownType(typeof(DeviceCapabilities))]
+    [ServiceKnownType(typeof(Size))]
+    [ServiceKnownType(typeof(OutputAmplification))]
+    [ServiceKnownType(typeof(FanMode))]
+    [ServiceKnownType(typeof(Switch))]
+    [ServiceKnownType(typeof(AcquisitionMode))]
+    [ServiceKnownType(typeof(ReadMode))]
+    [ServiceKnownType(typeof(TriggerMode))]
+    [ServiceKnownType(typeof(CameraType))]
+    [ServiceKnownType(typeof(PixelMode))]
+    [ServiceKnownType(typeof(SetFunction))]
+    [ServiceKnownType(typeof(GetFunction))]
+    [ServiceKnownType(typeof(SDKFeatures))]
+    [ServiceKnownType(typeof(EMGain))]
+    [ServiceKnownType(typeof(CameraStatus))]
     public interface IRemoteControl
     {
         /// <summary>
@@ -87,5 +106,24 @@ namespace DIPOL_Remote.Interfaces
 
         [OperationContract(IsOneWay = false)]
         string GetSerialNumber(int camIndex);
+
+        [OperationContract(IsOneWay = false)]
+        CameraProperties GetProperties(int camIndex);
+
+        [OperationContract(IsOneWay = false)]
+        bool GetIsInitialized(int camIndex);
+
+        [OperationContract(IsOneWay = false)]
+        FanMode GetFanMode(int camIndex);
+
+        [OperationContract(IsOneWay = false)]
+        Switch GetCoolerMode(int camIndex);
+
+        [OperationContract(IsOneWay = false)]
+        DeviceCapabilities GetCapabilities(int camIndex);
+
+
+        [OperationContract(IsOneWay = false)]
+        CameraStatus CallGetStatus(int camIndex);
     }
 }

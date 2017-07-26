@@ -15,11 +15,7 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 using ATMCD64CS;
 using ANDOR_CS.Enums;
@@ -28,59 +24,74 @@ using ANDOR_CS.Enums;
 
 namespace ANDOR_CS.DataStructures
 {
+    /// <summary>
+    /// Contains information about capabilities of a device.
+    /// </summary>
+    [DataContract]
     public struct DeviceCapabilities
     {
+        [DataMember(IsRequired = true)]
         public AcquisitionMode AcquisitionModes
         {
             get;
             internal set;
         }
+        [DataMember(IsRequired = true)]
         public ReadMode ReadModes
         {
             get;
             internal set;
         }
+        [DataMember(IsRequired = true)]
         public ReadMode FTReadModes
         {
             get;
             internal set;
         }
+        [DataMember(IsRequired = true)]
         public TriggerMode TriggerModes
         {
             get;
             internal set;
         }
+        [DataMember(IsRequired = true)]
         public CameraType CameraType
         {
             get;
             internal set;
         }
+        [DataMember(IsRequired = true)]
         public PixelMode PixelModes
         {
             get;
             internal set;
         }
+        [DataMember(IsRequired = true)]
         public SetFunction SetFunctions
         {
             get;
             internal set;
         }
+        [DataMember(IsRequired = true)]
         public GetFunction GetFunctions
         {
             get;
             internal set;
         }
+        [DataMember(IsRequired = true)]
         public SDKFeatures Features
         {
             get;
             // internal set;
             set;
         }
+        [DataMember(IsRequired = true)]
         public uint PCICardMaxSpeed
         {
             get;
             internal set;
         }
+        [DataMember(IsRequired = true)]
         public EMGain EMGainFeatures
         {
             get;
