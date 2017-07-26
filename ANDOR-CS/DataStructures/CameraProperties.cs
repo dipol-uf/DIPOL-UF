@@ -15,11 +15,7 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 using ANDOR_CS.Enums;
 
@@ -28,6 +24,7 @@ namespace ANDOR_CS.DataStructures
     /// <summary>
     /// Stores information about camera-specific properties
     /// </summary>
+    [DataContract]
     public struct CameraProperties
     {
         /// <summary>
@@ -42,6 +39,7 @@ namespace ANDOR_CS.DataStructures
         /// <summary>
         /// If available, stores the size of a 2D detector (in pixels)
         /// </summary>
+        [DataMember(IsRequired = true)]
         public Size DetectorSize
         {
             get;
@@ -51,6 +49,7 @@ namespace ANDOR_CS.DataStructures
         /// <summary>
         /// If available, indicates if camera has internal mechanical shutter
         /// </summary>
+        [DataMember(IsRequired = true)]
         public bool HasInternalMechanicalShutter
         {
             get;
@@ -60,6 +59,7 @@ namespace ANDOR_CS.DataStructures
         /// <summary>
         /// An array of bit-depths for each available AD converter
         /// </summary>
+        [DataMember(IsRequired = true)]
         public int[] ADConverters
         {
             get;
@@ -69,6 +69,7 @@ namespace ANDOR_CS.DataStructures
         /// <summary>
         /// An array of available amplifiers with respective maximum allowed horizontal speed
         /// </summary>
+        [DataMember(IsRequired = true)]
         public (string Name, OutputAmplification Amplifier, float MaxSpeed)[] Amplifiers
         {
             get;
@@ -78,21 +79,24 @@ namespace ANDOR_CS.DataStructures
         /// <summary>
         /// An array of available pre amp gain settings
         /// </summary>
+        [DataMember(IsRequired = true)]
         public string[] PreAmpGains
         {
             get;
             internal set;
         }
 
-          /// <summary>
+        /// <summary>
         /// An array of available Vertical Speeds (in us)
         /// </summary>
+        [DataMember(IsRequired = true)]
         public float[] VSSpeeds
         {
             get;
             internal set;
         }
 
+        [DataMember(IsRequired = true)]
         public (int Low, int High) EMCCDGainRange
         {
             get;

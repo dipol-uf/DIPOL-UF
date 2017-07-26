@@ -674,6 +674,11 @@
             An array of available Vertical Speeds (in us)
             </summary>
         </member>
+        <member name="T:ANDOR_CS.DataStructures.DeviceCapabilities">
+            <summary>
+            Contains information about capabilities of a device.
+            </summary>
+        </member>
         <member name="T:ANDOR_CS.Enums.AcquisitionMode">
             <summary>
             Acquisition modes
@@ -717,6 +722,42 @@
         <member name="F:ANDOR_CS.Enums.AcquisitionMode.UnspecifiedMode">
             <summary>
             Undocumented
+            </summary>
+        </member>
+        <member name="T:ANDOR_CS.Enums.Switch">
+            <summary>
+            Represents function of an object that can be in either of two regimes:
+            Enabled or Disabled
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.Switch.Enabled">
+            <summary>
+            Funcion is enabled/turned on
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.Switch.Disabled">
+            <summary>
+            Function is disabled/turned of
+            </summary>
+        </member>
+        <member name="T:ANDOR_CS.Enums.FanMode">
+            <summary>
+            Device's internal cooling system fan regimes
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.FanMode.FullSpeed">
+            <summary>
+            Full speed
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.FanMode.LowSpeed">
+            <summary>
+            Low speed; available only on some devices
+            </summary>
+        </member>
+        <member name="F:ANDOR_CS.Enums.FanMode.Off">
+            <summary>
+            Disabled
             </summary>
         </member>
         <member name="T:ANDOR_CS.Enums.OutputAmplification">

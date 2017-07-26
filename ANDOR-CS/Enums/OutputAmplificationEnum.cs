@@ -15,32 +15,32 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 namespace ANDOR_CS.Enums
 {
     /// <summary>
     /// Different type of output amplifiers. Availalbe on iXon, Clara and Newton
     /// </summary>
+    [DataContract]
     public enum OutputAmplification : uint
     {
         /// <summary>
         /// Electron multiplication. Not available for Clara 
         /// </summary>
+        [EnumMember]
         ElectronMultiplication = 0,
 
         /// <summary>
         /// Standard conventional 
         /// </summary>
+        [EnumMember]
         Conventional = 1,
 
         /// <summary>
         /// Only supported by Clara
         /// </summary>
+        [EnumMember] 
         ExtendedNIR = 2
     }
 }
