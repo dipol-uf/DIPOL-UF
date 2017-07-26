@@ -23,7 +23,7 @@ namespace Client
                 Console.WriteLine($"Number of available cameras: {client.GetNumberOfCameras()}");
 
                 var cam1 = client.CreateRemoteCamera(0);
-                cam1.PropertyChanged += (sender, e) => Console.WriteLine($"{(sender as DIPOL_Remote.Classes.RemoteCamera).CameraIndex}\t{e.PropertyName}");
+                cam1.PropertyChanged += (sender, e) => Console.WriteLine($"Event {(sender as DIPOL_Remote.Classes.RemoteCamera).CameraIndex}\t{e.PropertyName}");
                 var cam2 = client.CreateRemoteCamera(1);
 
                 Console.WriteLine(cam1.CameraModel);
