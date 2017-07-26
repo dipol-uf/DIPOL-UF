@@ -15,18 +15,33 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 namespace ANDOR_CS.Enums
 {
+
+    /// <summary>
+    /// Device's internal cooling system fan regimes
+    /// </summary>
+    [DataContract]
     public enum FanMode : uint
     {
+        /// <summary>
+        /// Full speed
+        /// </summary>
+        [EnumMember]
         FullSpeed = 0,
+
+        /// <summary>
+        /// Low speed; available only on some devices
+        /// </summary>
+        [EnumMember]
         LowSpeed = 1,
+
+        /// <summary>
+        /// Disabled
+        /// </summary>
+        [EnumMember]
         Off = 2
     }
 }

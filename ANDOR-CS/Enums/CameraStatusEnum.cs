@@ -15,26 +15,32 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Enums
 {
+    [DataContract]
     public enum CameraStatus : uint
     {
+        [EnumMember]
         Idle = SDK.DRV_IDLE,
+        [EnumMember]
         TemperatureCycle = SDK.DRV_TEMPCYCLE,
+        [EnumMember]
         Acquiring = SDK.DRV_ACQUIRING,
+        [EnumMember]
         AccumulateCycleTimeNotMet = SDK.DRV_ACCUM_TIME_NOT_MET,
+        [EnumMember]
         KineticCycleTimeNotMet = SDK.DRV_KINETIC_TIME_NOT_MET,
+        [EnumMember]
         CommunicationError = SDK.DRV_ERROR_ACK,
+        [EnumMember]
         AcquisitionBufferRate = SDK.DRV_ACQ_BUFFER,
+        [EnumMember]
         CameraMemoryFull = SDK.DRV_ACQ_DOWNFIFO_FULL,
+        [EnumMember]
         SpoolBufferOverflow = SDK.DRV_SPOOLERROR
     }
 }

@@ -16,51 +16,83 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Enums
 {
     [Flags]
+    [DataContract]
     public enum SDKFeatures : UInt64
     {
+        [EnumMember]
         Unknown = 0,
+        [EnumMember]
         Polling = SDK.AC_FEATURES_POLLING,
+        [EnumMember]
         Events = SDK.AC_FEATURES_EVENTS,
+        [EnumMember]
         Spooling = SDK.AC_FEATURES_SPOOLING,
+        [EnumMember]
         Shutter = SDK.AC_FEATURES_SHUTTER,
+        [EnumMember]
         ShutterEx = SDK.AC_FEATURES_SHUTTEREX,
+        [EnumMember]
         I2CBus = SDK.AC_FEATURES_EXTERNAL_I2C,
+        [EnumMember]
         SaturationEvent = SDK.AC_FEATURES_SATURATIONEVENT,
+        [EnumMember]
         FanControl = SDK.AC_FEATURES_FANCONTROL,
+        [EnumMember]
         LowFanMode = SDK.AC_FEATURES_MIDFANCONTROL,
+        [EnumMember]
         ReadTemperatureDuringAcquisition = SDK.AC_FEATURES_TEMPERATUREDURINGACQUISITION,
+        [EnumMember]
         KeepCleanControl = SDK.AC_FEATURES_KEEPCLEANCONTROL,
+        [EnumMember]
         DDGLite = SDK.AC_FEATURES_DDGLITE,
+        [EnumMember]
         FrameTransferAndExternalExposure = SDK.AC_FEATURES_FTEXTERNALEXPOSURE,
+        [EnumMember]
         KineticAndExternalExposure = SDK.AC_FEATURES_KINETICEXTERNALEXPOSURE,
+        [EnumMember]
         DACCntrol = SDK.AC_FEATURES_DACCONTROL,
+        [EnumMember]
         MetaData = SDK.AC_FEATURES_METADATA,
+        [EnumMember]
         IOControl = SDK.AC_FEATURES_IOCONTROL,
+        [EnumMember]
         PhotonCounting = SDK.AC_FEATURES_PHOTONCOUNTING,
+        [EnumMember]
         CountConvert = SDK.AC_FEATURES_COUNTCONVERT,
+        [EnumMember]
         DualMode = SDK.AC_FEATURES_DUALMODE,
+        [EnumMember]
         OptAcquire = SDK.AC_FEATURES_OPTACQUIRE,
+        [EnumMember]
         RealTimeNoiseFilter = SDK.AC_FEATURES_REALTIMESPURIOUSNOISEFILTER,
+        [EnumMember]
         PostProcessNoiseFilter = SDK.AC_FEATURES_POSTPROCESSSPURIOUSNOISEFILTER,
+        [EnumMember]
         DualPreAmpGain = SDK.AC_FEATURES_DUALPREAMPGAIN,
+        [EnumMember]
         DefectCorrection = SDK.AC_FEATURES_DEFECT_CORRECTION,
+        [EnumMember]
         StartOfExposureEvent = SDK.AC_FEATURES_STARTOFEXPOSURE_EVENT,
+        [EnumMember]
         EndOfExposureEvent = SDK.AC_FEATURES_ENDOFEXPOSURE_EVENT,
+        [EnumMember]
         CameraLink = SDK.AC_FEATURES_CAMERALINK,
+        [EnumMember]
         FIFOFullEvent = 1 << 28, //SDK.AC_FEATURES_FIFOFULL_EVENT,
+        [EnumMember]
         MultipleSensorPort = 1 << 29, // SDK.AC_FEATURES_SENSOR_PORT_CONFIGURATION,
+        [EnumMember]
         SensorCompensation = 1 << 30, // SDK.AC_FEATURES_SENSOR_COMPENSATION,
-        IRIGSupport = (UInt64) 1<<31, //AC_FEATURES_IRIG_SUPPORT,
-        ESDEvent = ((UInt64) 1 << 0) << 32 //AC_FEATURES2_ESD_EVENTS
+        [EnumMember]
+        IRIGSupport = (UInt64)1 << 31, //AC_FEATURES_IRIG_SUPPORT,
+        [EnumMember]
+        ESDEvent = (UInt64)1 << 32 //AC_FEATURES2_ESD_EVENTS
     }
 }

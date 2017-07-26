@@ -16,20 +16,20 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 namespace ANDOR_CS.DataStructures
 {
+    [DataContract]
     public struct Size
     {
+        [DataMember(IsRequired = true)]
         public int Horizontal
         {
             get;
             internal set;
         }
+        [DataMember(IsRequired = true)]
         public int Vertical
         {
             get;

@@ -16,22 +16,25 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Enums
 {
     [Flags]
+    [DataContract]
     public enum EMGain : uint
     {
+        [EnumMember]
         Unknown = 0,
+        [EnumMember]
         Bits8 = SDK.AC_EMGAIN_8BIT,
+        [EnumMember]
         Bits12 = SDK.AC_EMGAIN_12BIT,
+        [EnumMember]
         LinearBits12 = SDK.AC_EMGAIN_LINEAR12,
+        [EnumMember]
         RealBits12 = SDK.AC_EMGAIN_REAL12
     }
 }
