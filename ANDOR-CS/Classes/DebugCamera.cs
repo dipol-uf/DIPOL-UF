@@ -32,141 +32,141 @@ using CallerMemberNameAttribute = System.Runtime.CompilerServices.CallerMemberNa
 
 namespace ANDOR_CS.Classes
 {
-    public class DebugCamera :ICameraControl
+    public class DebugCamera : CameraBase
     {
-        private string _SerialNumber = "XYZ-1234";
-        private DeviceCapabilities _Capabilities = default(DeviceCapabilities);
-        private CameraProperties _Properties = default(CameraProperties);
-        private bool _IsActive = true;
-        private bool _IsInitialized = true;
-        private string _CameraModel = "DEBUG-CAMERA-INTERFACE";
-        private FanMode _FanMode = FanMode.Off;
-        private Switch _CoolerMode = Switch.Disabled;
-        private int _CameraIndex = -1;
+        //private string _SerialNumber = "XYZ-1234";
+        //private DeviceCapabilities _Capabilities = default(DeviceCapabilities);
+        //private CameraProperties _Properties = default(CameraProperties);
+        //private bool _IsActive = true;
+        //private bool _IsInitialized = true;
+        //private string _CameraModel = "DEBUG-CAMERA-INTERFACE";
+        //private FanMode _FanMode = FanMode.Off;
+        //private Switch _CoolerMode = Switch.Disabled;
+        //private int _CameraIndex = -1;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-
-        public DeviceCapabilities Capabilities
-        {
-            get => _Capabilities;
-            private set
-            {
-                if (!(value as ValueType).Equals(_Capabilities))
-                {
-                    _Capabilities = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-       
-        public CameraProperties Properties
-        {
-            get => _Properties;
-            private set
-            {
-                if (!(value as ValueType).Equals(_Properties))
-                {
-                    _Properties = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public bool IsActive
-        {
-            get => _IsActive;
-            private set
-            {
-                if (value != _IsActive)
-                {
-                    _IsActive = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public bool IsInitialized
-        {
-            get => _IsInitialized;
-            private set
-            {
-                if (value != _IsInitialized)
-                {
-                    _IsInitialized = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public string SerialNumber
-        {
-            get => _SerialNumber;
-            private set
-            {
-                if (value != _SerialNumber)
-                {
-                    _SerialNumber = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public string CameraModel
-        {
-            get => _CameraModel;
-            set
-            {
-                if (value != _CameraModel)
-                {
-                    _CameraModel = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public FanMode FanMode
-        {
-            get => _FanMode;
-            private set
-            {
-                if (value != _FanMode)
-                {
-                    _FanMode = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public Switch CoolerMode
-        {
-            get => _CoolerMode;
-            private set
-            {
-                if (value != _CoolerMode)
-                {
-                    _CoolerMode = value;
-                    OnPropertyChanged();
-                }
-
-            }
-        }
-
-        public int CameraIndex
-        {
-            get => _CameraIndex;
-            private set
-            {
-                if (value != _CameraIndex)
-                {
-                    _CameraIndex = value;
-                    OnPropertyChanged(); 
-                }
-            }
-        }
+        //public event PropertyChangedEventHandler PropertyChanged;
 
 
-        public CameraStatus GetStatus() => CameraStatus.Idle;
+        //public DeviceCapabilities Capabilities
+        //{
+        //    get => _Capabilities;
+        //    private set
+        //    {
+        //        if (!(value as ValueType).Equals(_Capabilities))
+        //        {
+        //            _Capabilities = value;
+        //            OnPropertyChanged();
+        //        }
+        //    }
+        //}
+
+        //public CameraProperties Properties
+        //{
+        //    get => _Properties;
+        //    private set
+        //    {
+        //        if (!(value as ValueType).Equals(_Properties))
+        //        {
+        //            _Properties = value;
+        //            OnPropertyChanged();
+        //        }
+        //    }
+        //}
+
+        //public bool IsActive
+        //{
+        //    get => _IsActive;
+        //    private set
+        //    {
+        //        if (value != _IsActive)
+        //        {
+        //            _IsActive = value;
+        //            OnPropertyChanged();
+        //        }
+        //    }
+        //}
+
+        //public bool IsInitialized
+        //{
+        //    get => _IsInitialized;
+        //    private set
+        //    {
+        //        if (value != _IsInitialized)
+        //        {
+        //            _IsInitialized = value;
+        //            OnPropertyChanged();
+        //        }
+        //    }
+        //}
+
+        //public string SerialNumber
+        //{
+        //    get => _SerialNumber;
+        //    private set
+        //    {
+        //        if (value != _SerialNumber)
+        //        {
+        //            _SerialNumber = value;
+        //            OnPropertyChanged();
+        //        }
+        //    }
+        //}
+
+        //public string CameraModel
+        //{
+        //    get => _CameraModel;
+        //    set
+        //    {
+        //        if (value != _CameraModel)
+        //        {
+        //            _CameraModel = value;
+        //            OnPropertyChanged();
+        //        }
+        //    }
+        //}
+
+        //public FanMode FanMode
+        //{
+        //    get => _FanMode;
+        //    private set
+        //    {
+        //        if (value != _FanMode)
+        //        {
+        //            _FanMode = value;
+        //            OnPropertyChanged();
+        //        }
+        //    }
+        //}
+
+        //public Switch CoolerMode
+        //{
+        //    get => _CoolerMode;
+        //    private set
+        //    {
+        //        if (value != _CoolerMode)
+        //        {
+        //            _CoolerMode = value;
+        //            OnPropertyChanged();
+        //        }
+
+        //    }
+        //}
+
+        //public int CameraIndex
+        //{
+        //    get => _CameraIndex;
+        //    private set
+        //    {
+        //        if (value != _CameraIndex)
+        //        {
+        //            _CameraIndex = value;
+        //            OnPropertyChanged();
+        //        }
+        //    }
+        //}
+
+
+        public override CameraStatus GetStatus() => CameraStatus.Idle;
 
 
         public DebugCamera(int camIndex)
@@ -175,13 +175,9 @@ namespace ANDOR_CS.Classes
             Console.WriteLine($"DebugCamera {camIndex} created.");
         }
 
-        public void Dispose() 
+        public override void Dispose() 
             => Console.WriteLine($"DebugCamera {CameraIndex} disposed");
-
-
-        private void OnPropertyChanged([CallerMemberName] string callerName = "")
-            =>  PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(callerName));
-        
+      
 
     }
 }
