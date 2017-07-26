@@ -16,17 +16,14 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 
 namespace ANDOR_CS.Interfaces
 {
-    public interface ICameraControl : IDisposable
+    public interface ICameraControl : IDisposable, INotifyPropertyChanged
     {
         DeviceCapabilities Capabilities { get; }
 
