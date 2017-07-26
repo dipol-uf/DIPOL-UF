@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Text;
+using System.ComponentModel;
 using System.Threading.Tasks;
 
 using ICameraControl = ANDOR_CS.Interfaces.ICameraControl;
@@ -97,6 +97,8 @@ namespace DIPOL_Remote.Classes
         }
 
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
         internal RemoteCamera(IRemoteControl sessionInstance, int camIndex)
         {
             session = sessionInstance ?? throw new ArgumentNullException("Session cannot be null.");
@@ -119,16 +121,23 @@ namespace DIPOL_Remote.Classes
         }
 
 
+        private void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+
         public static void NotifyRemotePropertyChanged(int camIndex, string sessionID, string property)
         {
             Console.WriteLine($"Property {property} of camera {camIndex} changed in session {sessionID}.");
 
             if (remoteCameras.TryGetValue(camIndex, out ICameraControl camera))
+            {
                 (camera as RemoteCamera).changedProperties.AddOrUpdate(property, true, (prop, oldVal) => true);
+                (camera as RemoteCamera).OnPropertyChanged(property);
+            }
         }
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
 
+        
     }
 }

@@ -32,7 +32,7 @@ using CallerMemberNameAttribute = System.Runtime.CompilerServices.CallerMemberNa
 
 namespace ANDOR_CS.Classes
 {
-    public class DebugCamera :ICameraControl, INotifyPropertyChanged
+    public class DebugCamera :ICameraControl
     {
         private string _SerialNumber = "XYZ-1234";
         private DeviceCapabilities _Capabilities = default(DeviceCapabilities);
@@ -180,9 +180,8 @@ namespace ANDOR_CS.Classes
 
 
         private void OnPropertyChanged([CallerMemberName] string callerName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(callerName));
-        }
+            =>  PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(callerName));
+        
 
     }
 }

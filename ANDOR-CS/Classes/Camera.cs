@@ -22,6 +22,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.ComponentModel;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
@@ -269,6 +270,8 @@ namespace ANDOR_CS.Classes
         /// Fires when backround task acsynchronously checks temperature
         /// </summary>
         public event TemperatureStatusEventHandler TemperatureStatusChecked;
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
         /// Fires when temperature is asynchronously checked during cooling process
