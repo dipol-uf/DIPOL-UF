@@ -25,10 +25,17 @@ namespace Client
                 var cam1 = client.CreateRemoteCamera(0);
                 var cam2 = client.CreateRemoteCamera(1);
 
+                Console.WriteLine(cam1.CameraModel);
+                Console.WriteLine(cam2.CameraModel);
+
                 Console.ReadKey();
                 Console.WriteLine(client.ActiveRemoteCameras().Length);
+                Console.WriteLine(cam2.CameraModel);
+                Console.WriteLine(cam2.CameraModel);
                 cam2.Dispose();
                 Console.WriteLine(client.ActiveRemoteCameras().Length);
+                Console.WriteLine(cam1.CameraModel);
+                Console.WriteLine(cam1.CameraModel);
                 cam1.Dispose();
                 Console.WriteLine(client.ActiveRemoteCameras().Length);
 

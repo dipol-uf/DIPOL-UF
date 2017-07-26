@@ -15,10 +15,18 @@ namespace DIPOL_Remote.Classes
 {
     public class RemoteCamera : ICameraControl
     {
+        private static ConcurrentDictionary<int, ICameraControl> remoteCameras
+            = new ConcurrentDictionary<int, ICameraControl>();
+
+
+        private ConcurrentDictionary<string, bool> changedProperties
+            = new ConcurrentDictionary<string, bool>();
+
         private IRemoteControl session;
 
-        private ConcurrentDictionary<int, ICameraControl> remoteCameras
-            = new ConcurrentDictionary<int, ICameraControl>();
+        private string _SerialNumber = "";
+        private string _CameraModel = "";
+        
 
 
         public DeviceCapabilities Capabilities
@@ -41,8 +49,17 @@ namespace DIPOL_Remote.Classes
 
         public string CameraModel
         {
-            get;
-            private set;
+            get
+            {
+                if (changedProperties.TryGetValue(NameofProperty(), out bool changed) && changed)
+                {
+                    _CameraModel = session.GetCameraModel(CameraIndex);
+                    changedProperties.AddOrUpdate(NameofProperty(), false, (prop, oldVal) => false);
+                }
+                
+                return _CameraModel;
+                
+            }
         }
 
         public Switch CoolerMode
@@ -59,8 +76,11 @@ namespace DIPOL_Remote.Classes
 
         public string SerialNumber
         {
-            get;
-            private set;
+            get
+            {
+                return _SerialNumber;
+            }
+            
         }
 
         public FanMode FanMode
@@ -83,6 +103,9 @@ namespace DIPOL_Remote.Classes
             CameraIndex = camIndex;
 
             remoteCameras.TryAdd(camIndex, this);
+
+            _CameraModel = session.GetCameraModel(CameraIndex);
+            
         }
 
 
@@ -99,7 +122,13 @@ namespace DIPOL_Remote.Classes
         public static void NotifyRemotePropertyChanged(int camIndex, string sessionID, string property)
         {
             Console.WriteLine($"Property {property} of camera {camIndex} changed in session {sessionID}.");
+
+            if (remoteCameras.TryGetValue(camIndex, out ICameraControl camera))
+                (camera as RemoteCamera).changedProperties.AddOrUpdate(property, true, (prop, oldVal) => true);
         }
+
+        private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
+            => name;
 
     }
 }

@@ -77,5 +77,9 @@ namespace DIPOL_Remote.Interfaces
 
         [OperationContract(IsOneWay = false)]
         int[] GetCamerasInUse();
+
+
+        [OperationContract(IsOneWay = false)]
+        string GetCameraModel(int camIndex);
     }
 }
