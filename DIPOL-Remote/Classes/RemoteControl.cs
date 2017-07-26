@@ -191,15 +191,8 @@ namespace DIPOL_Remote.Classes
             catch (AndorSDKException andorEx)
             {
                 // rethrow it, wrapped in FaultException<>, to the client side
-                throw new FaultException<AndorSDKServiceException>(
-                    new AndorSDKServiceException()
-                    {
-                        Message = "Failed retrieving number of available cameras.",
-                        Details = andorEx.Message,
-                        ErrorCode = andorEx.ErrorCode,
-                        MethodName = nameof(Camera.GetNumberOfCameras)
-                    },
-                    ServiceException.CameraCommunicationReason);
+                throw AndorSDKServiceException.WrapAndorSDKException(andorEx, nameof(Camera.GetNumberOfCameras));
+          
             }
             // If failure is not realted to Andor API
             catch (Exception ex)
@@ -229,7 +222,7 @@ namespace DIPOL_Remote.Classes
                 // Tries to create new remote camera
 #if NO_ACTUAL_CAMERA
                 camera = Camera.GetDebugInterface(camIndex);
-                
+
 #else
                 camera = new Camera(camIndex);
 #endif
@@ -237,15 +230,7 @@ namespace DIPOL_Remote.Classes
             // Andor-related exception
             catch (AndorSDKException andorEx)
             {
-                throw new FaultException<AndorSDKServiceException>(
-                    new AndorSDKServiceException()
-                    {
-                        Message = "Failed to create new remote camera.",
-                        Details = andorEx.Message,
-                        ErrorCode = andorEx.ErrorCode,
-                        MethodName = nameof(Camera)
-                    },
-                    ServiceException.CameraCommunicationReason);
+                throw AndorSDKServiceException.WrapAndorSDKException(andorEx, nameof(Camera));
             }
             // Other possible exceptions
             catch (Exception ex)
@@ -280,7 +265,7 @@ namespace DIPOL_Remote.Classes
             (camera as DebugCamera).PropertyChanged += (sender, e)
                 => context.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemotePropertyChanged(
-                    (camera as DebugCamera).CameraIndex,
+                    camera.CameraIndex,
                     SessionID,
                     e.PropertyName);
 #endif
@@ -290,22 +275,60 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void RemoveCamera(int camIndex)
         {
-            if (ActiveCameras.TryGetValue(
-                camIndex,
-                out (string SessionID, ICameraControl Camera) camInfo))
-                if (camInfo.SessionID == SessionID)
-                {
-                    camInfo.Camera.Dispose();
-                    activeCameras.TryRemove(camIndex, out _);
-                }
-                else
-                    throw new FaultException();
+            GetCameraSafe(sessionID, camIndex).Dispose();
+            activeCameras.TryRemove(camIndex, out _);
+
+            //if (ActiveCameras.TryGetValue(
+            //    camIndex,
+            //    out (string SessionID, ICameraControl Camera) camInfo))
+            //    if (camInfo.SessionID == SessionID)
+            //    {
+            //        camInfo.Camera.Dispose();
+            //        activeCameras.TryRemove(camIndex, out _);
+            //    }
+            //    else throw ServiceException.IllegalSessionFaultException();
+
+            //else throw new FaultException<ServiceException>(
+            //    new ServiceException()
+            //    {
+            //        Message = "Specified camera cannot be found among active devices.",
+            //        Details = "Camera is not found in pool of active cameras. It might have been already disposed.",
+            //        MethodName = nameof(ActiveCameras.TryGetValue)
+            //    },
+            //    ServiceException.GeneralServiceErrorReason);        
 
                         
         }
 
+        
         [OperationBehavior]
         public int[] GetCamerasInUse()
             => activeCameras.Keys.ToArray();
+
+        [OperationBehavior]
+        public string GetCameraModel(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).CameraModel;
+        
+
+
+        private ICameraControl GetCameraSafe(string session, int camIndex)
+        {
+            if (ActiveCameras.TryGetValue(
+                camIndex,
+                out (string SessionID, ICameraControl Camera) camInfo))
+
+                if (camInfo.SessionID == SessionID)
+                    return camInfo.Camera;
+                else throw ServiceException.IllegalSessionFaultException();
+
+            else throw new FaultException<ServiceException>(
+                new ServiceException()
+                {
+                    Message = "Specified camera cannot be found among active devices.",
+                    Details = "Camera is not found in pool of active cameras. It might have been already disposed.",
+                    MethodName = nameof(ActiveCameras.TryGetValue)
+                },
+                ServiceException.GeneralServiceErrorReason);
+        }
     }
 }
