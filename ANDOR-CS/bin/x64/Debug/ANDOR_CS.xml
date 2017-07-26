@@ -98,7 +98,7 @@
             <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <exception cref="T:System.NotSupportedException"/>
-            <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="P:ANDOR_CS.Classes.Camera.Properties"/>.VSSpeeds</param>
+            <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="!:Camera.Properties"/>.VSSpeeds</param>
         </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetVSSpeed">
             <summary>
@@ -374,11 +374,6 @@
             Indicates if this camera is currently active
             </summary>
         </member>
-        <member name="P:ANDOR_CS.Classes.Camera.CameraIndex">
-            <summary>
-            Andor SDK unique index of camera; passed to constructor
-            </summary>
-        </member>
         <member name="P:ANDOR_CS.Classes.Camera.CurrentSettings">
             <summary>
             Curently set acquisition regime
@@ -389,24 +384,20 @@
             Indicates if camera is in process of image acquisition.
             </summary>
         </member>
-        <member name="P:ANDOR_CS.Classes.Camera.IsInTemperatureCycle">
+        <member name="P:ANDOR_CS.Classes.Camera.IsAsyncAcquisition">
             <summary>
             Indicates of camera is in temperature cycle.
             </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.Camera.IsAsyncAcquisition">
             <summary>
             Indicates if acquisition is launched from async method and
             camera is able to properly fire all events.
             </summary>
         </member>
-        <member name="P:ANDOR_CS.Classes.Camera.IsAsyncTemperatureCycle">
+        <member name="T:ANDOR_CS.Classes.Camera.AcquisitionStatusEventHandler">
             <summary>
             Indicates if temperature cycle is launched from async method and
             camera is able to properly fire all events.
             </summary>
-        </member>
-        <member name="T:ANDOR_CS.Classes.Camera.AcquisitionStatusEventHandler">
             <summary>
             Handles all events related to acquisition of image process.
             </summary>
@@ -601,6 +592,12 @@
             <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
             <returns>A template that can be used to select proper acquisition settings</returns>
         </member>
+        <member name="M:ANDOR_CS.Classes.Camera.Dispose">
+            <summary>
+            A realisation of <see cref="M:System.IDisposable.Dispose"/> method.
+            Frees SDK-related resources
+            </summary>
+        </member>
         <member name="M:ANDOR_CS.Classes.Camera.#ctor(System.Int32)">
             <summary>
             Creates a new instance of Camera class to represent a connected Andor device.
@@ -610,12 +607,6 @@
             <exception cref="T:System.ArgumentException"/>
             <exception cref="T:System.InvalidOperationException"/>
             <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="M:ANDOR_CS.Classes.Camera.GetNumberOfCameras"/></param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.Camera.Dispose">
-            <summary>
-            A realisation of <see cref="M:System.IDisposable.Dispose"/> method.
-            Frees SDK-related resources
-            </summary>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.StartAcquistionAsync(System.Threading.CancellationToken,System.Int32)">
             <summary>

@@ -22,7 +22,7 @@ namespace Host
                 DIPOL_Remote.Classes.RemoteControl.ActiveCameras.TryGetValue(0, out (string, ANDOR_CS.Interfaces.ICameraControl) result);
                 (result.Item2 as ANDOR_CS.Classes.DebugCamera).CameraModel = "123";
                 DIPOL_Remote.Classes.RemoteControl.ActiveCameras.TryGetValue(1, out result);
-                (result.Item2 as ANDOR_CS.Classes.DebugCamera).CameraModel = "123";
+                (result.Item2 as ANDOR_CS.Classes.DebugCamera).CameraModel = "456";
                 Console.ReadKey();
             }
         }

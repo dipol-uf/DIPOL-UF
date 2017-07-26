@@ -308,8 +308,15 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public string GetCameraModel(int camIndex)
             => GetCameraSafe(sessionID, camIndex).CameraModel;
-        
 
+        [OperationBehavior]
+        public bool GetIsActive(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).IsActive;
+
+        [OperationBehavior]
+        public string GetSerialNumber(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).SerialNumber;
+        
 
         private ICameraControl GetCameraSafe(string session, int camIndex)
         {

@@ -81,5 +81,11 @@ namespace DIPOL_Remote.Interfaces
 
         [OperationContract(IsOneWay = false)]
         string GetCameraModel(int camIndex);
+
+        [OperationContract(IsOneWay = false)]
+        bool GetIsActive(int camIndex);
+
+        [OperationContract(IsOneWay = false)]
+        string GetSerialNumber(int camIndex);
     }
 }

@@ -43,16 +43,16 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Represents an instance of a Camera device
     /// </summary>
-    public class Camera : ICameraControl
+    public class Camera : CameraBase
     {
         private const int AmpDescriptorMaxLength = 21;
         private const int PreAmpGainDescriptorMaxLength = 30;
         private const int StatusCheckTimeOutMS = 100;
         private const int TempCheckTimeOutMS = 5000;
 
-        private static ConcurrentDictionary<int, ICameraControl> CreatedCameras 
-            = new ConcurrentDictionary<int, ICameraControl>();
-        private static Camera ActiveCamera = null;
+        private static ConcurrentDictionary<int, CameraBase> CreatedCameras 
+            = new ConcurrentDictionary<int, CameraBase>();
+        private static Camera _ActiveCamera = null;
 
         private static volatile SemaphoreSlim ActivityLocker = new SemaphoreSlim(1, 1);
 
@@ -85,6 +85,19 @@ namespace ANDOR_CS.Classes
 
         private volatile int LockDepth = 0;
 
+        private static Camera ActiveCamera
+        {
+            get => _ActiveCamera;
+            set
+            {
+                if(value != _ActiveCamera)
+                {
+                    _ActiveCamera = value;
+                    OnActiveCameraChanged();
+                }
+            }
+        }
+
         /// <summary>
         /// Read-only collection of all local cameras in use.
         /// </summary>
@@ -94,49 +107,51 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
-        public bool IsActive
+        public override bool IsActive
         {
-            get
-            {
-                try
-                {
-                    if(LockDepth == 0)
-                        ActivityLocker.Wait();
+            get => ActiveCamera == this;
+            //{
+                //try
+                //{
+                //    if (LockDepth == 0)
+                //        ActivityLocker.Wait();
 
-                    LockDepth++;
-                    return Call(SDKInstance.GetCurrentCamera, out int handle) == SDK.DRV_SUCCESS ? handle == CameraHandle.SDKPtr : false;
-                }
-                finally
-                {
-                    ReleaseLock();
-                }
-            }
+                //    LockDepth++;
+                //    return Call(SDKInstance.GetCurrentCamera, out int handle) == SDK.DRV_SUCCESS ? handle == CameraHandle.SDKPtr : false;
+                //}
+                //finally
+                //{
+                //    ReleaseLock();
+                //}
+            //}
+
+            
         }
-                           
+
         public SafeSDKCameraHandle CameraHandle
         {
             get;
             private set;
         } = null;
 
-        public bool IsInitialized
-        {
-            get;
-            private set;
-        } = false;
-        public FanMode FanMode
-        {
-            get;
-            private set;
-        } = FanMode.Off;
-        public Switch CoolerMode
-        {
-            get;
-            private set;
-        } = Switch.Disabled;
+        //public bool IsInitialized
+        //{
+        //    get;
+        //    private set;
+        //} = false;
+        //public FanMode FanMode
+        //{
+        //    get;
+        //    private set;
+        //} = FanMode.Off;
+        //public Switch CoolerMode
+        //{
+        //    get;
+        //    private set;
+        //} = Switch.Disabled;
         public (
-            ShutterMode Internal, 
-            ShutterMode? External, 
+            ShutterMode Internal,
+            ShutterMode? External,
             TTLShutterSignal Type,
             int OpenTime,
             int CloseTime
@@ -145,27 +160,27 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         }
-        public string SerialNumber
-        {
-            get;
-            private set;
-        } = "Unavailable";
-        public string CameraModel
-        {
-            get;
-            private set;
-        } = "Unknown";
-        public DeviceCapabilities Capabilities
-        {
-            get;
-            private set;
+        //public string SerialNumber
+        //{
+        //    get;
+        //    private set;
+        //} = "Unavailable";
+        //public string CameraModel
+        //{
+        //    get;
+        //    private set;
+        //} = "Unknown";
+        //public DeviceCapabilities Capabilities
+        //{
+        //    get;
+        //    private set;
 
-        } = default(DeviceCapabilities);
-        public CameraProperties Properties
-        {
-            get;
-            private set;
-        }
+        //} = default(DeviceCapabilities);
+        //public CameraProperties Properties
+        //{
+        //    get;
+        //    private set;
+        //}
         public (Version EPROM, Version COFFile, Version Driver, Version Dll) Software
         {
             get;
@@ -179,13 +194,13 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Andor SDK unique index of camera; passed to constructor
         /// </summary>
-        public int CameraIndex
-        {
-            get;
-            private set;
-        } = -1;
+        //public int CameraIndex
+        //{
+        //    get;
+        //    private set;
+        //} = -1;
 
-        
+
         /// <summary>
         /// Curently set acquisition regime
         /// </summary>
@@ -235,6 +250,7 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Event arguments</param>
         public delegate void TemperatureStatusEventHandler(object sender, TemperatureStatusEventArgs e);
 
+
         /// <summary>
         /// Fires when acquisition is started.
         /// </summary>
@@ -261,9 +277,9 @@ namespace ANDOR_CS.Classes
         /// </summary>
         public event TemperatureStatusEventHandler TemperatureStatusChecked;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        //public event PropertyChangedEventHandler PropertyChanged;      
 
-      
+              
 
         /// <summary>
         /// Retrieves camera's capabilities
@@ -714,9 +730,9 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSDKException"/>
         public void SetActive()
         {
-            Call(SDKInstance.GetCurrentCamera, out int handle);
+            //Call(SDKInstance.GetCurrentCamera, out int handle);
 
-            //if (!IsActive)
+            if (!IsActive)
             {
                 // If camera address is invalid, throws exception
                 if (CameraHandle.SDKPtr == 0)
@@ -728,7 +744,7 @@ namespace ANDOR_CS.Classes
                 ThrowIfError(result, nameof(SDKInstance.SetCurrentCamera));
 
                 // Updates the static field of Camera class to indicate that this camera is now active
-                //ActiveCamera = this;
+                ActiveCamera = this;
             }
         }
 
@@ -737,7 +753,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AndorSDKException"/>
         /// <returns>Camera status</returns>
-        public CameraStatus GetStatus()
+        public override CameraStatus GetStatus()
         {
             try
             {
@@ -1118,6 +1134,47 @@ namespace ANDOR_CS.Classes
         }
         
         /// <summary>
+        /// A realisation of <see cref="IDisposable.Dispose"/> method.
+        /// Frees SDK-related resources
+        /// </summary>
+        public override void Dispose()
+        {    
+            // If camera has valid SDK pointer and is initialized
+            if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
+            {
+                // Saves currently active camera
+                var oldCamera = ActiveCamera;
+
+                // Makes active camera that is going to be disposed (this)
+                try
+                {
+                    SetActiveAndLock();
+
+                    // ShutsDown camera
+                    CameraHandle.Dispose();
+
+                    // If succeeded, removes camera instance from the list of cameras
+                    CreatedCameras.TryRemove(CameraHandle.SDKPtr, out _);
+
+                                       
+                }
+                finally
+                {
+                   
+                    // If there are no other cameras, 
+                    if (CreatedCameras.Count == 0)
+                        ActiveCamera = null;
+                    // If there are, sets active the one that was active before disposing procedure
+                    else oldCamera?.SetActive();
+
+                    ReleaseLock();
+                }
+               
+            }
+
+        }
+
+        /// <summary>
         /// Creates a new instance of Camera class to represent a connected Andor device.
         /// Maximum 8 cameras can be controled at the same time
         /// </summary>
@@ -1162,7 +1219,7 @@ namespace ANDOR_CS.Classes
                 IsInitialized = true;
                 if (!CreatedCameras.TryAdd(CameraHandle.SDKPtr, this))
                     throw new InvalidOperationException("Failed to add camera to the concurrent dictionary");
-                
+
                 CameraIndex = camIndex;
 
                 // Gets information about software and hardware used in this system
@@ -1184,6 +1241,8 @@ namespace ANDOR_CS.Classes
                 //if (Capabilities.Features.HasFlag(SDKFeatures.FanControl))
                 //    FanControl(FanMode.Off);
 
+                CreatedCameras.TryAdd(CameraIndex, this);
+
             }
             finally
             {
@@ -1191,48 +1250,7 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        /// <summary>
-        /// A realisation of <see cref="IDisposable.Dispose"/> method.
-        /// Frees SDK-related resources
-        /// </summary>
-        public void Dispose()
-        {    
-            // If camera has valid SDK pointer and is initialized
-            if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
-            {
-                // Saves currently active camera
-                var oldCamera = ActiveCamera;
 
-                // Makes active camera that is going to be disposed (this)
-                try
-                {
-                    SetActiveAndLock();
-
-                    // ShutsDown camera
-                    CameraHandle.Dispose();
-
-                    // If succeeded, removes camera instance from the list of cameras
-                    CreatedCameras.TryRemove(CameraHandle.SDKPtr, out _);
-
-                   
-                }
-                finally
-                {
-                   
-                    // If there are no other cameras, 
-                    if (CreatedCameras.Count == 0)
-                        ActiveCamera = null;
-                    // If there are, sets active the one that was active before disposing procedure
-                    else oldCamera?.SetActive();
-
-                    ReleaseLock();
-                }
-               
-            }
-
-        }
-
-         
         /// <summary>
         /// Starts process of acquisition asynchronously.
         /// This is the preferred way to acquire images from camera.
@@ -1310,8 +1328,10 @@ namespace ANDOR_CS.Classes
             
 
         }
+        
+        
 
-               
+
 
         /// <summary>
         /// Queries the number of currently connected Andor cameras
@@ -1334,9 +1354,18 @@ namespace ANDOR_CS.Classes
         /// Does not requrire real camera
         /// </summary>
         /// <returns></returns>
-        public static Interfaces.ICameraControl GetDebugInterface(int camIndex = 0) 
+        public static CameraBase GetDebugInterface(int camIndex = 0) 
             => new DebugCamera(camIndex);
-        
+
+
+
+        private static void OnActiveCameraChanged()
+        {
+            foreach (var cam in CreatedCameras)
+                (cam.Value as Camera).OnPropertyChanged(nameof(IsActive));
+        }
+
+
     }
 
 }
