@@ -206,12 +206,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Indicates of camera is in temperature cycle.
         /// </summary>
-        [Obsolete("Obsolete property", true)]
-        public bool IsInTemperatureCycle
-        {
-            get => isInTemperatureCycle;
-            set => isInTemperatureCycle = value;
-        }
+        
         /// <summary>
         /// Indicates if acquisition is launched from async method and
         /// camera is able to properly fire all events.
@@ -225,12 +220,7 @@ namespace ANDOR_CS.Classes
         /// Indicates if temperature cycle is launched from async method and
         /// camera is able to properly fire all events.
         /// </summary>
-        [Obsolete("Obsolete property", true)]
-        public bool IsAsyncTemperatureCycle
-        {
-            get => isAsyncTemperatureCycle;
-            set => isAsyncTemperatureCycle = value;
-        }
+       
 
         /// <summary>
         /// Handles all events related to acquisition of image process.
@@ -273,31 +263,7 @@ namespace ANDOR_CS.Classes
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        /// <summary>
-        /// Fires when temperature is asynchronously checked during cooling process
-        /// </summary>
-        [Obsolete("Obsolete event", true)]
-        public event TemperatureStatusEventHandler CoolingTemperatureChecked;
-        /// <summary>
-        /// Firs when cooling is started
-        /// </summary>
-        [Obsolete("Obsolete event", true)]
-        public event TemperatureStatusEventHandler CoolingStarted;
-        /// <summary>
-        /// Fires when cooling is finished
-        /// </summary>
-        [Obsolete("Obsolete event", true)]
-        public event TemperatureStatusEventHandler CoolingFinished;
-        /// <summary>
-        /// Fires when cooling is aborted manually
-        /// </summary>
-        [Obsolete("Obsolete event", true)]
-        public event TemperatureStatusEventHandler CoolingAborted;
-        /// <summary>
-        /// Fires when an exception is thrown in a background asynchronous task.
-        /// </summary>
-        [Obsolete("Obsolete event", true)]
-        public event TemperatureStatusEventHandler CoolingErrorReturned;
+      
 
         /// <summary>
         /// Retrieves camera's capabilities
@@ -740,12 +706,7 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Status of camera when abortion happeed</param>
         protected virtual void OnAcquisitionAborted(AcquisitionStatusEventArgs e) => AcquisitionAborted?.Invoke(this, e);
         protected virtual void OnTemperatureStatusChecked(TemperatureStatusEventArgs e) => TemperatureStatusChecked?.Invoke(this, e);
-        protected virtual void OnCoolingTemperatureChecked(TemperatureStatusEventArgs e) => CoolingTemperatureChecked?.Invoke(this, e);
-        protected virtual void OnCoolingStarted(TemperatureStatusEventArgs e) => CoolingStarted?.Invoke(this, e);
-        protected virtual void OnCoolingFinished(TemperatureStatusEventArgs e) => CoolingFinished?.Invoke(this, e);
-        protected virtual void OnCoolingAborted(TemperatureStatusEventArgs e) => CoolingAborted?.Invoke(this, e);
-        protected virtual void OnCoolingErrorReturned(TemperatureStatusEventArgs e) => CoolingErrorReturned?.Invoke(this, e);
-
+       
 
         /// <summary>
         /// Sets current camera active
@@ -881,11 +842,7 @@ namespace ANDOR_CS.Classes
 
                 var status = GetCurrentTemperature();
 
-                if (mode == Switch.Enabled)
-                    OnCoolingStarted(new TemperatureStatusEventArgs(status.Status, status.Temperature));
-                else
-                    OnCoolingFinished(new TemperatureStatusEventArgs(status.Status, status.Temperature));
-
+               
             }
             finally
             {
@@ -1354,79 +1311,7 @@ namespace ANDOR_CS.Classes
 
         }
 
-        [Obsolete("Do not use this method, it is deprecated. Use serial tempearture controls.",true)]
-        public async Task StartCoolingCycleAsync(
-            int targetTemperature, 
-            FanMode desiredMode,
-            CancellationToken token,
-            int timeout = TempCheckTimeOutMS
-            )
-        {
-            // Checks if acquisition is in progress; throws exception
-            //ThrowIfAcquiring(this);
-
-            if (IsInTemperatureCycle)
-                throw new TemperatureCycleInProgressException("Cooling is already in process.");
-
-            SetTemperature(targetTemperature);
-
-            var oldFanMode = FanMode;
-
-            try
-            {
-                FanControl(desiredMode);
-            }
-            catch (NotSupportedException e)
-            {
-                if (desiredMode == FanMode.LowSpeed && Capabilities.Features.HasFlag(SDKFeatures.FanControl))
-                    FanControl(FanMode.FullSpeed);
-                else
-                    throw;
-            }
-            
-            (var status, var temp) = GetCurrentTemperature();
-
-            try
-            {
-                IsInTemperatureCycle = true;
-                IsAsyncTemperatureCycle = true;
-                CoolerControl(Switch.Enabled);
-
-                while (((status, temp) = GetCurrentTemperature()).Item1.HasFlag(TemperatureStatus.NotReached))
-                    {
-                        if (token.IsCancellationRequested)
-                        {
-                            OnCoolingAborted(new TemperatureStatusEventArgs(status, temp));
-                            break;
-                        }
-
-                        OnCoolingTemperatureChecked(new TemperatureStatusEventArgs(status, temp));
-
-                        await Task.Delay(timeout);
-                    }
-
-                
-            }
-            catch (Exception e)
-            {
-                OnCoolingErrorReturned(new TemperatureStatusEventArgs(status, temp));
-                throw;
-            }
-            finally
-            {
                
-
-                if (Capabilities.Features.HasFlag(SDKFeatures.FanControl))
-                    FanControl(oldFanMode);
-
-                IsInTemperatureCycle = false;
-                IsAsyncTemperatureCycle = true;
-                CoolerControl(Switch.Disabled);
-                
-            }
-        }
-
-        
 
         /// <summary>
         /// Queries the number of currently connected Andor cameras

@@ -450,31 +450,6 @@
             Fires when backround task acsynchronously checks temperature
             </summary>
         </member>
-        <member name="E:ANDOR_CS.Classes.Camera.CoolingTemperatureChecked">
-            <summary>
-            Fires when temperature is asynchronously checked during cooling process
-            </summary>
-        </member>
-        <member name="E:ANDOR_CS.Classes.Camera.CoolingStarted">
-            <summary>
-            Firs when cooling is started
-            </summary>
-        </member>
-        <member name="E:ANDOR_CS.Classes.Camera.CoolingFinished">
-            <summary>
-            Fires when cooling is finished
-            </summary>
-        </member>
-        <member name="E:ANDOR_CS.Classes.Camera.CoolingAborted">
-            <summary>
-            Fires when cooling is aborted manually
-            </summary>
-        </member>
-        <member name="E:ANDOR_CS.Classes.Camera.CoolingErrorReturned">
-            <summary>
-            Fires when an exception is thrown in a background asynchronous task.
-            </summary>
-        </member>
         <member name="M:ANDOR_CS.Classes.Camera.GetCapabilities">
             <summary>
             Retrieves camera's capabilities
