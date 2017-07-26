@@ -1,4 +1,22 @@
-﻿using System;
+﻿//    This file is part of Dipol-3 Camera Manager.
+
+//    Dipol-3 Camera Manager is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+
+//    Dipol-3 Camera Manager is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//    GNU General Public License for more details.
+
+//    You should have received a copy of the GNU General Public License
+//    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
+//
+//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -15,8 +33,8 @@ namespace DIPOL_Remote.Classes
 {
     public class RemoteCamera : CameraBase
     {
-        private static ConcurrentDictionary<(string,int), CameraBase> remoteCameras
-            = new ConcurrentDictionary<(string, int), CameraBase>();
+        private static ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase> remoteCameras
+            = new ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase>();
 
 
         private ConcurrentDictionary<string, bool> changedProperties
@@ -69,6 +87,80 @@ namespace DIPOL_Remote.Classes
             protected set => throw new NotSupportedException();
         }
 
+        public override CameraProperties Properties
+        {
+            get
+            {
+                if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                {
+                    _Properties = session.GetProperties(CameraIndex);
+                    changedProperties.TryUpdate(NameofProperty(), false, true);
+                }
+
+                return _Properties;
+            }
+            protected set => throw new NotSupportedException();
+        }
+
+        public override bool IsInitialized
+        {
+            get
+            {
+                if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                {
+                    _IsInitialized = session.GetIsInitialized(CameraIndex);
+                    changedProperties.TryUpdate(NameofProperty(), false, true);
+                }
+
+                return _IsInitialized;
+            }
+            protected set => throw new NotSupportedException();
+        }
+
+        public override FanMode FanMode
+        {
+            get
+            {
+                if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                {
+                    _FanMode = session.GetFanMode(CameraIndex);
+                    changedProperties.TryUpdate(NameofProperty(), false, true);
+                }
+
+                return _FanMode;
+            }
+            protected set => throw new NotSupportedException();
+        }
+
+        public override Switch CoolerMode
+        {
+            get
+            {
+                    if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                    {
+                        _CoolerMode = session.GetCoolerMode(CameraIndex);
+                        changedProperties.TryUpdate(NameofProperty(), false, true);
+                    }
+
+                    return _CoolerMode;
+                }
+            protected set => throw new NotSupportedException();
+        }
+
+        public override DeviceCapabilities Capabilities 
+        {
+            get
+            {
+                if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                {
+                    _Capabilities= session.GetCapabilities(CameraIndex);
+                    changedProperties.TryUpdate(NameofProperty(), false, true);
+                }
+
+                return _Capabilities;
+            }
+            protected set => throw new NotSupportedException();
+        }
 
 
         internal RemoteCamera(IRemoteControl sessionInstance, int camIndex)
@@ -79,12 +171,19 @@ namespace DIPOL_Remote.Classes
             remoteCameras.TryAdd((session.SessionID, camIndex), this);
 
             _CameraModel = session.GetCameraModel(CameraIndex);
+            _SerialNumber = session.GetSerialNumber(CameraIndex);
+            _IsActive = session.GetIsActive(CameraIndex);
+            _Properties = session.GetProperties(CameraIndex);
+            _IsInitialized = session.GetIsInitialized(CameraIndex);
+            _FanMode = session.GetFanMode(CameraIndex);
+            _CoolerMode = session.GetCoolerMode(CameraIndex);
+            _Capabilities = session.GetCapabilities(CameraIndex);
             
         }
 
 
         public override CameraStatus GetStatus()
-            => CameraStatus.Idle;
+            => session.CallGetStatus(CameraIndex);
 
         public override void Dispose()
         {

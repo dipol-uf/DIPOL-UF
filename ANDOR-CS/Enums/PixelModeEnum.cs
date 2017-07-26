@@ -16,52 +16,56 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Enums
 {
     [Flags]
+    [DataContract]
     public enum PixelMode : uint
     {
         /// <summary>
         /// 8-bit mode
         /// </summary>
+        [EnumMember]
         Bits8 =  SDK.AC_PIXELMODE_8BIT,
 
         /// <summary>
         /// 14-bit mode
         /// </summary>
+        [EnumMember]
         Bits14 = SDK.AC_PIXELMODE_14BIT,
 
         /// <summary>
         /// 16-bit mode
         /// </summary>
+        [EnumMember]
         Bits16 = SDK.AC_PIXELMODE_16BIT,
 
         /// <summary>
         /// 32-bit mode
         /// </summary>
+        [EnumMember]
         Bits32 = SDK.AC_PIXELMODE_32BIT,
 
         /// <summary>
         /// Grey scale
         /// </summary>
+        [EnumMember]
         Mono = SDK.AC_PIXELMODE_MONO,
 
         /// <summary>
         /// RGB colors
         /// </summary>
+        [EnumMember]
         RGB =  SDK.AC_PIXELMODE_RGB,
-
 
         /// <summary>
         /// CMY colors
         /// </summary>
+        [EnumMember]
         CMY = SDK.AC_PIXELMODE_CMY
 
     }

@@ -15,17 +15,27 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 namespace ANDOR_CS.Enums
 {
+    /// <summary>
+    /// Represents function of an object that can be in either of two regimes:
+    /// Enabled or Disabled
+    /// </summary>
+    [DataContract]
     public enum Switch : uint
     {
+        /// <summary>
+        /// Funcion is enabled/turned on
+        /// </summary>
+        [EnumMember]
         Enabled = 1,
+        
+        /// <summary>
+        /// Function is disabled/turned of
+        /// </summary>
+        [EnumMember]
         Disabled = 0
     }
 }

@@ -16,25 +16,31 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Enums
 {
     [Flags]
+    [DataContract]
     public enum ReadMode : uint
     {
+        [EnumMember]
         Unknown = 0,
+        [EnumMember]
         FullImage = SDK.AC_READMODE_FULLIMAGE,
+        [EnumMember]
         SubImage = SDK.AC_READMODE_SUBIMAGE,
+        [EnumMember]
         SingleTrack = SDK.AC_READMODE_SINGLETRACK,
+        [EnumMember]
         FullVerticalBinning = SDK.AC_READMODE_FVB,
+        [EnumMember]
         MultiTrack = SDK.AC_READMODE_MULTITRACK,
+        [EnumMember]
         RandomTrack = SDK.AC_READMODE_RANDOMTRACK,
+        [EnumMember]
         MultiTrackScan = SDK.AC_READMODE_MULTITRACKSCAN
     }
 }
