@@ -5,7 +5,7 @@ using System.Linq;
 using System.ComponentModel;
 using System.Threading.Tasks;
 
-using ICameraControl = ANDOR_CS.Interfaces.ICameraControl;
+using CameraBase = ANDOR_CS.Classes.CameraBase;
 using IRemoteControl = DIPOL_Remote.Interfaces.IRemoteControl;
 
 using ANDOR_CS.Enums;
@@ -13,10 +13,10 @@ using ANDOR_CS.DataStructures;
 
 namespace DIPOL_Remote.Classes
 {
-    public class RemoteCamera : ICameraControl
+    public class RemoteCamera : CameraBase
     {
-        private static ConcurrentDictionary<int, ICameraControl> remoteCameras
-            = new ConcurrentDictionary<int, ICameraControl>();
+        private static ConcurrentDictionary<(string,int), CameraBase> remoteCameras
+            = new ConcurrentDictionary<(string, int), CameraBase>();
 
 
         private ConcurrentDictionary<string, bool> changedProperties
@@ -24,111 +24,82 @@ namespace DIPOL_Remote.Classes
 
         private IRemoteControl session;
 
-        private string _SerialNumber = "";
-        private string _CameraModel = "";
-        
-
-
-        public DeviceCapabilities Capabilities
-        {
-            get;
-            private set;
-        }
-
-        public CameraProperties Properties
-        {
-            get;
-            private set;
-        }
-
-        public bool IsInitialized
-        {
-            get;
-            private set;
-        }
-
-        public string CameraModel
+        public override string CameraModel
         {
             get
             {
-                if (changedProperties.TryGetValue(NameofProperty(), out bool changed) && changed)
+                if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
                 {
                     _CameraModel = session.GetCameraModel(CameraIndex);
-                    changedProperties.AddOrUpdate(NameofProperty(), false, (prop, oldVal) => false);
+                    changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
-                
+
                 return _CameraModel;
-                
             }
+            set => throw new NotSupportedException();
         }
 
-        public Switch CoolerMode
-        {
-            get;
-            private set;
-        }
-
-        public bool IsActive
-        {
-            get;
-            private set;
-        }
-
-        public string SerialNumber
+        public override string SerialNumber
         {
             get
             {
+                if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                {
+                    _SerialNumber = session.GetSerialNumber(CameraIndex);
+                    changedProperties.TryUpdate(NameofProperty(), false, true);
+                }
+
                 return _SerialNumber;
             }
-            
+            protected set => throw new NotSupportedException();
         }
 
-        public FanMode FanMode
+        public override bool IsActive
         {
-            get;
-            private set;
+            get
+            {
+                if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                {
+                    _IsActive = session.GetIsActive(CameraIndex);
+                    changedProperties.TryUpdate(NameofProperty(), false, true);
+                }
+
+                return _IsActive;
+            }
+            protected set => throw new NotSupportedException();
         }
 
-        // Property is client-side
-        public int CameraIndex
-        {
-            get;
-            private set;
-        }
 
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         internal RemoteCamera(IRemoteControl sessionInstance, int camIndex)
         {
             session = sessionInstance ?? throw new ArgumentNullException("Session cannot be null.");
-            CameraIndex = camIndex;
+            _CameraIndex = camIndex;
 
-            remoteCameras.TryAdd(camIndex, this);
+            remoteCameras.TryAdd((session.SessionID, camIndex), this);
 
             _CameraModel = session.GetCameraModel(CameraIndex);
             
         }
 
 
-        public CameraStatus GetStatus()
+        public override CameraStatus GetStatus()
             => CameraStatus.Idle;
 
-        public void Dispose()
+        public override void Dispose()
         {
             session.RemoveCamera(CameraIndex);
-            remoteCameras.TryRemove(CameraIndex, out _);
+            remoteCameras.TryRemove((session.SessionID, CameraIndex), out _);
         }
+       
 
-
-        private void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+        //protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
+        //    => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
 
         public static void NotifyRemotePropertyChanged(int camIndex, string sessionID, string property)
         {
-            Console.WriteLine($"Property {property} of camera {camIndex} changed in session {sessionID}.");
-
-            if (remoteCameras.TryGetValue(camIndex, out ICameraControl camera))
+            
+            if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
             {
                 (camera as RemoteCamera).changedProperties.AddOrUpdate(property, true, (prop, oldVal) => true);
                 (camera as RemoteCamera).OnPropertyChanged(property);
