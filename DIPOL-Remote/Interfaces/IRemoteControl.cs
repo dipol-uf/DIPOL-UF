@@ -51,6 +51,8 @@ namespace DIPOL_Remote.Interfaces
     [ServiceKnownType(typeof(SDKFeatures))]
     [ServiceKnownType(typeof(EMGain))]
     [ServiceKnownType(typeof(CameraStatus))]
+    [ServiceKnownType(typeof(ShutterMode))]
+    [ServiceKnownType(typeof(TTLShutterSignal))]
     public interface IRemoteControl
     {
         /// <summary>
@@ -68,7 +70,6 @@ namespace DIPOL_Remote.Interfaces
         [OperationContract(IsInitiating = true, IsOneWay = false)]
         [FaultContract(typeof(ServiceException))]
         void Connect();
-
         /// <summary>
         /// Exit point of the connection. Frees resources
         /// </summary>
@@ -83,45 +84,43 @@ namespace DIPOL_Remote.Interfaces
         [FaultContract(typeof(AndorSDKServiceException))]
         [FaultContract(typeof(ServiceException))]
         int GetNumberOfCameras();
-
         [OperationContract(IsOneWay = false)]
         [FaultContract(typeof(AndorSDKServiceException))]
         [FaultContract(typeof(ServiceException))]
         void CreateCamera(int camIndex = 0);
-
         [OperationContract(IsOneWay = false)]
         [FaultContract(typeof(ServiceException))]
         void RemoveCamera(int camIndex);
-
-
         [OperationContract(IsOneWay = false)]
         int[] GetCamerasInUse();
 
 
         [OperationContract(IsOneWay = false)]
         string GetCameraModel(int camIndex);
-
         [OperationContract(IsOneWay = false)]
         bool GetIsActive(int camIndex);
-
         [OperationContract(IsOneWay = false)]
         string GetSerialNumber(int camIndex);
-
         [OperationContract(IsOneWay = false)]
         CameraProperties GetProperties(int camIndex);
-
         [OperationContract(IsOneWay = false)]
         bool GetIsInitialized(int camIndex);
-
         [OperationContract(IsOneWay = false)]
         FanMode GetFanMode(int camIndex);
-
         [OperationContract(IsOneWay = false)]
         Switch GetCoolerMode(int camIndex);
-
         [OperationContract(IsOneWay = false)]
         DeviceCapabilities GetCapabilities(int camIndex);
-
+        [OperationContract(IsOneWay = false)]
+        bool GetIsAcquiring(int camIndex);
+        [OperationContract(IsOneWay = false)]
+        bool GetIsAsyncAcquisition(int camIndex);
+        [OperationContract(IsOneWay = false)]
+        (ShutterMode Internal,
+           ShutterMode? External,
+           TTLShutterSignal Type,
+           int OpenTime,
+           int CloseTime) GetShutter(int camIndex);
 
         [OperationContract(IsOneWay = false)]
         CameraStatus CallGetStatus(int camIndex);
