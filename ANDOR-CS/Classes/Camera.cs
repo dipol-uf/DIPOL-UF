@@ -50,41 +50,15 @@ namespace ANDOR_CS.Classes
         private const int StatusCheckTimeOutMS = 100;
         private const int TempCheckTimeOutMS = 5000;
 
+        private Task TemperatureMonitorWorker = null;
+        private CancellationTokenSource TemperatureMonitorCanellationSource
+            = new CancellationTokenSource();
+
         private static ConcurrentDictionary<int, CameraBase> CreatedCameras 
             = new ConcurrentDictionary<int, CameraBase>();
         private static Camera _ActiveCamera = null;
-
         private static volatile SemaphoreSlim ActivityLocker = new SemaphoreSlim(1, 1);
-
-        /// <summary>
-        /// Backend field. Indicates if acquisition is in progress.
-        /// Volatile, atomic read/write.
-        /// </summary>
-        private volatile bool isAcquiring = false;
-        /// <summary>
-        /// Backend field. Indicates if temperature cycle is in progress.
-        /// Volatile, atomic read/write.
-        /// </summary>
-        private volatile bool isInTemperatureCycle = false;
-        /// <summary>
-        /// Backend field. Indicates if acquisition is launched from async task.
-        /// With async acquisition camera is able to properly fire all events.
-        /// Volatile, atomic read/write.
-        /// </summary>
-        private volatile bool isAsyncAcquisition = false;
-        /// <summary>
-        /// Backend field. Indicates if temperature cycle is launched from async task.
-        /// With async temperature cycle camera is able to properly fire all events.
-        /// Volatile, atomic read/write.
-        /// </summary>
-        private volatile bool isAsyncTemperatureCycle = false;
-
-        private Task TemperatureMonitorWorker = null;
-        private CancellationTokenSource TemperatureMonitorCanellationSource 
-            = new CancellationTokenSource();
-
-        private volatile int LockDepth = 0;
-
+        private static volatile int LockDepth = 0;
         private static Camera ActiveCamera
         {
             get => _ActiveCamera;
@@ -92,48 +66,48 @@ namespace ANDOR_CS.Classes
             {
                 if(value != _ActiveCamera)
                 {
+                    if (LockDepth++ == 0)
+                        ActivityLocker.Wait();
+                    
                     _ActiveCamera = value;
+
+                    if(--LockDepth == 0)
+                    ActivityLocker.Release();
+                    
                     OnActiveCameraChanged();
                 }
             }
         }
 
-        /// <summary>
-        /// Read-only collection of all local cameras in use.
-        /// </summary>
-        public IReadOnlyDictionary<int, ICameraControl> CamerasInUse 
-            => CreatedCameras as IReadOnlyDictionary<int, ICameraControl>;
-
+       
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
-        public override bool IsActive
+        public sealed override bool IsActive
         {
             get => ActiveCamera == this;
             //{
-                //try
-                //{
-                //    if (LockDepth == 0)
-                //        ActivityLocker.Wait();
+            //try
+            //{
+            //    if (LockDepth == 0)
+            //        ActivityLocker.Wait();
 
-                //    LockDepth++;
-                //    return Call(SDKInstance.GetCurrentCamera, out int handle) == SDK.DRV_SUCCESS ? handle == CameraHandle.SDKPtr : false;
-                //}
-                //finally
-                //{
-                //    ReleaseLock();
-                //}
+            //    LockDepth++;
+            //    return Call(SDKInstance.GetCurrentCamera, out int handle) == SDK.DRV_SUCCESS ? handle == CameraHandle.SDKPtr : false;
+            //}
+            //finally
+            //{
+            //    ReleaseLock();
+            //}
             //}
 
-            
+            protected set => throw new NotSupportedException();
         }
-
         public SafeSDKCameraHandle CameraHandle
         {
             get;
             private set;
         } = null;
-
         //public bool IsInitialized
         //{
         //    get;
@@ -149,17 +123,17 @@ namespace ANDOR_CS.Classes
         //    get;
         //    private set;
         //} = Switch.Disabled;
-        public (
-            ShutterMode Internal,
-            ShutterMode? External,
-            TTLShutterSignal Type,
-            int OpenTime,
-            int CloseTime
-            ) Shutter
-        {
-            get;
-            private set;
-        }
+        //public (
+        //    ShutterMode Internal,
+        //    ShutterMode? External,
+        //    TTLShutterSignal Type,
+        //    int OpenTime,
+        //    int CloseTime
+        //    ) Shutter
+        //{
+        //    get;
+        //    private set;
+        //}
         //public string SerialNumber
         //{
         //    get;
@@ -181,16 +155,16 @@ namespace ANDOR_CS.Classes
         //    get;
         //    private set;
         //}
-        public (Version EPROM, Version COFFile, Version Driver, Version Dll) Software
-        {
-            get;
-            private set;
-        }
-        public (Version PCB, Version Decode, Version CameraFirmware) Hardware
-        {
-            get;
-            private set;
-        }
+        //public (Version EPROM, Version COFFile, Version Driver, Version Dll) Software
+        //{
+        //    get;
+        //    private set;
+        //}
+        //public (Version PCB, Version Decode, Version CameraFirmware) Hardware
+        //{
+        //    get;
+        //    private set;
+        //}
         /// <summary>
         /// Andor SDK unique index of camera; passed to constructor
         /// </summary>
@@ -199,8 +173,6 @@ namespace ANDOR_CS.Classes
         //    get;
         //    private set;
         //} = -1;
-
-
         /// <summary>
         /// Curently set acquisition regime
         /// </summary>
@@ -209,77 +181,31 @@ namespace ANDOR_CS.Classes
             get;
             internal set;
         } = null;
-
         /// <summary>
         /// Indicates if camera is in process of image acquisition.
         /// </summary>
-        public bool IsAcquiring
-        {
-            get => isAcquiring;
-            set => isAcquiring = value;
-        }
-        /// <summary>
-        /// Indicates of camera is in temperature cycle.
-        /// </summary>
-        
+        //public bool IsAcquiring
+        //{
+        //    get => isAcquiring;
+        //    set => isAcquiring = value;
+        //}
         /// <summary>
         /// Indicates if acquisition is launched from async method and
         /// camera is able to properly fire all events.
         /// </summary>
-        public bool IsAsyncAcquisition
-        {
-            get => isAsyncAcquisition;
-            set => isAsyncAcquisition = value;
-        }
-        /// <summary>
-        /// Indicates if temperature cycle is launched from async method and
-        /// camera is able to properly fire all events.
-        /// </summary>
-       
-
-        /// <summary>
-        /// Handles all events related to acquisition of image process.
-        /// </summary>
-        /// <param name="sender">A <see cref="Camera"/> type source</param>
-        /// <param name="e">Event arguments</param>
-        public delegate void AcquisitionStatusEventHandler(object sender, AcquisitionStatusEventArgs e);
-        /// <summary>
-        /// Handles all events related to temperature cycle.
-        /// </summary>
-        /// <param name="sender">A <see cref="Camera"/> type source</param>
-        /// <param name="e">Event arguments</param>
-        public delegate void TemperatureStatusEventHandler(object sender, TemperatureStatusEventArgs e);
+        //public bool IsAsyncAcquisition
+        //{
+        //    get => isAsyncAcquisition;
+        //    set => isAsyncAcquisition = value;
+        //}
 
 
         /// <summary>
-        /// Fires when acquisition is started.
+        /// Read-only collection of all local cameras in use.
         /// </summary>
-        public event AcquisitionStatusEventHandler AcquisitionStarted;
-        /// <summary>
-        /// Fires when acquisition is finished.
-        /// </summary>
-        public event AcquisitionStatusEventHandler AcquisitionFinished;
-        /// <summary>
-        /// Fires when acquisition status is asynchronously checked
-        /// </summary>
-        public event AcquisitionStatusEventHandler AcquisitionStatusChecked;
-        /// <summary>
-        /// Fires when an exception is thrown in a background asynchronous task
-        /// </summary>
-        public event AcquisitionStatusEventHandler AcquisitionErrorReturned;
-        /// <summary>
-        /// Fires when acquisition is aborted manually
-        /// </summary>
-        public event AcquisitionStatusEventHandler AcquisitionAborted;
+        public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
+            => CreatedCameras as IReadOnlyDictionary<int, CameraBase>;
 
-        /// <summary>
-        /// Fires when backround task acsynchronously checks temperature
-        /// </summary>
-        public event TemperatureStatusEventHandler TemperatureStatusChecked;
-
-        //public event PropertyChangedEventHandler PropertyChanged;      
-
-              
 
         /// <summary>
         /// Retrieves camera's capabilities
@@ -674,14 +600,14 @@ namespace ANDOR_CS.Classes
         /// </summary>
         internal void SetActiveAndLock()
         {
-            if (LockDepth == 0)
+            if (LockDepth++ == 0)
             {
                 ActivityLocker.Wait();
 
                 SetActive();
             }
 
-            LockDepth++;
+            //LockDepth++;
         }
 
         /// <summary>
@@ -689,41 +615,11 @@ namespace ANDOR_CS.Classes
         /// </summary>
         internal void ReleaseLock()
         {
-            if(LockDepth == 1)
+            if(--LockDepth == 0)
                 ActivityLocker.Release();
-            LockDepth--;
+            //LockDepth--;
         }
         
-
-
-        /// <summary>
-        /// Fires <see cref="AcquisitionStarted"/> event.
-        /// </summary>
-        /// <param name="e">Status of camera at the beginning of acquisition</param>
-        protected virtual void OnAcquisitionStarted(AcquisitionStatusEventArgs e) => AcquisitionStarted?.Invoke(this, e);
-        /// <summary>
-        /// Fires <see cref="AcquisitionStatusChecked"/> event.
-        /// </summary>
-        /// <param name="e">Status of camera during acquisition</param>
-        protected virtual void OnAcquisitionStatusChecked(AcquisitionStatusEventArgs e) => AcquisitionStatusChecked?.Invoke(this, e);
-        /// <summary>
-        /// Fires <see cref="AcquisitionFinished"/> event.
-        /// </summary>
-        /// <param name="e">Status of camera at the end of acquisition</param>
-        protected virtual void OnAcquisitionFinished(AcquisitionStatusEventArgs e) => AcquisitionFinished?.Invoke(this, e);
-        /// <summary>
-        /// Fires <see cref="AcquisitionErrorReturned"/> event.
-        /// </summary>
-        /// <param name="e">Status of camera when exception was thrown</param>
-        protected virtual void OnAcquisitionErrorReturned(AcquisitionStatusEventArgs e) => AcquisitionErrorReturned?.Invoke(this, e);
-        /// <summary>
-        /// Fires <see cref="AcquisitionAborted"/> event.
-        /// </summary>
-        /// <param name="e">Status of camera when abortion happeed</param>
-        protected virtual void OnAcquisitionAborted(AcquisitionStatusEventArgs e) => AcquisitionAborted?.Invoke(this, e);
-        protected virtual void OnTemperatureStatusChecked(TemperatureStatusEventArgs e) => TemperatureStatusChecked?.Invoke(this, e);
-       
-
         /// <summary>
         /// Sets current camera active
         /// </summary>
@@ -957,7 +853,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AndorSDKException"/>
         /// <returns>Temperature status and temperature in degrees</returns>
-        public (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
+        public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
         {
             try
             {
@@ -1050,7 +946,7 @@ namespace ANDOR_CS.Classes
                 if (!IsAcquiring)
                     throw new AndorSDKException("Acquisition abort attemted while there is no acquisition in proress.", null);
 
-                if (isAsyncAcquisition)
+                if (IsAsyncAcquisition)
                     throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
 
                 // Tries to abort acquisition
@@ -1173,6 +1069,8 @@ namespace ANDOR_CS.Classes
             }
 
         }
+
+
 
         /// <summary>
         /// Creates a new instance of Camera class to represent a connected Andor device.

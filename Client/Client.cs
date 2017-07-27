@@ -12,8 +12,7 @@ namespace Client
     {
         static void Main(string[] args)
         {
-         
-
+          
             using (var client = new DIPOL_Remote.Classes.DipolClient())
             {
                 client.Connect();
@@ -46,5 +45,6 @@ namespace Client
 
             }
         }
+
     }
 }
