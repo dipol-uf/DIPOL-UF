@@ -66,12 +66,32 @@ namespace DIPOL_Remote.Classes
         /// </summary>
         private static ConcurrentDictionary<string, RemoteControl> serviceInstances 
             = new ConcurrentDictionary<string, RemoteControl>();
-
         /// <summary>
         /// Thread-safe collection of active remote cameras.
         /// </summary>
         private static ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
             = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
+
+        /// <summary>
+        /// Unique ID of current session
+        /// </summary>
+        public string SessionID
+        {
+            [OperationBehavior]
+            get => sessionID;
+
+        }
+        /// <summary>
+        /// Interface to collection of all active <see cref="RemoteControl"/> service instances.
+        /// </summary>
+        public static IReadOnlyDictionary<string, RemoteControl> ActiveConnections
+            => serviceInstances as IReadOnlyDictionary<string, RemoteControl>;
+        /// <summary>
+        /// Interface to collectio of all active cameras of all sessions
+        /// </summary>
+        public static IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)> ActiveCameras
+            => activeCameras as IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)>;
+
 
         /// <summary>
         /// Default constructor
@@ -80,29 +100,7 @@ namespace DIPOL_Remote.Classes
         {
          
         }
-                
-        /// <summary>
-        /// Unique ID of current session
-        /// </summary>
-        public string SessionID
-        {
-            [OperationBehavior]
-            get => sessionID;
-            
-        }
-
-        /// <summary>
-        /// Interface to collection of all active <see cref="RemoteControl"/> service instances.
-        /// </summary>
-        public static IReadOnlyDictionary<string, RemoteControl> ActiveConnections 
-            => serviceInstances as IReadOnlyDictionary<string, RemoteControl>;
-        
-        /// <summary>
-        /// Interface to collectio of all active cameras of all sessions
-        /// </summary>
-        public static IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)> ActiveCameras
-            => activeCameras as IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)>;
-        
+                   
 
         /// <summary>
         /// Entry point of any connection.
@@ -138,7 +136,6 @@ namespace DIPOL_Remote.Classes
                     );
 
         }
-
         /// <summary>
         /// Exit point for any connection. Frees resources.
         /// </summary>
@@ -167,6 +164,7 @@ namespace DIPOL_Remote.Classes
             // Remove this service from collection
             serviceInstances.TryRemove(sessionID, out _);
         }
+
 
         /// <summary>
         /// Returns number of available cameras.
@@ -210,7 +208,6 @@ namespace DIPOL_Remote.Classes
             }
             
         }
-
         [OperationBehavior]
         public void CreateCamera(int camIndex = 0)
         {
@@ -270,7 +267,6 @@ namespace DIPOL_Remote.Classes
 #endif
 
         }
-
         [OperationBehavior]
         public void RemoveCamera(int camIndex)
         {
@@ -303,42 +299,50 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public int[] GetCamerasInUse()
             => activeCameras.Keys.ToArray();
-
         [OperationBehavior]
         public string GetCameraModel(int camIndex)
             => GetCameraSafe(sessionID, camIndex).CameraModel;
-
         [OperationBehavior]
         public bool GetIsActive(int camIndex)
             => GetCameraSafe(sessionID, camIndex).IsActive;
-
         [OperationBehavior]
         public string GetSerialNumber(int camIndex)
             => GetCameraSafe(sessionID, camIndex).SerialNumber;
-
         [OperationBehavior]
         public CameraProperties GetProperties(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Properties;
-
         [OperationBehavior]
         public bool GetIsInitialized(int camIndex)
             => GetCameraSafe(sessionID, camIndex).IsInitialized;
-
         [OperationBehavior]
         public FanMode GetFanMode(int camIndex)
             => GetCameraSafe(sessionID, camIndex).FanMode;
-
         [OperationBehavior]
         public Switch GetCoolerMode(int camIndex)
             => GetCameraSafe(sessionID, camIndex).CoolerMode;
-
         [OperationBehavior]
         public DeviceCapabilities GetCapabilities(int camIndex)
            => GetCameraSafe(sessionID, camIndex).Capabilities;
+        [OperationBehavior]
+        public bool GetIsAcquiring(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).IsAcquiring;
+        [OperationBehavior]
+        public bool GetIsAsyncAcquisition(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).IsAsyncAcquisition;
+        [OperationBehavior]
+        public (
+           ShutterMode Internal,
+           ShutterMode? External,
+           TTLShutterSignal Type,
+           int OpenTime,
+           int CloseTime) GetShutter(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).Shutter;
+
 
         [OperationBehavior]
         public CameraStatus CallGetStatus(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).GetStatus();
+           => GetCameraSafe(sessionID, camIndex).GetStatus();
+
 
         private CameraBase GetCameraSafe(string session, int camIndex)
         {
