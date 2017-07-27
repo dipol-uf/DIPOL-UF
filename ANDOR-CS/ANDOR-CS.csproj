@@ -126,6 +126,7 @@
     <Compile Include="Enums\CameraStatusEnum.cs" />
     <Compile Include="Enums\ShutterModeEnum.cs" />
     <Compile Include="Enums\TTLShutterSignalEnum.cs" />
+    <Compile Include="Events\Delegates.cs" />
     <Compile Include="Events\TemperatureStatusEventArgs.cs" />
     <Compile Include="Exceptions\TemperatureCycleInProgressException.cs" />
     <Compile Include="Exceptions\AcquisitionInProgressException.cs" />

@@ -232,6 +232,121 @@
             SERIALIZATION TEST CONSTRUCTOR; DO NOT USE
             </summary>
         </member>
+        <member name="T:ANDOR_CS.Classes.CameraBase">
+            <summary>
+            Base abstract class to all ANDOR-device classes
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.CameraBase.CameraIndex">
+            <summary>
+            Andor SDK unique index of camera; passed to constructor
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.CameraBase.IsAcquiring">
+            <summary>
+            Indicates if camera is in process of image acquisition.
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.CameraBase.IsAsyncAcquisition">
+            <summary>
+            Indicates if acquisition is launched from async method and
+            camera is able to properly fire all events.
+            </summary>
+        </member>
+        <member name="E:ANDOR_CS.Classes.CameraBase.PropertyChanged">
+            <summary>
+            Fires when one of the properties was changed
+            </summary>
+        </member>
+        <member name="E:ANDOR_CS.Classes.CameraBase.AcquisitionStarted">
+            <summary>
+            Fires when acquisition is started.
+            </summary>
+        </member>
+        <member name="E:ANDOR_CS.Classes.CameraBase.AcquisitionFinished">
+            <summary>
+            Fires when acquisition is finished.
+            </summary>
+        </member>
+        <member name="E:ANDOR_CS.Classes.CameraBase.AcquisitionStatusChecked">
+            <summary>
+            Fires when acquisition status is asynchronously checked
+            </summary>
+        </member>
+        <member name="E:ANDOR_CS.Classes.CameraBase.AcquisitionErrorReturned">
+            <summary>
+            Fires when an exception is thrown in a background asynchronous task
+            </summary>
+        </member>
+        <member name="E:ANDOR_CS.Classes.CameraBase.AcquisitionAborted">
+            <summary>
+            Fires when acquisition is aborted manually
+            </summary>
+        </member>
+        <member name="E:ANDOR_CS.Classes.CameraBase.TemperatureStatusChecked">
+            <summary>
+            Fires when backround task acsynchronously checks temperature
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.CameraBase.GetStatus">
+            <summary>
+            When overriden in a derived class, returns current status of the camera
+            </summary>
+            <returns>Status of a camera</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.CameraBase.Dispose">
+            <summary>
+            When overriden in derived class, disposes camera instance and frees all resources.
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.CameraBase.GetCurrentTemperature">
+            <summary>
+            When overriden in derived class, returns current camera temperature and temperature status
+            </summary>
+            <returns>Temperature status and temperature in degrees</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.CameraBase.OnPropertyChanged(System.String)">
+            <summary>
+            Fires <see cref="E:ANDOR_CS.Classes.CameraBase.PropertyChanged"/> event
+            </summary>
+            <param name="property">Compiler-filled name of the property that fires event.</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.CameraBase.OnAcquisitionStarted(ANDOR_CS.Events.AcquisitionStatusEventArgs)">
+            <summary>
+            Fires <see cref="E:ANDOR_CS.Classes.CameraBase.AcquisitionStarted"/> event.
+            </summary>
+            <param name="e">Status of camera at the beginning of acquisition</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.CameraBase.OnAcquisitionStatusChecked(ANDOR_CS.Events.AcquisitionStatusEventArgs)">
+            <summary>
+            Fires <see cref="E:ANDOR_CS.Classes.CameraBase.AcquisitionStatusChecked"/> event.
+            </summary>
+            <param name="e">Status of camera during acquisition</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.CameraBase.OnAcquisitionFinished(ANDOR_CS.Events.AcquisitionStatusEventArgs)">
+            <summary>
+            Fires <see cref="E:ANDOR_CS.Classes.CameraBase.AcquisitionFinished"/> event.
+            </summary>
+            <param name="e">Status of camera at the end of acquisition</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.CameraBase.OnAcquisitionErrorReturned(ANDOR_CS.Events.AcquisitionStatusEventArgs)">
+            <summary>
+            Fires <see cref="E:ANDOR_CS.Classes.CameraBase.AcquisitionErrorReturned"/> event.
+            </summary>
+            <param name="e">Status of camera when exception was thrown</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.CameraBase.OnAcquisitionAborted(ANDOR_CS.Events.AcquisitionStatusEventArgs)">
+            <summary>
+            Fires <see cref="E:ANDOR_CS.Classes.CameraBase.AcquisitionAborted"/> event.
+            </summary>
+            <param name="e">Status of camera when abortion happeed</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.CameraBase.OnTemperatureStatusChecked(ANDOR_CS.Events.TemperatureStatusEventArgs)">
+            <summary>
+            Fires <see cref="E:ANDOR_CS.Classes.CameraBase.TemperatureStatusChecked"/> event
+            </summary>
+            <param name="e">Status of the camera when temperature was checked.</param>
+        </member>
         <member name="T:ANDOR_CS.Classes.SafeSDKCameraHandle">
             <summary>
             A safe handle class based on <see cref="T:System.Runtime.InteropServices.SafeHandle"/> class tha uses internal <see cref="T:System.IntPtr"/> handle to store
@@ -338,37 +453,6 @@
             Represents an instance of a Camera device
             </summary>
         </member>
-        <member name="F:ANDOR_CS.Classes.Camera.isAcquiring">
-            <summary>
-            Backend field. Indicates if acquisition is in progress.
-            Volatile, atomic read/write.
-            </summary>
-        </member>
-        <member name="F:ANDOR_CS.Classes.Camera.isInTemperatureCycle">
-            <summary>
-            Backend field. Indicates if temperature cycle is in progress.
-            Volatile, atomic read/write.
-            </summary>
-        </member>
-        <member name="F:ANDOR_CS.Classes.Camera.isAsyncAcquisition">
-            <summary>
-            Backend field. Indicates if acquisition is launched from async task.
-            With async acquisition camera is able to properly fire all events.
-            Volatile, atomic read/write.
-            </summary>
-        </member>
-        <member name="F:ANDOR_CS.Classes.Camera.isAsyncTemperatureCycle">
-            <summary>
-            Backend field. Indicates if temperature cycle is launched from async task.
-            With async temperature cycle camera is able to properly fire all events.
-            Volatile, atomic read/write.
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.Camera.CamerasInUse">
-            <summary>
-            Read-only collection of all local cameras in use.
-            </summary>
-        </member>
         <member name="P:ANDOR_CS.Classes.Camera.IsActive">
             <summary>
             Indicates if this camera is currently active
@@ -379,66 +463,9 @@
             Curently set acquisition regime
             </summary>
         </member>
-        <member name="P:ANDOR_CS.Classes.Camera.IsAcquiring">
+        <member name="P:ANDOR_CS.Classes.Camera.CamerasInUse">
             <summary>
-            Indicates if camera is in process of image acquisition.
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.Camera.IsAsyncAcquisition">
-            <summary>
-            Indicates of camera is in temperature cycle.
-            </summary>
-            <summary>
-            Indicates if acquisition is launched from async method and
-            camera is able to properly fire all events.
-            </summary>
-        </member>
-        <member name="T:ANDOR_CS.Classes.Camera.AcquisitionStatusEventHandler">
-            <summary>
-            Indicates if temperature cycle is launched from async method and
-            camera is able to properly fire all events.
-            </summary>
-            <summary>
-            Handles all events related to acquisition of image process.
-            </summary>
-            <param name="sender">A <see cref="T:ANDOR_CS.Classes.Camera"/> type source</param>
-            <param name="e">Event arguments</param>
-        </member>
-        <member name="T:ANDOR_CS.Classes.Camera.TemperatureStatusEventHandler">
-            <summary>
-            Handles all events related to temperature cycle.
-            </summary>
-            <param name="sender">A <see cref="T:ANDOR_CS.Classes.Camera"/> type source</param>
-            <param name="e">Event arguments</param>
-        </member>
-        <member name="E:ANDOR_CS.Classes.Camera.AcquisitionStarted">
-            <summary>
-            Fires when acquisition is started.
-            </summary>
-        </member>
-        <member name="E:ANDOR_CS.Classes.Camera.AcquisitionFinished">
-            <summary>
-            Fires when acquisition is finished.
-            </summary>
-        </member>
-        <member name="E:ANDOR_CS.Classes.Camera.AcquisitionStatusChecked">
-            <summary>
-            Fires when acquisition status is asynchronously checked
-            </summary>
-        </member>
-        <member name="E:ANDOR_CS.Classes.Camera.AcquisitionErrorReturned">
-            <summary>
-            Fires when an exception is thrown in a background asynchronous task
-            </summary>
-        </member>
-        <member name="E:ANDOR_CS.Classes.Camera.AcquisitionAborted">
-            <summary>
-            Fires when acquisition is aborted manually
-            </summary>
-        </member>
-        <member name="E:ANDOR_CS.Classes.Camera.TemperatureStatusChecked">
-            <summary>
-            Fires when backround task acsynchronously checks temperature
+            Read-only collection of all local cameras in use.
             </summary>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.GetCapabilities">
@@ -478,36 +505,6 @@
             <summary>
             Releases current camera, allowing to switch to another device
             </summary>
-        </member>
-        <member name="M:ANDOR_CS.Classes.Camera.OnAcquisitionStarted(ANDOR_CS.Events.AcquisitionStatusEventArgs)">
-            <summary>
-            Fires <see cref="E:ANDOR_CS.Classes.Camera.AcquisitionStarted"/> event.
-            </summary>
-            <param name="e">Status of camera at the beginning of acquisition</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.Camera.OnAcquisitionStatusChecked(ANDOR_CS.Events.AcquisitionStatusEventArgs)">
-            <summary>
-            Fires <see cref="E:ANDOR_CS.Classes.Camera.AcquisitionStatusChecked"/> event.
-            </summary>
-            <param name="e">Status of camera during acquisition</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.Camera.OnAcquisitionFinished(ANDOR_CS.Events.AcquisitionStatusEventArgs)">
-            <summary>
-            Fires <see cref="E:ANDOR_CS.Classes.Camera.AcquisitionFinished"/> event.
-            </summary>
-            <param name="e">Status of camera at the end of acquisition</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.Camera.OnAcquisitionErrorReturned(ANDOR_CS.Events.AcquisitionStatusEventArgs)">
-            <summary>
-            Fires <see cref="E:ANDOR_CS.Classes.Camera.AcquisitionErrorReturned"/> event.
-            </summary>
-            <param name="e">Status of camera when exception was thrown</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.Camera.OnAcquisitionAborted(ANDOR_CS.Events.AcquisitionStatusEventArgs)">
-            <summary>
-            Fires <see cref="E:ANDOR_CS.Classes.Camera.AcquisitionAborted"/> event.
-            </summary>
-            <param name="e">Status of camera when abortion happeed</param>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.SetActive">
             <summary>
@@ -557,7 +554,7 @@
             <summary>
             Starts acquisition of the image. Does not block current thread.
             To monitor acquisition progress, use <see cref="M:ANDOR_CS.Classes.Camera.GetStatus"/>.
-            Fires <see cref="M:ANDOR_CS.Classes.Camera.OnAcquisitionStarted(ANDOR_CS.Events.AcquisitionStatusEventArgs)"/> 
+            Fires <see cref="!:OnAcquisitionStarted(AcquisitionStatusEventArgs)"/> 
             with <see cref="P:ANDOR_CS.Events.AcquisitionStatusEventArgs.IsAsync"/> = false.
             NOTE: this method is not recommended. Consider using async version
             <see cref="M:ANDOR_CS.Classes.Camera.StartAcquistionAsync(System.Threading.CancellationToken,System.Int32)"/>.
@@ -875,6 +872,20 @@
             <summary>
             +4
             </summary>
+        </member>
+        <member name="T:ANDOR_CS.Events.AcquisitionStatusEventHandler">
+            <summary>
+            Handles all events related to acquisition of image process.
+            </summary>
+            <param name="sender">A <see cref="!:Camera"/> type source</param>
+            <param name="e">Event arguments</param>
+        </member>
+        <member name="T:ANDOR_CS.Events.TemperatureStatusEventHandler">
+            <summary>
+            Handles all events related to temperature cycle.
+            </summary>
+            <param name="sender">A <see cref="!:Camera"/> type source</param>
+            <param name="e">Event arguments</param>
         </member>
         <member name="T:ANDOR_CS.Events.TemperatureStatusEventArgs">
             <summary>
