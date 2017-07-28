@@ -15,23 +15,19 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-
 using System.ServiceModel;
+
+using ANDOR_CS.Events;
 
 namespace DIPOL_Remote.Interfaces
 {
     public interface IRemoteCallback
     {
         [OperationContract(IsOneWay = true)]
-        void SendToClient(string m);
+        void NotifyRemotePropertyChanged(int camIndex, string session, string proeprty);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyRemotePropertyChanged(int camIndex, string session, string proeprty);
+        void NotifyRemoteTemperatureStatusChecked(
+            int camIndex, string session, TemperatureStatusEventArgs args);
     }
 }

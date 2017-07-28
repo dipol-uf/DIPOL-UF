@@ -35,6 +35,7 @@ namespace DIPOL_Remote.Interfaces
     /// </summary>
     [ServiceContract(SessionMode = SessionMode.Required,
         CallbackContract = typeof(IRemoteCallback))]
+    [ServiceKnownType(typeof(Version))]
     [ServiceKnownType(typeof(CameraProperties))]
     [ServiceKnownType(typeof(DeviceCapabilities))]
     [ServiceKnownType(typeof(Size))]
@@ -53,6 +54,7 @@ namespace DIPOL_Remote.Interfaces
     [ServiceKnownType(typeof(CameraStatus))]
     [ServiceKnownType(typeof(ShutterMode))]
     [ServiceKnownType(typeof(TTLShutterSignal))]
+    [ServiceKnownType(typeof(TemperatureStatus))]
     public interface IRemoteControl
     {
         /// <summary>
@@ -121,8 +123,15 @@ namespace DIPOL_Remote.Interfaces
            TTLShutterSignal Type,
            int OpenTime,
            int CloseTime) GetShutter(int camIndex);
+        [OperationContract(IsOneWay = false)]
+        (Version EPROM, Version COFFile, Version Driver, Version Dll) GetSoftware(int camIndex);
+        [OperationContract(IsOneWay = false)]
+        (Version PCB, Version Decode, Version CameraFirmware) GetHardware(int camIndex);
+
 
         [OperationContract(IsOneWay = false)]
         CameraStatus CallGetStatus(int camIndex);
+        [OperationContract(IsOneWay = false)]
+        (TemperatureStatus Status, float Temperature) CallGetCurrentTemperature(int camIndex);
     }
 }
