@@ -37,7 +37,10 @@ namespace ANDOR_CS.Classes
        
         public override CameraStatus GetStatus() => CameraStatus.Idle;
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
-            => (Status: TemperatureStatus.Off, 20.0f);  
+        {
+            OnTemperatureStatusChecked(new Events.TemperatureStatusEventArgs(TemperatureStatus.Off, 20.0f));
+            return (Status: TemperatureStatus.Off, 20.0f);
+        }
 
 
         public DebugCamera(int camIndex)

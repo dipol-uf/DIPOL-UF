@@ -294,7 +294,7 @@ namespace ANDOR_CS.Classes
         /// <param name="property">Compiler-filled name of the property that fires event.</param>
         protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
         {
-            Console.WriteLine($"CameraBase.OnPropertyChanged({property})");
+            //Console.WriteLine($"CameraBase.OnPropertyChanged({property})");
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
         /// <summary>

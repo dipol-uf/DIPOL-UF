@@ -337,11 +337,21 @@ namespace DIPOL_Remote.Classes
            int OpenTime,
            int CloseTime) GetShutter(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Shutter;
+        [OperationBehavior]
+        public (Version EPROM, Version COFFile, Version Driver, Version Dll) GetSoftware(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).Software;
+        [OperationBehavior]
+        public (Version PCB, Version Decode, Version CameraFirmware) GetHardware(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).Hardware;
+
 
 
         [OperationBehavior]
         public CameraStatus CallGetStatus(int camIndex)
            => GetCameraSafe(sessionID, camIndex).GetStatus();
+        [OperationBehavior]
+        public (TemperatureStatus Status, float Temperature) CallGetCurrentTemperature(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).GetCurrentTemperature();
 
 
         private CameraBase GetCameraSafe(string session, int camIndex)
