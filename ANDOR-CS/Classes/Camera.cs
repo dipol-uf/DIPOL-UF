@@ -855,11 +855,10 @@ namespace ANDOR_CS.Classes
         /// <returns>Temperature status and temperature in degrees</returns>
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
         {
+            SetActiveAndLock();
             try
             {
-                SetActiveAndLock();
-
-                // Checks if acquisition is in progress; throws exception
+               // Checks if acquisition is in progress; throws exception
                // ThrowIfAcquiring(this);
 
                 if (!Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
@@ -879,11 +878,6 @@ namespace ANDOR_CS.Classes
                 }
 
                 var status = (TemperatureStatus)result;
-
-                //if (!IsAsyncTemperatureCycle &&
-                //    IsInTemperatureCycle &&
-                //    status != TemperatureStatus.NotReached)
-                //    IsInTemperatureCycle = false;
 
                 return (Status: status, Temperature: temp);
             }

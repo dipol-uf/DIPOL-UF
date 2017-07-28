@@ -16,12 +16,9 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using System.ServiceModel;
+
+using ANDOR_CS.Events;
 
 using DIPOL_Remote.Interfaces;
 
@@ -40,11 +37,9 @@ namespace DIPOL_Remote.Classes
         public void NotifyRemotePropertyChanged(int camIndex, string session, string property)
             => RemoteCamera.NotifyRemotePropertyChanged(camIndex, session, property);
 
+        public void NotifyRemoteTemperatureStatusChecked(
+            int camIndex, string session, TemperatureStatusEventArgs args)
+            => throw new NotImplementedException();
 
-        public void SendToClient(string m)
-        {
-
-            Console.WriteLine($"From service \"{m}\"");
-        }
     }
 }
