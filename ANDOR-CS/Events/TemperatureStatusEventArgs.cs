@@ -26,20 +26,23 @@ namespace ANDOR_CS.Events
     /// <summary>
     /// Stores the event arguments for all Acquisition-based events
     /// </summary>
+    [DataContract]
     public class TemperatureStatusEventArgs : EventArgs
     {
         /// <summary>
         /// Time stamp of the event
         /// </summary>
+        [DataMember]
         public DateTime EventTime
         {
             get;
             private set;
         }
-        
+
         /// <summary>
         /// Camera temperature.
         /// </summary>
+        [DataMember]
         public float Temperature
         {
             get;
@@ -49,6 +52,7 @@ namespace ANDOR_CS.Events
         /// <summary>
         /// Camera status at the moment of the event
         /// </summary>
+        [DataMember]
         public TemperatureStatus Status
         {
             get;
