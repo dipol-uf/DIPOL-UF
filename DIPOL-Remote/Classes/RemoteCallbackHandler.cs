@@ -39,7 +39,7 @@ namespace DIPOL_Remote.Classes
 
         public void NotifyRemoteTemperatureStatusChecked(
             int camIndex, string session, TemperatureStatusEventArgs args)
-            => throw new NotImplementedException();
+            => RemoteCamera.NotifyRemoteTemperatureStatusChecked(camIndex, session, args);
 
     }
 }

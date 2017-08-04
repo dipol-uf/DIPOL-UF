@@ -21,28 +21,109 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-using System.ComponentModel;
-
+using System.Threading;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
-using ANDOR_CS.Interfaces;
+using ANDOR_CS.Events;
 
 using CallerMemberNameAttribute = System.Runtime.CompilerServices.CallerMemberNameAttribute;
+
 
 namespace ANDOR_CS.Classes
 {
     public class DebugCamera : CameraBase
     {
-       
-        public override CameraStatus GetStatus() => CameraStatus.Idle;
-        public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
+        private static volatile object locker = new object();
+        private static readonly ConsoleColor Green = ConsoleColor.DarkGreen;
+        private static readonly ConsoleColor Red = ConsoleColor.Red;
+        private static readonly ConsoleColor Blue = ConsoleColor.Blue;
+
+        private Task TemperatureMonitorWorker;
+        private CancellationTokenSource TemperatureMonitorCancellationSource
+            = new CancellationTokenSource();
+
+        private void TemperatureMonitorCycler(CancellationToken token, int delay)
         {
-            OnTemperatureStatusChecked(new Events.TemperatureStatusEventArgs(TemperatureStatus.Off, 20.0f));
-            return (Status: TemperatureStatus.Off, 20.0f);
+            while (true)
+            {
+                if (token.IsCancellationRequested)
+                    return;
+
+                (var status, var temp) = GetCurrentTemperature();
+
+                OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
+
+                Task.Delay(delay).Wait();
+            }
+
         }
 
+        public override CameraStatus GetStatus()
+        {
+            WriteMessage("Status checked.", Blue);
+            return CameraStatus.Idle;
+        }
+        public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
+        {
+            WriteMessage("Current temperature returned.", Blue);
+            return (TemperatureStatus: TemperatureStatus.Stabilized, Temperature: 10.0f);
+        }
+        public override void SetActive()
+            => WriteMessage("Camera is manually set active.", Green);
+        public override void FanControl(FanMode mode)
+        {
+            FanMode = mode;
+            WriteMessage($"Fan mode is set to {mode}", Blue);
+        }
+        public override void CoolerControl(Switch mode)
+        {
+            CoolerMode = mode;
+            WriteMessage($"Cooler mode is set to {mode}", Blue);
+        }
+        public override void SetTemperature(int temperature)
+        {
+            WriteMessage($"Temperature was set to {temperature}.", Blue);
+        }
+        public override void ShutterControl(int clTime, int opTime, ShutterMode inter, ShutterMode exter = ShutterMode.FullyAuto, TTLShutterSignal type = TTLShutterSignal.Low)
+        {
+            WriteMessage("Shutter settings were changed.", Blue);
+        }
+        public override void TemperatureMonitor(Switch mode, int timeout)
+        {
+            // If monitor shold be enbled
+            if (mode == Switch.Enabled)
+            {
+                
+                // If background task has not been started yet
+                if (TemperatureMonitorWorker == null ||
+                    TemperatureMonitorWorker.Status == TaskStatus.Canceled ||
+                    TemperatureMonitorWorker.Status == TaskStatus.RanToCompletion ||
+                    TemperatureMonitorWorker.Status == TaskStatus.Faulted)
+                    // Starts new with a cancellation token
+                    TemperatureMonitorWorker = Task.Factory.StartNew(
+                        () => TemperatureMonitorCycler(TemperatureMonitorCancellationSource.Token, timeout),
+                        TemperatureMonitorCancellationSource.Token);
 
+                // If task was created, but has not started, start it
+                if (TemperatureMonitorWorker.Status == TaskStatus.Created)
+                    TemperatureMonitorWorker.Start();
+
+                WriteMessage("Temperature monitor enabled.", Green);
+
+            }
+            // If monitor should be disabled
+            if (mode == Switch.Disabled)
+            {
+                // if there is a working background monitor
+                if (TemperatureMonitorWorker?.Status == TaskStatus.Running ||
+                    TemperatureMonitorWorker?.Status == TaskStatus.WaitingForActivation ||
+                    TemperatureMonitorWorker?.Status == TaskStatus.WaitingToRun)
+                    // Stops it via cancellation token
+                    TemperatureMonitorCancellationSource.Cancel();
+
+                WriteMessage("Temperature monitor disabled.", Red);
+            }
+        }
         public DebugCamera(int camIndex)
         {
             CameraIndex = camIndex;
@@ -60,13 +141,27 @@ namespace ANDOR_CS.Classes
             CameraModel = "DEBUG-CAMERA-INTERFACE";
             FanMode = FanMode.Off;
             CoolerMode = Switch.Disabled;
-            
-            Console.WriteLine($"DebugCamera {camIndex} created.");
+
+            PropertyChanged += (sender, prop) => WriteMessage($"{prop.PropertyName} was changed.", Blue);
+            TemperatureStatusChecked += (sender, args) => WriteMessage($"Temperature: {args.Temperature}\tStatus: {args.Status}", Blue);
+            WriteMessage("Camera created.", Green);
         }
 
-        public override void Dispose() 
-            => Console.WriteLine($"DebugCamera {CameraIndex} disposed");
-      
+        public override void Dispose()
+            => WriteMessage("Camera disposed.", Red);
 
+
+        private void WriteMessage(string message, ConsoleColor col)
+        {
+            lock (locker)
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("[{0,-3:000}-{1:hh:mm:ss.ff}] > ", CameraIndex, DateTime.Now);
+                Console.ForegroundColor = col;
+                Console.WriteLine(message);
+                Console.ForegroundColor = ConsoleColor.White;
+            }
+
+        }
     }
 }

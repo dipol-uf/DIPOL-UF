@@ -250,6 +250,29 @@ namespace DIPOL_Remote.Classes
             => session.CallGetStatus(CameraIndex);
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
             => session.CallGetCurrentTemperature(CameraIndex);
+        public override void SetActive()
+            => session.CallSetActive(CameraIndex);
+        public override void FanControl(FanMode mode)
+            => session.CallFanControl(CameraIndex, mode);
+        public override void CoolerControl(Switch mode)
+            => session.CallCoolerControl(CameraIndex, mode);
+        public override void SetTemperature(int temperature)
+            => session.CallSetTemperature(CameraIndex, temperature);
+        public override void ShutterControl(
+            int clTime,
+            int opTime,
+            ShutterMode inter,
+            ShutterMode exter = ShutterMode.FullyAuto,
+            TTLShutterSignal type = TTLShutterSignal.Low)
+            => session.CallShutterControl(
+                CameraIndex,
+                clTime,
+                opTime,
+                inter,
+                exter,
+                type);
+        public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMS)
+            => session.CallTemperatureMonitor(CameraIndex, mode, timeout);
         public override void Dispose()
         {
             session.RemoveCamera(CameraIndex);

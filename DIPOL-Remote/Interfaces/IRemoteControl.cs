@@ -55,7 +55,7 @@ namespace DIPOL_Remote.Interfaces
     [ServiceKnownType(typeof(ShutterMode))]
     [ServiceKnownType(typeof(TTLShutterSignal))]
     [ServiceKnownType(typeof(TemperatureStatus))]
-    public interface IRemoteControl
+    internal interface IRemoteControl
     {
         /// <summary>
         /// Unique ID of the session 
@@ -133,5 +133,23 @@ namespace DIPOL_Remote.Interfaces
         CameraStatus CallGetStatus(int camIndex);
         [OperationContract(IsOneWay = false)]
         (TemperatureStatus Status, float Temperature) CallGetCurrentTemperature(int camIndex);
+        [OperationContract(IsOneWay = false)]
+        void CallSetActive(int camIndex);
+        [OperationContract(IsOneWay = false)]
+        void CallFanControl(int camIndex, FanMode mode);
+        [OperationContract(IsOneWay = false)]
+        void CallCoolerControl(int camIndex, Switch mode);
+        [OperationContract(IsOneWay = false)]
+        void CallSetTemperature(int camIndex, int temperature);
+        [OperationContract(IsOneWay = false)]
+        void CallShutterControl(
+            int camIndex,
+            int clTime,
+            int opTime,
+            ShutterMode inter,
+            ShutterMode exter = ShutterMode.FullyAuto,
+            TTLShutterSignal type = TTLShutterSignal.Low);
+        [OperationContract(IsOneWay = false)]
+        void CallTemperatureMonitor(int camIndex, Switch mode, int timeout);
     }
 }
