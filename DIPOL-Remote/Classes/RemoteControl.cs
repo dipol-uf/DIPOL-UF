@@ -48,7 +48,7 @@ namespace DIPOL_Remote.Classes
         InstanceContextMode = InstanceContextMode.PerSession,
         UseSynchronizationContext = true,
         IncludeExceptionDetailInFaults = true)]
-    public class RemoteControl : IRemoteControl, IDisposable
+    public sealed class RemoteControl : IRemoteControl, IDisposable
     {
         private static readonly int MaxTryAddAttempts = 10;
 
@@ -257,14 +257,20 @@ namespace DIPOL_Remote.Classes
                     ServiceException.GeneralServiceErrorReason);
             }
 
-#if NO_ACTUAL_CAMERA
-            (camera as DebugCamera).PropertyChanged += (sender, e)
+
+            camera.PropertyChanged += (sender, e)
                 => context.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemotePropertyChanged(
                     camera.CameraIndex,
                     SessionID,
                     e.PropertyName);
-#endif
+
+            camera.TemperatureStatusChecked += (sender, e)
+                => context.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteTemperatureStatusChecked(
+                    camera.CameraIndex,
+                    SessionID,
+                    e);
 
         }
         [OperationBehavior]
@@ -272,27 +278,6 @@ namespace DIPOL_Remote.Classes
         {
             GetCameraSafe(sessionID, camIndex).Dispose();
             activeCameras.TryRemove(camIndex, out _);
-
-            //if (ActiveCameras.TryGetValue(
-            //    camIndex,
-            //    out (string SessionID, ICameraControl Camera) camInfo))
-            //    if (camInfo.SessionID == SessionID)
-            //    {
-            //        camInfo.Camera.Dispose();
-            //        activeCameras.TryRemove(camIndex, out _);
-            //    }
-            //    else throw ServiceException.IllegalSessionFaultException();
-
-            //else throw new FaultException<ServiceException>(
-            //    new ServiceException()
-            //    {
-            //        Message = "Specified camera cannot be found among active devices.",
-            //        Details = "Camera is not found in pool of active cameras. It might have been already disposed.",
-            //        MethodName = nameof(ActiveCameras.TryGetValue)
-            //    },
-            //    ServiceException.GeneralServiceErrorReason);        
-
-                        
         }
 
         
@@ -352,6 +337,35 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public (TemperatureStatus Status, float Temperature) CallGetCurrentTemperature(int camIndex)
             => GetCameraSafe(sessionID, camIndex).GetCurrentTemperature();
+        [OperationBehavior]
+        public void CallSetActive(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).SetActive();
+        [OperationBehavior]
+        public void CallFanControl(int camIndex, FanMode mode)
+            => GetCameraSafe(sessionID, camIndex).FanControl(mode);
+        [OperationBehavior]
+        public void CallCoolerControl(int camIndex, Switch mode)
+            => GetCameraSafe(sessionID, camIndex).CoolerControl(mode);
+        [OperationBehavior]
+        public void CallSetTemperature(int camIndex, int temperature)
+            => GetCameraSafe(sessionID, camIndex).SetTemperature(temperature);
+        [OperationBehavior]
+        public void CallShutterControl(
+            int camIndex,
+            int clTime,
+            int opTime,
+            ShutterMode inter,
+            ShutterMode exter = ShutterMode.FullyAuto,
+            TTLShutterSignal type = TTLShutterSignal.Low)
+            => GetCameraSafe(sessionID, camIndex).ShutterControl(
+                clTime,
+                opTime,
+                inter,
+                exter,
+                type);
+        [OperationBehavior]
+        public void CallTemperatureMonitor(int camIndex, Switch mode, int timeout)
+            => GetCameraSafe(sessionID, camIndex).TemperatureMonitor(mode, timeout);
 
 
         private CameraBase GetCameraSafe(string session, int camIndex)
