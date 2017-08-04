@@ -45,13 +45,10 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public class Camera : CameraBase
     {
-        private const int AmpDescriptorMaxLength = 21;
-        private const int PreAmpGainDescriptorMaxLength = 30;
-        private const int StatusCheckTimeOutMS = 100;
-        private const int TempCheckTimeOutMS = 5000;
+       
 
         private Task TemperatureMonitorWorker = null;
-        private CancellationTokenSource TemperatureMonitorCanellationSource
+        private CancellationTokenSource TemperatureMonitorCancellationSource
             = new CancellationTokenSource();
 
         private static ConcurrentDictionary<int, CameraBase> CreatedCameras 
@@ -241,7 +238,6 @@ namespace ANDOR_CS.Classes
                 ReleaseLock();
             }
         }
-
         /// <summary>
         /// Retrieves camera's serial number
         /// </summary>
@@ -266,7 +262,6 @@ namespace ANDOR_CS.Classes
             }
 
         }
-
         /// <summary>
         /// Retrieves camera's model
         /// </summary>
@@ -292,7 +287,6 @@ namespace ANDOR_CS.Classes
                 ReleaseLock();
             }
         }
-
         /// <summary>
         /// Determines properties of currently active camera and sets respective Camera.Properties field.
         /// </summary>
@@ -509,7 +503,6 @@ namespace ANDOR_CS.Classes
             }
                         
         }
-
         /// <summary>
         /// Retrieves software/hardware versions
         /// </summary>
@@ -578,7 +571,6 @@ namespace ANDOR_CS.Classes
             }
 
         }
-
         private void TemperatureMonitorCycler(CancellationToken token, int delay)
         {
             while (true)
@@ -609,7 +601,6 @@ namespace ANDOR_CS.Classes
 
             //LockDepth++;
         }
-
         /// <summary>
         /// Releases current camera, allowing to switch to another device
         /// </summary>
@@ -624,7 +615,7 @@ namespace ANDOR_CS.Classes
         /// Sets current camera active
         /// </summary>
         /// <exception cref="AndorSDKException"/>
-        public void SetActive()
+        public override void SetActive()
         {
             //Call(SDKInstance.GetCurrentCamera, out int handle);
 
@@ -690,7 +681,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="NotSupportedException"/>
         /// <exception cref="AndorSDKException"/>
         /// <exception cref="AcquisitionInProgressException"/>
-        public void FanControl(FanMode mode)
+        public override void FanControl(FanMode mode)
         {
             try
             {
@@ -726,7 +717,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <param name="mode">Desired mode</param>
         /// <exception cref="AndorSDKException"/>
-        public void CoolerControl(Switch mode)
+        public override void CoolerControl(Switch mode)
         {
             try
             {
@@ -768,7 +759,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSDKException"/>
         /// <exception cref="AcquisitionInProgressException"/>
         /// <param name="temperature">Temperature</param>
-        public void SetTemperature(int temperature)
+        public override void SetTemperature(int temperature)
         {
             try
             {
@@ -801,7 +792,7 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        public void ShutterControl(            
+        public override void ShutterControl(            
             int clTime,
             int opTime,
             ShutterMode inter,           
@@ -964,7 +955,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="NotSupportedException"/>
         /// <param name="mode">Regime</param>
         /// <param name="timeout">Time interval between checks</param>
-        public void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMS)
+        public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMS)
         {
             try
             {
@@ -984,8 +975,8 @@ namespace ANDOR_CS.Classes
                         TemperatureMonitorWorker.Status == TaskStatus.Faulted)
                         // Starts new with a cancellation token
                         TemperatureMonitorWorker = Task.Factory.StartNew(
-                            () => TemperatureMonitorCycler(TemperatureMonitorCanellationSource.Token, timeout),
-                            TemperatureMonitorCanellationSource.Token);
+                            () => TemperatureMonitorCycler(TemperatureMonitorCancellationSource.Token, timeout),
+                            TemperatureMonitorCancellationSource.Token);
 
                     // If task was created, but has not started, start it
                     if (TemperatureMonitorWorker.Status == TaskStatus.Created)
@@ -1000,7 +991,7 @@ namespace ANDOR_CS.Classes
                         TemperatureMonitorWorker?.Status == TaskStatus.WaitingForActivation ||
                         TemperatureMonitorWorker?.Status == TaskStatus.WaitingToRun)
                         // Stops it via cancellation token
-                        TemperatureMonitorCanellationSource.Cancel();
+                        TemperatureMonitorCancellationSource.Cancel();
                 }
             }
             finally

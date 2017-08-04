@@ -30,6 +30,11 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public abstract class CameraBase : IDisposable, INotifyPropertyChanged//ANDOR_CS.Interfaces.ICameraControl
     {
+        protected const int AmpDescriptorMaxLength = 21;
+        protected const int PreAmpGainDescriptorMaxLength = 30;
+        protected const int StatusCheckTimeOutMS = 100;
+        protected const int TempCheckTimeOutMS = 5000;
+
         private bool _IsActive = false;
         private bool _IsInitialized = false;
         private DeviceCapabilities _Capabilities = default(DeviceCapabilities);
@@ -53,6 +58,7 @@ namespace ANDOR_CS.Classes
         private volatile bool _IsAcquiring = false;
         private volatile bool _IsAsyncAcquisition = false;
 
+      
         public virtual DeviceCapabilities Capabilities
         {
             get => _Capabilities;
@@ -285,8 +291,17 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <returns>Temperature status and temperature in degrees</returns>
         public abstract (TemperatureStatus Status, float Temperature) GetCurrentTemperature();
-
-
+        public abstract void SetActive();
+        public abstract void FanControl(FanMode mode);
+        public abstract void CoolerControl(Switch mode);
+        public abstract void SetTemperature(int temperature);
+        public abstract void ShutterControl(
+           int clTime,
+           int opTime,
+           ShutterMode inter,
+           ShutterMode exter = ShutterMode.FullyAuto,
+           TTLShutterSignal type = TTLShutterSignal.Low);
+        public abstract void TemperatureMonitor(Switch mode, int timeout);
 
         /// <summary>
         /// Fires <see cref="PropertyChanged"/> event
