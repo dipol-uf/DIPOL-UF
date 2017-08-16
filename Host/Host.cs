@@ -16,13 +16,11 @@ namespace Host
             using (var host = new DIPOL_Remote.Classes.DipolHost())
             {
                 host.Host();
-
-                Console.ReadKey();
+                host.EventReceived += (sender, message)
+                    => Console.WriteLine($"{((ANDOR_CS.Classes.CameraBase)sender).SerialNumber}: {message}");
+  
                 //Console.WriteLine($"Service instances: {DIPOL_Remote.Classes.RemoteControl.ActiveConnections.Count}");
-                if(DIPOL_Remote.Classes.RemoteControl.ActiveCameras.TryGetValue(0, out (string, ANDOR_CS.Classes.CameraBase) result))
-                    (result.Item2 as ANDOR_CS.Classes.DebugCamera).CameraModel = "123";
-                if(DIPOL_Remote.Classes.RemoteControl.ActiveCameras.TryGetValue(1, out result))
-                    (result.Item2 as ANDOR_CS.Classes.DebugCamera).CameraModel = "456";
+  
                 Console.ReadKey();
             }
         }
