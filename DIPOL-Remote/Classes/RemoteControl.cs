@@ -61,6 +61,8 @@ namespace DIPOL_Remote.Classes
         /// </summary>
         private OperationContext context;
 
+        private DipolHost host;
+
         /// <summary>
         /// Thread-safe collection of all active <see cref="RemoteControl"/> service instances.
         /// </summary>
@@ -135,6 +137,10 @@ namespace DIPOL_Remote.Classes
                     ServiceException.GeneralServiceErrorReason
                     );
 
+
+            // Looks up for a host with the same endpoint
+            host = DipolHost.OpenedHosts.FirstOrDefault(item => item.Key == context.Host.BaseAddresses[0].GetHashCode()).Value;
+
         }
         /// <summary>
         /// Exit point for any connection. Frees resources.
@@ -144,12 +150,7 @@ namespace DIPOL_Remote.Classes
         {
            Dispose();
         }
-        [OperationBehavior]
-        public void ResetHost()
-        {
-            Console.WriteLine(OperationContext.Current.Host.BaseAddresses[0]);
-        }
-
+ 
 
         /// <summary>
         /// Implementation of <see cref="IDisposable"/> interface. Frees resources.

@@ -21,8 +21,6 @@ namespace Client
 
                 Console.ReadKey();
 
-                ResetHost(client);
-
                 Console.ReadKey();
                 client.Disconnect();
 
@@ -70,9 +68,6 @@ namespace Client
             //Console.WriteLine(client.ActiveRemoteCameras().Length);
         }
 
-        private static void ResetHost(DIPOL_Remote.Classes.DipolClient client)
-        {
-            
-        }
+       
     }
 }
