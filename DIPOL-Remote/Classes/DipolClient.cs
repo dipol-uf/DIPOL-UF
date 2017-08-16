@@ -56,10 +56,7 @@ namespace DIPOL_Remote.Classes
         public void Disconnect()
             => Remote.Disconnect();
 
-        public void ResetHost()
-            => Remote.ResetHost();
-
-
+       
         public int GetNumberOfCameras()
             => Remote.GetNumberOfCameras();
 
