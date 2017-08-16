@@ -279,6 +279,9 @@ namespace DIPOL_Remote.Classes
                     SessionID,
                     e);
 
+            camera.TemperatureStatusChecked += (sender, e)
+                => host.OnEventReceived(sender, $"{e.Status} {e.Temperature}");
+
         }
         [OperationBehavior]
         public void RemoveCamera(int camIndex)
