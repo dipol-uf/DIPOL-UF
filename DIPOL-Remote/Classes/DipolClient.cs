@@ -29,7 +29,7 @@ namespace DIPOL_Remote.Classes
 {
     public class DipolClient : IDisposable
     {
-        private static readonly string endpointTemplate = @"net.tcp://{0}/DipolRemote";//new Uri(@"net.tcp://localhost:400/DipolRemote");
+        private static readonly string endpointTemplate = @"net.tcp://192.168.1.103:400/DipolRemote";//new Uri(@"net.tcp://localhost:400/DipolRemote");
 
         private IRemoteControl remote = null;
         private InstanceContext context = new InstanceContext(new RemoteCallbackHandler());
