@@ -17,9 +17,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 using System.ServiceModel;
 
@@ -30,14 +28,22 @@ namespace DIPOL_Remote.Classes
     public class DipolHost : IDisposable
     {
         private static readonly Uri endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
+        private static ConcurrentDictionary<int, DipolHost> _OpenedHosts;
 
         private ServiceHost host = null;
+
+
+        public static IReadOnlyDictionary<int, DipolHost> OpenedHosts
+            => _OpenedHosts as IReadOnlyDictionary<int, DipolHost>;
+
 
         public DipolHost()
         {
             host = new ServiceHost(typeof(RemoteControl), endpoint);
 
             host.AddServiceEndpoint(typeof(IRemoteControl), new NetTcpBinding(SecurityMode.None), "");
+
+            _OpenedHosts.TryAdd(host.BaseAddresses[0].GetHashCode(), this);
         }
 
         public void Host() => host?.Open();
@@ -45,7 +51,11 @@ namespace DIPOL_Remote.Classes
       
         public void Dispose()
         {
+            var baseAddress = host.BaseAddresses[0];
+
             host?.Close();
+
+            _OpenedHosts.TryRemove(baseAddress.GetHashCode(), out _);
         }
 
 
