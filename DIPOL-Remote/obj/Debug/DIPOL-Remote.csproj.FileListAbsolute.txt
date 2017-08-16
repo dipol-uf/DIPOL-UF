@@ -18,6 +18,6 @@ C:\Andor_programs\Projects\ANDOR\DIPOL-Remote\bin\Debug\ANDOR_CS.pdb
 C:\Andor_programs\Projects\ANDOR\DIPOL-Remote\bin\Debug\ANDOR_CS.xml
 C:\Andor_programs\Projects\ANDOR\DIPOL-Remote\bin\Debug\ANDOR_CS.dll.config
 C:\Andor_programs\Projects\ANDOR\DIPOL-Remote\obj\Debug\DIPOL-Remote.csprojResolveAssemblyReference.cache
+C:\Andor_programs\Projects\ANDOR\DIPOL-Remote\obj\Debug\DIPOL-Remote.csproj.CoreCompileInputs.cache
 C:\Andor_programs\Projects\ANDOR\DIPOL-Remote\obj\Debug\DIPOL-Remote.dll
 C:\Andor_programs\Projects\ANDOR\DIPOL-Remote\obj\Debug\DIPOL-Remote.pdb
-C:\Andor_programs\Projects\ANDOR\DIPOL-Remote\obj\Debug\DIPOL-Remote.csproj.CoreCompileInputs.cache
