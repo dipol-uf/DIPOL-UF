@@ -71,6 +71,8 @@ namespace Client
         }
 
         private static void ResetHost(DIPOL_Remote.Classes.DipolClient client)
-        { }
+        {
+            
+        }
     }
 }
