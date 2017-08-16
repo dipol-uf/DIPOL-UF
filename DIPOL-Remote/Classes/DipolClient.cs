@@ -29,7 +29,7 @@ namespace DIPOL_Remote.Classes
 {
     public class DipolClient : IDisposable
     {
-        private static readonly Uri endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
+        private static readonly string endpointTemplate = @"net.tcp://{0}/DipolRemote";//new Uri(@"net.tcp://localhost:400/DipolRemote");
 
         private IRemoteControl remote = null;
         private InstanceContext context = new InstanceContext(new RemoteCallbackHandler());
@@ -40,11 +40,12 @@ namespace DIPOL_Remote.Classes
         public string SessionID
             => Remote.SessionID;
 
-        public DipolClient()
+        public DipolClient(string host)
         {
+            var endpoint = new Uri(string.Format(endpointTemplate, host));
             remote = new DuplexChannelFactory<IRemoteControl>(
                 context, 
-                new NetTcpBinding(), 
+                new NetTcpBinding(SecurityMode.None), 
                 new EndpointAddress(endpoint)).CreateChannel();            
             
         }
