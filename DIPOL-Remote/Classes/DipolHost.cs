@@ -28,7 +28,7 @@ namespace DIPOL_Remote.Classes
     public class DipolHost : IDisposable
     {
         private static readonly Uri endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
-        private static ConcurrentDictionary<int, DipolHost> _OpenedHosts;
+        private static ConcurrentDictionary<int, DipolHost> _OpenedHosts = new ConcurrentDictionary<int, DipolHost>();
 
         private ServiceHost host = null;
 

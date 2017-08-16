@@ -144,7 +144,13 @@ namespace DIPOL_Remote.Classes
         {
            Dispose();
         }
-        
+        [OperationBehavior]
+        public void ResetHost()
+        {
+            Console.WriteLine(OperationContext.Current.Host.BaseAddresses[0]);
+        }
+
+
         /// <summary>
         /// Implementation of <see cref="IDisposable"/> interface. Frees resources.
         /// </summary>
