@@ -77,6 +77,8 @@ namespace DIPOL_Remote.Interfaces
         /// </summary>
         [OperationContract(IsTerminating = true, IsOneWay = false)]
         void Disconnect();
+        [OperationContract(IsTerminating = true, IsOneWay = true)]
+        void ResetHost();
 
         /// <summary>
         /// Returns number of available cameras
