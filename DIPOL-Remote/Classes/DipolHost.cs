@@ -36,6 +36,9 @@ namespace DIPOL_Remote.Classes
         public static IReadOnlyDictionary<int, DipolHost> OpenedHosts
             => _OpenedHosts as IReadOnlyDictionary<int, DipolHost>;
 
+        public delegate void HostEventHandler(object source, string message);
+
+        public event HostEventHandler EventReceived;
 
         public DipolHost()
         {
@@ -58,6 +61,8 @@ namespace DIPOL_Remote.Classes
             _OpenedHosts.TryRemove(baseAddress.GetHashCode(), out _);
         }
 
+        public virtual void OnEventReceived(object sender, string message)
+            => EventReceived?.Invoke(sender, message);
 
     }
 }
