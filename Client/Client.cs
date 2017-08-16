@@ -19,7 +19,9 @@ namespace Client
 
                 Console.WriteLine("Session ID {0}", client.SessionID);
 
+                Console.ReadKey();
 
+                ResetHost(client);
 
                 Console.ReadKey();
                 client.Disconnect();
