@@ -37,7 +37,7 @@ namespace DIPOL_Remote.Classes
         {
             host = new ServiceHost(typeof(RemoteControl), endpoint);
 
-            host.AddServiceEndpoint(typeof(IRemoteControl), new NetTcpBinding(), "");
+            host.AddServiceEndpoint(typeof(IRemoteControl), new NetTcpBinding(SecurityMode.None), "");
         }
 
         public void Host() => host?.Open();
