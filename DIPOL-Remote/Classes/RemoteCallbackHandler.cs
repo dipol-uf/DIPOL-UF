@@ -31,7 +31,7 @@ namespace DIPOL_Remote.Classes
 
         public RemoteCallbackHandler()
         {
-            Console.WriteLine("Remote control handler created");
+            
         }
 
         public void NotifyRemotePropertyChanged(int camIndex, string session, string property)
