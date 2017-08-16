@@ -1,9 +1,3 @@
-C:\Andor_programs\Projects\ANDOR\ROTATOR-CS\bin\Debug\ROTATOR-CS.exe.config
-C:\Andor_programs\Projects\ANDOR\ROTATOR-CS\bin\Debug\ROTATOR-CS.exe
-C:\Andor_programs\Projects\ANDOR\ROTATOR-CS\bin\Debug\ROTATOR-CS.pdb
-C:\Andor_programs\Projects\ANDOR\ROTATOR-CS\obj\Debug\ROTATOR-CS.csprojResolveAssemblyReference.cache
-C:\Andor_programs\Projects\ANDOR\ROTATOR-CS\obj\Debug\ROTATOR-CS.exe
-C:\Andor_programs\Projects\ANDOR\ROTATOR-CS\obj\Debug\ROTATOR-CS.pdb
 E:\OneDrive\GOOGLEDRIVE\Development\ANDOR\ROTATOR-CS\bin\Debug\ROTATOR-CS.exe.config
 E:\OneDrive\GOOGLEDRIVE\Development\ANDOR\ROTATOR-CS\bin\Debug\ROTATOR-CS.exe
 E:\OneDrive\GOOGLEDRIVE\Development\ANDOR\ROTATOR-CS\bin\Debug\ROTATOR-CS.pdb
@@ -18,4 +12,3 @@ C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ROTATOR-CS\obj\Debug\ROTAT
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ROTATOR-CS\obj\Debug\ROTATOR-CS.pdb
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ROTATOR-CS\bin\Debug\ROTATOR-CS.exe.CodeAnalysisLog.xml
 C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ROTATOR-CS\bin\Debug\ROTATOR-CS.exe.lastcodeanalysissucceeded
-C:\Andor_programs\Projects\ANDOR\ROTATOR-CS\obj\Debug\ROTATOR-CS.csproj.CoreCompileInputs.cache
