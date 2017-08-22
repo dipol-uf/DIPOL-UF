@@ -1124,7 +1124,7 @@ namespace ANDOR_CS.Classes
                 //if (Capabilities.Features.HasFlag(SDKFeatures.FanControl))
                 //    FanControl(FanMode.Off);
 
-                CreatedCameras.TryAdd(CameraIndex, this);
+                //CreatedCameras.TryAdd(CameraIndex, this);
 
             }
             finally

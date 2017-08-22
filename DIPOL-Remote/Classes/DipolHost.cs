@@ -18,7 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-
+using System.Diagnostics;
 using System.ServiceModel;
 
 using DIPOL_Remote.Interfaces;
@@ -28,6 +28,8 @@ namespace DIPOL_Remote.Classes
     public class DipolHost : IDisposable
     {
         private static readonly Uri endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
+        private static readonly string logName = @"Dipol Event Log";
+        private static readonly string sourceName = @"Dipol Remote Camera Service";
         private static ConcurrentDictionary<int, DipolHost> _OpenedHosts = new ConcurrentDictionary<int, DipolHost>();
 
         private ServiceHost host = null;
@@ -42,11 +44,29 @@ namespace DIPOL_Remote.Classes
 
         public DipolHost()
         {
+            if (!EventLog.SourceExists(sourceName))
+                EventLog.CreateEventSource(sourceName, logName);
+           
             host = new ServiceHost(typeof(RemoteControl), endpoint);
 
             host.AddServiceEndpoint(typeof(IRemoteControl), new NetTcpBinding(SecurityMode.None), "");
 
             _OpenedHosts.TryAdd(host.BaseAddresses[0].GetHashCode(), this);
+
+            EventReceived += (sender, message)
+                =>
+            {
+                string senderString = "";
+                if (sender is ANDOR_CS.Classes.CameraBase cam)
+                    senderString = $"{cam.CameraModel}/{cam.SerialNumber}";
+                else
+                    senderString = sender.ToString();
+
+                var logMessage = String.Format($"[{{0,23:yyyy/MM/dd HH-mm-ss.fff}}] @ {senderString}: {message}", DateTime.Now);
+
+                EventLog.WriteEntry(sourceName, logMessage, EventLogEntryType.Information);
+
+            };
         }
 
         public void Host() => host?.Open();

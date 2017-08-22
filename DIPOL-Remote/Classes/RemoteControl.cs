@@ -15,7 +15,7 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-#define NO_ACTUAL_CAMERA
+//#define NO_ACTUAL_CAMERA
 
 using System;
 using System.Collections.Generic;
@@ -141,6 +141,8 @@ namespace DIPOL_Remote.Classes
             // Looks up for a host with the same endpoint
             host = DipolHost.OpenedHosts.FirstOrDefault(item => item.Key == context.Host.BaseAddresses[0].GetHashCode()).Value;
 
+            host?.OnEventReceived("Host", $"Session {SessionID} established.");
+
         }
         /// <summary>
         /// Exit point for any connection. Frees resources.
@@ -149,6 +151,7 @@ namespace DIPOL_Remote.Classes
         public void Disconnect()
         {
            Dispose();
+            host?.OnEventReceived("Host", $"Session {SessionID} closed.");
         }
  
 
@@ -264,7 +267,9 @@ namespace DIPOL_Remote.Classes
                     ServiceException.GeneralServiceErrorReason);
             }
 
+            
 
+            // Remotely fires event, informing that some property has changed
             camera.PropertyChanged += (sender, e)
                 => context.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemotePropertyChanged(
@@ -272,6 +277,7 @@ namespace DIPOL_Remote.Classes
                     SessionID,
                     e.PropertyName);
 
+            // Remotely fires event, informing that temperature status was checked.
             camera.TemperatureStatusChecked += (sender, e)
                 => context.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemoteTemperatureStatusChecked(
@@ -280,14 +286,21 @@ namespace DIPOL_Remote.Classes
                     e);
 
             camera.TemperatureStatusChecked += (sender, e)
-                => host.OnEventReceived(sender, $"{e.Status} {e.Temperature}");
+                => host?.OnEventReceived(sender, $"{e.Status} {e.Temperature}");
 
+            camera.PropertyChanged += (sender, e)
+                => host?.OnEventReceived(sender, e.PropertyName);
+
+
+            host?.OnEventReceived(camera, "Camera was created remotely");
         }
         [OperationBehavior]
         public void RemoveCamera(int camIndex)
         {
             GetCameraSafe(sessionID, camIndex).Dispose();
-            activeCameras.TryRemove(camIndex, out _);
+            activeCameras.TryRemove(camIndex, out (string SessionID, CameraBase Camera) removedCam);
+
+            host?.OnEventReceived(removedCam.Camera, "Camera was disposed remotely.");
         }
 
         
