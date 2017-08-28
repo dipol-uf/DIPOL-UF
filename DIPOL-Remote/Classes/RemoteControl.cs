@@ -21,11 +21,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 using System.ServiceModel;
-using System.Reflection;
+
 
 using DIPOL_Remote.Faults;
 
@@ -33,6 +32,7 @@ using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
+using ANDOR_CS.Interfaces;
 
 using DIPOL_Remote.Interfaces;
 
@@ -74,6 +74,9 @@ namespace DIPOL_Remote.Classes
         private static ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
             = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
 
+        private static ConcurrentDictionary<string,  ISettings> settings
+            = new ConcurrentDictionary<string, ISettings>();
+
         /// <summary>
         /// Unique ID of current session
         /// </summary>
@@ -93,7 +96,8 @@ namespace DIPOL_Remote.Classes
         /// </summary>
         public static IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)> ActiveCameras
             => activeCameras as IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)>;
-
+        public static IReadOnlyDictionary<string,  ISettings> Settings
+            => settings as IReadOnlyDictionary<string,  ISettings>;
 
         /// <summary>
         /// Default constructor
@@ -302,8 +306,26 @@ namespace DIPOL_Remote.Classes
 
             host?.OnEventReceived(removedCam.Camera, "Camera was disposed remotely.");
         }
+        [OperationBehavior]
+        public string CreateSettings(int camIndex)
+        {
+            CameraBase cam = GetCameraSafe(SessionID, camIndex);
+            ISettings setts = cam.GetAcquisitionSettingsTemplate();
 
-        
+            string settingsID = Guid.NewGuid().ToString("N");
+            int counter = 0;
+            while ((counter <= MaxTryAddAttempts) && !settings.TryAdd(settingsID, setts)) ;
+                counter++;
+
+            if (counter >= MaxTryAddAttempts)
+                throw new Exception();
+
+            return settingsID;
+        }
+        [OperationContract]
+        public void RemoveSettings(string settingsID)
+            => settings.TryRemove(settingsID, out _);
+
         [OperationBehavior]
         public int[] GetCamerasInUse()
             => activeCameras.Keys.ToArray();
