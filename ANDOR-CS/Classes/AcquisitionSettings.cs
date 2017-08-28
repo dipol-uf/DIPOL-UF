@@ -19,15 +19,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.Serialization;
 using System.Xml.Linq;
 using System.IO;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
+using ANDOR_CS.Interfaces;
 
 using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
@@ -40,7 +38,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Represents all possible acuisition/camera settings that can be adjusted before taking any images
     /// </summary>
-     public class AcquisitionSettings
+     public class AcquisitionSettings : ISettings
     {
 
         /// <summary>
