@@ -27,7 +27,7 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
 
 using CallerMemberNameAttribute = System.Runtime.CompilerServices.CallerMemberNameAttribute;
-
+using ANDOR_CS.Interfaces;
 
 namespace ANDOR_CS.Classes
 {
@@ -145,6 +145,10 @@ namespace ANDOR_CS.Classes
             PropertyChanged += (sender, prop) => WriteMessage($"{prop.PropertyName} was changed.", Blue);
             TemperatureStatusChecked += (sender, args) => WriteMessage($"Temperature: {args.Temperature}\tStatus: {args.Status}", Blue);
             WriteMessage("Camera created.", Green);
+        }
+        public override ISettings GetAcquisitionSettingsTemplate()
+        {
+            throw new NotImplementedException();
         }
 
         public override void Dispose()

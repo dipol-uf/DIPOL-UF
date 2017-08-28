@@ -29,6 +29,7 @@ using IRemoteControl = DIPOL_Remote.Interfaces.IRemoteControl;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
+using ANDOR_CS.Interfaces;
 
 namespace DIPOL_Remote.Classes
 {
@@ -278,7 +279,9 @@ namespace DIPOL_Remote.Classes
             session.RemoveCamera(CameraIndex);
             remoteCameras.TryRemove((session.SessionID, CameraIndex), out _);
         }
-
+        public override ISettings GetAcquisitionSettingsTemplate()
+            => new RemoteSettings(session.SessionID, CameraIndex, session.CreateSettings(CameraIndex));            
+                
 
         protected sealed override void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
             => OnPropertyChangedRemotely(property, true);
