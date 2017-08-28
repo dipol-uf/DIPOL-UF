@@ -31,7 +31,7 @@ using ANDOR_CS.Exceptions;
 
 using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
-using ICameraControl = ANDOR_CS.Interfaces.ICameraControl;
+using ISettings = ANDOR_CS.Interfaces.ISettings;
 
 using static ANDOR_CS.Exceptions.AndorSDKException;
 using static ANDOR_CS.Exceptions.AcquisitionInProgressException;
@@ -173,7 +173,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Curently set acquisition regime
         /// </summary>
-        public AcquisitionSettings CurrentSettings
+        public ISettings CurrentSettings
         {
             get;
             internal set;
@@ -1006,7 +1006,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AndorSDKException"/>
         /// <returns>A template that can be used to select proper acquisition settings</returns>
-        public AcquisitionSettings GetAcquisitionSettingsTemplate()
+        public override ISettings GetAcquisitionSettingsTemplate()
         {
             if (!IsInitialized)
                 throw new AndorSDKException("Camera is not initialized properly.", new NullReferenceException());

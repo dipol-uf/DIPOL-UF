@@ -21,7 +21,7 @@ using System.ComponentModel;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
-
+using ANDOR_CS.Interfaces;
 
 namespace ANDOR_CS.Classes
 {
@@ -302,6 +302,7 @@ namespace ANDOR_CS.Classes
            ShutterMode exter = ShutterMode.FullyAuto,
            TTLShutterSignal type = TTLShutterSignal.Low);
         public abstract void TemperatureMonitor(Switch mode, int timeout);
+        public abstract ISettings GetAcquisitionSettingsTemplate();
 
         /// <summary>
         /// Fires <see cref="PropertyChanged"/> event
