@@ -48,6 +48,7 @@
     <Compile Include="Classes\DipolHost.cs" />
     <Compile Include="Classes\RemoteCamera.cs" />
     <Compile Include="Classes\RemoteSettings.cs" />
+    <Compile Include="Enums\AcquisitionEventTypeEnum.cs" />
     <Compile Include="Faults\AndorSDKServiceException.cs" />
     <Compile Include="Faults\ServiceException.cs" />
     <Compile Include="Interfaces\IRemoteCallback.cs" />

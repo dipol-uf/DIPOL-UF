@@ -167,5 +167,20 @@ namespace ANDOR_CS.Classes
             }
 
         }
+
+        public async override Task StartAcquistionAsync(CancellationToken token, int timeout)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void StartAcquisition()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void AbortAcquisition()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

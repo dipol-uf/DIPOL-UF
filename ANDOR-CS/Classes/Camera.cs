@@ -889,7 +889,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSDKException"/>
-        public void StartAcquisition()
+        public override void StartAcquisition()
         {
             try
             {
@@ -921,7 +921,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AndorSDKException"/>
         /// <exception cref="TaskCanceledException"/>
-        public void AbortAcquisition()
+        public override void AbortAcquisition()
         {
             try
             {
@@ -1144,7 +1144,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSDKException"/>
         /// <returns>Task that can be queried for execution status.</returns>
-        public async Task StartAcquistionAsync(CancellationToken token, int timeout = StatusCheckTimeOutMS)
+        public async override Task StartAcquistionAsync(CancellationToken token, int timeout = StatusCheckTimeOutMS)
         {
             CameraStatus status = CameraStatus.Idle;
             try
@@ -1212,9 +1212,6 @@ namespace ANDOR_CS.Classes
 
         }
         
-        
-
-
 
         /// <summary>
         /// Queries the number of currently connected Andor cameras
