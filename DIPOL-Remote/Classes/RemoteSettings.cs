@@ -39,6 +39,7 @@ namespace DIPOL_Remote.Classes
             SessionID = sessionID;
             CameraIndex = cameraIndex;
             SettingsID = settingsID;
+            this.session = session;
 
             if (!RemoteCamera.RemoteCameras.TryGetValue((sessionID, cameraIndex), out camera))
                 throw new Exception();
