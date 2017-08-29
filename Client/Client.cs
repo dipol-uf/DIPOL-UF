@@ -20,7 +20,7 @@ namespace Client
                 Console.WriteLine("Session ID {0}", client.SessionID);
 
                 Console.ReadKey();
-                TestCamera(client);
+                TestSettings(client);
                 Console.ReadKey();
                 client.Disconnect();
 
@@ -68,6 +68,20 @@ namespace Client
             //Console.WriteLine(client.ActiveRemoteCameras().Length);
         }
 
-       
+        private static void TestSettings(DIPOL_Remote.Classes.DipolClient client)
+        {
+            using (var camera = client.CreateRemoteCamera())
+            {
+
+                var sets = camera.GetAcquisitionSettingsTemplate();
+
+                var speeds = sets.GetAvailableHSSpeeds();
+
+                foreach (var speed in speeds)
+                    Console.WriteLine(speeds);
+            }
+        }
+
+
     }
 }
