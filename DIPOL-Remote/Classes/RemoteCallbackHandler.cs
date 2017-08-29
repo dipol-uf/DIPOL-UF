@@ -19,7 +19,7 @@ using System;
 using System.ServiceModel;
 
 using ANDOR_CS.Events;
-
+using DIPOL_Remote.Enums;
 using DIPOL_Remote.Interfaces;
 
 namespace DIPOL_Remote.Classes
@@ -32,6 +32,12 @@ namespace DIPOL_Remote.Classes
         public RemoteCallbackHandler()
         {
             
+        }
+
+        public void NotifyRemoteAcquisitionEventHappened(int camIndex, string session, 
+            AcquisitionEventType type, AcquisitionStatusEventArgs args)
+        {
+            throw new NotImplementedException();
         }
 
         public void NotifyRemotePropertyChanged(int camIndex, string session, string property)

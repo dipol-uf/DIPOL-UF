@@ -33,3 +33,4 @@ C:\Andor_programs\ANDOR\DIPOL-Remote\obj\Debug\DIPOL-Remote.csprojResolveAssembl
 C:\Andor_programs\ANDOR\DIPOL-Remote\obj\Debug\DIPOL-Remote.csproj.CoreCompileInputs.cache
 C:\Andor_programs\ANDOR\DIPOL-Remote\obj\Debug\DIPOL-Remote.dll
 C:\Andor_programs\ANDOR\DIPOL-Remote\obj\Debug\DIPOL-Remote.pdb
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\DIPOL-Remote\obj\Debug\DIPOL-Remote.csproj.CoreCompileInputs.cache
