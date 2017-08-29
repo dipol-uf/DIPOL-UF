@@ -374,7 +374,7 @@ namespace DIPOL_Remote.Classes
 
             string settingsID = Guid.NewGuid().ToString("N");
             int counter = 0;
-            while ((counter <= MaxTryAddAttempts) && !settings.TryAdd(settingsID, setts)) ;
+            while ((counter <= MaxTryAddAttempts) && !settings.TryAdd(settingsID, setts))
                 counter++;
 
             if (counter >= MaxTryAddAttempts)
@@ -382,7 +382,7 @@ namespace DIPOL_Remote.Classes
 
             return settingsID;
         }
-        [OperationContract]
+        //[OperationContract]
         public void RemoveSettings(string settingsID)
             => settings.TryRemove(settingsID, out _);
 
