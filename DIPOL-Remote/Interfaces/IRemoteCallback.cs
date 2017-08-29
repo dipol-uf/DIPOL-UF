@@ -17,6 +17,8 @@
 
 using System.ServiceModel;
 
+using DIPOL_Remote.Enums;
+
 using ANDOR_CS.Events;
 
 namespace DIPOL_Remote.Interfaces
@@ -29,5 +31,9 @@ namespace DIPOL_Remote.Interfaces
         [OperationContract(IsOneWay = true)]
         void NotifyRemoteTemperatureStatusChecked(
             int camIndex, string session, TemperatureStatusEventArgs args);
+
+        [OperationContract(IsOneWay = true)]
+        void NotifyRemoteAcquisitionEventHappened(
+            int camIndex, string session, AcquisitionEventType type, AcquisitionStatusEventArgs args);
     }
 }

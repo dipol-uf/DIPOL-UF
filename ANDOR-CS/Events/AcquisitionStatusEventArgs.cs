@@ -16,10 +16,7 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 using ANDOR_CS.Enums;
 
@@ -29,20 +26,23 @@ namespace ANDOR_CS.Events
     /// <summary>
     /// Stores the event arguments for all Acquisition-based events
     /// </summary>
+    [DataContract]
     public class AcquisitionStatusEventArgs : EventArgs
     {
         /// <summary>
         /// Time stamp of the event
         /// </summary>
+        [DataMember]
         public DateTime EventTime
         {
             get;
             private set;
         }
-        
+
         /// <summary>
         /// Camera status at the moment of the event
         /// </summary>
+        [DataMember]
         public CameraStatus Status
         {
             get;
@@ -52,6 +52,7 @@ namespace ANDOR_CS.Events
         /// <summary>
         /// Indicates if event is received from asynchronous task.
         /// </summary>
+        [DataMember]
         public bool IsAsync
         {
             get;

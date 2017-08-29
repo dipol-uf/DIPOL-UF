@@ -20,16 +20,18 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 
 using CameraBase = ANDOR_CS.Classes.CameraBase;
 using IRemoteControl = DIPOL_Remote.Interfaces.IRemoteControl;
+using AcquisitionEventType = DIPOL_Remote.Enums.AcquisitionEventType;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
 using ANDOR_CS.Interfaces;
+
 
 namespace DIPOL_Remote.Classes
 {
@@ -56,7 +58,7 @@ namespace DIPOL_Remote.Classes
 
                 return base.CameraModel;
             }
-                        
+
         }
         public override string SerialNumber
         {
@@ -121,28 +123,28 @@ namespace DIPOL_Remote.Classes
                 }
 
                 return base.FanMode;
-            }           
+            }
         }
         public override Switch CoolerMode
         {
             get
             {
-                    if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
-                    {
-                        CoolerMode = session.GetCoolerMode(CameraIndex);
-                        changedProperties.TryUpdate(NameofProperty(), false, true);
-                    }
-
-                    return base.CoolerMode;
+                if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                {
+                    CoolerMode = session.GetCoolerMode(CameraIndex);
+                    changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
+
+                return base.CoolerMode;
+            }
         }
-        public override DeviceCapabilities Capabilities 
+        public override DeviceCapabilities Capabilities
         {
             get
             {
                 if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
                 {
-                    Capabilities= session.GetCapabilities(CameraIndex);
+                    Capabilities = session.GetCapabilities(CameraIndex);
                     changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -280,8 +282,18 @@ namespace DIPOL_Remote.Classes
             remoteCameras.TryRemove((session.SessionID, CameraIndex), out _);
         }
         public override ISettings GetAcquisitionSettingsTemplate()
-            => new RemoteSettings(session.SessionID, CameraIndex, session.CreateSettings(CameraIndex));            
-                
+            => new RemoteSettings(session.SessionID, CameraIndex, session.CreateSettings(CameraIndex));
+
+        public async override Task StartAcquistionAsync(CancellationToken token, int timeout)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void StartAcquisition()
+            => session.CallStartAcquisition(CameraIndex);
+
+        public override void AbortAcquisition()
+            => session.CallAbortAcquisition(CameraIndex);
 
         protected sealed override void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
             => OnPropertyChangedRemotely(property, true);
@@ -295,26 +307,53 @@ namespace DIPOL_Remote.Classes
 
         }
 
-        public static void NotifyRemotePropertyChanged(int camIndex, string sessionID, string property)
+        internal static void NotifyRemotePropertyChanged(int camIndex, string sessionID, string property)
         {
-            
             if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
             {
                 (camera as RemoteCamera).changedProperties.AddOrUpdate(property, true, (prop, oldVal) => true);
                 (camera as RemoteCamera).OnPropertyChangedRemotely(property);
             }
         }
-        public static void NotifyRemoteTemperatureStatusChecked(
+        internal static void NotifyRemoteTemperatureStatusChecked(
             int camIndex, string sessionID, TemperatureStatusEventArgs args)
         {
 
             if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
                 (camera as RemoteCamera).OnTemperatureStatusChecked(args);
         }
+        internal static void NotifyReqmoteAcquisitionEventHappened(int camIndex, string sessionID, 
+            AcquisitionEventType type, AcquisitionStatusEventArgs args)
+        {
+            if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
+            {
+                var remCamera = camera as RemoteCamera;
+
+                switch (type)
+                {
+                    case AcquisitionEventType.Started:
+                        remCamera.OnAcquisitionStarted(args);
+                        return;
+                    case AcquisitionEventType.Finished:
+                        remCamera.OnAcquisitionFinished(args);
+                        return;
+                    case AcquisitionEventType.StatusChecked:
+                        remCamera.OnAcquisitionStatusChecked(args);
+                        return;
+                    case AcquisitionEventType.ErrorReturned:
+                        remCamera.OnAcquisitionErrorReturned(args);
+                        return;
+                    case AcquisitionEventType.Aborted:
+                        remCamera.OnAcquisitionAborted(args);
+                        return;
+                }
+            }
+        }
+
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
 
-        
+       
     }
 }

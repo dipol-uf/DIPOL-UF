@@ -16,17 +16,15 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using System.ServiceModel;
 
 using DIPOL_Remote.Faults;
+using DIPOL_Remote.Enums;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
+using ANDOR_CS.Events;
 
 namespace DIPOL_Remote.Interfaces
 {
@@ -55,6 +53,9 @@ namespace DIPOL_Remote.Interfaces
     [ServiceKnownType(typeof(ShutterMode))]
     [ServiceKnownType(typeof(TTLShutterSignal))]
     [ServiceKnownType(typeof(TemperatureStatus))]
+    [ServiceKnownType(typeof(AcquisitionEventType))]
+    [ServiceKnownType(typeof(AcquisitionStatusEventArgs))]
+    [ServiceKnownType(typeof(TemperatureStatusEventArgs))]
     internal interface IRemoteControl
     {
         /// <summary>
@@ -154,5 +155,10 @@ namespace DIPOL_Remote.Interfaces
             TTLShutterSignal type = TTLShutterSignal.Low);
         [OperationContract(IsOneWay = false)]
         void CallTemperatureMonitor(int camIndex, Switch mode, int timeout);
+        [OperationContract(IsOneWay = false)]
+        void CallStartAcquisition(int camIndex);
+        [OperationContract(IsOneWay = false)]
+        void CallAbortAcquisition(int camIndex);
+
     }
 }
