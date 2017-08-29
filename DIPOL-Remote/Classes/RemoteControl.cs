@@ -177,6 +177,13 @@ namespace DIPOL_Remote.Classes
                     // If successful, dispose camera instance
                     camInfo.Camera.Dispose();
 
+            foreach (var key in
+                from item
+                in settings
+                where (item.Value as RemoteSettings)?.SessionID == SessionID
+                select item.Key)
+                RemoveSettings(key);
+
             // Remove this service from collection
             serviceInstances.TryRemove(sessionID, out _);
         }
@@ -471,6 +478,13 @@ namespace DIPOL_Remote.Classes
         public void CallAbortAcquisition(int camIndex)
             => GetCameraSafe(sessionID, camIndex).AbortAcquisition();
 
+        [OperationBehavior]
+        public (int Index, float Speed)[] GetAvailableHSSpeeds(string settingsID)
+            => GetSettingsSafe(settingsID, sessionID).GetAvailableHSSpeeds().ToArray();
+
+        [OperationBehavior]
+        public (int Index, string Name)[] GetAvailablePreAmpGain(string settingsID)
+            => GetSettingsSafe(settingsID, sessionID).GetAvailablePreAmpGain().ToArray();
 
         private CameraBase GetCameraSafe(string session, int camIndex)
         {
@@ -490,6 +504,13 @@ namespace DIPOL_Remote.Classes
                     MethodName = nameof(ActiveCameras.TryGetValue)
                 },
                 ServiceException.GeneralServiceErrorReason);
+        }
+        private ISettings GetSettingsSafe(string settingsID, string sessionID)
+        {
+            if (Settings.TryGetValue(settingsID, out ISettings sets)
+                && (sets as RemoteSettings).SessionID == sessionID)
+                return sets;
+            else throw new Exception();
         }
     }
 }
