@@ -98,8 +98,8 @@ namespace DIPOL_Remote.Interfaces
         int[] GetCamerasInUse();
         [OperationContract(IsOneWay = false)]
         string CreateSettings(int camIndex);
-        [OperationContract(IsOneWay = false)]
-        void RemoveSettings(string settingsID);
+        //[OperationContract(IsOneWay = false)]
+        //void RemoveSettings(string settingsID);
 
         [OperationContract(IsOneWay = false)]
         string GetCameraModel(int camIndex);
