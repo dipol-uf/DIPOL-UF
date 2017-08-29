@@ -7,11 +7,17 @@ using System.Threading.Tasks;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Interfaces;
+using ANDOR_CS.Classes;
+
+using DIPOL_Remote.Interfaces;
 
 namespace DIPOL_Remote.Classes
 {
     public class RemoteSettings : ISettings
     {
+        private CameraBase camera = null;
+        private IRemoteControl session;
+
         public string SessionID
         {
             get;
@@ -22,133 +28,119 @@ namespace DIPOL_Remote.Classes
             get;
             private set;
         }
-        public string SettingsID
+        internal string SettingsID
         {
             get;
             private set;
         }
 
-        internal RemoteSettings(string sessionID, int cameraIndex, string settingsID)
+        internal RemoteSettings(string sessionID, int cameraIndex, string settingsID, IRemoteControl session)
         {
             SessionID = sessionID;
             CameraIndex = cameraIndex;
             SettingsID = settingsID;
+
+            if (!RemoteCamera.RemoteCameras.TryGetValue((sessionID, cameraIndex), out camera))
+                throw new Exception();
         }
 
-        (int Index, float Speed)? ISettings.VSSpeed => throw new NotImplementedException();
-
-        (int Index, float Speed)? ISettings.HSSpeed => throw new NotImplementedException();
-
-        (int Index, int BitDepth)? ISettings.ADConverter => throw new NotImplementedException();
-
-        VSAmplitude? ISettings.VSAmplitude => throw new NotImplementedException();
-
-        (string Name, OutputAmplification Amplifier, int Index)? ISettings.Amplifier => throw new NotImplementedException();
-
-        (int Index, string Name)? ISettings.PreAmpGain => throw new NotImplementedException();
-
-        AcquisitionMode? ISettings.AcquisitionMode => throw new NotImplementedException();
-
-        ReadMode? ISettings.ReadMode => throw new NotImplementedException();
-
-        TriggerMode? ISettings.TriggerMode => throw new NotImplementedException();
-
-        float? ISettings.ExposureTime => throw new NotImplementedException();
-
-        Rectangle? ISettings.ImageArea => throw new NotImplementedException();
-
-        (int Frames, float Time)? ISettings.AccumulateCycle => throw new NotImplementedException();
-
-        (int Frames, float Time)? ISettings.KineticCycle => throw new NotImplementedException();
-
-        int? ISettings.EMCCDGain => throw new NotImplementedException();
-
-        List<(string Option, bool Success, uint ReturnCode)> ISettings.ApplySettings(out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
+        public (int Index, float Speed)? VSSpeed { get; private set; } = null;
+        public (int Index, float Speed)? HSSpeed { get; private set; } = null;
+        public (int Index, int BitDepth)? ADConverter { get; private set; } = null;
+        public VSAmplitude? VSAmplitude { get; private set; } = null;
+        public (string Name, OutputAmplification Amplifier, int Index)? Amplifier { get; private set; } = null;
+        public (int Index, string Name)? PreAmpGain { get; private set; } = null;
+        public AcquisitionMode? AcquisitionMode { get; private set; } = null;
+        public ReadMode? ReadMode { get; private set; } = null;
+        public TriggerMode? TriggerMode { get; private set; } = null;
+        public float? ExposureTime { get; private set; } = null;
+        public Rectangle? ImageArea { get; private set; } = null;
+        public (int Frames, float Time)? AccumulateCycle { get; private set; } = null;
+        public (int Frames, float Time)? KineticCycle { get; private set; } = null;
+        public int? EMCCDGain { get; private set; } = null;
+        
+        public List<(string Option, bool Success, uint ReturnCode)> ApplySettings(out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
         {
             throw new NotImplementedException();
         }
 
-        IEnumerable<(int Index, float Speed)> ISettings.GetAvailableHSSpeeds()
+        public IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds()
+            => session.GetAvailableHSSpeeds(SettingsID);
+
+        public IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain()
+            => session.GetAvailablePreAmpGain(SettingsID);
+
+        public void SetAccumulationCycle(int number, float time)
         {
             throw new NotImplementedException();
         }
 
-        IEnumerable<(int Index, string Name)> ISettings.GetAvailablePreAmpGain()
+        public void SetAcquisitionMode(AcquisitionMode mode)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetAccumulationCycle(int number, float time)
+        public void SetADConverter(int converterIndex)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetAcquisitionMode(AcquisitionMode mode)
+        public void SetEMCCDGain(int gain)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetADConverter(int converterIndex)
+        public void SetExposureTime(float time)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetEMCCDGain(int gain)
+        public void SetHSSpeed(int speedIndex)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetExposureTime(float time)
+        public void SetImageArea(Rectangle area)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetHSSpeed(int speedIndex)
+        public void SetKineticCycle(int number, float time)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetImageArea(Rectangle area)
+        public void SetOutputAmplifier(OutputAmplification amplifier)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetKineticCycle(int number, float time)
+        public void SetPreAmpGain(int gainIndex)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetOutputAmplifier(OutputAmplification amplifier)
+        public void SetReadoutMode(ReadMode mode)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetPreAmpGain(int gainIndex)
+        public void SetTriggerMode(TriggerMode mode)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetReadoutMode(ReadMode mode)
+        public void SetVSAmplitude(VSAmplitude amplitude)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetTriggerMode(TriggerMode mode)
+        public void SetVSSpeed(int speedIndex)
         {
             throw new NotImplementedException();
         }
 
-        void ISettings.SetVSAmplitude(VSAmplitude amplitude)
-        {
-            throw new NotImplementedException();
-        }
-
-        void ISettings.SetVSSpeed(int speedIndex)
-        {
-            throw new NotImplementedException();
-        }
-
-        void ISettings.SetVSSpeed()
+        public void SetVSSpeed()
         {
             throw new NotImplementedException();
         }

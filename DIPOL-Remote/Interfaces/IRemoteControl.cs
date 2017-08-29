@@ -160,5 +160,9 @@ namespace DIPOL_Remote.Interfaces
         [OperationContract(IsOneWay = false)]
         void CallAbortAcquisition(int camIndex);
 
+        [OperationContract(IsOneWay = false)]
+        (int Index, float Speed)[] GetAvailableHSSpeeds(string settingsID);
+        [OperationContract(IsOneWay = false)]
+        (int Index, string Name)[] GetAvailablePreAmpGain(string settingsID);
     }
 }

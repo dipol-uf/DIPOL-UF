@@ -46,6 +46,10 @@ namespace DIPOL_Remote.Classes
 
         private IRemoteControl session;
 
+
+        internal static IDictionary<(string SessionID, int CameraIndex), CameraBase> RemoteCameras
+            => remoteCameras as IDictionary<(string SessionID, int CameraIndex), CameraBase>;
+
         public override string CameraModel
         {
             get
@@ -282,7 +286,7 @@ namespace DIPOL_Remote.Classes
             remoteCameras.TryRemove((session.SessionID, CameraIndex), out _);
         }
         public override ISettings GetAcquisitionSettingsTemplate()
-            => new RemoteSettings(session.SessionID, CameraIndex, session.CreateSettings(CameraIndex));
+            => new RemoteSettings(session.SessionID, CameraIndex, session.CreateSettings(CameraIndex), session);
 
         public async override Task StartAcquistionAsync(CancellationToken token, int timeout)
         {
