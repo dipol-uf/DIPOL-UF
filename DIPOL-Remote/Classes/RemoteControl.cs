@@ -63,6 +63,9 @@ namespace DIPOL_Remote.Classes
 
         private DipolHost host;
 
+        private ConcurrentDictionary<string, ISettings> settings
+            = new ConcurrentDictionary<string, ISettings>();
+
         /// <summary>
         /// Thread-safe collection of all active <see cref="RemoteControl"/> service instances.
         /// </summary>
@@ -74,8 +77,9 @@ namespace DIPOL_Remote.Classes
         private static ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
             = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
 
-        private static ConcurrentDictionary<string,  ISettings> settings
-            = new ConcurrentDictionary<string, ISettings>();
+
+        public IReadOnlyDictionary<string, ISettings> Settings
+           => settings as IReadOnlyDictionary<string, ISettings>;
 
         /// <summary>
         /// Unique ID of current session
@@ -96,9 +100,7 @@ namespace DIPOL_Remote.Classes
         /// </summary>
         public static IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)> ActiveCameras
             => activeCameras as IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)>;
-        public static IReadOnlyDictionary<string,  ISettings> Settings
-            => settings as IReadOnlyDictionary<string,  ISettings>;
-
+       
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -288,12 +290,63 @@ namespace DIPOL_Remote.Classes
                     camera.CameraIndex,
                     SessionID,
                     e);
+            // Remotely fires event, informing that acquisition was started.
+            camera.AcquisitionStarted += (snder, e)
+                => context.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteAcquisitionEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    Enums.AcquisitionEventType.Started,
+                    e);
+            // Remotely fires event, informing that acquisition was finished.
+            camera.AcquisitionFinished += (snder, e)
+                => context.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteAcquisitionEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    Enums.AcquisitionEventType.Finished,
+                    e);
+            // Remotely fires event, informing that acquisition progress was checked.
+            camera.AcquisitionStatusChecked += (snder, e)
+                => context.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteAcquisitionEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    Enums.AcquisitionEventType.StatusChecked,
+                    e);
+            // Remotely fires event, informing that acquisition was aborted.
+            camera.AcquisitionAborted += (snder, e)
+                => context.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteAcquisitionEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    Enums.AcquisitionEventType.Aborted,
+                    e);
+            // Remotely fires event, informing that an error happened during acquisition process.
+            camera.AcquisitionErrorReturned += (snder, e)
+                => context.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteAcquisitionEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    Enums.AcquisitionEventType.ErrorReturned,
+                    e);
 
             camera.TemperatureStatusChecked += (sender, e)
                 => host?.OnEventReceived(sender, $"{e.Status} {e.Temperature}");
 
             camera.PropertyChanged += (sender, e)
                 => host?.OnEventReceived(sender, e.PropertyName);
+
+            camera.AcquisitionStarted += (sender, e)
+                => host?.OnEventReceived(sender, $"Acq. Started      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            camera.AcquisitionFinished += (sender, e)
+                => host?.OnEventReceived(sender, $"Acq. Finished     {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            camera.AcquisitionStatusChecked += (sender, e)
+                => host?.OnEventReceived(sender, $"Acq. Stat. Check. {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            camera.AcquisitionAborted += (sender, e)
+                => host?.OnEventReceived(sender, $"Acq. Aborted      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            camera.AcquisitionErrorReturned += (sender, e)
+                => host?.OnEventReceived(sender, $"Acq. Err. Ret.    {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
 
 
             host?.OnEventReceived(camera, "Camera was created remotely");
@@ -411,6 +464,12 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void CallTemperatureMonitor(int camIndex, Switch mode, int timeout)
             => GetCameraSafe(sessionID, camIndex).TemperatureMonitor(mode, timeout);
+        [OperationBehavior]
+        public void CallStartAcquisition(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).StartAcquisition();
+        [OperationBehavior]
+        public void CallAbortAcquisition(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).AbortAcquisition();
 
 
         private CameraBase GetCameraSafe(string session, int camIndex)

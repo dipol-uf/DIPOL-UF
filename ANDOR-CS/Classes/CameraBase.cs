@@ -17,6 +17,8 @@
 
 using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
+using System.Threading;
 
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
@@ -303,6 +305,20 @@ namespace ANDOR_CS.Classes
            TTLShutterSignal type = TTLShutterSignal.Low);
         public abstract void TemperatureMonitor(Switch mode, int timeout);
         public abstract ISettings GetAcquisitionSettingsTemplate();
+
+        public abstract void StartAcquisition();
+
+        /// <summary>
+        /// A synchronous way to manually abort acquisition.
+        /// NOTE: if called while async acquisition is in progress, throws
+        /// <see cref="TaskCanceledException"/>. To cancel async acquisition, use 
+        /// <see cref="CancellationToken"/>.
+        /// </summary>
+        /// <exception cref="AndorSDKException"/>
+        /// <exception cref="TaskCanceledException"/>
+        public abstract void AbortAcquisition();
+
+        public abstract Task StartAcquistionAsync(CancellationToken token, int timeout);
 
         /// <summary>
         /// Fires <see cref="PropertyChanged"/> event

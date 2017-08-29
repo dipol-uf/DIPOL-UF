@@ -305,6 +305,16 @@
             </summary>
             <returns>Temperature status and temperature in degrees</returns>
         </member>
+        <member name="M:ANDOR_CS.Classes.CameraBase.AbortAcquisition">
+            <summary>
+            A synchronous way to manually abort acquisition.
+            NOTE: if called while async acquisition is in progress, throws
+            <see cref="T:System.Threading.Tasks.TaskCanceledException"/>. To cancel async acquisition, use 
+            <see cref="T:System.Threading.CancellationToken"/>.
+            </summary>
+            <exception cref="!:AndorSDKException"/>
+            <exception cref="T:System.Threading.Tasks.TaskCanceledException"/>
+        </member>
         <member name="M:ANDOR_CS.Classes.CameraBase.OnPropertyChanged(System.String)">
             <summary>
             Fires <see cref="E:ANDOR_CS.Classes.CameraBase.PropertyChanged"/> event
