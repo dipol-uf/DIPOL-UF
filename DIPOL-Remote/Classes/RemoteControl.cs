@@ -382,7 +382,7 @@ namespace DIPOL_Remote.Classes
 
             return settingsID;
         }
-        //[OperationContract]
+        [OperationBehavior]
         public void RemoveSettings(string settingsID)
             => settings.TryRemove(settingsID, out _);
 
@@ -479,8 +479,17 @@ namespace DIPOL_Remote.Classes
             => GetCameraSafe(sessionID, camIndex).AbortAcquisition();
 
         [OperationBehavior]
-        public (int Index, float Speed)[] GetAvailableHSSpeeds(string settingsID)
-            => GetSettingsSafe(settingsID, sessionID).GetAvailableHSSpeeds().ToArray();
+        public (int Index, float Speed)[] GetAvailableHSSpeeds(
+            string settingsID, 
+            int ADConverterIndex,
+            OutputAmplification amplifier)
+        {
+            var setts = GetSettingsSafe(settingsID, sessionID) as AcquisitionSettings;
+            setts.SetADConverter(ADConverterIndex);
+            setts.SetOutputAmplifier(amplifier);
+
+            return setts.GetAvailableHSSpeeds().ToArray();
+        }
 
         [OperationBehavior]
         public (int Index, string Name)[] GetAvailablePreAmpGain(string settingsID)
