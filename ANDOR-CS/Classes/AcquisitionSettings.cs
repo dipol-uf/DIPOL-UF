@@ -518,7 +518,7 @@ namespace ANDOR_CS.Classes
             // Queries available amplifiers, looking for the one, which type mathces input parameter
             var query = from amp
                         in camera.Properties.Amplifiers
-                        where amp.Item2 == amplifier
+                        where amp.Amplifier == amplifier
                         select amp;
 
             // If no mathces found, throws an exception
@@ -529,7 +529,7 @@ namespace ANDOR_CS.Classes
             // Otherwise, assigns name and type of the amplifier 
             var element = query.First();
 
-            Amplifier = (Name: element.Item1, Amplifier: element.Item2, Index: camera.Properties.Amplifiers.IndexOf(element));
+            Amplifier = (Name: element.Name, Amplifier: element.Amplifier, Index: camera.Properties.Amplifiers.IndexOf(element));
 
         }
 
