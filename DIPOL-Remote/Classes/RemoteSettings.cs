@@ -8,6 +8,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Interfaces;
 using ANDOR_CS.Classes;
+using ANDOR_CS.Exceptions;
 
 using DIPOL_Remote.Interfaces;
 
@@ -66,7 +67,13 @@ namespace DIPOL_Remote.Classes
         }
 
         public IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds()
-            => session.GetAvailableHSSpeeds(SettingsID);
+            => session.GetAvailableHSSpeeds(
+                SettingsID,
+                ADConverter?.Index ??
+                    throw new NullReferenceException($"AD Converter ({nameof(ADConverter)}) is not set."),
+                Amplifier?.Amplifier ?? 
+                    throw new NullReferenceException($"Output amplifier ({nameof(Amplifier)}) is not set."));
+                   
 
         public IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain()
             => session.GetAvailablePreAmpGain(SettingsID);
@@ -83,7 +90,11 @@ namespace DIPOL_Remote.Classes
 
         public void SetADConverter(int converterIndex)
         {
-            throw new NotImplementedException();
+            if (converterIndex < 0 || converterIndex >= camera.Properties.ADConverters.Length)
+                throw new ArgumentOutOfRangeException($"AD converter index {converterIndex} if out of range " +
+                    $"(should be in [{0}, {camera.Properties.ADConverters.Length - 1}]).");
+
+            ADConverter = (Index: converterIndex, BitDepth: camera.Properties.ADConverters[converterIndex]);
         }
 
         public void SetEMCCDGain(int gain)
@@ -113,7 +124,21 @@ namespace DIPOL_Remote.Classes
 
         public void SetOutputAmplifier(OutputAmplification amplifier)
         {
-            throw new NotImplementedException();
+            // Queries available amplifiers, looking for the one, which type mathces input parameter
+            var query = from amp
+                        in camera.Properties.Amplifiers
+                        where amp.Amplifier == amplifier
+                        select amp;
+
+            // If no mathces found, throws an exception
+            if (query.Count() == 0)
+                throw new ArgumentOutOfRangeException($"Provided amplifier i sout of range " +
+                    $"{(Enum.IsDefined(typeof(OutputAmplification), amplifier) ? Enum.GetName(typeof(OutputAmplification), amplifier) : "Unknown")}.");
+
+            // Otherwise, assigns name and type of the amplifier 
+            var element = query.First();
+
+            Amplifier = (Name: element.Name, Amplifier: element.Amplifier, Index: camera.Properties.Amplifiers.IndexOf(element));
         }
 
         public void SetPreAmpGain(int gainIndex)
