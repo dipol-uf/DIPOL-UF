@@ -11,6 +11,9 @@ namespace ANDOR_CS.Interfaces
 {
     public interface ISettings
     {
+        int CameraIndex
+        { get; }
+
         /// <summary>
         /// Stores the value of currently set vertical speed
         /// </summary>
