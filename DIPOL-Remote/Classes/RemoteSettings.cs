@@ -25,10 +25,7 @@ namespace DIPOL_Remote.Classes
             private set;
         }
         public int CameraIndex
-        {
-            get;
-            private set;
-        }
+            => camera.CameraIndex;
         internal string SettingsID
         {
             get;
@@ -38,8 +35,7 @@ namespace DIPOL_Remote.Classes
         internal RemoteSettings(string sessionID, int cameraIndex, string settingsID, IRemoteControl session)
         {
             SessionID = sessionID;
-            CameraIndex = cameraIndex;
-            SettingsID = settingsID;
+               SettingsID = settingsID;
             this.session = session;
 
             if (!RemoteCamera.RemoteCameras.TryGetValue((sessionID, cameraIndex), out camera))

@@ -157,7 +157,7 @@ namespace DIPOL_Remote.Classes
         public void Disconnect()
         {
            Dispose();
-            host?.OnEventReceived("Host", $"Session {SessionID} closed.");
+           host?.OnEventReceived("Host", $"Session {SessionID} closed.");
         }
  
 
@@ -361,7 +361,15 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void RemoveCamera(int camIndex)
         {
+            foreach (var settsKey in
+                from item
+                in settings
+                where (item.Value.Settings as RemoteSettings).CameraIndex == camIndex
+                select item.Key)
+                RemoveSettings(settsKey);
+
             GetCameraSafe(sessionID, camIndex).Dispose();
+
             activeCameras.TryRemove(camIndex, out (string SessionID, CameraBase Camera) removedCam);
 
             host?.OnEventReceived(removedCam.Camera, "Camera was disposed remotely.");
@@ -380,12 +388,17 @@ namespace DIPOL_Remote.Classes
             if (counter >= MaxTryAddAttempts)
                 throw new Exception();
 
+            host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} created.");
+
             return settingsID;
         }
         [OperationBehavior]
         public void RemoveSettings(string settingsID)
-            => settings.TryRemove(settingsID, out _);
+        {
+            settings.TryRemove(settingsID, out _);
 
+            host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} removed.");
+        }
         [OperationBehavior]
         public int[] GetCamerasInUse()
             => activeCameras.Keys.ToArray();
