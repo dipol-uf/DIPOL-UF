@@ -98,8 +98,8 @@ namespace DIPOL_Remote.Interfaces
         int[] GetCamerasInUse();
         [OperationContract(IsOneWay = false)]
         string CreateSettings(int camIndex);
-        //[OperationContract(IsOneWay = false)]
-        //void RemoveSettings(string settingsID);
+        [OperationContract(IsOneWay = false)]
+        void RemoveSettings(string settingsID);
 
         [OperationContract(IsOneWay = false)]
         string GetCameraModel(int camIndex);
@@ -161,7 +161,10 @@ namespace DIPOL_Remote.Interfaces
         void CallAbortAcquisition(int camIndex);
 
         [OperationContract(IsOneWay = false)]
-        (int Index, float Speed)[] GetAvailableHSSpeeds(string settingsID);
+        (int Index, float Speed)[] GetAvailableHSSpeeds(
+            string settingsID,
+            int ADConverterIndex,
+            OutputAmplification amplifier);
         [OperationContract(IsOneWay = false)]
         (int Index, string Name)[] GetAvailablePreAmpGain(string settingsID);
     }
