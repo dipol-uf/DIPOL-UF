@@ -11,7 +11,7 @@ namespace Host
     {
         static void Main(string[] args)
         {
-            
+            Console.WindowWidth = 120;
 
             using (var host = new DIPOL_Remote.Classes.DipolHost())
             {
@@ -27,7 +27,12 @@ namespace Host
                         else
                             senderString = sender.ToString();
 
-                        Console.WriteLine($"[{{0,23:yyyy/MM/dd HH-mm-ss.fff}}] @ {senderString}: {message}", DateTime.Now);
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.Write($"[{{0,23:yyyy/MM/dd HH-mm-ss.fff}}] @", DateTime.Now);
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.Write($" { senderString}");
+                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.WriteLine($": { message}");
                     }
 
                 };
