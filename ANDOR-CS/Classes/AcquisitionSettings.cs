@@ -47,6 +47,9 @@ namespace ANDOR_CS.Classes
         /// </summary>
         private Camera camera = null;
 
+        public int CameraIndex
+            => camera.CameraIndex;
+
         /// <summary>
         /// Stores the value of currently set vertical speed
         /// </summary>
