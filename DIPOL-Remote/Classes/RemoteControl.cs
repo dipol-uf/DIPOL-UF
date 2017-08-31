@@ -63,8 +63,8 @@ namespace DIPOL_Remote.Classes
 
         private DipolHost host;
 
-        private ConcurrentDictionary<string, ISettings> settings
-            = new ConcurrentDictionary<string, ISettings>();
+        private ConcurrentDictionary<string, (string SessionID, ISettings Settings)> settings
+            = new ConcurrentDictionary<string, (string SessionID, ISettings Settings)>();
 
         /// <summary>
         /// Thread-safe collection of all active <see cref="RemoteControl"/> service instances.
@@ -78,8 +78,8 @@ namespace DIPOL_Remote.Classes
             = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
 
 
-        public IReadOnlyDictionary<string, ISettings> Settings
-           => settings as IReadOnlyDictionary<string, ISettings>;
+        public IReadOnlyDictionary<string, (string SessionID, ISettings Settings)> Settings
+           => settings as IReadOnlyDictionary<string, (string SessionID, ISettings Settings)>;
 
         /// <summary>
         /// Unique ID of current session
@@ -180,7 +180,7 @@ namespace DIPOL_Remote.Classes
             foreach (var key in
                 from item
                 in settings
-                where (item.Value as RemoteSettings)?.SessionID == SessionID
+                where item.Value.SessionID == SessionID
                 select item.Key)
                 RemoveSettings(key);
 
@@ -374,7 +374,7 @@ namespace DIPOL_Remote.Classes
 
             string settingsID = Guid.NewGuid().ToString("N");
             int counter = 0;
-            while ((counter <= MaxTryAddAttempts) && !settings.TryAdd(settingsID, setts))
+            while ((counter <= MaxTryAddAttempts) && !settings.TryAdd(settingsID, (SessionID: SessionID, Settings: setts)))
                 counter++;
 
             if (counter >= MaxTryAddAttempts)
@@ -516,9 +516,9 @@ namespace DIPOL_Remote.Classes
         }
         private ISettings GetSettingsSafe(string settingsID, string sessionID)
         {
-            if (Settings.TryGetValue(settingsID, out ISettings sets)
-                && (sets as RemoteSettings).SessionID == sessionID)
-                return sets;
+            if (Settings.TryGetValue(settingsID, out (string SessionID, ISettings Settings) sets)
+                && sets.SessionID == SessionID)
+                return sets.Settings;
             else throw new Exception();
         }
     }

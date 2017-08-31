@@ -75,10 +75,13 @@ namespace Client
 
                 var sets = camera.GetAcquisitionSettingsTemplate();
 
+                sets.SetADConverter(0);
+                sets.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification.Conventional);
+
                 var speeds = sets.GetAvailableHSSpeeds();
 
                 foreach (var speed in speeds)
-                    Console.WriteLine(speeds);
+                    Console.WriteLine(speed);
             }
         }
 
