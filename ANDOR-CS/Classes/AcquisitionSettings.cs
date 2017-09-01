@@ -1256,7 +1256,11 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSDKException"/>
         /// <returns>true if HS Speed is supported, 
         /// throws exception if SDK communication fails; false, otherwise.</returns>
-        public override bool IsHSSpeedSupported(int speedIndex, out float speed)
+        public override bool IsHSSpeedSupported(
+            int speedIndex,
+            int ADConverter,
+            int amplifier,
+            out float speed)
         {
             // Checks if camera is OK and is active
             CheckCamera();
@@ -1267,16 +1271,11 @@ namespace ANDOR_CS.Classes
                 // Checks if camera supports horizontal readout speed control
                 if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
                 {
-                    if (ADConverter == null || Amplifier == null)
-                        return false;
-
-                    // Determines indexes of converter and amplifier
-                    int channel = ADConverter.Value.Index;
-                    int amp = Amplifier.Value.Index;
+                   
                     int nSpeeds = 0;
 
                     // Gets the number of availab;e speeds
-                    var result = SDKInit.SDKInstance.GetNumberHSSpeeds(channel, amp, ref nSpeeds);
+                    var result = SDKInit.SDKInstance.GetNumberHSSpeeds(ADConverter, amplifier, ref nSpeeds);
                     ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberHSSpeeds));
 
                     // Checks if speedIndex is in allowed range
@@ -1284,7 +1283,7 @@ namespace ANDOR_CS.Classes
                         return false;                   
 
                     // Retrieves float value of currently selected horizontal speed
-                    result = SDKInit.SDKInstance.GetHSSpeed(channel, amp, speedIndex, ref speed);
+                    result = SDKInit.SDKInstance.GetHSSpeed(ADConverter, amplifier, speedIndex, ref speed);
                     ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHSSpeed));
 
                     return true;

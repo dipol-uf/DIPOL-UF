@@ -61,10 +61,15 @@ namespace DIPOL_Remote.Classes
                 amplifier,
                 HSSpeed);
 
-        public override bool IsHSSpeedSupported(int speedIndex, out float speed)
+        public override bool IsHSSpeedSupported(
+            int speedIndex, 
+            int ADConverter,
+            int amplifier,
+            out float speed)
         {
             speed = 0.0f;
-            (bool isSupported, float locSpeed) = session.CallIsHSSpeedSupported(SettingsID, speedIndex);
+            (bool isSupported, float locSpeed) = session
+                .CallIsHSSpeedSupported(SettingsID, ADConverter, amplifier, speedIndex);
              speed = locSpeed;
             return isSupported;
         }
