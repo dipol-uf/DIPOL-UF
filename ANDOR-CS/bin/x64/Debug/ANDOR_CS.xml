@@ -44,26 +44,13 @@
             <exception cref="T:System.NotSupportedException"/>
             <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)">
-            <summary>
-            Sets Horizontal Readout Speed for currently selected Amplifier and AD Converter.
-            Requires camera to be active.
-            Note: <see cref="!:AcquisitionSettings.ADConverter"/> and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/> and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
-            before calling this method.
-            </summary>
-            <exception cref="T:System.NullReferenceException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <exception cref="T:System.NotSupportedException"/>
-            <param name="speedIndex">Index of horizontal speed</param>
-        </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.GetAvailablePreAmpGain">
             <summary>
             Returns a collection of available PreAmp gains for currently selected HSSpeed, Amplifier, Converter.
             Requires camera to be active.
             Note: <see cref="!:AcquisitionSettings.ADConverter"/>, <see cref="!:AcquisitionSettings.HSSpeed"/>
             and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)"/>
+            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="!:AcquisitionSettings.SetHSSpeed(int)"/>
             and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
             </summary>
             <exception cref="T:System.NullReferenceException"/>
@@ -76,12 +63,24 @@
             Requires camera to be active.
             Note: <see cref="!:AcquisitionSettings.ADConverter"/>, <see cref="!:AcquisitionSettings.HSSpeed"/>
             and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)"/>
+            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="!:AcquisitionSettings.SetHSSpeed(int)"/>
             and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
             </summary>
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <param name="gainIndex">Index of gain</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.IsHSSpeedSupported(System.Int32,System.Single@)">
+            <summary>
+            Checks if HS Speed is supported in current configuration.
+            Throws exceptions if SDK communication fails.
+            </summary>
+            <param name="speedIndex">Speed index to test.</param>
+            <param name="speed">If call is successfull, assigns float value of HS speed,
+            otherwies, is initialized to 0.0f.</param>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
+            <returns>true if HS Speed is supported, 
+            throws exception if SDK communication fails; false, otherwise.</returns>
         </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.#ctor">
             <summary>
@@ -357,7 +356,7 @@
             Requires camera to be active.
             Note: <see cref="!:AcquisitionSettings.ADConverter"/>, <see cref="!:AcquisitionSettings.HSSpeed"/>
             and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)"/>
+            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="!:AcquisitionSettings.SetHSSpeed(int)"/>
             and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
             </summary>
             <exception cref="T:System.NullReferenceException"/>
@@ -370,7 +369,7 @@
             Requires camera to be active.
             Note: <see cref="!:AcquisitionSettings.ADConverter"/>, <see cref="!:AcquisitionSettings.HSSpeed"/>
             and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)"/>
+            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="!:AcquisitionSettings.SetHSSpeed(int)"/>
             and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
             </summary>
             <exception cref="T:System.NullReferenceException"/>
