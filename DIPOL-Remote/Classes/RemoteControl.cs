@@ -519,6 +519,37 @@ namespace DIPOL_Remote.Classes
                 .IsHSSpeedSupported(speedIndex, ADConverter, amplifier, out float speed),
             Speed: speed);
 
+        /// <summary>
+        /// Applies <see cref="RemoteSettings"/> to local instance of <see cref="AcquisitionSettings"/>.
+        /// Remote settings are packed into <see cref="byte"/> array and transmitted over network.
+        /// </summary>
+        /// <param name="settingsID">Unique settings identifier.</param>
+        /// <param name="data">Packed into <see cref="byte"/> array <see cref="RemoteSettings"/>.</param>
+        /// <returns>
+        /// A complex object <see cref="ValueTuple{T1, T2}"/> containing results of settings application (an array) 
+        /// and tuple of timing/frame information that is calculated for this specific settings.
+        /// </returns>
+        [OperationBehavior]
+        public
+        // Output of AcquisitionSettings.ApplySettings()
+        ((string Option, bool Success, uint ReturnCode)[] Result,
+        // Out-result of the same method
+         (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) Timing)
+         CallApplySettings(string settingsID, byte[] data)
+        {
+            // Safely retrieves local copy of AcquisitionSettings.
+            var setts = GetSettingsSafe(settingsID, sessionID);
+
+            // Creates MemoryStream from byte array and uses it for deserialization.
+            using (var memStr = new System.IO.MemoryStream(data))
+                setts.Deserialize(memStr);
+
+            // Applies settings on a local copy of settings.
+            var result = setts.ApplySettings(out (float, float, float, int) timing);
+
+            // Returns results.
+            return (Result: result.ToArray(), Timing: timing);
+        }
 
         private CameraBase GetCameraSafe(string session, int camIndex)
         {
