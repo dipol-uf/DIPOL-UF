@@ -76,6 +76,7 @@ namespace DIPOL_Remote.Interfaces
         /// Exit point of the connection. Frees resources
         /// </summary>
         [OperationContract(IsTerminating = true, IsOneWay = false)]
+        [FaultContract(typeof(ServiceException))]
         void Disconnect();
 
         /// <summary>
@@ -86,19 +87,27 @@ namespace DIPOL_Remote.Interfaces
         [FaultContract(typeof(AndorSDKServiceException))]
         [FaultContract(typeof(ServiceException))]
         int GetNumberOfCameras();
+
         [OperationContract(IsOneWay = false)]
         [FaultContract(typeof(AndorSDKServiceException))]
         [FaultContract(typeof(ServiceException))]
         void CreateCamera(int camIndex = 0);
+
         [OperationContract(IsOneWay = false)]
         [FaultContract(typeof(ServiceException))]
         void RemoveCamera(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         int[] GetCamerasInUse();
+
         [OperationContract(IsOneWay = false)]
+        [FaultContract(typeof(ServiceException))]
         string CreateSettings(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         void RemoveSettings(string settingsID);
+
+
 
         [OperationContract(IsOneWay = false)]
         string GetCameraModel(int camIndex);

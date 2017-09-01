@@ -228,8 +228,7 @@ namespace DIPOL_Remote.Classes
             }
         }
 
-
-
+        
         internal RemoteCamera(IRemoteControl sessionInstance, int camIndex)
         {
             session = sessionInstance ?? throw new ArgumentNullException("Session cannot be null.");
@@ -251,8 +250,7 @@ namespace DIPOL_Remote.Classes
             Software = session.GetSoftware(CameraIndex);
             Hardware = session.GetHardware(CameraIndex);
         }
-
-
+        
         public override CameraStatus GetStatus()
             => session.CallGetStatus(CameraIndex);
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
@@ -284,6 +282,7 @@ namespace DIPOL_Remote.Classes
         {
             session.RemoveCamera(CameraIndex);
             remoteCameras.TryRemove((session.SessionID, CameraIndex), out _);
+            session = null;
         }
         public override SettingsBase GetAcquisitionSettingsTemplate()
             => new RemoteSettings(session.SessionID, CameraIndex, session.CreateSettings(CameraIndex), session);

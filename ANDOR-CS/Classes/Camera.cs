@@ -1050,8 +1050,6 @@ namespace ANDOR_CS.Classes
 
         }
 
-
-
         /// <summary>
         /// Creates a new instance of Camera class to represent a connected Andor device.
         /// Maximum 8 cameras can be controled at the same time

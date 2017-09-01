@@ -50,7 +50,10 @@ namespace DIPOL_Remote.Classes
         IncludeExceptionDetailInFaults = true)]
     public sealed class RemoteControl : IRemoteControl, IDisposable
     {
-        private static readonly int MaxTryAddAttempts = 10;
+        /// <summary>
+        /// Defines max number of attempts to create unique identifier.
+        /// </summary>
+        private static readonly int MaxTryAddAttempts = 30;
 
         /// <summary>
         /// Unique ID of the current session
@@ -60,9 +63,14 @@ namespace DIPOL_Remote.Classes
         /// Operation context of current connection. Used for callbacks
         /// </summary>
         private OperationContext context;
-
+        /// <summary>
+        /// A reference to Host instance
+        /// </summary>
         private DipolHost host;
 
+        /// <summary>
+        /// Thread-safe collection of all active instances of AcquisitionSettings.
+        /// </summary>
         private ConcurrentDictionary<string, (string SessionID, SettingsBase Settings)> settings
             = new ConcurrentDictionary<string, (string SessionID, SettingsBase Settings)>();
 
@@ -78,9 +86,6 @@ namespace DIPOL_Remote.Classes
             = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
 
 
-        public IReadOnlyDictionary<string, (string SessionID, SettingsBase Settings)> Settings
-           => settings as IReadOnlyDictionary<string, (string SessionID, SettingsBase Settings)>;
-
         /// <summary>
         /// Unique ID of current session
         /// </summary>
@@ -90,6 +95,11 @@ namespace DIPOL_Remote.Classes
             get => sessionID;
 
         }
+        /// <summary>
+        /// Interface to collection of all active <see cref="AcquisitionSettings"/> instances.
+        /// </summary>
+        public IReadOnlyDictionary<string, (string SessionID, SettingsBase Settings)> Settings
+           => settings as IReadOnlyDictionary<string, (string SessionID, SettingsBase Settings)>;
         /// <summary>
         /// Interface to collection of all active <see cref="RemoteControl"/> service instances.
         /// </summary>
@@ -166,26 +176,39 @@ namespace DIPOL_Remote.Classes
         /// </summary>
         public void Dispose()
         {
-            // Select all cameras that are created from this session
-            foreach (var key in
-                from item
-                in activeCameras
-                where item.Value.SessionID == SessionID
-                select item.Key)
-                // Remove these cameras from te collection
-                if (activeCameras.TryRemove(key, out (string SessionID, CameraBase Camera) camInfo))
-                    // If successful, dispose camera instance
-                    camInfo.Camera.Dispose();
+            try
+            {
+                // Select all cameras that are created from this session
+                foreach (var key in
+                    from item
+                    in activeCameras
+                    where item.Value.SessionID == SessionID
+                    select item.Key)
+                    // Remove these cameras from te collection
+                    if (activeCameras.TryRemove(key, out (string SessionID, CameraBase Camera) camInfo))
+                        // If successful, dispose camera instance
+                        camInfo.Camera.Dispose();
 
-            foreach (var key in
-                from item
-                in settings
-                where item.Value.SessionID == SessionID
-                select item.Key)
-                RemoveSettings(key);
+                foreach (var key in
+                    from item
+                    in settings
+                    where item.Value.SessionID == SessionID
+                    select item.Key)
+                    RemoveSettings(key);
 
-            // Remove this service from collection
-            serviceInstances.TryRemove(sessionID, out _);
+                // Remove this session from collection
+                serviceInstances.TryRemove(sessionID, out _);
+            }
+            catch (Exception e)
+            {
+                throw new FaultException<ServiceException>(
+                    new ServiceException()
+                    {
+                        Message = "An exception was thrown while dsiposing session resources.",
+                        Details = e.Message
+                    },
+                    ServiceException.GeneralServiceErrorReason);
+            }
         }
 
 
@@ -361,18 +384,31 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void RemoveCamera(int camIndex)
         {
-            foreach (var settsKey in
-                from item
-                in settings
-                where item.Value.Settings.CameraIndex == camIndex
-                select item.Key)
-                RemoveSettings(settsKey);
+            try
+            {
+                foreach (var settsKey in
+                    from item
+                    in settings
+                    where item.Value.Settings.CameraIndex == camIndex
+                    select item.Key)
+                    RemoveSettings(settsKey);
 
-            GetCameraSafe(sessionID, camIndex).Dispose();
+                var removedCamera = GetCameraSafe(sessionID, camIndex);
+                host?.OnEventReceived(removedCamera, "Camera was disposed remotely.");
+                activeCameras.TryRemove(camIndex, out _);
 
-            activeCameras.TryRemove(camIndex, out (string SessionID, CameraBase Camera) removedCam);
-
-            host?.OnEventReceived(removedCam.Camera, "Camera was disposed remotely.");
+                removedCamera.Dispose();
+            }
+            catch (Exception e)
+            {
+                throw new FaultException<ServiceException>(
+                    new ServiceException()
+                    {
+                        Message = "An exception was thrown while disposing Camera resource",
+                        Details = e.Message
+                    },
+                    ServiceException.GeneralServiceErrorReason);
+            }
         }
         [OperationBehavior]
         public string CreateSettings(int camIndex)
@@ -386,7 +422,14 @@ namespace DIPOL_Remote.Classes
                 counter++;
 
             if (counter >= MaxTryAddAttempts)
-                throw new Exception();
+                throw new FaultException<ServiceException>(
+                    new ServiceException()
+                    {
+                        Message = "Failed to create unique ID for the settings instance.",
+                        Details = $"After {MaxTryAddAttempts} sessionID was not generated",
+                        MethodName = nameof(settings.TryAdd)
+                    },
+                    ServiceException.GeneralServiceErrorReason);
 
             host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} created.");
 
@@ -395,10 +438,12 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void RemoveSettings(string settingsID)
         {
-            settings.TryRemove(settingsID, out _);
+            settings.TryRemove(settingsID, out (string, SettingsBase) setts);
+            setts.Item2.Dispose();
 
             host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} removed.");
         }
+
         [OperationBehavior]
         public int[] GetCamerasInUse()
             => activeCameras.Keys.ToArray();
