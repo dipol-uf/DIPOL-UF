@@ -248,6 +248,13 @@ namespace ANDOR_CS.Classes
             }
         }
 
+        public virtual SettingsBase CurrentSettings
+        {
+            get;
+            internal set;
+        } = null;
+
+
         /// <summary>
         /// Fires when one of the properties was changed
         /// </summary>
@@ -304,7 +311,7 @@ namespace ANDOR_CS.Classes
            ShutterMode exter = ShutterMode.FullyAuto,
            TTLShutterSignal type = TTLShutterSignal.Low);
         public abstract void TemperatureMonitor(Switch mode, int timeout);
-        public abstract ISettings GetAcquisitionSettingsTemplate();
+        public abstract SettingsBase GetAcquisitionSettingsTemplate();
 
         public abstract void StartAcquisition();
 
