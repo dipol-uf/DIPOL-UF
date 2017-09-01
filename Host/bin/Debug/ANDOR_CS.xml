@@ -31,7 +31,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <exception cref="T:System.NotSupportedException"/>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.GetAvailableHSSpeeds">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.GetAvailableHSSpeeds(System.Int32,System.Int32)">
             <summary>
             Returns a collection of available Horizonal Readout Speeds for currently selected Amplifier and AD Converter.
             Requires camera to be active.
@@ -44,7 +44,7 @@
             <exception cref="T:System.NotSupportedException"/>
             <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.GetAvailablePreAmpGain">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.GetAvailablePreAmpGain(System.Int32,System.Int32,System.Int32)">
             <summary>
             Returns a collection of available PreAmp gains for currently selected HSSpeed, Amplifier, Converter.
             Requires camera to be active.
@@ -57,7 +57,7 @@
             <exception cref="T:System.NotSupportedException"/>
             <returns>Available PreAmp gains</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetPreAmpGain(System.Int32)">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.Serialize(System.IO.Stream,System.String)">
             <summary>
             Sets PreAmp gain for currently selected HSSpeed, Amplifier, Converter.
             Requires camera to be active.
