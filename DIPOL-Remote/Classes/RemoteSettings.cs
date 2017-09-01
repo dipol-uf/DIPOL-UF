@@ -43,23 +43,28 @@ namespace DIPOL_Remote.Classes
                 throw new Exception();
         }
 
-        public override List<(string Option, bool Success, uint ReturnCode)> ApplySettings(out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
+        public override List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
+            out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
         {
+            // Stores byte representation of settings
             byte[] data;
 
+            // Creates MemoryStream and serializes settings into it.
             using (var memStr = new MemoryStream())
             {
                 Serialize(memStr, $"RemoteSettings_{camera.CameraModel}/{camera.SerialNumber}");
-
+                
+                // Writes stream bytes to array.
                 data = memStr.ToArray();
             }
 
-            using (var anotherStr = new MemoryStream(data))
-                Deserialize(anotherStr);
+            // Calls remote method.
+            var result = session.CallApplySettings(SettingsID, data);
 
-            timing = (0, 0, 0, 0);
+            // Assigns out values
+            timing = result.Timing;
 
-            return new List<(string Option, bool Success, uint ReturnCode)>();
+            return result.Result.ToList();
             
         }
 
@@ -92,29 +97,6 @@ namespace DIPOL_Remote.Classes
             return isSupported;
         }
 
-        //public void SetReadoutMode(ReadMode mode)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public void SetTriggerMode(TriggerMode mode)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public void SetVSAmplitude(VSAmplitude amplitude)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public void SetVSSpeed(int speedIndex)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public void SetVSSpeed()
-        //{
-        //    throw new NotImplementedException();
-        //}
+        
     }
 }
