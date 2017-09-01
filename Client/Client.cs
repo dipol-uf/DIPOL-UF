@@ -94,6 +94,9 @@ namespace Client
 
                 sets.SetPreAmpGain(0);
 
+                sets.SetAcquisitionMode(ANDOR_CS.Enums.AcquisitionMode.SingleScan);
+                sets.SetExposureTime(1.0f);
+                
                 sets.ApplySettings(out (float, float, float, int) timing);
 
             }
