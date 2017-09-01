@@ -32,6 +32,7 @@ namespace ANDOR_CS.Classes
     {
         protected CameraBase camera = null;
 
+        [ANDOR_CS.Attributes.NotSerializeProperty]
         public int CameraIndex
             => camera.CameraIndex;
 
@@ -652,10 +653,11 @@ namespace ANDOR_CS.Classes
                 var elementsToWrite = from prop
                                       in this.GetType().GetProperties()
                                       where prop.GetMethod.IsPublic && prop.SetMethod.IsPrivate
+                                      where !Attribute.IsDefined(prop, typeof(Attributes.NotSerializePropertyAttribute))
                                       select prop;
 
                 elementsToWrite = from prop
-                                   in elementsToWrite
+                                  in elementsToWrite
                                   where prop.GetMethod.Invoke(this, new object[] { }) != null
                                   select prop;
 
