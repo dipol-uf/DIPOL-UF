@@ -70,7 +70,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <param name="gainIndex">Index of gain</param>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.IsHSSpeedSupported(System.Int32,System.Single@)">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.IsHSSpeedSupported(System.Int32,System.Int32,System.Int32,System.Single@)">
             <summary>
             Checks if HS Speed is supported in current configuration.
             Throws exceptions if SDK communication fails.

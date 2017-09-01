@@ -174,6 +174,10 @@ namespace DIPOL_Remote.Interfaces
             int HSSpeed);
 
         [OperationContract(IsOneWay = false)]
-        (bool IsSupported, float Speed) CallIsHSSpeedSupported(string settingsID, int speedIndex);
+        (bool IsSupported, float Speed) CallIsHSSpeedSupported(
+            string settingsID, 
+            int ADConverter,
+            int amplifier,
+            int speedIndex);
     }
 }
