@@ -1,8 +1,26 @@
-﻿using System;
+﻿//    This file is part of Dipol-3 Camera Manager.
+
+//    Dipol-3 Camera Manager is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+
+//    Dipol-3 Camera Manager is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//    GNU General Public License for more details.
+
+//    You should have received a copy of the GNU General Public License
+//    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
+//
+//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Xml.Linq;
+using System.IO;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
@@ -136,7 +154,6 @@ namespace ANDOR_CS.Classes
 
         public abstract List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
             out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing);
-
 
         /// <summary>
         /// Tries to set vertical speed. 
@@ -613,6 +630,315 @@ namespace ANDOR_CS.Classes
             // Checks if camera is initialized
             if (!camera.IsInitialized)
                 throw new AndorSDKException("Camera is not properly initialized.", null);
+        }
+
+        public virtual void Serialize(Stream stream, string name = "")
+        {
+            using (var str = System.Xml.XmlWriter.Create(
+                stream,
+                new System.Xml.XmlWriterSettings()
+                {
+                    Indent = true,
+                    IndentChars = "\t"
+                }))
+            {
+                str.WriteStartDocument();
+
+                str.WriteStartElement("AcquisitionSettings");
+                str.WriteAttributeString("Camera", camera?.CameraModel ?? "TEST");
+                str.WriteAttributeString("Name", name);
+
+
+                var elementsToWrite = from prop
+                                      in this.GetType().GetProperties()
+                                      where prop.GetMethod.IsPublic && prop.SetMethod.IsPrivate
+                                      select prop;
+
+                elementsToWrite = from prop
+                                   in elementsToWrite
+                                  where prop.GetMethod.Invoke(this, new object[] { }) != null
+                                  select prop;
+
+                foreach (var element in elementsToWrite)
+                {
+                    str.WriteStartElement(element.Name);
+
+                    var t = element.PropertyType;
+                    if (element.PropertyType.Name.Contains("Nullable"))
+                        t = t.GenericTypeArguments[0];
+
+                    if (t.Name.Contains("ValueTuple"))
+                    {
+                        str.WriteAttributeString("Tuple", "True");
+                        var f = t.GetFields();
+                        str.WriteAttributeString("TupleSize", f.Length.ToString());
+
+                        var tupleNames = ((System.Collections.ICollection)
+                            element
+                            .CustomAttributes
+                            .First()
+                            .ConstructorArguments
+                            .First()
+                            .Value)
+                        .Cast<System.Reflection.CustomAttributeTypedArgument>()
+                        .Select((arg) => (string)arg.Value)
+                        .ToArray();
+
+                        var elementVal = element.GetValue(this);
+
+                        var vals = elementVal.GetType().GetFields().Select((v) => v.GetValue(elementVal)).ToArray();
+
+                        for (int i = 0; i < f.Length; i++)
+                        {
+                            str.WriteStartElement("TupleElement");
+                            str.WriteAttributeString("FieldName", tupleNames[i]);
+                            str.WriteAttributeString("FieldType", f[i].FieldType.ToString());
+                            str.WriteValue("\r\n\t\t\t" + vals[i].ToString() + "\r\n\t\t");
+
+                            str.WriteEndElement();
+
+                        }
+                    }
+                    else
+                    {
+                        str.WriteAttributeString("Tuple", "False");
+                        str.WriteAttributeString("Type", element.PropertyType.GenericTypeArguments.First().ToString());
+                        str.WriteValue("\r\n\t\t" + element.GetValue(this).ToString() + "\r\n\t");
+                    }
+
+
+
+                    str.WriteEndElement();
+
+                }
+
+                str.WriteEndElement();
+
+                str.WriteEndDocument();
+            }
+        }
+
+        public virtual void Deserialize(Stream stream)
+        {
+
+            //(camera as Camera).SetActiveAndLock();
+
+            XDocument doc = XDocument.Load(stream);
+
+            if (doc.Elements().Count() < 1)
+                throw new Exception();
+
+            var root = doc.Elements().First();
+
+            var cameraName = root.Attribute(XName.Get("Camera"))?.Value;
+            var settingsName = root.Attribute(XName.Get("Name"))?.Value;
+
+            XElement element;
+            var query = root.Elements().Where(e => e.Name == "VSSpeed");
+            if (query.Count() == 1)
+            {
+                element = query.First();
+
+                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+                if (value != null)
+                {
+                    int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+                    SetVSSpeed(index);
+                }
+            }
+
+
+            if ((query = root.Elements().Where(e => e.Name == "VSAmplitude")).Count() == 1)
+            {
+                var value = query.First()?.Value;
+
+                if (value != null)
+                {
+                    Enums.VSAmplitude vsAmp = (Enums.VSAmplitude)Enum.Parse(typeof(Enums.VSAmplitude), value);
+
+                    SetVSAmplitude(vsAmp);
+                }
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "ADConverter")).Count() == 1)
+            {
+                element = query.First();
+
+                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+                if (value != null)
+                {
+                    int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+                    SetADConverter(index);
+                }
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "Amplifier")).Count() == 1)
+            {
+                element = query.First();
+
+                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Amplifier")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+                if (value != null)
+                {
+                    var amp = (Enums.OutputAmplification)Enum.Parse(typeof(Enums.OutputAmplification), value);
+
+                    SetOutputAmplifier(amp);
+                }
+            }
+
+
+            if ((query = root.Elements().Where(e => e.Name == "HSSpeed")).Count() == 1)
+            {
+                element = query.First();
+
+                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+                if (value != null)
+                {
+                    int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+                    SetHSSpeed(index);
+                }
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "PreAmpGain")).Count() == 1)
+            {
+                element = query.First();
+
+                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+                if (value != null)
+                {
+                    int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+                    SetPreAmpGain(index);
+                }
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "AcquisitionMode")).Count() == 1)
+            {
+                var value = query.First()?.Value;
+
+                if (value != null)
+                {
+                    var mode = (Enums.AcquisitionMode)Enum.Parse(typeof(Enums.AcquisitionMode), value);
+
+                    SetAcquisitionMode(mode);
+                }
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "ReadMode")).Count() == 1)
+            {
+                var value = query.First()?.Value;
+
+                if (value != null)
+                {
+                    var mode = (Enums.ReadMode)Enum.Parse(typeof(Enums.ReadMode), value);
+
+                    SetReadoutMode(mode);
+                }
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "TriggerMode")).Count() == 1)
+            {
+                var value = query.First()?.Value;
+
+                if (value != null)
+                {
+                    var mode = (Enums.TriggerMode)Enum.Parse(typeof(Enums.TriggerMode), value);
+
+                    SetTriggerMode(mode);
+                }
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "ExposureTime")).Count() == 1)
+            {
+                var value = query.First()?.Value;
+
+                if (value != null)
+                {
+                    var time = System.Single.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+                    SetExposureTime(time);
+                }
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "ImageArea")).Count() == 1)
+            {
+                var value = query.First()?.Value;
+
+                if (value != null)
+                {
+                    var rect = Rectangle.Parse(value);
+
+                    SetImageArea(rect);
+                }
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "AccumulateCycle")).Count() == 1)
+            {
+                element = query.First();
+
+                var value1 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Frames")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+
+                var value2 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Time")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+
+                if (value1 != null && value2 != null)
+                {
+                    int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+                    float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+                    SetAccumulationCycle(number, time);
+                }
+
+
+            }
+
+            if ((query = root.Elements().Where(e => e.Name == "KineticCycle")).Count() == 1)
+            {
+                element = query.First();
+
+                var value1 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Frames")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+
+                var value2 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Time")
+                    .FirstOrDefault()
+                    ?.Value
+                    .Trim();
+
+                if (value1 != null && value2 != null)
+                {
+                    int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+                    float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+                    SetKineticCycle(number, time);
+                }
+
+
+            }
+
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
@@ -42,7 +43,22 @@ namespace DIPOL_Remote.Classes
 
         public override List<(string Option, bool Success, uint ReturnCode)> ApplySettings(out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
         {
-            throw new NotImplementedException();
+            byte[] data;
+
+            using (var memStr = new MemoryStream())
+            {
+                Serialize(memStr, $"RemoteSettings_{camera.CameraModel}/{camera.SerialNumber}");
+
+                data = memStr.ToArray();
+            }
+
+            using (var anotherStr = new MemoryStream(data))
+                Deserialize(anotherStr);
+
+            timing = (0, 0, 0, 0);
+
+            return new List<(string Option, bool Success, uint ReturnCode)>();
+            
         }
 
         public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int ADConverter, int amplifier)

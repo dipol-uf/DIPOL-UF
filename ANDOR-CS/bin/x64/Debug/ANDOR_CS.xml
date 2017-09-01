@@ -57,19 +57,6 @@
             <exception cref="T:System.NotSupportedException"/>
             <returns>Available PreAmp gains</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.Serialize(System.IO.Stream,System.String)">
-            <summary>
-            Sets PreAmp gain for currently selected HSSpeed, Amplifier, Converter.
-            Requires camera to be active.
-            Note: <see cref="!:AcquisitionSettings.ADConverter"/>, <see cref="!:AcquisitionSettings.HSSpeed"/>
-            and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="!:AcquisitionSettings.SetHSSpeed(int)"/>
-            and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
-            </summary>
-            <exception cref="T:System.NullReferenceException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="gainIndex">Index of gain</param>
-        </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.IsHSSpeedSupported(System.Int32,System.Int32,System.Int32,System.Single@)">
             <summary>
             Checks if HS Speed is supported in current configuration.
