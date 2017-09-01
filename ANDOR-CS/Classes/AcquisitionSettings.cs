@@ -729,52 +729,52 @@ namespace ANDOR_CS.Classes
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <param name="gainIndex">Index of gain</param>
-        public override void SetPreAmpGain(int gainIndex)
-        {
-            // Checks if camera is OK and is active
-            CheckCamera();
+        //public override void SetPreAmpGain(int gainIndex)
+        //{
+        //    // Checks if camera is OK and is active
+        //    CheckCamera();
 
-            try
-            {
-                (camera as Camera).SetActiveAndLock();
+        //    try
+        //    {
+        //        (camera as Camera).SetActiveAndLock();
 
-                // Checks if camera supports PreAmp Gain control
-                if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
-                {
-                    // Check if all required settings are already set
-                    if (HSSpeed == null || Amplifier == null || ADConverter == null)
-                        throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(ADConverter)})," +
-                            $"Amplifier ({nameof(Amplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
+        //        // Checks if camera supports PreAmp Gain control
+        //        if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
+        //        {
+        //            // Check if all required settings are already set
+        //            if (HSSpeed == null || Amplifier == null || ADConverter == null)
+        //                throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(ADConverter)})," +
+        //                    $"Amplifier ({nameof(Amplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
 
 
-                    // Stores indexes of ADConverter, Amplifier and Horizontal Speed
-                    int channel = ADConverter.Value.Index;
-                    int amp = Amplifier.Value.Index;
-                    int speed = HSSpeed.Value.Index;
+        //            // Stores indexes of ADConverter, Amplifier and Horizontal Speed
+        //            int channel = ADConverter.Value.Index;
+        //            int amp = Amplifier.Value.Index;
+        //            int speed = HSSpeed.Value.Index;
 
-                    // Total number of gain settings available
-                    int gainNumber = camera.Properties.PreAmpGains.Length;
+        //            // Total number of gain settings available
+        //            int gainNumber = camera.Properties.PreAmpGains.Length;
 
-                    // Checks if argument is in valid range
-                    if (gainIndex < 0 || gainIndex >= gainNumber)
-                        throw new ArgumentOutOfRangeException($"Gain index (nameof{gainIndex}) is out of range (should be in [{0}, {gainNumber}]).");
+        //            // Checks if argument is in valid range
+        //            if (gainIndex < 0 || gainIndex >= gainNumber)
+        //                throw new ArgumentOutOfRangeException($"Gain index (nameof{gainIndex}) is out of range (should be in [{0}, {gainNumber}]).");
 
-                    int status = -1;
+        //            int status = -1;
 
-                    uint result = SDKInit.SDKInstance.IsPreAmpGainAvailable(channel, amp, speed, gainIndex, ref status);
-                    ThrowIfError(result, nameof(SDKInit.SDKInstance.IsPreAmpGainAvailable));
+        //            uint result = SDKInit.SDKInstance.IsPreAmpGainAvailable(channel, amp, speed, gainIndex, ref status);
+        //            ThrowIfError(result, nameof(SDKInit.SDKInstance.IsPreAmpGainAvailable));
 
-                    if (status != 1)
-                        throw new ArgumentOutOfRangeException($"Pre amp gain index ({gainIndex}) is out of range.");
+        //            if (status != 1)
+        //                throw new ArgumentOutOfRangeException($"Pre amp gain index ({gainIndex}) is out of range.");
 
-                    PreAmpGain = (Index: gainIndex, Name: camera.Properties.PreAmpGains[gainIndex]);
-                }
-            }
-            finally
-            {
-                (camera as Camera).ReleaseLock();
-            }
-        }
+        //            PreAmpGain = (Index: gainIndex, Name: camera.Properties.PreAmpGains[gainIndex]);
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        (camera as Camera).ReleaseLock();
+        //    }
+        //}
 
         ///// <summary>
         ///// Sets acquisition mode. 

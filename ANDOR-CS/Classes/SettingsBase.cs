@@ -33,7 +33,7 @@ namespace ANDOR_CS.Classes
         {
             get;
             protected set;
-        }= null;
+        } = null;
 
         /// <summary>
         /// Stores the index of currently set Analogue-Digital Converter and its bit depth.
@@ -42,7 +42,7 @@ namespace ANDOR_CS.Classes
         {
             get;
             protected set;
-        }= null;
+        } = null;
 
         /// <summary>
         /// Stores the value of currently set vertical clock voltage amplitude
@@ -51,7 +51,7 @@ namespace ANDOR_CS.Classes
         {
             get;
             protected set;
-        }= null;
+        } = null;
 
         /// <summary>
         /// Stores type of currentlt set Amplifier
@@ -60,7 +60,7 @@ namespace ANDOR_CS.Classes
         {
             get;
             protected set;
-        }= null;
+        } = null;
 
         /// <summary>
         /// Stores type of currently set PreAmp Gain
@@ -69,7 +69,7 @@ namespace ANDOR_CS.Classes
         {
             get;
             protected set;
-        }= null;
+        } = null;
 
         /// <summary>
         /// Stores currently set acquisition mode
@@ -78,7 +78,7 @@ namespace ANDOR_CS.Classes
         {
             get;
             protected set;
-        }= null;
+        } = null;
 
         /// <summary>
         /// Stores currently set read mode
@@ -105,7 +105,7 @@ namespace ANDOR_CS.Classes
         {
             get;
             protected set;
-        }= null;
+        } = null;
 
         /// <summary>
         /// Stoers seleced image area - part of the CCD from where data should be collected
@@ -114,19 +114,19 @@ namespace ANDOR_CS.Classes
         {
             get;
             protected set;
-        }= null;
+        } = null;
 
         public (int Frames, float Time)? AccumulateCycle
         {
             get;
             protected set;
-        }= null;
+        } = null;
 
         public (int Frames, float Time)? KineticCycle
         {
             get;
             protected set;
-        }= null;
+        } = null;
 
         public int? EMCCDGain
         {
@@ -333,7 +333,34 @@ namespace ANDOR_CS.Classes
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <param name="gainIndex">Index of gain</param>
-        public abstract void SetPreAmpGain(int gainIndex);
+        public virtual void SetPreAmpGain(int gainIndex)
+        {
+            // Checks if camera is OK and is active
+            CheckCamera();           
+
+            // Checks if camera supports PreAmp Gain control
+            if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
+            {
+                // Check if all required settings are already set
+                if (HSSpeed == null || Amplifier == null || ADConverter == null)
+                    throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(ADConverter)})," +
+                        $"Amplifier ({nameof(Amplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
+
+                // Total number of gain settings available
+                int gainNumber = camera.Properties.PreAmpGains.Length;
+
+                // Checks if argument is in valid range
+                if (gainIndex < 0 || gainIndex >= gainNumber)
+                    throw new ArgumentOutOfRangeException($"Gain index (nameof{gainIndex}) is out of range (should be in [{0}, {gainNumber}]).");
+
+                if (GetAvailablePreAmpGain().Where(item => item.Index == gainIndex).Count() > 0)
+                    PreAmpGain = (Index: gainIndex, Name: camera.Properties.PreAmpGains[gainIndex]);
+                else
+                    throw new ArgumentOutOfRangeException($"Pre amp gain index ({gainIndex}) is out of range.");
+
+            }
+            
+        }
 
         /// <summary>
         /// Sets acquisition mode. 

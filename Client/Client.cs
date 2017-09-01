@@ -84,6 +84,15 @@ namespace Client
                     Console.WriteLine(speed);
 
                 sets.SetHSSpeed(1);
+
+                var preAmps = sets.GetAvailablePreAmpGain();
+
+                Console.WriteLine();
+
+                foreach (var amp in preAmps)
+                    Console.WriteLine(amp);
+
+                sets.SetPreAmpGain(0);
             }
         }
 
