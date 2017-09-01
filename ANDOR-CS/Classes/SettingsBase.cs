@@ -570,7 +570,30 @@ namespace ANDOR_CS.Classes
             KineticCycle = (Frames: number, Time: time);
         }
 
-        public abstract bool IsHSSpeedSupported(int speedIndex, out float speed);
+        public virtual bool IsHSSpeedSupported(int speedIndex, out float speed)
+        {
+            // Checks if camera is OK and is active
+            CheckCamera();
+            speed = 0;
+
+            // Checks if camera supports horizontal readout speed control
+            if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
+            {
+                if (ADConverter == null || Amplifier == null)
+                    return false;
+
+                return IsHSSpeedSupported(speedIndex, ADConverter.Value.Index, Amplifier.Value.Index, out speed);
+            }
+            else
+                return false;
+        
+        }
+
+        public abstract bool IsHSSpeedSupported(
+            int speedIndex, 
+            int ADConverter,
+            int amplifier, 
+            out float speed);
 
         public abstract IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(
             int ADConverter, 

@@ -509,8 +509,14 @@ namespace DIPOL_Remote.Classes
             ADConverterIndex, amplifier, HSSpeed).ToArray();
 
         [OperationBehavior]
-        public (bool IsSupported, float Speed) CallIsHSSpeedSupported(string settingsID, int speedIndex)
-            => (IsSupported: GetSettingsSafe(settingsID, sessionID).IsHSSpeedSupported(speedIndex, out float speed),
+        public (bool IsSupported, float Speed) CallIsHSSpeedSupported(
+            string settingsID, 
+            int ADConverter,
+            int amplifier,
+            int speedIndex)
+            => (
+            IsSupported: GetSettingsSafe(settingsID, sessionID)
+                .IsHSSpeedSupported(speedIndex, ADConverter, amplifier, out float speed),
             Speed: speed);
 
 
