@@ -70,7 +70,6 @@ namespace DIPOL_Remote.Classes
                 Amplifier?.Amplifier ?? 
                     throw new NullReferenceException($"Output amplifier ({nameof(Amplifier)}) is not set."));
                    
-
         public override IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain()
             => session.GetAvailablePreAmpGain(SettingsID);
 
@@ -140,6 +139,14 @@ namespace DIPOL_Remote.Classes
         public override void SetPreAmpGain(int gainIndex)
         {
             throw new NotImplementedException();
+        }
+
+        public override bool IsHSSpeedSupported(int speedIndex, out float speed)
+        {
+            speed = 0.0f;
+            (bool isSupported, float locSpeed) = session.CallIsHSSpeedSupported(SettingsID, speedIndex);
+             speed = locSpeed;
+            return isSupported;
         }
 
         //public void SetReadoutMode(ReadMode mode)

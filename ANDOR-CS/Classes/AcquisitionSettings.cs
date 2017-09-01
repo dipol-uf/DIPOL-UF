@@ -601,60 +601,62 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Sets Horizontal Readout Speed for currently selected Amplifier and AD Converter.
         /// Requires camera to be active.
-        /// Note: <see cref="AcquisitionSettings.ADConverter"/> and <see cref="AcquisitionSettings.Amplifier"/> should be set
-        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/> and <see cref="AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
+        /// Note: <see cref="SettingsBase.ADConverter"/> and <see cref="SettingsBase.Amplifier"/> should be set
+        /// via <see cref="SettingsBase.SetADConverter(int)"/> and <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)"/>
         /// before calling this method.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <exception cref="NotSupportedException"/>
         /// <param name="speedIndex">Index of horizontal speed</param>
-        public override void SetHSSpeed(int speedIndex)
-        {
-            // Checks if camera is OK and is active
-            CheckCamera();
+        //public override void SetHSSpeed(int speedIndex)
+        //{
+        //    // Checks if camera is OK and is active
+        //    CheckCamera();
 
-            try
-            {
-                (camera as Camera).SetActiveAndLock();
-                // Checks if camera supports horizontal readout speed control
-                if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
-                {
-                    // Checks if both AD converter and Amplifier are already set
-                    if (ADConverter == null || Amplifier == null)
-                        throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
+        //    //try
+        //    //{
+        //    //    (camera as Camera).SetActiveAndLock();
+        //    // Checks if camera supports horizontal readout speed control
+        //    if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed)
+        //        && IsHSSpeedSupported(speedIndex, out float speed))
+        //        HSSpeed = (Index: speedIndex, Speed: speed);
+        //    //{
+        //    //    // Checks if both AD converter and Amplifier are already set
+        //    //    if (ADConverter == null || Amplifier == null)
+        //    //        throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
 
-                    // Determines indexes of converter and amplifier
-                    int channel = ADConverter.Value.Index;
-                    int amp = Amplifier.Value.Index;
-                    int nSpeeds = 0;
+        //    //    // Determines indexes of converter and amplifier
+        //    //    int channel = ADConverter.Value.Index;
+        //    //    int amp = Amplifier.Value.Index;
+        //    //    int nSpeeds = 0;
 
-                    // Gets the number of availab;e speeds
-                    var result = SDKInit.SDKInstance.GetNumberHSSpeeds(channel, amp, ref nSpeeds);
-                    ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberHSSpeeds));
+        //    //    // Gets the number of availab;e speeds
+        //    //    var result = SDKInit.SDKInstance.GetNumberHSSpeeds(channel, amp, ref nSpeeds);
+        //    //    ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberHSSpeeds));
 
-                    // Checks if speedIndex is in allowed range
-                    if (speedIndex < 0 || speedIndex >= nSpeeds)
-                        throw new ArgumentOutOfRangeException($"Horizontal speed index ({speedIndex}) is out of range (should be in [{0}, {speedIndex - 1}]).");
+        //    //    // Checks if speedIndex is in allowed range
+        //    //    if (speedIndex < 0 || speedIndex >= nSpeeds)
+        //    //        throw new ArgumentOutOfRangeException($"Horizontal speed index ({speedIndex}) is out of range (should be in [{0}, {speedIndex - 1}]).");
 
-                    float speed = 0;
+        //    //    float speed = 0;
 
-                    // Retrieves float value of currently selected horizontal speed
-                    result = SDKInit.SDKInstance.GetHSSpeed(channel, amp, speedIndex, ref speed);
-                    ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHSSpeed));
+        //    //    // Retrieves float value of currently selected horizontal speed
+        //    //    result = SDKInit.SDKInstance.GetHSSpeed(channel, amp, speedIndex, ref speed);
+        //    //    ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHSSpeed));
 
-                    // Assigns speed index and speed value
-                    HSSpeed = (Index: speedIndex, Speed: speed);
+        //    //    // Assigns speed index and speed value
+        //    //    HSSpeed = (Index: speedIndex, Speed: speed);
 
-                }
-                else
-                    throw new NotSupportedException("Camera does not support horizontal readout speed controls");
-            }
-            finally
-            {
-                (camera as Camera).ReleaseLock();
-            }
-        }
+        //    //}
+        //    else
+        //        throw new NotSupportedException("Camera does not support horizontal readout speed controls");
+        //    //}
+        //    //finally
+        //    //{
+        //    //    (camera as Camera).ReleaseLock();
+        //    //}
+        //}
 
         /// <summary>
         /// Returns a collection of available PreAmp gains for currently selected HSSpeed, Amplifier, Converter.
@@ -1252,6 +1254,58 @@ namespace ANDOR_CS.Classes
 
 
                 }
+            }
+            finally
+            {
+                (camera as Camera).ReleaseLock();
+            }
+        }
+
+        /// <summary>
+        /// Checks if HS Speed is supported in current configuration.
+        /// Throws exceptions if SDK communication fails.
+        /// </summary>
+        /// <param name="speedIndex">Speed index to test.</param>
+        /// <param name="speed">If call is successfull, assigns float value of HS speed,
+        /// otherwies, is initialized to 0.0f.</param>
+        /// <exception cref="AndorSDKException"/>
+        /// <returns>true if HS Speed is supported, 
+        /// throws exception if SDK communication fails; false, otherwise.</returns>
+        public override bool IsHSSpeedSupported(int speedIndex, out float speed)
+        {
+            // Checks if camera is OK and is active
+            CheckCamera();
+            speed = 0;
+            try
+            {
+                (camera as Camera).SetActiveAndLock();
+                // Checks if camera supports horizontal readout speed control
+                if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
+                {
+                    if (ADConverter == null || Amplifier == null)
+                        return false;
+
+                    // Determines indexes of converter and amplifier
+                    int channel = ADConverter.Value.Index;
+                    int amp = Amplifier.Value.Index;
+                    int nSpeeds = 0;
+
+                    // Gets the number of availab;e speeds
+                    var result = SDKInit.SDKInstance.GetNumberHSSpeeds(channel, amp, ref nSpeeds);
+                    ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberHSSpeeds));
+
+                    // Checks if speedIndex is in allowed range
+                    if (speedIndex < 0 || speedIndex >= nSpeeds)
+                        return false;                   
+
+                    // Retrieves float value of currently selected horizontal speed
+                    result = SDKInit.SDKInstance.GetHSSpeed(channel, amp, speedIndex, ref speed);
+                    ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHSSpeed));
+
+                    return true;
+                }
+                else
+                    return false;
             }
             finally
             {

@@ -167,5 +167,7 @@ namespace DIPOL_Remote.Interfaces
             OutputAmplification amplifier);
         [OperationContract(IsOneWay = false)]
         (int Index, string Name)[] GetAvailablePreAmpGain(string settingsID);
+        [OperationContract(IsOneWay = false)]
+        (bool IsSupported, float Speed) CallIsHSSpeedSupported(string settingsID, int speedIndex);
     }
 }
