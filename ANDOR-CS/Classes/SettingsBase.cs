@@ -259,7 +259,55 @@ namespace ANDOR_CS.Classes
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <exception cref="NotSupportedException"/>
         /// <param name="speedIndex">Index of horizontal speed</param>
-        public abstract void SetHSSpeed(int speedIndex);
+        public virtual void SetHSSpeed(int speedIndex)
+        {
+            // Checks if camera is OK and is active
+            CheckCamera();
+
+            //try
+            //{
+            //    (camera as Camera).SetActiveAndLock();
+            // Checks if camera supports horizontal readout speed control
+            if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed)
+                && IsHSSpeedSupported(speedIndex, out float speed))
+                HSSpeed = (Index: speedIndex, Speed: speed);
+            //{
+            //    // Checks if both AD converter and Amplifier are already set
+            //    if (ADConverter == null || Amplifier == null)
+            //        throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
+
+            //    // Determines indexes of converter and amplifier
+            //    int channel = ADConverter.Value.Index;
+            //    int amp = Amplifier.Value.Index;
+            //    int nSpeeds = 0;
+
+            //    // Gets the number of availab;e speeds
+            //    var result = SDKInit.SDKInstance.GetNumberHSSpeeds(channel, amp, ref nSpeeds);
+            //    ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberHSSpeeds));
+
+            //    // Checks if speedIndex is in allowed range
+            //    if (speedIndex < 0 || speedIndex >= nSpeeds)
+            //        throw new ArgumentOutOfRangeException($"Horizontal speed index ({speedIndex}) is out of range (should be in [{0}, {speedIndex - 1}]).");
+
+            //    float speed = 0;
+
+            //    // Retrieves float value of currently selected horizontal speed
+            //    result = SDKInit.SDKInstance.GetHSSpeed(channel, amp, speedIndex, ref speed);
+            //    ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHSSpeed));
+
+            //    // Assigns speed index and speed value
+            //    HSSpeed = (Index: speedIndex, Speed: speed);
+
+            //}
+            else
+                throw new NotSupportedException("Camera does not support horizontal readout speed controls");
+            //}
+            //finally
+            //{
+            //    (camera as Camera).ReleaseLock();
+            //}
+
+        }
 
         /// <summary>
         /// Returns a collection of available PreAmp gains for currently selected HSSpeed, Amplifier, Converter.
@@ -451,6 +499,8 @@ namespace ANDOR_CS.Classes
 
             KineticCycle = (Frames: number, Time: time);
         }
+
+        public abstract bool IsHSSpeedSupported(int speedIndex, out float speed);
 
         protected virtual void CheckCamera()
         {

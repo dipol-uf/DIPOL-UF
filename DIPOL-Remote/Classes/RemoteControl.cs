@@ -491,6 +491,7 @@ namespace DIPOL_Remote.Classes
         public void CallAbortAcquisition(int camIndex)
             => GetCameraSafe(sessionID, camIndex).AbortAcquisition();
 
+        
         [OperationBehavior]
         public (int Index, float Speed)[] GetAvailableHSSpeeds(
             string settingsID, 
@@ -507,6 +508,12 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public (int Index, string Name)[] GetAvailablePreAmpGain(string settingsID)
             => GetSettingsSafe(settingsID, sessionID).GetAvailablePreAmpGain().ToArray();
+
+        [OperationBehavior]
+        public (bool IsSupported, float Speed) CallIsHSSpeedSupported(string settingsID, int speedIndex)
+            => (IsSupported: GetSettingsSafe(settingsID, sessionID).IsHSSpeedSupported(speedIndex, out float speed),
+            Speed: speed);
+
 
         private CameraBase GetCameraSafe(string session, int camIndex)
         {

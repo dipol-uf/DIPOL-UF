@@ -82,6 +82,8 @@ namespace Client
 
                 foreach (var speed in speeds)
                     Console.WriteLine(speed);
+
+                sets.SetHSSpeed(1);
             }
         }
 
