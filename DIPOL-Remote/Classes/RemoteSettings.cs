@@ -97,6 +97,11 @@ namespace DIPOL_Remote.Classes
             return isSupported;
         }
 
-        
+        public override void Dispose()
+        {
+            session.RemoveSettings(SessionID);
+            session = null;
+            base.Dispose();
+        }
     }
 }

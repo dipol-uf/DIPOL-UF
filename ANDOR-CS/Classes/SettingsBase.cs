@@ -28,7 +28,7 @@ using ANDOR_CS.Exceptions;
 
 namespace ANDOR_CS.Classes
 {
-    public abstract class SettingsBase
+    public abstract class SettingsBase : IDisposable
     {
         protected CameraBase camera = null;
 
@@ -941,6 +941,11 @@ namespace ANDOR_CS.Classes
 
             }
 
+        }
+
+        public virtual void Dispose()
+        {
+            camera = null;
         }
     }
 }
