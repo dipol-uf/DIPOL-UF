@@ -116,6 +116,7 @@
     <Compile Include="Classes\DebugCamera.cs" />
     <Compile Include="Classes\EnumConverter.cs" />
     <Compile Include="Classes\SafeSDKCameraHandle.cs" />
+    <Compile Include="Classes\SettingsBase.cs" />
     <Compile Include="DataStructures\CameraProperties.cs" />
     <Compile Include="Classes\Extensions.cs" />
     <Compile Include="DataStructures\Size.cs" />
@@ -147,7 +148,6 @@
     <Compile Include="Enums\VSAmplitudeEnum.cs" />
     <Compile Include="Events\AcquisitionStatusEventArgs.cs" />
     <Compile Include="Interfaces\ICameraControl.cs" />
-    <Compile Include="Interfaces\ISettings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Enums\TemperatureStatusEnum.cs" />

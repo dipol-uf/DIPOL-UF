@@ -63,8 +63,8 @@ namespace DIPOL_Remote.Classes
 
         private DipolHost host;
 
-        private ConcurrentDictionary<string, (string SessionID, ISettings Settings)> settings
-            = new ConcurrentDictionary<string, (string SessionID, ISettings Settings)>();
+        private ConcurrentDictionary<string, (string SessionID, SettingsBase Settings)> settings
+            = new ConcurrentDictionary<string, (string SessionID, SettingsBase Settings)>();
 
         /// <summary>
         /// Thread-safe collection of all active <see cref="RemoteControl"/> service instances.
@@ -78,8 +78,8 @@ namespace DIPOL_Remote.Classes
             = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
 
 
-        public IReadOnlyDictionary<string, (string SessionID, ISettings Settings)> Settings
-           => settings as IReadOnlyDictionary<string, (string SessionID, ISettings Settings)>;
+        public IReadOnlyDictionary<string, (string SessionID, SettingsBase Settings)> Settings
+           => settings as IReadOnlyDictionary<string, (string SessionID, SettingsBase Settings)>;
 
         /// <summary>
         /// Unique ID of current session
@@ -378,7 +378,7 @@ namespace DIPOL_Remote.Classes
         public string CreateSettings(int camIndex)
         {
             CameraBase cam = GetCameraSafe(SessionID, camIndex);
-            ISettings setts = cam.GetAcquisitionSettingsTemplate();
+            SettingsBase setts = cam.GetAcquisitionSettingsTemplate();
 
             string settingsID = Guid.NewGuid().ToString("N");
             int counter = 0;
@@ -527,9 +527,9 @@ namespace DIPOL_Remote.Classes
                 },
                 ServiceException.GeneralServiceErrorReason);
         }
-        private ISettings GetSettingsSafe(string settingsID, string sessionID)
+        private SettingsBase GetSettingsSafe(string settingsID, string sessionID)
         {
-            if (Settings.TryGetValue(settingsID, out (string SessionID, ISettings Settings) sets)
+            if (Settings.TryGetValue(settingsID, out (string SessionID, SettingsBase Settings) sets)
                 && sets.SessionID == SessionID)
                 return sets.Settings;
             else throw new Exception();
