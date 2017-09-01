@@ -19,12 +19,14 @@ namespace DIPOL_Remote.Classes
     {
         private IRemoteControl session;
 
+        [ANDOR_CS.Attributes.NotSerializeProperty]
         public string SessionID
         {
             get;
             private set;
         }
-        
+
+        [ANDOR_CS.Attributes.NotSerializeProperty]
         internal string SettingsID
         {
             get;
