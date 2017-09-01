@@ -45,16 +45,21 @@ namespace DIPOL_Remote.Classes
             throw new NotImplementedException();
         }
 
-        public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds()
+        public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int ADConverter, int amplifier)
             => session.GetAvailableHSSpeeds(
                 SettingsID,
-                ADConverter?.Index ??
-                    throw new NullReferenceException($"AD Converter ({nameof(ADConverter)}) is not set."),
-                Amplifier?.Amplifier ?? 
-                    throw new NullReferenceException($"Output amplifier ({nameof(Amplifier)}) is not set."));
+                ADConverter,
+                amplifier);
                    
-        public override IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain()
-            => session.GetAvailablePreAmpGain(SettingsID);
+        public override IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain(
+            int ADConverter,
+            int amplifier,
+            int HSSpeed)
+            => session.GetAvailablePreAmpGain(
+                SettingsID, 
+                ADConverter, 
+                amplifier,
+                HSSpeed);
 
         public override bool IsHSSpeedSupported(int speedIndex, out float speed)
         {

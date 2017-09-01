@@ -164,9 +164,15 @@ namespace DIPOL_Remote.Interfaces
         (int Index, float Speed)[] GetAvailableHSSpeeds(
             string settingsID,
             int ADConverterIndex,
-            OutputAmplification amplifier);
+            int amplifier);
+
         [OperationContract(IsOneWay = false)]
-        (int Index, string Name)[] GetAvailablePreAmpGain(string settingsID);
+        (int Index, string Name)[] GetAvailablePreAmpGain(
+            string settingsID,
+            int ADConverterIndex,
+            int amplifier,
+            int HSSpeed);
+
         [OperationContract(IsOneWay = false)]
         (bool IsSupported, float Speed) CallIsHSSpeedSupported(string settingsID, int speedIndex);
     }
