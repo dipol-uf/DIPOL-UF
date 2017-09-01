@@ -146,7 +146,7 @@ namespace ANDOR_CS.Classes
             TemperatureStatusChecked += (sender, args) => WriteMessage($"Temperature: {args.Temperature}\tStatus: {args.Status}", Blue);
             WriteMessage("Camera created.", Green);
         }
-        public override ISettings GetAcquisitionSettingsTemplate()
+        public override SettingsBase GetAcquisitionSettingsTemplate()
         {
             throw new NotImplementedException();
         }
