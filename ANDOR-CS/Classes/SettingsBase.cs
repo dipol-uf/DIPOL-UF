@@ -246,7 +246,29 @@ namespace ANDOR_CS.Classes
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <exception cref="NotSupportedException"/>
         /// <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
-        public abstract IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds();
+        public virtual IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds()
+        { 
+            
+            // Checks if camera is OK and is active
+            CheckCamera();
+
+            // Checks if camera support horizontal speed controls
+            if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
+            {
+                // Checks if AD converter and Amplifier are already selected
+                if (ADConverter == null || Amplifier == null)
+                    throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
+
+                // Determines indexes of converter and amplifier
+                int channel = ADConverter.Value.Index;
+                int amp = Amplifier.Value.Index;
+                
+                return GetAvailableHSSpeeds(channel, amp);
+            }
+            else
+                throw new NotSupportedException("Camera does not support horizontal readout speed controls.");
+
+        }
 
         /// <summary>
         /// Sets Horizontal Readout Speed for currently selected Amplifier and AD Converter.
@@ -320,7 +342,28 @@ namespace ANDOR_CS.Classes
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="NotSupportedException"/>
         /// <returns>Available PreAmp gains</returns>
-        public abstract IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain();
+        public virtual IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain()
+        {
+            // Checks if camera is OK and is active
+            CheckCamera();
+            
+            // Checks if camera supports PreAmp Gain control
+            if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
+            {
+                // Check if all required settings are already set
+                if (HSSpeed == null || Amplifier == null || ADConverter == null)
+                    throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(ADConverter)})," +
+                        $"Amplifier ({nameof(Amplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
+
+
+
+                return GetAvailablePreAmpGain(ADConverter.Value.Index, Amplifier.Value.Index, HSSpeed.Value.Index);
+
+            }
+            else
+                throw new NotSupportedException("Camera does not support Pre Amp Gain controls.");
+
+        }
 
         /// <summary>
         /// Sets PreAmp gain for currently selected HSSpeed, Amplifier, Converter.
@@ -528,6 +571,15 @@ namespace ANDOR_CS.Classes
         }
 
         public abstract bool IsHSSpeedSupported(int speedIndex, out float speed);
+
+        public abstract IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(
+            int ADConverter, 
+            int amplifier);
+
+        public abstract IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain(
+           int ADConverter,
+           int amplifier,
+           int HSSpeed);
 
         protected virtual void CheckCamera()
         {

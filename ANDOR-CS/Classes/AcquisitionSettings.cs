@@ -547,7 +547,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <exception cref="NotSupportedException"/>
         /// <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
-        public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds()
+        public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int ADConverter, int amplifier)
         {
             // Checks if camera is OK and is active
             CheckCamera();
@@ -558,17 +558,9 @@ namespace ANDOR_CS.Classes
                 // Checks if camera support horizontal speed controls
                 if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
                 {
-                    // Checks if AD converter and Amplifier are already selected
-                    if (ADConverter == null || Amplifier == null)
-                        throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
-
-                    // Determines indexes of converter and amplifier
-                    int channel = ADConverter.Value.Index;
-                    int amp = Amplifier.Value.Index;
                     int nSpeeds = 0;
-
                     // Gets the number of availab;e speeds
-                    var result = SDKInit.SDKInstance.GetNumberHSSpeeds(channel, amp, ref nSpeeds);
+                    var result = SDKInit.SDKInstance.GetNumberHSSpeeds(ADConverter, amplifier, ref nSpeeds);
                     ThrowIfError(result, nameof(SDKInit.SDKInstance.GetNumberHSSpeeds));
 
                     // Checks if obtained value is valid
@@ -580,7 +572,7 @@ namespace ANDOR_CS.Classes
                     {
                         float locSpeed = 0;
 
-                        result = SDKInit.SDKInstance.GetHSSpeed(channel, amp, speedIndex, ref locSpeed);
+                        result = SDKInit.SDKInstance.GetHSSpeed(ADConverter, amplifier, speedIndex, ref locSpeed);
                         ThrowIfError(result, nameof(SDKInit.SDKInstance.GetHSSpeed));
 
                         // Returns speed index and speed value for evvery subsequent call
@@ -669,7 +661,10 @@ namespace ANDOR_CS.Classes
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="NotSupportedException"/>
         /// <returns>Available PreAmp gains</returns>
-        public override IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain()
+        public override IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain(
+            int ADConverter,
+            int amplifier,
+            int HSSpeed)
         {
             // Checks if camera is OK and is active
             CheckCamera();
@@ -681,26 +676,16 @@ namespace ANDOR_CS.Classes
                 // Checks if camera supports PreAmp Gain control
                 if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
                 {
-                    // Check if all required settings are already set
-                    if (HSSpeed == null || Amplifier == null || ADConverter == null)
-                        throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(ADConverter)})," +
-                            $"Amplifier ({nameof(Amplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
-
-
-                    // Stores indexes of ADConverter, Amplifier and Horizontal Speed
-                    int channel = ADConverter.Value.Index;
-                    int amp = Amplifier.Value.Index;
-                    int speed = HSSpeed.Value.Index;
-
+                    
                     // Total number of gain settings available
                     int gainNumber = camera.Properties.PreAmpGains.Length;
-
 
                     for (int gainIndex = 0; gainIndex < gainNumber; gainIndex++)
                     {
                         int status = -1;
 
-                        uint result = SDKInit.SDKInstance.IsPreAmpGainAvailable(channel, amp, speed, gainIndex, ref status);
+                        uint result = SDKInit.SDKInstance.IsPreAmpGainAvailable(
+                            ADConverter, amplifier, HSSpeed, gainIndex, ref status);
                         ThrowIfError(result, nameof(SDKInit.SDKInstance.IsPreAmpGainAvailable));
 
                         // If status of a certain combination of settings is 1, return it
