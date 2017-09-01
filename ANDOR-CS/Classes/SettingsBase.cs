@@ -653,7 +653,7 @@ namespace ANDOR_CS.Classes
                 var elementsToWrite = from prop
                                       in this.GetType().GetProperties()
                                       where !Attribute.IsDefined(prop, typeof(Attributes.NotSerializePropertyAttribute))
-                                      where prop.GetMethod.IsPublic && prop.SetMethod.IsPrivate
+                                      where prop.GetMethod.IsPublic && prop.SetMethod.IsFamily
                                       select prop;
 
                 elementsToWrite = from prop

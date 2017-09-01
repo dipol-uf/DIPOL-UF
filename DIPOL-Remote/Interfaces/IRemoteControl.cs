@@ -16,7 +16,6 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-
 using System.ServiceModel;
 
 using DIPOL_Remote.Faults;
@@ -160,6 +159,8 @@ namespace DIPOL_Remote.Interfaces
         [OperationContract(IsOneWay = false)]
         void CallAbortAcquisition(int camIndex);
 
+
+
         [OperationContract(IsOneWay = false)]
         (int Index, float Speed)[] GetAvailableHSSpeeds(
             string settingsID,
@@ -179,5 +180,10 @@ namespace DIPOL_Remote.Interfaces
             int ADConverter,
             int amplifier,
             int speedIndex);
+
+        [OperationContract(IsOneWay = false)]
+        ((string Option, bool Success, uint ReturnCode)[] Result, 
+         (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) Timing)
+         CallApplySettings(string settingsID, byte[] data);
     }
 }
