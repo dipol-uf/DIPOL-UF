@@ -96,7 +96,10 @@ namespace Client
 
                 sets.SetAcquisitionMode(ANDOR_CS.Enums.AcquisitionMode.SingleScan);
                 sets.SetExposureTime(1.0f);
-                
+                sets.SetReadoutMode(ANDOR_CS.Enums.ReadMode.FullImage);
+                sets.SetTriggerMode(ANDOR_CS.Enums.TriggerMode.Internal);
+                sets.SetImageArea(new Rectangle(1, 1, 512, 512));
+
                 sets.ApplySettings(out (float, float, float, int) timing);
 
             }
