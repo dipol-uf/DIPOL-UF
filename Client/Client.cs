@@ -95,6 +95,7 @@ namespace Client
                 sets.SetPreAmpGain(0);
 
                 sets.ApplySettings(out (float, float, float, int) timing);
+
             }
         }
 
