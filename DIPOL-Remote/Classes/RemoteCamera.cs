@@ -339,7 +339,7 @@ namespace DIPOL_Remote.Classes
             if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
                 (camera as RemoteCamera).OnTemperatureStatusChecked(args);
         }
-        internal static void NotifyReqmoteAcquisitionEventHappened(int camIndex, string sessionID, 
+        internal static void NotifyRemoteAcquisitionEventHappened(int camIndex, string sessionID, 
             AcquisitionEventType type, AcquisitionStatusEventArgs args)
         {
             if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
@@ -366,7 +366,7 @@ namespace DIPOL_Remote.Classes
                 }
             }
         }
-
+        
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
