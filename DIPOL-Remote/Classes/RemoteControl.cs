@@ -21,7 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
-
+using System.Threading.Tasks;
+using System.Threading;
 
 using System.ServiceModel;
 
@@ -71,8 +72,11 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Thread-safe collection of all active instances of AcquisitionSettings.
         /// </summary>
-        private ConcurrentDictionary<string, (string SessionID, SettingsBase Settings)> settings
-            = new ConcurrentDictionary<string, (string SessionID, SettingsBase Settings)>();
+        private ConcurrentDictionary<string,  SettingsBase> settings
+            = new ConcurrentDictionary<string,  SettingsBase>();
+
+        private ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> activeTasks
+            = new ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>();
 
         /// <summary>
         /// Thread-safe collection of all active <see cref="RemoteControl"/> service instances.
@@ -98,8 +102,10 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Interface to collection of all active <see cref="AcquisitionSettings"/> instances.
         /// </summary>
-        public IReadOnlyDictionary<string, (string SessionID, SettingsBase Settings)> Settings
-           => settings as IReadOnlyDictionary<string, (string SessionID, SettingsBase Settings)>;
+        public IReadOnlyDictionary<string,  SettingsBase> Settings
+           => settings as IReadOnlyDictionary<string, SettingsBase>;
+        public IReadOnlyDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> ActiveTasks
+            => activeTasks as IReadOnlyDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>;
         /// <summary>
         /// Interface to collection of all active <see cref="RemoteControl"/> service instances.
         /// </summary>
@@ -189,12 +195,11 @@ namespace DIPOL_Remote.Classes
                         // If successful, dispose camera instance
                         camInfo.Camera.Dispose();
 
-                foreach (var key in
-                    from item
-                    in settings
-                    where item.Value.SessionID == SessionID
-                    select item.Key)
+                foreach (var key in settings.Keys)
                     RemoveSettings(key);
+
+                foreach (var key in activeTasks.Keys)
+                    RemoveTask(key);
 
                 // Remove this session from collection
                 serviceInstances.TryRemove(sessionID, out _);
@@ -389,9 +394,16 @@ namespace DIPOL_Remote.Classes
                 foreach (var settsKey in
                     from item
                     in settings
-                    where item.Value.Settings.CameraIndex == camIndex
+                    where item.Value.CameraIndex == camIndex
                     select item.Key)
                     RemoveSettings(settsKey);
+
+                foreach (var taskKey in
+                    from item
+                    in activeTasks
+                    where item.Value.CameraIndex == camIndex
+                    select item.Key)
+                    RemoveTask(taskKey);
 
                 var removedCamera = GetCameraSafe(sessionID, camIndex);
                 host?.OnEventReceived(removedCamera, "Camera was disposed remotely.");
@@ -418,7 +430,7 @@ namespace DIPOL_Remote.Classes
 
             string settingsID = Guid.NewGuid().ToString("N");
             int counter = 0;
-            while ((counter <= MaxTryAddAttempts) && !settings.TryAdd(settingsID, (SessionID: SessionID, Settings: setts)))
+            while ((counter <= MaxTryAddAttempts) && !settings.TryAdd(settingsID, setts))
                 counter++;
 
             if (counter >= MaxTryAddAttempts)
@@ -438,11 +450,53 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void RemoveSettings(string settingsID)
         {
-            settings.TryRemove(settingsID, out (string, SettingsBase) setts);
-            setts.Item2.Dispose();
+            settings.TryRemove(settingsID, out SettingsBase setts);
+            setts?.Dispose();
 
             host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} removed.");
         }
+        [OperationBehavior]
+        public string CreateAcquisitionTask(int camIndex, int delay)
+        {
+            var cam = GetCameraSafe(sessionID, camIndex);
+            string taskID = Guid.NewGuid().ToString("N");
+
+            int counter = 0;
+            var source = new CancellationTokenSource();
+            var task = cam.StartAcquistionAsync(source.Token, delay);
+
+            while (counter <= MaxTryAddAttempts && !activeTasks.TryAdd(taskID, (Task: task, Token: source, CamIndex: camIndex)))
+                taskID = Guid.NewGuid().ToString("N");
+
+            if (counter >= MaxTryAddAttempts)
+            {
+                source.Cancel();
+                task.Wait();
+                task.Dispose();
+                source.Dispose();
+
+                throw new Exception();
+            }
+
+            host?.OnEventReceived("Host", $"AcqTask with ID {taskID} created.");
+
+            return taskID;
+        }
+        [OperationBehavior]
+        public void RemoveTask(string taskID)
+        {
+            if (activeTasks.TryRemove(taskID, out (Task Task, CancellationTokenSource Token, int CamIndex) taskInfo))
+            {
+                taskInfo.Token.Cancel();
+                taskInfo.Task.Wait();
+
+                taskInfo.Task.Dispose();
+                taskInfo.Token.Dispose();
+            }
+
+            host?.OnEventReceived("Host", $"AcqTask with ID {taskID} removed.");
+        }
+
 
         [OperationBehavior]
         public int[] GetCamerasInUse()
@@ -542,7 +596,7 @@ namespace DIPOL_Remote.Classes
             string settingsID,
             int ADConverterIndex,
             int amplifier)
-        => GetSettingsSafe(settingsID, sessionID).GetAvailableHSSpeeds(ADConverterIndex, amplifier).ToArray();
+        => GetSettingsSafe(settingsID).GetAvailableHSSpeeds(ADConverterIndex, amplifier).ToArray();
 
         [OperationBehavior]
         public (int Index, string Name)[] GetAvailablePreAmpGain(
@@ -550,7 +604,7 @@ namespace DIPOL_Remote.Classes
             int ADConverterIndex,
             int amplifier,
             int HSSpeed)
-        => GetSettingsSafe(settingsID, sessionID).GetAvailablePreAmpGain(
+        => GetSettingsSafe(settingsID).GetAvailablePreAmpGain(
             ADConverterIndex, amplifier, HSSpeed).ToArray();
 
         [OperationBehavior]
@@ -560,7 +614,7 @@ namespace DIPOL_Remote.Classes
             int amplifier,
             int speedIndex)
             => (
-            IsSupported: GetSettingsSafe(settingsID, sessionID)
+            IsSupported: GetSettingsSafe(settingsID)
                 .IsHSSpeedSupported(speedIndex, ADConverter, amplifier, out float speed),
             Speed: speed);
 
@@ -583,7 +637,7 @@ namespace DIPOL_Remote.Classes
          CallApplySettings(string settingsID, byte[] data)
         {
             // Safely retrieves local copy of AcquisitionSettings.
-            var setts = GetSettingsSafe(settingsID, sessionID);
+            var setts = GetSettingsSafe(settingsID);
 
             // Creates MemoryStream from byte array and uses it for deserialization.
             using (var memStr = new System.IO.MemoryStream(data))
@@ -594,6 +648,22 @@ namespace DIPOL_Remote.Classes
 
             // Returns results.
             return (Result: result.ToArray(), Timing: timing);
+        }
+
+        [OperationBehavior]
+        public bool IsTaskFinished(string taskID)
+            => GetTaskSafe(taskID).Task.Status == 
+             (TaskStatus.RanToCompletion | TaskStatus.Canceled | TaskStatus.Faulted);
+
+        [OperationBehavior]
+        public void RequestCancellation(string taskID)
+        {
+            if (ActiveTasks.TryGetValue(taskID, out (Task Task, CancellationTokenSource Token, int CameraIndex) taskInfo))
+            {
+                taskInfo.Token.Cancel();
+                RemoveTask(taskID);
+            }
+            else throw new Exception();
         }
 
         private CameraBase GetCameraSafe(string session, int camIndex)
@@ -615,12 +685,18 @@ namespace DIPOL_Remote.Classes
                 },
                 ServiceException.GeneralServiceErrorReason);
         }
-        private SettingsBase GetSettingsSafe(string settingsID, string sessionID)
+        private SettingsBase GetSettingsSafe(string settingsID)
         {
-            if (Settings.TryGetValue(settingsID, out (string SessionID, SettingsBase Settings) sets)
-                && sets.SessionID == SessionID)
-                return sets.Settings;
+            if (Settings.TryGetValue(settingsID, out SettingsBase sets))
+                return sets;
             else throw new Exception();
+        }
+        private (Task Task, CancellationTokenSource Token, int CameraIndex) GetTaskSafe(string taskID)
+        {
+            if (ActiveTasks.TryGetValue(taskID, out (Task Task, CancellationTokenSource Token, int CameraIndex) taskInfo))
+                return taskInfo;
+            else
+                throw new Exception();
         }
     }
 }
