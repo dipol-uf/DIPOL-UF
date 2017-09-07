@@ -1,7 +1,7 @@
 ﻿DIPOL-UF
 
 
-winexe
+exe
 C#
 .cs
 C:\Andor_programs\Projects\ANDOR\DIPOL-UF\obj\Debug\
@@ -10,11 +10,11 @@ none
 false
 DEBUG;TRACE
 
-3-1926776945
+4324320037
 
-11600722846
+141576900793
 141448227212
-App.xaml;DipolMainWindow.xaml;Windows\CameraLoader.xaml;
+App.xaml;DipolMainWindow.xaml;Windows\CameraLoader.xaml;Windows\ProgressWindow.xaml;
 
 True
 

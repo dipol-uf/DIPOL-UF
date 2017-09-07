@@ -1,0 +1,13 @@
+C:\Andor_programs\Projects\ANDOR\ImageTest\bin\Debug\atmcd64d.dll
+C:\Andor_programs\Projects\ANDOR\ImageTest\bin\Debug\ImageTest.exe.config
+C:\Andor_programs\Projects\ANDOR\ImageTest\bin\Debug\ImageTest.exe
+C:\Andor_programs\Projects\ANDOR\ImageTest\bin\Debug\ImageTest.pdb
+C:\Andor_programs\Projects\ANDOR\ImageTest\bin\Debug\ANDOR_CS.dll
+C:\Andor_programs\Projects\ANDOR\ImageTest\bin\Debug\ATMCD64CS.dll
+C:\Andor_programs\Projects\ANDOR\ImageTest\bin\Debug\ANDOR_CS.pdb
+C:\Andor_programs\Projects\ANDOR\ImageTest\bin\Debug\ANDOR_CS.dll.config
+C:\Andor_programs\Projects\ANDOR\ImageTest\obj\Debug\ImageTest.csprojResolveAssemblyReference.cache
+C:\Andor_programs\Projects\ANDOR\ImageTest\obj\Debug\ImageTest.csproj.CoreCompileInputs.cache
+C:\Andor_programs\Projects\ANDOR\ImageTest\obj\Debug\ImageTest.exe
+C:\Andor_programs\Projects\ANDOR\ImageTest\obj\Debug\ImageTest.pdb
+C:\Andor_programs\Projects\ANDOR\ImageTest\bin\Debug\ANDOR_CS.xml
