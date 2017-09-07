@@ -652,8 +652,7 @@ namespace DIPOL_Remote.Classes
 
         [OperationBehavior]
         public bool IsTaskFinished(string taskID)
-            => GetTaskSafe(taskID).Task.Status == 
-             (TaskStatus.RanToCompletion | TaskStatus.Canceled | TaskStatus.Faulted);
+            => GetTaskSafe(taskID).Task.IsCompleted;
 
         [OperationBehavior]
         public void RequestCancellation(string taskID)
