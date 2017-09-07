@@ -27,10 +27,10 @@ namespace Host
                         else
                             senderString = sender.ToString();
 
-                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.Write($"[{{0,23:yyyy/MM/dd HH-mm-ss.fff}}] @", DateTime.Now);
                         Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.Write($" { senderString}");
+                        Console.Write(" {0, 16}", senderString);
                         Console.ForegroundColor = ConsoleColor.White;
                         Console.WriteLine($": { message}");
                     }
