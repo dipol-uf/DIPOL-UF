@@ -289,7 +289,21 @@ namespace DIPOL_Remote.Classes
 
         public async override Task StartAcquistionAsync(CancellationToken token, int timeout)
         {
-            throw new NotImplementedException();
+            string taskID = session.CreateAcquisitionTask(CameraIndex, timeout);
+
+            try
+            {
+                while (!session.IsTaskFinished(taskID))
+                {
+                    await Task.Delay(timeout);
+                    if (token.IsCancellationRequested)
+                        session.RequestCancellation(taskID);
+                }
+            }
+            finally
+            {
+                session.RemoveTask(taskID);
+            }
         }
 
         public override void StartAcquisition()

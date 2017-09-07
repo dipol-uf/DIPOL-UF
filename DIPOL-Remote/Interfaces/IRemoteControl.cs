@@ -194,5 +194,18 @@ namespace DIPOL_Remote.Interfaces
         ((string Option, bool Success, uint ReturnCode)[] Result, 
          (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) Timing)
          CallApplySettings(string settingsID, byte[] data);
+
+
+        [OperationContract(IsOneWay = false)]
+        bool IsTaskFinished(string taskID);
+
+        [OperationContract(IsOneWay = false)]
+        string CreateAcquisitionTask(int camIndex, int delay);
+
+        [OperationContract(IsOneWay = false)]
+        void RemoveTask(string taskID);
+
+        [OperationContract(IsOneWay = false)]
+        void RequestCancellation(string taskID);
     }
 }
