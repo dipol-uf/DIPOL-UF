@@ -34,11 +34,9 @@ namespace DIPOL_Remote.Classes
             
         }
 
-        public void NotifyRemoteAcquisitionEventHappened(int camIndex, string session, 
+        public void NotifyRemoteAcquisitionEventHappened(int camIndex, string session,
             AcquisitionEventType type, AcquisitionStatusEventArgs args)
-        {
-            throw new NotImplementedException();
-        }
+       => RemoteCamera.NotifyRemoteAcquisitionEventHappened(camIndex, session, type, args);
 
         public void NotifyRemotePropertyChanged(int camIndex, string session, string property)
             => RemoteCamera.NotifyRemotePropertyChanged(camIndex, session, property);
