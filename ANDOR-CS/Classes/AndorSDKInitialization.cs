@@ -35,6 +35,7 @@ namespace ANDOR_CS.Classes
 
        // private static System.Threading.SemaphoreSlim semaphore = new System.Threading.SemaphoreSlim(1, 1);
         private static volatile System.Threading.SemaphoreSlim locker = new System.Threading.SemaphoreSlim(1, 1);
+        private static volatile int LockDepth = 0;
 
         /// <summary>
         /// Gets an singleton instance of a basic AndorSDK class
@@ -177,7 +178,9 @@ namespace ANDOR_CS.Classes
         /// </summary>
         internal static void LockManually()
         {
-            locker.Wait();
+            if (LockDepth++ == 0)
+                locker.Wait();
+            
         }
 
         /// <summary>
@@ -185,7 +188,8 @@ namespace ANDOR_CS.Classes
         /// </summary>
         internal static void ReleaseManually()
         {
-            locker.Release();
+            if(--LockDepth == 0)
+                locker.Release();
         }
 
     }
