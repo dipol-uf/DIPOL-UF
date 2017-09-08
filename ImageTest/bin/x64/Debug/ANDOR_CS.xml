@@ -917,6 +917,11 @@
             <param name="sender">A <see cref="!:Camera"/> type source</param>
             <param name="e">Event arguments</param>
         </member>
+        <member name="P:ANDOR_CS.Events.NewImageReceivedEventArgs.EventTime">
+            <summary>
+            Time stamp of the event
+            </summary>
+        </member>
         <member name="T:ANDOR_CS.Events.TemperatureStatusEventArgs">
             <summary>
             Stores the event arguments for all Acquisition-based events

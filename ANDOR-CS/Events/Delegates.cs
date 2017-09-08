@@ -31,4 +31,6 @@ namespace ANDOR_CS.Events
     /// <param name="e">Event arguments</param>
     public delegate void TemperatureStatusEventHandler(object sender, TemperatureStatusEventArgs e);
 
+    public delegate void NewImageReceivedHandler(object sender, NewImageReceivedEventArgs e);
+
 }
