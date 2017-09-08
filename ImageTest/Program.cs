@@ -16,7 +16,7 @@ namespace ImageTest
         {
             using (var camera = new Camera())
             {
-
+                camera.NewImageReceived += (sender, arg) => Console.WriteLine($"New image received at {{0:HH-mm-ss.fff}}: {arg.First} {arg.Last}", arg.EventTime);
                 var sets = camera.GetAcquisitionSettingsTemplate();
 
                 sets.SetADConverter(0);
@@ -38,12 +38,12 @@ namespace ImageTest
 
                 sets.SetPreAmpGain(0);
 
-                int N = 50;
+                int N = 10;
 
                 sets.SetAcquisitionMode(ANDOR_CS.Enums.AcquisitionMode.Kinetic);
                 sets.SetKineticCycle(N, 0.1f);
-                sets.SetAccumulationCycle(1, 0.1f);
-                sets.SetExposureTime(0.1f);
+                sets.SetAccumulationCycle(2, 0.1f);
+                sets.SetExposureTime(0.5f);
                 sets.SetReadoutMode(ANDOR_CS.Enums.ReadMode.FullImage);
                 sets.SetTriggerMode(ANDOR_CS.Enums.TriggerMode.Internal);
                 sets.SetImageArea(new Rectangle(1, 1, 512, 512));
@@ -65,7 +65,6 @@ namespace ImageTest
                 ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetNumberAvailableImages(ref first, ref last);
 
                 
-                uint result;
                 var t = DateTime.Now;
 
                 for (int i = first; i <= last; i++)
