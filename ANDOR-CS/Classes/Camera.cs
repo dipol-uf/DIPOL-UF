@@ -22,7 +22,6 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.ComponentModel;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
@@ -45,13 +44,13 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public class Camera : CameraBase
     {
-       
+
 
         private Task TemperatureMonitorWorker = null;
         private CancellationTokenSource TemperatureMonitorCancellationSource
             = new CancellationTokenSource();
 
-        private static ConcurrentDictionary<int, CameraBase> CreatedCameras 
+        private static ConcurrentDictionary<int, CameraBase> CreatedCameras
             = new ConcurrentDictionary<int, CameraBase>();
         private static Camera _ActiveCamera = null;
         private static volatile SemaphoreSlim ActivityLocker = new SemaphoreSlim(1, 1);
@@ -61,22 +60,23 @@ namespace ANDOR_CS.Classes
             get => _ActiveCamera;
             set
             {
-                if(value != _ActiveCamera)
+                if (value != _ActiveCamera)
                 {
                     if (LockDepth++ == 0)
                         ActivityLocker.Wait();
-                    
+
                     _ActiveCamera = value;
 
-                    if(--LockDepth == 0)
-                    ActivityLocker.Release();
-                    
+                    if (--LockDepth == 0)
+                        ActivityLocker.Release();
+
                     OnActiveCameraChanged();
                 }
             }
         }
 
-       
+        private ConcurrentQueue<object> acquiredImages = new ConcurrentQueue<object>();
+
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
@@ -207,7 +207,7 @@ namespace ANDOR_CS.Classes
             try
             {
                 SetActiveAndLock();
-            
+
                 // Throws if camera is acquiring
                 ThrowIfAcquiring(this);
 
@@ -241,7 +241,7 @@ namespace ANDOR_CS.Classes
             try
             {
                 SetActiveAndLock();
-            
+
                 // Checks if acquisition is in progress
                 ThrowIfAcquiring(this);
 
@@ -266,7 +266,7 @@ namespace ANDOR_CS.Classes
             {
                 SetActiveAndLock();
 
-            
+
                 // Checks if acquisition is in process
                 ThrowIfAcquiring(this);
 
@@ -293,7 +293,7 @@ namespace ANDOR_CS.Classes
             {
                 SetActiveAndLock();
 
-            
+
                 // Checks if acquisition is in progress; throws exception
                 ThrowIfAcquiring(this);
 
@@ -489,14 +489,14 @@ namespace ANDOR_CS.Classes
                     Amplifiers = amplifiers,
                     PreAmpGains = preAmpGainDesc,
                     VSSpeeds = speedArray,
-                    EMCCDGainRange = (Low, High)                    
+                    EMCCDGainRange = (Low, High)
                 };
             }
             finally
             {
                 ReleaseLock();
             }
-                        
+
         }
         /// <summary>
         /// Retrieves software/hardware versions
@@ -508,7 +508,7 @@ namespace ANDOR_CS.Classes
             {
                 SetActiveAndLock();
 
-            
+
 
                 // Checks if acquisition is in progress; throws exception
                 ThrowIfAcquiring(this);
@@ -579,6 +579,27 @@ namespace ANDOR_CS.Classes
 
                 Task.Delay(delay).Wait();
             }
+
+        }
+
+        private void PushNewImage(NewImageReceivedEventArgs e)
+        {
+            LockManually();
+
+            try
+            {
+                ushort[] array = new ushort[CurrentSettings.ImageArea.Value.Height * CurrentSettings.ImageArea.Value.Width];
+                (int First, int Last) validImages = (0, 0);
+                //uint result = SDKInstance.GetImages16(e.Last, e.Last, array, (UInt32)(array.Length), ref validImages.First, ref validImages.Last);
+                uint result = SDKInstance.GetMostRecentImage16(array, (uint)array.Length);
+                Console.WriteLine($"{validImages} {result == SDK.DRV_SUCCESS}");
+
+            }
+            finally
+            {
+                ReleaseManually();
+            }
+
 
         }
 
@@ -886,6 +907,8 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSDKException"/>
         public override void StartAcquisition()
         {
+            acquiredImages = new ConcurrentQueue<object>();
+            
             try
             {
                 SetActiveAndLock();
@@ -1119,6 +1142,8 @@ namespace ANDOR_CS.Classes
 
                 //CreatedCameras.TryAdd(CameraIndex, this);
 
+                NewImageReceived += (sender, e) => PushNewImage(e);
+
             }
             finally
             {
@@ -1160,11 +1185,36 @@ namespace ANDOR_CS.Classes
 
                 status = GetStatus();
 
+                (int First, int Last) previousImages = (0, 0);
+
                 // While status is acquiring
                 while ((status = GetStatus()) == CameraStatus.Acquiring)
                 {
                     // Fires AcquisitionStatusChecked event
                     OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, true));
+
+                    // Checks if new image is already acuired and is available in camera memory
+                    // Locks SDK handle for thread-safety
+                    LockManually();
+                    try
+                    {
+                        // Gets indexes of first and last available new images
+                        (int First, int Last) acquiredImages = (0, 0);
+                        var result = SDKInstance.GetNumberNewImages(ref acquiredImages.First, ref acquiredImages.Last);
+
+                        // If there is new image, updates indexes of previous abailable images and fires an event.
+                        if (acquiredImages.Last != previousImages.Last
+                            || acquiredImages.First != previousImages.First)
+                        {
+                            previousImages = acquiredImages;
+
+                            OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImages.First, acquiredImages.Last));
+                        }
+                    }
+                    finally
+                    {
+                        ReleaseManually();
+                    }
                     // If task is aborted
                     if (token.IsCancellationRequested)
                     {
@@ -1230,13 +1280,16 @@ namespace ANDOR_CS.Classes
         public static CameraBase GetDebugInterface(int camIndex = 0) 
             => new DebugCamera(camIndex);
 
-
-
         private static void OnActiveCameraChanged()
         {
             foreach (var cam in CreatedCameras)
                 (cam.Value as Camera).OnPropertyChanged(nameof(IsActive));
         }
+
+        public event NewImageReceivedHandler NewImageReceived;
+
+        protected virtual void OnNewImageReceived(NewImageReceivedEventArgs e)
+            => NewImageReceived?.Invoke(this, e);
 
 
     }
