@@ -50,5 +50,8 @@ Temporary Items
 *TemporaryGenerated*
 *.cache
 *.ide
-/**/*.cache
-./**/*.cache
+**/*.cache
+**/*.cache
+*.cache
+*.cache
+*.txt
