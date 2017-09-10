@@ -16,43 +16,47 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Runtime.Serialization;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace ANDOR_CS.Events
+namespace Image
 {
-    [DataContract]
-    public class NewImageReceivedEventArgs : EventArgs
+    public class Image<T> where T: struct
     {
-        /// <summary>
-        /// Time stamp of the event
-        /// </summary>
-        [DataMember]
-        public DateTime EventTime
+        private T[] baseArray;
+
+        public int Width
         {
             get;
-            private set;
+            set;
         }
 
-        [DataMember]
-        public int First
+        public int Height
         {
             get;
-            private set;
+            set;
         }
 
-        [DataMember]
-        public int Last
+        public Image(T[] data, int width, int height)
         {
-            get;
-            private set;
-        }
+            var type = typeof(T);
 
-        public NewImageReceivedEventArgs(int first, int last)
-        {
-            First = first;
-            Last = last;
-            EventTime = DateTime.Now;
-        }
+            if (type != typeof(Int16) |
+                type != typeof(Int32) |
+                type != typeof(UInt16) |
+                type != typeof(UInt32) |
+                type != typeof(Byte) |
+                type != typeof(Single) |
+                type != typeof(Double))
+                throw new ArgumentException($"Provided type {type} is not supported");
 
+            baseArray = new T[data.Length];
+            Array.Copy(data, baseArray, data.Length);
+
+            Width = width;
+            Height = height;
+        }
     }
 }
