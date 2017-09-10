@@ -14,6 +14,7 @@ namespace ImageTest
     {
         static void Main(string[] args)
         {
+           
             using (var camera = new Camera())
             {
                 camera.NewImageReceived += (sender, arg) => Console.WriteLine($"New image received at {{0:HH-mm-ss.fff}}: {arg.First} {arg.Last}", arg.EventTime);
@@ -75,5 +76,7 @@ namespace ImageTest
 
             Console.ReadKey();
         }
+
+     
     }
 }
