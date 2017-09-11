@@ -8,13 +8,23 @@ using ANDOR_CS;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 
+using ImageDisplayLib;
+
 namespace ImageTest
 {
     class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
-           
+            Test2();
+
+
+            Console.ReadKey();
+        }
+
+        private static void Test1()
+        {
             using (var camera = new Camera())
             {
                 camera.NewImageReceived += (sender, arg) => Console.WriteLine($"New image received at {{0:HH-mm-ss.fff}}: {arg.First} {arg.Last}", arg.EventTime);
@@ -65,7 +75,7 @@ namespace ImageTest
                 ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetNumberNewImages(ref first, ref last);
                 ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetNumberAvailableImages(ref first, ref last);
 
-                
+
                 var t = DateTime.Now;
 
                 for (int i = first; i <= last; i++)
@@ -73,10 +83,14 @@ namespace ImageTest
 
                 Console.WriteLine("{0:F3} s", (DateTime.Now - t).TotalSeconds / test);
             }
-
-            Console.ReadKey();
         }
 
-     
+        private static void Test2()
+        {
+           
+
+            var app = new System.Windows.Application();
+            app.Run(new TestWindow());
+        }
     }
 }

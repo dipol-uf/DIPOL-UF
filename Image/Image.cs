@@ -21,42 +21,72 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Image
+namespace DipolImage
 {
-    public class Image<T> where T: struct
+    public class Image
     {
-        private T[] baseArray;
+        private Array baseArray;
 
         public int Width
         {
             get;
-            set;
+            private set;
         }
-
         public int Height
         {
             get;
-            set;
+            private set;
         }
 
-        public Image(T[] data, int width, int height)
+        public object this[int i, int j]
         {
-            var type = typeof(T);
+            get => baseArray.GetValue(i * Width + j);
+            set => baseArray.SetValue(value, i * Width + j);
+        }
 
-            if (type != typeof(Int16) |
-                type != typeof(Int32) |
-                type != typeof(UInt16) |
-                type != typeof(UInt32) |
-                type != typeof(Byte) |
-                type != typeof(Single) |
-                type != typeof(Double))
-                throw new ArgumentException($"Provided type {type} is not supported");
+        public Image(Array initialArray, int width, int height)
+        {
+            switch (initialArray.GetValue(0))
+            {
+                case Int32 x:
+                    baseArray = Array.CreateInstance(typeof(Int32), width * height);
+                    break;
+                case UInt16 x:
+                    baseArray = Array.CreateInstance(typeof(UInt16), width * height);
+                    break;
+                default:
+                    throw new Exception();
+            }
 
-            baseArray = new T[data.Length];
-            Array.Copy(data, baseArray, data.Length);
+            Array.Copy(initialArray, baseArray, width * height);
 
             Width = width;
             Height = height;
+        }
+
+        public byte[] GetBytes()
+        {
+            var size = System.Runtime.InteropServices.Marshal.SizeOf(this[0, 0]);
+
+            var byteArray = new byte[Width * Height * size];
+
+            switch (this[0, 0])
+            {
+                case Int32 x:
+                    for (int i = 0; i < Height; i++)
+                        for (int j = 0; j < Width; j++)
+                            Array.Copy(BitConverter.GetBytes((Int32)this[i, j]), 0, byteArray, (i * Width + j) * size, size);
+                    break;
+                case UInt16 x:
+                    for (int i = 0; i < Height; i++)
+                        for (int j = 0; j < Width; j++)
+                            Array.Copy(BitConverter.GetBytes((UInt16)this[i, j]), 0, byteArray, (i * Width + j) * size, size);
+                    break;
+                default:
+                    throw new Exception();
+            }
+
+            return byteArray;
         }
     }
 }
