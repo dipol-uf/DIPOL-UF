@@ -18,13 +18,13 @@
                 <Style TargetType="Image">
                     <Setter Property="Cursor" Value="Arrow"/>
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding ElementName=Debug_EnablePeek, Path=IsChecked}" Value="True">
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=IsSamplingEnabled}" Value="True">
                             <Setter Property="Cursor" Value="Cross"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </Image.Style>
-        </Image>
+        </Image>        
         <Grid Name="StatusPanel" VerticalAlignment="Stretch" HorizontalAlignment="Center" Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -47,7 +47,7 @@
             <TextBlock Name="MeasuredValueText"  VerticalAlignment="Center" Width="70" Margin="5,1,5,1" Grid.Column="3" Grid.Row ="1"/>
         </Grid>
         <Grid Name="ImageAdjustmentPanel" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Stretch" Width="{Binding ElementName=StatusPanel, Path=ActualWidth}">
-            <local:Slider2 x:Name="SliderTwo" MinValue="0" MaxValue="100" LeftThumb="0" RightThumb="100" MinDifference="5"/>
+            <local:Slider2 x:Name="SliderTwo" MinValue="0" MaxValue="100" LeftThumb="0" RightThumb="100" MinDifference="5" IsLeftThumbDraggingChanged="SliderTwo_IsThumbDraggingChanged" IsRightThumbDraggingChanged="SliderTwo_IsThumbDraggingChanged"/>
             <TextBlock Name="LeftLimit" HorizontalAlignment="Left" VerticalAlignment="Bottom" Text="{Binding ElementName=SliderTwo, Path=LeftThumb, Converter={locconv:ImageDisplay_DoubleToStringConverter}}"/>
             <TextBlock Name="RightLimit" HorizontalAlignment="Right" VerticalAlignment="Bottom" Text="{Binding ElementName=SliderTwo, Path=RightThumb, Converter={locconv:ImageDisplay_DoubleToStringConverter}}"/>
         </Grid>

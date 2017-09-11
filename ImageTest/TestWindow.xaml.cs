@@ -33,7 +33,7 @@ namespace ImageTest
 
             for (int i = 0; i < N; i++)
                 for (int j = 0; j < M; j++)
-                    arr[M * i + j] = (UInt16)(30*(i+j) + 10000) ;
+                    arr[M * i + j] = (UInt16)(60*(i+j) + 1000) ;
 
             var im = new ImageDisplayLib.Image(arr, M, N);
 
