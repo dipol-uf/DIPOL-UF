@@ -196,9 +196,9 @@ namespace ImageDisplayLib
                     locMin = (UInt16)min;
                     Func<UInt16, UInt16> converter = (y) => (UInt16)Math.Floor(globMin + 1.0*(globMax - globMin) / (locMax - locMin) * (y - locMin));
 
-                    //for (int i = 0; i < result.Width * result.Height; i++)
-                    //    result.baseArray.SetValue(converter((UInt16)result.baseArray.GetValue(i)), i);
-                    Parallel.For(0, result.Width * result.Height, (i) => result.baseArray.SetValue(converter((UInt16)result.baseArray.GetValue(i)), i));
+                    for (int i = 0; i < result.Width * result.Height; i++)
+                        result.baseArray.SetValue(converter((UInt16)result.baseArray.GetValue(i)), i);
+                    //Parallel.For(0, result.Width * result.Height, (i) => result.baseArray.SetValue(converter((UInt16)result.baseArray.GetValue(i)), i));
                     break;
                 default:
                     throw new Exception();

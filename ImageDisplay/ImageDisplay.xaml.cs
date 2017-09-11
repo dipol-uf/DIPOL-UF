@@ -24,8 +24,6 @@ namespace ImageDisplayLib
 
         private ImageType imageType;
 
-        private double oldSliderValue = double.MinValue;
-
         private Image initialImage;
         private Image displayedImage;
 
@@ -76,23 +74,10 @@ namespace ImageDisplayLib
             DataContext = this;
 
             IsSamplingEnabledChanged += ClearTextFields;
-            SliderTwo.LeftThumbChanged += Slider2_ThumbChanged;
-            SliderTwo.RightThumbChanged += Slider2_ThumbChanged;
-        }
-
-        private void Slider2_ThumbChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-
-            if (Math.Abs((double)e.NewValue - oldSliderValue) > 0.05 * (SliderTwo.MaxValue - SliderTwo.MinValue))
-            {
-                oldSliderValue = (double)e.NewValue;
-                displayedImage = initialImage.Clamp(SliderTwo.LeftThumb, SliderTwo.RightThumb).Scale();
-
-                UpdateFrame();
-            }
             
         }
 
+       
         public void LoadImage(Image image, ImageType type)
         {
             displayedImage = image.Copy();
@@ -108,6 +93,7 @@ namespace ImageDisplayLib
             SliderTwo.RightThumb = SliderTwo.MaxValue;
             SliderTwo.LeftThumb = SliderTwo.MinValue;
             SliderTwo.MinDifference = 0.025*(SliderTwo.MaxValue - SliderTwo.MinValue);
+
             
             UpdateFrame();
         }
@@ -176,7 +162,17 @@ namespace ImageDisplayLib
             => DisplayImageWidthChanged?.Invoke(sender, e);
         protected static void OnDisplayImageHeightChanged(object sender, DependencyPropertyChangedEventArgs e)
         => DisplayImageHeightChanged?.Invoke(sender, e);
-        
+
+        private void SliderTwo_IsThumbDraggingChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if ((bool)e.NewValue == false)
+            {
+                displayedImage = initialImage.Clamp(SliderTwo.LeftThumb, SliderTwo.RightThumb).Scale();
+
+                UpdateFrame();
+            }
+
+        }
     }
 
 
