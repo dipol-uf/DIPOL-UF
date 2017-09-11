@@ -9,3 +9,13 @@ C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x86\Debug\Image.dll
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\bin\x86\Debug\Image.pdb
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\obj\x86\Debug\ANDOR-CS.csproj.CoreCompileInputs.cache
 C:\Andor_programs\Projects\ANDOR\ANDOR-CS\obj\x86\Debug\ANDOR_CS.dll
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x86\Debug\atmcd64d.dll
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x86\Debug\ANDOR_CS.dll.config
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x86\Debug\ANDOR_CS.dll
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x86\Debug\ANDOR_CS.pdb
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x86\Debug\ATMCD64CS.dll
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\bin\x86\Debug\Image.pdb
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\obj\x86\Debug\ANDOR-CS.csprojResolveAssemblyReference.cache
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\obj\x86\Debug\ANDOR-CS.csproj.CoreCompileInputs.cache
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\obj\x86\Debug\ANDOR_CS.dll
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ANDOR-CS\obj\x86\Debug\ANDOR_CS.pdb

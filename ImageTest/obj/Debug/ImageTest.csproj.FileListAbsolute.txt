@@ -11,3 +11,7 @@ C:\Andor_programs\Projects\ANDOR\ImageTest\obj\Debug\ImageTest.csproj.CoreCompil
 C:\Andor_programs\Projects\ANDOR\ImageTest\obj\Debug\ImageTest.exe
 C:\Andor_programs\Projects\ANDOR\ImageTest\obj\Debug\ImageTest.pdb
 C:\Andor_programs\Projects\ANDOR\ImageTest\bin\Debug\ANDOR_CS.xml
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ImageTest\obj\Debug\ImageTest.csprojResolveAssemblyReference.cache
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ImageTest\obj\Debug\ImageTest_MarkupCompile.cache
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ImageTest\obj\Debug\ImageTest.exe
+C:\Users\iliak\OneDrive\GOOGLEDRIVE\Development\ANDOR\ImageTest\obj\Debug\ImageTest.pdb

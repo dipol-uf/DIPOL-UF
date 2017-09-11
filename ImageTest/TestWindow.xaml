@@ -8,6 +8,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300" Loaded="Window_Loaded">
     <Grid>
-        <img:ImageDisplay Name="ImageHandle"/>
+        <img:ImageDisplay Name="ImageHandle" IsSamplingEnabled="True" ImageName="Test Image"/>
     </Grid>
 </Window>
