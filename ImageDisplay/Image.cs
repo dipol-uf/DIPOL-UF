@@ -184,16 +184,21 @@ namespace ImageDisplayLib
 
             dynamic globMin = null;
             dynamic globMax = null;
+            dynamic locMax = null;
+            dynamic locMin = null;
 
             switch (this[0, 0])
             {
                 case UInt16 x:
                     globMin = UInt16.MinValue;
                     globMax = UInt16.MaxValue;
-                    Func<UInt16, UInt16> converter = (y) => (UInt16)Math.Floor(globMin + 1.0*(globMax - globMin) / ((UInt16)max - (UInt16)min) * (y - (UInt16)min));
+                    locMax = (UInt16)max;
+                    locMin = (UInt16)min;
+                    Func<UInt16, UInt16> converter = (y) => (UInt16)Math.Floor(globMin + 1.0*(globMax - globMin) / (locMax - locMin) * (y - locMin));
 
-                    for (int i = 0; i < result.Width * result.Height; i++)
-                        result.baseArray.SetValue(converter((UInt16)result.baseArray.GetValue(i)), i);
+                    //for (int i = 0; i < result.Width * result.Height; i++)
+                    //    result.baseArray.SetValue(converter((UInt16)result.baseArray.GetValue(i)), i);
+                    Parallel.For(0, result.Width * result.Height, (i) => result.baseArray.SetValue(converter((UInt16)result.baseArray.GetValue(i)), i));
                     break;
                 default:
                     throw new Exception();

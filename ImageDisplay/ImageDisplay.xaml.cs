@@ -24,15 +24,20 @@ namespace ImageDisplayLib
 
         private ImageType imageType;
 
+        private double oldSliderValue = double.MinValue;
+
         private Image initialImage;
         private Image displayedImage;
 
         public static readonly DependencyProperty DisplayedImageWidthProperty =
-            DependencyProperty.Register("DisplayedImageWidth", typeof(int), typeof(ImageDisplay));
+            DependencyProperty.Register("DisplayedImageWidth", typeof(int), typeof(ImageDisplay), new PropertyMetadata(640, OnDisplayImageWidthChanged), value => (int)value > 0);
         public static readonly DependencyProperty DisplayedImageHeightProperty =
-            DependencyProperty.Register("DisplayedImageHeight", typeof(int), typeof(ImageDisplay));
+            DependencyProperty.Register("DisplayedImageHeight", typeof(int), typeof(ImageDisplay), new PropertyMetadata(480, OnDisplayImageHeightChanged), value => (int)value > 0);
         public static readonly DependencyProperty ImageNameProperty =
-           DependencyProperty.Register("ImageName", typeof(string), typeof(ImageDisplay));
+           DependencyProperty.Register("ImageName", typeof(string), typeof(ImageDisplay), new PropertyMetadata("", OnImageNameChanged));
+        public static readonly DependencyProperty IsSamplingEnabledProperty =
+            DependencyProperty.Register("IsSamplingEnabled", typeof(bool), typeof(ImageDisplay), new PropertyMetadata(false, OnIsSamplingEnabledChanged));
+
 
         public int DisplayedImageWidth
         {
@@ -54,12 +59,38 @@ namespace ImageDisplayLib
             get => (string)GetValue(ImageNameProperty);
             set => SetValue(ImageNameProperty, value);
         }
+        public bool IsSamplingEnabled
+        {
+            get => (bool)GetValue(IsSamplingEnabledProperty);
+            set => SetValue(IsSamplingEnabledProperty, value);
+        }
 
+        public static event DependencyPropertyChangedEventHandler IsSamplingEnabledChanged;
+        public static event DependencyPropertyChangedEventHandler ImageNameChanged;
+        public static event DependencyPropertyChangedEventHandler DisplayImageWidthChanged;
+        public static event DependencyPropertyChangedEventHandler DisplayImageHeightChanged;
 
         public ImageDisplay()
         {
             InitializeComponent();
-            DataContext = this;           
+            DataContext = this;
+
+            IsSamplingEnabledChanged += ClearTextFields;
+            SliderTwo.LeftThumbChanged += Slider2_ThumbChanged;
+            SliderTwo.RightThumbChanged += Slider2_ThumbChanged;
+        }
+
+        private void Slider2_ThumbChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+
+            if (Math.Abs((double)e.NewValue - oldSliderValue) > 0.05 * (SliderTwo.MaxValue - SliderTwo.MinValue))
+            {
+                oldSliderValue = (double)e.NewValue;
+                displayedImage = initialImage.Clamp(SliderTwo.LeftThumb, SliderTwo.RightThumb).Scale();
+
+                UpdateFrame();
+            }
+            
         }
 
         public void LoadImage(Image image, ImageType type)
@@ -69,7 +100,15 @@ namespace ImageDisplayLib
             imageType = type;
             DisplayedImageWidth = image.Width;
             DisplayedImageHeight = image.Height;
+            dynamic imageMin = initialImage.Min();
+            dynamic imageMax = initialImage.Max();
 
+            SliderTwo.MinValue = 1.0 * imageMin;
+            SliderTwo.MaxValue = 1.0 * imageMax;
+            SliderTwo.RightThumb = SliderTwo.MaxValue;
+            SliderTwo.LeftThumb = SliderTwo.MinValue;
+            SliderTwo.MinDifference = 0.025*(SliderTwo.MaxValue - SliderTwo.MinValue);
+            
             UpdateFrame();
         }
 
@@ -96,7 +135,7 @@ namespace ImageDisplayLib
 
         private void ImageFrame_MouseMove(object sender, MouseEventArgs e)
         {
-            if (Debug_EnablePeek.IsChecked ?? false)
+            if (IsSamplingEnabled)
             {
                 var pos = e.GetPosition(ImageFrame);
 
@@ -110,13 +149,33 @@ namespace ImageDisplayLib
 
                 CoordinatesXText.Text = x.ToString();
                 CoordinatesYText.Text = y.ToString();
-                this.MeasuredValueText.Text = initialImage[y, x].ToString();
-                //CoordinatesText.Text = String.Format("[{0,-8:.00}:{1,8:.00}] : {2,16:e4}", x, y, ((Int16[,])rawAray)[y,x]);
-                    
+                MeasuredValueText.Text = initialImage[y, x].ToString();
+                                  
             }
         }
 
-     
+        private static void ClearTextFields(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is ImageDisplay imDis)
+            {
+                if ((bool)e.NewValue == false)
+                {
+                    imDis.CoordinatesXText.Text = "";
+                    imDis.CoordinatesYText.Text = "";
+                    imDis.MeasuredValueText.Text = "";
+                }
+            }
+            else throw new Exception();
+        }
+        
+        protected static void OnIsSamplingEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+            =>  IsSamplingEnabledChanged?.Invoke(sender, e);
+        protected static void OnImageNameChanged(object sender, DependencyPropertyChangedEventArgs e)
+            => ImageNameChanged?.Invoke(sender, e);
+        protected static void OnDisplayImageWidthChanged(object sender, DependencyPropertyChangedEventArgs e)
+            => DisplayImageWidthChanged?.Invoke(sender, e);
+        protected static void OnDisplayImageHeightChanged(object sender, DependencyPropertyChangedEventArgs e)
+        => DisplayImageHeightChanged?.Invoke(sender, e);
         
     }
 

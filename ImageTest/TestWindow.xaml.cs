@@ -37,10 +37,9 @@ namespace ImageTest
 
             var im = new ImageDisplayLib.Image(arr, M, N);
 
-            var max = im.Max();
-            
+            var max = im.Max();            
 
-            ImageHandle.LoadImage(im.Clamp(15000, 30000).Scale(), ImageDisplayLib.ImageType.GrayScale16Int);
+            ImageHandle.LoadImage(im, ImageDisplayLib.ImageType.GrayScale16Int);
 
         }
     }
