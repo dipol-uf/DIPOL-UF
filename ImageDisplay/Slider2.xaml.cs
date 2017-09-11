@@ -30,10 +30,19 @@ namespace ImageDisplayLib
         public static DependencyProperty TrackBrushProperty = DependencyProperty.Register("TrackBrush", typeof(Brush), typeof(Slider2), new PropertyMetadata(Brushes.DarkGray));
         public static DependencyProperty LeftThumbBrushProperty = DependencyProperty.Register("LeftThumbBrush", typeof(Brush), typeof(Slider2), new PropertyMetadata(Brushes.DarkGreen));
         public static DependencyProperty RightThumbBrushProperty = DependencyProperty.Register("RightThumbBrush", typeof(Brush), typeof(Slider2), new PropertyMetadata(Brushes.DarkBlue));
+        public static DependencyProperty IsLeftThumbDraggingProperty = DependencyProperty.Register("IsLeftThumbDragging", typeof(bool), typeof(Slider2), new PropertyMetadata(false, OnIsLeftThumbDraggingPropertyChanged));
+        public static DependencyProperty IsRightThumbDraggingProperty = DependencyProperty.Register("IsRightThumbDragging", typeof(bool), typeof(Slider2), new PropertyMetadata(false, OnIsRightThumbDraggingPropertyChanged));
 
-        private bool isLeftThumbDragging = false;
-        private bool isRightThumbDragging = false;
-
+        public bool IsLeftThumbDragging
+        {
+            get => (bool)GetValue(IsLeftThumbDraggingProperty);
+            set => SetValue(IsLeftThumbDraggingProperty, value);
+        }
+        public bool IsRightThumbDragging
+        {
+            get => (bool)GetValue(IsRightThumbDraggingProperty);
+            set => SetValue(IsRightThumbDraggingProperty, value);
+        }
         public double MinValue
         {
             get => (double)GetValue(MinValueProperty);
@@ -77,6 +86,8 @@ namespace ImageDisplayLib
 
         public event DependencyPropertyChangedEventHandler LeftThumbChanged;
         public event DependencyPropertyChangedEventHandler RightThumbChanged;
+        public event DependencyPropertyChangedEventHandler IsLeftThumbDraggingChanged;
+        public event DependencyPropertyChangedEventHandler IsRightThumbDraggingChanged;
 
         public Slider2()
         {
@@ -87,6 +98,10 @@ namespace ImageDisplayLib
             => LeftThumbChanged?.Invoke(sender, e);
         protected virtual void OnRightThumbChanged(object sender, DependencyPropertyChangedEventArgs e)
             => RightThumbChanged?.Invoke(sender, e);
+        protected virtual void OnIsLeftThumbDraggingChanged(object sender, DependencyPropertyChangedEventArgs e)
+            => IsLeftThumbDraggingChanged?.Invoke(sender, e);
+        protected virtual void OnIsRightThumbDraggingChanged(object sender, DependencyPropertyChangedEventArgs e)
+            => IsRightThumbDraggingChanged?.Invoke(sender, e);
 
         protected static void OnLeftThumbPropertyChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
@@ -98,6 +113,18 @@ namespace ImageDisplayLib
         {
             if (sender is Slider2 slider)
                 slider.OnRightThumbChanged(sender, e);
+            else throw new Exception();
+        }
+        protected static void OnIsLeftThumbDraggingPropertyChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is Slider2 slider)
+                slider.OnIsLeftThumbDraggingChanged(sender, e);
+            else throw new Exception();
+        }
+        protected static void OnIsRightThumbDraggingPropertyChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is Slider2 slider)
+                slider.OnIsRightThumbDraggingChanged(sender, e);
             else throw new Exception();
         }
 
@@ -129,13 +156,13 @@ namespace ImageDisplayLib
         {
             if ((sender as FrameworkElement).Name == "LeftThumbSlider")
             {
-                isLeftThumbDragging = e.LeftButton == MouseButtonState.Pressed;
-                isRightThumbDragging &= !isLeftThumbDragging;
+                IsLeftThumbDragging = e.LeftButton == MouseButtonState.Pressed;
+                IsRightThumbDragging &= !IsLeftThumbDragging;
             }
             else if ((sender as FrameworkElement).Name == "RightThumbSlider")
             {
-                isRightThumbDragging = e.LeftButton == MouseButtonState.Pressed;
-                isLeftThumbDragging &= !isRightThumbDragging;
+                IsRightThumbDragging = e.LeftButton == MouseButtonState.Pressed;
+                IsLeftThumbDragging &= !IsRightThumbDragging;
             }
 
         }
@@ -145,12 +172,12 @@ namespace ImageDisplayLib
 
             if ((sender as FrameworkElement).Name == "LeftThumbSlider")
             {
-                isLeftThumbDragging = e.LeftButton == MouseButtonState.Pressed;
+                IsLeftThumbDragging = e.LeftButton == MouseButtonState.Pressed;
                 
             }
             else if ((sender as FrameworkElement).Name == "RightThumbSlider")
             { 
-                isRightThumbDragging = e.LeftButton == MouseButtonState.Pressed;
+                IsRightThumbDragging = e.LeftButton == MouseButtonState.Pressed;
                 
             }
             
@@ -159,7 +186,7 @@ namespace ImageDisplayLib
         
         private void UnderlyingCanvas_MouseMove(object sender, MouseEventArgs e)
         {
-            if (isLeftThumbDragging | isRightThumbDragging)
+            if (IsLeftThumbDragging | IsRightThumbDragging)
             {
                 double xPos = e.GetPosition(UnderlyingCanvas).X;
 
@@ -167,7 +194,7 @@ namespace ImageDisplayLib
 
                 double val = MinValue + offset * (MaxValue - MinValue) / Track.Width;
 
-                if (isLeftThumbDragging)
+                if (IsLeftThumbDragging)
                     LeftThumb = val;
                 else
                     RightThumb = val;
@@ -179,18 +206,18 @@ namespace ImageDisplayLib
         private void UnderlyingCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
           
-            if (isLeftThumbDragging && e.LeftButton == MouseButtonState.Released)
-                isLeftThumbDragging = false;
-            if (isRightThumbDragging && e.LeftButton == MouseButtonState.Released)
-                isRightThumbDragging = false;
+            if (IsLeftThumbDragging && e.LeftButton == MouseButtonState.Released)
+                IsLeftThumbDragging = false;
+            if (IsRightThumbDragging && e.LeftButton == MouseButtonState.Released)
+                IsRightThumbDragging = false;
         }
 
         private void UnderlyingCanvas_MouseLeave(object sender, MouseEventArgs e)
         {
-            if (isLeftThumbDragging)
-                isLeftThumbDragging = false;
-            if (isRightThumbDragging)
-                isRightThumbDragging = false;
+            if (IsLeftThumbDragging)
+                IsLeftThumbDragging = false;
+            if (IsRightThumbDragging)
+                IsRightThumbDragging = false;
         }
 
         
