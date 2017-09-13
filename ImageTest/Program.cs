@@ -19,7 +19,6 @@ namespace ImageTest
         {
             Test2();
 
-
             Console.ReadKey();
         }
 
@@ -87,10 +86,36 @@ namespace ImageTest
 
         private static void Test2()
         {
-           
+
 
             var app = new System.Windows.Application();
             app.Run(new TestWindow());
         }
+
+        private static void ArrayTest()
+        {
+
+            int N = 100000000;
+            Array arr1 = Array.CreateInstance(typeof(int), N);
+            Image im = new Image(arr1, N, 1);
+
+            double sum = 0;
+            var t = DateTime.Now;
+
+
+            for (int j = 0; j < 10; j++)
+            {
+                sum = 0;
+                t = DateTime.Now;
+
+                for (int i = 0; i < N; i++)
+                    sum += im.Get<int>(0, i);
+
+                Console.WriteLine("{0:E3}", (DateTime.Now - t).TotalSeconds / N);
+            }
+
+            var nIm = im.Clamp(100, 10000).Scale();
+        }
+     
     }
 }
