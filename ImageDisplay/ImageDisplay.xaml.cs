@@ -165,13 +165,23 @@ namespace ImageDisplayLib
 
         private void SliderTwo_IsThumbDraggingChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if ((bool)e.NewValue == false)
+            if ((bool)e.NewValue == false & initialImage != null)
             {
-                displayedImage = initialImage.Clamp(SliderTwo.LeftThumb, SliderTwo.RightThumb).Scale();
+                double left = SliderTwo.LeftThumb;
+                double right = SliderTwo.RightThumb;
+
+                initialImage.CopyTo(displayedImage);
+                displayedImage = displayedImage.Clamp(left, right).Scale();
 
                 UpdateFrame();
+
             }
 
+        }
+
+        private void SliderTwo_ThumbChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+          
         }
     }
 

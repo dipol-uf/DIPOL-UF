@@ -56,3 +56,5 @@ Temporary Items
 *.cache
 *.txt
 *.lref
+*.psess
+*.exe
