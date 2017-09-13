@@ -58,3 +58,4 @@ Temporary Items
 *.lref
 *.psess
 *.exe
+*.pdb
