@@ -51,9 +51,9 @@ namespace ImageTest
                 int N = 10;
 
                 sets.SetAcquisitionMode(ANDOR_CS.Enums.AcquisitionMode.Kinetic);
-                sets.SetKineticCycle(N, 0.1f);
-                sets.SetAccumulationCycle(2, 0.1f);
-                sets.SetExposureTime(0.5f);
+                sets.SetKineticCycle(N, 1.1f);
+                sets.SetAccumulationCycle(2, 1.1f);
+                sets.SetExposureTime(1.5f);
                 sets.SetReadoutMode(ANDOR_CS.Enums.ReadMode.FullImage);
                 sets.SetTriggerMode(ANDOR_CS.Enums.TriggerMode.Internal);
                 sets.SetImageArea(new Rectangle(1, 1, 512, 512));
@@ -69,11 +69,15 @@ namespace ImageTest
                 int first2 = 0;
                 int last2 = 0;
 
-                camera.StartAcquistionAsync(System.Threading.CancellationToken.None, 100).Wait();
+                var task = camera.StartAcquistionAsync(System.Threading.CancellationToken.None, 100);
+
                 ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetTotalNumberImagesAcquired(ref test);
                 ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetNumberNewImages(ref first, ref last);
                 ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetNumberAvailableImages(ref first, ref last);
 
+
+                var app = new System.Windows.Application();
+                app.Run(new TestWindow(camera));
 
                 var t = DateTime.Now;
 
