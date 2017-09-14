@@ -198,6 +198,9 @@ namespace ANDOR_CS.Classes
         public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
             => CreatedCameras as IReadOnlyDictionary<int, CameraBase>;
 
+        public ConcurrentQueue<Image> AcquiredImages
+            => acquiredImages;
+
 
         /// <summary>
         /// Retrieves camera's capabilities
@@ -588,11 +591,11 @@ namespace ANDOR_CS.Classes
 
             try
             {
-                ushort[] array = new ushort[CurrentSettings.ImageArea.Value.Height * CurrentSettings.ImageArea.Value.Width];
+                UInt16[] array = new UInt16[CurrentSettings.ImageArea.Value.Height * CurrentSettings.ImageArea.Value.Width];
                 (int First, int Last) validImages = (0, 0);
-                //uint result = SDKInstance.GetImages16(e.Last, e.Last, array, (UInt32)(array.Length), ref validImages.First, ref validImages.Last);
-                uint result = SDKInstance.GetMostRecentImage16(array, (uint)array.Length);
-                Console.WriteLine($"{validImages} {result == SDK.DRV_SUCCESS}");
+                ThrowIfError(SDKInstance.GetImages16(e.Last, e.Last, array, (UInt32)(array.Length), ref validImages.First, ref validImages.Last), nameof(SDKInstance.GetImages16));
+                
+                acquiredImages.Enqueue(new Image(array, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height));
 
             }
             finally
@@ -1164,94 +1167,114 @@ namespace ANDOR_CS.Classes
         /// <returns>Task that can be queried for execution status.</returns>
         public async override Task StartAcquistionAsync(CancellationToken token, int timeout = StatusCheckTimeOutMS)
         {
-            CameraStatus status = CameraStatus.Idle;
-            try
+            await Task.Factory.StartNew(() =>
             {
-                SetActiveAndLock();
-
-                // Checks if acquisition is in progress; throws exception
-                ThrowIfAcquiring(this);
-
-                // If camera is not idle, cannot start acquisition
-                if (GetStatus() != CameraStatus.Idle)
-                    throw new AndorSDKException("Camera is not in the idle mode.", null);
-
-                
-                // Marks acuisition asynchronous
-                IsAsyncAcquisition = true;
-
-                // Start scquisition
-                StartAcquisition();
-
-                status = GetStatus();
-
-                (int First, int Last) previousImages = (0, 0);
-
-                // While status is acquiring
-                while ((status = GetStatus()) == CameraStatus.Acquiring)
+                CameraStatus status = CameraStatus.Idle;
+                try
                 {
-                    // Fires AcquisitionStatusChecked event
-                    OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, true));
+                    SetActiveAndLock();
 
-                    // Checks if new image is already acuired and is available in camera memory
-                    // Locks SDK handle for thread-safety
-                    LockManually();
-                    try
+                    // Checks if acquisition is in progress; throws exception
+                    ThrowIfAcquiring(this);
+
+                    // If camera is not idle, cannot start acquisition
+                    if (GetStatus() != CameraStatus.Idle)
+                        throw new AndorSDKException("Camera is not in the idle mode.", null);
+
+
+                    // Marks acuisition asynchronous
+                    IsAsyncAcquisition = true;
+
+                    // Start scquisition
+                    StartAcquisition();
+
+                    status = GetStatus();
+
+                    (int First, int Last) previousImages = (0, 0);
+                    (int First, int Last) acquiredImagesIndex = (0, 0);
+                    // While status is acquiring
+                    while ((status = GetStatus()) == CameraStatus.Acquiring)
                     {
-                        // Gets indexes of first and last available new images
-                        (int First, int Last) acquiredImages = (0, 0);
-                        var result = SDKInstance.GetNumberNewImages(ref acquiredImages.First, ref acquiredImages.Last);
+                        // Fires AcquisitionStatusChecked event
+                        OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, true));
 
-                        // If there is new image, updates indexes of previous abailable images and fires an event.
-                        if (acquiredImages.Last != previousImages.Last
-                            || acquiredImages.First != previousImages.First)
+                        // Checks if new image is already acuired and is available in camera memory
+                        // Locks SDK handle for thread-safety
+                        LockManually();
+                        try
                         {
-                            previousImages = acquiredImages;
+                            // Gets indexes of first and last available new images
+                            acquiredImagesIndex = (0, 0);
+                            LockManually();
+                            var result = SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last);
+                            ReleaseManually();
 
-                            OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImages.First, acquiredImages.Last));
+                            // If there is new image, updates indexes of previous abailable images and fires an event.
+                            if (acquiredImagesIndex.Last != previousImages.Last
+                                || acquiredImagesIndex.First != previousImages.First)
+                            {
+                                previousImages = acquiredImagesIndex;
+
+                                OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
+                            }
                         }
-                    }
-                    finally
-                    {
-                        ReleaseManually();
-                    }
-                    // If task is aborted
-                    if (token.IsCancellationRequested)
-                    {
-                        // Aborts
-                        AbortAcquisition();
-                        // Exits wait loop
-                        break;
+                        finally
+                        {
+                            ReleaseManually();
+                        }
+                        // If task is aborted
+                        //if (token.IsCancellationRequested)
+                        //{
+                        //    // Aborts
+                        //    AbortAcquisition();
+                        //    // Exits wait loop
+                        //    break;
+                        //}
+
+                        // Waits for specified amount of time before checking status again
+                       
+                        Task.Delay(StatusCheckTimeOutMS).Wait();
+
                     }
 
-                    // Waits for specified amount of time before checking status again
-                    await Task.Delay(StatusCheckTimeOutMS);//.Wait();
+                    // Gets indexes of first and last available new images
+
+                    LockManually();
+                    ThrowIfError(SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last), nameof(SDKInstance.GetNumberNewImages));
+                    ReleaseManually();
+
+                    // If there is new image, updates indexes of previous abailable images and fires an event.
+                    if (acquiredImagesIndex.Last != previousImages.Last
+                        || acquiredImagesIndex.First != previousImages.First)
+                    {
+                        previousImages = acquiredImagesIndex;
+
+                        OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
+                    }
+
+                    // If after end of acquisition camera status is not idle, throws exception
+                    if (!token.IsCancellationRequested && status != CameraStatus.Idle)
+                        throw new AndorSDKException($"Acquisiotn finished with non-Idle status ({status}).", null);
+
 
                 }
-
-                // If after end of acquisition camera status is not idle, throws exception
-                if (!token.IsCancellationRequested && status != CameraStatus.Idle)
-                    throw new AndorSDKException($"Acquisiotn finished with non-Idle status ({status}).", null);
-
-
-            }
-            // If there were exceptions during status checking loop
-            catch (Exception e)
-            {
-                // Fire event
-                OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(status, true));
-                // re-throw received exception
-                throw;
-            }
-            // Ensures that acquisition is properly finished and event is fired
-            finally
-            {
-                IsAcquiring = false;
-                IsAsyncAcquisition = false;
-                OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus(), true));
-                ReleaseLock();
-            }
-            
+                // If there were exceptions during status checking loop
+                catch (Exception e)
+                {
+                    // Fire event
+                    OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(status, true));
+                    // re-throw received exception
+                    throw;
+                }
+                // Ensures that acquisition is properly finished and event is fired
+                finally
+                {
+                    IsAcquiring = false;
+                    IsAsyncAcquisition = false;
+                    OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus(), true));
+                    ReleaseLock();
+                }
+            }, token);
 
         }
         

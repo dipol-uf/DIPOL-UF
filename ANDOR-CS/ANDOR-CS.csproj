@@ -177,5 +177,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ImageDisplay\ImageDisplay.csproj">
+      <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
+      <Name>ImageDisplay</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
