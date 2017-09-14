@@ -116,6 +116,58 @@ namespace ImageTest
 
             var nIm = im.Clamp(100, 10000).Scale();
         }
+
+        private static void LoopTest()
+        {
+
+            int N = 50_000_000;
+            int M = 50;
+            double[] array = new double[N];
+
+            Random R = new Random();
+
+            for (int i = 0; i < N; i++)
+                array[i] = R.NextDouble();
+
+            DateTime t = DateTime.Now;
+            double sum = 0.0;
+
+            Func<int, double> worker = (i) =>
+            {
+                double locSum = 0.0;
+                for (int j = 0; j < N; j++)
+                    locSum += 1.0 / (1.0 + Math.Exp(Math.Log(Math.Abs(array[j]))));
+                return locSum;
+            };
+
+            t = DateTime.Now;
+            sum = 0.0;
+            for (int i = 0; i < M; i++)
+            {
+                for (int j = 0; j < N; j++)
+                    sum += 1.0/(1.0+Math.Exp(Math.Log(Math.Abs(array[j]))));
+            }
+            Console.WriteLine("Serial   {0:E3} \t {1:E3}", (DateTime.Now - t).TotalSeconds, sum);
+
+            t = DateTime.Now;
+            sum = 0.0;
+            for (int i = 0; i < M; i++)
+            {
+                sum += worker(i);
+            }
+            Console.WriteLine("Delegate {0:E3} \t {1:E3}", (DateTime.Now - t).TotalSeconds, sum);
+
+            t = DateTime.Now;
+            sum = 0.0;
+            Parallel.For(0, M, () => 0.0,
+            (i, state, local) =>
+            {
+                local += worker(i);
+                return local;
+            }, (item) => sum += item);
+            Console.WriteLine("Parallel {0:E3} \t {1:E3}", (DateTime.Now - t).TotalSeconds, sum);
+
+        }
      
     }
 }
