@@ -59,3 +59,5 @@ Temporary Items
 *.psess
 *.exe
 *.pdb
+*.dll
+*.suo
