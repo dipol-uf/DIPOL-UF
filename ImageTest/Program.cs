@@ -17,7 +17,7 @@ namespace ImageTest
         [STAThread]
         static void Main(string[] args)
         {
-            Test2();
+            Test1();
 
             Console.ReadKey();
         }
