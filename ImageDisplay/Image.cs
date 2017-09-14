@@ -25,6 +25,10 @@ namespace ImageDisplayLib
 {
     public class Image
     {
+        private static readonly int MaxImageSingleThreadSize = 512 * 768;
+
+        private volatile bool IsParallelEnabled = true;
+
         private Array baseArray;
 
         private Type type;
@@ -286,8 +290,6 @@ namespace ImageDisplayLib
 
         public Image Clamp(double low, double high)
         {
-            //var result = Copy();
-
             if (type == typeof(UInt16))
             {
                 UInt16 locLow = (UInt16)(Math.Floor(low));
@@ -374,12 +376,20 @@ namespace ImageDisplayLib
                 UInt16 globMax = UInt16.MaxValue;
                 UInt16 locMax = (UInt16)max;
                 UInt16 locMin = (UInt16)min;
-                Func<UInt16, UInt16> converter = (y) => (UInt16)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (y - locMin));
+              
+                Action<int> worker = (k) =>
+                    {
+                        for (int j = 0; j < Width; j++)
+                            Set<UInt16>((UInt16)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<UInt16>(k, j) - locMin)), k, j);
+                    };
 
-                for (int i = 0; i < this.Height; i++)
-                    for (int j = 0; j < this.Width; j++)
-                        this.Set<UInt16>(converter(this.Get<UInt16>(i, j)), i, j);
+                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                    Parallel.For(0, Height, worker);
+                else
+                    for (int i = 0; i < Height; i++)
+                        worker(i);
 
+               
             }
             else if (type == typeof(Int16))
             {
@@ -387,23 +397,37 @@ namespace ImageDisplayLib
                 Int16 globMax = Int16.MaxValue;
                 Int16 locMax = (Int16)max;
                 Int16 locMin = (Int16)min;
-                Func<Int16, Int16> converter = (y) => (Int16)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (y - locMin));
 
-                for (int i = 0; i < this.Height; i++)
-                    for (int j = 0; j < this.Width; j++)
-                        this.Set<Int16>(converter(this.Get<Int16>(i, j)), i, j);
+                Action<int> worker = (k) =>
+                {
+                    for (int j = 0; j < Width; j++)
+                        Set<Int16>((Int16)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<Int16>(k, j) - locMin)), k, j);
+                };
+
+                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                    Parallel.For(0, Height, worker);
+                else
+                    for (int i = 0; i < Height; i++)
+                        worker(i);
             }
             else if (type == typeof(UInt32))
             {
-                UInt32 globMin = UInt32.MinValue;
-                UInt32 globMax = UInt32.MaxValue;
-                UInt32 locMax = (UInt32)max;
-                UInt32 locMin = (UInt32)min;
-                Func<UInt32, UInt32> converter = (y) => (UInt32)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (y - locMin));
+                UInt16 globMin = UInt16.MinValue;
+                UInt16 globMax = UInt16.MaxValue;
+                UInt16 locMax = (UInt16)max;
+                UInt16 locMin = (UInt16)min;
 
-                for (int i = 0; i < this.Height; i++)
-                    for (int j = 0; j < this.Width; j++)
-                        this.Set<UInt32>(converter(this.Get<UInt32>(i, j)), i, j);
+                Action<int> worker = (k) =>
+                {
+                    for (int j = 0; j < Width; j++)
+                        Set<UInt16>((UInt16)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<UInt16>(k, j) - locMin)), k, j);
+                };
+
+                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                    Parallel.For(0, Height, worker);
+                else
+                    for (int i = 0; i < Height; i++)
+                        worker(i);
             }
             else if (type == typeof(Int32))
             {
@@ -411,37 +435,22 @@ namespace ImageDisplayLib
                 Int32 globMax = Int32.MaxValue;
                 Int32 locMax = (Int32)max;
                 Int32 locMin = (Int32)min;
-                Func<Int32, Int32> converter = (y) => (Int32)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (y - locMin));
 
-                for (int i = 0; i < this.Height; i++)
-                    for (int j = 0; j < this.Width; j++)
-                        this.Set<Int32>(converter(this.Get<Int32>(i, j)), i, j);
+                Action<int> worker = (k) =>
+                {
+                    for (int j = 0; j < Width; j++)
+                        Set<Int32>((Int32)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<Int32>(k, j) - locMin)), k, j);
+                };
+
+                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                    Parallel.For(0, Height, worker);
+                else
+                    for (int i = 0; i < Height; i++)
+                        worker(i);
             }
             else throw new Exception();
 
-            //{
-            //    dynamic globMin = null;
-            //    dynamic globMax = null;
-            //    dynamic locMax = null;
-            //    dynamic locMin = null;
-
-            //    switch (this[0, 0])
-            //    {
-            //        case UInt16 x:
-            //            globMin = UInt16.MinValue;
-            //            globMax = UInt16.MaxValue;
-            //            locMax = (UInt16)max;
-            //            locMin = (UInt16)min;
-            //            Func<UInt16, UInt16> converter = (y) => (UInt16)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (y - locMin));
-
-            //            for (int i = 0; i < result.Width * result.Height; i++)
-            //                result.baseArray.SetValue(converter((UInt16)result.baseArray.GetValue(i)), i);
-            //            //Parallel.For(0, result.Width * result.Height, (i) => result.baseArray.SetValue(converter((UInt16)result.baseArray.GetValue(i)), i));
-            //            break;
-            //        default:
-            //            throw new Exception();
-            //    }
-            //}
+           
             return this;
         }
     }
