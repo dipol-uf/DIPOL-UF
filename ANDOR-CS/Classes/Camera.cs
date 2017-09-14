@@ -30,7 +30,7 @@ using ANDOR_CS.Exceptions;
 
 using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
-
+using Image = ImageDisplayLib.Image;
 
 using static ANDOR_CS.Exceptions.AndorSDKException;
 using static ANDOR_CS.Exceptions.AcquisitionInProgressException;
@@ -75,7 +75,7 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        private ConcurrentQueue<object> acquiredImages = new ConcurrentQueue<object>();
+        private ConcurrentQueue<Image> acquiredImages = new ConcurrentQueue<Image>();
 
         /// <summary>
         /// Indicates if this camera is currently active
@@ -907,7 +907,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSDKException"/>
         public override void StartAcquisition()
         {
-            acquiredImages = new ConcurrentQueue<object>();
+            acquiredImages = new ConcurrentQueue<Image>();
             
             try
             {
