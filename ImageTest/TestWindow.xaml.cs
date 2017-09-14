@@ -27,8 +27,8 @@ namespace ImageTest
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            int N = 2048;
-            int M = 4096;
+            int N = 4096;
+            int M = 8192;
             UInt16[] arr = new UInt16[N * M];
 
             for (int i = 0; i < N; i++)
