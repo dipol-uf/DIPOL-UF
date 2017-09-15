@@ -173,6 +173,7 @@ namespace ANDOR_CS.Classes
             return result;
         }
 
+
         /// <summary>
         /// Manually waits while other tasks access SDK instance
         /// </summary>
@@ -180,7 +181,7 @@ namespace ANDOR_CS.Classes
         {
             if (LockDepth++ == 0)
                 locker.Wait();
-            
+
         }
 
         /// <summary>
@@ -188,7 +189,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         internal static void ReleaseManually()
         {
-            if(--LockDepth == 0)
+            if (--LockDepth == 0)
                 locker.Release();
         }
 

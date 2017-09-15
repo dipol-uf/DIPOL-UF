@@ -222,9 +222,12 @@ namespace ANDOR_CS.Classes
 
                 // Using manual locker controls to call SDk function task-safely
 
-                LockManually();
-                var result = SDKInstance.GetCapabilities(ref caps);
-                ReleaseManually();
+                //LockManually();
+                //var result = SDKInstance.GetCapabilities(ref caps);
+                //ReleaseManually();
+
+                var result = Call(() => SDKInstance.GetCapabilities(ref caps));
+                
 
                 ThrowIfError(result, nameof(SDKInit.SDKInstance.GetCapabilities));
 
