@@ -95,10 +95,7 @@
   <ItemGroup>
     <Reference Include="ATMCD64CS, Version=2.102.30013.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\ATMCD64CS.dll</HintPath>
-    </Reference>
-    <Reference Include="Image">
-      <HintPath>..\..\FITS\Image\bin\Debug\Image.dll</HintPath>
+      <HintPath>bin\x64\Debug\ATMCD64CS.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -170,12 +167,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ATMCD32CS.dll" />
-    <Content Include="atmcd32d.dll" />
-    <Content Include="ATMCD64CS.dll" />
-    <Content Include="atmcd64d.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <ProjectReference Include="..\ImageDisplay\ImageDisplay.csproj">
+      <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
+      <Name>ImageDisplay</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

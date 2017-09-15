@@ -20,6 +20,28 @@ namespace ImageTest
     /// </summary>
     public partial class TestWindow : Window
     {
+
+        ANDOR_CS.Classes.Camera camera = null;
+
+        public TestWindow(ANDOR_CS.Classes.Camera cam)
+        {
+            InitializeComponent();
+            camera = cam;
+            
+        }
+
+        private void Cam_NewImageReceived(object sender, ANDOR_CS.Events.NewImageReceivedEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ImageDisplayLib.Image im = null;
+                if (camera.AcquiredImages.TryDequeue(out im) == true)
+                {
+                    ImageHandle.LoadImage(im, ImageDisplayLib.ImageType.GrayScale16Int);
+                }
+            });
+        }
+
         public TestWindow()
         {
             InitializeComponent();
@@ -27,19 +49,23 @@ namespace ImageTest
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            int N = 4096;
-            int M = 8192;
-            UInt16[] arr = new UInt16[N * M];
+            camera.NewImageReceived += Cam_NewImageReceived;
+            //if (camera == null)
+            //{
+            //    int N = 4096;
+            //    int M = 8192;
+            //    UInt16[] arr = new UInt16[N * M];
 
-            for (int i = 0; i < N; i++)
-                for (int j = 0; j < M; j++)
-                    arr[M * i + j] = (UInt16)(60*(i+j) + 1000) ;
+            //    for (int i = 0; i < N; i++)
+            //        for (int j = 0; j < M; j++)
+            //            arr[M * i + j] = (UInt16)(60 * (i + j) + 1000);
 
-            var im = new ImageDisplayLib.Image(arr, M, N);
+            //    var im = new ImageDisplayLib.Image(arr, M, N);
 
-            var max = im.Max();            
+            //    var max = im.Max();
 
-            ImageHandle.LoadImage(im, ImageDisplayLib.ImageType.GrayScale16Int);
+            //    ImageHandle.LoadImage(im, ImageDisplayLib.ImageType.GrayScale16Int);
+            //}
 
         }
     }
