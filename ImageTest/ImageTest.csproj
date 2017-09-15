@@ -56,9 +56,12 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ATMCD64CS, Version=2.102.30013.0, Culture=neutral, processorArchitecture=AMD64">
+    <Reference Include="ATMCD64CS">
+      <HintPath>..\ANDOR-CS\bin\x64\Debug\ATMCD64CS.dll</HintPath>
+    </Reference>
+    <Reference Include="ImageDisplay, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Program Files\Andor SDK\ATMCD64CS.dll</HintPath>
+      <HintPath>..\ImageDisplay\bin\Debug\ImageDisplay.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -87,10 +90,6 @@
     <ProjectReference Include="..\ANDOR-CS\ANDOR-CS.csproj">
       <Project>{d1e8b17d-4c59-42dd-87bd-f111df8e631d}</Project>
       <Name>ANDOR-CS</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ImageDisplay\ImageDisplay.csproj">
-      <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
-      <Name>ImageDisplay</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
