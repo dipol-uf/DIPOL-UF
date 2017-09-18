@@ -587,7 +587,7 @@
             Fires <see cref="!:OnAcquisitionStarted(AcquisitionStatusEventArgs)"/> 
             with <see cref="P:ANDOR_CS.Events.AcquisitionStatusEventArgs.IsAsync"/> = false.
             NOTE: this method is not recommended. Consider using async version
-            <see cref="M:ANDOR_CS.Classes.Camera.StartAcquistionAsync(System.Threading.CancellationToken,System.Int32)"/>.
+            <see cref="!:StartAcquistionAsync(CancellationToken, int)"/>.
             Async version allows <see cref="T:ANDOR_CS.Classes.Camera"/> to properly monitor acquisition progress.
             </summary>
             <exception cref="T:ANDOR_CS.Exceptions.AcquisitionInProgressException"/>
@@ -635,7 +635,7 @@
             <exception cref="T:System.InvalidOperationException"/>
             <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="M:ANDOR_CS.Classes.Camera.GetNumberOfCameras"/></param>
         </member>
-        <member name="M:ANDOR_CS.Classes.Camera.StartAcquistionAsync(System.Threading.CancellationToken,System.Int32)">
+        <member name="M:ANDOR_CS.Classes.Camera.StartAcquistionAsync(System.Threading.CancellationTokenSource,System.Int32)">
             <summary>
             Starts process of acquisition asynchronously.
             This is the preferred way to acquire images from camera.
