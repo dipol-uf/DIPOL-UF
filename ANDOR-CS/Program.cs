@@ -109,7 +109,7 @@ namespace ANDOR_CS
 
                         Console.WriteLine($"\r\nExposure {i + 1}");
 
-                        cam.StartAcquistionAsync(cancel.Token, 5).Wait();
+                        cam.StartAcquistionAsync(cancel, 5).Wait();
                         //Task.Delay(100).Wait();
                         Console.WriteLine("Exposure time {0:F6}", span.TotalMilliseconds / 1000.0);
 

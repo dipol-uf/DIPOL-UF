@@ -76,6 +76,7 @@ namespace ANDOR_CS.Classes
         }
 
         private ConcurrentQueue<Image> acquiredImages = new ConcurrentQueue<Image>();
+        private ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> runningTasks = new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
         /// <summary>
         /// Indicates if this camera is currently active
@@ -1052,6 +1053,12 @@ namespace ANDOR_CS.Classes
                 {
                     SetActiveAndLock();
 
+                    foreach (var key in runningTasks.Keys)
+                    {
+                        runningTasks.TryRemove(key, out (Task Task, CancellationTokenSource Source) item);
+                        item.Source.Cancel();
+                    }
+
                     // ShutsDown camera
                     CameraHandle.Dispose();
 
@@ -1165,9 +1172,10 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSDKException"/>
         /// <returns>Task that can be queried for execution status.</returns>
-        public async override Task StartAcquistionAsync(CancellationToken token, int timeout = StatusCheckTimeOutMS)
+        public async override Task StartAcquistionAsync(CancellationTokenSource source, int timeout = StatusCheckTimeOutMS)
         {
-            await Task.Factory.StartNew(() =>
+                        
+            var task = Task.Run(() =>
             {
                 CameraStatus status = CameraStatus.Idle;
                 try
@@ -1253,7 +1261,7 @@ namespace ANDOR_CS.Classes
                     }
 
                     // If after end of acquisition camera status is not idle, throws exception
-                    if (!token.IsCancellationRequested && status != CameraStatus.Idle)
+                    if (!source.Token.IsCancellationRequested && status != CameraStatus.Idle)
                         throw new AndorSDKException($"Acquisiotn finished with non-Idle status ({status}).", null);
 
 
@@ -1274,7 +1282,15 @@ namespace ANDOR_CS.Classes
                     OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus(), true));
                     ReleaseLock();
                 }
-            }, token);
+            }, source.Token);
+            int id = task.Id;
+
+            runningTasks.TryAdd(id, (Task: task, Source: source));
+
+            await task;
+
+            if (!runningTasks.TryRemove(id, out _))
+                throw new InvalidOperationException("Failed to remove finished task from queue.");
 
         }
         
