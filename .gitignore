@@ -57,8 +57,4 @@ Temporary Items
 *.txt
 *.lref
 *.psess
-*.exe
-*.pdb
-*.dll
-*.suo
-*.suo
+
