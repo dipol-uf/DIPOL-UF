@@ -52,7 +52,8 @@ namespace ANDOR_CS.Exceptions
 
         public static void ThrowIfError(uint returnCode, string name)
         {
-            if (returnCode != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+            if (returnCode != ATMCD64CS.AndorSDK.DRV_SUCCESS 
+                & returnCode != ATMCD64CS.AndorSDK.DRV_NO_NEW_DATA)
                 throw new AndorSDKException($"{name} returned error code.",
                     returnCode);
         }
