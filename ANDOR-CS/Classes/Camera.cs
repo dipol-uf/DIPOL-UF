@@ -222,9 +222,12 @@ namespace ANDOR_CS.Classes
 
                 // Using manual locker controls to call SDk function task-safely
 
-                LockManually();
-                var result = SDKInstance.GetCapabilities(ref caps);
-                ReleaseManually();
+                //LockManually();
+                //var result = SDKInstance.GetCapabilities(ref caps);
+                //ReleaseManually();
+
+                var result = Call(() => SDKInstance.GetCapabilities(ref caps));
+                
 
                 ThrowIfError(result, nameof(SDKInit.SDKInstance.GetCapabilities));
 
@@ -318,9 +321,12 @@ namespace ANDOR_CS.Classes
                 {
                     // Native call to SDK
                     // Uses manual synchronization calls
-                    LockManually();
-                    result = SDKInstance.GetTemperatureRange(ref min, ref max);
-                    ReleaseManually();
+                    result = Call((ref (int Min, int Max) output) =>
+                        SDKInstance.GetTemperatureRange(ref output.Min, ref output.Max),
+                        out (int Min, int Max) oMinMax);
+
+                    min = oMinMax.Min;
+                    max = oMinMax.Max;
 
                     // If return code is not DRV_SUCCESS = (uint) 20002, throws standard AndorSDKException 
                     ThrowIfError(result, nameof(SDKInstance.GetTemperatureRange));
@@ -338,9 +344,11 @@ namespace ANDOR_CS.Classes
                 if (Capabilities.GetFunctions.HasFlag(GetFunction.DetectorSize))
                 {
                     // Manual synchronization
-                    LockManually();
-                    result = SDKInstance.GetDetector(ref h, ref v);
-                    ReleaseManually();
+                    result = Call((ref (int H, int V) output) =>
+                        SDKInstance.GetDetector(ref output.H, ref output.V),
+                        out (int H, int V) oHV);
+                    h = oHV.H;
+                    v = oHV.V;
 
                     ThrowIfError(result, nameof(SDKInstance.GetDetector));
 
@@ -403,12 +411,10 @@ namespace ANDOR_CS.Classes
 
                 for (int ampIndex = 0; ampIndex < amps; ampIndex++)
                 {
-                    string ampName = "";
 
                     // Manual synchronization
-                    LockManually();
-                    result = SDKInstance.GetAmpDesc(ampIndex, ref ampName, AmpDescriptorMaxLength);
-                    ReleaseManually();
+                    result = Call((ref string output) =>
+                        SDKInstance.GetAmpDesc(ampIndex, ref output, AmpDescriptorMaxLength), out string ampName);
 
                     ThrowIfError(result, nameof(SDKInstance.GetAmpDesc));
 
@@ -437,14 +443,14 @@ namespace ANDOR_CS.Classes
 
                 for (int preAmpIndex = 0; preAmpIndex < preAmpGainMaxNumber; preAmpIndex++)
                 {
-                    string desc = "";
 
                     // Retrieves decription
                     // Manual synchronization
-                    LockManually();
-                    result = SDKInstance.GetPreAmpGainText(preAmpIndex, ref desc, PreAmpGainDescriptorMaxLength);
-                    ReleaseManually();
-
+                    //result = Call((ref string output) =>
+                    //    SDKInstance.GetPreAmpGainText(preAmpIndex, ref output, PreAmpGainDescriptorMaxLength),
+                    //    out string desc);                    
+                    string desc = "";
+                    result = Call(() => SDKInstance.GetPreAmpGainText(preAmpIndex, ref desc, PreAmpGainDescriptorMaxLength));
                     ThrowIfError(result, nameof(SDKInstance.GetPreAmpGainText));
 
                     // If success, adds it to array
@@ -477,9 +483,11 @@ namespace ANDOR_CS.Classes
 
                 if (Capabilities.GetFunctions.HasFlag(GetFunction.EMCCDGain))
                 {
-                    LockManually();
-                    SDKInstance.GetEMGainRange(ref Low, ref High);
-                    ReleaseManually();
+                    Call((ref (int Low, int High) output) =>
+                        SDKInstance.GetEMGainRange(ref output.Low, ref output.High),
+                        out (int Low, int High) oLH);
+                    Low = oLH.Low;
+                    High = oLH.High;
                 }
 
                 // Assemples a new CameraProperties object using collected above information
@@ -527,11 +535,9 @@ namespace ANDOR_CS.Classes
                 uint DllVer = 0;
                 uint DllRev = 0;
 
-                // Manual synchronization
-                LockManually();
-                result = SDKInstance.GetSoftwareVersion(ref eprom, ref COF, ref driverRev, ref driverVer, ref DllRev, ref DllVer);
-                ReleaseManually();
-
+               
+                result = Call(() => SDKInstance.GetSoftwareVersion(ref eprom, ref COF, ref driverRev, ref driverVer, ref DllRev, ref DllVer));
+               
                 ThrowIfError(result, nameof(SDKInstance.GetSoftwareVersion));
 
                 // Assigns obtained version information to the class field
@@ -550,10 +556,9 @@ namespace ANDOR_CS.Classes
                 uint firmwareRev = 0;
 
                 // Manual synchronization
-                LockManually();
-                result = SDKInstance.GetHardwareVersion(ref PCB, ref decode, ref dummy, ref dummy, ref firmwareVer, ref firmwareRev);
-                ReleaseManually();
-
+                
+                result = Call(() => SDKInstance.GetHardwareVersion(ref PCB, ref decode, ref dummy, ref dummy, ref firmwareVer, ref firmwareRev));
+                
                 ThrowIfError(result, nameof(SDKInstance.GetHardwareVersion));
 
                 // Assigns obtained hardware versions to the class field
@@ -587,21 +592,17 @@ namespace ANDOR_CS.Classes
 
         private void PushNewImage(NewImageReceivedEventArgs e)
         {
-            LockManually();
+            
 
-            try
-            {
+           
                 UInt16[] array = new UInt16[CurrentSettings.ImageArea.Value.Height * CurrentSettings.ImageArea.Value.Width];
                 (int First, int Last) validImages = (0, 0);
-                ThrowIfError(SDKInstance.GetImages16(e.Last, e.Last, array, (UInt32)(array.Length), ref validImages.First, ref validImages.Last), nameof(SDKInstance.GetImages16));
+                ThrowIfError(Call(() =>
+                    SDKInstance.GetImages16(e.Last, e.Last, array, (UInt32)(array.Length), ref validImages.First, ref validImages.Last)), nameof(SDKInstance.GetImages16));
                 
                 acquiredImages.Enqueue(new Image(array, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height));
 
-            }
-            finally
-            {
-                ReleaseManually();
-            }
+            
 
 
         }
@@ -833,9 +834,9 @@ namespace ANDOR_CS.Classes
 
                 if (Capabilities.Features.HasFlag(SDKFeatures.ShutterEx))
                 {
-                    LockManually();
-                    var result = SDKInstance.SetShutterEx((int)type, (int)inter, clTime, opTime, (int)exter);
-                    ReleaseManually();
+                    
+                    var result = Call(() =>SDKInstance.SetShutterEx((int)type, (int)inter, clTime, opTime, (int)exter));
+                   
 
                     ThrowIfError(result, nameof(SDKInstance.SetShutterEx));
 
@@ -843,9 +844,9 @@ namespace ANDOR_CS.Classes
                 }
                 else
                 {
-                    LockManually();
-                    var result = SDKInstance.SetShutter((int)type, (int)inter, clTime, opTime);
-                    ReleaseManually();
+
+                    var result = Call(() => SDKInstance.SetShutter((int)type, (int)inter, clTime, opTime));
+                    
 
                     ThrowIfError(result, nameof(SDKInstance.SetShutter));
 
@@ -1176,6 +1177,7 @@ namespace ANDOR_CS.Classes
                         
             var task = Task.Run(() =>
             {
+                uint result = 0;
                 CameraStatus status = CameraStatus.Idle;
                 try
                 {
@@ -1206,29 +1208,26 @@ namespace ANDOR_CS.Classes
                         OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, true));
 
                         // Checks if new image is already acuired and is available in camera memory
-                        // Locks SDK handle for thread-safety
-                        LockManually();
-                        try
-                        {
-                            // Gets indexes of first and last available new images
-                            acquiredImagesIndex = (0, 0);
-                            LockManually();
-                            var result = SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last);
-                            ReleaseManually();
+                       
+                        // Gets indexes of first and last available new images
+                        acquiredImagesIndex = (0, 0);
 
-                            // If there is new image, updates indexes of previous abailable images and fires an event.
-                            if (acquiredImagesIndex.Last != previousImages.Last
-                                || acquiredImagesIndex.First != previousImages.First)
-                            {
-                                previousImages = acquiredImagesIndex;
+                        //ThrowIfError(Call((ref (int, int) output) =>
+                        //    SDKInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
+                        //    out acquiredImagesIndex), nameof(SDKInstance.GetNumberNewImages));
 
-                                OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
-                            }
-                        }
-                        finally
+                        ThrowIfError(Call(() => SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last)), 
+                            nameof(SDKInstance.GetNumberNewImages));
+
+                        // If there is new image, updates indexes of previous abailable images and fires an event.
+                        if (acquiredImagesIndex.Last != previousImages.Last
+                            || acquiredImagesIndex.First != previousImages.First)
                         {
-                            ReleaseManually();
+                            previousImages = acquiredImagesIndex;
+
+                            OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
                         }
+                       
                         // If task is aborted
                         //if (token.IsCancellationRequested)
                         //{
@@ -1246,9 +1245,14 @@ namespace ANDOR_CS.Classes
 
                     // Gets indexes of first and last available new images
 
-                    LockManually();
-                    ThrowIfError(SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last), nameof(SDKInstance.GetNumberNewImages));
-                    ReleaseManually();
+
+                    ThrowIfError(Call((ref (int, int) output) =>
+                        SDKInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
+                        out acquiredImagesIndex), nameof(SDKInstance.GetNumberNewImages));
+
+                    //LockManually();
+                    //ThrowIfError(SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last), nameof(SDKInstance.GetNumberNewImages));
+                    //ReleaseManually();
 
                     // If there is new image, updates indexes of previous abailable images and fires an event.
                     if (acquiredImagesIndex.Last != previousImages.Last
