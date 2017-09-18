@@ -69,7 +69,9 @@ namespace ImageTest
                 int first2 = 0;
                 int last2 = 0;
 
-                var task = camera.StartAcquistionAsync(System.Threading.CancellationToken.None, 100);
+                System.Threading.CancellationTokenSource source = new System.Threading.CancellationTokenSource();
+
+                var task = camera.StartAcquistionAsync(source, 100);
 
                 ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetTotalNumberImagesAcquired(ref test);
                 ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetNumberNewImages(ref first, ref last);
