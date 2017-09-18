@@ -16,6 +16,7 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Threading;
@@ -23,7 +24,7 @@ using System.Threading;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
-using ANDOR_CS.Interfaces;
+using ImageDisplayLib;
 
 namespace ANDOR_CS.Classes
 {
@@ -60,7 +61,9 @@ namespace ANDOR_CS.Classes
         private volatile bool _IsAcquiring = false;
         private volatile bool _IsAsyncAcquisition = false;
 
-      
+        protected ConcurrentQueue<Image> acquiredImages = new ConcurrentQueue<Image>();
+
+
         public virtual DeviceCapabilities Capabilities
         {
             get => _Capabilities;
@@ -247,7 +250,10 @@ namespace ANDOR_CS.Classes
                 }
             }
         }
-
+        public abstract ConcurrentQueue<Image> AcquiredImages
+        {
+            get;
+        }
         public virtual SettingsBase CurrentSettings
         {
             get;
@@ -283,8 +289,9 @@ namespace ANDOR_CS.Classes
         /// Fires when backround task acsynchronously checks temperature
         /// </summary>
         public event TemperatureStatusEventHandler TemperatureStatusChecked;
+        public event NewImageReceivedHandler NewImageReceived;
 
-
+       
 
         /// <summary>
         /// When overriden in a derived class, returns current status of the camera
@@ -325,7 +332,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="TaskCanceledException"/>
         public abstract void AbortAcquisition();
 
-        public abstract Task StartAcquistionAsync(CancellationToken token, int timeout);
+        public abstract Task StartAcquistionAsync(CancellationTokenSource token, int timeout);
 
         /// <summary>
         /// Fires <see cref="PropertyChanged"/> event
@@ -372,7 +379,9 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Status of the camera when temperature was checked.</param>
         protected virtual void OnTemperatureStatusChecked(TemperatureStatusEventArgs e) 
             => TemperatureStatusChecked?.Invoke(this, e);
+        protected virtual void OnNewImageReceived(NewImageReceivedEventArgs e)
+           => NewImageReceived?.Invoke(this, e);
     }
 
-    
+
 }
