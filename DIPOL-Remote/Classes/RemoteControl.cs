@@ -463,7 +463,7 @@ namespace DIPOL_Remote.Classes
 
             int counter = 0;
             var source = new CancellationTokenSource();
-            var task = cam.StartAcquistionAsync(source.Token, delay);
+            var task = cam.StartAcquistionAsync(source, delay);
 
             while (counter <= MaxTryAddAttempts && !activeTasks.TryAdd(taskID, (Task: task, Token: source, CameraIndex: camIndex)))
                 taskID = Guid.NewGuid().ToString("N");

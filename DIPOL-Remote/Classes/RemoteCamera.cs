@@ -287,7 +287,7 @@ namespace DIPOL_Remote.Classes
         public override SettingsBase GetAcquisitionSettingsTemplate()
             => new RemoteSettings(session.SessionID, CameraIndex, session.CreateSettings(CameraIndex), session);
 
-        public async override Task StartAcquistionAsync(CancellationToken token, int timeout)
+        public async override Task StartAcquistionAsync(CancellationTokenSource token, int timeout)
         {
             string taskID = session.CreateAcquisitionTask(CameraIndex, timeout);
 
