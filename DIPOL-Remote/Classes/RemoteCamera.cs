@@ -31,7 +31,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
 using ANDOR_CS.Classes;
-
+using ImageDisplayLib;
 
 namespace DIPOL_Remote.Classes
 {
@@ -228,7 +228,8 @@ namespace DIPOL_Remote.Classes
             }
         }
 
-        
+        public override ConcurrentQueue<Image> AcquiredImages => throw new NotImplementedException();
+
         internal RemoteCamera(IRemoteControl sessionInstance, int camIndex)
         {
             session = sessionInstance ?? throw new ArgumentNullException("Session cannot be null.");
@@ -293,12 +294,15 @@ namespace DIPOL_Remote.Classes
 
             try
             {
-                while (!session.IsTaskFinished(taskID))
-                {
-                    await Task.Delay(timeout);
-                    if (token.IsCancellationRequested)
-                        session.RequestCancellation(taskID);
-                }
+                await Task.Run(() =>
+               {
+                   while (!session.IsTaskFinished(taskID))
+                   {
+                       Task.Delay(timeout).Wait();
+                       if (token.IsCancellationRequested)
+                           session.RequestCancellation(taskID);
+                   }
+               });
             }
             finally
             {

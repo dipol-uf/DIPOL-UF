@@ -75,7 +75,6 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        private ConcurrentQueue<Image> acquiredImages = new ConcurrentQueue<Image>();
         private ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> runningTasks = new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
         /// <summary>
@@ -199,7 +198,7 @@ namespace ANDOR_CS.Classes
         public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
             => CreatedCameras as IReadOnlyDictionary<int, CameraBase>;
 
-        public ConcurrentQueue<Image> AcquiredImages
+        public override ConcurrentQueue<Image> AcquiredImages
             => acquiredImages;
 
 
