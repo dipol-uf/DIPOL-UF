@@ -26,6 +26,7 @@ namespace ImageTest
         {
             using (var camera = new Camera())
             {
+                camera.FanControl(ANDOR_CS.Enums.FanMode.FullSpeed);
                 camera.NewImageReceived += (sender, arg) => Console.WriteLine($"New image received at {{0:HH-mm-ss.fff}}: {arg.First} {arg.Last}", arg.EventTime);
                 var sets = camera.GetAcquisitionSettingsTemplate();
 

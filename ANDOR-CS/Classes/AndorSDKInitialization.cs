@@ -68,17 +68,21 @@ namespace ANDOR_CS.Classes
             // Stores return code
             uint result = 0;
 
-            p1 = default(T1);
+            try
+            {
+                p1 = default(T1);
 
-            // Waits until SDKInstance is available
-            locker.Wait();
-            
-            // Calls function
-            result = method(ref p1);
-            
-            // Releases semaphore
-            locker.Release();
-            
+                // Waits until SDKInstance is available
+                locker.Wait();
+
+                // Calls function
+                result = method(ref p1);
+            }
+            finally
+            {
+                // Releases semaphore
+                locker.Release();
+            }
             return result;
         }
 
@@ -158,39 +162,48 @@ namespace ANDOR_CS.Classes
 
         public static uint Call(Func<uint> method)
         {
+
             // Stores return code
             uint result = 0;
 
-            // Waits until SDKInstance is available
-            locker.Wait();
-
-            // Calls function
-            result = method();
-
-            // Releases semaphore
-            locker.Release();
-
-            return result;
-        }
-
-        /// <summary>
-        /// Manually waits while other tasks access SDK instance
-        /// </summary>
-        internal static void LockManually()
-        {
-            if (LockDepth++ == 0)
+            try
+            {           
+                // Waits until SDKInstance is available
                 locker.Wait();
-            
+
+                // Calls function
+                result = method();
+                
+            }
+            finally
+            {
+                // Releases semaphore
+                locker.Release();
+                
+            }
+            return result;
+
         }
 
-        /// <summary>
-        /// Manually releases semaphore and allows other tasks to call SDK functions
-        /// </summary>
-        internal static void ReleaseManually()
-        {
-            if(--LockDepth == 0)
-                locker.Release();
-        }
+
+        ///// <summary>
+        ///// Manually waits while other tasks access SDK instance
+        ///// </summary>
+        //internal static void LockManually()
+        //{
+        //    if (LockDepth++ == 0)
+        //        locker.Wait();
+
+        //}
+
+        ///// <summary>
+        ///// Manually releases semaphore and allows other tasks to call SDK functions
+        ///// </summary>
+        //internal static void ReleaseManually()
+        //{
+        //    if (--LockDepth == 0)
+        //        locker.Release();
+        //}
 
     }
 }
