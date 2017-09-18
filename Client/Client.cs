@@ -102,7 +102,9 @@ namespace Client
 
                 sets.ApplySettings(out (float, float, float, int) timing);
 
-                camera.StartAcquistionAsync(System.Threading.CancellationToken.None, 100).Wait();
+                System.Threading.CancellationTokenSource source = new System.Threading.CancellationTokenSource();
+
+                camera.StartAcquistionAsync(source, 100).Wait();
 
             }
         }

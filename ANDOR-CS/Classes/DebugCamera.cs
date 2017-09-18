@@ -28,6 +28,8 @@ using ANDOR_CS.Events;
 
 using CallerMemberNameAttribute = System.Runtime.CompilerServices.CallerMemberNameAttribute;
 using ANDOR_CS.Interfaces;
+using ImageDisplayLib;
+using System.Collections.Concurrent;
 
 namespace ANDOR_CS.Classes
 {
@@ -41,6 +43,8 @@ namespace ANDOR_CS.Classes
         private Task TemperatureMonitorWorker;
         private CancellationTokenSource TemperatureMonitorCancellationSource
             = new CancellationTokenSource();
+
+        public override ConcurrentQueue<Image> AcquiredImages => throw new NotImplementedException();
 
         private void TemperatureMonitorCycler(CancellationToken token, int delay)
         {
@@ -168,7 +172,7 @@ namespace ANDOR_CS.Classes
 
         }
 
-        public async override Task StartAcquistionAsync(CancellationToken token, int timeout)
+        public async override Task StartAcquistionAsync(CancellationTokenSource token, int timeout)
         {
             throw new NotImplementedException();
         }
