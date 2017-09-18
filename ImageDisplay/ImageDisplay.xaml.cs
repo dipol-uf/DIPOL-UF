@@ -78,9 +78,9 @@ namespace ImageDisplayLib
         }
 
        
-        public void LoadImage(Image image, ImageType type)
+        public void LoadImage(Image image, ImageType type, double low = 0.001, double high = 0.999)
         {
-            displayedImage = image.Copy();
+            
             initialImage = image.Copy();
             imageType = type;
             DisplayedImageWidth = image.Width;
@@ -90,11 +90,14 @@ namespace ImageDisplayLib
 
             SliderTwo.MinValue = 1.0 * imageMin;
             SliderTwo.MaxValue = 1.0 * imageMax;
-            SliderTwo.RightThumb = SliderTwo.MaxValue;
-            SliderTwo.LeftThumb = SliderTwo.MinValue;
+            SliderTwo.RightThumb = initialImage.Percentile(low);
+            SliderTwo.LeftThumb = initialImage.Percentile(high);
             SliderTwo.MinDifference = 0.025*(SliderTwo.MaxValue - SliderTwo.MinValue);
 
-            
+            displayedImage = image.Copy();
+
+            SliderTwo_IsThumbDraggingChanged(SliderTwo, new DependencyPropertyChangedEventArgs(Slider2.IsLeftThumbDraggingProperty, false, false));
+
             UpdateFrame();
         }
 
