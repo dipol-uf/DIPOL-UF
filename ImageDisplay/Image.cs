@@ -16,30 +16,35 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ImageDisplayLib
 {
+    [DataContract]
     public class Image
     {
         private static readonly int MaxImageSingleThreadSize = 512 * 768;
 
+        [DataMember]
         private volatile bool IsParallelEnabled = true;
 
+        [DataMember]
         private Array baseArray;
 
+        //[DataMember]
         private Type type;
 
-        public Type UnderlyingType => type;        
+        public Type UnderlyingType => type;
 
+        [DataMember]
         public int Width
         {
             get;
             private set;
         }
+        [DataMember]
         public int Height
         {
             get;
@@ -94,6 +99,26 @@ namespace ImageDisplayLib
 
             Width = width;
             Height = height;
+        }
+
+        public Image(byte[] initialArray, int width, int height, Type type)
+        {
+            int size = 0;
+
+            if (type == typeof(UInt16))
+            {
+                size = sizeof(UInt16);
+                baseArray = new UInt16[width * height];
+                Width = width;
+                Height = height;
+                this.type = type;
+
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        Set<UInt16>(BitConverter.ToUInt16(initialArray, (i * width + j) * size), i, j);
+            }
+            else
+                throw new Exception();
         }
 
         public byte[] GetBytes()

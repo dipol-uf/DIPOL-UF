@@ -473,16 +473,6 @@
             <param name="p3">Stores result of the function call</param>
             <returns>Return code</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.LockManually">
-            <summary>
-            Manually waits while other tasks access SDK instance
-            </summary>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.ReleaseManually">
-            <summary>
-            Manually releases semaphore and allows other tasks to call SDK functions
-            </summary>
-        </member>
         <member name="T:ANDOR_CS.Classes.Camera">
             <summary>
             Represents an instance of a Camera device
