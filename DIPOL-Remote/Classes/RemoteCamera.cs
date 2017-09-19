@@ -370,7 +370,11 @@ namespace DIPOL_Remote.Classes
                 }
             }
         }
-        
+        internal static void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string sessionID, NewImageReceivedEventArgs e)
+        {
+            if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
+                (camera as RemoteCamera).OnNewImageReceived(e);
+        }
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
