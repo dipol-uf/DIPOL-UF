@@ -378,7 +378,8 @@ namespace DIPOL_Remote.Classes
             {
                 var cam = camera as RemoteCamera;
 
-                cam.acquiredImages.Enqueue(cam.session.PullNewImage(cam.CameraIndex));
+                var message = cam.session.PullNewImage(cam.CameraIndex);
+                Image im = new Image(message.Data, message.Width, message.Height, message.Type);
                 cam.OnNewImageReceived(e);
             }
         }
