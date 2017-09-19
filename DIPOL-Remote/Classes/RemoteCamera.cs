@@ -380,7 +380,7 @@ namespace DIPOL_Remote.Classes
 
                 //var message = cam.session.PullNewImage(cam.CameraIndex);
                 //Image im = new Image(message.Data, message.Width, message.Height, message.Type);
-                var test = cam.session.PullNewImage(cam.CameraIndex);
+                cam.session.PullNewImage(cam.CameraIndex);
                 cam.OnNewImageReceived(e);
                 Console.WriteLine("New image");
             }
