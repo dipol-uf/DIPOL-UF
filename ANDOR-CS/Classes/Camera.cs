@@ -75,6 +75,7 @@ namespace ANDOR_CS.Classes
             }
         }
         private static object Locker = new object();
+        private static volatile int CanSwitchCamera = 0;
 
         private ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> runningTasks = new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
@@ -101,7 +102,7 @@ namespace ANDOR_CS.Classes
 
             protected set => throw new NotSupportedException();
         }
-        public SafeSDKCameraHandle CameraHandle
+        internal SafeSDKCameraHandle CameraHandle
         {
             get;
             private set;
@@ -490,6 +491,11 @@ namespace ANDOR_CS.Classes
             }
 
         }
+        /// <summary>
+        /// Represents a worker that runs infinite loop until cancellation is requested.
+        /// </summary>
+        /// <param name="token">Cancellation token used to break the loop.</param>
+        /// <param name="delay">Time delay between loop cycles</param>
         private void TemperatureMonitorCycler(CancellationToken token, int delay)
         {
             while (true)
@@ -507,6 +513,10 @@ namespace ANDOR_CS.Classes
             
 
         }
+        /// <summary>
+        /// Retrives new image from camera buffer and pushes it to queue.
+        /// </summary>
+        /// <param name="e">Parameters obtained from <see cref="CameraBase.NewImageReceived"/> event.</param>
         private void PushNewImage(NewImageReceivedEventArgs e)
         {
             
@@ -537,8 +547,13 @@ namespace ANDOR_CS.Classes
             //    SetActive();
             //}
 
-            Monitor.Enter(Locker);
-            SetActive();
+            //Monitor.Enter(Locker);
+            if (Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1) == 1)
+                SetActive();
+            else if (ActiveCamera == this)
+                Interlocked.Increment(ref LockDepth);
+                      
+            //SetActive();
             //LockDepth++;
         }
         /// <summary>
@@ -550,7 +565,24 @@ namespace ANDOR_CS.Classes
             //    ActivityLocker.Release();
             ////LockDepth--;
 
-            Monitor.Exit(Locker);
+            //Monitor.Exit(Locker);
+
+            if (CanSwitchCamera == 0)
+            {
+                if (ActiveCamera == this)
+                {
+                    Monitor.Enter(Locker);
+                    if (Interlocked.Decrement(ref LockDepth) == 0 &
+                        Interlocked.CompareExchange(ref CanSwitchCamera, 1, 0) != 0)
+                        throw new AbandonedMutexException("Thread encountered abandoned mutex or call logic order was violated.");
+
+                    Monitor.Exit(Locker);
+                }
+                else
+                    throw new ThreadStateException("Attempt to release lock from foreign thread.");
+            }
+            else
+                throw new AbandonedMutexException($"Thread encountered an abandoned mutex.");
         }
         
         /// <summary>
@@ -1245,9 +1277,11 @@ namespace ANDOR_CS.Classes
         /// Does not requrire real camera
         /// </summary>
         /// <returns></returns>
+
+#if DEBUG
         public static CameraBase GetDebugInterface(int camIndex = 0) 
             => new DebugCamera(camIndex);
-
+#endif
         private static void OnActiveCameraChanged()
         {
             foreach (var cam in CreatedCameras)
