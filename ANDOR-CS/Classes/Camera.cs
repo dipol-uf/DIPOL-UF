@@ -492,20 +492,18 @@ namespace ANDOR_CS.Classes
         }
         private void TemperatureMonitorCycler(CancellationToken token, int delay)
         {
-            Task.Run(() =>
+            while (true)
             {
-                while (true)
-                {
-                    if (token.IsCancellationRequested)
-                        return;
+                if (token.IsCancellationRequested)
+                    return;
 
-                    (var status, var temp) = GetCurrentTemperature();
+                (var status, var temp) = GetCurrentTemperature();
 
-                    OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
+                OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
 
 
-                }
-            }, token);
+            }
+            
 
         }
         private void PushNewImage(NewImageReceivedEventArgs e)

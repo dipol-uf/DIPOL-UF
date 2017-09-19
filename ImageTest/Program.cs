@@ -35,6 +35,8 @@ namespace ImageTest
                     
                     camera.SetTemperature(0);
                     camera.CoolerControl(ANDOR_CS.Enums.Switch.Enabled);
+                    camera.TemperatureStatusChecked += (sender, e) => Console.WriteLine(e);
+                    camera.TemperatureMonitor(ANDOR_CS.Enums.Switch.Enabled, 1000);
                     camera.NewImageReceived += (sender, arg) => Console.WriteLine($"New image received at {{0:HH-mm-ss.fff}}: {arg.First} {arg.Last}", arg.EventTime);
                     var sets = camera.GetAcquisitionSettingsTemplate();
 
@@ -110,6 +112,7 @@ namespace ImageTest
 
                     task.Wait();
                     camera.CoolerControl(ANDOR_CS.Enums.Switch.Disabled);
+                    camera.TemperatureMonitor(ANDOR_CS.Enums.Switch.Disabled);
                     camera.SetTemperature(20);
                 }
 
