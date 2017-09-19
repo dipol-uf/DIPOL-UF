@@ -114,8 +114,8 @@ namespace ANDOR_CS.Classes
         public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
             => CreatedCameras as IReadOnlyDictionary<int, CameraBase>;
 
-        public override ConcurrentQueue<Image> AcquiredImages
-            => acquiredImages;
+        //public override ConcurrentQueue<Image> AcquiredImages
+        //    => acquiredImages;
 
 
         /// <summary>
@@ -501,8 +501,10 @@ namespace ANDOR_CS.Classes
 
                 OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
 
-                Task.Delay(delay).Wait();
+                Thread.Sleep(delay);
+
             }
+            
 
         }
         private void PushNewImage(NewImageReceivedEventArgs e)
@@ -973,6 +975,9 @@ namespace ANDOR_CS.Classes
                 {
                     SetActiveAndLock();
 
+                    if (TemperatureMonitorWorker.Status == TaskStatus.Running)
+                        TemperatureMonitor(Switch.Disabled);
+
                     foreach (var key in runningTasks.Keys)
                     {
                         runningTasks.TryRemove(key, out (Task Task, CancellationTokenSource Source) item);
@@ -1147,7 +1152,7 @@ namespace ANDOR_CS.Classes
 
                             OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
                         }
-                       
+
                         // If task is aborted
                         //if (token.IsCancellationRequested)
                         //{
@@ -1158,8 +1163,9 @@ namespace ANDOR_CS.Classes
                         //}
 
                         // Waits for specified amount of time before checking status again
-                       
-                        Task.Delay(StatusCheckTimeOutMS).Wait();
+
+                        Thread.Sleep(timeout);
+                        //Task.Delay(StatusCheckTimeOutMS).Wait();
 
                     }
 
