@@ -453,5 +453,19 @@ namespace ImageDisplayLib
            
             return this;
         }
+
+        public double Percentile(double lvl)
+        {
+            if (type == typeof(UInt16))
+            {
+                var query = ((UInt16[])baseArray).OrderBy((x) => x);
+
+                int length = (int)Math.Ceiling(lvl * Width * Height);
+
+                return (double)query.Skip(length - 1).Take(1).First();
+                    
+            }
+            else throw new Exception();
+        }
     }
 }
