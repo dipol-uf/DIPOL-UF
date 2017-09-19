@@ -24,12 +24,12 @@ namespace ImageTest
 
         private static void Test1()
         {
-            //using (var client = new DIPOL_Remote.Classes.DipolClient("dipol-2"))
+            using (var client = new DIPOL_Remote.Classes.DipolClient("dipol-2"))
             {
-                //    client.Connect();
+                client.Connect();
 
-                //using (var camera = client.CreateRemoteCamera())
-                using (var camera = new Camera())
+                using (var camera = client.CreateRemoteCamera())
+                //using (var camera = new Camera())
                 {
                     camera.FanControl(ANDOR_CS.Enums.FanMode.FullSpeed);
                     camera.NewImageReceived += (sender, arg) => Console.WriteLine($"New image received at {{0:HH-mm-ss.fff}}: {arg.First} {arg.Last}", arg.EventTime);
@@ -66,8 +66,8 @@ namespace ImageTest
 
                     sets.ApplySettings(out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing);
 
-                    using (var str = new System.IO.StreamWriter("test.xml"))
-                        sets.Serialize(str.BaseStream);
+                    //using (var str = new System.IO.StreamWriter("test.xml"))
+                    //    sets.Serialize(str.BaseStream);
 
                     Console.WriteLine(timing);
 
@@ -80,7 +80,7 @@ namespace ImageTest
 
                     System.Threading.CancellationTokenSource source = new System.Threading.CancellationTokenSource();
 
-                   // var task = camera.StartAcquistionAsync(source, 100);
+                    var task = camera.StartAcquistionAsync(source, 100);
 
                     //ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetTotalNumberImagesAcquired(ref test);
                     //ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetNumberNewImages(ref first, ref last);
@@ -90,14 +90,14 @@ namespace ImageTest
                     var app = new System.Windows.Application();
                     app.Run(new TestWindow(camera));
 
-                    //var t = DateTime.Now;
+                    var t = DateTime.Now;
 
                     //for (int i = first; i <= last; i++)
                     //    Console.WriteLine($"{i} \t {ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetImages(i, i, array, 512 * 512, ref first2, ref last2) == 20002} \t {array.Max()}");
 
                     //Console.WriteLine("{0:F3} s", (DateTime.Now - t).TotalSeconds / test);
 
-                  //  task.Wait();
+                    //  task.Wait();
                 }
             }
         }
