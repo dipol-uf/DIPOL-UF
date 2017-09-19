@@ -42,10 +42,12 @@ namespace DIPOL_Remote.Classes
 
         public DipolClient(string host)
         {
+            var bnd = new NetTcpBinding(SecurityMode.None);
+            bnd.TransferMode = TransferMode.StreamedResponse;
             var endpoint = new Uri(string.Format(endpointTemplate, host));
             remote = new DuplexChannelFactory<IRemoteControl>(
                 context, 
-                new NetTcpBinding(SecurityMode.None), 
+                bnd, 
                 new EndpointAddress(endpoint)).CreateChannel();            
             
         }
