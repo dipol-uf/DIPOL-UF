@@ -296,7 +296,7 @@ namespace DIPOL_Remote.Classes
 
             try
             {
-                await Task.Run(() =>
+               await Task.Run(() =>
                {
                    while (!session.IsTaskFinished(taskID))
                    {
