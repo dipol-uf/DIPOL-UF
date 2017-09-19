@@ -290,6 +290,8 @@ namespace DIPOL_Remote.Classes
 
         public async override Task StartAcquistionAsync(CancellationTokenSource token, int timeout)
         {
+            acquiredImages = new ConcurrentQueue<Image>();
+
             string taskID = session.CreateAcquisitionTask(CameraIndex, timeout);
 
             try
@@ -373,7 +375,12 @@ namespace DIPOL_Remote.Classes
         internal static void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string sessionID, NewImageReceivedEventArgs e)
         {
             if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
-                (camera as RemoteCamera).OnNewImageReceived(e);
+            {
+                var cam = camera as RemoteCamera;
+
+                cam.acquiredImages.Enqueue(cam.session.PullNewImage(cam.CameraIndex));
+                cam.OnNewImageReceived(e);
+            }
         }
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
