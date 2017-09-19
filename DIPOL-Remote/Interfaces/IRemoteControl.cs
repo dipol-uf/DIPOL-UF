@@ -143,7 +143,7 @@ namespace DIPOL_Remote.Interfaces
         (Version PCB, Version Decode, Version CameraFirmware) GetHardware(int camIndex);
 
         [OperationContract(IsOneWay = false)]
-        (byte[] Data, int Width, int Height, Type type) PullNewImage(int camIndex);
+        (byte[] Data, int Width, int Height, TypeCode type) PullNewImage(int camIndex);
 
 
         [OperationContract(IsOneWay = false)]
