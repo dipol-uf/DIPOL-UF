@@ -48,7 +48,7 @@ namespace DIPOL_Remote.Classes
                 EventLog.CreateEventSource(sourceName, logName);
 
             var bnd = new NetTcpBinding(SecurityMode.None);
-            bnd.TransferMode = TransferMode.StreamedResponse;
+          
 
             host = new ServiceHost(typeof(RemoteControl), endpoint);
 
