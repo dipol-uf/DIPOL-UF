@@ -32,6 +32,9 @@ namespace ImageTest
                 //using (var camera = new Camera())
                 {
                     camera.FanControl(ANDOR_CS.Enums.FanMode.FullSpeed);
+                    
+                    camera.SetTemperature(0);
+                    camera.CoolerControl(ANDOR_CS.Enums.Switch.Enabled);
                     camera.NewImageReceived += (sender, arg) => Console.WriteLine($"New image received at {{0:HH-mm-ss.fff}}: {arg.First} {arg.Last}", arg.EventTime);
                     var sets = camera.GetAcquisitionSettingsTemplate();
 
@@ -54,7 +57,7 @@ namespace ImageTest
 
                     sets.SetPreAmpGain(0);
 
-                    int N = 2;
+                    int N = 15;
 
                     sets.SetAcquisitionMode(ANDOR_CS.Enums.AcquisitionMode.Kinetic);
                     sets.SetKineticCycle(N, 1.1f);
@@ -78,6 +81,14 @@ namespace ImageTest
                     //int first2 = 0;
                     //int last2 = 0;
 
+                    var st = camera.GetCurrentTemperature();
+                    while (st.Temperature > 5 & st.Status == ANDOR_CS.Enums.TemperatureStatus.NotReached)
+                    {
+                        System.Threading.Thread.Sleep(200);
+                        Console.WriteLine(st);
+                    }
+                    
+
                     System.Threading.CancellationTokenSource source = new System.Threading.CancellationTokenSource();
 
                     var task = camera.StartAcquistionAsync(source, 100);
@@ -87,8 +98,8 @@ namespace ImageTest
                     //ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetNumberAvailableImages(ref first, ref last);
 
 
-                    //var app = new System.Windows.Application();
-                    //app.Run(new TestWindow(camera));
+                    var app = new System.Windows.Application();
+                    app.Run(new TestWindow(camera));
 
                     //var t = DateTime.Now;
 
@@ -98,7 +109,11 @@ namespace ImageTest
                     //Console.WriteLine("{0:F3} s", (DateTime.Now - t).TotalSeconds / test);
 
                     task.Wait();
+                    camera.CoolerControl(ANDOR_CS.Enums.Switch.Disabled);
+                    camera.SetTemperature(20);
                 }
+
+                client.Disconnect();
             }
         }
 

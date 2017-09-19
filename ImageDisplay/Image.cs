@@ -441,13 +441,24 @@ namespace ImageDisplayLib
 
         public double Percentile(double lvl)
         {
+            if (lvl < 0 | lvl > 1.0)
+                throw new ArgumentOutOfRangeException($"{nameof(lvl)} parameter is out of range ({lvl} should be in [0, 1]).");
+
             if (typeCode == TypeCode.UInt16)
             {
-                var query = ((UInt16[])baseArray).OrderBy((x) => x);
+                if (Math.Abs(lvl) < Double.Epsilon)
+                    return (UInt16)Min();
+                else if (Math.Abs(lvl - 1) < Double.Epsilon)
+                    return (UInt16)Max();
+                else
+                {
+                    var query = ((UInt16[])baseArray).OrderBy((x) => x);
 
-                int length = (int)Math.Ceiling(lvl * Width * Height);
+                    int length = (int)Math.Ceiling(lvl * Width * Height);
 
-                return (double)query.Skip(length - 1).Take(1).First();
+
+                    return query.Skip(length - 1).Take(1).First();
+                }
                     
             }
             else throw new Exception();
