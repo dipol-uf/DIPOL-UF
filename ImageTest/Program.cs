@@ -54,7 +54,7 @@ namespace ImageTest
 
                     sets.SetPreAmpGain(0);
 
-                    int N = 10;
+                    int N = 2;
 
                     sets.SetAcquisitionMode(ANDOR_CS.Enums.AcquisitionMode.Kinetic);
                     sets.SetKineticCycle(N, 1.1f);
@@ -87,17 +87,17 @@ namespace ImageTest
                     //ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetNumberAvailableImages(ref first, ref last);
 
 
-                    var app = new System.Windows.Application();
-                    app.Run(new TestWindow(camera));
+                    //var app = new System.Windows.Application();
+                    //app.Run(new TestWindow(camera));
 
-                    var t = DateTime.Now;
+                    //var t = DateTime.Now;
 
                     //for (int i = first; i <= last; i++)
                     //    Console.WriteLine($"{i} \t {ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetImages(i, i, array, 512 * 512, ref first2, ref last2) == 20002} \t {array.Max()}");
 
                     //Console.WriteLine("{0:F3} s", (DateTime.Now - t).TotalSeconds / test);
 
-                    //  task.Wait();
+                    task.Wait();
                 }
             }
         }
