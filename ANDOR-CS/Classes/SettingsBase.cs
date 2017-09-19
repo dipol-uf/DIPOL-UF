@@ -643,6 +643,9 @@ namespace ANDOR_CS.Classes
                     IndentChars = "\t"
                 }))
             {
+                var sourceCulture = System.Threading.Thread.CurrentThread.CurrentCulture;
+                System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+
                 str.WriteStartDocument();
 
                 str.WriteStartElement("AcquisitionSettings");
@@ -717,6 +720,8 @@ namespace ANDOR_CS.Classes
                 str.WriteEndElement();
 
                 str.WriteEndDocument();
+
+                System.Threading.Thread.CurrentThread.CurrentCulture = sourceCulture;
             }
         }
 
