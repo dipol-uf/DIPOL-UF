@@ -53,7 +53,7 @@ namespace ANDOR_CS.Classes
         private static ConcurrentDictionary<int, CameraBase> CreatedCameras
             = new ConcurrentDictionary<int, CameraBase>();
         private static Camera _ActiveCamera = null;
-        private static volatile SemaphoreSlim ActivityLocker = new SemaphoreSlim(1, 1);
+      //  private static volatile SemaphoreSlim ActivityLocker = new SemaphoreSlim(1, 1);
         private static volatile int LockDepth = 0;
         private static Camera ActiveCamera
         {
@@ -62,18 +62,19 @@ namespace ANDOR_CS.Classes
             {
                 if (value != _ActiveCamera)
                 {
-                    if (LockDepth++ == 0)
-                        ActivityLocker.Wait();
+                    //if (LockDepth++ == 0)
+                    //    ActivityLocker.Wait();
 
                     _ActiveCamera = value;
 
-                    if (--LockDepth == 0)
-                        ActivityLocker.Release();
+                    //if (--LockDepth == 0)
+                    //    ActivityLocker.Release();
 
                     OnActiveCameraChanged();
                 }
             }
         }
+        private static object Locker = new object();
 
         private ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> runningTasks = new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
@@ -105,91 +106,6 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         } = null;
-        //public bool IsInitialized
-        //{
-        //    get;
-        //    private set;
-        //} = false;
-        //public FanMode FanMode
-        //{
-        //    get;
-        //    private set;
-        //} = FanMode.Off;
-        //public Switch CoolerMode
-        //{
-        //    get;
-        //    private set;
-        //} = Switch.Disabled;
-        //public (
-        //    ShutterMode Internal,
-        //    ShutterMode? External,
-        //    TTLShutterSignal Type,
-        //    int OpenTime,
-        //    int CloseTime
-        //    ) Shutter
-        //{
-        //    get;
-        //    private set;
-        //}
-        //public string SerialNumber
-        //{
-        //    get;
-        //    private set;
-        //} = "Unavailable";
-        //public string CameraModel
-        //{
-        //    get;
-        //    private set;
-        //} = "Unknown";
-        //public DeviceCapabilities Capabilities
-        //{
-        //    get;
-        //    private set;
-
-        //} = default(DeviceCapabilities);
-        //public CameraProperties Properties
-        //{
-        //    get;
-        //    private set;
-        //}
-        //public (Version EPROM, Version COFFile, Version Driver, Version Dll) Software
-        //{
-        //    get;
-        //    private set;
-        //}
-        //public (Version PCB, Version Decode, Version CameraFirmware) Hardware
-        //{
-        //    get;
-        //    private set;
-        //}
-        /// <summary>
-        /// Andor SDK unique index of camera; passed to constructor
-        /// </summary>
-        //public int CameraIndex
-        //{
-        //    get;
-        //    private set;
-        //} = -1;
-        /// <summary>
-        /// Curently set acquisition regime
-        /// </summary>
-        /// <summary>
-        /// Indicates if camera is in process of image acquisition.
-        /// </summary>
-        //public bool IsAcquiring
-        //{
-        //    get => isAcquiring;
-        //    set => isAcquiring = value;
-        //}
-        /// <summary>
-        /// Indicates if acquisition is launched from async method and
-        /// camera is able to properly fire all events.
-        /// </summary>
-        //public bool IsAsyncAcquisition
-        //{
-        //    get => isAsyncAcquisition;
-        //    set => isAsyncAcquisition = value;
-        //}
 
 
         /// <summary>
@@ -589,7 +505,6 @@ namespace ANDOR_CS.Classes
             }
 
         }
-
         private void PushNewImage(NewImageReceivedEventArgs e)
         {
             
@@ -607,18 +522,21 @@ namespace ANDOR_CS.Classes
 
         }
 
+
         /// <summary>
         /// Sets curernt camera active and locks it, preventing any further switches
         /// </summary>
         internal void SetActiveAndLock()
         {
-            if (LockDepth++ == 0)
-            {
-                ActivityLocker.Wait();
+            //if (LockDepth++ == 0)
+            //{
+            //    ActivityLocker.Wait();
 
-                SetActive();
-            }
+            //    SetActive();
+            //}
 
+            Monitor.Enter(Locker);
+            SetActive();
             //LockDepth++;
         }
         /// <summary>
@@ -626,9 +544,11 @@ namespace ANDOR_CS.Classes
         /// </summary>
         internal void ReleaseLock()
         {
-            if(--LockDepth == 0)
-                ActivityLocker.Release();
-            //LockDepth--;
+            //if(--LockDepth == 0)
+            //    ActivityLocker.Release();
+            ////LockDepth--;
+
+            Monitor.Exit(Locker);
         }
         
         /// <summary>
