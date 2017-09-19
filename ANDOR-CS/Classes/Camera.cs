@@ -75,7 +75,7 @@ namespace ANDOR_CS.Classes
             }
         }
         private static object Locker = new object();
-        private static volatile int CanSwitchCamera = 0;
+        private static volatile int CanSwitchCamera = 1;
 
         private ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> runningTasks = new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
@@ -547,11 +547,22 @@ namespace ANDOR_CS.Classes
             //    SetActive();
             //}
 
-            //Monitor.Enter(Locker);
-            if (Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1) == 1)
-                SetActive();
-            else if (ActiveCamera == this)
-                Interlocked.Increment(ref LockDepth);
+
+            //if (Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1) == 1)
+            //{
+            //    SetActive();
+            //    Interlocked.Increment(ref LockDepth);
+            //}
+            //if (ActiveCamera == this)
+            //    Interlocked.Increment(ref LockDepth);
+            //else
+
+            if (ActiveCamera != this)
+                SpinWait.SpinUntil(() => Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1) == 1);
+            else
+                Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1);
+            SetActive();
+            Interlocked.Increment(ref LockDepth);
                       
             //SetActive();
             //LockDepth++;
@@ -561,7 +572,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         internal void ReleaseLock()
         {
-            //if(--LockDepth == 0)
+            //if(--LockDepth == 0).
             //    ActivityLocker.Release();
             ////LockDepth--;
 
@@ -572,7 +583,7 @@ namespace ANDOR_CS.Classes
                 if (ActiveCamera == this)
                 {
                     Monitor.Enter(Locker);
-                    if (Interlocked.Decrement(ref LockDepth) == 0 &
+                    if (Interlocked.Decrement(ref LockDepth) == 0 &&
                         Interlocked.CompareExchange(ref CanSwitchCamera, 1, 0) != 0)
                         throw new AbandonedMutexException("Thread encountered abandoned mutex or call logic order was violated.");
 
@@ -951,7 +962,17 @@ namespace ANDOR_CS.Classes
                         TemperatureMonitorWorker.Status == TaskStatus.Faulted)
                         // Starts new with a cancellation token
                         TemperatureMonitorWorker = Task.Factory.StartNew(
-                            () => TemperatureMonitorCycler(TemperatureMonitorCancellationSource.Token, timeout),
+                            () =>
+                            {
+                                try
+                                {
+                                    TemperatureMonitorCycler(TemperatureMonitorCancellationSource.Token, timeout);
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e.Message);
+                                }
+                            },
                             TemperatureMonitorCancellationSource.Token);
 
                     // If task was created, but has not started, start it
@@ -1026,14 +1047,14 @@ namespace ANDOR_CS.Classes
                 }
                 finally
                 {
-                   
+                    ReleaseLock();
                     // If there are no other cameras, 
                     if (CreatedCameras.Count == 0)
                         ActiveCamera = null;
                     // If there are, sets active the one that was active before disposing procedure
                     else oldCamera?.SetActive();
 
-                    ReleaseLock();
+                    
                 }
                
             }
@@ -1075,6 +1096,8 @@ namespace ANDOR_CS.Classes
 
             try
             {// Sets current camera active
+                ActiveCamera = this;
+
                 SetActiveAndLock();
 
                 // Initializes current camera
@@ -1087,6 +1110,8 @@ namespace ANDOR_CS.Classes
                     throw new InvalidOperationException("Failed to add camera to the concurrent dictionary");
 
                 CameraIndex = camIndex;
+
+                //SetActive();
 
                 // Gets information about software and hardware used in this system
                 GetSoftwareHardwareVersion();
