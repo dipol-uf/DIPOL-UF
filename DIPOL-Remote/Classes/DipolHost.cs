@@ -46,10 +46,13 @@ namespace DIPOL_Remote.Classes
         {
             if (!EventLog.SourceExists(sourceName))
                 EventLog.CreateEventSource(sourceName, logName);
-           
+
+            var bnd = new NetTcpBinding(SecurityMode.None);
+            bnd.TransferMode = TransferMode.StreamedResponse;
+
             host = new ServiceHost(typeof(RemoteControl), endpoint);
 
-            host.AddServiceEndpoint(typeof(IRemoteControl), new NetTcpBinding(SecurityMode.None), "");
+            host.AddServiceEndpoint(typeof(IRemoteControl),bnd, "");
 
             _OpenedHosts.TryAdd(host.BaseAddresses[0].GetHashCode(), this);
 
