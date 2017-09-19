@@ -33,7 +33,7 @@ namespace ImageDisplayLib
         [DataMember]
         private Array baseArray;
 
-        [DataMember]
+        //[DataMember]
         private Type type;
 
         public Type UnderlyingType => type;
