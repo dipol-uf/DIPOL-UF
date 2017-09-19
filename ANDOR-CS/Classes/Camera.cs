@@ -1248,12 +1248,7 @@ namespace ANDOR_CS.Classes
                 (cam.Value as Camera).OnPropertyChanged(nameof(IsActive));
         }
 
-        public event NewImageReceivedHandler NewImageReceived;
-
-        protected virtual void OnNewImageReceived(NewImageReceivedEventArgs e)
-            => NewImageReceived?.Invoke(this, e);
-
-
+        
     }
 
 }
