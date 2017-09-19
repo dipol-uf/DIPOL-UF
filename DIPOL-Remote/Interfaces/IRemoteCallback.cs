@@ -35,5 +35,9 @@ namespace DIPOL_Remote.Interfaces
         [OperationContract(IsOneWay = true)]
         void NotifyRemoteAcquisitionEventHappened(
             int camIndex, string session, AcquisitionEventType type, AcquisitionStatusEventArgs args);
+
+        [OperationContract(IsOneWay = true)]
+        void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string session, NewImageReceivedEventArgs e);
+
     }
 }
