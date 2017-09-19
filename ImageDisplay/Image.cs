@@ -16,34 +16,35 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace ImageDisplayLib
 {
-    
+    [DataContract]
     public class Image
     {
         private static readonly int MaxImageSingleThreadSize = 512 * 768;
 
+        [DataMember]
         private volatile bool IsParallelEnabled = true;
 
-        
+        [DataMember]
         private Array baseArray;
 
-       
+        [DataMember]
         private Type type;
 
-        public Type UnderlyingType => type;        
+        public Type UnderlyingType => type;
 
-        
+        [DataMember]
         public int Width
         {
             get;
             private set;
         }
-        
+        [DataMember]
         public int Height
         {
             get;
