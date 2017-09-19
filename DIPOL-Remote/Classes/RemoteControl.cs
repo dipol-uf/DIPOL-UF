@@ -555,17 +555,17 @@ namespace DIPOL_Remote.Classes
             => GetCameraSafe(sessionID, camIndex).Hardware;
 
         [OperationBehavior]
-        public byte[] PullNewImage(int camIndex)
+        public ImageDisplayLib.Image PullNewImage(int camIndex)
         {
-            //if (GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out ImageDisplayLib.Image im))
-            //    return (im.GetBytes(), im.Height, im.Width);
-            //else
-            //    throw new Exception();
-            
-            //GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out ImageDisplayLib.Image im);
-            byte[] arr = new byte[10];
-            (new Random()).NextBytes(arr);
-            return arr; // im.GetBytes();
+            if (GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out ImageDisplayLib.Image im))
+                return im;
+            else
+                throw new Exception();
+
+            ////GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out ImageDisplayLib.Image im);
+            //byte[] arr = new byte[10];
+            //(new Random()).NextBytes(arr);
+            //return arr; // im.GetBytes();
         }
 
 
