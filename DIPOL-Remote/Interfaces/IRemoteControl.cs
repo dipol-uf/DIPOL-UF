@@ -57,6 +57,7 @@ namespace DIPOL_Remote.Interfaces
     [ServiceKnownType(typeof(TemperatureStatusEventArgs))]
     [ServiceKnownType(typeof(NewImageReceivedEventArgs))]
     [ServiceKnownType(typeof(ImageDisplayLib.Image))]
+    [ServiceKnownType(typeof(TypeCode))]
     internal interface IRemoteControl
     {
         /// <summary>
@@ -143,7 +144,7 @@ namespace DIPOL_Remote.Interfaces
         (Version PCB, Version Decode, Version CameraFirmware) GetHardware(int camIndex);
 
         [OperationContract(IsOneWay = false)]
-        (byte[] Data, int Width, int Height, Type type) PullNewImage(int camIndex);
+        (byte[] Data, int Width, int Height, TypeCode type) PullNewImage(int camIndex);
 
 
         [OperationContract(IsOneWay = false)]
