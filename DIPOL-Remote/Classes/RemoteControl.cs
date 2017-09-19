@@ -546,6 +546,16 @@ namespace DIPOL_Remote.Classes
         public (Version PCB, Version Decode, Version CameraFirmware) GetHardware(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Hardware;
 
+        [OperationBehavior]
+        public ImageDisplayLib.Image PullNewImage(int camIndex)
+        {
+            if (GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out ImageDisplayLib.Image im))
+                return im;
+            else
+                throw new Exception();
+        }
+
+
 
 
         [OperationBehavior]
