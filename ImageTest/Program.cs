@@ -24,12 +24,12 @@ namespace ImageTest
 
         private static void Test1()
         {
-           // using (var client = new DIPOL_Remote.Classes.DipolClient("dipol-2"))
+            using (var client = new DIPOL_Remote.Classes.DipolClient("dipol-2"))
             {
-                //client.Connect();
+                client.Connect();
 
-                // using (var camera = client.CreateRemoteCamera())
-                using (var camera = new Camera())
+                using (var camera = client.CreateRemoteCamera())
+                //using (var camera = new Camera())
                 {
                     camera.FanControl(ANDOR_CS.Enums.FanMode.FullSpeed);
                     
@@ -116,7 +116,7 @@ namespace ImageTest
                     camera.SetTemperature(20);
                 }
 
-               // client.Disconnect();
+                client.Disconnect();
             }
         }
 
