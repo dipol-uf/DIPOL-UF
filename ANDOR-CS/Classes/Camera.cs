@@ -501,6 +501,7 @@ namespace ANDOR_CS.Classes
 
                 OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
 
+                Thread.Sleep(delay);
 
             }
             
@@ -1151,7 +1152,7 @@ namespace ANDOR_CS.Classes
 
                             OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
                         }
-                       
+
                         // If task is aborted
                         //if (token.IsCancellationRequested)
                         //{
@@ -1162,8 +1163,9 @@ namespace ANDOR_CS.Classes
                         //}
 
                         // Waits for specified amount of time before checking status again
-                       
-                        Task.Delay(StatusCheckTimeOutMS).Wait();
+
+                        Thread.Sleep(timeout);
+                        //Task.Delay(StatusCheckTimeOutMS).Wait();
 
                     }
 

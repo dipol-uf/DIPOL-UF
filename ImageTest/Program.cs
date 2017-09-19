@@ -87,7 +87,7 @@ namespace ImageTest
                     while (st.Temperature > 5 & st.Status == ANDOR_CS.Enums.TemperatureStatus.NotReached)
                     {
                         System.Threading.Thread.Sleep(200);
-                        Console.WriteLine(st);
+                        st = camera.GetCurrentTemperature();
                     }
                     
 
