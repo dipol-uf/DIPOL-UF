@@ -9,6 +9,8 @@ namespace Host
 {
     class Host
     {
+        private static object locker = new object();
+
         static void Main(string[] args)
         {
             Console.WindowWidth = 120;
@@ -27,12 +29,15 @@ namespace Host
                         else
                             senderString = sender.ToString();
 
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.Write($"[{{0,23:yyyy/MM/dd HH-mm-ss.fff}}] @", DateTime.Now);
-                        Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.Write(" {0, 16}", senderString);
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.WriteLine($": { message}");
+                        lock (locker)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.Write($"[{{0,23:yyyy/MM/dd HH-mm-ss.fff}}] @", DateTime.Now);
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            Console.Write(" {0, 16}", senderString);
+                            Console.ForegroundColor = ConsoleColor.White;
+                            Console.WriteLine($": { message}");
+                        }
                     }
 
                 };
