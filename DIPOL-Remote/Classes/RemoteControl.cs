@@ -561,15 +561,8 @@ namespace DIPOL_Remote.Classes
                 return (im.GetBytes(), im.Width, im.Height, im.UnderlyingType);
             else
                 throw new Exception();
-
-            ////GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out ImageDisplayLib.Image im);
-            //byte[] arr = new byte[10];
-            //(new Random()).NextBytes(arr);
-            //return arr; // im.GetBytes();
         }
-
-
-
+        
 
         [OperationBehavior]
         public CameraStatus CallGetStatus(int camIndex)

@@ -77,7 +77,35 @@ namespace ImageDisplayLib
             
         }
 
-       
+        public void LoadImage(Image image, ImageType type)
+        {
+            
+            if (initialImage == null)
+                LoadImage(image, type, 0.00, 1.0-3e-3);
+            else
+            {
+                double low =  SliderTwo.LeftThumb;
+                double high = SliderTwo.RightThumb;
+                initialImage = image.Copy();
+                imageType = type;
+                DisplayedImageWidth = image.Width;
+                DisplayedImageHeight = image.Height;
+                dynamic imageMin = initialImage.Min();
+                dynamic imageMax = initialImage.Max();
+
+                SliderTwo.MinValue = 1.0 * imageMin;
+                SliderTwo.MaxValue = 1.0 * imageMax;
+                SliderTwo.LeftThumb = Math.Max(low, 1.0 * imageMin);
+                SliderTwo.RightThumb = Math.Min(high, 1.0 * imageMax);
+                SliderTwo.MinDifference = 0.025 * (SliderTwo.MaxValue - SliderTwo.MinValue);
+
+                displayedImage = image.Copy();
+
+                SliderTwo_IsThumbDraggingChanged(SliderTwo, new DependencyPropertyChangedEventArgs(Slider2.IsLeftThumbDraggingProperty, false, false));
+
+                UpdateFrame();
+            }
+        }
         public void LoadImage(Image image, ImageType type, double low = 0.001, double high = 0.999)
         {
             
@@ -90,10 +118,12 @@ namespace ImageDisplayLib
 
             SliderTwo.MinValue = 1.0 * imageMin;
             SliderTwo.MaxValue = 1.0 * imageMax;
-            SliderTwo.RightThumb = initialImage.Percentile(low);
-            SliderTwo.LeftThumb = initialImage.Percentile(high);
+           
             SliderTwo.MinDifference = 0.025*(SliderTwo.MaxValue - SliderTwo.MinValue);
+            SliderTwo.RightThumb = SliderTwo.MaxValue;
 
+            SliderTwo.LeftThumb =  initialImage.Percentile(low);
+            SliderTwo.RightThumb = Math.Max(initialImage.Percentile(high), SliderTwo.LeftThumb + SliderTwo.MinDifference);
             displayedImage = image.Copy();
 
             SliderTwo_IsThumbDraggingChanged(SliderTwo, new DependencyPropertyChangedEventArgs(Slider2.IsLeftThumbDraggingProperty, false, false));
