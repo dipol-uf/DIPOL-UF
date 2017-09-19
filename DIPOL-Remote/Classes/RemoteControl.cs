@@ -365,6 +365,13 @@ namespace DIPOL_Remote.Classes
                     SessionID,
                     Enums.AcquisitionEventType.ErrorReturned,
                     e);
+            // Remotely fires event, informing that new image was acquired
+            camera.NewImageReceived += (sndr, e)
+                => context.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteNewImageReceivedEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    e);
 
             camera.TemperatureStatusChecked += (sender, e)
                 => host?.OnEventReceived(sender, $"{e.Status} {e.Temperature}");
@@ -382,7 +389,8 @@ namespace DIPOL_Remote.Classes
                 => host?.OnEventReceived(sender, $"Acq. Aborted      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
             camera.AcquisitionErrorReturned += (sender, e)
                 => host?.OnEventReceived(sender, $"Acq. Err. Ret.    {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-
+            camera.NewImageReceived += (sender, e)
+                => host?.OnEventReceived(sender, $"New image:  ({e.First}, {e.Last})");
 
             host?.OnEventReceived(camera, "Camera was created remotely");
         }
@@ -546,7 +554,15 @@ namespace DIPOL_Remote.Classes
         public (Version PCB, Version Decode, Version CameraFirmware) GetHardware(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Hardware;
 
-
+        [OperationBehavior]
+        public (byte[] Data, int Width, int Height, TypeCode TypeCode) PullNewImage(int camIndex)
+        {
+            if (GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out ImageDisplayLib.Image im))
+                return (im.GetBytes(), im.Width, im.Height, im.UnderlyingType);
+            else
+                throw new Exception();
+        }
+        
 
         [OperationBehavior]
         public CameraStatus CallGetStatus(int camIndex)

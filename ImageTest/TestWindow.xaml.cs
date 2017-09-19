@@ -21,9 +21,9 @@ namespace ImageTest
     public partial class TestWindow : Window
     {
 
-        ANDOR_CS.Classes.Camera camera = null;
+        ANDOR_CS.Classes.CameraBase camera = null;
 
-        public TestWindow(ANDOR_CS.Classes.Camera cam)
+        public TestWindow(ANDOR_CS.Classes.CameraBase cam)
         {
             InitializeComponent();
             camera = cam;
