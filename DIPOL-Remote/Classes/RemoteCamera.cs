@@ -228,7 +228,7 @@ namespace DIPOL_Remote.Classes
             }
         }
 
-        public override ConcurrentQueue<Image> AcquiredImages => throw new NotImplementedException();
+        //public override ConcurrentQueue<Image> AcquiredImages => throw new NotImplementedException();
 
         internal RemoteCamera(IRemoteControl sessionInstance, int camIndex)
         {
@@ -379,10 +379,10 @@ namespace DIPOL_Remote.Classes
                 var cam = camera as RemoteCamera;
 
                 var message = cam.session.PullNewImage(cam.CameraIndex);
-                Image im = new Image(message.Data, message.Width, message.Height, message.TypeCode);
-                
+               
+                cam.acquiredImages.Enqueue(new Image(message.Data, message.Width, message.Height, message.TypeCode));
+
                 cam.OnNewImageReceived(e);
-                Console.WriteLine("New image");
             }
         }
 

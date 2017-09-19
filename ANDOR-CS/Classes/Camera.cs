@@ -114,8 +114,8 @@ namespace ANDOR_CS.Classes
         public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
             => CreatedCameras as IReadOnlyDictionary<int, CameraBase>;
 
-        public override ConcurrentQueue<Image> AcquiredImages
-            => acquiredImages;
+        //public override ConcurrentQueue<Image> AcquiredImages
+        //    => acquiredImages;
 
 
         /// <summary>
@@ -492,17 +492,20 @@ namespace ANDOR_CS.Classes
         }
         private void TemperatureMonitorCycler(CancellationToken token, int delay)
         {
-            while (true)
+            Task.Run(() =>
             {
-                if (token.IsCancellationRequested)
-                    return;
+                while (true)
+                {
+                    if (token.IsCancellationRequested)
+                        return;
 
-                (var status, var temp) = GetCurrentTemperature();
+                    (var status, var temp) = GetCurrentTemperature();
 
-                OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
+                    OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
 
-                Task.Delay(delay).Wait();
-            }
+
+                }
+            }, token);
 
         }
         private void PushNewImage(NewImageReceivedEventArgs e)
@@ -972,6 +975,9 @@ namespace ANDOR_CS.Classes
                 try
                 {
                     SetActiveAndLock();
+
+                    if (TemperatureMonitorWorker.Status == TaskStatus.Running)
+                        TemperatureMonitor(Switch.Disabled);
 
                     foreach (var key in runningTasks.Keys)
                     {
