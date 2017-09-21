@@ -67,29 +67,35 @@ namespace ANDOR_CS.Classes
 
             // Variable holds return codes of some Andor SDK methods
             uint result = 0;
-
-            // Used to check the currently active camera. 
             int cameraHandle = 0;
+            //// Used to check the currently active camera. 
+            //int cameraHandle = 0;
 
             // Gets currently active camera
-            SDKInit.SDKInstance.GetCurrentCamera(ref cameraHandle);
-            
-            // Checks if currently active camera is not the one that is being disposed
-            if (cameraHandle != handle.ToInt32())
+            //SDKInit.SDKInstance.GetCurrentCamera(ref cameraHandle);
+
+            return SDKInit.Call(this, () =>
             {
-                // Force-sets disposing camera as active
-                result = SDKInit.SDKInstance.SetCurrentCamera(handle.ToInt32());
-                // If it is impossible, then false is returned to indicate failure during resource releasing
+                result = SDKInit.SDKInstance.GetCurrentCamera(ref cameraHandle);
                 if (result != ATMCD64CS.AndorSDK.DRV_SUCCESS)
-                    return false;
-            }
+                    return result;
 
-            // Frees camera handles
-            SDKInit.SDKInstance.ShutDown();
+                //// Checks if currently active camera is not the one that is being disposed
+                //if (cameraHandle != handle.ToInt32())
+                //{
+                //    // Force-sets disposing camera as active
+                //    result = SDKInit.SDKInstance.SetCurrentCamera(handle.ToInt32());
+                //    if (result != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+                //        return result;
 
-            // If successfully reached this point, all resources are freed. Returns true to indicate success
-            return true;
-               
+                //}
+
+                // Frees camera handles
+                result = SDKInit.SDKInstance.ShutDown();
+
+                return result;
+            }) == ATMCD64CS.AndorSDK.DRV_SUCCESS;
+           
         }
     }
 }

@@ -160,7 +160,7 @@ namespace ANDOR_CS.Classes
             return result;
         }
 
-        public static uint Call(Func<uint> method)
+        public static uint Call(SafeSDKCameraHandle handle, Func<uint> method)
         {
 
             // Stores return code
@@ -185,7 +185,17 @@ namespace ANDOR_CS.Classes
 
         }
 
+        private static void SetActiveCamera(SafeSDKCameraHandle handle)
+        {
+            int currHandle = 0;
+            if (SDKInstance.GetCurrentCamera(ref currHandle) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+                throw new Exception();
 
+            if(currHandle != handle.SDKPtr)
+                if (SDKInstance.SetCurrentCamera(handle.SDKPtr) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+                    throw new Exception();
+
+        }
         ///// <summary>
         ///// Manually waits while other tasks access SDK instance
         ///// </summary>

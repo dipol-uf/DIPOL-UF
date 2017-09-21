@@ -218,7 +218,7 @@ namespace ImageTest
             cams[0] = new Camera(0);
             cams[1] = new Camera(1);
 
-            int N = 100000;
+            int N = 1000;
 
             System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -227,10 +227,10 @@ namespace ImageTest
                 if (AndorSDKInitialization.Call(AndorSDKInitialization.SDKInstance.SetCurrentCamera, cams[i % 2].CameraHandle.SDKPtr) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
                     throw new Exception("Switch failed.");
 
-                //if(AndorSDKInitialization.Call(AndorSDKInitialization.SDKInstance.GetCameraSerialNumber, out int num) == ATMCD64CS.AndorSDK.DRV_SUCCESS)
-                //    Console.WriteLine(num);
-                //else
-                //    throw new Exception("Switch failed.");
+                if (AndorSDKInitialization.Call(AndorSDKInitialization.SDKInstance.GetCameraSerialNumber, out int num) == ATMCD64CS.AndorSDK.DRV_SUCCESS)
+                    Console.WriteLine(num);
+                else
+                    throw new Exception("Switch failed.");
             }
 
             watch.Stop();
