@@ -87,10 +87,9 @@ namespace ANDOR_CS.Classes
             //}
         }
         private static object Locker = new object();
-        //private static volatile int CanSwitchCamera = 1;
-
+       
         private ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> runningTasks = new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
-
+        
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
@@ -864,29 +863,23 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSDKException"/>
-        public override void StartAcquisition()
+        internal override void StartAcquisition()
         {
             acquiredImages = new ConcurrentQueue<Image>();
-            
-            try
-            {
-               
-                // If acquisition is already in progress, throw exception
-                ThrowIfAcquiring(this);
 
-                // Starts acquisition
-                ThrowIfError(Call(CameraHandle, SDKInstance.StartAcquisition), nameof(SDKInstance.StartAcquisition));
 
-                // Fires event
-                OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
 
-                // Marks camera as in process of acquiring
-                IsAcquiring = true;
-            }
-            finally
-            {
-                
-            }
+            // If acquisition is already in progress, throw exception
+            ThrowIfAcquiring(this);
+
+            // Starts acquisition
+            ThrowIfError(Call(CameraHandle, SDKInstance.StartAcquisition), nameof(SDKInstance.StartAcquisition));
+
+            // Fires event
+            OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
+
+            // Marks camera as in process of acquiring
+            IsAcquiring = true;
         }
 
         /// <summary>
@@ -897,31 +890,24 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AndorSDKException"/>
         /// <exception cref="TaskCanceledException"/>
-        public override void AbortAcquisition()
+        internal override void AbortAcquisition()
         {
-            try
-            {
-                
-                // If there is no acquisition, throws exception
-                if (!IsAcquiring)
-                    throw new AndorSDKException("Acquisition abort attemted while there is no acquisition in proress.", null);
 
-                if (IsAsyncAcquisition)
-                    throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
+            // If there is no acquisition, throws exception
+            if (!IsAcquiring)
+                throw new AndorSDKException("Acquisition abort attemted while there is no acquisition in proress.", null);
 
-                // Tries to abort acquisition
-                ThrowIfError(Call(CameraHandle, SDKInstance.AbortAcquisition), nameof(SDKInstance.AbortAcquisition));
+            if (IsAsyncAcquisition)
+                throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
 
-                // Fires AcquisitionAborted event
-                OnAcquisitionAborted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
+            // Tries to abort acquisition
+            ThrowIfError(Call(CameraHandle, SDKInstance.AbortAcquisition), nameof(SDKInstance.AbortAcquisition));
 
-                // Marks the end of acquisition
-                IsAcquiring = false;
-            }
-            finally
-            {
-                
-            }
+            // Fires AcquisitionAborted event
+            OnAcquisitionAborted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
+
+            // Marks the end of acquisition
+            IsAcquiring = false;
         }
 
         /// <summary>
@@ -1021,55 +1007,36 @@ namespace ANDOR_CS.Classes
         /// Frees SDK-related resources
         /// </summary>
         public override void Dispose()
-        {    
+        {
             // If camera has valid SDK pointer and is initialized
             if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
             {
-                
 
-                // Makes active camera that is going to be disposed (this)
-                try
+
+                //if (TemperatureMonitorWorker?.Status == TaskStatus.Running)
+                //    TemperatureMonitor(Switch.Disabled);
+
+                if (TemperatureMonitorTimer != null)
                 {
+                    if (TemperatureMonitorTimer.Enabled)
+                        TemperatureMonitorTimer.Stop();
 
-
-                    //if (TemperatureMonitorWorker?.Status == TaskStatus.Running)
-                    //    TemperatureMonitor(Switch.Disabled);
-
-                    if (TemperatureMonitorTimer != null)
-                    {
-                        if (TemperatureMonitorTimer.Enabled)
-                            TemperatureMonitorTimer.Stop();
-
-                        TemperatureMonitorTimer.Close();
-                    }
-
-                    foreach (var key in runningTasks.Keys)
-                    {
-                        runningTasks.TryRemove(key, out (Task Task, CancellationTokenSource Source) item);
-                        item.Source.Cancel();
-                    }
-
-                    // ShutsDown camera
-                    CameraHandle.Dispose();
-
-                    // If succeeded, removes camera instance from the list of cameras
-                    CreatedCameras.TryRemove(CameraHandle.SDKPtr, out _);
-
-                                       
+                    TemperatureMonitorTimer.Close();
                 }
-                finally
+
+                foreach (var key in runningTasks.Keys)
                 {
-                    
-                    // If there are no other cameras, 
-                    //if (CreatedCameras.Count == 0)
-                    //    ActiveCamera = null;
-                    // If there are, sets active the one that was active before disposing procedure
-                   
-                                        
+                    runningTasks.TryRemove(key, out (Task Task, CancellationTokenSource Source) item);
+                    item.Source.Cancel();
                 }
-               
+
+                // ShutsDown camera
+                CameraHandle.Dispose();
+
+                // If succeeded, removes camera instance from the list of cameras
+                CreatedCameras.TryRemove(CameraHandle.SDKPtr, out _);
+
             }
-
         }
 
         /// <summary>
@@ -1154,7 +1121,6 @@ namespace ANDOR_CS.Classes
             }
         }
 
-
         /// <summary>
         /// Starts process of acquisition asynchronously.
         /// This is the preferred way to acquire images from camera.
@@ -1167,7 +1133,6 @@ namespace ANDOR_CS.Classes
         /// <returns>Task that can be queried for execution status.</returns>
         public async override Task StartAcquistionAsync(CancellationTokenSource source, int timeout = StatusCheckTimeOutMS)
         {
-                        
             var task = Task.Run(() =>
             {
                 uint result = 0;
@@ -1200,15 +1165,12 @@ namespace ANDOR_CS.Classes
                         OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, true));
 
                         // Checks if new image is already acuired and is available in camera memory
-                       
+
                         // Gets indexes of first and last available new images
                         acquiredImagesIndex = (0, 0);
 
-                        //ThrowIfError(Call((ref (int, int) output) =>
-                        //    SDKInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
-                        //    out acquiredImagesIndex), nameof(SDKInstance.GetNumberNewImages));
 
-                        ThrowIfError(Call(CameraHandle, () => SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last)), 
+                        ThrowIfError(Call(CameraHandle, () => SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last)),
                             nameof(SDKInstance.GetNumberNewImages));
 
                         // If there is new image, updates indexes of previous abailable images and fires an event.
@@ -1221,18 +1183,18 @@ namespace ANDOR_CS.Classes
                         }
 
                         // If task is aborted
-                        //if (token.IsCancellationRequested)
-                        //{
-                        //    // Aborts
-                        //    AbortAcquisition();
-                        //    // Exits wait loop
-                        //    break;
-                        //}
+                        if (source.Token.IsCancellationRequested)
+                        {
+                            // Aborts
+                            AbortAcquisition();
+                            // Exits wait loop
+                            break;
+                        }
 
                         // Waits for specified amount of time before checking status again
 
                         Thread.Sleep(timeout);
-                        //Task.Delay(StatusCheckTimeOutMS).Wait();
+
 
                     }
 
@@ -1242,10 +1204,6 @@ namespace ANDOR_CS.Classes
                     ThrowIfError(Call(CameraHandle, (ref (int, int) output) =>
                         SDKInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
                         out acquiredImagesIndex), nameof(SDKInstance.GetNumberNewImages));
-
-                    //LockManually();
-                    //ThrowIfError(SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last), nameof(SDKInstance.GetNumberNewImages));
-                    //ReleaseManually();
 
                     // If there is new image, updates indexes of previous abailable images and fires an event.
                     if (acquiredImagesIndex.Last != previousImages.Last
@@ -1259,7 +1217,6 @@ namespace ANDOR_CS.Classes
                     // If after end of acquisition camera status is not idle, throws exception
                     if (!source.Token.IsCancellationRequested && status != CameraStatus.Idle)
                         throw new AndorSDKException($"Acquisiotn finished with non-Idle status ({status}).", null);
-
 
                 }
                 // If there were exceptions during status checking loop
@@ -1277,7 +1234,8 @@ namespace ANDOR_CS.Classes
                     IsAsyncAcquisition = false;
                     OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus(), true));
                 }
-            }, source.Token);
+            });
+
             int id = task.Id;
 
             runningTasks.TryAdd(id, (Task: task, Source: source));
@@ -1287,23 +1245,6 @@ namespace ANDOR_CS.Classes
             if (!runningTasks.TryRemove(id, out _))
                 throw new InvalidOperationException("Failed to remove finished task from queue.");
 
-        }
-
-        private uint EnsureActiveAndRun(Func<uint> action)
-        {
-            uint result = 0;
-
-            try
-            {
-                Monitor.Enter(Locker);
-                SetActive();
-                result = action();
-                return result;
-            }
-            finally
-            {
-                Monitor.Exit(Locker);
-            }
         }
 
         /// <summary>
