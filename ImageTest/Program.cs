@@ -19,10 +19,14 @@ namespace ImageTest
         [STAThread]
         static void Main(string[] args)
         {
-            // ContextSwitchTest();
+            try
+            {
+                ContextSwitchTest();
 
-            Test1();
-
+                //Test1();
+            }
+            catch
+            { }
             Console.ReadKey();
         }
 
@@ -213,8 +217,12 @@ namespace ImageTest
 
         private static void ContextSwitchTest()
         {
-            using (var client = new DIPOL_Remote.Classes.DipolClient("dipol-2"))
+            DIPOL_Remote.Classes.DipolClient client = null;
+
+            try
             {
+                client = new DIPOL_Remote.Classes.DipolClient("dipol-2");
+            
                 client.Connect();
 
                 int n = client.GetNumberOfCameras();
@@ -236,65 +244,37 @@ namespace ImageTest
                     else
                         Console.WriteLine("ERROR! Sender is not a Camera");
 
-
                 };
 
                 foreach (var cam in cams)
                 {
                     cam.TemperatureStatusChecked += TemperatureHandler;
                     cam.TemperatureMonitor(ANDOR_CS.Enums.Switch.Enabled, 1000);
+                    cam.SetTemperature(0);
+                    cam.CoolerControl(ANDOR_CS.Enums.Switch.Enabled);
                 }
 
 
-
-                //Parallel.For(0, 2, (i) =>
-                //cams[i] = new Camera(i));
-
                 watch.Stop();
 
-                Console.WriteLine(watch.Elapsed.TotalSeconds.ToString("E3"));
+               // Console.WriteLine(watch.Elapsed.TotalSeconds.ToString("E3"));
 
-                //int N = 1000;
+                Console.ReadKey();
 
-
-                //int[] models = new int[cams.Length];
-                //long[] counts = new long[cams.Length];
-
-                //for (int i = 0; i < models.Length; i++)
-                //{
-                //    AndorSDKInitialization.Call(cams[i].CameraHandle, AndorSDKInitialization.SDKInstance.GetCameraSerialNumber, out int mdl);
-                //    models[i] = mdl;
-                //    counts[i] = 0;
-                //}
-
-
-                //watch.Restart();
-
-                ////for (int i = 0; i < N; i++)
-                //Parallel.For(0, N, (i) =>
-                //{
-                //    AndorSDKInitialization.Call(cams[i % 2].CameraHandle, AndorSDKInitialization.SDKInstance.GetCameraSerialNumber, out int num);
-                //    if (models[i % 2] == num)
-                //        counts[i % 2] += 1;
-                //    System.Threading.Thread.Sleep(100);
-                //});
-
-
-
-                //watch.Stop();
-
-
-                //Console.WriteLine($"Total: {watch.Elapsed.TotalSeconds.ToString("e3")}\t Per switch: {(watch.Elapsed.TotalSeconds / N).ToString("e3")}");
-                //Console.WriteLine("{0,7} | {1,-7} | Total", models[0], models[1]);
-                //Console.WriteLine("{0,7} | {1,-7} | {2}", counts[0], counts[1], N);
+                foreach (var cam in cams)
+                    cam.CoolerControl(ANDOR_CS.Enums.Switch.Disabled);
 
                 Console.ReadKey();
 
                 for (int j = 0; j < cams.Length; j++)
                     cams[j].Dispose();
-
-                client.Disconnect();
             }
+            finally
+            {
+                client.Disconnect();
+                client.Dispose();
+            }
+            
         }
 
     }
