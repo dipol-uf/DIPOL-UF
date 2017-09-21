@@ -35,7 +35,7 @@ namespace ANDOR_CS.Classes
 
        // private static System.Threading.SemaphoreSlim semaphore = new System.Threading.SemaphoreSlim(1, 1);
         private static volatile System.Threading.SemaphoreSlim locker = new System.Threading.SemaphoreSlim(1, 1);
-        private static volatile int LockDepth = 0;
+       // private static volatile int LockDepth = 0;
 
         /// <summary>
         /// Gets an singleton instance of a basic AndorSDK class
@@ -63,7 +63,7 @@ namespace ANDOR_CS.Classes
         /// <param name="method"><see cref="SDKInstance"/> method to invoke</param>
         /// <param name="p1">Stores result of the function call</param>
         /// <returns>Return code</returns>
-        public static uint Call<T1>(AndorSDK<T1> method, out T1 p1)
+        public static uint Call<T1>(SafeSDKCameraHandle handle, AndorSDK<T1> method, out T1 p1)
         {
             // Stores return code
             uint result = 0;
@@ -71,19 +71,21 @@ namespace ANDOR_CS.Classes
             try
             {
                 p1 = default(T1);
-
                 // Waits until SDKInstance is available
                 locker.Wait();
+                SetActiveCamera(handle);
+                
 
                 // Calls function
                 result = method(ref p1);
+                return result;
             }
             finally
             {
                 // Releases semaphore
                 locker.Release();
             }
-            return result;
+            
         }
 
         /// <summary>
@@ -95,20 +97,27 @@ namespace ANDOR_CS.Classes
         /// <param name="p1">Inpput argument of the method</param>
         /// <param name="p2">Stores result of the function call</param>
         /// <returns>Return code</returns>
-        public static uint Call<T1, T2>(AndorSDK<T1, T2> method, T1 p1, out T2 p2)
+        public static uint Call<T1, T2>(SafeSDKCameraHandle handle, AndorSDK<T1, T2> method, T1 p1, out T2 p2)
         {
             // Stores return code
             uint result = 0;
             p2 = default(T2);
-                
-            // Waits until SDKInstance is available
-            locker.Wait();
 
-            // Calls function
-            result = method(p1, ref p2);
+            try
+            {
+                // Waits until SDKInstance is available
+                locker.Wait();
+                SetActiveCamera(handle);
+                // Calls function
+                result = method(p1, ref p2);
 
-            // Releases semaphore
-            locker.Release();
+                return result;
+            }
+            finally
+            {
+                // Releases semaphore
+                locker.Release();
+            }
 
             return result;
         }
@@ -124,40 +133,52 @@ namespace ANDOR_CS.Classes
         /// <param name="p2">Second inpput argument of the method</param>
         /// <param name="p3">Stores result of the function call</param>
         /// <returns>Return code</returns>
-        public static uint Call<T1, T2, T3>(AndorSDK<T1, T2, T3> method, T1 p1, T2 p2, out T3 p3)
+        public static uint Call<T1, T2, T3>(SafeSDKCameraHandle handle, AndorSDK<T1, T2, T3> method, T1 p1, T2 p2, out T3 p3)
         {
             // Stores return code
             uint result = 0;
             p3 = default(T3);
-           
-            // Waits until SDKInstance is available
-            locker.Wait();
 
-            // Calls function
-            result = method(p1, p2, ref p3);
+            try
+            {
+                // Waits until SDKInstance is available
+                locker.Wait();
+                SetActiveCamera(handle);
+                // Calls function
+                result = method(p1, p2, ref p3);
 
-            // Releases semaphore
-            locker.Release();
+                return result;
+            }
 
-            return result;
+            finally
+            {
+                // Releases semaphore
+                locker.Release();
+            }
         }
 
-        public static uint Call<T1>(Func<T1, uint> method, T1 p1)
+        public static uint Call<T1>(SafeSDKCameraHandle handle, Func<T1, uint> method, T1 p1)
         {
             // Stores return code
             uint result = 0;
 
 
-            // Waits until SDKInstance is available
-            locker.Wait();
+            try
+            {// Waits until SDKInstance is available
+                locker.Wait();
 
-            // Calls function
-            result = method(p1);
+                // Calls function
+                SetActiveCamera(handle);
+                result = method(p1);
 
-            // Releases semaphore
-            locker.Release();
+                return result;
+            }
+            finally
+            {// Releases semaphore
+                locker.Release();
+            }
 
-            return result;
+            
         }
 
         public static uint Call(SafeSDKCameraHandle handle, Func<uint> method)
@@ -167,34 +188,35 @@ namespace ANDOR_CS.Classes
             uint result = 0;
 
             try
-            {           
+            {
                 // Waits until SDKInstance is available
                 locker.Wait();
-
+                SetActiveCamera(handle);
                 // Calls function
                 result = method();
-                
+                return result;
             }
             finally
             {
                 // Releases semaphore
                 locker.Release();
-                
-            }
-            return result;
+
+            }            
 
         }
 
         private static void SetActiveCamera(SafeSDKCameraHandle handle)
         {
-            int currHandle = 0;
-            if (SDKInstance.GetCurrentCamera(ref currHandle) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
-                throw new Exception();
-
-            if(currHandle != handle.SDKPtr)
-                if (SDKInstance.SetCurrentCamera(handle.SDKPtr) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+            if (handle != null)
+            {
+                int currHandle = 0;
+                if (SDKInstance.GetCurrentCamera(ref currHandle) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
                     throw new Exception();
 
+                if (currHandle != handle.SDKPtr)
+                    if (SDKInstance.SetCurrentCamera(handle.SDKPtr) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+                        throw new Exception();
+            }
         }
         ///// <summary>
         ///// Manually waits while other tasks access SDK instance
