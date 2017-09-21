@@ -22,15 +22,19 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
 
+using Timer = System.Timers.Timer;
+
 using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
 using Image = ImageDisplayLib.Image;
+
 
 using static ANDOR_CS.Exceptions.AndorSDKException;
 using static ANDOR_CS.Exceptions.AcquisitionInProgressException;
@@ -44,11 +48,10 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public class Camera : CameraBase
     {
-
-
-        private Task TemperatureMonitorWorker = null;
-        private CancellationTokenSource TemperatureMonitorCancellationSource
-            = new CancellationTokenSource();
+        private Timer TemperatureMonitorTimer = null;
+        //private Task TemperatureMonitorWorker = null;
+        //private CancellationTokenSource TemperatureMonitorCancellationSource
+        //    = new CancellationTokenSource();
 
         private static ConcurrentDictionary<int, CameraBase> CreatedCameras
             = new ConcurrentDictionary<int, CameraBase>();
@@ -103,6 +106,9 @@ namespace ANDOR_CS.Classes
 
             protected set => throw new NotSupportedException();
         }
+        /// <summary>
+        /// A safe handle that stores native SDK pointer to the current <see cref="Camera"/> resource.
+        /// </summary>
         public SafeSDKCameraHandle CameraHandle
         {
             get;
@@ -490,21 +496,22 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <param name="token">Cancellation token used to break the loop.</param>
         /// <param name="delay">Time delay between loop cycles</param>
-        private void TemperatureMonitorCycler(CancellationToken token, int delay)
+        private void TemperatureMonitorCycler(object sender, ElapsedEventArgs e)
         {
-            while (true)
-            {
-                if (token.IsCancellationRequested)
-                    return;
+            //while (true)
+            //{
+            //    if (token.IsCancellationRequested)
+            //        return;
+            if (sender is Timer t)
+                if (t.Enabled)
+                {
+                    (var status, var temp) = GetCurrentTemperature();
 
-                (var status, var temp) = GetCurrentTemperature();
+                    OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
+                }
+            //    Thread.Sleep(delay);
 
-                OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
-
-                Thread.Sleep(delay);
-
-            }
-            
+            //}
 
         }
         /// <summary>
@@ -925,56 +932,74 @@ namespace ANDOR_CS.Classes
         /// <param name="timeout">Time interval between checks</param>
         public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMS)
         {
-            try
-            {
+            // Throws if temperature monitoring is not supported
+            if (!Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
+                throw new NotSupportedException("Camera dose not support temperature queries.");
 
-                // If monitor shold be enbled
-                if (mode == Switch.Enabled)
-                {
-                    // Throws if temperature monitoring is not supported
-                    if (!Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
-                        throw new NotSupportedException("Camera dose not support temperature queries.");
 
-                    // If background task has not been started yet
-                    if (TemperatureMonitorWorker == null ||
-                        TemperatureMonitorWorker.Status == TaskStatus.Canceled ||
-                        TemperatureMonitorWorker.Status == TaskStatus.RanToCompletion ||
-                        TemperatureMonitorWorker.Status == TaskStatus.Faulted)
-                        // Starts new with a cancellation token
-                        TemperatureMonitorWorker = Task.Factory.StartNew(
-                            () =>
-                            {
-                                try
-                                {
-                                    TemperatureMonitorCycler(TemperatureMonitorCancellationSource.Token, timeout);
-                                }
-                                catch (Exception e)
-                                {
-                                    Console.WriteLine(e.Message);
-                                }
-                            },
-                            TemperatureMonitorCancellationSource.Token);
 
-                    // If task was created, but has not started, start it
-                    if (TemperatureMonitorWorker.Status == TaskStatus.Created)
-                        TemperatureMonitorWorker.Start();
-
-                }
-                // If monitor should be disabled
-                if (mode == Switch.Disabled)
-                {
-                    // if there is a working background monitor
-                    if (TemperatureMonitorWorker?.Status == TaskStatus.Running ||
-                        TemperatureMonitorWorker?.Status == TaskStatus.WaitingForActivation ||
-                        TemperatureMonitorWorker?.Status == TaskStatus.WaitingToRun)
-                        // Stops it via cancellation token
-                        TemperatureMonitorCancellationSource.Cancel();
-                }
-            }
-            finally
+            // If monitor shold be enbled
+            if (mode == Switch.Enabled)
             {
                 
+                if (TemperatureMonitorTimer == null)
+                    TemperatureMonitorTimer = new Timer();
+
+                if (TemperatureMonitorTimer.Enabled)
+                    TemperatureMonitorTimer.Stop();
+
+                TemperatureMonitorTimer.AutoReset = true;
+
+                TemperatureMonitorTimer.Interval = timeout;
+
+                TemperatureMonitorTimer.Elapsed += TemperatureMonitorCycler;
+                
+                TemperatureMonitorTimer.Start();
+
             }
+            else
+                TemperatureMonitorTimer?.Stop();
+
+            //        // If background task has not been started yet
+            //        if (TemperatureMonitorWorker == null ||
+            //            TemperatureMonitorWorker.Status == TaskStatus.Canceled ||
+            //            TemperatureMonitorWorker.Status == TaskStatus.RanToCompletion ||
+            //            TemperatureMonitorWorker.Status == TaskStatus.Faulted)
+            //            // Starts new with a cancellation token
+            //            TemperatureMonitorWorker = Task.Factory.StartNew(
+            //                () =>
+            //                {
+            //                    try
+            //                    {
+            //                        TemperatureMonitorCycler(TemperatureMonitorCancellationSource.Token, timeout);
+            //                    }
+            //                    catch (Exception e)
+            //                    {
+            //                        Console.WriteLine(e.Message);
+            //                    }
+            //                },
+            //                TemperatureMonitorCancellationSource.Token);
+
+            //        // If task was created, but has not started, start it
+            //        if (TemperatureMonitorWorker.Status == TaskStatus.Created)
+            //            TemperatureMonitorWorker.Start();
+
+            //    }
+            //    // If monitor should be disabled
+            //    if (mode == Switch.Disabled)
+            //    {
+            //        // if there is a working background monitor
+            //        if (TemperatureMonitorWorker?.Status == TaskStatus.Running ||
+            //            TemperatureMonitorWorker?.Status == TaskStatus.WaitingForActivation ||
+            //            TemperatureMonitorWorker?.Status == TaskStatus.WaitingToRun)
+            //            // Stops it via cancellation token
+            //            TemperatureMonitorCancellationSource.Cancel();
+            //    }
+            //}
+            //finally
+            //{
+                
+            //}
         }
 
         /// <summary>
@@ -1005,10 +1030,18 @@ namespace ANDOR_CS.Classes
                 // Makes active camera that is going to be disposed (this)
                 try
                 {
-                    
 
-                    if (TemperatureMonitorWorker?.Status == TaskStatus.Running)
-                        TemperatureMonitor(Switch.Disabled);
+
+                    //if (TemperatureMonitorWorker?.Status == TaskStatus.Running)
+                    //    TemperatureMonitor(Switch.Disabled);
+
+                    if (TemperatureMonitorTimer != null)
+                    {
+                        if (TemperatureMonitorTimer.Enabled)
+                            TemperatureMonitorTimer.Stop();
+
+                        TemperatureMonitorTimer.Close();
+                    }
 
                     foreach (var key in runningTasks.Keys)
                     {
