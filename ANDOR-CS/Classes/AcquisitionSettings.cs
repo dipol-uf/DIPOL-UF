@@ -206,7 +206,7 @@ namespace ANDOR_CS.Classes
             CheckCamera();
             try
             {
-                (camera as Camera).SetActiveAndLock();
+                var locCam = camera as Camera;
 
                 uint result = 0;
 
@@ -383,7 +383,7 @@ namespace ANDOR_CS.Classes
             }
             finally
             {
-                (camera as Camera).ReleaseLock();
+               
 
             }
         }
@@ -436,7 +436,7 @@ namespace ANDOR_CS.Classes
             CheckCamera();
             try
             {
-                (camera as Camera).SetActiveAndLock();
+                var locCam = (camera as Camera);
 
                 // Checks if camera actually supports changing vertical readout speed
                 if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed))
@@ -465,7 +465,7 @@ namespace ANDOR_CS.Classes
             }
             finally
             {
-                (camera as Camera).ReleaseLock();
+               
             }
         }
 
@@ -553,7 +553,7 @@ namespace ANDOR_CS.Classes
             CheckCamera();
             try
             {
-                (camera as Camera).SetActiveAndLock();
+                var locCam = (camera as Camera);
 
                 // Checks if camera support horizontal speed controls
                 if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
@@ -586,7 +586,7 @@ namespace ANDOR_CS.Classes
             }
             finally
             {
-                (camera as Camera).ReleaseLock();
+               
             }
         }
 
@@ -608,7 +608,7 @@ namespace ANDOR_CS.Classes
 
         //    //try
         //    //{
-        //    //    (camera as Camera).SetActiveAndLock();
+        //    //    var locCam = camera as Camera;
         //    // Checks if camera supports horizontal readout speed control
         //    if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed)
         //        && IsHSSpeedSupported(speedIndex, out float speed))
@@ -646,7 +646,7 @@ namespace ANDOR_CS.Classes
         //    //}
         //    //finally
         //    //{
-        //    //    (camera as Camera).ReleaseLock();
+        //    //   
         //    //}
         //}
 
@@ -671,7 +671,7 @@ namespace ANDOR_CS.Classes
 
             try
             {
-                (camera as Camera).SetActiveAndLock();
+                var locCam = camera as Camera;
 
                 // Checks if camera supports PreAmp Gain control
                 if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
@@ -699,7 +699,7 @@ namespace ANDOR_CS.Classes
             }
             finally
             {
-                (camera as Camera).ReleaseLock();
+               
             }
         }
 
@@ -721,7 +721,7 @@ namespace ANDOR_CS.Classes
 
         //    try
         //    {
-        //        (camera as Camera).SetActiveAndLock();
+        //        var locCam = camera as Camera;
 
         //        // Checks if camera supports PreAmp Gain control
         //        if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
@@ -757,7 +757,7 @@ namespace ANDOR_CS.Classes
         //    }
         //    finally
         //    {
-        //        (camera as Camera).ReleaseLock();
+        //       
         //    }
         //}
 
@@ -1022,7 +1022,7 @@ namespace ANDOR_CS.Classes
         //{
         //    try
         //    {
-        //        (camera as Camera).SetActiveAndLock();
+        //        var locCam = camera as Camera;
 
         //        XDocument doc = XDocument.Load(stream);
 
@@ -1242,7 +1242,7 @@ namespace ANDOR_CS.Classes
         //    }
         //    finally
         //    {
-        //        (camera as Camera).ReleaseLock();
+        //       
         //    }
         //}
 
@@ -1267,7 +1267,7 @@ namespace ANDOR_CS.Classes
             speed = 0;
             try
             {
-                (camera as Camera).SetActiveAndLock();
+                var locCam = camera as Camera;
                 // Checks if camera supports horizontal readout speed control
                 if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
                 {
@@ -1293,7 +1293,7 @@ namespace ANDOR_CS.Classes
             }
             finally
             {
-                (camera as Camera).ReleaseLock();
+               
             }
         }
 

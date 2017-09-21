@@ -440,7 +440,7 @@
             Gets an singleton instance of a basic AndorSDK class
             </summary>
         </member>
-        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``1(ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0},``0@)">
+        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``1(ANDOR_CS.Classes.SafeSDKCameraHandle,ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0},``0@)">
             <summary>
             Task-safely invokes SDK method with one output ref parameter
             </summary>
@@ -449,7 +449,7 @@
             <param name="p1">Stores result of the function call</param>
             <returns>Return code</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``2(ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0,``1},``0,``1@)">
+        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``2(ANDOR_CS.Classes.SafeSDKCameraHandle,ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0,``1},``0,``1@)">
             <summary>
             Task-safely invokes SDK method with oneinput and one output ref parameter
             </summary>
@@ -460,7 +460,7 @@
             <param name="p2">Stores result of the function call</param>
             <returns>Return code</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``3(ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0,``1,``2},``0,``1,``2@)">
+        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``3(ANDOR_CS.Classes.SafeSDKCameraHandle,ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0,``1,``2},``0,``1,``2@)">
             <summary>
             Task-safely invokes SDK method with oneinput and one output ref parameter
             </summary>
@@ -528,16 +528,6 @@
             Retrives new image from camera buffer and pushes it to queue.
             </summary>
             <param name="e">Parameters obtained from <see cref="E:ANDOR_CS.Classes.CameraBase.NewImageReceived"/> event.</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.Camera.SetActiveAndLock">
-            <summary>
-            Sets curernt camera active and locks it, preventing any further switches
-            </summary>
-        </member>
-        <member name="M:ANDOR_CS.Classes.Camera.ReleaseLock">
-            <summary>
-            Releases current camera, allowing to switch to another device
-            </summary>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.SetActive">
             <summary>
