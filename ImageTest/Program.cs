@@ -207,7 +207,29 @@ namespace ImageTest
 
         }
 
-       
-     
+        private static void ContextSwitchTest()
+        {
+            int n = Camera.GetNumberOfCameras();
+            if (n < 2)
+                throw new Exception($"Not enough cameras ({n})");
+
+            Camera[] cams = new Camera[2];
+
+            cams[0] = new Camera(0);
+            cams[1] = new Camera(1);
+
+            int N = 10;
+
+            System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
+
+            for (int i = 0; i < N; i++)
+                if (AndorSDKInitialization.Call(AndorSDKInitialization.SDKInstance.SelectDevice, i % 2) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+                    throw new Exception("Switch failed.");
+
+            watch.Stop();
+
+            Console.WriteLine($"Total: {watch.Elapsed.TotalSeconds.ToString("e3")}\t Per switch: {watch.Elapsed.TotalSeconds.ToString("e3")}");
+        }
+
     }
 }
