@@ -700,37 +700,29 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSDKException"/>
         public override void CoolerControl(Switch mode)
         {
-            try
-            {
-               // Checks if cooling is supported
-                if (!Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
-                    throw new AndorSDKException("Camera does not support cooler controls.", new ArgumentException());
 
-                //if (IsInTemperatureCycle &&
-                //    IsAsyncTemperatureCycle &&
-                //    mode == Switch.Disabled)
-                //    throw new TaskCanceledException("Camera is in process of async cooling. Cannot control cooler synchronously.");
+            // Checks if cooling is supported
+            if (!Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
+                throw new AndorSDKException("Camera does not support cooler controls.", new ArgumentException());
 
-                uint result = SDK.DRV_SUCCESS;
-                
-                // Switches cooler mode
-                if (mode == Switch.Enabled)
-                    result = Call(CameraHandle, SDKInstance.CoolerON);
-                else if (mode == Switch.Disabled)
-                    result = Call(CameraHandle, SDKInstance.CoolerOFF);
+            //if (IsInTemperatureCycle &&
+            //    IsAsyncTemperatureCycle &&
+            //    mode == Switch.Disabled)
+            //    throw new TaskCanceledException("Camera is in process of async cooling. Cannot control cooler synchronously.");
 
-                ThrowIfError(result, nameof(SDKInstance.CoolerON) + " or " + nameof(SDKInstance.CoolerOFF));
-                CoolerMode = mode;
+            uint result = SDK.DRV_SUCCESS;
 
-                var status = GetCurrentTemperature();
+            // Switches cooler mode
+            if (mode == Switch.Enabled)
+                result = Call(CameraHandle, SDKInstance.CoolerON);
+            else if (mode == Switch.Disabled)
+                result = Call(CameraHandle, SDKInstance.CoolerOFF);
 
-               
-            }
-            finally
-            {
-                
-            }
+            ThrowIfError(result, nameof(SDKInstance.CoolerON) + " or " + nameof(SDKInstance.CoolerOFF));
+            CoolerMode = mode;
+
         }
+           
 
         /// <summary>
         /// Sets target cooling temperature
@@ -1012,8 +1004,8 @@ namespace ANDOR_CS.Classes
             // If camera has valid SDK pointer and is initialized
             if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
             {
-
-
+                if (CoolerMode == Switch.Enabled)
+                    CoolerControl(Switch.Disabled);
                 //if (TemperatureMonitorWorker?.Status == TaskStatus.Running)
                 //    TemperatureMonitor(Switch.Disabled);
 
