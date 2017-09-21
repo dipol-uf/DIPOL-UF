@@ -863,7 +863,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSDKException"/>
-        internal override void StartAcquisition()
+        public override void StartAcquisition()
         {
             acquiredImages = new ConcurrentQueue<Image>();
 
@@ -890,7 +890,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AndorSDKException"/>
         /// <exception cref="TaskCanceledException"/>
-        internal override void AbortAcquisition()
+        public override void AbortAcquisition()
         {
 
             // If there is no acquisition, throws exception

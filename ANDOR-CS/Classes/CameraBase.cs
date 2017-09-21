@@ -317,7 +317,7 @@ namespace ANDOR_CS.Classes
         public abstract void TemperatureMonitor(Switch mode, int timeout);
         public abstract SettingsBase GetAcquisitionSettingsTemplate();
 
-        internal abstract void StartAcquisition();
+        public abstract void StartAcquisition();
 
         /// <summary>
         /// A synchronous way to manually abort acquisition.
@@ -327,7 +327,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AndorSDKException"/>
         /// <exception cref="TaskCanceledException"/>
-        internal abstract void AbortAcquisition();
+        public abstract void AbortAcquisition();
 
         public abstract Task StartAcquistionAsync(CancellationTokenSource token, int timeout);
 
