@@ -1135,18 +1135,15 @@ namespace ANDOR_CS.Classes
         {
             var task = Task.Run(() =>
             {
-                uint result = 0;
                 CameraStatus status = CameraStatus.Idle;
                 try
                 {
-
                     // Checks if acquisition is in progress; throws exception
                     ThrowIfAcquiring(this);
 
                     // If camera is not idle, cannot start acquisition
                     if (GetStatus() != CameraStatus.Idle)
                         throw new AndorSDKException("Camera is not in the idle mode.", null);
-
 
                     // Marks acuisition asynchronous
                     IsAsyncAcquisition = true;
@@ -1194,8 +1191,6 @@ namespace ANDOR_CS.Classes
                         // Waits for specified amount of time before checking status again
 
                         Thread.Sleep(timeout);
-
-
                     }
 
                     // Gets indexes of first and last available new images
