@@ -1182,6 +1182,7 @@ namespace ANDOR_CS.Classes
                         // If task is aborted
                         if (source.Token.IsCancellationRequested)
                         {
+                            IsAsyncAcquisition = false;
                             // Aborts
                             AbortAcquisition();
                             // Exits wait loop
