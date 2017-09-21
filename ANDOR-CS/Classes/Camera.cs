@@ -52,30 +52,38 @@ namespace ANDOR_CS.Classes
 
         private static ConcurrentDictionary<int, CameraBase> CreatedCameras
             = new ConcurrentDictionary<int, CameraBase>();
-        private static Camera _ActiveCamera = null;
+        //private static Camera _ActiveCamera = null;
       //  private static volatile SemaphoreSlim ActivityLocker = new SemaphoreSlim(1, 1);
-        private static volatile int LockDepth = 0;
+        //private static volatile int LockDepth = 0;
         private static Camera ActiveCamera
         {
-            get => _ActiveCamera;
-            set
+            get
             {
-                if (value != _ActiveCamera)
-                {
-                    //if (LockDepth++ == 0)
-                    //    ActivityLocker.Wait();
+                if (Call(SDKInstance.GetCurrentCamera, out int handle) == SDK.DRV_SUCCESS &&
+                    CreatedCameras.TryGetValue(handle, out CameraBase cam) &&
+                    cam is Camera)
+                    return cam as Camera;
+                else throw new Exception();
 
-                    _ActiveCamera = value;
-
-                    //if (--LockDepth == 0)
-                    //    ActivityLocker.Release();
-
-                    OnActiveCameraChanged();
-                }
             }
+            set => throw new NotSupportedException();
+            //{
+            //    if (value != _ActiveCamera)
+            //    {
+            //        //if (LockDepth++ == 0)
+            //        //    ActivityLocker.Wait();
+
+            //        _ActiveCamera = value;
+
+            //        //if (--LockDepth == 0)
+            //        //    ActivityLocker.Release();
+
+            //        OnActiveCameraChanged();
+            //    }
+            //}
         }
         private static object Locker = new object();
-        private static volatile int CanSwitchCamera = 1;
+        //private static volatile int CanSwitchCamera = 1;
 
         private ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> runningTasks = new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
@@ -84,21 +92,13 @@ namespace ANDOR_CS.Classes
         /// </summary>
         public sealed override bool IsActive
         {
-            get => ActiveCamera == this;
-            //{
-            //try
-            //{
-            //    if (LockDepth == 0)
-            //        ActivityLocker.Wait();
-
-            //    LockDepth++;
-            //    return Call(SDKInstance.GetCurrentCamera, out int handle) == SDK.DRV_SUCCESS ? handle == CameraHandle.SDKPtr : false;
-            //}
-            //finally
-            //{
-            //    ReleaseLock();
-            //}
-            //}
+            get
+            {
+                if (Call(SDKInstance.GetCurrentCamera, out int cam) == SDK.DRV_SUCCESS)
+                    return cam == CameraHandle.SDKPtr;
+                else throw new Exception();
+                               
+            }
 
             protected set => throw new NotSupportedException();
         }
@@ -143,7 +143,7 @@ namespace ANDOR_CS.Classes
                 //var result = SDKInstance.GetCapabilities(ref caps);
                 //ReleaseManually();
 
-                var result = Call(() => SDKInstance.GetCapabilities(ref caps));
+                var result = Call(CameraHandle, () => SDKInstance.GetCapabilities(ref caps));
                 
 
                 ThrowIfError(result, nameof(SDKInit.SDKInstance.GetCapabilities));
@@ -163,7 +163,7 @@ namespace ANDOR_CS.Classes
         {
             try
             {
-                SetActiveAndLock();
+               // SetActiveAndLock();
 
                 // Checks if acquisition is in progress
                 ThrowIfAcquiring(this);
@@ -367,7 +367,7 @@ namespace ANDOR_CS.Classes
                     //    SDKInstance.GetPreAmpGainText(preAmpIndex, ref output, PreAmpGainDescriptorMaxLength),
                     //    out string desc);                    
                     string desc = "";
-                    result = Call(() => SDKInstance.GetPreAmpGainText(preAmpIndex, ref desc, PreAmpGainDescriptorMaxLength));
+                    result = Call(CameraHandle, () => SDKInstance.GetPreAmpGainText(preAmpIndex, ref desc, PreAmpGainDescriptorMaxLength));
                     ThrowIfError(result, nameof(SDKInstance.GetPreAmpGainText));
 
                     // If success, adds it to array
@@ -434,9 +434,7 @@ namespace ANDOR_CS.Classes
         {
             try
             {
-                SetActiveAndLock();
-
-
+                //SetActiveAndLock();
 
                 // Checks if acquisition is in progress; throws exception
                 ThrowIfAcquiring(this);
@@ -453,7 +451,7 @@ namespace ANDOR_CS.Classes
                 uint DllRev = 0;
 
                
-                result = Call(() => SDKInstance.GetSoftwareVersion(ref eprom, ref COF, ref driverRev, ref driverVer, ref DllRev, ref DllVer));
+                result = EnsureActiveAndRun(() => Call(CameraHandle, () => SDKInstance.GetSoftwareVersion(ref eprom, ref COF, ref driverRev, ref driverVer, ref DllRev, ref DllVer)));
                
                 ThrowIfError(result, nameof(SDKInstance.GetSoftwareVersion));
 
@@ -474,7 +472,7 @@ namespace ANDOR_CS.Classes
 
                 // Manual synchronization
                 
-                result = Call(() => SDKInstance.GetHardwareVersion(ref PCB, ref decode, ref dummy, ref dummy, ref firmwareVer, ref firmwareRev));
+                result = EnsureActiveAndRun(() => Call(CameraHandle, () => SDKInstance.GetHardwareVersion(ref PCB, ref decode, ref dummy, ref dummy, ref firmwareVer, ref firmwareRev)));
                 
                 ThrowIfError(result, nameof(SDKInstance.GetHardwareVersion));
 
@@ -487,7 +485,7 @@ namespace ANDOR_CS.Classes
             }
             finally
             {
-                ReleaseLock();
+                //ReleaseLock();
             }
 
         }
@@ -524,7 +522,7 @@ namespace ANDOR_CS.Classes
            
                 UInt16[] array = new UInt16[CurrentSettings.ImageArea.Value.Height * CurrentSettings.ImageArea.Value.Width];
                 (int First, int Last) validImages = (0, 0);
-                ThrowIfError(Call(() =>
+                ThrowIfError(Call(CameraHandle, () =>
                     SDKInstance.GetImages16(e.Last, e.Last, array, (UInt32)(array.Length), ref validImages.First, ref validImages.Last)), nameof(SDKInstance.GetImages16));
                 
                 acquiredImages.Enqueue(new Image(array, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height));
@@ -557,14 +555,14 @@ namespace ANDOR_CS.Classes
             //    Interlocked.Increment(ref LockDepth);
             //else
 
-            if (ActiveCamera != null && ActiveCamera != this)
-                SpinWait.SpinUntil(() => Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1) == 1);
-            else
-                Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1);
-            SetActive();
-            Interlocked.Increment(ref LockDepth);
-                      
+            //if (ActiveCamera != null && ActiveCamera != this)
+            //    SpinWait.SpinUntil(() => Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1) == 1);
+            //else
+            //    Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1);
             //SetActive();
+            //Interlocked.Increment(ref LockDepth);
+
+            SetActive();
             //LockDepth++;
         }
         /// <summary>
@@ -578,22 +576,22 @@ namespace ANDOR_CS.Classes
 
             //Monitor.Exit(Locker);
 
-            if (CanSwitchCamera == 0)
-            {
-                if (ActiveCamera == this)
-                {
-                    Monitor.Enter(Locker);
-                    if (Interlocked.Decrement(ref LockDepth) == 0 &&
-                        Interlocked.CompareExchange(ref CanSwitchCamera, 1, 0) != 0)
-                        throw new AbandonedMutexException("Thread encountered abandoned mutex or call logic order was violated.");
+            //if (CanSwitchCamera == 0)
+            //{
+            //    if (ActiveCamera == this)
+            //    {
+            //        Monitor.Enter(Locker);
+            //        if (Interlocked.Decrement(ref LockDepth) == 0 &&
+            //            Interlocked.CompareExchange(ref CanSwitchCamera, 1, 0) != 0)
+            //            throw new AbandonedMutexException("Thread encountered abandoned mutex or call logic order was violated.");
 
-                    Monitor.Exit(Locker);
-                }
-                else
-                    throw new ThreadStateException("Attempt to release lock from foreign thread.");
-            }
-            else
-                throw new AbandonedMutexException($"Thread encountered an abandoned mutex.");
+            //        Monitor.Exit(Locker);
+            //    }
+            //    else
+            //        throw new ThreadStateException("Attempt to release lock from foreign thread.");
+            //}
+            //else
+            //    throw new AbandonedMutexException($"Thread encountered an abandoned mutex.");
         }
         
         /// <summary>
@@ -615,8 +613,8 @@ namespace ANDOR_CS.Classes
                 // If it fails, throw an exception
                 ThrowIfError(result, nameof(SDKInstance.SetCurrentCamera));
 
-                // Updates the static field of Camera class to indicate that this camera is now active
-                ActiveCamera = this;
+                //// Updates the static field of Camera class to indicate that this camera is now active
+                //ActiveCamera = this;
             }
         }
 
@@ -721,9 +719,9 @@ namespace ANDOR_CS.Classes
                 
                 // Switches cooler mode
                 if (mode == Switch.Enabled)
-                    result = Call(SDKInstance.CoolerON);
+                    result = Call(CameraHandle, SDKInstance.CoolerON);
                 else if (mode == Switch.Disabled)
-                    result = Call(SDKInstance.CoolerOFF);
+                    result = Call(CameraHandle, SDKInstance.CoolerOFF);
 
                 ThrowIfError(result, nameof(SDKInstance.CoolerON) + " or " + nameof(SDKInstance.CoolerOFF));
                 CoolerMode = mode;
@@ -800,7 +798,7 @@ namespace ANDOR_CS.Classes
                 if (Capabilities.Features.HasFlag(SDKFeatures.ShutterEx))
                 {
                     
-                    var result = Call(() =>SDKInstance.SetShutterEx((int)type, (int)inter, clTime, opTime, (int)exter));
+                    var result = Call(CameraHandle, () =>SDKInstance.SetShutterEx((int)type, (int)inter, clTime, opTime, (int)exter));
                    
 
                     ThrowIfError(result, nameof(SDKInstance.SetShutterEx));
@@ -810,7 +808,7 @@ namespace ANDOR_CS.Classes
                 else
                 {
 
-                    var result = Call(() => SDKInstance.SetShutter((int)type, (int)inter, clTime, opTime));
+                    var result = Call(CameraHandle, () => SDKInstance.SetShutter((int)type, (int)inter, clTime, opTime));
                     
 
                     ThrowIfError(result, nameof(SDKInstance.SetShutter));
@@ -886,7 +884,7 @@ namespace ANDOR_CS.Classes
                 ThrowIfAcquiring(this);
 
                 // Starts acquisition
-                ThrowIfError(Call(SDKInstance.StartAcquisition), nameof(SDKInstance.StartAcquisition));
+                ThrowIfError(Call(CameraHandle, SDKInstance.StartAcquisition), nameof(SDKInstance.StartAcquisition));
 
                 // Fires event
                 OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
@@ -922,7 +920,7 @@ namespace ANDOR_CS.Classes
                     throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
 
                 // Tries to abort acquisition
-                ThrowIfError(Call(SDKInstance.AbortAcquisition), nameof(SDKInstance.AbortAcquisition));
+                ThrowIfError(Call(CameraHandle, SDKInstance.AbortAcquisition), nameof(SDKInstance.AbortAcquisition));
 
                 // Fires AcquisitionAborted event
                 OnAcquisitionAborted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
@@ -1053,8 +1051,7 @@ namespace ANDOR_CS.Classes
                         ActiveCamera = null;
                     // If there are, sets active the one that was active before disposing procedure
                     else oldCamera?.SetActive();
-
-                    
+                                        
                 }
                
             }
@@ -1098,10 +1095,10 @@ namespace ANDOR_CS.Classes
             {// Sets current camera active
                 //ActiveCamera = this;
 
-                SetActiveAndLock();
+               // SetActiveAndLock();
                // SetActive();
                 // Initializes current camera
-                result = Call(SDKInstance.Initialize, ".\\");
+                result = EnsureActiveAndRun(() => Call(SDKInstance.Initialize, ".\\"));
                 ThrowIfError(result, nameof(SDKInstance.Initialize));
 
                 // If succeeded, sets IsInitialized flag to true and adds current camera to the list of initialized cameras
@@ -1139,7 +1136,7 @@ namespace ANDOR_CS.Classes
             }
             finally
             {
-                ReleaseLock();
+               // ReleaseLock();
             }
         }
 
@@ -1198,7 +1195,7 @@ namespace ANDOR_CS.Classes
                         //    SDKInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
                         //    out acquiredImagesIndex), nameof(SDKInstance.GetNumberNewImages));
 
-                        ThrowIfError(Call(() => SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last)), 
+                        ThrowIfError(Call(CameraHandle, () => SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last)), 
                             nameof(SDKInstance.GetNumberNewImages));
 
                         // If there is new image, updates indexes of previous abailable images and fires an event.
@@ -1279,7 +1276,23 @@ namespace ANDOR_CS.Classes
                 throw new InvalidOperationException("Failed to remove finished task from queue.");
 
         }
-        
+
+        private uint EnsureActiveAndRun(Func<uint> action)
+        {
+            uint result = 0;
+
+            try
+            {
+                Monitor.Enter(Locker);
+                SetActive();
+                result = action();
+                return result;
+            }
+            finally
+            {
+                Monitor.Exit(Locker);
+            }
+        }
 
         /// <summary>
         /// Queries the number of currently connected Andor cameras
@@ -1313,6 +1326,7 @@ namespace ANDOR_CS.Classes
                 (cam.Value as Camera).OnPropertyChanged(nameof(IsActive));
         }
 
+        
         
     }
 
