@@ -228,7 +228,7 @@ namespace DIPOL_Remote.Classes
             }
         }
 
-        public override ConcurrentQueue<Image> AcquiredImages => throw new NotImplementedException();
+        //public override ConcurrentQueue<Image> AcquiredImages => throw new NotImplementedException();
 
         internal RemoteCamera(IRemoteControl sessionInstance, int camIndex)
         {
@@ -290,11 +290,13 @@ namespace DIPOL_Remote.Classes
 
         public async override Task StartAcquistionAsync(CancellationTokenSource token, int timeout)
         {
+            acquiredImages = new ConcurrentQueue<Image>();
+
             string taskID = session.CreateAcquisitionTask(CameraIndex, timeout);
 
             try
             {
-                await Task.Run(() =>
+               await Task.Run(() =>
                {
                    while (!session.IsTaskFinished(taskID))
                    {
@@ -370,7 +372,19 @@ namespace DIPOL_Remote.Classes
                 }
             }
         }
-        
+        internal static void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string sessionID, NewImageReceivedEventArgs e)
+        {
+            if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
+            {
+                var cam = camera as RemoteCamera;
+
+                var message = cam.session.PullNewImage(cam.CameraIndex);
+               
+                cam.acquiredImages.Enqueue(new Image(message.Data, message.Width, message.Height, message.TypeCode));
+
+                cam.OnNewImageReceived(e);
+            }
+        }
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
