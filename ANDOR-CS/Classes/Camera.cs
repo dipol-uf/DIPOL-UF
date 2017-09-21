@@ -75,6 +75,7 @@ namespace ANDOR_CS.Classes
             }
         }
         private static object Locker = new object();
+        private static volatile int CanSwitchCamera = 1;
 
         private ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> runningTasks = new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
@@ -114,8 +115,8 @@ namespace ANDOR_CS.Classes
         public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
             => CreatedCameras as IReadOnlyDictionary<int, CameraBase>;
 
-        public override ConcurrentQueue<Image> AcquiredImages
-            => acquiredImages;
+        //public override ConcurrentQueue<Image> AcquiredImages
+        //    => acquiredImages;
 
 
         /// <summary>
@@ -490,6 +491,11 @@ namespace ANDOR_CS.Classes
             }
 
         }
+        /// <summary>
+        /// Represents a worker that runs infinite loop until cancellation is requested.
+        /// </summary>
+        /// <param name="token">Cancellation token used to break the loop.</param>
+        /// <param name="delay">Time delay between loop cycles</param>
         private void TemperatureMonitorCycler(CancellationToken token, int delay)
         {
             while (true)
@@ -501,10 +507,16 @@ namespace ANDOR_CS.Classes
 
                 OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
 
-                Task.Delay(delay).Wait();
+                Thread.Sleep(delay);
+
             }
+            
 
         }
+        /// <summary>
+        /// Retrives new image from camera buffer and pushes it to queue.
+        /// </summary>
+        /// <param name="e">Parameters obtained from <see cref="CameraBase.NewImageReceived"/> event.</param>
         private void PushNewImage(NewImageReceivedEventArgs e)
         {
             
@@ -535,8 +547,24 @@ namespace ANDOR_CS.Classes
             //    SetActive();
             //}
 
-            Monitor.Enter(Locker);
+
+            //if (Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1) == 1)
+            //{
+            //    SetActive();
+            //    Interlocked.Increment(ref LockDepth);
+            //}
+            //if (ActiveCamera == this)
+            //    Interlocked.Increment(ref LockDepth);
+            //else
+
+            if (ActiveCamera != null && ActiveCamera != this)
+                SpinWait.SpinUntil(() => Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1) == 1);
+            else
+                Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1);
             SetActive();
+            Interlocked.Increment(ref LockDepth);
+                      
+            //SetActive();
             //LockDepth++;
         }
         /// <summary>
@@ -544,11 +572,28 @@ namespace ANDOR_CS.Classes
         /// </summary>
         internal void ReleaseLock()
         {
-            //if(--LockDepth == 0)
+            //if(--LockDepth == 0).
             //    ActivityLocker.Release();
             ////LockDepth--;
 
-            Monitor.Exit(Locker);
+            //Monitor.Exit(Locker);
+
+            if (CanSwitchCamera == 0)
+            {
+                if (ActiveCamera == this)
+                {
+                    Monitor.Enter(Locker);
+                    if (Interlocked.Decrement(ref LockDepth) == 0 &&
+                        Interlocked.CompareExchange(ref CanSwitchCamera, 1, 0) != 0)
+                        throw new AbandonedMutexException("Thread encountered abandoned mutex or call logic order was violated.");
+
+                    Monitor.Exit(Locker);
+                }
+                else
+                    throw new ThreadStateException("Attempt to release lock from foreign thread.");
+            }
+            else
+                throw new AbandonedMutexException($"Thread encountered an abandoned mutex.");
         }
         
         /// <summary>
@@ -917,7 +962,17 @@ namespace ANDOR_CS.Classes
                         TemperatureMonitorWorker.Status == TaskStatus.Faulted)
                         // Starts new with a cancellation token
                         TemperatureMonitorWorker = Task.Factory.StartNew(
-                            () => TemperatureMonitorCycler(TemperatureMonitorCancellationSource.Token, timeout),
+                            () =>
+                            {
+                                try
+                                {
+                                    TemperatureMonitorCycler(TemperatureMonitorCancellationSource.Token, timeout);
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e.Message);
+                                }
+                            },
                             TemperatureMonitorCancellationSource.Token);
 
                     // If task was created, but has not started, start it
@@ -973,6 +1028,9 @@ namespace ANDOR_CS.Classes
                 {
                     SetActiveAndLock();
 
+                    if (TemperatureMonitorWorker.Status == TaskStatus.Running)
+                        TemperatureMonitor(Switch.Disabled);
+
                     foreach (var key in runningTasks.Keys)
                     {
                         runningTasks.TryRemove(key, out (Task Task, CancellationTokenSource Source) item);
@@ -989,14 +1047,14 @@ namespace ANDOR_CS.Classes
                 }
                 finally
                 {
-                   
+                    ReleaseLock();
                     // If there are no other cameras, 
                     if (CreatedCameras.Count == 0)
                         ActiveCamera = null;
                     // If there are, sets active the one that was active before disposing procedure
                     else oldCamera?.SetActive();
 
-                    ReleaseLock();
+                    
                 }
                
             }
@@ -1023,7 +1081,7 @@ namespace ANDOR_CS.Classes
             if (camIndex < 0)
                 throw new ArgumentException($"Camera index is out of range; Cannot be less than 0 (provided {camIndex}).");
             // If cameraIndex equals to or exceeds the number of available cameras, it is also out of range
-            if (camIndex >= n)
+            if (camIndex > n)
                 throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
             // If camera with such index is already in use, throws exception
             if (CreatedCameras.Count(cam => cam.Value.CameraIndex == camIndex) != 0)
@@ -1038,8 +1096,10 @@ namespace ANDOR_CS.Classes
 
             try
             {// Sets current camera active
-                SetActiveAndLock();
+                //ActiveCamera = this;
 
+                SetActiveAndLock();
+               // SetActive();
                 // Initializes current camera
                 result = Call(SDKInstance.Initialize, ".\\");
                 ThrowIfError(result, nameof(SDKInstance.Initialize));
@@ -1050,6 +1110,8 @@ namespace ANDOR_CS.Classes
                     throw new InvalidOperationException("Failed to add camera to the concurrent dictionary");
 
                 CameraIndex = camIndex;
+
+                //SetActive();
 
                 // Gets information about software and hardware used in this system
                 GetSoftwareHardwareVersion();
@@ -1147,7 +1209,7 @@ namespace ANDOR_CS.Classes
 
                             OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
                         }
-                       
+
                         // If task is aborted
                         //if (token.IsCancellationRequested)
                         //{
@@ -1158,8 +1220,9 @@ namespace ANDOR_CS.Classes
                         //}
 
                         // Waits for specified amount of time before checking status again
-                       
-                        Task.Delay(StatusCheckTimeOutMS).Wait();
+
+                        Thread.Sleep(timeout);
+                        //Task.Delay(StatusCheckTimeOutMS).Wait();
 
                     }
 
@@ -1239,21 +1302,18 @@ namespace ANDOR_CS.Classes
         /// Does not requrire real camera
         /// </summary>
         /// <returns></returns>
+
+#if DEBUG
         public static CameraBase GetDebugInterface(int camIndex = 0) 
             => new DebugCamera(camIndex);
-
+#endif
         private static void OnActiveCameraChanged()
         {
             foreach (var cam in CreatedCameras)
                 (cam.Value as Camera).OnPropertyChanged(nameof(IsActive));
         }
 
-        public event NewImageReceivedHandler NewImageReceived;
-
-        protected virtual void OnNewImageReceived(NewImageReceivedEventArgs e)
-            => NewImageReceived?.Invoke(this, e);
-
-
+        
     }
 
 }

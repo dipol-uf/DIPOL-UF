@@ -250,10 +250,7 @@ namespace ANDOR_CS.Classes
                 }
             }
         }
-        public abstract ConcurrentQueue<Image> AcquiredImages
-        {
-            get;
-        }
+        public virtual ConcurrentQueue<Image> AcquiredImages => acquiredImages;
         public virtual SettingsBase CurrentSettings
         {
             get;
