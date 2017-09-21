@@ -303,6 +303,7 @@ namespace DIPOL_Remote.Classes
                        Task.Delay(timeout).Wait();
                        if (token.IsCancellationRequested)
                            session.RequestCancellation(taskID);
+                       break;
                    }
                });
             }

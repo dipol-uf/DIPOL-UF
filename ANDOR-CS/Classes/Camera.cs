@@ -897,8 +897,8 @@ namespace ANDOR_CS.Classes
             if (!IsAcquiring)
                 throw new AndorSDKException("Acquisition abort attemted while there is no acquisition in proress.", null);
 
-            if (IsAsyncAcquisition)
-                throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
+            //if (IsAsyncAcquisition)
+            //    throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
 
             // Tries to abort acquisition
             ThrowIfError(Call(CameraHandle, SDKInstance.AbortAcquisition), nameof(SDKInstance.AbortAcquisition));
@@ -908,6 +908,7 @@ namespace ANDOR_CS.Classes
 
             // Marks the end of acquisition
             IsAcquiring = false;
+            IsAsyncAcquisition = false;
         }
 
         /// <summary>
@@ -1182,7 +1183,6 @@ namespace ANDOR_CS.Classes
                         // If task is aborted
                         if (source.Token.IsCancellationRequested)
                         {
-                            IsAsyncAcquisition = false;
                             // Aborts
                             AbortAcquisition();
                             // Exits wait loop
