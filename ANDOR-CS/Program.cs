@@ -234,7 +234,7 @@ namespace ANDOR_CS
                 task[i] = Task.Run(() =>
                 {
                     int num = 0;
-                    SDKInit.Call(SDKInit.SDKInstance.GetNumberDevices, out num);
+                    SDKInit.Call(null, SDKInit.SDKInstance.GetNumberDevices, out num);
                     Console.WriteLine($"{num}");
                 }
                 );
