@@ -19,7 +19,7 @@ namespace ImageTest
         [STAThread]
         static void Main(string[] args)
         {
-            Test1();
+            ContextSwitchTest();
 
             Console.ReadKey();
         }
@@ -218,17 +218,24 @@ namespace ImageTest
             cams[0] = new Camera(0);
             cams[1] = new Camera(1);
 
-            int N = 10;
+            int N = 100000;
 
             System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
 
             for (int i = 0; i < N; i++)
-                if (AndorSDKInitialization.Call(AndorSDKInitialization.SDKInstance.SelectDevice, i % 2) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+            {
+                if (AndorSDKInitialization.Call(AndorSDKInitialization.SDKInstance.SetCurrentCamera, cams[i % 2].CameraHandle.SDKPtr) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
                     throw new Exception("Switch failed.");
+
+                //if(AndorSDKInitialization.Call(AndorSDKInitialization.SDKInstance.GetCameraSerialNumber, out int num) == ATMCD64CS.AndorSDK.DRV_SUCCESS)
+                //    Console.WriteLine(num);
+                //else
+                //    throw new Exception("Switch failed.");
+            }
 
             watch.Stop();
 
-            Console.WriteLine($"Total: {watch.Elapsed.TotalSeconds.ToString("e3")}\t Per switch: {watch.Elapsed.TotalSeconds.ToString("e3")}");
+            Console.WriteLine($"Total: {watch.Elapsed.TotalSeconds.ToString("e3")}\t Per switch: {(watch.Elapsed.TotalSeconds/N).ToString("e3")}");
         }
 
     }
