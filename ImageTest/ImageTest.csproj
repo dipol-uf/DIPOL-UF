@@ -63,6 +63,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ImageDisplay\bin\Debug\ImageDisplay.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -90,6 +91,10 @@
     <ProjectReference Include="..\ANDOR-CS\ANDOR-CS.csproj">
       <Project>{d1e8b17d-4c59-42dd-87bd-f111df8e631d}</Project>
       <Name>ANDOR-CS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DIPOL-Remote\DIPOL-Remote.csproj">
+      <Project>{355d3461-6989-4022-9fde-b2bea3581590}</Project>
+      <Name>DIPOL-Remote</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

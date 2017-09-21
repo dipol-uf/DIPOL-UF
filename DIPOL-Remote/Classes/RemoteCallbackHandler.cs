@@ -31,7 +31,7 @@ namespace DIPOL_Remote.Classes
 
         public RemoteCallbackHandler()
         {
-            
+
         }
 
         public void NotifyRemoteAcquisitionEventHappened(int camIndex, string session,
@@ -45,5 +45,7 @@ namespace DIPOL_Remote.Classes
             int camIndex, string session, TemperatureStatusEventArgs args)
             => RemoteCamera.NotifyRemoteTemperatureStatusChecked(camIndex, session, args);
 
+        public void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string session, NewImageReceivedEventArgs e)
+            => RemoteCamera.NotifyRemoteNewImageReceivedEventHappened(camIndex, session, e);
     }
 }

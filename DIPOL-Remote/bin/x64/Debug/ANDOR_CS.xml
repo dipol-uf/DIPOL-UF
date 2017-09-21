@@ -207,7 +207,7 @@
         </member>
         <member name="P:ANDOR_CS.Classes.SafeSDKCameraHandle.SDKPtr">
             <summary>
-            A porperty with getter that returns stored raw Andor SDK camera handle
+            A property with getter that returns stored raw Andor SDK camera handle
             </summary>
         </member>
         <member name="M:ANDOR_CS.Classes.SafeSDKCameraHandle.#ctor(System.Int32)">
@@ -515,6 +515,19 @@
             Retrieves software/hardware versions
             </summary>
             <exception cref="T:ANDOR_CS.Exceptions.AcquisitionInProgressException"/>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.TemperatureMonitorCycler(System.Threading.CancellationToken,System.Int32)">
+            <summary>
+            Represents a worker that runs infinite loop until cancellation is requested.
+            </summary>
+            <param name="token">Cancellation token used to break the loop.</param>
+            <param name="delay">Time delay between loop cycles</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.Camera.PushNewImage(ANDOR_CS.Events.NewImageReceivedEventArgs)">
+            <summary>
+            Retrives new image from camera buffer and pushes it to queue.
+            </summary>
+            <param name="e">Parameters obtained from <see cref="E:ANDOR_CS.Classes.CameraBase.NewImageReceived"/> event.</param>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.SetActiveAndLock">
             <summary>
