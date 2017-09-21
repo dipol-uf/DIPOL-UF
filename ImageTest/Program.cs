@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using ANDOR_CS;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
@@ -204,6 +206,8 @@ namespace ImageTest
             Console.WriteLine("Parallel {0:E3} \t {1:E3}", (DateTime.Now - t).TotalSeconds, sum);
 
         }
+
+       
      
     }
 }
