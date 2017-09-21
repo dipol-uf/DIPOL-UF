@@ -19,9 +19,9 @@ namespace ImageTest
         [STAThread]
         static void Main(string[] args)
         {
-            ContextSwitchTest();
+            // ContextSwitchTest();
 
-            //Test1();
+            Test1();
 
             Console.ReadKey();
         }
@@ -103,9 +103,11 @@ namespace ImageTest
                     //ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetNumberNewImages(ref first, ref last);
                     //ANDOR_CS.Classes.AndorSDKInitialization.SDKInstance.GetNumberAvailableImages(ref first, ref last);
 
+                    System.Threading.Thread.Sleep(2000);
+                    source.Cancel();
 
-                    var app = new System.Windows.Application();
-                    app.Run(new TestWindow(camera));
+                    //var app = new System.Windows.Application();
+                    //app.Run(new TestWindow(camera));
 
                     //var t = DateTime.Now;
 
