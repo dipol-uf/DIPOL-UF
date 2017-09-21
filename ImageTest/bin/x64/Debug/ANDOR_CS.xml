@@ -207,7 +207,7 @@
         </member>
         <member name="P:ANDOR_CS.Classes.SafeSDKCameraHandle.SDKPtr">
             <summary>
-            A porperty with getter that returns stored raw Andor SDK camera handle
+            A property with getter that returns stored raw Andor SDK camera handle
             </summary>
         </member>
         <member name="M:ANDOR_CS.Classes.SafeSDKCameraHandle.#ctor(System.Int32)">

@@ -34,7 +34,7 @@ namespace ANDOR_CS.Classes
     public class SafeSDKCameraHandle : Microsoft.Win32.SafeHandles.SafeHandleZeroOrMinusOneIsInvalid
     {
         /// <summary>
-        /// A porperty with getter that returns stored raw Andor SDK camera handle
+        /// A property with getter that returns stored raw Andor SDK camera handle
         /// </summary>
         public int SDKPtr => handle.ToInt32();
 

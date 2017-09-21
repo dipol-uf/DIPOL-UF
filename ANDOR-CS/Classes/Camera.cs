@@ -102,7 +102,7 @@ namespace ANDOR_CS.Classes
 
             protected set => throw new NotSupportedException();
         }
-        internal SafeSDKCameraHandle CameraHandle
+        public SafeSDKCameraHandle CameraHandle
         {
             get;
             private set;
@@ -557,7 +557,7 @@ namespace ANDOR_CS.Classes
             //    Interlocked.Increment(ref LockDepth);
             //else
 
-            if (ActiveCamera != this)
+            if (ActiveCamera != null && ActiveCamera != this)
                 SpinWait.SpinUntil(() => Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1) == 1);
             else
                 Interlocked.CompareExchange(ref CanSwitchCamera, 0, 1);
@@ -1081,7 +1081,7 @@ namespace ANDOR_CS.Classes
             if (camIndex < 0)
                 throw new ArgumentException($"Camera index is out of range; Cannot be less than 0 (provided {camIndex}).");
             // If cameraIndex equals to or exceeds the number of available cameras, it is also out of range
-            if (camIndex >= n)
+            if (camIndex > n)
                 throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
             // If camera with such index is already in use, throws exception
             if (CreatedCameras.Count(cam => cam.Value.CameraIndex == camIndex) != 0)
@@ -1096,10 +1096,10 @@ namespace ANDOR_CS.Classes
 
             try
             {// Sets current camera active
-                ActiveCamera = this;
+                //ActiveCamera = this;
 
                 SetActiveAndLock();
-
+               // SetActive();
                 // Initializes current camera
                 result = Call(SDKInstance.Initialize, ".\\");
                 ThrowIfError(result, nameof(SDKInstance.Initialize));
