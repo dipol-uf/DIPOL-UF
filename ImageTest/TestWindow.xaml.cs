@@ -21,9 +21,9 @@ namespace ImageTest
     public partial class TestWindow : Window
     {
 
-        ANDOR_CS.Classes.Camera camera = null;
+        ANDOR_CS.Classes.CameraBase camera = null;
 
-        public TestWindow(ANDOR_CS.Classes.Camera cam)
+        public TestWindow(ANDOR_CS.Classes.CameraBase cam)
         {
             InitializeComponent();
             camera = cam;
@@ -50,6 +50,7 @@ namespace ImageTest
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             camera.NewImageReceived += Cam_NewImageReceived;
+            camera.TemperatureStatusChecked += Cam_TemperatureStatusChecked;
             //if (camera == null)
             //{
             //    int N = 4096;
@@ -67,6 +68,21 @@ namespace ImageTest
             //    ImageHandle.LoadImage(im, ImageDisplayLib.ImageType.GrayScale16Int);
             //}
 
+        }
+
+        private void Cam_TemperatureStatusChecked(object sender, ANDOR_CS.Events.TemperatureStatusEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                TemperatureBlock.Text = $"T = {e.Temperature.ToString("F2")} C";
+                StatusBlock.Text = e.Status.ToString();
+                if (e.Temperature > 10)
+                    TemperatureBlock.Foreground = Brushes.DarkRed;
+                else if (e.Temperature > -10)
+                    TemperatureBlock.Foreground = Brushes.ForestGreen;
+                else
+                    TemperatureBlock.Foreground = Brushes.DarkBlue;
+            });
         }
     }
 }
