@@ -452,7 +452,7 @@ namespace ANDOR_CS.Classes
                 uint DllRev = 0;
 
                
-                result = EnsureActiveAndRun(() => Call(CameraHandle, () => SDKInstance.GetSoftwareVersion(ref eprom, ref COF, ref driverRev, ref driverVer, ref DllRev, ref DllVer)));
+                result = Call(CameraHandle, () => SDKInstance.GetSoftwareVersion(ref eprom, ref COF, ref driverRev, ref driverVer, ref DllRev, ref DllVer));
                
                 ThrowIfError(result, nameof(SDKInstance.GetSoftwareVersion));
 
@@ -473,7 +473,7 @@ namespace ANDOR_CS.Classes
 
                 // Manual synchronization
                 
-                result = EnsureActiveAndRun(() => Call(CameraHandle, () => SDKInstance.GetHardwareVersion(ref PCB, ref decode, ref dummy, ref dummy, ref firmwareVer, ref firmwareRev)));
+                result = Call(CameraHandle, () => SDKInstance.GetHardwareVersion(ref PCB, ref decode, ref dummy, ref dummy, ref firmwareVer, ref firmwareRev));
                 
                 ThrowIfError(result, nameof(SDKInstance.GetHardwareVersion));
 
@@ -1079,7 +1079,7 @@ namespace ANDOR_CS.Classes
                // SetActiveAndLock();
                // SetActive();
                 // Initializes current camera
-                result = EnsureActiveAndRun(() => Call(CameraHandle, SDKInstance.Initialize, ".\\"));
+                result = Call(CameraHandle, SDKInstance.Initialize, ".\\");
                 ThrowIfError(result, nameof(SDKInstance.Initialize));
 
                 // If succeeded, sets IsInitialized flag to true and adds current camera to the list of initialized cameras
