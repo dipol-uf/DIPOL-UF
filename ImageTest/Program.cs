@@ -221,6 +221,22 @@ namespace ImageTest
             cams[0] = new Camera(0);
             cams[1] = new Camera(1);
 
+            void TemperatureHandler(object sender, ANDOR_CS.Events.TemperatureStatusEventArgs e)
+            {
+                if (sender is Camera cm)
+                    Console.WriteLine($"{cm.SerialNumber} \t {e.Temperature} \t {e.Status}");
+                else
+                    Console.WriteLine("ERROR! Sender is not a Camera");
+
+                
+            };
+
+            foreach (var cam in cams)
+            {
+                cam.TemperatureStatusChecked += TemperatureHandler;
+                cam.TemperatureMonitor(ANDOR_CS.Enums.Switch.Enabled, 1000);
+            }
+
 
 
             //Parallel.For(0, 2, (i) =>
@@ -230,7 +246,7 @@ namespace ImageTest
 
             Console.WriteLine(watch.Elapsed.TotalSeconds.ToString("E3"));
 
-            int N = 10000;
+            int N = 1000;
 
            
             int[] models = new int[cams.Length];
@@ -252,6 +268,7 @@ namespace ImageTest
                 AndorSDKInitialization.Call(cams[i % 2].CameraHandle, AndorSDKInitialization.SDKInstance.GetCameraSerialNumber, out int num);
                 if (models[i % 2] == num)
                     counts[i % 2] += 1;
+                System.Threading.Thread.Sleep(100);
             });
 
             
@@ -262,6 +279,8 @@ namespace ImageTest
             Console.WriteLine($"Total: {watch.Elapsed.TotalSeconds.ToString("e3")}\t Per switch: {(watch.Elapsed.TotalSeconds/N).ToString("e3")}");
             Console.WriteLine("{0,7} | {1,-7} | Total", models[0], models[1]);
             Console.WriteLine("{0,7} | {1,-7} | {2}", counts[0], counts[1], N);
+
+            Console.ReadKey();
 
             for (int j = 0; j < cams.Length; j++)
                 cams[j].Dispose();

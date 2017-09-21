@@ -483,6 +483,11 @@
             Indicates if this camera is currently active
             </summary>
         </member>
+        <member name="P:ANDOR_CS.Classes.Camera.CameraHandle">
+            <summary>
+            A safe handle that stores native SDK pointer to the current <see cref="T:ANDOR_CS.Classes.Camera"/> resource.
+            </summary>
+        </member>
         <member name="P:ANDOR_CS.Classes.Camera.CamerasInUse">
             <summary>
             Read-only collection of all local cameras in use.
@@ -516,7 +521,7 @@
             </summary>
             <exception cref="T:ANDOR_CS.Exceptions.AcquisitionInProgressException"/>
         </member>
-        <member name="M:ANDOR_CS.Classes.Camera.TemperatureMonitorCycler(System.Threading.CancellationToken,System.Int32)">
+        <member name="M:ANDOR_CS.Classes.Camera.TemperatureMonitorCycler(System.Object,System.Timers.ElapsedEventArgs)">
             <summary>
             Represents a worker that runs infinite loop until cancellation is requested.
             </summary>

@@ -31,6 +31,7 @@ using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 using SDK = ATMCD64CS.AndorSDK;
 
 using static ANDOR_CS.Exceptions.AndorSDKException;
+using static ANDOR_CS.Classes.AndorSDKInitialization;
 
 namespace ANDOR_CS.Classes
 {
@@ -203,17 +204,21 @@ namespace ANDOR_CS.Classes
         {
             List<(string Option, bool Success, uint ReturnCode)> output = new List<(string Option, bool Success, uint ReturnCode)>();
 
+            SafeSDKCameraHandle handle = null;
+            if (camera is Camera locCam)
+                handle = locCam.CameraHandle;
+            else
+                throw new Exception("Type of camera is wrong.");
+
             CheckCamera();
             try
             {
-                var locCam = camera as Camera;
-
                 uint result = 0;
 
 
                 if (VSSpeed.HasValue)
                 {
-                    result = SDKInit.SDKInstance.SetVSSpeed(VSSpeed.Value.Index);
+                    result = Call(handle, SDKInstance.SetVSSpeed, VSSpeed.Value.Index);
 
                     output.Add(("VS Speed", result == SDK.DRV_SUCCESS, result));
                 }
