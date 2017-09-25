@@ -96,6 +96,10 @@
       <Project>{355d3461-6989-4022-9fde-b2bea3581590}</Project>
       <Name>DIPOL-Remote</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FITS-CS\FITS-CS.csproj">
+      <Project>{89516f86-17d4-4ed3-89f2-d20df612c7de}</Project>
+      <Name>FITS-CS</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Page Include="TestWindow.xaml">

@@ -11,6 +11,7 @@ using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 
 using ImageDisplayLib;
+using FITS_CS;
 
 namespace ImageTest
 {
@@ -21,8 +22,8 @@ namespace ImageTest
         {
             try
             {
-                ContextSwitchTest();
-
+                // ContextSwitchTest();
+                FITSTest();
                 //Test1();
             }
             catch
@@ -277,5 +278,7 @@ namespace ImageTest
             
         }
 
+        private static void FITSTest()
+        { }
     }
 }
