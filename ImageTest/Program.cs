@@ -26,8 +26,10 @@ namespace ImageTest
                 FITSTest();
                 //Test1();
             }
-            catch
-            { }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
             Console.ReadKey();
         }
 
@@ -279,6 +281,15 @@ namespace ImageTest
         }
 
         private static void FITSTest()
-        { }
+        {
+            using (var str = new FITSStream(new System.IO.FileStream("test.fits", System.IO.FileMode.Open)))
+            {
+                int count = 0;
+                while (str.TryReadUnit(out FITSUnit u))
+                {
+                    Console.WriteLine($"{count++}\t{u.IsKeywords}");
+                }
+            }
+        }
     }
 }
