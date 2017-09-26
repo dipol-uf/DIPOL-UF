@@ -32,7 +32,7 @@ namespace ImageDisplayLib
 
         [DataMember]
         private Array baseArray;
-              
+
         [DataMember]
         private TypeCode typeCode;
 
@@ -61,7 +61,6 @@ namespace ImageDisplayLib
             => ((T[])baseArray)[i * Width + j];
         public void Set<T>(T value, int i, int j)
             => ((T[])baseArray)[i * Width + j] = value;
-            
 
         public Image(Array initialArray, int width, int height)
         {
@@ -163,7 +162,7 @@ namespace ImageDisplayLib
                         Array.Copy(BitConverter.GetBytes(Get<Int32>(i, j)), 0, byteArray, (i * Width + j) * size, size);
             }
             else throw new Exception();
-            
+
 
             return byteArray;
         }
@@ -218,7 +217,7 @@ namespace ImageDisplayLib
             }
             else throw new Exception();
 
-         
+
 
             return max;
         }
@@ -242,7 +241,7 @@ namespace ImageDisplayLib
             }
             else if (typeCode == TypeCode.Int16)
             {
-                Int16 localMin = Int16.MinValue;
+                Int16 localMin = Int16.MaxValue;
                 Int16 localVal = localMin;
                 for (int i = 0; i < Height; i++)
                     for (int j = 0; j < Width; j++)
@@ -253,7 +252,7 @@ namespace ImageDisplayLib
             }
             else if (typeCode == TypeCode.Int32)
             {
-                Int32 localMin = Int32.MinValue;
+                Int32 localMin = Int32.MaxValue;
                 Int32 localVal = localMin;
                 for (int i = 0; i < Height; i++)
                     for (int j = 0; j < Width; j++)
@@ -264,7 +263,7 @@ namespace ImageDisplayLib
             }
             else if (typeCode == TypeCode.UInt32)
             {
-                UInt32 localMin = UInt32.MinValue;
+                UInt32 localMin = UInt32.MaxValue;
                 UInt32 localVal = localMin;
                 for (int i = 0; i < Height; i++)
                     for (int j = 0; j < Width; j++)
@@ -275,7 +274,7 @@ namespace ImageDisplayLib
             }
             else throw new Exception();
 
-      
+
 
             return min;
         }
@@ -288,7 +287,7 @@ namespace ImageDisplayLib
             if (im.typeCode != typeCode || im.baseArray.Length != baseArray.Length)
                 im.baseArray = Array.CreateInstance(
                     Type.GetType("System." + typeCode.ToString(), true, true),
-                    baseArray.Length);      
+                    baseArray.Length);
 
             Array.Copy(baseArray, im.baseArray, baseArray.Length);
 
@@ -350,7 +349,7 @@ namespace ImageDisplayLib
 
         public Image Scale()
         {
-           // var result = Copy();
+            // var result = Copy();
 
             var min = this.Min();
             var max = this.Max();
@@ -361,7 +360,7 @@ namespace ImageDisplayLib
                 UInt16 globMax = UInt16.MaxValue;
                 UInt16 locMax = (UInt16)max;
                 UInt16 locMin = (UInt16)min;
-              
+
                 Action<int> worker = (k) =>
                     {
                         for (int j = 0; j < Width; j++)
@@ -374,7 +373,7 @@ namespace ImageDisplayLib
                     for (int i = 0; i < Height; i++)
                         worker(i);
 
-               
+
             }
             else if (typeCode == TypeCode.Int16)
             {
@@ -435,7 +434,7 @@ namespace ImageDisplayLib
             }
             else throw new Exception();
 
-           
+
             return this;
         }
 
@@ -459,9 +458,65 @@ namespace ImageDisplayLib
 
                     return query.Skip(length - 1).Take(1).First();
                 }
-                    
+
+            }
+            else if (typeCode == TypeCode.Int16)
+            {
+                if (Math.Abs(lvl) < Double.Epsilon)
+                    return (Int16)Min();
+                else if (Math.Abs(lvl - 1) < Double.Epsilon)
+                    return (Int16)Max();
+                else
+                {
+                    var query = ((Int16[])baseArray).OrderBy((x) => x);
+
+                    int length = (int)Math.Ceiling(lvl * Width * Height);
+
+
+                    return query.Skip(length - 1).Take(1).First();
+                }
+
             }
             else throw new Exception();
+        }
+
+        public void AddScalar(double value)
+        {
+            if (UnderlyingType == TypeCode.Int16)
+            {
+                Int16[] data = (Int16[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToInt16(data[i] + value);
+            }
+            else
+                throw new Exception();
+
+
+        }
+
+        public void MultiplyByScalar(double value)
+        {
+            if(UnderlyingType == TypeCode.Int16)
+            {
+                Int16[] data = (Int16[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToInt16(data[i] * value);
+            }
+            else
+                throw new Exception();
+        }
+
+        public void Invert()
+        {
+            if (UnderlyingType == TypeCode.Int16)
+            {
+                Int16[] data = (Int16[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = (Int16)(-data[i]);
+            }
+            else
+                throw new Exception();
+
         }
     }
 }
