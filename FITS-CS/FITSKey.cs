@@ -11,37 +11,56 @@ namespace FITS_CS
         public static readonly int KeySize = 80;
         public static readonly int KeyHeaderSize = 8;
 
-        byte[] array = new byte[FITSKey.KeySize];
+        string data = null;
 
-        byte[] Data => array;
+        public byte[] Data => Encoding.ASCII.GetBytes(data.ToArray());
+        public string Extension
+        {
+            get;
+            internal set;
+        } = null;
+        public string KeyString => data;
+        public bool IsEmpty => String.IsNullOrWhiteSpace(data);
+        public string Header => data.Substring(0, KeyHeaderSize).Trim();
 
-        public FITSKey(byte[] data)
+        public bool IsExtension => !IsEmpty && String.IsNullOrWhiteSpace(Header);
+        public FITSKey(byte[] data, int offset = 0)
         {
             if (data == null)
                 throw new ArgumentNullException($"{nameof(data)} is null");
-            if (data.Length != KeySize)
+            if ((data.Length <= KeySize) || (offset + KeySize > data.Length))
                 throw new ArgumentException($"{nameof(data)} has wrong length");
 
-            Array.Copy(data, array, data.Length);
+            this.data = new string(Encoding.ASCII.GetChars(data, offset, KeySize)); 
+        }
+        
+
+        public override string ToString() => data;        
+
+        public static bool IsFITSKey(byte[] data, int offset = 0)
+        {
+            if (data == null)
+                throw new ArgumentNullException($"{nameof(data)} is null");
+            if ((data.Length <= KeySize) || (offset + KeySize > data.Length))
+                throw new ArgumentException($"{nameof(data)} has wrong length");
+
+            return Encoding.ASCII.GetChars(data, offset, KeyHeaderSize)
+                .Where(c => c != ' ')
+                .All(c => Char.IsLetterOrDigit(c) || c == '-');
+                
+            
         }
 
-        public static char[] IsFITSKey(byte[] data, int offset = 0)
+        public static void JoinKeywords(params FITSUnit[] keyUnits)
         {
-            if (data == null)
-                throw new ArgumentNullException($"{nameof(data)} is null");
-            if (data.Length <= KeySize)
-                throw new ArgumentException($"{nameof(data)} has wrong length");
-            if(offset + KeySize > data.Length)
-                throw new ArgumentException($"{nameof(data)} has wrong length");
+            Dictionary<string, FITSKey> result 
+                = new Dictionary<string, FITSKey>(keyUnits.Length * FITSUnit.UnitSizeInBytes/KeySize);
 
+            foreach (var keyUnit in keyUnits)
+                if (keyUnit.TryGetKeys(out List<FITSKey> keys))
+                    foreach (var key in keys)
+                        result.Add("", key);
 
-            return data
-                .Skip(offset)
-                .Take(KeyHeaderSize)
-                .Select(b => (char)b)
-                .Where(c => c!= ' ')
-                .ToArray();               
-            
         }
     }
 }

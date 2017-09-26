@@ -34,11 +34,8 @@ namespace ImageTest
         {
             Dispatcher.Invoke(() =>
             {
-                ImageDisplayLib.Image im = null;
-                if (camera.AcquiredImages.TryDequeue(out im) == true)
-                {
+                if (camera.AcquiredImages.TryDequeue(out ImageDisplayLib.Image im))
                     ImageHandle.LoadImage(im, ImageDisplayLib.ImageType.GrayScale16Int);
-                }
             });
         }
 
