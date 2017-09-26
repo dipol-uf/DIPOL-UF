@@ -22,6 +22,7 @@ namespace ImageTest
     {
 
         ANDOR_CS.Classes.CameraBase camera = null;
+        ImageDisplayLib.Image Im = null;
 
         public TestWindow(ANDOR_CS.Classes.CameraBase cam)
         {
@@ -29,7 +30,12 @@ namespace ImageTest
             camera = cam;
             
         }
+        public TestWindow(ImageDisplayLib.Image im)
+        {
+            InitializeComponent();
+            Im = im;
 
+        }
         private void Cam_NewImageReceived(object sender, ANDOR_CS.Events.NewImageReceivedEventArgs e)
         {
             Dispatcher.Invoke(() =>
@@ -45,9 +51,13 @@ namespace ImageTest
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            camera.NewImageReceived += Cam_NewImageReceived;
-            camera.TemperatureStatusChecked += Cam_TemperatureStatusChecked;
+        {if (camera != null)
+            {
+                camera.NewImageReceived += Cam_NewImageReceived;
+                camera.TemperatureStatusChecked += Cam_TemperatureStatusChecked;
+            }
+            if (Im != null)
+                ImageHandle.LoadImage(Im, ImageDisplayLib.ImageType.GrayScale16Int);
             //if (camera == null)
             //{
             //    int N = 4096;
