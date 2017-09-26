@@ -296,12 +296,19 @@ namespace ImageTest
                         data.Add(u);                        
                 }
 
-                var t = System.Diagnostics.Stopwatch.StartNew();
+                var totalKeys = FITSKey.JoinKeywords(keywords.ToArray());
+
                 var image = FITSUnit.JoinData<Int16>(data.ToArray());
                 var dd = image.ToArray();
-                t.Stop();
-                Console.WriteLine($"{t.ElapsedMilliseconds/1000.0} s");
-                Console.WriteLine($"{t.ElapsedMilliseconds / 1000.0/data.Count} s per unit");
+
+                int width = totalKeys.First(item => item.Header == "NAXIS1").GetValue<int>();
+                int height = totalKeys.First(item => item.Header == "NAXIS2").GetValue<int>();
+                FITSImageType type = (FITSImageType)totalKeys.First(item => item.Header == "BITPIX").GetValue<int>();
+
+                Image im = new Image(dd, width, height);
+
+                var app = new System.Windows.Application();
+                app.Run(new TestWindow(im));
             }
         }
     }
