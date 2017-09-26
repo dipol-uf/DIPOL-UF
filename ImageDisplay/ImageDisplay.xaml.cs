@@ -90,6 +90,8 @@ namespace ImageDisplayLib
                 imageType = type;
                 DisplayedImageWidth = image.Width;
                 DisplayedImageHeight = image.Height;
+                
+
                 dynamic imageMin = initialImage.Min();
                 dynamic imageMax = initialImage.Max();
 
@@ -106,7 +108,7 @@ namespace ImageDisplayLib
                 UpdateFrame();
             }
         }
-        public void LoadImage(Image image, ImageType type, double low = 0.001, double high = 0.999)
+        public void LoadImage(Image image, ImageType type, double low = 0.000, double high = 1)
         {
             
             initialImage = image.Copy();
@@ -116,8 +118,8 @@ namespace ImageDisplayLib
             dynamic imageMin = initialImage.Min();
             dynamic imageMax = initialImage.Max();
 
-            SliderTwo.MinValue = 1.0 * imageMin;
-            SliderTwo.MaxValue = 1.0 * imageMax;
+            SliderTwo.MinValue = -32768;//1.0 * imageMin;
+            SliderTwo.MaxValue = 32767;// 1.0 * imageMax;
            
             SliderTwo.MinDifference = 0.025*(SliderTwo.MaxValue - SliderTwo.MinValue);
             SliderTwo.RightThumb = SliderTwo.MaxValue;
@@ -125,7 +127,7 @@ namespace ImageDisplayLib
             SliderTwo.LeftThumb =  initialImage.Percentile(low);
             SliderTwo.RightThumb = Math.Max(initialImage.Percentile(high), SliderTwo.LeftThumb + SliderTwo.MinDifference);
             displayedImage = image.Copy();
-
+            displayedImage.Scale();
             SliderTwo_IsThumbDraggingChanged(SliderTwo, new DependencyPropertyChangedEventArgs(Slider2.IsLeftThumbDraggingProperty, false, false));
 
             UpdateFrame();
@@ -202,7 +204,7 @@ namespace ImageDisplayLib
                 double right = SliderTwo.RightThumb;
 
                 initialImage.CopyTo(displayedImage);
-                displayedImage = displayedImage.Clamp(left, right).Scale();
+                displayedImage = displayedImage.Clamp(left, right);//.Scale();
 
                 UpdateFrame();
 

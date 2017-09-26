@@ -73,7 +73,7 @@ namespace FITS_CS
                 }
                 if (!currKey.IsExtension)
                     keys.Add(currKey);
-                keys = keys.Where(k => !k.IsEmpty).ToList();
+                //keys = keys.Where(k => !k.IsEmpty).ToList();
                 return true;
             }
             catch
