@@ -20,16 +20,16 @@ namespace ImageTest
         [STAThread]
         static void Main(string[] args)
         {
-            try
+            //try
             {
                 // ContextSwitchTest();
                 FITSTest();
                 //Test1();
             }
-            catch(Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
+            //catch(Exception e)
+            //{
+            //    Console.WriteLine(e.Message);
+            //}
             Console.ReadKey();
         }
 
@@ -282,13 +282,26 @@ namespace ImageTest
 
         private static void FITSTest()
         {
-            using (var str = new FITSStream(new System.IO.FileStream("test.fits", System.IO.FileMode.Open)))
+            using (var str = new FITSStream(new System.IO.FileStream("test2.fits", System.IO.FileMode.Open)))
             {
                 int count = 0;
+                List<FITSUnit> keywords = new List<FITSUnit>();
+                List<FITSUnit> data = new List<FITSUnit>();
+
                 while (str.TryReadUnit(out FITSUnit u))
                 {
-                    Console.WriteLine($"{count++}\t{u.IsKeywords}");
+                    if (u.IsKeywords)
+                        keywords.Add(u);
+                    else if (u.IsData)
+                        data.Add(u);                        
                 }
+
+                var t = System.Diagnostics.Stopwatch.StartNew();
+                var image = FITSUnit.JoinData<Int16>(data.ToArray());
+                var dd = image.ToArray();
+                t.Stop();
+                Console.WriteLine($"{t.ElapsedMilliseconds/1000.0} s");
+                Console.WriteLine($"{t.ElapsedMilliseconds / 1000.0/data.Count} s per unit");
             }
         }
     }
