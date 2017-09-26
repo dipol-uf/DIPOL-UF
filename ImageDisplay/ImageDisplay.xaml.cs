@@ -139,16 +139,14 @@ namespace ImageDisplayLib
             {
                 case ImageType.GrayScale16Int:
                     pf = PixelFormats.Gray16;
-                    stride = 2 * displayedImage.Width;
                     break;
                 case ImageType.GrayScale32Float:
                     pf = PixelFormats.Gray32Float;
-                    stride = 4 * displayedImage.Width;
                     break;
                 default:
                     throw new Exception();
             }
-
+            stride = (displayedImage.Width * pf.BitsPerPixel + 7) / 8;
             ImageFrame.Source = BitmapSource.Create(displayedImage.Width, displayedImage.Height, 300, 300, pf, BitmapPalettes.Gray256, displayedImage.GetBytes(), stride);
         }
 
