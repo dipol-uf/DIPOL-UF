@@ -120,6 +120,66 @@ namespace ImageDisplayLib
                     for (int j = 0; j < Width; j++)
                         Set<UInt16>(BitConverter.ToUInt16(initialArray, (i * width + j) * size), i, j);
             }
+            else if (type == TypeCode.Int16)
+            {
+                size = sizeof(Int16);
+                baseArray = new Int16[width * height];
+                Width = width;
+                Height = height;
+                this.typeCode = type;
+
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        Set<Int16>(BitConverter.ToInt16(initialArray, (i * width + j) * size), i, j);
+            }
+            else if (type == TypeCode.UInt32)
+            {
+                size = sizeof(UInt32);
+                baseArray = new UInt32[width * height];
+                Width = width;
+                Height = height;
+                this.typeCode = type;
+
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        Set<UInt32>(BitConverter.ToUInt32(initialArray, (i * width + j) * size), i, j);
+            }
+            else if (type == TypeCode.Int32)
+            {
+                size = sizeof(Int32);
+                baseArray = new Int32[width * height];
+                Width = width;
+                Height = height;
+                this.typeCode = type;
+
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        Set<Int32>(BitConverter.ToInt32(initialArray, (i * width + j) * size), i, j);
+            }
+            else if (type == TypeCode.Single)
+            {
+                size = sizeof(Single);
+                baseArray = new Single[width * height];
+                Width = width;
+                Height = height;
+                this.typeCode = type;
+
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        Set<Single>(BitConverter.ToSingle(initialArray, (i * width + j) * size), i, j);
+            }
+            else if (type == TypeCode.Double)
+            {
+                size = sizeof(Double);
+                baseArray = new Double[width * height];
+                Width = width;
+                Height = height;
+                this.typeCode = type;
+
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        Set<Double>(BitConverter.ToDouble(initialArray, (i * width + j) * size), i, j);
+            }
             else
                 throw new Exception();
         }
@@ -160,6 +220,22 @@ namespace ImageDisplayLib
                 for (int i = 0; i < Height; i++)
                     for (int j = 0; j < Width; j++)
                         Array.Copy(BitConverter.GetBytes(Get<Int32>(i, j)), 0, byteArray, (i * Width + j) * size, size);
+            }
+            else if (typeCode == TypeCode.Single)
+            {
+                int size = sizeof(Single);
+                byteArray = new byte[Width * Height * size];
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        Array.Copy(BitConverter.GetBytes(Get<Single>(i, j)), 0, byteArray, (i * Width + j) * size, size);
+            }
+            else if (typeCode == TypeCode.Double)
+            {
+                int size = sizeof(Double);
+                byteArray = new byte[Width * Height * size];
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        Array.Copy(BitConverter.GetBytes(Get<Double>(i, j)), 0, byteArray, (i * Width + j) * size, size);
             }
             else throw new Exception();
 
@@ -211,6 +287,28 @@ namespace ImageDisplayLib
                 for (int i = 0; i < Height; i++)
                     for (int j = 0; j < Width; j++)
                         if ((localVal = Get<Int32>(i, j)) > localMax)
+                            localMax = localVal;
+
+                max = localMax;
+            }
+            else if (typeCode == TypeCode.Single)
+            {
+                Single localMax = Single.MinValue;
+                Single localVal = localMax;
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        if ((localVal = Get<Single>(i, j)) > localMax)
+                            localMax = localVal;
+
+                max = localMax;
+            }
+            else if (typeCode == TypeCode.Double)
+            {
+                Double localMax = Double.MinValue;
+                Double localVal = localMax;
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        if ((localVal = Get<Double>(i, j)) > localMax)
                             localMax = localVal;
 
                 max = localMax;
@@ -272,6 +370,28 @@ namespace ImageDisplayLib
 
                 min = localMin;
             }
+            else if (typeCode == TypeCode.Single)
+            {
+                Single localMin = Single.MaxValue;
+                Single localVal = localMin;
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        if ((localVal = Get<Single>(i, j)) < localMin)
+                            localMin = localVal;
+
+                min = localMin;
+            }
+            else if (typeCode == TypeCode.Double)
+            {
+                Double localMin = Double.MaxValue;
+                Double localVal = localMin;
+                for (int i = 0; i < Height; i++)
+                    for (int j = 0; j < Width; j++)
+                        if ((localVal = Get<Double>(i, j)) < localMin)
+                            localMin = localVal;
+
+                min = localMin;
+            }
             else throw new Exception();
 
 
@@ -296,7 +416,7 @@ namespace ImageDisplayLib
             im.typeCode = typeCode;
         }
 
-        public Image Clamp(double low, double high)
+        public void Clamp(double low, double high)
         {
             if (typeCode == TypeCode.UInt16)
             {
@@ -342,22 +462,41 @@ namespace ImageDisplayLib
                         else if (this.Get<Int32>(i, j) > locHigh)
                             this.Set<Int32>(locHigh, i, j);
             }
+            else if (typeCode == TypeCode.Single)
+            {
+                Single locLow = (Single)(Math.Floor(low));
+                Single locHigh = (Single)(Math.Ceiling(high));
+                for (int i = 0; i < this.Height; i++)
+                    for (int j = 0; j < this.Width; j++)
+                        if (this.Get<Single>(i, j) < locLow)
+                            this.Set<Single>(locLow, i, j);
+                        else if (this.Get<Single>(i, j) > locHigh)
+                            this.Set<Single>(locHigh, i, j);
+            }
+            else if (typeCode == TypeCode.Double)
+            {
+                Double locLow = (Double)(Math.Floor(low));
+                Double locHigh = (Double)(Math.Ceiling(high));
+                for (int i = 0; i < this.Height; i++)
+                    for (int j = 0; j < this.Width; j++)
+                        if (this.Get<Double>(i, j) < locLow)
+                            this.Set<Double>(locLow, i, j);
+                        else if (this.Get<Double>(i, j) > locHigh)
+                            this.Set<Double>(locHigh, i, j);
+            }
             else throw new Exception();
-
-            return this;
         }
 
-        public Image Scale()
+        public void Scale(double gMin, double gMax)
         {
-            // var result = Copy();
 
             var min = this.Min();
             var max = this.Max();
 
             if (typeCode == TypeCode.UInt16)
             {
-                UInt16 globMin = UInt16.MinValue;
-                UInt16 globMax = UInt16.MaxValue;
+                UInt16 globMin = Convert.ToUInt16(gMin);
+                UInt16 globMax = Convert.ToUInt16(gMax);
                 UInt16 locMax = (UInt16)max;
                 UInt16 locMin = (UInt16)min;
 
@@ -377,8 +516,8 @@ namespace ImageDisplayLib
             }
             else if (typeCode == TypeCode.Int16)
             {
-                Int16 globMin = Int16.MinValue;
-                Int16 globMax = Int16.MaxValue;
+                Int16 globMin = Convert.ToInt16(gMin);
+                Int16 globMax = Convert.ToInt16(gMax);
                 Int16 locMax = (Int16)max;
                 Int16 locMin = (Int16)min;
 
@@ -396,15 +535,15 @@ namespace ImageDisplayLib
             }
             else if (typeCode == TypeCode.UInt32)
             {
-                UInt16 globMin = UInt16.MinValue;
-                UInt16 globMax = UInt16.MaxValue;
-                UInt16 locMax = (UInt16)max;
-                UInt16 locMin = (UInt16)min;
+                UInt32 globMin = Convert.ToUInt32(gMin);
+                UInt32 globMax = Convert.ToUInt32(gMax);
+                UInt32 locMax = (UInt32)max;
+                UInt32 locMin = (UInt32)min;
 
                 Action<int> worker = (k) =>
                 {
                     for (int j = 0; j < Width; j++)
-                        Set<UInt16>((UInt16)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<UInt16>(k, j) - locMin)), k, j);
+                        Set<UInt32>((UInt32)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<UInt32>(k, j) - locMin)), k, j);
                 };
 
                 if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
@@ -415,8 +554,8 @@ namespace ImageDisplayLib
             }
             else if (typeCode == TypeCode.Int32)
             {
-                Int32 globMin = Int32.MinValue;
-                Int32 globMax = Int32.MaxValue;
+                Int32 globMin = Convert.ToInt32(gMin);
+                Int32 globMax = Convert.ToInt32(gMax);
                 Int32 locMax = (Int32)max;
                 Int32 locMin = (Int32)min;
 
@@ -432,10 +571,65 @@ namespace ImageDisplayLib
                     for (int i = 0; i < Height; i++)
                         worker(i);
             }
+            else if (typeCode == TypeCode.Single)
+            {
+                Single globMin = Convert.ToSingle(gMin);
+                Single globMax = Convert.ToSingle(gMax);
+                Single locMax = (Single)max;
+                Single locMin = (Single)min;
+
+                Action<int> worker = (k) =>
+                {
+                    for (int j = 0; j < Width; j++)
+                        Set<Single>((Single)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<Single>(k, j) - locMin)), k, j);
+                };
+
+                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                    Parallel.For(0, Height, worker);
+                else
+                    for (int i = 0; i < Height; i++)
+                        worker(i);
+            }
+            else if (typeCode == TypeCode.Double)
+            {
+                Double globMin = Convert.ToDouble(gMin);
+                Double globMax = Convert.ToDouble(gMax);
+                Double locMax = (Double)max;
+                Double locMin = (Double)min;
+
+                Action<int> worker = (k) =>
+                {
+                    for (int j = 0; j < Width; j++)
+                        Set<Double>(Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<Double>(k, j) - locMin)), k, j);
+                };
+
+                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                    Parallel.For(0, Height, worker);
+                else
+                    for (int i = 0; i < Height; i++)
+                        worker(i);
+            }
             else throw new Exception();
+        }
 
+        public void Scale()
+        {
 
-            return this;
+            Type tp = Type.GetType("Syste." + UnderlyingType);
+            dynamic min = tp.GetField("MinValue").GetValue(null);
+            dynamic max = tp.GetField("MaxValue").GetValue(null);
+            Scale(1.0 * min, 1.0 * max);
+            //switch (typeCode)
+            //{
+            //    case TypeCode.UInt16:
+            //        Scale(UInt16.MinValue, UInt16.MaxValue);
+            //        break;
+            //    case TypeCode.Int16:
+            //        Scale(Int16.MinValue, Int16.MaxValue);
+            //        break;
+            //    default:
+            //        throw new Exception();
+            //}
         }
 
         public double Percentile(double lvl)
@@ -517,6 +711,59 @@ namespace ImageDisplayLib
             else
                 throw new Exception();
 
+        }
+
+        public Image ReduceToDisplay(ImageType type)
+        {
+            switch (type)
+            {
+                case ImageType.GrayScale16Int:
+                    if (UnderlyingType != TypeCode.UInt16)
+                    {
+                        var tp = Type.GetType("System." + UnderlyingType);
+                        dynamic min = tp.GetField("MinValue").GetValue(null);
+                        dynamic max = tp.GetField("MaxValue").GetValue(null);
+                        return ReduceToDisplay(type, 1.0 * min, 1.0 * max);
+                    }
+                    else
+                        return this.Copy();
+                default:
+                    throw new Exception();
+            }
+        }
+
+        public Image ReduceToDisplay(ImageType type, double min, double max)
+        {
+            switch (type)
+            {
+                case ImageType.GrayScale16Int:
+                    Func<double, UInt16> convrtr = (x) => Convert.ToUInt16(1.0 * (x - min) * UInt16.MaxValue / (max - min));
+                    switch (UnderlyingType)
+                    {
+                        case TypeCode.Int16:
+                            return new Image(((Int16[])baseArray)
+                                .AsParallel()
+                                .Select((x) => convrtr(x))
+                                .ToArray(), Width, Height);
+                        case TypeCode.UInt16:
+                            return this.Copy();
+                        case TypeCode.Int32:
+                            return new Image(((Int32[])baseArray)
+                                .AsParallel()
+                                .Select((x) => convrtr(x))
+                                .ToArray(), Width, Height);
+                        case TypeCode.UInt32:
+                            return new Image(((UInt32[])baseArray)
+                                .AsParallel()
+                                .Select((x) => convrtr(x))
+                                .ToArray(), Width, Height);
+                        default:
+                            throw new Exception();
+                    }
+
+                default:
+                    throw new Exception();
+            }
         }
     }
 }

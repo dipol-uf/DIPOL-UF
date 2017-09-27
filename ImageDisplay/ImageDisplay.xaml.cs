@@ -81,7 +81,7 @@ namespace ImageDisplayLib
         {
             
             if (initialImage == null)
-                LoadImage(image, type, 0.00, 1.0-3e-3);
+                LoadImage(image, type, 0.00, 1.0);
             else
             {
                 double low =  SliderTwo.LeftThumb;
@@ -118,8 +118,8 @@ namespace ImageDisplayLib
             dynamic imageMin = initialImage.Min();
             dynamic imageMax = initialImage.Max();
 
-            SliderTwo.MinValue = -32768;//1.0 * imageMin;
-            SliderTwo.MaxValue = 32767;// 1.0 * imageMax;
+            SliderTwo.MinValue = 1.0 * imageMin;
+            SliderTwo.MaxValue = 1.0 * imageMax;
            
             SliderTwo.MinDifference = 0.025*(SliderTwo.MaxValue - SliderTwo.MinValue);
             SliderTwo.RightThumb = SliderTwo.MaxValue;
@@ -149,7 +149,8 @@ namespace ImageDisplayLib
                     throw new Exception();
             }
             stride = (displayedImage.Width * pf.BitsPerPixel + 7) / 8;
-            ImageFrame.Source = BitmapSource.Create(displayedImage.Width, displayedImage.Height, 300, 300, pf, BitmapPalettes.Gray256, displayedImage.GetBytes(), stride);
+            ImageFrame.Source = BitmapSource.Create(displayedImage.Width, displayedImage.Height, 300, 300, pf, BitmapPalettes.Gray256,
+                displayedImage.ReduceToDisplay(imageType).GetBytes(), stride);
         }
 
         private void ImageFrame_MouseMove(object sender, MouseEventArgs e)
@@ -204,7 +205,8 @@ namespace ImageDisplayLib
                 double right = SliderTwo.RightThumb;
 
                 initialImage.CopyTo(displayedImage);
-                displayedImage = displayedImage.Clamp(left, right);//.Scale();
+                displayedImage.Clamp(left, right);//.Scale();
+                displayedImage.Scale();
 
                 UpdateFrame();
 
