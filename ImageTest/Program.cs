@@ -163,7 +163,8 @@ namespace ImageTest
                 Console.WriteLine("{0:E3}", (DateTime.Now - t).TotalSeconds / N);
             }
 
-            var nIm = im.Clamp(100, 10000).Scale();
+            im.Clamp(100, 1000);
+            im.Scale(int.MaxValue, int.MaxValue);
         }
 
         private static void LoopTest()
@@ -293,7 +294,7 @@ namespace ImageTest
                     if (u.IsKeywords)
                         keywords.Add(u);
                     else if (u.IsData)
-                        data.Add(u);                        
+                        data.Add(u);
                 }
 
                 var totalKeys = FITSKey.JoinKeywords(keywords.ToArray());
@@ -306,7 +307,10 @@ namespace ImageTest
                 FITSImageType type = (FITSImageType)totalKeys.First(item => item.Header == "BITPIX").GetValue<int>();
 
                 Image im = new Image(dd, width, height);
-
+                //im.MultiplyByScalar(0.5);
+                //im.AddScalar(16385);
+                //im.MultiplyByScalar(0.5);
+                //im = new Image(Enumerable.Range(0, 16).Select(i =>  Convert.ToUInt16( i * 2048) ).ToArray(), 16, 1);
                 var app = new System.Windows.Application();
                 app.Run(new TestWindow(im));
             }
