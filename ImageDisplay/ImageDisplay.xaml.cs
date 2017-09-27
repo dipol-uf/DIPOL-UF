@@ -127,7 +127,7 @@ namespace ImageDisplayLib
             SliderTwo.LeftThumb =  initialImage.Percentile(low);
             SliderTwo.RightThumb = Math.Max(initialImage.Percentile(high), SliderTwo.LeftThumb + SliderTwo.MinDifference);
             displayedImage = image.Copy();
-            displayedImage.Scale();
+            
             SliderTwo_IsThumbDraggingChanged(SliderTwo, new DependencyPropertyChangedEventArgs(Slider2.IsLeftThumbDraggingProperty, false, false));
 
             UpdateFrame();
