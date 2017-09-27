@@ -26,6 +26,15 @@ namespace ImageDisplayLib
     public class Image
     {
         private static readonly int MaxImageSingleThreadSize = 512 * 768;
+        private static readonly TypeCode[] allowedTypes =
+         {
+            TypeCode.Double,
+            TypeCode.Single,
+            TypeCode.UInt16,
+            TypeCode.Int16,
+            TypeCode.UInt32,
+            TypeCode.Int32
+        };
 
         [DataMember]
         private volatile bool IsParallelEnabled = true;
@@ -35,6 +44,9 @@ namespace ImageDisplayLib
 
         [DataMember]
         private TypeCode typeCode;
+
+        public static System.Collections.Generic.IReadOnlyCollection<TypeCode> AllowedTypes
+            => allowedTypes as System.Collections.Generic.IReadOnlyCollection<TypeCode>;
 
         public TypeCode UnderlyingType => typeCode;
 
@@ -64,7 +76,12 @@ namespace ImageDisplayLib
 
         public Image(Array initialArray, int width, int height)
         {
-            switch (initialArray.GetValue(0))
+            object val = initialArray.GetValue(0);
+
+            if (!AllowedTypes.Contains(Type.GetTypeCode(val.GetType())))
+                throw new ArgumentException($"Provided array's base type {val.GetType()} is not allowed.");
+
+            switch (val)
             {
                 case UInt32 x:
                     baseArray = new UInt32[width * height];
@@ -104,6 +121,9 @@ namespace ImageDisplayLib
         {
             if (!Enum.IsDefined(typeof(TypeCode), type))
                 throw new ArgumentException($"Parameter type ({type}) is not defined in {typeof(TypeCode)}.");
+
+            if (!AllowedTypes.Contains(type))
+                throw new ArgumentException($"Specified type {type} is not allowed.");
 
             int size = 0;
 
@@ -615,7 +635,7 @@ namespace ImageDisplayLib
         public void Scale()
         {
 
-            Type tp = Type.GetType("Syste." + UnderlyingType);
+            Type tp = Type.GetType("System." + UnderlyingType);
             dynamic min = tp.GetField("MinValue").GetValue(null);
             dynamic max = tp.GetField("MaxValue").GetValue(null);
             Scale(1.0 * min, 1.0 * max);
@@ -671,16 +691,114 @@ namespace ImageDisplayLib
                 }
 
             }
+            else if (typeCode == TypeCode.UInt32)
+            {
+                if (Math.Abs(lvl) < Double.Epsilon)
+                    return (UInt32)Min();
+                else if (Math.Abs(lvl - 1) < Double.Epsilon)
+                    return (UInt32)Max();
+                else
+                {
+                    var query = ((UInt32[])baseArray).OrderBy((x) => x);
+
+                    int length = (int)Math.Ceiling(lvl * Width * Height);
+
+
+                    return query.Skip(length - 1).Take(1).First();
+                }
+
+            }
+            else if (typeCode == TypeCode.Int32)
+            {
+                if (Math.Abs(lvl) < Double.Epsilon)
+                    return (Int32)Min();
+                else if (Math.Abs(lvl - 1) < Double.Epsilon)
+                    return (Int32)Max();
+                else
+                {
+                    var query = ((Int32[])baseArray).OrderBy((x) => x);
+
+                    int length = (int)Math.Ceiling(lvl * Width * Height);
+
+
+                    return query.Skip(length - 1).Take(1).First();
+                }
+
+            }
+            else if (typeCode == TypeCode.Single)
+            {
+                if (Math.Abs(lvl) < Double.Epsilon)
+                    return (Single)Min();
+                else if (Math.Abs(lvl - 1) < Double.Epsilon)
+                    return (Single)Max();
+                else
+                {
+                    var query = ((Single[])baseArray).OrderBy((x) => x);
+
+                    int length = (int)Math.Ceiling(lvl * Width * Height);
+
+
+                    return query.Skip(length - 1).Take(1).First();
+                }
+
+            }
+            else if (typeCode == TypeCode.Double)
+            {
+                if (Math.Abs(lvl) < Double.Epsilon)
+                    return (Double)Min();
+                else if (Math.Abs(lvl - 1) < Double.Epsilon)
+                    return (Double)Max();
+                else
+                {
+                    var query = ((Double[])baseArray).OrderBy((x) => x);
+
+                    int length = (int)Math.Ceiling(lvl * Width * Height);
+
+
+                    return query.Skip(length - 1).Take(1).First();
+                }
+
+            }
             else throw new Exception();
         }
 
         public void AddScalar(double value)
         {
-            if (UnderlyingType == TypeCode.Int16)
+            if (UnderlyingType == TypeCode.UInt16)
+            {
+                UInt16[] data = (UInt16[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToUInt16(data[i] + value);
+            }
+            else if (UnderlyingType == TypeCode.Int16)
             {
                 Int16[] data = (Int16[])baseArray;
                 for (int i = 0; i < data.Length; i++)
                     data[i] = Convert.ToInt16(data[i] + value);
+            }
+            else if (UnderlyingType == TypeCode.UInt32)
+            {
+                UInt32[] data = (UInt32[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToUInt32(data[i] + value);
+            }
+            else if (UnderlyingType == TypeCode.Int32)
+            {
+                Int32[] data = (Int32[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToInt32(data[i] + value);
+            }
+            else if (UnderlyingType == TypeCode.Single)
+            {
+                Single[] data = (Single[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToSingle(data[i] + value);
+            }
+            else if (UnderlyingType == TypeCode.Double)
+            {
+                Double[] data = (Double[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToDouble(data[i] + value);
             }
             else
                 throw new Exception();
@@ -690,11 +808,41 @@ namespace ImageDisplayLib
 
         public void MultiplyByScalar(double value)
         {
-            if(UnderlyingType == TypeCode.Int16)
+            if(UnderlyingType == TypeCode.UInt16)
+            {
+                UInt16[] data = (UInt16[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToUInt16(data[i] * value);
+            }
+            else if (UnderlyingType == TypeCode.Int16)
             {
                 Int16[] data = (Int16[])baseArray;
                 for (int i = 0; i < data.Length; i++)
                     data[i] = Convert.ToInt16(data[i] * value);
+            }
+            if (UnderlyingType == TypeCode.UInt32)
+            {
+                UInt32[] data = (UInt32[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToUInt32(data[i] * value);
+            }
+            else if (UnderlyingType == TypeCode.Int32)
+            {
+                Int32[] data = (Int32[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToInt32(data[i] * value);
+            }
+            if (UnderlyingType == TypeCode.Single)
+            {
+                Single[] data = (Single[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToSingle(data[i] * value);
+            }
+            else if (UnderlyingType == TypeCode.Double)
+            {
+                Double[] data = (Double[])baseArray;
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = Convert.ToDouble(data[i] * value);
             }
             else
                 throw new Exception();
@@ -757,6 +905,16 @@ namespace ImageDisplayLib
                                 .AsParallel()
                                 .Select((x) => convrtr(x))
                                 .ToArray(), Width, Height);
+                        case TypeCode.Single:
+                            return new Image(((Single[])baseArray)
+                                .AsParallel()
+                                .Select((x) => convrtr(x))
+                                .ToArray(), Width, Height);
+                        case TypeCode.Double:
+                            return new Image(((Double[])baseArray)
+                                .AsParallel()
+                                .Select((x) => convrtr(x))
+                                .ToArray(), Width, Height);
                         default:
                             throw new Exception();
                     }
@@ -765,5 +923,15 @@ namespace ImageDisplayLib
                     throw new Exception();
             }
         }
+
+        public Image CastTo<Ts, Td>(Func<Ts, Td> cast)
+           =>  (typeof(Ts) == Type.GetType("System." + UnderlyingType))                       
+            ? new Image(((Ts[])baseArray)
+                .AsParallel()
+                .Select<Ts, Td>(cast)
+                .ToArray(),
+                Width, Height)
+            : throw new TypeAccessException($"Source type {typeof(Ts)} differs from underlying type with code {UnderlyingType}.");
+               
     }
 }

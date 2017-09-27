@@ -304,15 +304,21 @@ namespace ImageTest
 
                 int width = totalKeys.First(item => item.Header == "NAXIS1").GetValue<int>();
                 int height = totalKeys.First(item => item.Header == "NAXIS2").GetValue<int>();
+
+                double bScale = totalKeys.First(item => item.Header == "BSCALE").GetValue<double>();
+                double bZero = totalKeys.First(item => item.Header == "BZERO").GetValue<double>();
                 FITSImageType type = (FITSImageType)totalKeys.First(item => item.Header == "BITPIX").GetValue<int>();
 
-                Image im = new Image(dd, width, height);
-                //im.MultiplyByScalar(0.5);
-                //im.AddScalar(16385);
-                //im.MultiplyByScalar(0.5);
-                //im = new Image(Enumerable.Range(0, 16).Select(i =>  Convert.ToUInt16( i * 2048) ).ToArray(), 16, 1);
-                var app = new System.Windows.Application();
-                app.Run(new TestWindow(im));
+                Image im = new Image(dd, width, height).CastTo<Int16, Single>(x => 1.0f * x);
+
+                 im.MultiplyByScalar(bScale);
+                 im.AddScalar(bZero); 
+                 //im.MultiplyByScalar(0.5);
+                 //im.AddScalar(16385);
+                 //im.MultiplyByScalar(0.5);
+                 //im = new Image(Enumerable.Range(0, 16).Select(i =>  Convert.ToUInt16( i * 2048) ).ToArray(), 16, 1);
+                 var app = new System.Windows.Application();
+                 app.Run(new TestWindow(im));
             }
         }
     }
