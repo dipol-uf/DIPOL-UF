@@ -41,7 +41,7 @@ namespace ImageTest
             Dispatcher.Invoke(() =>
             {
                 if (camera.AcquiredImages.TryDequeue(out ImageDisplayLib.Image im))
-                    ImageHandle.LoadImage(im, ImageDisplayLib.ImageType.GrayScale16Int);
+                    ImageHandle.LoadImage(im);
             });
         }
 
@@ -57,7 +57,7 @@ namespace ImageTest
                 camera.TemperatureStatusChecked += Cam_TemperatureStatusChecked;
             }
             if (Im != null)
-                ImageHandle.LoadImage(Im, ImageDisplayLib.ImageType.GrayScale16Int);
+                ImageHandle.LoadImage(Im);
             //if (camera == null)
             //{
             //    int N = 4096;
