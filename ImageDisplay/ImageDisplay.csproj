@@ -62,7 +62,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Compile Include="Image.cs" />
-    <Compile Include="ImageTypeEnum.cs" />
     <Compile Include="ImageDisplay.xaml.cs">
       <DependentUpon>ImageDisplay.xaml</DependentUpon>
       <SubType>Code</SubType>
