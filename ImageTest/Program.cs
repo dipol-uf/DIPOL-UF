@@ -285,7 +285,6 @@ namespace ImageTest
         {
             using (var str = new FITSStream(new System.IO.FileStream("test2.fits", System.IO.FileMode.Open)))
             {
-                int count = 0;
                 List<FITSUnit> keywords = new List<FITSUnit>();
                 List<FITSUnit> data = new List<FITSUnit>();
 
@@ -309,16 +308,13 @@ namespace ImageTest
                 double bZero = totalKeys.First(item => item.Header == "BZERO").GetValue<double>();
                 FITSImageType type = (FITSImageType)totalKeys.First(item => item.Header == "BITPIX").GetValue<int>();
 
+
                 Image im = new Image(dd, width, height).CastTo<Int16, Single>(x => 1.0f * x);
 
-                 im.MultiplyByScalar(bScale);
-                 im.AddScalar(bZero); 
-                 //im.MultiplyByScalar(0.5);
-                 //im.AddScalar(16385);
-                 //im.MultiplyByScalar(0.5);
-                 //im = new Image(Enumerable.Range(0, 16).Select(i =>  Convert.ToUInt16( i * 2048) ).ToArray(), 16, 1);
-                 var app = new System.Windows.Application();
-                 app.Run(new TestWindow(im));
+                im.MultiplyByScalar(bScale);
+                im.AddScalar(bZero);
+                var app = new System.Windows.Application();
+                app.Run(new TestWindow(im));
             }
         }
     }

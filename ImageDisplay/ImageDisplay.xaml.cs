@@ -21,22 +21,39 @@ namespace ImageDisplayLib
     /// </summary>
     public partial class ImageDisplay : UserControl
     {
-
-        private ImageType imageType;
-
+        /// <summary>
+        /// Initial image in any data format
+        /// </summary>
         private Image initialImage;
+        /// <summary>
+        /// Image scaled to Int16 and displayed
+        /// </summary>
         private Image displayedImage;
 
+        /// <summary>
+        /// Image Width dependency property.
+        /// </summary>
         public static readonly DependencyProperty DisplayedImageWidthProperty =
             DependencyProperty.Register("DisplayedImageWidth", typeof(int), typeof(ImageDisplay), new PropertyMetadata(640, OnDisplayImageWidthChanged), value => (int)value > 0);
+        /// <summary>
+        /// Image Height dependency property
+        /// </summary>
         public static readonly DependencyProperty DisplayedImageHeightProperty =
             DependencyProperty.Register("DisplayedImageHeight", typeof(int), typeof(ImageDisplay), new PropertyMetadata(480, OnDisplayImageHeightChanged), value => (int)value > 0);
+        /// <summary>
+        /// Image Name dependency property
+        /// </summary>
         public static readonly DependencyProperty ImageNameProperty =
            DependencyProperty.Register("ImageName", typeof(string), typeof(ImageDisplay), new PropertyMetadata("", OnImageNameChanged));
+        /// <summary>
+        /// Dependencing property responsible for <see cref="bool"/> flag IsSamplingEnabled
+        /// </summary>
         public static readonly DependencyProperty IsSamplingEnabledProperty =
             DependencyProperty.Register("IsSamplingEnabled", typeof(bool), typeof(ImageDisplay), new PropertyMetadata(false, OnIsSamplingEnabledChanged));
 
-
+        /// <summary>
+        /// Image width (pix).
+        /// </summary>
         public int DisplayedImageWidth
         {
             get => (int)GetValue(DisplayedImageWidthProperty);
@@ -47,47 +64,73 @@ namespace ImageDisplayLib
             }
             
         }
+        /// <summary>
+        /// Image height (pix).
+        /// </summary>
         public int DisplayedImageHeight
         {
             get => (int)GetValue(DisplayedImageHeightProperty);
             set => SetValue(DisplayedImageHeightProperty, value);
         }
+        /// <summary>
+        /// Displayed image name
+        /// </summary>
         public string ImageName
         {
             get => (string)GetValue(ImageNameProperty);
             set => SetValue(ImageNameProperty, value);
         }
+        /// <summary>
+        /// If true, cursor can be used to peek pixel values of the initial image.
+        /// </summary>
         public bool IsSamplingEnabled
         {
             get => (bool)GetValue(IsSamplingEnabledProperty);
             set => SetValue(IsSamplingEnabledProperty, value);
         }
-
+        
+        /// <summary>
+        /// Fires on IsSamplingEnabled changed.
+        /// </summary>
         public static event DependencyPropertyChangedEventHandler IsSamplingEnabledChanged;
+        /// <summary>
+        /// Fires on ImageName changed.
+        /// </summary>
         public static event DependencyPropertyChangedEventHandler ImageNameChanged;
+        /// <summary>
+        /// Fires on ImageWidth changed.
+        /// </summary>
         public static event DependencyPropertyChangedEventHandler DisplayImageWidthChanged;
+        /// <summary>
+        /// Fires on ImageHeight changed.
+        /// </summary>
         public static event DependencyPropertyChangedEventHandler DisplayImageHeightChanged;
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         public ImageDisplay()
         {
+            // Initializes components. WPF-related.
             InitializeComponent();
+            // Sets data context to this; enables binding options.
             DataContext = this;
 
+            // On IsSamlingEnabled changed clears text fields.
             IsSamplingEnabledChanged += ClearTextFields;
             
         }
 
-        public void LoadImage(Image image, ImageType type)
+        public void LoadImage(Image image)
         {
             
             if (initialImage == null)
-                LoadImage(image, type, 0.00, 1.0);
+                LoadImage(image, 0.00, 1.0);
             else
             {
                 double low =  SliderTwo.LeftThumb;
                 double high = SliderTwo.RightThumb;
                 initialImage = image.Copy();
-                imageType = type;
                 DisplayedImageWidth = image.Width;
                 DisplayedImageHeight = image.Height;
                 
@@ -105,14 +148,12 @@ namespace ImageDisplayLib
 
                 SliderTwo_IsThumbDraggingChanged(SliderTwo, new DependencyPropertyChangedEventArgs(Slider2.IsLeftThumbDraggingProperty, false, false));
 
-                UpdateFrame();
             }
         }
-        public void LoadImage(Image image, ImageType type, double low = 0.000, double high = 1)
+        public void LoadImage(Image image, double low = 0.000, double high = 1)
         {
-            
+
             initialImage = image.Copy();
-            imageType = type;
             DisplayedImageWidth = image.Width;
             DisplayedImageHeight = image.Height;
             dynamic imageMin = initialImage.Min();
@@ -120,37 +161,46 @@ namespace ImageDisplayLib
 
             SliderTwo.MinValue = 1.0 * imageMin;
             SliderTwo.MaxValue = 1.0 * imageMax;
-           
-            SliderTwo.MinDifference = 0.025*(SliderTwo.MaxValue - SliderTwo.MinValue);
+
+            SliderTwo.MinDifference = 0.025 * (SliderTwo.MaxValue - SliderTwo.MinValue);
             SliderTwo.RightThumb = SliderTwo.MaxValue;
 
-            SliderTwo.LeftThumb =  initialImage.Percentile(low);
+            SliderTwo.LeftThumb = initialImage.Percentile(low);
             SliderTwo.RightThumb = Math.Max(initialImage.Percentile(high), SliderTwo.LeftThumb + SliderTwo.MinDifference);
-            displayedImage = image.Copy();
-            
+
+            displayedImage = initialImage.Copy();
+
             SliderTwo_IsThumbDraggingChanged(SliderTwo, new DependencyPropertyChangedEventArgs(Slider2.IsLeftThumbDraggingProperty, false, false));
 
-            UpdateFrame();
         }
 
-        public void UpdateFrame()
+        public void UpdateFrame(double left, double right)
         {
-            PixelFormat pf;
-            int stride;
-            switch (imageType)
+            PixelFormat pf = PixelFormats.Gray16;
+            initialImage.CopyTo(displayedImage);
+            displayedImage.Clamp(left, right);
+            int stride = (displayedImage.Width * pf.BitsPerPixel + 7) / 8;
+
+            switch (displayedImage.UnderlyingType)
             {
-                case ImageType.GrayScale16Int:
-                    pf = PixelFormats.Gray16;
+                case TypeCode.Int16:
+                    displayedImage.Scale(Int16.MinValue, Int16.MaxValue);
+                    displayedImage = displayedImage
+                        .CastTo<Int16, UInt16>(x => (UInt16)(x - Int16.MinValue));
                     break;
-                case ImageType.GrayScale32Float:
-                    pf = PixelFormats.Gray32Float;
+                case TypeCode.Single:
+                    dynamic locMax = displayedImage.Max();
+                    dynamic locMin = displayedImage.Min();
+                    double dLocMin = 1.0 * locMin;
+                    double dLocMax = 1.0 * locMax;
+                    displayedImage = displayedImage
+                        .CastTo<Single, UInt16>(x => (UInt16)((UInt16.MaxValue)*(x - dLocMin)/(dLocMax - dLocMin)));
                     break;
-                default:
-                    throw new Exception();
             }
-            stride = (displayedImage.Width * pf.BitsPerPixel + 7) / 8;
             ImageFrame.Source = BitmapSource.Create(displayedImage.Width, displayedImage.Height, 300, 300, pf, BitmapPalettes.Gray256,
-                displayedImage.ReduceToDisplay(imageType).GetBytes(), stride);
+                displayedImage.GetBytes(), stride);
+    
+           
         }
 
         private void ImageFrame_MouseMove(object sender, MouseEventArgs e)
@@ -204,11 +254,8 @@ namespace ImageDisplayLib
                 double left = SliderTwo.LeftThumb;
                 double right = SliderTwo.RightThumb;
 
-                initialImage.CopyTo(displayedImage);
-                displayedImage.Clamp(left, right);//.Scale();
-                displayedImage.Scale();
 
-                UpdateFrame();
+                UpdateFrame(left, right);
 
             }
 
