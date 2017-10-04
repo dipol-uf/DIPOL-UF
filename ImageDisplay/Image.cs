@@ -484,8 +484,8 @@ namespace ImageDisplayLib
             }
             else if (typeCode == TypeCode.Single)
             {
-                Single locLow = (Single)(Math.Floor(low));
-                Single locHigh = (Single)(Math.Ceiling(high));
+                Single locLow = (Single)(low);
+                Single locHigh = (Single)(high);
                 for (int i = 0; i < this.Height; i++)
                     for (int j = 0; j < this.Width; j++)
                         if (this.Get<Single>(i, j) < locLow)
@@ -495,8 +495,8 @@ namespace ImageDisplayLib
             }
             else if (typeCode == TypeCode.Double)
             {
-                Double locLow = (Double)(Math.Floor(low));
-                Double locHigh = (Double)(Math.Ceiling(high));
+                Double locLow = (Double)(low);
+                Double locHigh = (Double)(high);
                 for (int i = 0; i < this.Height; i++)
                     for (int j = 0; j < this.Width; j++)
                         if (this.Get<Double>(i, j) < locLow)
@@ -630,26 +630,6 @@ namespace ImageDisplayLib
                         worker(i);
             }
             else throw new Exception();
-        }
-
-        public void Scale()
-        {
-
-            Type tp = Type.GetType("System." + UnderlyingType);
-            dynamic min = tp.GetField("MinValue").GetValue(null);
-            dynamic max = tp.GetField("MaxValue").GetValue(null);
-            Scale(1.0 * min, 1.0 * max);
-            //switch (typeCode)
-            //{
-            //    case TypeCode.UInt16:
-            //        Scale(UInt16.MinValue, UInt16.MaxValue);
-            //        break;
-            //    case TypeCode.Int16:
-            //        Scale(Int16.MinValue, Int16.MaxValue);
-            //        break;
-            //    default:
-            //        throw new Exception();
-            //}
         }
 
         public double Percentile(double lvl)
@@ -820,7 +800,7 @@ namespace ImageDisplayLib
                 for (int i = 0; i < data.Length; i++)
                     data[i] = Convert.ToInt16(data[i] * value);
             }
-            if (UnderlyingType == TypeCode.UInt32)
+            else if (UnderlyingType == TypeCode.UInt32)
             {
                 UInt32[] data = (UInt32[])baseArray;
                 for (int i = 0; i < data.Length; i++)
@@ -832,7 +812,7 @@ namespace ImageDisplayLib
                 for (int i = 0; i < data.Length; i++)
                     data[i] = Convert.ToInt32(data[i] * value);
             }
-            if (UnderlyingType == TypeCode.Single)
+            else if (UnderlyingType == TypeCode.Single)
             {
                 Single[] data = (Single[])baseArray;
                 for (int i = 0; i < data.Length; i++)
@@ -848,80 +828,44 @@ namespace ImageDisplayLib
                 throw new Exception();
         }
 
-        public void Invert()
+        public Image ReduceToDisplay(double min, double max)
         {
-            if (UnderlyingType == TypeCode.Int16)
-            {
-                Int16[] data = (Int16[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = (Int16)(-data[i]);
-            }
-            else
-                throw new Exception();
 
-        }
-
-        public Image ReduceToDisplay(ImageType type)
-        {
-            switch (type)
+            Func<double, UInt16> convrtr = (x) => Convert.ToUInt16(1.0 * (x - min) * UInt16.MaxValue / (max - min));
+            switch (UnderlyingType)
             {
-                case ImageType.GrayScale16Int:
-                    if (UnderlyingType != TypeCode.UInt16)
-                    {
-                        var tp = Type.GetType("System." + UnderlyingType);
-                        dynamic min = tp.GetField("MinValue").GetValue(null);
-                        dynamic max = tp.GetField("MaxValue").GetValue(null);
-                        return ReduceToDisplay(type, 1.0 * min, 1.0 * max);
-                    }
-                    else
-                        return this.Copy();
+                case TypeCode.Int16:
+                    return new Image(((Int16[])baseArray)
+                        .AsParallel()
+                        .Select((x) => convrtr(x))
+                        .ToArray(), Width, Height);
+                case TypeCode.UInt16:
+                    return this.Copy();
+                case TypeCode.Int32:
+                    return new Image(((Int32[])baseArray)
+                        .AsParallel()
+                        .Select((x) => convrtr(x))
+                        .ToArray(), Width, Height);
+                case TypeCode.UInt32:
+                    return new Image(((UInt32[])baseArray)
+                        .AsParallel()
+                        .Select((x) => convrtr(x))
+                        .ToArray(), Width, Height);
+                case TypeCode.Single:
+                    return new Image(((Single[])baseArray)
+                        .AsParallel()
+                        .Select((x) => convrtr(x))
+                        .ToArray(), Width, Height);
+                case TypeCode.Double:
+                    return new Image(((Double[])baseArray)
+                        .AsParallel()
+                        .Select((x) => convrtr(x))
+                        .ToArray(), Width, Height);
                 default:
                     throw new Exception();
             }
-        }
 
-        public Image ReduceToDisplay(ImageType type, double min, double max)
-        {
-            switch (type)
-            {
-                case ImageType.GrayScale16Int:
-                    Func<double, UInt16> convrtr = (x) => Convert.ToUInt16(1.0 * (x - min) * UInt16.MaxValue / (max - min));
-                    switch (UnderlyingType)
-                    {
-                        case TypeCode.Int16:
-                            return new Image(((Int16[])baseArray)
-                                .AsParallel()
-                                .Select((x) => convrtr(x))
-                                .ToArray(), Width, Height);
-                        case TypeCode.UInt16:
-                            return this.Copy();
-                        case TypeCode.Int32:
-                            return new Image(((Int32[])baseArray)
-                                .AsParallel()
-                                .Select((x) => convrtr(x))
-                                .ToArray(), Width, Height);
-                        case TypeCode.UInt32:
-                            return new Image(((UInt32[])baseArray)
-                                .AsParallel()
-                                .Select((x) => convrtr(x))
-                                .ToArray(), Width, Height);
-                        case TypeCode.Single:
-                            return new Image(((Single[])baseArray)
-                                .AsParallel()
-                                .Select((x) => convrtr(x))
-                                .ToArray(), Width, Height);
-                        case TypeCode.Double:
-                            return new Image(((Double[])baseArray)
-                                .AsParallel()
-                                .Select((x) => convrtr(x))
-                                .ToArray(), Width, Height);
-                        default:
-                            throw new Exception();
-                    }
 
-                default:
-                    throw new Exception();
-            }
         }
 
         public Image CastTo<Ts, Td>(Func<Ts, Td> cast)
