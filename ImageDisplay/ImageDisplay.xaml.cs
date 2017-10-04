@@ -25,10 +25,6 @@ namespace ImageDisplayLib
         /// Initial image in any data format
         /// </summary>
         private Image initialImage;
-        /// <summary>
-        /// Image scaled to Int16 and displayed
-        /// </summary>
-        private Image displayedImage;
 
         /// <summary>
         /// Image Width dependency property.
@@ -121,82 +117,112 @@ namespace ImageDisplayLib
             
         }
 
+        /// <summary>
+        /// Loads image to the frame.
+        /// </summary>
+        /// <param name="image">Image to load</param>
         public void LoadImage(Image image)
         {
-            
+            // If there is no initial image (first time sonething is loaded)
             if (initialImage == null)
                 LoadImage(image, 0.00, 1.0);
+            // Else, keep selected range of values (if possible).
+            // Works OK when a series of similar images is loaded with similar dynamic range
             else
             {
+                // Preserves current settings; lower and upper limits
                 double low =  SliderTwo.LeftThumb;
                 double high = SliderTwo.RightThumb;
+                // Loads provided image into control's memory
                 initialImage = image.Copy();
+                // Assigns Width/Height properties
                 DisplayedImageWidth = image.Width;
                 DisplayedImageHeight = image.Height;
                 
-
+                // Determines image dynamic range
                 dynamic imageMin = initialImage.Min();
                 dynamic imageMax = initialImage.Max();
 
+                // Min/max slider settings
                 SliderTwo.MinValue = 1.0 * imageMin;
                 SliderTwo.MaxValue = 1.0 * imageMax;
+                // Restores slider settings (if possible)
                 SliderTwo.LeftThumb = Math.Max(low, 1.0 * imageMin);
                 SliderTwo.RightThumb = Math.Min(high, 1.0 * imageMax);
                 SliderTwo.MinDifference = 0.025 * (SliderTwo.MaxValue - SliderTwo.MinValue);
 
-                displayedImage = image.Copy();
 
+                // Manually fires SliderChange event to update content
                 SliderTwo_IsThumbDraggingChanged(SliderTwo, new DependencyPropertyChangedEventArgs(Slider2.IsLeftThumbDraggingProperty, false, false));
 
             }
         }
+
+        /// <summary>
+        /// Loads image to the frame. Resets dynamic range selection.
+        /// </summary>
+        /// <param name="image">Image to load.</param>
+        /// <param name="low">Lower percentile to clamp.</param>
+        /// <param name="high">Upper percentile to clamp.</param>
         public void LoadImage(Image image, double low = 0.000, double high = 1)
         {
-
+            // Overwrites existing image with a new one.
             initialImage = image.Copy();
+            // Assigns Height/Width properties
             DisplayedImageWidth = image.Width;
             DisplayedImageHeight = image.Height;
+
+            // Determines dynamic ranges
             dynamic imageMin = initialImage.Min();
             dynamic imageMax = initialImage.Max();
 
+            // Sets slider limits
             SliderTwo.MinValue = 1.0 * imageMin;
             SliderTwo.MaxValue = 1.0 * imageMax;
 
             SliderTwo.MinDifference = 0.025 * (SliderTwo.MaxValue - SliderTwo.MinValue);
-            SliderTwo.RightThumb = SliderTwo.MaxValue;
 
+            // First, sets right thumb to rightmost value.
+            SliderTwo.RightThumb = SliderTwo.MaxValue;
+            // Then, sets left thumb.
             SliderTwo.LeftThumb = initialImage.Percentile(low);
+            // Finally, changes position of right thumb. Avoids locks and collisions of thumbs
             SliderTwo.RightThumb = Math.Max(initialImage.Percentile(high), SliderTwo.LeftThumb + SliderTwo.MinDifference);
 
-            displayedImage = initialImage.Copy();
-
+            // Manually invokes event to update control
             SliderTwo_IsThumbDraggingChanged(SliderTwo, new DependencyPropertyChangedEventArgs(Slider2.IsLeftThumbDraggingProperty, false, false));
 
         }
 
-        public void UpdateFrame(double left, double right)
+        public async Task UpdateFrame(double left, double right)
         {
             PixelFormat pf = PixelFormats.Gray16;
-            initialImage.CopyTo(displayedImage);
-            displayedImage.Clamp(left, right);
-            int stride = (displayedImage.Width * pf.BitsPerPixel + 7) / 8;
-
-            switch (displayedImage.UnderlyingType)
+            var task = Task.Run<Image>(() =>
             {
-                case TypeCode.Int16:
-                    displayedImage.Scale(Int16.MinValue, Int16.MaxValue);
-                    displayedImage = displayedImage
-                        .CastTo<Int16, UInt16>(x => (UInt16)(x - Int16.MinValue));
-                    break;
-                case TypeCode.Single:
-                    dynamic locMax = displayedImage.Max();
-                    dynamic locMin = displayedImage.Min();
-                    double dLocMin = 1.0 * locMin;
-                    double dLocMax = 1.0 * locMax;
-                    displayedImage = displayedImage
-                        .CastTo<Single, UInt16>(x => (UInt16)((UInt16.MaxValue)*(x - dLocMin)/(dLocMax - dLocMin)));
-                    break;
-            }
+                var locImage = initialImage.Copy();
+                locImage.Clamp(left, right);
+                switch (locImage.UnderlyingType)
+                {
+                    case TypeCode.Int16:
+                        locImage.Scale(Int16.MinValue, Int16.MaxValue);
+                        locImage = locImage
+                            .CastTo<Int16, UInt16>(x => (UInt16)(x - Int16.MinValue));
+                        break;
+                    case TypeCode.Single:
+                        dynamic locMax = locImage.Max();
+                        dynamic locMin = locImage.Min();
+                        double dLocMin = 1.0 * locMin;
+                        double dLocMax = 1.0 * locMax;
+                        locImage = locImage
+                            .CastTo<Single, UInt16>(x => (UInt16)((UInt16.MaxValue) * (x - dLocMin) / (dLocMax - dLocMin)));
+                        break;
+                }
+
+                return locImage;
+            });
+            Image displayedImage = await task;
+
+            int stride = (displayedImage.Width * pf.BitsPerPixel + 7) / 8;
             ImageFrame.Source = BitmapSource.Create(displayedImage.Width, displayedImage.Height, 300, 300, pf, BitmapPalettes.Gray256,
                 displayedImage.GetBytes(), stride);
     
@@ -247,7 +273,7 @@ namespace ImageDisplayLib
         protected static void OnDisplayImageHeightChanged(object sender, DependencyPropertyChangedEventArgs e)
         => DisplayImageHeightChanged?.Invoke(sender, e);
 
-        private void SliderTwo_IsThumbDraggingChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private async void SliderTwo_IsThumbDraggingChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             if ((bool)e.NewValue == false & initialImage != null)
             {
@@ -255,7 +281,7 @@ namespace ImageDisplayLib
                 double right = SliderTwo.RightThumb;
 
 
-                UpdateFrame(left, right);
+                await UpdateFrame(left, right);
 
             }
 
