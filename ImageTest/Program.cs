@@ -295,7 +295,7 @@ namespace ImageTest
                         data.Add(u);
                 }
 
-                var totalKeys = FITSKey.JoinKeywords(keywords.ToArray());
+                var totalKeys = FITSKey.JoinKeywords(keywords.ToArray()).ToList();
 
                 var image = FITSUnit.JoinData<Double>(data.ToArray());
                 var dd = image.ToArray();
@@ -318,21 +318,24 @@ namespace ImageTest
                 //FITSKey.CreateNew("TEST", FITSKeywordType.Float, 123456.0f, "NOCOMMENT");
                 //FITSKey.CreateNew("TEST", FITSKeywordType.String, "O'HARA ldkjhfkdlhgkdlfhjgkdhsjdghkl123095=8y37iuerhkgjoi3hfldsghldghlkd", "NOCOMMENT");
                 //FITSKey.CreateNew("TEST", FITSKeywordType.Complex, new System.Numerics.Complex(123.0, 9999) , "NOCOMMENT12345678901234567890");
+                totalKeys.Remove(totalKeys.Where((k) => k.Header == "BITPIX").First());
+                totalKeys.Insert(1, FITSKey.CreateNew("BITPIX", FITSKeywordType.Integer, -32));
                 var keysArray = totalKeys.Select((k) => FITSKey.CreateNew(k.Header, k.Type, k.RawValue, k.Comment)).ToArray();
                 var test = FITSUnit.GenerateFromKeywords(keysArray);
                 Console.Write(test.Count());
                 //var app = new System.Windows.Application();
                 //app.Run(new TestWindow(im));
 
-                FITSUnit.GenerateFromArray(im.GetBytes(), type = FITSImageType.Double);
+                //FITSUnit.GenerateFromArray(im.GetBytes(), type = FITSImageType.Double);
 
-                using (var str2 = new FITSStream(new System.IO.FileStream("test3.fits", System.IO.FileMode.OpenOrCreate)))
-                {
-                    str2.Write(test.First().Data, 0, FITSUnit.UnitSizeInBytes);
-                    int i = 0;
-                    foreach (var unit in FITSUnit.GenerateFromArray(im.GetBytes(), FITSImageType.Double))
-                        str2.WriteUnit(unit);
-                }
+                //using (var str2 = new FITSStream(new System.IO.FileStream("test3.fits", System.IO.FileMode.OpenOrCreate)))
+                //{
+                //    str2.Write(test.First().Data, 0, FITSUnit.UnitSizeInBytes);
+                //    foreach (var unit in FITSUnit.GenerateFromArray(im.CastTo<double, Single>((x) => (Single)x).GetBytes(), FITSImageType.Single))
+                //        str2.WriteUnit(unit);
+                //}
+
+                FITSStream.WriteImage(im.CastTo<Double, Int16>(x => (Int16)x), FITSImageType.Int16, "test4.fits");
 
             }
         }
