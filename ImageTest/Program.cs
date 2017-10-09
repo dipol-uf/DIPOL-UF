@@ -313,8 +313,17 @@ namespace ImageTest
 
                 im.MultiplyByScalar(bScale);
                 im.AddScalar(bZero);
-                var app = new System.Windows.Application();
-                app.Run(new TestWindow(im));
+
+                //FITSKey.CreateNew("TEST", FITSKeywordType.Logical, true, "NOCOMMENT");
+                //FITSKey.CreateNew("TEST", FITSKeywordType.Integer, 123456, "NOCOMMENT");
+                //FITSKey.CreateNew("TEST", FITSKeywordType.Float, 123456.0f, "NOCOMMENT");
+                //FITSKey.CreateNew("TEST", FITSKeywordType.String, "O'HARA ldkjhfkdlhgkdlfhjgkdhsjdghkl123095=8y37iuerhkgjoi3hfldsghldghlkd", "NOCOMMENT");
+                FITSKey.CreateNew("TEST", FITSKeywordType.Complex, new System.Numerics.Complex(123.0, 9999) , "NOCOMMENT12345678901234567890");
+
+
+
+                //var app = new System.Windows.Application();
+                //app.Run(new TestWindow(im));
             }
         }
     }
