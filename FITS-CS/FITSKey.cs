@@ -185,6 +185,8 @@ namespace FITS_CS
         /// <param name="value">Actual keyword value. Should agree with type. String values CAN BE truncated.</param>
         /// <param name="comment">An optional comment. Comments can be truncated (or removed) to fit in FITS keyword size limit of 80 chars.</param>
         /// <param name="layout">Indicates which layout to use.</param>
+        /// <exception cref="ArgumentException"/>
+        /// <exception cref="ArgumentNullException"/>
         /// <returns>A new isntance of FITS keyword</returns>
         public static FITSKey CreateNew(
             string header, FITSKeywordType type, object value, 
@@ -233,6 +235,7 @@ namespace FITS_CS
                             key.Value = logicalValue ? "T" : "F";
                             // Puts T or F in 29 char (30th column)
                             result.Insert(LastValueColumnFixed, key.Value);
+                            // Index of last symbol of value string
                             lastIndex = LastValueColumnFixed;
                         }
                         else
@@ -243,7 +246,9 @@ namespace FITS_CS
                         if (value is int integerValue)
                         {
                             key.Value = integerValue.ToString();
+                            // Inserts right-justivied int up to 3-th column
                             result.Insert(KeyHeaderSize + 2, String.Format($"{{0, {NumericValueMaxLengthFixed}}}", integerValue));
+                            // Index of last symbol of value string
                             lastIndex = LastValueColumnFixed;
                         }
                         else
@@ -251,8 +256,10 @@ namespace FITS_CS
                         break;
 
                     case FITSKeywordType.Float:
+                        // If value is double
                         if (value is double doubleValue)
                             key.Value = String.Format($"{{0, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 7)}E+000}}", doubleValue);
+                        // If value is float
                         else if (value is float floatValue)
                             key.Value = String.Format($"{{0, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 6)}E+00}}", floatValue);
                         else
@@ -260,20 +267,24 @@ namespace FITS_CS
 
                         result.Insert(KeyHeaderSize + 1, key.Value);
                         key.Value = key.Value.Trim();
+                        // Index of last symbol of value string
                         lastIndex = LastValueColumnFixed;
                         break;
 
                     case FITSKeywordType.String:
                         if (value is string stringValue)
                         {
+                            // Replaces single quotes ' with double '', adds preceding '
                             stringValue = ('\'' + stringValue.Replace("'", "''"));
-                            if(stringValue.Length > KeySize - KeyHeaderSize - 3)
-                                stringValue = stringValue.Substring(0, KeySize - KeyHeaderSize - 3) + '\'';
+                            // Truncates string
+                            if (stringValue.Length > KeySize - KeyHeaderSize - 3)
+                                stringValue = stringValue.Substring(0, KeySize - KeyHeaderSize - 3);
+                            // Insert string value with trailing '
                             result.Insert(KeyHeaderSize + 2,
-                                stringValue);
+                                stringValue + '\'');
 
                             key.Value = stringValue;
-
+                            // Last index depends on the actual string value length
                             lastIndex = Math.Max(LastValueColumnFixed, stringValue.Length + KeyHeaderSize + 2);
                         }
                         else
@@ -282,6 +293,7 @@ namespace FITS_CS
                         break;
 
                     case FITSKeywordType.Complex:
+                        // Complex is represented as two subsequent floats
                         if (value is Complex complexValue)
                             key.Value = String.Format($"{{0, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 8)}E+000}}" +
                                 $"{{1, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 8)}E+000}}", complexValue.Real, complexValue.Imaginary);
@@ -290,26 +302,33 @@ namespace FITS_CS
 
                         result.Insert(KeyHeaderSize + 2, key.Value);
                         key.Value = key.Value.Trim();
+                        // Last index depends on 2 times size of numerical value (20 symbols)
                         lastIndex = KeyHeaderSize + 1 + 2 * NumericValueMaxLengthFixed;
                         break;
                 }
 
+                // If comment is not null
                 if (!string.IsNullOrWhiteSpace(comment))
                 {
-                    var commLength = KeySize - lastIndex - 4;
-
+                    var commLength = Math.Max(KeySize - lastIndex - 4, 0);
+                    // Comment delimeter
                     result.Insert(lastIndex + 2, "\\ ");
+                    // Truncated comment
                     key.Comment = comment.Substring(0, commLength);
+                    // Inserts comment after comment delimeter
                     result.Insert(lastIndex + 4, key.Comment);
                 }
             }
             else
                 throw new NotImplementedException();
 
+            // Ensures keyword representation can be fitted into 80 symbols string 
             if (result.Length > KeySize)
                 result = result.Remove(KeySize, result.Length - KeySize);
 
+            // Assigns constructed string 
             key.data = result.ToString();
+            // And body
             key.Body = key.data.Substring(KeyHeaderSize);
 
             return key;
