@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
+using Image = ImageDisplayLib.Image;
+
 namespace FITS_CS
 {
     public class FITSStream : Stream, IDisposable
@@ -121,6 +123,32 @@ namespace FITS_CS
             catch (Exception)
             {
                 return false;
+            }
+        }
+
+        public static void WriteImage(Image image, FITSImageType type, string path)
+        {
+
+            List<FITSKey> keys = new List<FITSKey>
+            {
+                FITSKey.CreateNew("SIMPLE", FITSKeywordType.Logical, true),
+                FITSKey.CreateNew("BITPIX", FITSKeywordType.Integer, (int)Math.Abs((short)type)),
+                FITSKey.CreateNew("NAXIS", FITSKeywordType.Integer, 2),
+                FITSKey.CreateNew("NAXIS1", FITSKeywordType.Integer, image.Width),
+                FITSKey.CreateNew("NAXIS2", FITSKeywordType.Integer, image.Height),
+                FITSKey.CreateNew("NAXIS", FITSKeywordType.Integer, 2),
+                FITSKey.CreateNew("END", FITSKeywordType.Blank, null)
+            };
+
+            var keyUnits = FITSUnit.GenerateFromKeywords(keys.ToArray());
+            var dataUnits = FITSUnit.GenerateFromArray(image.GetBytes(), type);
+
+            using (var str = new FITSStream(new FileStream(path, FileMode.OpenOrCreate)))
+            {
+                foreach (var unit in keyUnits)
+                    str.WriteUnit(unit);
+                foreach (var unit in dataUnits)
+                    str.WriteUnit(unit);
             }
         }
     }
