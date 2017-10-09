@@ -49,7 +49,9 @@ namespace FITS_CS
 
         public override void Write(byte[] buffer, int offset, int count)
             => baseStream.Write(buffer, offset, count);
-        
+
+        public void WriteUnit(FITSUnit unit)
+            => Write(unit.Data, 0, FITSUnit.UnitSizeInBytes);
 
         public FITSStream(Stream str)
             =>  baseStream = str ?? throw new ArgumentNullException($"{nameof(str)} is null");
@@ -85,11 +87,11 @@ namespace FITS_CS
             if (!CanRead)
                 throw new NotSupportedException("Stream does not support reading.");
 
+            byte[] buffer = new byte[FITSUnit.UnitSizeInBytes];
             try
             {
-                if (CanSeek && Position + FITSUnit.UnitSizeInBytes >= Length)
+                if (CanSeek && Position + FITSUnit.UnitSizeInBytes > Length)
                     throw new ArgumentException("Stream ended");
-                byte[] buffer = new byte[FITSUnit.UnitSizeInBytes];
                 baseStream.Read(buffer, 0, FITSUnit.UnitSizeInBytes);
                 bytesConsumed += FITSUnit.UnitSizeInBytes;
                 return new FITSUnit(buffer);

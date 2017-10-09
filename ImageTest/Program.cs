@@ -21,11 +21,9 @@ namespace ImageTest
         static void Main(string[] args)
         {
             //try
-            {
                 // ContextSwitchTest();
                 FITSTest();
                 //Test1();
-            }
             //catch(Exception e)
             //{
             //    Console.WriteLine(e.Message);
@@ -283,8 +281,9 @@ namespace ImageTest
 
         private static void FITSTest()
         {
-            using (var str = new FITSStream(new System.IO.FileStream("test2.fits", System.IO.FileMode.Open)))
+            using (var str = new FITSStream(new System.IO.FileStream("test.fits", System.IO.FileMode.Open)))
             {
+                
                 List<FITSUnit> keywords = new List<FITSUnit>();
                 List<FITSUnit> data = new List<FITSUnit>();
 
@@ -298,32 +297,43 @@ namespace ImageTest
 
                 var totalKeys = FITSKey.JoinKeywords(keywords.ToArray());
 
-                var image = FITSUnit.JoinData<Int16>(data.ToArray());
+                var image = FITSUnit.JoinData<Double>(data.ToArray());
                 var dd = image.ToArray();
 
                 int width = totalKeys.First(item => item.Header == "NAXIS1").GetValue<int>();
                 int height = totalKeys.First(item => item.Header == "NAXIS2").GetValue<int>();
 
-                double bScale = totalKeys.First(item => item.Header == "BSCALE").GetValue<double>();
-                double bZero = totalKeys.First(item => item.Header == "BZERO").GetValue<double>();
+                double bScale = totalKeys.First(item => item.Header == "BSCALE").GetValue<int>();
+                double bZero = totalKeys.First(item => item.Header == "BZERO").GetValue<int>();
                 FITSImageType type = (FITSImageType)totalKeys.First(item => item.Header == "BITPIX").GetValue<int>();
 
 
-                Image im = new Image(dd, width, height).CastTo<Int16, Single>(x => 1.0f * x);
+                Image im = new Image(dd, width, height);//.CastTo<Int16, Single>(x => 1.0f * x);
 
-                im.MultiplyByScalar(bScale);
-                im.AddScalar(bZero);
+                //im.MultiplyByScalar(bScale);
+                //im.AddScalar(bZero);
 
                 //FITSKey.CreateNew("TEST", FITSKeywordType.Logical, true, "NOCOMMENT");
                 //FITSKey.CreateNew("TEST", FITSKeywordType.Integer, 123456, "NOCOMMENT");
                 //FITSKey.CreateNew("TEST", FITSKeywordType.Float, 123456.0f, "NOCOMMENT");
                 //FITSKey.CreateNew("TEST", FITSKeywordType.String, "O'HARA ldkjhfkdlhgkdlfhjgkdhsjdghkl123095=8y37iuerhkgjoi3hfldsghldghlkd", "NOCOMMENT");
-                FITSKey.CreateNew("TEST", FITSKeywordType.Complex, new System.Numerics.Complex(123.0, 9999) , "NOCOMMENT12345678901234567890");
-
-
-
+                //FITSKey.CreateNew("TEST", FITSKeywordType.Complex, new System.Numerics.Complex(123.0, 9999) , "NOCOMMENT12345678901234567890");
+                var keysArray = totalKeys.Select((k) => FITSKey.CreateNew(k.Header, k.Type, k.RawValue, k.Comment)).ToArray();
+                var test = FITSUnit.GenerateFromKeywords(keysArray);
+                Console.Write(test.Count());
                 //var app = new System.Windows.Application();
                 //app.Run(new TestWindow(im));
+
+                FITSUnit.GenerateFromArray(im.GetBytes(), type = FITSImageType.Double);
+
+                using (var str2 = new FITSStream(new System.IO.FileStream("test3.fits", System.IO.FileMode.OpenOrCreate)))
+                {
+                    str2.Write(test.First().Data, 0, FITSUnit.UnitSizeInBytes);
+                    int i = 0;
+                    foreach (var unit in FITSUnit.GenerateFromArray(im.GetBytes(), FITSImageType.Double))
+                        str2.WriteUnit(unit);
+                }
+
             }
         }
     }

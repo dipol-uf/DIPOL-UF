@@ -131,5 +131,65 @@ namespace FITS_CS
                     yield return item;
             }
         }
+
+        public static IEnumerable<FITSUnit> GenerateFromKeywords(params FITSKey[] keys)
+        {
+            int keysPerUnit = UnitSizeInBytes / FITSKey.KeySize;
+
+            int nUnits = (int)Math.Ceiling(1.0 * keys.Length / keysPerUnit);
+
+            int nEmpty = nUnits * keysPerUnit - keys.Length;
+
+            byte[] buffer = new byte[UnitSizeInBytes];
+
+            for (int iUnit = 0; iUnit < nUnits; iUnit++)
+            {
+
+                if (iUnit != nUnits - 1)
+                {
+                    for (int iKey = 0; iKey < keysPerUnit; iKey++)
+                        Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FITSKey.KeySize, FITSKey.KeySize);
+
+                    yield return new FITSUnit(buffer);
+                }
+                else
+                {
+                    for (int iKey = 0; iKey < keysPerUnit - nEmpty; iKey++)
+                        Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FITSKey.KeySize, FITSKey.KeySize);
+                    for (int iKey = keysPerUnit - nEmpty; iKey < keysPerUnit; iKey++)
+                        Array.Copy(FITSKey.Empty.Data, 0, buffer, iKey * FITSKey.KeySize, FITSKey.KeySize);
+
+                    yield return new FITSUnit(buffer);
+
+                }
+            }
+
+
+        }
+
+        public static IEnumerable<FITSUnit> GenerateFromArray(byte[] array, FITSImageType type)
+        {
+            int size = Math.Abs((short)type) / 8;
+            int n = (int)Math.Ceiling(1.0 * array.Length / UnitSizeInBytes);
+            int m = n / size;
+            byte[] mappedArray;
+            if (BitConverter.IsLittleEndian)
+                mappedArray = array.Reverse().ToArray();
+            else
+                mappedArray = array;
+
+            byte[] buffer = new byte[UnitSizeInBytes];
+
+            for (int iUnit = 0; iUnit < n-1; iUnit++)
+            {
+                Array.Copy(mappedArray, iUnit * UnitSizeInBytes, buffer, 0, UnitSizeInBytes);
+                yield return new FITSUnit(buffer);
+            }
+
+            Array.Clear(buffer, 0, UnitSizeInBytes);
+            Array.Copy(mappedArray, (n-1) * UnitSizeInBytes, buffer, 0, mappedArray.Length - (n-1) * UnitSizeInBytes);
+
+           yield return new FITSUnit(buffer);
+        }
     }
 }
