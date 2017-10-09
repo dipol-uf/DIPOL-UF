@@ -20,9 +20,12 @@ namespace FITS_CS
         public static readonly int KeyHeaderSize = 8;
         public static readonly int LastValueColumnFixed = 29;
         public static readonly int NumericValueMaxLengthFixed = 20;
-        private string data = "";
+        private string data = new string(' ', KeySize);
         private object rawValue = null;
 
+        public static FITSKey Empty => new FITSKey();
+
+        public object RawValue => rawValue;
         public byte[] Data => Encoding.ASCII.GetBytes(data.ToArray());
         public string Extension
         {
@@ -212,7 +215,7 @@ namespace FITS_CS
             key.rawValue = value;
 
             // If keyword is of value type
-            if (type != FITSKeywordType.Comment | type != FITSKeywordType.Blank)
+            if (type != FITSKeywordType.Comment & type != FITSKeywordType.Blank)
             {
                 // Header/content separator
                 result.Insert(KeyHeaderSize, "= ");
