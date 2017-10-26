@@ -11,6 +11,7 @@ namespace ROTATOR_CS
     public class Rotator : IDisposable
     {
         private SerialPort port;
+        private volatile bool responseReceived = false;
 
         public event SerialDataReceivedEventHandler DataRecieved;
         public event SerialErrorReceivedEventHandler ErrorRecieved;
@@ -31,11 +32,13 @@ namespace ROTATOR_CS
 
         private void Port_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
+            responseReceived = true;
             OnErrorReceived(e);
         }
 
         private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
+            responseReceived = true;
             LastRespond = new byte[port.BytesToRead];
             port.Read(LastRespond, 0, LastRespond.Length);
             
@@ -44,7 +47,7 @@ namespace ROTATOR_CS
 
         public void SendCommand(Command command, int argument, byte type = 0, byte address = 1, byte motorOrBank = 0)
         {
-            
+            responseReceived = false;
             byte[] val = BitConverter.GetBytes(argument);
             val = BitConverter.IsLittleEndian ? val.Reverse().ToArray() : val;
 
@@ -73,6 +76,9 @@ namespace ROTATOR_CS
             port.Close();
             port.Dispose();
         }
+
+        public void WaitResponse(int msTimeOut = -1)
+            => System.Threading.SpinWait.SpinUntil(() => responseReceived, msTimeOut);
 
         protected virtual void OnDataReceived(SerialDataReceivedEventArgs e)
             => DataRecieved?.Invoke(this, e);
