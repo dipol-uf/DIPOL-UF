@@ -3,7 +3,7 @@
 namespace ROTATOR_CS
 {
     [DataContract]
-    enum ReturnStatus : byte
+    public enum ReturnStatus : byte
     {
         [EnumMember]
         UnknownError = 0,
