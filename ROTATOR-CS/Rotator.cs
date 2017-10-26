@@ -11,8 +11,6 @@ namespace ROTATOR_CS
     public class Rotator : IDisposable
     {
         private SerialPort port;
-        private byte address = 1;
-        private byte motorOrBank = 0;
 
         public event SerialDataReceivedEventHandler DataRecieved;
         public event SerialErrorReceivedEventHandler ErrorRecieved;
@@ -44,7 +42,7 @@ namespace ROTATOR_CS
             OnDataReceived(e);
         }
 
-        public void SendCommand(Command command, int argument, byte type = 0)
+        public void SendCommand(Command command, int argument, byte type = 0, byte address = 1, byte motorOrBank = 0)
         {
             
             byte[] val = BitConverter.GetBytes(argument);
