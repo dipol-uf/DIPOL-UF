@@ -29,8 +29,6 @@ namespace ROTATOR_CS
             port.DataReceived += Port_DataReceived;
             port.ErrorReceived += Port_ErrorReceived;
             port.Open();
-
-
         }
 
         private void Port_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
@@ -46,7 +44,7 @@ namespace ROTATOR_CS
             OnDataReceived(e);
         }
 
-        public void SendCommand(Commands command, int argument, byte type = 0)
+        public void SendCommand(Command command, int argument, byte type = 0)
         {
             
             byte[] val = BitConverter.GetBytes(argument);
