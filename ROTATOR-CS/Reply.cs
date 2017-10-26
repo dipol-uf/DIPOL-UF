@@ -46,10 +46,7 @@ namespace ROTATOR_CS
             else if (replyData.Length != ReplyLength)
                 throw new ArgumentException($"Reply length (in bytes) is invalid (expected {ReplyLength}, got {replyData.Length}).");
 
-            int checkSum = 0;
-
-            for (int i = 0; i < ReplyLength - 1; i++)
-                checkSum += replyData[i];
+            int checkSum = replyData.Take(ReplyLength - 1).Aggregate((sm, x) => sm += x);
 
             if ((checkSum & 0x00FF) != replyData[ReplyLength - 1])
                 throw new ArgumentException("Wrong checksum in the reply.");
@@ -61,8 +58,8 @@ namespace ROTATOR_CS
             Status = null;
             Command = Enum.IsDefined(typeof(Command), replyData[3]) ? (Command)replyData[3] : Command.Unknown;
             ReturnValue = BitConverter.IsLittleEndian
-                ? BitConverter.ToInt32(replyData, 4)
-                : BitConverter.ToInt32(new[] { replyData[7], replyData[6], replyData[5], replyData[4] }, 0);
+                ? BitConverter.ToInt32(new[] { replyData[7], replyData[6], replyData[5], replyData[4] }, 0)
+                : BitConverter.ToInt32(replyData, 4);
 
 
         }
