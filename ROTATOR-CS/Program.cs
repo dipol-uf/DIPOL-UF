@@ -18,54 +18,7 @@ namespace ROTATOR_CS
             Console.ReadKey();
         }
 
-        static void Test()
-        {
-            var str = SerialPort.GetPortNames();
-           
-            using (var rot = new Rotator("COM2"))
-            {
-                bool isWaiting = false;
-
-                rot.DataRecieved += (sender, e) =>
-                {
-                    Console.WriteLine("-----------------------");
-                    foreach (var b in rot.LastRespond)
-                        Console.Write("{0:X2} ", b);
-
-                    byte[] subArr = new byte[4];
-
-                    for (int i = 0; i < subArr.Length; i++)
-                        subArr[i] = BitConverter.IsLittleEndian ? rot.LastRespond[4 + subArr.Length - 1 - i] : rot.LastRespond[4 + i];
-
-                    var returnedVal = BitConverter.ToInt32(subArr, 0);
-
-                    Console.WriteLine();
-                    Console.WriteLine(returnedVal);
-                    Console.WriteLine("-----------------------");
-                    isWaiting = false;
-
-                };
-
-                while (true)
-                {
-                    while (isWaiting)
-                        System.Threading.Thread.Sleep(100);
-
-                    Console.Write("Input: ");
-                    int angle = int.Parse(Console.ReadLine());
-
-                    rot.SendCommand(Command.MoveToPosition, angle);
-                    isWaiting = true;
-                    
-                    if (angle == 0)
-                        break;
-
-                    Console.WriteLine();
-                }
-            }
-
-        }
-
+       
         private static void Test2()
         {
             var ports = SerialPort.GetPortNames();
@@ -81,7 +34,7 @@ namespace ROTATOR_CS
                     => Console.WriteLine(new Reply(rot.LastRespond));
                 rot.SendCommand(Command.MoveToPosition, 2000);
 
-                Console.ReadKey();
+                rot.WaitResponse();
             }
         }
 
