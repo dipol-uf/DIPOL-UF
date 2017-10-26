@@ -28,13 +28,34 @@ namespace ROTATOR_CS
 
             using (var rot = new Rotator("COM2"))
             {
-                rot.DataRecieved += (sender, e) 
-                    => Console.WriteLine(new Reply(rot.LastRespond));
+                rot.DataRecieved += (sender, e) =>
+                   Console.WriteLine(new Reply(rot.LastResponse));
+                 
                 rot.ErrorRecieved += (sender, e)
-                    => Console.WriteLine(new Reply(rot.LastRespond));
-                rot.SendCommand(Command.MoveToPosition, 2000, CommandType.Absolute);
+                    => Console.WriteLine(new Reply(rot.LastResponse));
 
-                rot.WaitResponse();
+
+                int N = 500;
+
+                rot.SendCommand(Command.MoveToPosition, 0000, (byte) CommandType.Absolute);
+                //System.Threading.Thread.Sleep(300);
+
+                //var t = System.Diagnostics.Stopwatch.StartNew();
+
+                //for (int i = 0; i < N; i++)
+                //{
+
+                for (int i = 0; i < N; i++)
+                {
+                    rot.SendCommand(Command.GetAxisParameter, 0, 1);
+                    //System.Threading.Thread.Sleep(1000);
+                }
+                    //rot.WaitResponse();
+                //}
+
+                //t.Stop();
+                //Console.WriteLine("Total time: {0:F3}; Per rotation on {1} units: {2:e3}",
+                    //t.ElapsedMilliseconds / 1000.0, step, t.ElapsedMilliseconds / 1000.0 / N);
             }
         }
 
