@@ -35,7 +35,7 @@ namespace ROTATOR_CS
 
         private void Port_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
-            ErrorRecieved(sender, e);
+            OnErrorReceived(e);
         }
 
         private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -43,7 +43,7 @@ namespace ROTATOR_CS
             LastRespond = new byte[port.BytesToRead];
             port.Read(LastRespond, 0, LastRespond.Length);
 
-            DataRecieved(sender, e);
+            OnDataReceived(e);
         }
 
         public void SendCommand(Commands command, int argument, byte type = 0)
@@ -77,6 +77,12 @@ namespace ROTATOR_CS
             port.Close();
             port.Dispose();
         }
+
+        protected virtual void OnDataReceived(SerialDataReceivedEventArgs e)
+            => DataRecieved?.Invoke(this, e);
+
+        protected virtual void OnErrorReceived(SerialErrorReceivedEventArgs e)
+            => ErrorRecieved?.Invoke(this, e);
     }
 
 }
