@@ -13,7 +13,7 @@ namespace ROTATOR_CS
     {
         static void Main(string[] args)
         {
-            Test();
+            Test2();
 
             Console.ReadKey();
         }
@@ -64,6 +64,19 @@ namespace ROTATOR_CS
                 }
             }
 
+        }
+
+        private static void Test2()
+        {
+            var ports = SerialPort.GetPortNames();
+
+            foreach (var port in ports)
+                Console.WriteLine(port);
+
+            using (var rot = new Rotator("COM2"))
+            {
+
+            }
         }
 
         
