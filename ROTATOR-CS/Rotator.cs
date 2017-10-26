@@ -45,7 +45,9 @@ namespace ROTATOR_CS
             OnDataReceived(e);
         }
 
-        public void SendCommand(Command command, int argument, byte type = 0, byte address = 1, byte motorOrBank = 0)
+        public void SendCommand(Command command, int argument, 
+            CommandType type = CommandType.Unused, 
+            byte address = 1, byte motorOrBank = 0)
         {
             responseReceived = false;
             byte[] val = BitConverter.GetBytes(argument);
@@ -56,7 +58,7 @@ namespace ROTATOR_CS
             {
                 address,
                 (byte) command,
-                type,
+                (byte)type,
                 motorOrBank,
                 val[0],
                 val[1],
