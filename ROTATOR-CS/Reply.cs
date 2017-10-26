@@ -62,5 +62,10 @@ namespace ROTATOR_CS
 
 
         }
+
+        public override string ToString()
+        {
+            return String.Format("{0}\t{1}\t{2}\t{3}\t{4}", ReplyAddress, ModuleAddress, Command, ReturnValue, Status);
+        }
     }
 }
