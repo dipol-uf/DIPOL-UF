@@ -54,7 +54,7 @@ namespace ROTATOR_CS
                     Console.Write("Input: ");
                     int angle = int.Parse(Console.ReadLine());
 
-                    rot.SendCommand(Commands.MoveToPosition, angle);
+                    rot.SendCommand(Command.MoveToPosition, angle);
                     isWaiting = true;
                     
                     if (angle == 0)
