@@ -77,6 +77,8 @@ namespace ROTATOR_CS
             {
                 rot.DataRecieved += (sender, e) 
                     => Console.WriteLine(new Reply(rot.LastRespond));
+                rot.ErrorRecieved += (sender, e)
+                    => Console.WriteLine(new Reply(rot.LastRespond));
                 rot.SendCommand(Command.MoveToPosition, 2000);
 
                 Console.ReadKey();
