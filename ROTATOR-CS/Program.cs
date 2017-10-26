@@ -75,7 +75,10 @@ namespace ROTATOR_CS
 
             using (var rot = new Rotator("COM2"))
             {
-
+                rot.DataRecieved += (sender, e) 
+                    => Console.WriteLine(new Reply(rot.LastRespond));
+                rot.SendCommand(Command.MoveToPosition, 2000);
+                
             }
         }
 
