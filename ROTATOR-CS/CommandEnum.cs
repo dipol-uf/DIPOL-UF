@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace ROTATOR_CS
+namespace ROTATOR_CS 
 {
     /// <summary>
     /// A list of available commands
