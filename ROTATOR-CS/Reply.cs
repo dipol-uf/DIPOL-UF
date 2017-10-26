@@ -21,7 +21,7 @@ namespace ROTATOR_CS
             private set;          
         }
 
-        public object Status
+        public ReturnStatus Status
         {
             get;
             private set;
@@ -54,8 +54,7 @@ namespace ROTATOR_CS
 
             ReplyAddress = replyData[0];
             ModuleAddress = replyData[1];
-            // Status is not implemented yet!
-            Status = null;
+            Status = Enum.IsDefined(typeof(ReturnStatus), replyData[2]) ? (ReturnStatus)replyData[2] : ReturnStatus.UnknownError;
             Command = Enum.IsDefined(typeof(Command), replyData[3]) ? (Command)replyData[3] : Command.Unknown;
             ReturnValue = BitConverter.IsLittleEndian
                 ? BitConverter.ToInt32(new[] { replyData[7], replyData[6], replyData[5], replyData[4] }, 0)

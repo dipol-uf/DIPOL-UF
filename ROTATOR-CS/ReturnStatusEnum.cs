@@ -6,6 +6,8 @@ namespace ROTATOR_CS
     enum ReturnStatus : byte
     {
         [EnumMember]
+        UnknownError = 0,
+        [EnumMember]
         Success = 100,
         [EnumMember]
         CommandLoadedIntoEEPROM = 101,
