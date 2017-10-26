@@ -32,7 +32,7 @@ namespace ROTATOR_CS
                     => Console.WriteLine(new Reply(rot.LastRespond));
                 rot.ErrorRecieved += (sender, e)
                     => Console.WriteLine(new Reply(rot.LastRespond));
-                rot.SendCommand(Command.MoveToPosition, 2000);
+                rot.SendCommand(Command.MoveToPosition, 2000, CommandType.Absolute);
 
                 rot.WaitResponse();
             }
