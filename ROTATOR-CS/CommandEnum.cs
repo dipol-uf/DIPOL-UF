@@ -6,8 +6,14 @@ namespace ROTATOR_CS
     /// A list of available commands
     /// </summary>
     [DataContract]
-    public enum Commands : byte
+    public enum Command : byte
     {
+        /// <summary>
+        /// Unknown command
+        /// </summary>
+        [EnumMember]
+        Unknown = 0,
+
         /// <summary>
         /// ROR: rotates right
         /// </summary>
