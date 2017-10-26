@@ -40,7 +40,7 @@ namespace ROTATOR_CS
         {
             LastRespond = new byte[port.BytesToRead];
             port.Read(LastRespond, 0, LastRespond.Length);
-
+            
             OnDataReceived(e);
         }
 
