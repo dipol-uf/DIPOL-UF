@@ -11,12 +11,12 @@ namespace ROTATOR_CS
     public class Rotator : IDisposable
     {
         private SerialPort port;
-        private volatile bool responseReceived = false;
+        private volatile bool commandSent = false;
 
         public event SerialDataReceivedEventHandler DataRecieved;
         public event SerialErrorReceivedEventHandler ErrorRecieved;
 
-        public byte[] LastRespond
+        public byte[] LastResponse
         {
             get;
             private set;
@@ -32,24 +32,29 @@ namespace ROTATOR_CS
 
         private void Port_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
-            responseReceived = true;
             OnErrorReceived(e);
         }
 
         private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            responseReceived = true;
-            LastRespond = new byte[port.BytesToRead];
-            port.Read(LastRespond, 0, LastRespond.Length);
-            
-            OnDataReceived(e);
+            if (port.BytesToRead > 0)
+            {
+                commandSent = false;
+                LastResponse = new byte[port.BytesToRead];
+                port.Read(LastResponse, 0, LastResponse.Length);
+                OnDataReceived(e);
+            }
         }
 
         public void SendCommand(Command command, int argument, 
-            CommandType type = CommandType.Unused, 
+            byte type = (byte)CommandType.Unused, 
             byte address = 1, byte motorOrBank = 0)
         {
-            responseReceived = false;
+            if (commandSent)
+                System.Threading.SpinWait.SpinUntil(() => !commandSent, 100 * 5);
+
+            commandSent = true;
+
             byte[] val = BitConverter.GetBytes(argument);
             val = BitConverter.IsLittleEndian ? val.Reverse().ToArray() : val;
 
@@ -58,7 +63,7 @@ namespace ROTATOR_CS
             {
                 address,
                 (byte) command,
-                (byte)type,
+                type,
                 motorOrBank,
                 val[0],
                 val[1],
@@ -78,9 +83,6 @@ namespace ROTATOR_CS
             port.Close();
             port.Dispose();
         }
-
-        public void WaitResponse(int msTimeOut = -1)
-            => System.Threading.SpinWait.SpinUntil(() => responseReceived, msTimeOut);
 
         protected virtual void OnDataReceived(SerialDataReceivedEventArgs e)
             => DataRecieved?.Invoke(this, e);
