@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AxisParameterEnum.cs" />
     <Compile Include="CommandEnum.cs" />
     <Compile Include="CommandTypeEnum.cs" />
     <Compile Include="Program.cs" />
