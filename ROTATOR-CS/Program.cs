@@ -29,6 +29,7 @@ namespace ROTATOR_CS
                 Console.WriteLine(port);
 
             List<(int, double, double)> data = new List<(int, double, double)>();
+            var angle = 4000;
 
             using (var rot = new Rotator("COM2"))
             {
@@ -38,29 +39,31 @@ namespace ROTATOR_CS
                 //rot.ErrorRecieved += (sender, e) =>
                 //    Console.WriteLine($"{ e.EventTime} {e.Reply}");
 
+                rot.SendCommand(Command.MoveToPosition, 0, (byte)CommandType.Absolute);
+                rot.WaitResponse();
+                rot.WaitPositionReached();
+
                 for (int i = 1; i <= 50; i++)
                 {
-                    rot.SendCommand(Command.MoveToPosition, 0, (byte)CommandType.Absolute);
-                    rot.WaitResponse();
-                    rot.WaitPositionReached();
 
                     var t = System.Diagnostics.Stopwatch.StartNew();
 
-                    var angle = 2000;
                     rot.SendCommand(Command.MoveToPosition, i * angle, (byte)CommandType.Absolute);
                     rot.WaitResponse();
 
-                    rot.WaitPositionReached();
+                    rot.WaitPositionReached(checkIntervalMS: 50);
 
                     t.Stop();
 
                     data.Add((i * angle, t.ElapsedMilliseconds / 1000.0, i * angle * 1000.0 / t.ElapsedMilliseconds));
 
-                    Console.WriteLine($"Rotated on {i * angle} over {t.ElapsedMilliseconds / 1000.0} with average speed " +
-                        $"{(i * angle * 1000.0 / t.ElapsedMilliseconds).ToString("F1")} units per sec.");
+                    Console.WriteLine($"Rotated on {{0, 9}} over {(t.ElapsedMilliseconds / 1000.0).ToString("F3")} with average speed " +
+                        $"{(angle * 1000.0 / t.ElapsedMilliseconds).ToString("F1")} units per sec.", i * angle);
                 }
 
             }
+
+            Console.WriteLine("Average time: {0:F3}  speed: {1:F3}", data.Select(x => x.Item2).Average(),  data.Select(x => angle / x.Item2).Average());
 
             using (var str = new StreamWriter("log.dat"))
             {
