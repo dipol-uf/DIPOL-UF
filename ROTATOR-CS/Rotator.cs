@@ -12,6 +12,7 @@ namespace ROTATOR_CS
     {
         private SerialPort port;
         private volatile bool commandSent = false;
+        private volatile bool suppressEvents = false;
 
         public event SerialDataReceivedEventHandler DataRecieved;
         public event SerialErrorReceivedEventHandler ErrorRecieved;
@@ -32,7 +33,8 @@ namespace ROTATOR_CS
 
         private void Port_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
-            OnErrorReceived(e);
+            if(!suppressEvents)
+                OnErrorReceived(e);
         }
 
         private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -42,7 +44,8 @@ namespace ROTATOR_CS
                 commandSent = false;
                 LastResponse = new byte[port.BytesToRead];
                 port.Read(LastResponse, 0, LastResponse.Length);
-                OnDataReceived(e);
+                if(!suppressEvents)
+                    OnDataReceived(e);
             }
         }
 
