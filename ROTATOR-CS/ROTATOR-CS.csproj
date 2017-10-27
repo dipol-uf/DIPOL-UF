@@ -53,6 +53,7 @@
     <Compile Include="Reply.cs" />
     <Compile Include="ReturnStatusEnum.cs" />
     <Compile Include="Rotator.cs" />
+    <Compile Include="RotatorEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
