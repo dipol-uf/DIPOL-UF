@@ -35,9 +35,9 @@ namespace ROTATOR_CS
                     => Console.WriteLine(new Reply(rot.LastResponse));
 
 
-                int N = 500;
+                int N = 250;
 
-                rot.SendCommand(Command.MoveToPosition, 0000, (byte) CommandType.Absolute);
+                rot.SendCommand(Command.MoveToPosition, 0000000, (byte) CommandType.Absolute);
                 //System.Threading.Thread.Sleep(300);
 
                 //var t = System.Diagnostics.Stopwatch.StartNew();
@@ -45,11 +45,24 @@ namespace ROTATOR_CS
                 //for (int i = 0; i < N; i++)
                 //{
 
-                for (int i = 0; i < N; i++)
-                {
-                    rot.SendCommand(Command.GetAxisParameter, 0, 1);
-                    //System.Threading.Thread.Sleep(1000);
-                }
+                rot.WaitPositionReached();
+                Console.WriteLine("Position reached");
+
+                //for (int i = 0; i < N; i++)
+                //{
+                //    var statusDictionary = rot.GetStatus();
+                //    if (i % 10 == 0)
+                //        Console.Clear();
+                //    Console.WriteLine("----------------------------------");
+                //    foreach (var status in statusDictionary)
+                //        Console.WriteLine("{0,30}\t{1}", status.Key,  
+                //            (byte)status.Key < 8 ? status.Value.ToString() : (status.Value > 0).ToString());
+                //    //if (N % 100 == 0)
+                //    //    Console.Clear();
+                //    System.Threading.Thread.Sleep(150);
+                //    Console.CursorLeft = 0;
+                //    Console.CursorTop = 0;
+                //}
                     //rot.WaitResponse();
                 //}
 
