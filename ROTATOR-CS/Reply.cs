@@ -9,13 +9,13 @@ namespace ROTATOR_CS
     {
         public static readonly int ReplyLength = 9;
 
-        public int ReplyAddress
+        public byte ReplyAddress
         {
             get;
             private set;
         }
 
-        public int ModuleAddress
+        public byte ModuleAddress
         {
             get;
             private set;          
@@ -65,7 +65,7 @@ namespace ROTATOR_CS
 
         public override string ToString()
         {
-            return String.Format("{0}\t{1}\t{2}\t{3}\t{4}", ReplyAddress, ModuleAddress, Command, ReturnValue, Status);
+            return String.Format("[{0,4}{1,4}{2,15}{3,10}{4,12}]", ReplyAddress, ModuleAddress, Command, ReturnValue, Status);
         }
     }
 }
