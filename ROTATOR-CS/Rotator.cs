@@ -10,12 +10,14 @@ namespace ROTATOR_CS
 {
     public class Rotator : IDisposable
     {
+        public delegate void RotatorEventHandler(object sender, RotatorEventArgs e);
+
         private SerialPort port;
         private volatile bool commandSent = false;
         private volatile bool suppressEvents = false;
 
-        public event SerialDataReceivedEventHandler DataRecieved;
-        public event SerialErrorReceivedEventHandler ErrorRecieved;
+        public event RotatorEventHandler DataRecieved;
+        public event RotatorEventHandler ErrorRecieved;
 
         public byte[] LastResponse
         {
@@ -33,8 +35,12 @@ namespace ROTATOR_CS
 
         private void Port_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
-            if(!suppressEvents)
-                OnErrorReceived(e);
+            LastResponse = new byte[port.BytesToRead];
+            port.Read(LastResponse, 0, LastResponse.Length);
+            commandSent = false;
+
+            if (!suppressEvents)
+                OnErrorReceived(new RotatorEventArgs(LastResponse));
         }
 
         private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -45,7 +51,7 @@ namespace ROTATOR_CS
                 port.Read(LastResponse, 0, LastResponse.Length);
                 commandSent = false;
                 if(!suppressEvents)
-                    OnDataReceived(e);
+                    OnDataReceived(new RotatorEventArgs(LastResponse));
             }
         }
 
@@ -145,10 +151,10 @@ namespace ROTATOR_CS
 
         }
 
-        protected virtual void OnDataReceived(SerialDataReceivedEventArgs e)
+        protected virtual void OnDataReceived(RotatorEventArgs e)
             => DataRecieved?.Invoke(this, e);
 
-        protected virtual void OnErrorReceived(SerialErrorReceivedEventArgs e)
+        protected virtual void OnErrorReceived(RotatorEventArgs e)
             => ErrorRecieved?.Invoke(this, e);
     }
 
