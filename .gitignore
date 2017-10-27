@@ -59,3 +59,5 @@ Temporary Items
 *.psess
 **/*.force
 **/*.vs*
+
+**/*.dat
