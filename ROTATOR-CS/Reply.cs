@@ -65,7 +65,8 @@ namespace ROTATOR_CS
 
         public override string ToString()
         {
-            return String.Format("[{0,4}{1,4}{2,15}{3,10}{4,12}]", ReplyAddress, ModuleAddress, Command, ReturnValue, Status);
+            return String.Format("[{0,2};{1,2};{2,15};{3,12};{4,10}]", ReplyAddress, ModuleAddress, Command,
+                Status, ReturnValue);
         }
     }
 }
