@@ -21,9 +21,11 @@ namespace ImageTest
         [STAThread]
         static void Main(string[] args)
         {
+            System.Globalization.CultureInfo.DefaultThreadCurrentCulture = new System.Globalization.CultureInfo("en-US");
+            System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = new System.Globalization.CultureInfo("en-US");
             //try
-                // ContextSwitchTest();
-                FITSTest();
+            // ContextSwitchTest();
+            FITSTest();
                 //Test1();
             //catch(Exception e)
             //{
@@ -136,11 +138,10 @@ namespace ImageTest
         {
             using (var cam = new Camera())
             {
-                cam.FanControl(FanMode.Off);
+                cam.FanControl(FanMode.LowSpeed);
 
                 var settings = cam.GetAcquisitionSettingsTemplate();
 
-                settings.SetAcquisitionMode(AcquisitionMode.SingleScan);
 
                 settings.SetOutputAmplifier(OutputAmplification.Conventional);
                 settings.SetADConverter(0);
@@ -160,73 +161,95 @@ namespace ImageTest
 
                 settings.SetTriggerMode(TriggerMode.Internal);
 
+                settings.SetAcquisitionMode(AcquisitionMode.Kinetic);
+
+                settings.SetAccumulationCycle(1, 0.2f);
+
+                settings.SetKineticCycle(10, 0.2f);
+
                 var output = settings.ApplySettings(out (float, float, float, int) timing);
+
+                cam.NewImageReceived += ImageReceivedHandler;
 
                 foreach (var o in output)
                     Console.WriteLine(o);
 
 
-                Console.WriteLine(timing);
+                Console.WriteLine("\r\n" + timing);
+
+                cam.StartAcquistionAsync(new System.Threading.CancellationTokenSource()).Wait();
 
             }
 
-            using (var str = new FITSStream(new System.IO.FileStream("test.fits", System.IO.FileMode.Open)))
+        }
+
+        private static void ImageReceivedHandler (object sender, ANDOR_CS.Events.NewImageReceivedEventArgs e)
+        {
+
+            (sender as CameraBase).AcquiredImages.TryDequeue(out Image image);
+            using (var str = new FITSStream(new System.IO.FileStream(String.Format("image_{0:000}.fits", e.First), System.IO.FileMode.Create)))
             {
-
-                List<FITSUnit> keywords = new List<FITSUnit>();
-                List<FITSUnit> data = new List<FITSUnit>();
-
-                while (str.TryReadUnit(out FITSUnit u))
+                FITSKey[] keywords =
                 {
-                    if (u.IsKeywords)
-                        keywords.Add(u);
-                    else if (u.IsData)
-                        data.Add(u);
-                }
+                    FITSKey.CreateNew("SIMPLE", FITSKeywordType.Logical, true),
+                    FITSKey.CreateNew("BITPIX", FITSKeywordType.Integer, 16),
+                    FITSKey.CreateNew("NAXIS", FITSKeywordType.Integer, 2),
+                    FITSKey.CreateNew("NAXIS1", FITSKeywordType.Integer, image.Width),
+                    FITSKey.CreateNew("NAXIS2", FITSKeywordType.Integer, image.Height),
+                    FITSKey.CreateNew("DATE-OBS", FITSKeywordType.String, String.Format("{0:dd'/'MM'/'yy}", e.EventTime.ToUniversalTime())),
+                    FITSKey.CreateNew("TIME-OBS", FITSKeywordType.String, String.Format("{0:HH:MM:00}", e.EventTime.ToUniversalTime())),
+                    FITSKey.CreateNew("SECONDS", FITSKeywordType.Float, Math.Round(e.EventTime.ToUniversalTime().TimeOfDay.TotalMilliseconds % 60000 / 1000,4)),
 
-                var totalKeys = FITSKey.JoinKeywords(keywords.ToArray()).ToList();
+                    FITSKey.CreateNew("END", FITSKeywordType.Blank, null)
+                };
 
-                var image = FITSUnit.JoinData<Double>(data.ToArray());
-                var dd = image.ToArray();
+                var keyUnit = FITSUnit.GenerateFromKeywords(keywords).First();
 
-                int width = totalKeys.First(item => item.Header == "NAXIS1").GetValue<int>();
-                int height = totalKeys.First(item => item.Header == "NAXIS2").GetValue<int>();
+                var dataUnits = FITSUnit.GenerateFromArray(image.GetBytes(), FITSImageType.Int16);
 
-                double bScale = totalKeys.First(item => item.Header == "BSCALE").GetValue<int>();
-                double bZero = totalKeys.First(item => item.Header == "BZERO").GetValue<int>();
-                FITSImageType type = (FITSImageType)totalKeys.First(item => item.Header == "BITPIX").GetValue<int>();
-
-
-                Image im = new Image(dd, width, height);//.CastTo<Int16, Single>(x => 1.0f * x);
-
-                //im.MultiplyByScalar(bScale);
-                //im.AddScalar(bZero);
-
-                //FITSKey.CreateNew("TEST", FITSKeywordType.Logical, true, "NOCOMMENT");
-                //FITSKey.CreateNew("TEST", FITSKeywordType.Integer, 123456, "NOCOMMENT");
-                //FITSKey.CreateNew("TEST", FITSKeywordType.Float, 123456.0f, "NOCOMMENT");
-                //FITSKey.CreateNew("TEST", FITSKeywordType.String, "O'HARA ldkjhfkdlhgkdlfhjgkdhsjdghkl123095=8y37iuerhkgjoi3hfldsghldghlkd", "NOCOMMENT");
-                //FITSKey.CreateNew("TEST", FITSKeywordType.Complex, new System.Numerics.Complex(123.0, 9999) , "NOCOMMENT12345678901234567890");
-                totalKeys.Remove(totalKeys.Where((k) => k.Header == "BITPIX").First());
-                totalKeys.Insert(1, FITSKey.CreateNew("BITPIX", FITSKeywordType.Integer, -32));
-                var keysArray = totalKeys.Select((k) => FITSKey.CreateNew(k.Header, k.Type, k.RawValue, k.Comment)).ToArray();
-                var test = FITSUnit.GenerateFromKeywords(keysArray);
-                Console.Write(test.Count());
-                //var app = new System.Windows.Application();
-                //app.Run(new TestWindow(im));
-
-                //FITSUnit.GenerateFromArray(im.GetBytes(), type = FITSImageType.Double);
-
-                //using (var str2 = new FITSStream(new System.IO.FileStream("test3.fits", System.IO.FileMode.OpenOrCreate)))
-                //{
-                //    str2.Write(test.First().Data, 0, FITSUnit.UnitSizeInBytes);
-                //    foreach (var unit in FITSUnit.GenerateFromArray(im.CastTo<double, Single>((x) => (Single)x).GetBytes(), FITSImageType.Single))
-                //        str2.WriteUnit(unit);
-                //}
-
-                FITSStream.WriteImage(im.CastTo<Double, Int16>(x => (Int16)x), FITSImageType.Int16, "test4.fits");
-
+                str.WriteUnit(keyUnit);
+                foreach (var unit in dataUnits)
+                    str.WriteUnit(unit);
             }
+
+            //using (var str = new FITSStream(new System.IO.FileStream("test.fits", System.IO.FileMode.Open)))
+            //{
+
+            //    List<FITSUnit> keywords = new List<FITSUnit>();
+            //    List<FITSUnit> data = new List<FITSUnit>();
+
+            //    while (str.TryReadUnit(out FITSUnit u))
+            //    {
+            //        if (u.IsKeywords)
+            //            keywords.Add(u);
+            //        else if (u.IsData)
+            //            data.Add(u);
+            //    }
+
+            //    var totalKeys = FITSKey.JoinKeywords(keywords.ToArray()).ToList();
+
+            //    var image = FITSUnit.JoinData<Double>(data.ToArray());
+            //    var dd = image.ToArray();
+
+            //    int width = totalKeys.First(item => item.Header == "NAXIS1").GetValue<int>();
+            //    int height = totalKeys.First(item => item.Header == "NAXIS2").GetValue<int>();
+
+            //    double bScale = totalKeys.First(item => item.Header == "BSCALE").GetValue<int>();
+            //    double bZero = totalKeys.First(item => item.Header == "BZERO").GetValue<int>();
+            //    FITSImageType type = (FITSImageType)totalKeys.First(item => item.Header == "BITPIX").GetValue<int>();
+
+
+            //    Image im = new Image(dd, width, height);//.CastTo<Int16, Single>(x => 1.0f * x);
+
+            //    totalKeys.Remove(totalKeys.Where((k) => k.Header == "BITPIX").First());
+            //    totalKeys.Insert(1, FITSKey.CreateNew("BITPIX", FITSKeywordType.Integer, -32));
+            //    var keysArray = totalKeys.Select((k) => FITSKey.CreateNew(k.Header, k.Type, k.RawValue, k.Comment)).ToArray();
+            //    var test = FITSUnit.GenerateFromKeywords(keysArray);
+            //    Console.Write(test.Count());
+
+            //    FITSStream.WriteImage(im.CastTo<Double, Int16>(x => (Int16)x), FITSImageType.Int16, "test4.fits");
+
+            //}
         }
     }
 }
