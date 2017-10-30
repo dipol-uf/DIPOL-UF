@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 namespace ROTATOR_CS
 {
     [DataContract]
-    public class RotatorEventArgs : EventArgs
+    public class StepMotorEventArgs : EventArgs
     {
         [DataMember]
         public DateTime EventTime
@@ -37,7 +37,7 @@ namespace ROTATOR_CS
             private set;
         }
 
-        public RotatorEventArgs(byte[] message)
+        public StepMotorEventArgs(byte[] message)
         {
             Reply = new Reply(message);
 
