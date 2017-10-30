@@ -25,59 +25,128 @@ using System.IO.Ports;
 
 namespace ROTATOR_CS
 {
-
+    /// <summary>
+    /// A COM-based interface to DIPOL's step-motor.
+    /// </summary>
     public class StepMotorHandler : IDisposable
     {
-        public delegate void RotatorEventHandler(object sender, RotatorEventArgs e);
+        /// <summary>
+        /// Delegate that handles Data/Error received events.
+        /// </summary>
+        /// <param name="sender">Sender is <see cref="StepMotorHandler"/>.</param>
+        /// <param name="e">Event arguments.</param>
+        public delegate void StepMotorEventHandler(object sender, StepMotorEventArgs e);
 
-        private SerialPort port;
+        /// <summary>
+        /// Backend serial port 
+        /// </summary>
+        private SerialPort port = null;
+        /// <summary>
+        /// Indicates whether a command was sent and no response has been received yet.
+        /// </summary>
         private volatile bool commandSent = false;
+        /// <summary>
+        /// Used to suppress public events while performing WaitResponse.
+        /// </summary>
         private volatile bool suppressEvents = false;
+        
+        /// <summary>
+        /// Fires when data has been received from COM port.
+        /// </summary>
+        public event StepMotorEventHandler DataRecieved;
+        /// <summary>
+        /// Fires when error data has been received from COM port.
+        /// </summary>
+        public event StepMotorEventHandler ErrorRecieved;
 
-        public event RotatorEventHandler DataRecieved;
-        public event RotatorEventHandler ErrorRecieved;
-
+        /// <summary>
+        /// Stores last raw response from the COM port.
+        /// </summary>
         public byte[] LastResponse
         {
             get;
             private set;
         } = null;
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="portName">COM port name.</param>
+        /// <exception cref="ArgumentOutOfRangeException"/>
         public StepMotorHandler(string portName)
         {
+            // Checks if port name is legal
+            if (!SerialPort.GetPortNames().Contains(portName))
+                throw new ArgumentOutOfRangeException($"Provided {nameof(portName)} ({portName}) is either illegal or not present on the sstem.");
+
+            // Creates port
             port = new SerialPort(portName, 9600, Parity.None, 8, StopBits.One);
+            // Event listeners
             port.DataReceived += Port_DataReceived;
             port.ErrorReceived += Port_ErrorReceived;
+            // Opens port
             port.Open();
         }
 
+        /// <summary>
+        /// Handles internal COM port ErrorReceived.
+        /// </summary>
+        /// <param name="sender">COM port.</param>
+        /// <param name="e">Event arguments.</param>
         private void Port_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
+            // Reads last response
             LastResponse = new byte[port.BytesToRead];
             port.Read(LastResponse, 0, LastResponse.Length);
+            // Indicates command received response
             commandSent = false;
 
+            // IF events are not suppressed, fires respective public event
             if (!suppressEvents)
-                OnErrorReceived(new RotatorEventArgs(LastResponse));
+                OnErrorReceived(new StepMotorEventArgs(LastResponse));
         }
 
+        /// <summary>
+        /// Handles internal COM port DataReceived.
+        /// </summary>
+        /// <param name="sender">COM port.</param>
+        /// <param name="e">Event arguments.</param>
         private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
+            // If port buffer is not empty
             if (port.BytesToRead > 0)
             {
+                //Reads last response
                 LastResponse = new byte[port.BytesToRead];
                 port.Read(LastResponse, 0, LastResponse.Length);
+                // Indicates command received response
                 commandSent = false;
-                if(!suppressEvents)
-                    OnDataReceived(new RotatorEventArgs(LastResponse));
+
+                // IF events are not suppressed, fires respective public event
+                if (!suppressEvents)
+                    OnDataReceived(new StepMotorEventArgs(LastResponse));
             }
         }
 
+        /// <summary>
+        /// Waits for response. Waits until commandSent if false, which is set in internal
+        /// COM port event handlers. 
+        /// Based on <see cref="System.Threading.SpinWait.SpinUntil(Func{bool}, TimeSpan)"/>.
+        /// </summary>
+        /// <param name="timeOutMS">Timeout to wait. -1 is not recommended.</param>
+        /// <returns>An isntance of <see cref="Reply"/> generated from response byte array.</returns>
         private Reply WaitResponse(int timeOutMS = 200)
         {
+            // Waits for response
             System.Threading.SpinWait.SpinUntil(() => !commandSent, timeOutMS);
+
+            // If response still has not been received, throws
             if (commandSent)
+            {
+                commandSent = false;
                 throw new InvalidOperationException("No response received");
+            }
+
             return new Reply(LastResponse);
         }
 
@@ -113,6 +182,9 @@ namespace ROTATOR_CS
             return WaitResponse(waitResponseTimeMS);
         }
 
+        /// <summary>
+        /// Implements interface and frees resources
+        /// </summary>
         public void Dispose()
         {
             port.Close();
@@ -175,11 +247,20 @@ namespace ROTATOR_CS
 
         }
 
-        protected virtual void OnDataReceived(RotatorEventArgs e)
+        /// <summary>
+        /// Used to fire DataReceived event.
+        /// </summary>
+        /// <param name="e">Event arguments.</param>
+        protected virtual void OnDataReceived(StepMotorEventArgs e)
             => DataRecieved?.Invoke(this, e);
 
-        protected virtual void OnErrorReceived(RotatorEventArgs e)
+        /// <summary>
+        /// Used to fire ErrorReceived event.
+        /// </summary>
+        /// <param name="e">Event arguments.</param>
+        protected virtual void OnErrorReceived(StepMotorEventArgs e)
             => ErrorRecieved?.Invoke(this, e);
     }
 
 }
+
