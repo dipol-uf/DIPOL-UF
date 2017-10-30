@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 
 using System.IO.Ports;
 
-namespace ROTATOR_CS
+namespace StepMotor
 {
     /// <summary>
     /// A COM-based interface to DIPOL's step-motor.
