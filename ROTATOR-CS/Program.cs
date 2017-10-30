@@ -31,7 +31,7 @@ namespace ROTATOR_CS
             List<(int, double, double)> data = new List<(int, double, double)>();
             var angle = 4000;
 
-            using (var rot = new Rotator("COM2"))
+            using (var rot = new StepMotorHandler("COM2"))
             {
                 //rot.DataRecieved += (sender, e) =>
                 //   Console.WriteLine($"{ e.EventTime} {e.Reply}");
