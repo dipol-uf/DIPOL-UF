@@ -25,7 +25,8 @@ using System.IO.Ports;
 
 namespace ROTATOR_CS
 {
-    public class Rotator : IDisposable
+
+    public class StepMotorHandler : IDisposable
     {
         public delegate void RotatorEventHandler(object sender, RotatorEventArgs e);
 
@@ -42,7 +43,7 @@ namespace ROTATOR_CS
             private set;
         } = null;
 
-        public Rotator(string portName)
+        public StepMotorHandler(string portName)
         {
             port = new SerialPort(portName, 9600, Parity.None, 8, StopBits.One);
             port.DataReceived += Port_DataReceived;
