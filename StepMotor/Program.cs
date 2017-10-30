@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.IO.Ports;
 
-namespace ROTATOR_CS
+namespace StepMotor
 {
     class Program
     {

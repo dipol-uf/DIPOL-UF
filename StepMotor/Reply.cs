@@ -19,7 +19,7 @@ using System;
 using System.Runtime.Serialization;
 using System.Linq;
 
-namespace ROTATOR_CS
+namespace StepMotor
 {
     /// <summary>
     /// Represents a reply from a step motor.

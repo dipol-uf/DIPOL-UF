@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace ROTATOR_CS
+namespace StepMotor
 {
     [DataContract]
     public class StepMotorEventArgs : EventArgs
