@@ -75,6 +75,8 @@ namespace ROTATOR_CS
         private Reply WaitResponse(int timeOutMS = 200)
         {
             System.Threading.SpinWait.SpinUntil(() => !commandSent, timeOutMS);
+            if (commandSent)
+                throw new InvalidOperationException("No response received");
             return new Reply(LastResponse);
         }
 
@@ -82,9 +84,7 @@ namespace ROTATOR_CS
             byte type = (byte)CommandType.Unused, 
             byte address = 1, byte motorOrBank = 0, int waitResponseTimeMS = 200)
         {
-            if (commandSent)
-                System.Threading.SpinWait.SpinUntil(() => !commandSent, 100 * 5);
-
+            
             commandSent = true;
 
             byte[] val = BitConverter.GetBytes(argument);
