@@ -19,7 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageDisplay", "ImageDispla
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FITS-CS", "FITS-CS\FITS-CS.csproj", "{89516F86-17D4-4ED3-89F2-D20DF612C7DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ROTATOR-CS", "ROTATOR-CS\ROTATOR-CS.csproj", "{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StepMotor", "StepMotor\StepMotor.csproj", "{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
