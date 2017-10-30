@@ -17,7 +17,7 @@ Software is being developed as part of a scientific project done at the [**@Tuor
 
 - [**Image**](./Image) contains Image class that handles all image transport in a project.
 
-- [**ImageDisplay**[(./ImageDisplay) is a WPF control that can display [Image](./Image).
+- [**ImageDisplay**](./ImageDisplay) is a WPF control that can display [Image](./Image).
 
 
 - [**Client**](./Client), [**Host**](./Host), [**ImageTest**](./ImageTest) are test projects used at debug phase.
