@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ANDOR_CS;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
+using ANDOR_CS.Enums;
 
 using ImageDisplayLib;
 using FITS_CS;
@@ -131,159 +132,47 @@ namespace ImageTest
             }
         }
 
-        private static void Test2()
-        {
-
-
-            var app = new System.Windows.Application();
-            app.Run(new TestWindow());
-        }
-
-        private static void ArrayTest()
-        {
-
-            int N = 100000000;
-            Array arr1 = Array.CreateInstance(typeof(int), N);
-            Image im = new Image(arr1, N, 1);
-
-            double sum = 0;
-            var t = DateTime.Now;
-
-
-            for (int j = 0; j < 10; j++)
-            {
-                sum = 0;
-                t = DateTime.Now;
-
-                for (int i = 0; i < N; i++)
-                    sum += im.Get<int>(0, i);
-
-                Console.WriteLine("{0:E3}", (DateTime.Now - t).TotalSeconds / N);
-            }
-
-            im.Clamp(100, 1000);
-            im.Scale(int.MaxValue, int.MaxValue);
-        }
-
-        private static void LoopTest()
-        {
-
-            int N = 50_000_000;
-            int M = 50;
-            double[] array = new double[N];
-
-            Random R = new Random();
-
-            for (int i = 0; i < N; i++)
-                array[i] = R.NextDouble();
-
-            DateTime t = DateTime.Now;
-            double sum = 0.0;
-
-            Func<int, double> worker = (i) =>
-            {
-                double locSum = 0.0;
-                for (int j = 0; j < N; j++)
-                    locSum += 1.0 / (1.0 + Math.Exp(Math.Log(Math.Abs(array[j]))));
-                return locSum;
-            };
-
-            t = DateTime.Now;
-            sum = 0.0;
-            for (int i = 0; i < M; i++)
-            {
-                for (int j = 0; j < N; j++)
-                    sum += 1.0/(1.0+Math.Exp(Math.Log(Math.Abs(array[j]))));
-            }
-            Console.WriteLine("Serial   {0:E3} \t {1:E3}", (DateTime.Now - t).TotalSeconds, sum);
-
-            t = DateTime.Now;
-            sum = 0.0;
-            for (int i = 0; i < M; i++)
-            {
-                sum += worker(i);
-            }
-            Console.WriteLine("Delegate {0:E3} \t {1:E3}", (DateTime.Now - t).TotalSeconds, sum);
-
-            t = DateTime.Now;
-            sum = 0.0;
-            Parallel.For(0, M, () => 0.0,
-            (i, state, local) =>
-            {
-                local += worker(i);
-                return local;
-            }, (item) => sum += item);
-            Console.WriteLine("Parallel {0:E3} \t {1:E3}", (DateTime.Now - t).TotalSeconds, sum);
-
-        }
-
-        private static void ContextSwitchTest()
-        {
-            DIPOL_Remote.Classes.DipolClient client = null;
-
-            try
-            {
-                client = new DIPOL_Remote.Classes.DipolClient("dipol-2");
-            
-                client.Connect();
-
-                int n = client.GetNumberOfCameras();
-                if (n < 2)
-                    throw new Exception($"Not enough cameras ({n})");
-
-                CameraBase[] cams = new CameraBase[2];
-
-
-                System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
-
-                cams[0] = client.CreateRemoteCamera(0);
-                cams[1] = client.CreateRemoteCamera(1);
-
-                void TemperatureHandler(object sender, ANDOR_CS.Events.TemperatureStatusEventArgs e)
-                {
-                    if (sender is CameraBase cm)
-                        Console.WriteLine($"{cm.SerialNumber} \t {e.Temperature} \t {e.Status}");
-                    else
-                        Console.WriteLine("ERROR! Sender is not a Camera");
-
-                };
-
-                foreach (var cam in cams)
-                {
-                    cam.TemperatureStatusChecked += TemperatureHandler;
-                    cam.TemperatureMonitor(ANDOR_CS.Enums.Switch.Enabled, 1000);
-                    cam.SetTemperature(0);
-                    cam.CoolerControl(ANDOR_CS.Enums.Switch.Enabled);
-                }
-
-
-                watch.Stop();
-
-               // Console.WriteLine(watch.Elapsed.TotalSeconds.ToString("E3"));
-
-                Console.ReadKey();
-
-                foreach (var cam in cams)
-                    cam.CoolerControl(ANDOR_CS.Enums.Switch.Disabled);
-
-                Console.ReadKey();
-
-                for (int j = 0; j < cams.Length; j++)
-                    cams[j].Dispose();
-            }
-            finally
-            {
-                client.Disconnect();
-                client.Dispose();
-            }
-            
-        }
-
         private static void FITSTest()
         {
+            using (var cam = new Camera())
+            {
+                cam.FanControl(FanMode.Off);
+
+                var settings = cam.GetAcquisitionSettingsTemplate();
+
+                settings.SetAcquisitionMode(AcquisitionMode.SingleScan);
+
+                settings.SetOutputAmplifier(OutputAmplification.Conventional);
+                settings.SetADConverter(0);
+                //foreach (var speed in settings.GetAvailableHSSpeeds())
+                //    Console.WriteLine("Speed {0} has value {1}", speed.Item1 + 1, speed.Item2);
+
+                var query = settings.GetAvailableHSSpeeds();
+
+                settings.SetHSSpeed(1);
+                settings.SetVSSpeed(4);
+
+                settings.SetExposureTime(0.5f);
+
+                settings.SetImageArea(new Rectangle(1, 1, 512, 512));
+
+                settings.SetReadoutMode(ReadMode.FullImage);
+
+                settings.SetTriggerMode(TriggerMode.Internal);
+
+                var output = settings.ApplySettings(out (float, float, float, int) timing);
+
+                foreach (var o in output)
+                    Console.WriteLine(o);
+
+
+                Console.WriteLine(timing);
+
+            }
+
             using (var str = new FITSStream(new System.IO.FileStream("test.fits", System.IO.FileMode.Open)))
             {
-                
+
                 List<FITSUnit> keywords = new List<FITSUnit>();
                 List<FITSUnit> data = new List<FITSUnit>();
 
