@@ -17,7 +17,7 @@
 
 using System.Runtime.Serialization;
 
-namespace ROTATOR_CS 
+namespace StepMotor 
 {
     /// <summary>
     /// A list of available commands
