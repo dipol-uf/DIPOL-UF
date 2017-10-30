@@ -29,7 +29,7 @@ namespace StepMotor
                 Console.WriteLine(port);
 
             List<(int, double, double)> data = new List<(int, double, double)>();
-            var angle = 3200;
+            var angle = 4000;
 
             using (var rot = new StepMotorHandler("COM2"))
             {
@@ -40,9 +40,9 @@ namespace StepMotor
                 //    Console.WriteLine($"{ e.EventTime} {e.Reply}");
 
                 rot.SendCommand(Command.MoveToPosition, 0, (byte)CommandType.Absolute);
-                rot.WaitPositionReached();
+                rot.WaitPositionReached(checkIntervalMS: 100);
 
-                for (int i = 1; i <= 50; i++)
+                for (int i = 1; i <= 16; i++)
                 {
 
                     var t = System.Diagnostics.Stopwatch.StartNew();
@@ -58,10 +58,20 @@ namespace StepMotor
                     Console.WriteLine($"Rotated on {{0, 9}} over {(t.ElapsedMilliseconds / 1000.0).ToString("F3")} with average speed " +
                         $"{(angle * 1000.0 / t.ElapsedMilliseconds).ToString("F1")} units per sec.", i * angle);
                 }
+                var t2 = System.Diagnostics.Stopwatch.StartNew();
+                rot.SendCommand(Command.MoveToPosition, 0, (byte)CommandType.Absolute);
+
+                Console.WriteLine("Average time: {0:F3}  speed: {1:F3}", data.Select(x => x.Item2).Average(), data.Select(x => angle / x.Item2).Average());
+
+                rot.WaitPositionReached(checkIntervalMS: 100);
+
+                t2.Stop();
+
+                Console.WriteLine("Rotation back took {0:f3} second.", t2.ElapsedMilliseconds / 1000.0);
+                Console.WriteLine("Total cycle took {0:f3} second.", data.Select(x => x.Item2).Sum() + t2.ElapsedMilliseconds / 1000.0);
 
             }
 
-            Console.WriteLine("Average time: {0:F3}  speed: {1:F3}", data.Select(x => x.Item2).Average(),  data.Select(x => angle / x.Item2).Average());
 
             using (var str = new StreamWriter("log.dat"))
             {
