@@ -49,7 +49,7 @@ namespace ROTATOR_CS
 
                     rot.SendCommand(Command.MoveToPosition, i * angle, (byte)CommandType.Absolute);
 
-                    rot.WaitPositionReached(checkIntervalMS: 50);
+                    rot.WaitPositionReached(checkIntervalMS: 0);
 
                     t.Stop();
 

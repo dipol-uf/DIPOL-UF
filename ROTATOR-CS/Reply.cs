@@ -115,7 +115,7 @@ namespace ROTATOR_CS
                 // 3-rd is command for which respond is received (coerced to enum)
                 Command = Enum.IsDefined(typeof(Command), replyData[3]) ? (Command)replyData[3] : Command.Unknown;
                 // Bytes 4 to 7 are Int32 return value. 
-                // Step motor returns it in Most Significant Byte First format, so 
+                // Step motor returns it in Most Significant Bit First format, so 
                 // for LittleEndian environemnts sequence should be reversed
                 ReturnValue = BitConverter.IsLittleEndian
                     ? BitConverter.ToInt32(new[] { replyData[7], replyData[6], replyData[5], replyData[4] }, 0)
