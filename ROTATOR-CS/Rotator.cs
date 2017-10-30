@@ -72,9 +72,15 @@ namespace ROTATOR_CS
             }
         }
 
-        public void SendCommand(Command command, int argument, 
+        private Reply WaitResponse(int timeOutMS = 200)
+        {
+            System.Threading.SpinWait.SpinUntil(() => !commandSent, timeOutMS);
+            return new Reply(LastResponse);
+        }
+
+        public Reply SendCommand(Command command, int argument, 
             byte type = (byte)CommandType.Unused, 
-            byte address = 1, byte motorOrBank = 0)
+            byte address = 1, byte motorOrBank = 0, int waitResponseTimeMS = 200)
         {
             if (commandSent)
                 System.Threading.SpinWait.SpinUntil(() => !commandSent, 100 * 5);
@@ -102,6 +108,8 @@ namespace ROTATOR_CS
             toSend[8] = Convert.ToByte(sum & 0x00FF);
 
             port.Write(toSend, 0, toSend.Length);
+
+            return WaitResponse(waitResponseTimeMS);
         }
 
         public void Dispose()
@@ -138,11 +146,6 @@ namespace ROTATOR_CS
 
         }
 
-        public Reply WaitResponse(int timeOutMS = 1000)
-        {
-            System.Threading.SpinWait.SpinUntil(() => !commandSent, timeOutMS);
-            return new Reply(LastResponse);
-        }
 
         public void WaitPositionReached(byte address = 1, byte motorOrBank = 0, 
             bool suppressEvents = true, int timeOutMS = 10000, int checkIntervalMS = 200)
