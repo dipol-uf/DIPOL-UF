@@ -121,8 +121,11 @@ namespace ROTATOR_CS
 
         }
 
-        public void WaitResponse(int timeOutMS = 1000)
-            => System.Threading.SpinWait.SpinUntil(() => !commandSent, timeOutMS);
+        public Reply WaitResponse(int timeOutMS = 1000)
+        {
+            System.Threading.SpinWait.SpinUntil(() => !commandSent, timeOutMS);
+            return new Reply(LastResponse);
+        }
 
         public void WaitPositionReached(byte address = 1, byte motorOrBank = 0, 
             bool suppressEvents = true, int timeOutMS = 10000, int checkIntervalMS = 200)
