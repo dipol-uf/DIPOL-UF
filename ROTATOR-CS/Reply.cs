@@ -4,41 +4,74 @@ using System.Linq;
 
 namespace ROTATOR_CS
 {
+    /// <summary>
+    /// Represents a reply from a step motor.
+    /// </summary>
     [DataContract]
     public struct Reply
     {
+        /// <summary>
+        /// Reply byte length.
+        /// </summary>
         public static readonly int ReplyLength = 9;
 
+        /// <summary>
+        /// Sddress of the reply.
+        /// </summary>
+        [DataMember]
         public byte ReplyAddress
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Addres of the module.
+        /// </summary>
+        [DataMember]
         public byte ModuleAddress
         {
             get;
             private set;          
         }
 
+        /// <summary>
+        /// Status of a command execution.
+        /// </summary>
+        [DataMember]
         public ReturnStatus Status
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Sent command.
+        /// </summary>
+        [DataMember]
         public Command Command
         {
             get;
             private set;       
         }
 
+        /// <summary>
+        /// Return value, Stores either value sent to motor or step motor parameter value if
+        /// <see cref="CommandType"/> is Get***.
+        /// </summary>
+        [DataMember]
         public int ReturnValue
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Constructs reply from COM-port byte reply.
+        /// </summary>
+        /// <param name="replyData">COM-port raw reply.</param>
+        /// <exception cref="ArgumentNullException"/>
+        /// <exception cref="ArgumentException"/>
         public Reply(byte[] replyData)
         {
             if (replyData == null)
@@ -63,6 +96,10 @@ namespace ROTATOR_CS
 
         }
 
+        /// <summary>
+        /// Standard string representation, 47 symbols long.
+        /// </summary>
+        /// <returns>String representation of <see cref="Reply"/>.</returns>
         public override string ToString()
         {
             return String.Format("[{0,2};{1,2};{2,15};{3,12};{4,10}]", ReplyAddress, ModuleAddress, Command,
