@@ -29,7 +29,7 @@ namespace ROTATOR_CS
                 Console.WriteLine(port);
 
             List<(int, double, double)> data = new List<(int, double, double)>();
-            var angle = 4000;
+            var angle = 3200;
 
             using (var rot = new StepMotorHandler("COM2"))
             {
