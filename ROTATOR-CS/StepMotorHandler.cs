@@ -150,17 +150,30 @@ namespace ROTATOR_CS
             return new Reply(LastResponse);
         }
 
+        /// <summary>
+        /// Sends command and waits for a response.
+        /// </summary>
+        /// <param name="command">Command.</param>
+        /// <param name="argument">Command value.</param>
+        /// <param name="type">Type. Depends on the command.</param>
+        /// <param name="address">Address.</param>
+        /// <param name="motorOrBank">Motor or bank. Defaults to 0.</param>
+        /// <param name="waitResponseTimeMS">Wait time out. -1 is not recommended.</param>
+        /// <returns></returns>
         public Reply SendCommand(Command command, int argument, 
             byte type = (byte)CommandType.Unused, 
             byte address = 1, byte motorOrBank = 0, int waitResponseTimeMS = 200)
         {
-            
+            // Indicates command sending is in process and response have been received yet.
             commandSent = true;
 
+            // Converts Int32 into byte array. 
+            // Motor accepts Most Significant Bit First, so for LittleEndian 
+            // array should be reversed.
             byte[] val = BitConverter.GetBytes(argument);
             val = BitConverter.IsLittleEndian ? val.Reverse().ToArray() : val;
 
-
+            // Constructs raw command array
             byte[] toSend = new byte[]
             {
                 address,
@@ -171,14 +184,20 @@ namespace ROTATOR_CS
                 val[1],
                 val[2],
                 val[3], 
-                0
+                0 // Reserved for checksum
             };
 
-            int sum = toSend.Aggregate((sm, x) => sm += x);
-            toSend[8] = Convert.ToByte(sum & 0x00FF);
+            int sum = 0;
+            for (int i = 0; i < toSend.Length - 1; i++)
+                sum += toSend[i];
 
+            // Takes least significant byte
+            toSend[8] = Convert.ToByte(sum & 0xFF);
+
+            // Sends data to COM port
             port.Write(toSend, 0, toSend.Length);
 
+            // Wait for response
             return WaitResponse(waitResponseTimeMS);
         }
 
@@ -191,15 +210,29 @@ namespace ROTATOR_CS
             port.Dispose();
         }
 
+        /// <summary>
+        /// Queries status of all Axis parameters.
+        /// </summary>
+        /// <param name="address">Address.</param>
+        /// <param name="motorOrBank">Motor or bank, defaults to 0.</param>
+        /// <param name="suppressEvents">If true, no standard events are thrown,
+        /// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
+        /// If false, events are fired for each parameter queried.</param>
+        /// <returns>Retrieved values for each AxisParameter quieried.</returns>
         public Dictionary<AxisParameter, int> GetStatus(byte address = 1, byte motorOrBank = 0, bool suppressEvents = true)
         {
+            // Stores old state
             var oldState = this.suppressEvents;
             this.suppressEvents = suppressEvents;
 
+            Dictionary<AxisParameter, int> status = new Dictionary<AxisParameter, int>();
+
+            // Ensures state is restored
             try
             {
-                Dictionary<AxisParameter, int> status = new Dictionary<AxisParameter, int>();
 
+                // For each basic Axis Parameter quieries its value
+                // Uses explicit convertion of byte to AxisParameter
                 for (byte i = 0; i < 14; i++)
                 {
                     SendCommand(Command.GetAxisParameter, 0, i, address, motorOrBank);
@@ -210,38 +243,59 @@ namespace ROTATOR_CS
 
                 }
 
-                return status;
             }
             finally
             {
+                // Restores state
                 this.suppressEvents = oldState;
             }
 
+                // Returns query result
+                return status;
         }
 
-
+        /// <summary>
+        /// Wwait for position to be reached. Checks boolean TargetPositionReached parameter.
+        /// </summary>
+        /// <param name="address">Address.</param>
+        /// <param name="motorOrBank">Motor or bank. Defaults to 0.</param>
+        /// <param name="suppressEvents">If true, no standard events are thrown,
+        /// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
+        /// If false, events are fired for each parameter queried.</param>
+        /// <param name="checkIntervalMS">TIme between subsequent checks of the status.</param>
         public void WaitPositionReached(byte address = 1, byte motorOrBank = 0, 
-            bool suppressEvents = true, int timeOutMS = 10000, int checkIntervalMS = 200)
+            bool suppressEvents = true, int checkIntervalMS = 200)
         {
+            // Stores old state
             bool oldState = this.suppressEvents;
             this.suppressEvents = suppressEvents;
+
             try
             {
-                SendCommand(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPoisitionReached, address, motorOrBank);
-                WaitResponse();
+                // Sends GetAxisParameter with TargetPositionReached as parameter.
+                SendCommand(
+                    Command.GetAxisParameter, 
+                    0, 
+                    (byte)AxisParameter.TargetPoisitionReached, 
+                    address, 
+                    motorOrBank);
+                
+                // Parses last reply
                 Reply r = new Reply(LastResponse);
 
+                // While status is Success and returned value if 0 (false), continue checks
                 while (r.Status == ReturnStatus.Success && r.ReturnValue == 0)
                 {
-                    Task.Delay(checkIntervalMS);
+                    // Waits for small amount of time.
+                    System.Threading.Thread.Sleep(checkIntervalMS);
                     SendCommand(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPoisitionReached, address, motorOrBank);
-                    WaitResponse();
                     r = new Reply(LastResponse);
                 }
 
             }
             finally
             {
+                // Restores old staate
                 this.suppressEvents = oldState;
             }
 
