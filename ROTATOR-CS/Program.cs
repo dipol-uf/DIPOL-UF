@@ -40,7 +40,7 @@ namespace ROTATOR_CS
                 //    Console.WriteLine($"{ e.EventTime} {e.Reply}");
 
                 rot.SendCommand(Command.MoveToPosition, 0, (byte)CommandType.Absolute);
-                rot.WaitResponse();
+                Console.WriteLine(rot.WaitResponse());
                 rot.WaitPositionReached();
 
                 for (int i = 1; i <= 50; i++)
@@ -49,7 +49,7 @@ namespace ROTATOR_CS
                     var t = System.Diagnostics.Stopwatch.StartNew();
 
                     rot.SendCommand(Command.MoveToPosition, i * angle, (byte)CommandType.Absolute);
-                    rot.WaitResponse();
+                    Console.WriteLine(rot.WaitResponse());
 
                     rot.WaitPositionReached(checkIntervalMS: 50);
 
