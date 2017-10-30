@@ -94,34 +94,42 @@ namespace ROTATOR_CS
             // Throws if input is null
             if (replyData == null)
                 throw new ArgumentNullException($"Input parameter ({nameof(replyData)}) is null.");
-            // Throws if array is of wrong length
-            else if (replyData.Length != ReplyLength)
-                throw new ArgumentException($"Reply length (in bytes) is invalid (expected {ReplyLength}, got {replyData.Length}).");
+            // If replyData has proper (expected) length
+            else if (replyData.Length == ReplyLength)
+            {
+                // Calculates checksum
+                int checkSum = 0;
+                for (int i = 0; i < ReplyLength - 1; i++)
+                    checkSum += replyData[i];
 
-            // Calculates checksum
-            int checkSum = 0;
-            for (int i = 0; i < ReplyLength - 1; i++)
-                checkSum += replyData[i];
+                // Checksum checked
+                if ((checkSum & 0x00_00_00_FF) != replyData[ReplyLength - 1])
+                    throw new ArgumentException("Wrong checksum in the reply.");
 
-            // Checksum checked
-            if ((checkSum & 0x00_00_00_FF) != replyData[ReplyLength - 1])
-                throw new ArgumentException("Wrong checksum in the reply.");
-            
-            // 0-th byte is reply address
-            ReplyAddress = replyData[0];
-            // 1-st is module address
-            ModuleAddress = replyData[1];
-            // 2-nd is status (coerced to enum)
-            Status = Enum.IsDefined(typeof(ReturnStatus), replyData[2]) ? (ReturnStatus)replyData[2] : ReturnStatus.UnknownError;
-            // 3-rd is command for which respond is received (coerced to enum)
-            Command = Enum.IsDefined(typeof(Command), replyData[3]) ? (Command)replyData[3] : Command.Unknown;
-            // Bytes 4 to 7 are Int32 return value. 
-            // Step motor returns it in Most Significant Byte First format, so 
-            // for LittleEndian environemnts sequence should be reversed
-            ReturnValue = BitConverter.IsLittleEndian
-                ? BitConverter.ToInt32(new[] { replyData[7], replyData[6], replyData[5], replyData[4] }, 0)
-                : BitConverter.ToInt32(replyData, 4);
-
+                // 0-th byte is reply address
+                ReplyAddress = replyData[0];
+                // 1-st is module address
+                ModuleAddress = replyData[1];
+                // 2-nd is status (coerced to enum)
+                Status = Enum.IsDefined(typeof(ReturnStatus), replyData[2]) ? (ReturnStatus)replyData[2] : ReturnStatus.UnknownError;
+                // 3-rd is command for which respond is received (coerced to enum)
+                Command = Enum.IsDefined(typeof(Command), replyData[3]) ? (Command)replyData[3] : Command.Unknown;
+                // Bytes 4 to 7 are Int32 return value. 
+                // Step motor returns it in Most Significant Byte First format, so 
+                // for LittleEndian environemnts sequence should be reversed
+                ReturnValue = BitConverter.IsLittleEndian
+                    ? BitConverter.ToInt32(new[] { replyData[7], replyData[6], replyData[5], replyData[4] }, 0)
+                    : BitConverter.ToInt32(replyData, 4);
+            }
+            // If length is wrong, return a failed state reply
+            else
+            {
+                ReplyAddress = 0;
+                ModuleAddress = 0;
+                Status = ReturnStatus.UnknownError;
+                Command = Command.Unknown;
+                ReturnValue = 0;
+            }
         }
 
         /// <summary>
