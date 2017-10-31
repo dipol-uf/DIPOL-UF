@@ -61,3 +61,8 @@ Temporary Items
 **/*.vs*
 
 **/*.dat
+**/*.fits
+**/*.exe
+**/*.pdb
+**/*.baml
+**/*.exe.config
