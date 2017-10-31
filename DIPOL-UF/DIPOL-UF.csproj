@@ -74,12 +74,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\CameraListItem.cs" />
-    <Compile Include="EventArgs\CameraEventArgs.cs" />
-    <Compile Include="Windows\CameraLoader.xaml.cs">
-      <DependentUpon>CameraLoader.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Windows\ProgressWindow.xaml.cs">
+    <Compile Include="Views\ProgressWindow.xaml.cs">
       <DependentUpon>ProgressWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="App.xaml">
@@ -99,11 +94,7 @@
       <DependentUpon>DipolMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Windows\CameraLoader.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Windows\ProgressWindow.xaml">
+    <Page Include="Views\ProgressWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -140,6 +131,9 @@
       <Name>ANDOR-CS</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="ViewModels\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

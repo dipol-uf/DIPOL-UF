@@ -66,3 +66,4 @@ Temporary Items
 **/*.pdb
 **/*.baml
 **/*.exe.config
+**/*.g*cs
