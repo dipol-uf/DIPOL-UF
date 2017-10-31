@@ -7,7 +7,8 @@
         mc:Ignorable="d"
         x:Name="ProgressWindowInstance"
         Title="ProgressWindow" Height="100" Width="400" WindowStyle="None" ResizeMode="NoResize"
-        Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}">
+        Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" 
+        BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}">
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -19,7 +20,10 @@
             <ColumnDefinition Width="70"/>
         </Grid.ColumnDefinitions>
         <ProgressBar Name="Bar" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="15, 5, 15, 5" Height="15" Grid.Row="1" Grid.Column="0"
-                     IsIndeterminate="{Binding Path=IsIndeterminate, Mode=OneWay, ElementName=ProgressWindowInstance}"/>
+                     IsIndeterminate="{Binding Path=IsIndeterminate, UpdateSourceTrigger=PropertyChanged}"
+                     Minimum="{Binding Minium, UpdateSourceTrigger=PropertyChanged}"
+                     Maximum="{Binding Maximum, UpdateSourceTrigger=PropertyChanged}"
+                     Value="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
         <TextBlock Name="TitleBox" Grid.Row="0" Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Center" FontWeight="Bold" 
                  Text="{Binding DisplayedTitleText, Mode=OneWay}" Margin="5" />
         <TextBlock Name="CommentBox" Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Center"

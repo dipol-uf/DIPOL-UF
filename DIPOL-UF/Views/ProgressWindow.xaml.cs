@@ -29,9 +29,7 @@ namespace DIPOL_UF.Views
         private static DependencyProperty DisplayPercentsProperty
             = DependencyProperty.Register("DisplayPercents", typeof(bool), typeof(ProgressWindow));
 
-        private static DependencyProperty IsIndeterminateProperty
-            = DependencyProperty.Register("IsIndeterminate", typeof(bool), typeof(ProgressWindow));
-
+        
         public string DisplayedProgressText
         {
             get
@@ -75,23 +73,18 @@ namespace DIPOL_UF.Views
             set => SetValue(DisplayPercentsProperty, value);
         }
 
-        public bool IsIndereminate
-        {
-            get => (bool)GetValue(IsIndeterminateProperty);
-            set => SetValue(IsIndeterminateProperty, value);
-        } 
 
-        public ProgressWindow()
+        public ProgressWindow(object dataContext)
         {
             InitializeComponent();
+            DataContext = dataContext;
             Loaded += ProgressWindow_Loaded;
           
         }
 
         private void ProgressWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            IsIndereminate = true;
-            Console.WriteLine(Bar.IsIndeterminate);
+            
         }
     }
 }
