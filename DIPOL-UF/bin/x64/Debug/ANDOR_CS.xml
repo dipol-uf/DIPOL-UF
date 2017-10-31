@@ -9,79 +9,11 @@
             Represents all possible acuisition/camera settings that can be adjusted before taking any images
             </summary>
         </member>
-        <member name="F:ANDOR_CS.Classes.AcquisitionSettings.camera">
-            <summary>
-            A reference to the parent <see cref="T:ANDOR_CS.Classes.Camera"/> object.
-            Used to perform checks of capabilities of the current camera.
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.VSSpeed">
-            <summary>
-            Stores the value of currently set vertical speed
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.HSSpeed">
-            <summary>
-            Stores the value of currently set horizontal speed
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter">
-            <summary>
-            Stores the index of currently set Analogue-Digital Converter and its bit depth.
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.VSAmplitude">
-            <summary>
-            Stores the value of currently set vertical clock voltage amplitude
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier">
-            <summary>
-            Stores type of currentlt set Amplifier
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.PreAmpGain">
-            <summary>
-            Stores type of currently set PreAmp Gain
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.AcquisitionMode">
-            <summary>
-            Stores currently set acquisition mode
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.ReadMode">
-            <summary>
-            Stores currently set read mode
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.TriggerMode">
-            <summary>
-            Stores currently set trigger mode
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.ExposureTime">
-            <summary>
-            Stores exposure time
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Classes.AcquisitionSettings.ImageArea">
-            <summary>
-            Stoers seleced image area - part of the CCD from where data should be collected
-            </summary>
-        </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.#ctor(ANDOR_CS.Classes.Camera)">
             <summary>
             Constructor adds reference to parent <see cref="T:ANDOR_CS.Classes.Camera"/> object.
             </summary>
             <param name="camera">Parent object. Camera, to which settings should be applied.</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.CheckCamera">
-            <summary>
-            Checks camera parent <see cref="T:ANDOR_CS.Classes.Camera"/>. If it is not initialized or active, throws exception.
-            </summary>
-            <exception cref="T:System.NullReferenceException"/>
-            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
         </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.ApplySettings(System.ValueTuple{System.Single,System.Single,System.Single,System.Int32}@)">
             <summary>
@@ -89,16 +21,6 @@
             </summary>
             <exception cref="T:System.ArgumentNullException"/>
             <returns>Result of application of each non-null setting</returns>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetVSSpeed(System.Int32)">
-            <summary>
-            Tries to set vertical speed. 
-            Camera may not be active.
-            </summary>
-            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <exception cref="T:System.NotSupportedException"/>
-            <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="!:Camera.Properties"/>.VSSpeeds</param>
         </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetVSSpeed">
             <summary>
@@ -109,35 +31,12 @@
             <exception cref="T:System.ArgumentOutOfRangeException"/>
             <exception cref="T:System.NotSupportedException"/>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetVSAmplitude(ANDOR_CS.Enums.VSAmplitude)">
-            <summary>
-            Sets the vertical clock voltage amplitude (if camera supports it).
-            Camera may be not active.
-            </summary>
-            <param name="amplitude">New amplitude </param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)">
-            <summary>
-            Sets Analogue-Digital converter.
-            Does not require camera to be active
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="converterIndex"></param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)">
-            <summary>
-            Sets output amplifier. 
-            Does not require camera to be active.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="amplifier"></param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.GetAvailableHSSpeeds">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.GetAvailableHSSpeeds(System.Int32,System.Int32)">
             <summary>
             Returns a collection of available Horizonal Readout Speeds for currently selected Amplifier and AD Converter.
             Requires camera to be active.
-            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/> and <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)"/> and <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)"/>
+            Note: <see cref="!:AcquisitionSettings.ADConverter"/> and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
+            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/> and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
             before calling this method.
             </summary>
             <exception cref="T:System.NullReferenceException"/>
@@ -145,87 +44,30 @@
             <exception cref="T:System.NotSupportedException"/>
             <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)">
-            <summary>
-            Sets Horizontal Readout Speed for currently selected Amplifier and AD Converter.
-            Requires camera to be active.
-            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/> and <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)"/> and <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)"/>
-            before calling this method.
-            </summary>
-            <exception cref="T:System.NullReferenceException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <exception cref="T:System.NotSupportedException"/>
-            <param name="speedIndex">Index of horizontal speed</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.GetAvailablePreAmpGain">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.GetAvailablePreAmpGain(System.Int32,System.Int32,System.Int32)">
             <summary>
             Returns a collection of available PreAmp gains for currently selected HSSpeed, Amplifier, Converter.
             Requires camera to be active.
-            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/>, <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.HSSpeed"/>
-            and <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)"/>, <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)"/>
-            and <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)"/>.
+            Note: <see cref="!:AcquisitionSettings.ADConverter"/>, <see cref="!:AcquisitionSettings.HSSpeed"/>
+            and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
+            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="!:AcquisitionSettings.SetHSSpeed(int)"/>
+            and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
             </summary>
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:System.NotSupportedException"/>
             <returns>Available PreAmp gains</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetPreAmpGain(System.Int32)">
+        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.IsHSSpeedSupported(System.Int32,System.Int32,System.Int32,System.Single@)">
             <summary>
-            Sets PreAmp gain for currently selected HSSpeed, Amplifier, Converter.
-            Requires camera to be active.
-            Note: <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.ADConverter"/>, <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.HSSpeed"/>
-            and <see cref="P:ANDOR_CS.Classes.AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetADConverter(System.Int32)"/>, <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetHSSpeed(System.Int32)"/>
-            and <see cref="M:ANDOR_CS.Classes.AcquisitionSettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)"/>.
+            Checks if HS Speed is supported in current configuration.
+            Throws exceptions if SDK communication fails.
             </summary>
-            <exception cref="T:System.NullReferenceException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="gainIndex">Index of gain</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetAcquisitionMode(ANDOR_CS.Enums.AcquisitionMode)">
-            <summary>
-            Sets acquisition mode. 
-            Camera may be inactive.
-            </summary>
-            <exception cref="T:System.NotSupportedException"/>
-            <exception cref="T:System.InvalidOperationException"/>
-            <param name="mode">Acquisition mode</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetTriggerMode(ANDOR_CS.Enums.TriggerMode)">
-            <summary>
-            Sets trigger mode. 
-            Camera may be inactive.
-            </summary>
-            <exception cref="T:System.NotSupportedException"/>
-            <exception cref="T:System.InvalidOperationException"/>
-            <param name="mode">Trigger mode</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetReadoutMode(ANDOR_CS.Enums.ReadMode)">
-            <summary>
-            Sets read mode.
-            Camera may be inactive.
-            </summary>
-            <exception cref="T:System.NotSupportedException"/>
-            <exception cref="T:System.InvalidOperationException"/>
-            <param name="mode">Read mode</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetExposureTime(System.Single)">
-            <summary>
-            Sets exposure time.
-            Camera may be inactive.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="time">Exposure time</param>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AcquisitionSettings.SetImageArea(ANDOR_CS.DataStructures.Rectangle)">
-            <summary>
-            Sets image area.
-            Camera may be inactive.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="area">Image rectangle</param>
+            <param name="speedIndex">Speed index to test.</param>
+            <param name="speed">If call is successfull, assigns float value of HS speed,
+            otherwies, is initialized to 0.0f.</param>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
+            <returns>true if HS Speed is supported, 
+            throws exception if SDK communication fails; false, otherwise.</returns>
         </member>
         <member name="M:ANDOR_CS.Classes.AcquisitionSettings.#ctor">
             <summary>
@@ -365,7 +207,7 @@
         </member>
         <member name="P:ANDOR_CS.Classes.SafeSDKCameraHandle.SDKPtr">
             <summary>
-            A porperty with getter that returns stored raw Andor SDK camera handle
+            A property with getter that returns stored raw Andor SDK camera handle
             </summary>
         </member>
         <member name="M:ANDOR_CS.Classes.SafeSDKCameraHandle.#ctor(System.Int32)">
@@ -380,6 +222,189 @@
             Marked for safe execution
             </summary>
             <returns>true if cleanup finished successfully, false, otherwise, which triggers releaseHandleFailed MDA</returns>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SettingsBase.VSSpeed">
+            <summary>
+            Stores the value of currently set vertical speed
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SettingsBase.HSSpeed">
+            <summary>
+            Stores the value of currently set horizontal speed
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SettingsBase.ADConverter">
+            <summary>
+            Stores the index of currently set Analogue-Digital Converter and its bit depth.
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SettingsBase.VSAmplitude">
+            <summary>
+            Stores the value of currently set vertical clock voltage amplitude
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SettingsBase.Amplifier">
+            <summary>
+            Stores type of currentlt set Amplifier
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SettingsBase.PreAmpGain">
+            <summary>
+            Stores type of currently set PreAmp Gain
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SettingsBase.AcquisitionMode">
+            <summary>
+            Stores currently set acquisition mode
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SettingsBase.ReadMode">
+            <summary>
+            Stores currently set read mode
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SettingsBase.TriggerMode">
+            <summary>
+            Stores currently set trigger mode
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SettingsBase.ExposureTime">
+            <summary>
+            Stores exposure time
+            </summary>
+        </member>
+        <member name="P:ANDOR_CS.Classes.SettingsBase.ImageArea">
+            <summary>
+            Stoers seleced image area - part of the CCD from where data should be collected
+            </summary>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.SetVSSpeed(System.Int32)">
+            <summary>
+            Tries to set vertical speed. 
+            Camera may not be active.
+            </summary>
+            <exception cref="T:ANDOR_CS.Exceptions.AndorSDKException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.NotSupportedException"/>
+            <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="!:Camera.Properties"/>.VSSpeeds</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.SetVSAmplitude(ANDOR_CS.Enums.VSAmplitude)">
+            <summary>
+            Sets the vertical clock voltage amplitude (if camera supports it).
+            Camera may be not active.
+            </summary>
+            <param name="amplitude">New amplitude </param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.SetADConverter(System.Int32)">
+            <summary>
+            Sets Analogue-Digital converter.
+            Does not require camera to be active
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <param name="converterIndex"></param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)">
+            <summary>
+            Sets output amplifier. 
+            Does not require camera to be active.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <param name="amplifier"></param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.GetAvailableHSSpeeds">
+            <summary>
+            Returns a collection of available Horizonal Readout Speeds for currently selected Amplifier and AD Converter.
+            Requires camera to be active.
+            Note: <see cref="!:AcquisitionSettings.ADConverter"/> and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
+            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/> and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
+            before calling this method.
+            </summary>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.NotSupportedException"/>
+            <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.SetHSSpeed(System.Int32)">
+            <summary>
+            Sets Horizontal Readout Speed for currently selected Amplifier and AD Converter.
+            Requires camera to be active.
+            Note: <see cref="!:AcquisitionSettings.ADConverter"/> and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
+            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/> and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
+            before calling this method.
+            </summary>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <exception cref="T:System.NotSupportedException"/>
+            <param name="speedIndex">Index of horizontal speed</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.GetAvailablePreAmpGain">
+            <summary>
+            Returns a collection of available PreAmp gains for currently selected HSSpeed, Amplifier, Converter.
+            Requires camera to be active.
+            Note: <see cref="!:AcquisitionSettings.ADConverter"/>, <see cref="!:AcquisitionSettings.HSSpeed"/>
+            and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
+            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="!:AcquisitionSettings.SetHSSpeed(int)"/>
+            and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
+            </summary>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.NotSupportedException"/>
+            <returns>Available PreAmp gains</returns>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.SetPreAmpGain(System.Int32)">
+            <summary>
+            Sets PreAmp gain for currently selected HSSpeed, Amplifier, Converter.
+            Requires camera to be active.
+            Note: <see cref="!:AcquisitionSettings.ADConverter"/>, <see cref="!:AcquisitionSettings.HSSpeed"/>
+            and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
+            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="!:AcquisitionSettings.SetHSSpeed(int)"/>
+            and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
+            </summary>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <param name="gainIndex">Index of gain</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.SetAcquisitionMode(ANDOR_CS.Enums.AcquisitionMode)">
+            <summary>
+            Sets acquisition mode. 
+            Camera may be inactive.
+            </summary>
+            <exception cref="T:System.NotSupportedException"/>
+            <exception cref="T:System.InvalidOperationException"/>
+            <param name="mode">Acquisition mode</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.SetTriggerMode(ANDOR_CS.Enums.TriggerMode)">
+            <summary>
+            Sets trigger mode. 
+            Camera may be inactive.
+            </summary>
+            <exception cref="T:System.NotSupportedException"/>
+            <exception cref="T:System.InvalidOperationException"/>
+            <param name="mode">Trigger mode</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.SetReadoutMode(ANDOR_CS.Enums.ReadMode)">
+            <summary>
+            Sets read mode.
+            Camera may be inactive.
+            </summary>
+            <exception cref="T:System.NotSupportedException"/>
+            <exception cref="T:System.InvalidOperationException"/>
+            <param name="mode">Read mode</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.SetExposureTime(System.Single)">
+            <summary>
+            Sets exposure time.
+            Camera may be inactive.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <param name="time">Exposure time</param>
+        </member>
+        <member name="M:ANDOR_CS.Classes.SettingsBase.SetImageArea(ANDOR_CS.DataStructures.Rectangle)">
+            <summary>
+            Sets image area.
+            Camera may be inactive.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+            <param name="area">Image rectangle</param>
         </member>
         <member name="T:ANDOR_CS.Classes.Extensions">
             <summary>
@@ -415,7 +440,7 @@
             Gets an singleton instance of a basic AndorSDK class
             </summary>
         </member>
-        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``1(ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0},``0@)">
+        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``1(ANDOR_CS.Classes.SafeSDKCameraHandle,ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0},``0@)">
             <summary>
             Task-safely invokes SDK method with one output ref parameter
             </summary>
@@ -424,7 +449,7 @@
             <param name="p1">Stores result of the function call</param>
             <returns>Return code</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``2(ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0,``1},``0,``1@)">
+        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``2(ANDOR_CS.Classes.SafeSDKCameraHandle,ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0,``1},``0,``1@)">
             <summary>
             Task-safely invokes SDK method with oneinput and one output ref parameter
             </summary>
@@ -435,7 +460,7 @@
             <param name="p2">Stores result of the function call</param>
             <returns>Return code</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``3(ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0,``1,``2},``0,``1,``2@)">
+        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.Call``3(ANDOR_CS.Classes.SafeSDKCameraHandle,ANDOR_CS.Classes.AndorSDKInitialization.AndorSDK{``0,``1,``2},``0,``1,``2@)">
             <summary>
             Task-safely invokes SDK method with oneinput and one output ref parameter
             </summary>
@@ -448,16 +473,6 @@
             <param name="p3">Stores result of the function call</param>
             <returns>Return code</returns>
         </member>
-        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.LockManually">
-            <summary>
-            Manually waits while other tasks access SDK instance
-            </summary>
-        </member>
-        <member name="M:ANDOR_CS.Classes.AndorSDKInitialization.ReleaseManually">
-            <summary>
-            Manually releases semaphore and allows other tasks to call SDK functions
-            </summary>
-        </member>
         <member name="T:ANDOR_CS.Classes.Camera">
             <summary>
             Represents an instance of a Camera device
@@ -468,9 +483,9 @@
             Indicates if this camera is currently active
             </summary>
         </member>
-        <member name="P:ANDOR_CS.Classes.Camera.CurrentSettings">
+        <member name="P:ANDOR_CS.Classes.Camera.CameraHandle">
             <summary>
-            Curently set acquisition regime
+            A safe handle that stores native SDK pointer to the current <see cref="T:ANDOR_CS.Classes.Camera"/> resource.
             </summary>
         </member>
         <member name="P:ANDOR_CS.Classes.Camera.CamerasInUse">
@@ -506,15 +521,18 @@
             </summary>
             <exception cref="T:ANDOR_CS.Exceptions.AcquisitionInProgressException"/>
         </member>
-        <member name="M:ANDOR_CS.Classes.Camera.SetActiveAndLock">
+        <member name="M:ANDOR_CS.Classes.Camera.TemperatureMonitorCycler(System.Object,System.Timers.ElapsedEventArgs)">
             <summary>
-            Sets curernt camera active and locks it, preventing any further switches
+            Represents a worker that runs infinite loop until cancellation is requested.
             </summary>
+            <param name="token">Cancellation token used to break the loop.</param>
+            <param name="delay">Time delay between loop cycles</param>
         </member>
-        <member name="M:ANDOR_CS.Classes.Camera.ReleaseLock">
+        <member name="M:ANDOR_CS.Classes.Camera.PushNewImage(ANDOR_CS.Events.NewImageReceivedEventArgs)">
             <summary>
-            Releases current camera, allowing to switch to another device
+            Retrives new image from camera buffer and pushes it to queue.
             </summary>
+            <param name="e">Parameters obtained from <see cref="E:ANDOR_CS.Classes.CameraBase.NewImageReceived"/> event.</param>
         </member>
         <member name="M:ANDOR_CS.Classes.Camera.SetActive">
             <summary>
@@ -567,7 +585,7 @@
             Fires <see cref="!:OnAcquisitionStarted(AcquisitionStatusEventArgs)"/> 
             with <see cref="P:ANDOR_CS.Events.AcquisitionStatusEventArgs.IsAsync"/> = false.
             NOTE: this method is not recommended. Consider using async version
-            <see cref="M:ANDOR_CS.Classes.Camera.StartAcquistionAsync(System.Threading.CancellationToken,System.Int32)"/>.
+            <see cref="!:StartAcquistionAsync(CancellationToken, int)"/>.
             Async version allows <see cref="T:ANDOR_CS.Classes.Camera"/> to properly monitor acquisition progress.
             </summary>
             <exception cref="T:ANDOR_CS.Exceptions.AcquisitionInProgressException"/>
@@ -615,7 +633,7 @@
             <exception cref="T:System.InvalidOperationException"/>
             <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="M:ANDOR_CS.Classes.Camera.GetNumberOfCameras"/></param>
         </member>
-        <member name="M:ANDOR_CS.Classes.Camera.StartAcquistionAsync(System.Threading.CancellationToken,System.Int32)">
+        <member name="M:ANDOR_CS.Classes.Camera.StartAcquistionAsync(System.Threading.CancellationTokenSource,System.Int32)">
             <summary>
             Starts process of acquisition asynchronously.
             This is the preferred way to acquire images from camera.
@@ -897,6 +915,11 @@
             <param name="sender">A <see cref="!:Camera"/> type source</param>
             <param name="e">Event arguments</param>
         </member>
+        <member name="P:ANDOR_CS.Events.NewImageReceivedEventArgs.EventTime">
+            <summary>
+            Time stamp of the event
+            </summary>
+        </member>
         <member name="T:ANDOR_CS.Events.TemperatureStatusEventArgs">
             <summary>
             Stores the event arguments for all Acquisition-based events
@@ -946,198 +969,6 @@
             <summary>
             Default constructor
             </summary>
-        </member>
-        <member name="P:ANDOR_CS.Interfaces.ISettings.VSSpeed">
-            <summary>
-            Stores the value of currently set vertical speed
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Interfaces.ISettings.HSSpeed">
-            <summary>
-            Stores the value of currently set horizontal speed
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Interfaces.ISettings.ADConverter">
-            <summary>
-            Stores the index of currently set Analogue-Digital Converter and its bit depth.
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Interfaces.ISettings.VSAmplitude">
-            <summary>
-            Stores the value of currently set vertical clock voltage amplitude
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Interfaces.ISettings.Amplifier">
-            <summary>
-            Stores type of currentlt set Amplifier
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Interfaces.ISettings.PreAmpGain">
-            <summary>
-            Stores type of currently set PreAmp Gain
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Interfaces.ISettings.AcquisitionMode">
-            <summary>
-            Stores currently set acquisition mode
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Interfaces.ISettings.ReadMode">
-            <summary>
-            Stores currently set read mode
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Interfaces.ISettings.TriggerMode">
-            <summary>
-            Stores currently set trigger mode
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Interfaces.ISettings.ExposureTime">
-            <summary>
-            Stores exposure time
-            </summary>
-        </member>
-        <member name="P:ANDOR_CS.Interfaces.ISettings.ImageArea">
-            <summary>
-            Stoers seleced image area - part of the CCD from where data should be collected
-            </summary>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetVSSpeed(System.Int32)">
-            <summary>
-            Tries to set vertical speed. 
-            Camera may not be active.
-            </summary>
-            <exception cref="!:AndorSDKException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <exception cref="T:System.NotSupportedException"/>
-            <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="!:Camera.Properties"/>.VSSpeeds</param>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetVSSpeed">
-            <summary>
-            Tries to set vertical speed to fastest recommended speed. 
-            Requires camera to be active.
-            </summary>
-            <exception cref="!:AndorSDKException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <exception cref="T:System.NotSupportedException"/>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetVSAmplitude(ANDOR_CS.Enums.VSAmplitude)">
-            <summary>
-            Sets the vertical clock voltage amplitude (if camera supports it).
-            Camera may be not active.
-            </summary>
-            <param name="amplitude">New amplitude </param>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetADConverter(System.Int32)">
-            <summary>
-            Sets Analogue-Digital converter.
-            Does not require camera to be active
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="converterIndex"></param>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetOutputAmplifier(ANDOR_CS.Enums.OutputAmplification)">
-            <summary>
-            Sets output amplifier. 
-            Does not require camera to be active.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="amplifier"></param>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.GetAvailableHSSpeeds">
-            <summary>
-            Returns a collection of available Horizonal Readout Speeds for currently selected Amplifier and AD Converter.
-            Requires camera to be active.
-            Note: <see cref="!:AcquisitionSettings.ADConverter"/> and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/> and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
-            before calling this method.
-            </summary>
-            <exception cref="T:System.NullReferenceException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <exception cref="T:System.NotSupportedException"/>
-            <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetHSSpeed(System.Int32)">
-            <summary>
-            Sets Horizontal Readout Speed for currently selected Amplifier and AD Converter.
-            Requires camera to be active.
-            Note: <see cref="!:AcquisitionSettings.ADConverter"/> and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/> and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
-            before calling this method.
-            </summary>
-            <exception cref="T:System.NullReferenceException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <exception cref="T:System.NotSupportedException"/>
-            <param name="speedIndex">Index of horizontal speed</param>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.GetAvailablePreAmpGain">
-            <summary>
-            Returns a collection of available PreAmp gains for currently selected HSSpeed, Amplifier, Converter.
-            Requires camera to be active.
-            Note: <see cref="!:AcquisitionSettings.ADConverter"/>, <see cref="!:AcquisitionSettings.HSSpeed"/>
-            and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="!:AcquisitionSettings.SetHSSpeed(int)"/>
-            and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
-            </summary>
-            <exception cref="T:System.NullReferenceException"/>
-            <exception cref="T:System.NotSupportedException"/>
-            <returns>Available PreAmp gains</returns>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetPreAmpGain(System.Int32)">
-            <summary>
-            Sets PreAmp gain for currently selected HSSpeed, Amplifier, Converter.
-            Requires camera to be active.
-            Note: <see cref="!:AcquisitionSettings.ADConverter"/>, <see cref="!:AcquisitionSettings.HSSpeed"/>
-            and <see cref="!:AcquisitionSettings.Amplifier"/> should be set
-            via <see cref="!:AcquisitionSettings.SetADConverter(int)"/>, <see cref="!:AcquisitionSettings.SetHSSpeed(int)"/>
-            and <see cref="!:AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
-            </summary>
-            <exception cref="T:System.NullReferenceException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="gainIndex">Index of gain</param>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetAcquisitionMode(ANDOR_CS.Enums.AcquisitionMode)">
-            <summary>
-            Sets acquisition mode. 
-            Camera may be inactive.
-            </summary>
-            <exception cref="T:System.NotSupportedException"/>
-            <exception cref="T:System.InvalidOperationException"/>
-            <param name="mode">Acquisition mode</param>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetTriggerMode(ANDOR_CS.Enums.TriggerMode)">
-            <summary>
-            Sets trigger mode. 
-            Camera may be inactive.
-            </summary>
-            <exception cref="T:System.NotSupportedException"/>
-            <exception cref="T:System.InvalidOperationException"/>
-            <param name="mode">Trigger mode</param>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetReadoutMode(ANDOR_CS.Enums.ReadMode)">
-            <summary>
-            Sets read mode.
-            Camera may be inactive.
-            </summary>
-            <exception cref="T:System.NotSupportedException"/>
-            <exception cref="T:System.InvalidOperationException"/>
-            <param name="mode">Read mode</param>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetExposureTime(System.Single)">
-            <summary>
-            Sets exposure time.
-            Camera may be inactive.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="time">Exposure time</param>
-        </member>
-        <member name="M:ANDOR_CS.Interfaces.ISettings.SetImageArea(ANDOR_CS.DataStructures.Rectangle)">
-            <summary>
-            Sets image area.
-            Camera may be inactive.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException"/>
-            <param name="area">Image rectangle</param>
         </member>
     </members>
 </doc>
