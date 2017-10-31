@@ -274,23 +274,20 @@ namespace StepMotor
             try
             {
                 // Sends GetAxisParameter with TargetPositionReached as parameter.
-                SendCommand(
+                Reply r = SendCommand(
                     Command.GetAxisParameter, 
                     0, 
                     (byte)AxisParameter.TargetPoisitionReached, 
                     address, 
                     motorOrBank);
                 
-                // Parses last reply
-                Reply r = new Reply(LastResponse);
 
                 // While status is Success and returned value if 0 (false), continue checks
                 while (r.Status == ReturnStatus.Success && r.ReturnValue == 0)
                 {
                     // Waits for small amount of time.
                     System.Threading.Thread.Sleep(checkIntervalMS);
-                    SendCommand(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPoisitionReached, address, motorOrBank);
-                    r = new Reply(LastResponse);
+                    r = SendCommand(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPoisitionReached, address, motorOrBank);
                 }
 
             }
@@ -300,6 +297,35 @@ namespace StepMotor
                 this.suppressEvents = oldState;
             }
 
+        }
+
+        public void WaitReferencePositionReached(byte address = 1, byte motorOrBank = 0,
+            bool suppressEvents = true, int checkIntervalMS = 200)
+        {
+            // Stores old state
+            bool oldState = this.suppressEvents;
+            this.suppressEvents = suppressEvents;
+
+            try
+            {
+
+                Reply r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Start, address, motorOrBank);
+                r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Status, address, motorOrBank);
+                // While status is Success and returned value if 0 (false), continue checks
+                while (r.Status == ReturnStatus.Success && r.ReturnValue != 0)
+                {
+                    // Waits for small amount of time.
+                    System.Threading.Thread.Sleep(checkIntervalMS);
+                    r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Status, address, motorOrBank);
+                }
+
+            }
+            finally
+            {
+                SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Stop, address, motorOrBank);
+                // Restores old staate
+                this.suppressEvents = oldState;
+            }
         }
 
         /// <summary>
