@@ -104,10 +104,10 @@ namespace StepMotor
         RestoreGlobalParameter = 12,
 
         /// <summary>
-        /// RFS: Rfreshes search
+        /// RFS: Reference search
         /// </summary>
         [EnumMember]
-        RefreshSearch = 13,
+        ReferenceSearch = 13,
 
         /// <summary>
         /// SIO: Sets output
