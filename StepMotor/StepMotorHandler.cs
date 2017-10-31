@@ -114,7 +114,7 @@ namespace StepMotor
         private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             // If port buffer is not empty
-            if (port.BytesToRead > 0)
+            if (port.BytesToRead == 9)
             {
                 //Reads last response
                 LastResponse = new byte[port.BytesToRead];
@@ -126,6 +126,7 @@ namespace StepMotor
                 if (!suppressEvents)
                     OnDataReceived(new StepMotorEventArgs(LastResponse));
             }
+           
         }
 
         /// <summary>

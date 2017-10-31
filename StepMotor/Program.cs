@@ -31,8 +31,11 @@ namespace StepMotor
             List<(int, double, double)> data = new List<(int, double, double)>();
             var angle = 2*4000;
 
-            using (var rot = new StepMotorHandler("COM2"))
+            using (var rot = new StepMotorHandler("COM1"))
             {
+
+                //Console.WriteLine(rot.SendCommand(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPoisitionReached));
+
                 //rot.DataRecieved += (sender, e) =>
                 //   Console.WriteLine($"{ e.EventTime} {e.Reply}");
 
@@ -50,7 +53,6 @@ namespace StepMotor
                     rot.SendCommand(Command.MoveToPosition, i * angle, (byte)CommandType.Absolute);
 
                     rot.WaitPositionReached(checkIntervalMS: 0);
-
                     t.Stop();
 
                     data.Add((i * angle, t.ElapsedMilliseconds / 1000.0, i * angle * 1000.0 / t.ElapsedMilliseconds));
