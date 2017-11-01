@@ -3,6 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
         xmlns:local="clr-namespace:DIPOL_UF.Views"
         xmlns:conv="clr-namespace:DIPOL_UF.Converters"
         mc:Ignorable="d"
@@ -10,6 +12,7 @@
         Title="ProgressWindow" Height="100" Width="500" WindowStyle="None" ResizeMode="NoResize"
         Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" 
         BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}">
+        
     <Window.Resources>
         <conv:ProgressBarNumberColumnSizeMultiValueConverter x:Key="ProgressBarNumberColumnSizeConverter"/>
     </Window.Resources>

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
+using System.Windows.Input;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -101,6 +102,8 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
+        public ICommand WindowDrag => new Commands.WindowDragCommand();
+
         public ProgressBarViewModel(Models.ProgressBar model)
         {
             progressBar = model ?? throw new ArgumentNullException();
@@ -109,6 +112,7 @@ namespace DIPOL_UF.ViewModels
 
             PropertyChanged += (sender, e) => Console.WriteLine(e.PropertyName);
         }
+
 
         protected virtual void ModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
