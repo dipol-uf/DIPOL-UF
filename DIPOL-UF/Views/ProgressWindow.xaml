@@ -4,11 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DIPOL_UF.Views"
+        xmlns:conv="clr-namespace:DIPOL_UF.Converters"
         mc:Ignorable="d"
         x:Name="ProgressWindowInstance"
-        Title="ProgressWindow" Height="100" Width="400" WindowStyle="None" ResizeMode="NoResize"
+        Title="ProgressWindow" Height="100" Width="500" WindowStyle="None" ResizeMode="NoResize"
         Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" 
         BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}">
+    <Window.Resources>
+        <conv:ProgressBarNumberColumnSizeMultiValueConverter x:Key="ProgressBarNumberColumnSizeConverter"/>
+    </Window.Resources>
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -17,7 +21,15 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="70"/>
+            <ColumnDefinition >
+                <ColumnDefinition.Width>
+                    <MultiBinding Converter="{StaticResource ProgressBarNumberColumnSizeConverter}">
+                        <Binding ElementName="ProgressNumberBox" Mode="OneTime"/>
+                        <Binding Path="ProgressText" UpdateSourceTrigger="PropertyChanged" Mode="OneWay"/>
+                        <Binding Path="IsIndeterminate" UpdateSourceTrigger="PropertyChanged" Mode="OneWay"/>
+                    </MultiBinding>
+                </ColumnDefinition.Width>
+            </ColumnDefinition>
         </Grid.ColumnDefinitions>
         <ProgressBar Name="Bar" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="15, 5, 15, 5" Height="15" Grid.Row="1" Grid.Column="0"
                      IsIndeterminate="{Binding Path=IsIndeterminate, UpdateSourceTrigger=PropertyChanged}"
@@ -25,10 +37,10 @@
                      Maximum="{Binding Maximum, UpdateSourceTrigger=PropertyChanged}"
                      Value="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
         <TextBlock Name="TitleBox" Grid.Row="0" Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Center" FontWeight="Bold" 
-                 Text="{Binding DisplayedTitleText, Mode=OneWay}" Margin="5" />
+                 Text="{Binding BarTitle, UpdateSourceTrigger=PropertyChanged}" Margin="5" />
         <TextBlock Name="CommentBox" Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                 Text="{Binding DisplayedCommentText, Mode=OneWay}" Margin="5"/>
+                 Text="{Binding BarComment, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
         <TextBlock Name="ProgressNumberBox" Grid.Row ="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" 
-                 TextAlignment="Center"  Text="{Binding DisplayedProgressText, Mode=OneWay}"/>
+                 TextAlignment="Center"  Text="{Binding ProgressText, UpdateSourceTrigger=PropertyChanged}"/>
     </Grid>
 </Window>

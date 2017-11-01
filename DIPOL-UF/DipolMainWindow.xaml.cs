@@ -27,9 +27,15 @@ namespace DIPOL_UF
         {
             InitializeComponent();
             Loaded += (sender, e) => {
-                var vm = new ViewModels.ProgressBarViewModel();
+                var mdl = new Models.ProgressBar();
+                var vm = new ViewModels.ProgressBarViewModel(mdl);
                 var wind = new Views.ProgressWindow(vm);
-                vm.IsIndeterminate = true;
+                mdl.BarTitle = "Test Title";
+                mdl.BarComment = "Test Comment";
+                mdl.DisplayPercents = false;
+                mdl.Minimum = -123;
+                mdl.Value = 68;
+
                 wind.Show();
             };
         }
