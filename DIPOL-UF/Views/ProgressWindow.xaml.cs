@@ -23,8 +23,8 @@ namespace DIPOL_UF.Views
 
         public ProgressWindow(object dataContext)
         {
-            DataContext = dataContext;
             InitializeComponent();
+            DataContext = dataContext;
             Loaded += ProgressWindow_Loaded;
           
         }
