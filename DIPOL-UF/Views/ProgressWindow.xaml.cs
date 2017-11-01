@@ -19,60 +19,7 @@ namespace DIPOL_UF.Views
     /// </summary>
     public partial class ProgressWindow : Window
     {
-        private static DependencyProperty DisplayedProgressTextProperty = 
-            DependencyProperty.Register("DisplayedProgressText", typeof(string), typeof(ProgressWindow));
-        private static DependencyProperty DisplayedTitleTextProperty = 
-            DependencyProperty.Register("DisplayedTitleText", typeof(string), typeof(ProgressWindow));
-        private static DependencyProperty DisplayedCommentTextProperty = 
-            DependencyProperty.Register("DisplayedCommentText", typeof(string), typeof(ProgressWindow));
-
-        private static DependencyProperty DisplayPercentsProperty
-            = DependencyProperty.Register("DisplayPercents", typeof(bool), typeof(ProgressWindow));
-
-        
-        public string DisplayedProgressText
-        {
-            get
-            {
-                return (string)GetValue(DisplayedProgressTextProperty);
-            }
-            set
-            {
-                SetValue(DisplayedProgressTextProperty, value);
-            }
-        }
-
-        public string DisplayedTitleText
-        {
-            get
-            {
-                return (string)GetValue(DisplayedTitleTextProperty);
-            }
-            set
-            {
-                SetValue(DisplayedTitleTextProperty, value);
-            }
-        }
-
-        public string DisplayedCommentText
-        {
-            get
-            {
-                return (string)GetValue(DisplayedCommentTextProperty);
-            }
-            set
-            {
-                SetValue(DisplayedCommentTextProperty, value);
-            }
-        }
-
-        public bool DisplayPercents
-        {
-            get => (bool)GetValue(DisplayPercentsProperty);
-
-            set => SetValue(DisplayPercentsProperty, value);
-        }
-
+       
 
         public ProgressWindow(object dataContext)
         {

@@ -3,57 +3,124 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace DIPOL_UF.ViewModels
 {
     class ProgressBarViewModel : ObservableObject
     {
         private Models.ProgressBar progressBar = new Models.ProgressBar();
-        private bool isIndeterminate = false;
 
         public int Minimum
         {
-            get => progressBar?.Minimum ?? throw new ArgumentNullException();
-            set
-            {
-                progressBar.Minimum = value;
-                RaisePropertyChanged();
-            }
+            get => progressBar.Minimum;
+            set => progressBar.Minimum = value;
         }
 
         public int Maximum
         {
-            get => progressBar?.Maximum ?? throw new ArgumentNullException();
-            set
-            {
-                progressBar.Maximum = value;
-                RaisePropertyChanged();
-            }
+            get => progressBar.Maximum;
+            set => progressBar.Maximum = value;
         }
 
         public int Value
         {
-            get => progressBar?.Value ?? throw new ArgumentNullException();
-            set
-            {
-                progressBar.Value = value;
-                RaisePropertyChanged();
-            }
+            get => progressBar.Value;
+            set => progressBar.Value = value;
         }
 
         public bool IsIndeterminate
         {
-            get => isIndeterminate;
-            set
+            get => progressBar.IsIndeterminate;
+            set => progressBar.IsIndeterminate = value;
+        }
+
+        public bool DisplayPercents
+        {
+            get => progressBar.DisplayPercents;
+            set => progressBar.DisplayPercents = value;
+        }    
+
+        public string BarTitle
+        {
+            get => progressBar.BarTitle;
+            set => progressBar.BarTitle = value;            
+        }
+
+        public string BarComment
+        {
+            get => progressBar.BarComment;
+            set => progressBar.BarComment = value;
+        }
+
+        public string ProgressText
+        {
+            get
             {
-                isIndeterminate = value;
-                RaisePropertyChanged();
+                if (DisplayPercents)
+                    return String.Format("{0:F0}%", 100.0 * Value / (Maximum - Minimum));
+                else 
+                {
+                    double decDigits = Math.Ceiling(Math.Log10(Maximum % 10 == 0 ? Maximum + 1 : Maximum));
+
+                    if (Minimum == 0)
+                    {
+                        var format = String.Format("{{0, {0:F0} }}/{{1, {0:F0} }}", decDigits);
+                        return String.Format(format, Value, Maximum);
+                    }
+                    else
+                    {
+                        var format = String.Format("{{0, {0:F0} }} in ({{1, {0:F0} }}, {{2, {0:F0} }})", decDigits);
+                        try
+                        {
+                            Console.WriteLine(String.Format(format, Value, Minimum, Maximum));
+                        }
+                        catch (Exception e)
+                        {
+
+                            throw;
+                        }
+                        return String.Format(format, Value, Minimum, Maximum);
+                    }
+                    
+                }
+                    
             }
         }
 
-        public ProgressBarViewModel()
+        public double PercentageWidth
         {
+            get
+            {
+
+                if (DisplayPercents)
+                    return 60;
+                else if (Minimum == 0)
+                    return 90;
+                else return 150;
+            }
+        }
+
+        public ProgressBarViewModel(Models.ProgressBar model)
+        {
+            progressBar = model ?? throw new ArgumentNullException();
+
+            model.PropertyChanged += ModelPropertyChanged;
+
             PropertyChanged += (sender, e) => Console.WriteLine(e.PropertyName);
+        }
+
+        protected virtual void ModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            RaisePropertyChanged(e.PropertyName);
+
+            if (e.PropertyName != nameof(BarTitle) &&
+                e.PropertyName != nameof(BarComment))
+                RaisePropertyChanged(nameof(ProgressText));
+
+            if (e.PropertyName == nameof(DisplayPercents) || e.PropertyName == nameof(Minimum))
+                RaisePropertyChanged(nameof(PercentageWidth));
         }
     }
 }
+
