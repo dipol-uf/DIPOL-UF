@@ -67,3 +67,5 @@ Temporary Items
 **/*.baml
 **/*.exe.config
 **/*.g*cs
+
+**/*.user
