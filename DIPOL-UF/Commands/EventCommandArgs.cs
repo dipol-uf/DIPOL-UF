@@ -9,21 +9,28 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Input;
 using System.Windows.Shapes;
 
 namespace DIPOL_UF.Commands
 {
-    class WindowDragCommand : ICommand
+    class EventCommandArgs<T> where T : RoutedEventArgs
     {
-        public event EventHandler CanExecuteChanged;
-
-        public bool CanExecute(object parameter)
-            => true;
-
-        public void Execute(object parameter)
+        public T EventArgs
         {
-            return;
+            get;
+            private set;
+        }
+
+        public object Sender
+        {
+            get;
+            private set;
+        }
+
+        public EventCommandArgs(object sender, T args)
+        {
+            Sender = sender;
+            EventArgs = args;
         }
     }
 }

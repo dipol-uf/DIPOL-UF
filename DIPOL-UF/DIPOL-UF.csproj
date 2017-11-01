@@ -76,8 +76,10 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\WindowDragCommand.cs" />
+    <Compile Include="Commands\DelegateCommand.cs" />
+    <Compile Include="Commands\EventCommandArgs.cs" />
     <Compile Include="Converters\ProgressBarNumberColumnSizeMultiValueConverter.cs" />
+    <Compile Include="Commands\EventToCommndExtension.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Models\ProgressBar.cs" />
     <Compile Include="ObservableObject.cs" />
