@@ -74,8 +74,10 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Converters\ProgressBarNumberColumnSizeMultiValueConverter.cs" />
+    <Compile Include="Helper.cs" />
     <Compile Include="Models\ProgressBar.cs" />
-    <Compile Include="ViewModels\ObservableObject.cs" />
+    <Compile Include="ObservableObject.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
     <Compile Include="Views\ProgressWindow.xaml.cs">
       <DependentUpon>ProgressWindow.xaml</DependentUpon>
