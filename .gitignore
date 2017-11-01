@@ -69,3 +69,12 @@ Temporary Items
 **/*.g*cs
 
 **/*.user
+
+**/*.resources
+
+**/*.dll
+**/*.dpb
+
+**/*.CopyComplete
+
+**/*.config
