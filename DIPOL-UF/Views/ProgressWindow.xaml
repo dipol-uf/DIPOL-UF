@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
-        xmlns:local="clr-namespace:DIPOL_UF.Views"
+        xmlns:views="clr-namespace:DIPOL_UF.Views"
+        xmlns:cmds="clr-namespace:DIPOL_UF.Commands"
         xmlns:conv="clr-namespace:DIPOL_UF.Converters"
         mc:Ignorable="d"
         x:Name="ProgressWindowInstance"
@@ -16,7 +17,7 @@
     <Window.Resources>
         <conv:ProgressBarNumberColumnSizeMultiValueConverter x:Key="ProgressBarNumberColumnSizeConverter"/>
     </Window.Resources>
-    <Grid Margin="5">
+    <Grid Margin="5" Background="Transparent" MouseDown="{cmds:EventToCommnd TestCommand}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
