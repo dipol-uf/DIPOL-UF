@@ -102,7 +102,8 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
-        public ICommand WindowDrag => new Commands.WindowDragCommand();
+        public ICommand TestCommand
+            => new Commands.DelegateCommand(_ => Console.WriteLine("TestCommand"), _ => true, true);
 
         public ProgressBarViewModel(Models.ProgressBar model)
         {
