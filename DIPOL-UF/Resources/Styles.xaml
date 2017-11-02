@@ -5,17 +5,31 @@
         <Setter Property="FontSize" Value="20"/>
         <Setter Property="FontStyle" Value="Normal"/>
         <Setter Property="FontWeight" Value="DemiBold"/>
-        <Setter Property="Margin" Value="1"/>
     </Style>
     <Style x:Key="ContentFont"  TargetType="{x:Type Control}">
         <Setter Property="FontSize" Value="17"/>
         <Setter Property="FontStyle" Value="Normal"/>
         <Setter Property="FontWeight" Value="Normal"/>
-        <Setter Property="Margin" Value="1"/>
     </Style>
 
 
-    <Style x:Key="TitleFont_Label" TargetType="{x:Type Label}" BasedOn="{StaticResource TitleFont}"/>
-    <Style x:Key="ContentFont_Label" TargetType="{x:Type Label}" BasedOn="{StaticResource ContentFont}"/>
+    <Style x:Key="BasicButton" TargetType="{x:Type Button}" BasedOn="{StaticResource ContentFont}">
+        <Setter Property="Width" Value="80"/>
+        <Setter Property="Height" Value="30"/>
+    </Style>
+    
+    <Style x:Key="CancelButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource BasicButton}">
+        <Setter Property="Background" Value="#FFED8383"/>
+        <Setter Property="Padding" Value="5, 2, 5, 2"/>
+        <Setter Property="IsCancel" Value="True"/>
+    </Style>
+
+
+    <Style x:Key="TitleFont_Label" TargetType="{x:Type Label}" BasedOn="{StaticResource TitleFont}">
+        <Setter Property="Margin" Value="1"/>
+    </Style>
+    <Style x:Key="ContentFont_Label" TargetType="{x:Type Label}" BasedOn="{StaticResource ContentFont}">
+        <Setter Property="Margin" Value="1"/>
+    </Style>
 
 </ResourceDictionary>

@@ -136,11 +136,6 @@ namespace DIPOL_UF.Models
         public Commands.WindowDragCommand WindowDragCommand => dragCommand;
             
 
-        public ProgressBar()
-        {
-            
-        }
-
 
         public bool TryIncrement()
             => ++Value <= Maximum;

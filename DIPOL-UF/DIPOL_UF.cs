@@ -13,7 +13,7 @@ namespace DIPOL_UF
         {
             App applicationInstance = new App();
             applicationInstance.InitializeComponent();
-            applicationInstance.Run(new DipolMainWindow());
+            applicationInstance.Run(new Views.DipolMainWindow());
 
             return 0;
         }
