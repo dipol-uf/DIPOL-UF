@@ -91,7 +91,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="DipolMainWindow.xaml">
+    <Page Include="Views\DipolMainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -100,7 +100,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DIPOL_UF.cs" />
-    <Compile Include="DipolMainWindow.xaml.cs">
+    <Compile Include="Views\DipolMainWindow.xaml.cs">
       <DependentUpon>DipolMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>

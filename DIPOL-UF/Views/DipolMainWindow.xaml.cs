@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 
 
 
-namespace DIPOL_UF
+namespace DIPOL_UF.Views
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -30,13 +30,30 @@ namespace DIPOL_UF
                 var mdl = new Models.ProgressBar();
                 var vm = new ViewModels.ProgressBarViewModel(mdl);
                 var wind = new Views.ProgressWindow(vm);
+                wind.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                wind.Owner = this;
                 mdl.BarTitle = "Test Title";
                 mdl.BarComment = "Test Comment";
-                mdl.DisplayPercents = false;
-                mdl.Minimum = -123;
-                mdl.Value = 68;
+                mdl.DisplayPercents = true;
+                mdl.Minimum = 0;
+                mdl.Maximum = 100;
+                mdl.Value = 0;
 
-                wind.Show();
+                Task.Run(() =>
+                {
+                    Task.Delay(100).Wait();
+                    for (int i = 1; i <= 100; i++)
+                    {
+                        Task.Delay(150).Wait();
+
+                        if (!Dispatcher.Invoke(mdl.TryIncrement))
+                            break;
+                    }
+                    Task.Delay(150).Wait();
+                    Dispatcher.Invoke(() => { mdl.IsIndeterminate = true; });
+                });
+
+                var result = wind.ShowDialog();
             };
         }
     }
