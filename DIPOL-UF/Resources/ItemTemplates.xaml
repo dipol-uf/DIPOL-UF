@@ -1,0 +1,10 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:DIPOL_UF.Resources"
+                    xmlns:vm="clr-namespace:DIPOL_UF.ViewModels">
+    <HierarchicalDataTemplate x:Key="MenuBarItemTemplate" DataType="{x:Type vm:MenuItemViewModel}"
+                              ItemsSource="{Binding MenuItems}">
+        <Label Content="{Binding Header}"/>
+    </HierarchicalDataTemplate>
+        
+</ResourceDictionary>
