@@ -78,10 +78,10 @@
   <ItemGroup>
     <Compile Include="Commands\DelegateCommand.cs" />
     <Compile Include="Commands\EventCommandArgs.cs" />
-    <Compile Include="Converters\ProgressBarNumberColumnSizeMultiValueConverter.cs" />
     <Compile Include="Commands\EventToCommndExtension.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Models\ProgressBar.cs" />
+    <Compile Include="Commands\WindowDragCommand.cs" />
     <Compile Include="ObservableObject.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
     <Compile Include="Views\ProgressWindow.xaml.cs">
@@ -147,6 +147,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Bindings\" />
+    <Folder Include="Converters\" />
+    <Folder Include="Interfaces\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

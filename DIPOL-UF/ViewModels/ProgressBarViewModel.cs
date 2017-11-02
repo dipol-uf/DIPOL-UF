@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Windows.Input;
+using System.Windows;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -89,8 +90,7 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
-        public ICommand TestCommand
-            => new Commands.DelegateCommand(x => Console.WriteLine(x), _ => true, true);
+        public ICommand MouseEventHandler => progressBar.WindowDragCommand;
 
         public ProgressBarViewModel(Models.ProgressBar model)
         {

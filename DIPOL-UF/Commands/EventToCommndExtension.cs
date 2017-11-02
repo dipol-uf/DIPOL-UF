@@ -87,10 +87,10 @@ namespace DIPOL_UF.Commands
                     .DataContext
                     .GetType()
                     .GetProperty(commandName, BindingFlags.Instance | BindingFlags.Public)
-                    .GetValue(element.DataContext) as ICommand;
+                    ?.GetValue(element.DataContext) as ICommand;
 
                 // If can be executed, executes
-                if (delegateCommand.CanExecute(commandArgs))
+                if (delegateCommand?.CanExecute(commandArgs) ?? false)
                     delegateCommand.Execute(commandArgs);
                 
             }
