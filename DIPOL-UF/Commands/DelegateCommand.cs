@@ -17,30 +17,20 @@ namespace DIPOL_UF.Commands
     {
         private Action<object> worker;
         private Func<object, bool> canExecute;
-        private bool canExecuteState;
 
         public event EventHandler CanExecuteChanged;
 
         public bool CanExecute(object parameter)
-        {
-            bool state = canExecute(parameter);
-            if (state != canExecuteState)
-            {
-                canExecuteState = state;
-                OnCanExecuteChanged(this, new EventArgs());
-            }
+            => canExecute(parameter);
 
-            return state;
-        }
 
         public void Execute(object parameter)
             => worker(parameter);
 
-        public DelegateCommand(Action<object> worker, Func<object, bool> canExecute, bool initialCanExecuteState)
+        public DelegateCommand(Action<object> worker, Func<object, bool> canExecute)
         {
             this.worker = worker ?? throw new ArgumentNullException();
             this.canExecute = canExecute ?? throw new ArgumentNullException();
-            this.canExecuteState = initialCanExecuteState;
             OnCanExecuteChanged(this, new EventArgs());
         }
 
