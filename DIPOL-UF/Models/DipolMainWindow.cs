@@ -57,24 +57,24 @@ namespace DIPOL_UF.Models
 
         private void InitializeMenu()
         {
-            MenuBarItems = new ObservableCollection<ViewModels.MenuItemViewModel>()
-        {
-            new ViewModels.MenuItemViewModel(new MenuItemModel()
-                {
-                 Header = "_Camera",
-                 MenuItems = new ObservableCollection<ViewModels.MenuItemViewModel>()
-                 {
-                     new ViewModels.MenuItemViewModel(new MenuItemModel()
-                     {
-                         Header = "Find Available",
-                         Command = new Commands.DelegateCommand(
-                             ListCameras,
-                             (x) => CamerasAvailable()),
+            //MenuBarItems = new ObservableCollection<ViewModels.MenuItemViewModel>()
+            //{
+            //    new ViewModels.MenuItemViewModel(new MenuItemModel()
+            //    {
+            //        Header = "_Camera",
+            //        MenuItems = new ObservableCollection<ViewModels.MenuItemViewModel>()
+            //        {
+            //            new ViewModels.MenuItemViewModel(new MenuItemModel()
+            //            {
+            //                Header = "Find Available",
+            //                Command = new Commands.DelegateCommand(
+            //                    ListCameras,
+            //                    (x) => CamerasAvailable()),
 
-                     })
-                 }
-            })
-        };
+            //            })
+            //        }   
+            //    })
+            //};
         }
 
         private async void ListCameras(object parameter)
@@ -101,11 +101,12 @@ namespace DIPOL_UF.Models
 
             var worker = Task.Run(() => ConnectToLocalCameras(numLocCameras, pbModel, pbWindow));
 
-            pbWindow.ShowDialog();
+            pbWindow.Show();
 
             foreach (var camera in await worker)
                 connectedCameras.TryAdd($"{camera.CameraModel}{camera.SerialNumber}", camera);
 
+            pbWindow.Close();
 
         }
 
@@ -155,8 +156,6 @@ namespace DIPOL_UF.Models
                     progressReporter?.TryIncrement();
                 }
             }
-            Task.Delay(1500).Wait();
-            Application.Current.Dispatcher.Invoke(() => dialog.DialogResult = true);
             return cams;
 
         }
