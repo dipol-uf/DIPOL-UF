@@ -5,15 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:DIPOL_UF.Views"
         xmlns:cmds="clr-namespace:DIPOL_UF.Commands"
+        xmlns:local="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         x:Name="ProgressWindowInstance"
         Title="ProgressWindow" Height="auto" Width="auto" WindowStyle="None" ResizeMode="NoResize"
         SizeToContent="WidthAndHeight"
         Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" 
         BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}">
-        
-    <Grid Margin="5" Background="Transparent" 
-          MouseDown="{cmds:EventToCommnd MouseEventHandler}">
+
+    <Grid Margin="5" Background="Transparent"  MouseDown="{cmds:EventToCommnd 'MouseDragEventHandler | MouseEventHandler'}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>

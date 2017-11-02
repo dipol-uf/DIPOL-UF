@@ -90,8 +90,9 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
-        public ICommand MouseEventHandler => progressBar.WindowDragCommand;
+        public ICommand MouseDragEventHandler => progressBar.WindowDragCommand;
 
+        
         public ProgressBarViewModel(Models.ProgressBar model)
         {
             progressBar = model ?? throw new ArgumentNullException();
