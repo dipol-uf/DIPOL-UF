@@ -5,9 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DIPOL_UF"
         mc:Ignorable="d"
-        Title="Dipol-UF" Height="768" Width="1024" HorizontalContentAlignment="Stretch" MinWidth="800" MinHeight="600">
+        Title="Dipol-UF" Height="768" Width="1024" HorizontalContentAlignment="Stretch" MinWidth="800" MinHeight="600"
+        Style="{StaticResource ResourceKey=ContentFont}">
 
-    <Grid Name="MainLayoutGrid">
-        
-    </Grid>
+    <DockPanel x:Name="MainContainer" VerticalAlignment="Stretch">
+        <Menu DockPanel.Dock="Top" x:Name="MenuBar" VerticalAlignment="Top"
+              Style="{StaticResource ResourceKey=MenuBarStyle}"      
+              ItemsSource="{Binding MenuBarItems}"
+              ItemTemplate="{StaticResource ResourceKey=MenuBarItemTemplate}">
+            
+        </Menu>
+    </DockPanel>
 </Window>

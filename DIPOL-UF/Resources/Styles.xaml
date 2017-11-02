@@ -13,12 +13,22 @@
     </Style>
 
 
-    <Style x:Key="BasicButton" TargetType="{x:Type Button}" BasedOn="{StaticResource ContentFont}">
+    <Style x:Key="MenuItemStyle" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource ContentFont}">
+        <Setter Property="Command" Value="{Binding Command}"/>
+        <Setter Property="CommandParameter" Value="{Binding Header}"/>
+    </Style>
+
+    <Style x:Key="MenuBarStyle" TargetType="{x:Type Menu}" BasedOn="{StaticResource ContentFont}">
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource MenuItemStyle}"/>
+    </Style>
+
+    <Style x:Key="BasicButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource ContentFont}">
         <Setter Property="Width" Value="80"/>
         <Setter Property="Height" Value="30"/>
     </Style>
     
-    <Style x:Key="CancelButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource BasicButton}">
+    <Style x:Key="CancelButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource BasicButtonStyle}">
         <Setter Property="Background" Value="#FFED8383"/>
         <Setter Property="Padding" Value="5, 2, 5, 2"/>
         <Setter Property="IsCancel" Value="True"/>

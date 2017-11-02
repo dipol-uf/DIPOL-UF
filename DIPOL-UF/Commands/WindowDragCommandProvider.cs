@@ -14,7 +14,7 @@ using System.Windows.Shapes;
 
 namespace DIPOL_UF.Commands
 {
-    sealed class WindowDragCommand 
+    sealed class WindowDragCommandProvider 
     {
         private DelegateCommand command;
 
@@ -41,7 +41,7 @@ namespace DIPOL_UF.Commands
         private bool CanExecute(object parameter) => true;
 
 
-        public WindowDragCommand()
+        public WindowDragCommandProvider()
             => command = new DelegateCommand(Execute, CanExecute);
 
 

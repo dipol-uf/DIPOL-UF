@@ -23,16 +23,9 @@ namespace DIPOL_UF.Views
 
         public ProgressWindow(object dataContext)
         {
-            var x = Application.Current.Resources.Values;
             InitializeComponent();
             DataContext = dataContext;
-            Loaded += ProgressWindow_Loaded;
           
-        }
-
-        private void ProgressWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            
         }
     }
 }
