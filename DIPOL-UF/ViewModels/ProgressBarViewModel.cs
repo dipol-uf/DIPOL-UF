@@ -89,19 +89,6 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
-        public double PercentageWidth
-        {
-            get
-            {
-
-                if (DisplayPercents)
-                    return 60;
-                else if (Minimum == 0)
-                    return 90;
-                else return 150;
-            }
-        }
-
         public ICommand TestCommand
             => new Commands.DelegateCommand(x => Console.WriteLine(x), _ => true, true);
 
@@ -123,8 +110,6 @@ namespace DIPOL_UF.ViewModels
                 e.PropertyName != nameof(BarComment))
                 RaisePropertyChanged(nameof(ProgressText));
 
-            if (e.PropertyName == nameof(DisplayPercents) || e.PropertyName == nameof(Minimum))
-                RaisePropertyChanged(nameof(PercentageWidth));
         }
     }
 }
