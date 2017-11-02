@@ -32,5 +32,6 @@ namespace DIPOL_UF
 
             return new Size(formattedText.Width, formattedText.Height);
         }
+
     }
 }

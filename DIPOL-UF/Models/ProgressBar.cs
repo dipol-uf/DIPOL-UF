@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace DIPOL_UF.Models
 {
     class ProgressBar : ObservableObject
     {
+        private Commands.WindowDragCommand dragCommand = new Commands.WindowDragCommand();
         private int minimum = 0;
         private int maximum = 100;
         private int value = 50;
@@ -15,6 +19,7 @@ namespace DIPOL_UF.Models
         private bool displayPercents = false;
         private string barTitle = "";
         private string barComment = "";
+
 
         public int Minimum
         {
@@ -87,7 +92,7 @@ namespace DIPOL_UF.Models
                     RaisePropertyChanged();
                 }
             }
-        } 
+        }
 
         public bool DisplayPercents
         {
@@ -128,6 +133,13 @@ namespace DIPOL_UF.Models
             }
         }
 
+        public Commands.WindowDragCommand WindowDragCommand => dragCommand;
+            
+
+        public ProgressBar()
+        {
+            
+        }
 
 
         public bool TryIncrement()
@@ -135,5 +147,8 @@ namespace DIPOL_UF.Models
 
         public bool Decrement()
             => --Value >= Minimum;
+
+
+      
     }
 }
