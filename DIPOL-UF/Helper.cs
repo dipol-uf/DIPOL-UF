@@ -33,5 +33,15 @@ namespace DIPOL_UF
             return new Size(formattedText.Width, formattedText.Height);
         }
 
+        public static DependencyObject FindParentOfType<T>(DependencyObject element)
+        {
+            var parent = VisualTreeHelper.GetParent(element);
+
+            while(!(parent is T))
+                parent = VisualTreeHelper.GetParent(parent);
+
+            return parent;
+        }
+
     }
 }

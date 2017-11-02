@@ -15,7 +15,7 @@
 
     <Style x:Key="MenuItemStyle" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource ContentFont}">
         <Setter Property="Command" Value="{Binding Command}"/>
-        <Setter Property="CommandParameter" Value="{Binding Header}"/>
+        <Setter Property="CommandParameter" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=MenuItem}}"/>
     </Style>
 
     <Style x:Key="MenuBarStyle" TargetType="{x:Type Menu}" BasedOn="{StaticResource ContentFont}">

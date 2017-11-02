@@ -148,13 +148,13 @@ namespace DIPOL_UF.Models
         public Commands.DelegateCommand WindowDragCommand
         {
             get;
-            set;
+            private set;
         }
 
         public Commands.DelegateCommand CancelCommand
         {
             get;
-            set;
+            private set;
         }
 
         public bool TryIncrement()
