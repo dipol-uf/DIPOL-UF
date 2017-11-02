@@ -12,6 +12,7 @@ namespace DIPOL_UF
         public static int Main(string[] args)
         {
             App applicationInstance = new App();
+            applicationInstance.InitializeComponent();
             applicationInstance.Run(new DipolMainWindow());
 
             return 0;
