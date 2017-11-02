@@ -59,6 +59,9 @@ namespace DIPOL_UF.ViewModels
         {
             get
             {
+                if (IsIndeterminate)
+                    return String.Empty;
+                    
                 if (DisplayPercents)
                     return String.Format("{0:F0}%", 100.0 * Value / (Maximum - Minimum));
                 else 
@@ -73,15 +76,7 @@ namespace DIPOL_UF.ViewModels
                     else
                     {
                         var format = String.Format("{{0, {0:F0} }} in ({{1, {0:F0} }}, {{2, {0:F0} }})", decDigits);
-                        try
-                        {
-                            Console.WriteLine(String.Format(format, Value, Minimum, Maximum));
-                        }
-                        catch (Exception e)
-                        {
-
-                            throw;
-                        }
+                                                
                         return String.Format(format, Value, Minimum, Maximum);
                     }
                     
