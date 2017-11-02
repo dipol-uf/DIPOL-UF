@@ -13,11 +13,15 @@ namespace DIPOL_UF
         {
             App applicationInstance = new App();
             applicationInstance.InitializeComponent();
-            var mainModel = new Models.DipolMainWindow();
-            var view = new ViewModels.DipolMainWindowViewMode(mainModel);
 
-            applicationInstance.Run(new Views.DipolMainWindow(view));
 
+            using (var mainModel = new Models.DipolMainWindow())
+            {
+                var view = new ViewModels.DipolMainWindowViewMode(mainModel);
+
+                applicationInstance.Run(new Views.DipolMainWindow(view));
+            }
+            
             return 0;
         }
     }

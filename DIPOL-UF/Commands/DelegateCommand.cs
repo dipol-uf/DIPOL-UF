@@ -17,11 +17,21 @@ namespace DIPOL_UF.Commands
     {
         private Action<object> worker;
         private Func<object, bool> canExecute;
+        private bool oldCanExecuteState;
 
         public event EventHandler CanExecuteChanged;
 
         public bool CanExecute(object parameter)
-            => canExecute(parameter);
+        {
+            bool canExecute = this.canExecute(parameter);
+            if (canExecute != oldCanExecuteState)
+            {
+                oldCanExecuteState = canExecute;
+                OnCanExecuteChanged(this, new EventArgs());
+            }
+
+            return canExecute;
+        }
 
 
         public void Execute(object parameter)
