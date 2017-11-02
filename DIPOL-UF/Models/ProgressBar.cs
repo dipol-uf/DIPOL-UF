@@ -133,7 +133,7 @@ namespace DIPOL_UF.Models
             }
         }
 
-        public Commands.WindowDragCommand WindowDragCommand => dragCommand;
+        public Commands.DelegateCommand WindowDragCommand => dragCommand.Command;
             
 
 
