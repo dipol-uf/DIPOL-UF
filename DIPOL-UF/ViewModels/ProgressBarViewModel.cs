@@ -87,6 +87,7 @@ namespace DIPOL_UF.ViewModels
 
         public ICommand MouseDragEventHandler => progressBar.WindowDragCommand;
 
+        public ICommand CancelCommand => progressBar.CancelCommand;
         
         public ProgressBarViewModel(Models.ProgressBar model)
         {

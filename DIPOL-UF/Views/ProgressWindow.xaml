@@ -43,7 +43,8 @@
 
         <Button Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" Margin="0, 5, 10, 5"
                 Style="{StaticResource ResourceKey=CancelButtonStyle}"
-                Content="Abort"/>
+                Content="Abort"
+                Command="{Binding CancelCommand}" CommandParameter="{Binding ElementName=ProgressWindowInstance}"/>
 
     </Grid>
 </Window>
