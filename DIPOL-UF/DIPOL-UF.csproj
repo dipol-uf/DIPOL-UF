@@ -80,9 +80,13 @@
     <Compile Include="Commands\EventCommandArgs.cs" />
     <Compile Include="Commands\EventToCommndExtension.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="Models\DipolMainWindow.cs" />
+    <Compile Include="Models\MenuItemModel.cs" />
     <Compile Include="Models\ProgressBar.cs" />
-    <Compile Include="Commands\WindowDragCommand.cs" />
+    <Compile Include="Commands\WindowDragCommandProvider.cs" />
     <Compile Include="ObservableObject.cs" />
+    <Compile Include="ViewModels\DipolMainWindowViewMode.cs" />
+    <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
     <Compile Include="Views\ProgressWindow.xaml.cs">
       <DependentUpon>ProgressWindow.xaml</DependentUpon>
@@ -90,6 +94,10 @@
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\ItemTemplates.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\DipolMainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

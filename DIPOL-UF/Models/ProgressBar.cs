@@ -11,7 +11,6 @@ namespace DIPOL_UF.Models
 {
     class ProgressBar : ObservableObject
     {
-        private Commands.WindowDragCommand dragCommand = new Commands.WindowDragCommand();
         private int minimum = 0;
         private int maximum = 100;
         private int value = 50;
@@ -19,7 +18,7 @@ namespace DIPOL_UF.Models
         private bool displayPercents = false;
         private string barTitle = "";
         private string barComment = "";
-
+        private bool isAborted = false;
 
         public int Minimum
         {
@@ -133,9 +132,30 @@ namespace DIPOL_UF.Models
             }
         }
 
-        public Commands.DelegateCommand WindowDragCommand => dragCommand.Command;
-            
+        public bool IsAborted
+        {
+            get => isAborted;
+            set
+            {
+                if (value != isAborted)
+                {
+                    isAborted = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        
+        public Commands.DelegateCommand WindowDragCommand
+        {
+            get;
+            set;
+        }
 
+        public Commands.DelegateCommand CancelCommand
+        {
+            get;
+            set;
+        }
 
         public bool TryIncrement()
             => ++Value <= Maximum;
@@ -144,6 +164,21 @@ namespace DIPOL_UF.Models
             => --Value >= Minimum;
 
 
-      
+        public ProgressBar()
+        {
+            CancelCommand = new Commands.DelegateCommand(
+                (param) => {
+                    if (param is Window w)
+                    {
+                        w.DialogResult = false;
+                        IsAborted = true;
+                        w.Close();
+                    }
+                },
+                (param) => !IsAborted);
+
+            WindowDragCommand = new Commands.WindowDragCommandProvider().Command;
+        }
+
     }
 }
