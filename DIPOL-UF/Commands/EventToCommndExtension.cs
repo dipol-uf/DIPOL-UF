@@ -20,10 +20,11 @@ namespace DIPOL_UF.Commands
     /// </summary>
     class EventToCommndExtension : MarkupExtension
     {
+       
         /// <summary>
         /// ViewModel command name.
         /// </summary>
-        private string commandName = null;
+        private IEnumerable<string> commandNames = null;
 
         /// <summary>
         /// Invoked by XAML code when property value is needed.
@@ -82,17 +83,19 @@ namespace DIPOL_UF.Commands
                 // Packages sender and e into container class sent to ICommand.Execute(object) parameter
                 var commandArgs = new EventCommandArgs<T>(sender, e);
 
-                // Retrieves ViewModel, then property to which event is bound, then value of this property, which should be ICommand.
-                var delegateCommand = element
-                    .DataContext
-                    .GetType()
-                    .GetProperty(commandName, BindingFlags.Instance | BindingFlags.Public)
-                    ?.GetValue(element.DataContext) as ICommand;
+                foreach (var commandName in commandNames)
+                {
+                    // Retrieves ViewModel, then property to which event is bound, then value of this property, which should be ICommand.
+                    var delegateCommand = element
+                        .DataContext
+                        .GetType()
+                        .GetProperty(commandName, BindingFlags.Instance | BindingFlags.Public)
+                        ?.GetValue(element.DataContext) as ICommand;
 
-                // If can be executed, executes
-                if (delegateCommand?.CanExecute(commandArgs) ?? false)
-                    delegateCommand.Execute(commandArgs);
-                
+                    // If can be executed, executes
+                    if (delegateCommand?.CanExecute(commandArgs) ?? false)
+                        delegateCommand.Execute(commandArgs);
+                }
             }
         }
 
@@ -103,8 +106,10 @@ namespace DIPOL_UF.Commands
         public EventToCommndExtension(object commandName)
         {
             // Right now supports only property name binding.
-            if (commandName is string command)
-                this.commandName = command;
+            if (commandName is string commands)
+            {
+                commandNames = commands.Split(' ', ';' , '|').Where(x => !string.IsNullOrWhiteSpace(x));
+            }
             else throw new ArgumentException();
                         
         }
