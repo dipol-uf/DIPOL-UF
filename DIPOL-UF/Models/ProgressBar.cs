@@ -19,6 +19,7 @@ namespace DIPOL_UF.Models
         private string barTitle = "";
         private string barComment = "";
         private bool isAborted = false;
+        private bool canAbort = true;
 
         public int Minimum
         {
@@ -144,6 +145,19 @@ namespace DIPOL_UF.Models
                 }
             }
         }
+
+        public bool CanAbort
+        {
+            get => canAbort;
+            set
+            {
+                if (value != canAbort)
+                {
+                    canAbort = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
         
         public Commands.DelegateCommand WindowDragCommand
         {
@@ -170,12 +184,13 @@ namespace DIPOL_UF.Models
                 (param) => {
                     if (param is Window w)
                     {
-                        w.DialogResult = false;
+                        if(Helper.IsDialogWindow(w))
+                            w.DialogResult = false;
                         IsAborted = true;
                         w.Close();
                     }
                 },
-                (param) => !IsAborted);
+                (param) => CanAbort && !IsAborted);
 
             WindowDragCommand = new Commands.WindowDragCommandProvider().Command;
         }
