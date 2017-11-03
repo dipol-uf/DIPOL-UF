@@ -12,7 +12,7 @@
         Title="ProgressWindow" Height="auto" Width="auto" WindowStyle="None" ResizeMode="NoResize"
         SizeToContent="WidthAndHeight"
         Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" 
-        BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}">
+        BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" IsTabStop="False">
     <Window.Resources>
             <cnvs:BoolToVisibilityValueConverter x:Key="BoolToVisibilityConverter"/>
     </Window.Resources>
