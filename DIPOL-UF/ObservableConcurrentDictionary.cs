@@ -3,12 +3,14 @@ using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Windows.Threading;
 
 
 namespace DIPOL_UF
 {
     class ObservableConcurrentDictionary<TKey, TValue> : ConcurrentDictionary<TKey, TValue>, INotifyPropertyChanged, INotifyCollectionChanged 
     {
+        protected Dispatcher dispatcher = System.Windows.Application.Current?.Dispatcher;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
@@ -153,7 +155,7 @@ namespace DIPOL_UF
             bool added = false;
             try
             {
-                return added = TryAdd(key, value);
+                return added = base.TryAdd(key, value);
             }
             finally
             {
@@ -208,10 +210,21 @@ namespace DIPOL_UF
         }
 
         protected virtual void OnNotifyCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-            => CollectionChanged?.Invoke(sender, e);
+        {
+            if (dispatcher == null)
+                CollectionChanged(sender, e);
+            else
+                dispatcher.Invoke(() => CollectionChanged(sender, e));
+        }
 
         protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
-            => PropertyChanged?.Invoke(sender, e);
+        {
+            if (dispatcher == null)
+                PropertyChanged(sender, e);
+            else
+                dispatcher.Invoke(() => PropertyChanged(sender, e));
+        }
 
+        
     }
 }

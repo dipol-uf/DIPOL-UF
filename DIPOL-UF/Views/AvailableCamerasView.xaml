@@ -6,16 +6,14 @@
         xmlns:local="clr-namespace:DIPOL_UF.Views"
         mc:Ignorable="d"
         Style="{StaticResource ResourceKey=ContentFont}"
-        Title="Available Cameras" Height="auto" Width="300" WindowStyle="ToolWindow" SizeToContent="Height" Topmost="True" WindowStartupLocation="CenterOwner">
-    <DockPanel>
+        Title="Available Cameras" Height="auto" Width="auto" WindowStyle="ThreeDBorderWindow" SizeToContent="WidthAndHeight" Topmost="True" WindowStartupLocation="CenterOwner">
+    <DockPanel Margin="10, 5, 10, 5">
         <Label DockPanel.Dock="Top" Content="Found:" 
                BorderBrush="{StaticResource ResourceKey=BorderColor}"
                BorderThickness="{StaticResource ResourceKey=BottomOnlyBorderThickness}"/>
 
         <ListView DockPanel.Dock="Top" BorderThickness="0" Style="{StaticResource ResourceKey=ListViewStyle}"
-                  Height="300">
-            <ListViewItem>1</ListViewItem>
-            <ListViewItem>2</ListViewItem>
+                  Height="300" ItemsSource="{Binding FoundCameras}">
         </ListView>
         <Border DockPanel.Dock="Top" VerticalAlignment="Bottom" 
                 Style="{StaticResource ResourceKey=BorderStyle}"
