@@ -15,20 +15,26 @@
               ItemTemplate="{StaticResource ResourceKey=MenuBarItemTemplate}"/>
         <Grid x:Name="MainWindowGrid" DockPanel.Dock="Top">
             <Border HorizontalAlignment="Right" VerticalAlignment="Stretch" Margin="2"
-                    Style="{StaticResource ResourceKey=UIBorderStyle}">
-                <DockPanel >
+                    Style="{StaticResource ResourceKey=BorderStyle}">
+                <DockPanel>
                     <Label x:Name="ConnectedCamerasLabel" Content="Camera Manager" DockPanel.Dock="Top"
                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                     <TreeView x:Name="ConnectedCamerasView" VerticalAlignment="Top" DockPanel.Dock="Top" >
+                    <Separator DockPanel.Dock="Top" Style="{StaticResource ResourceKey=SeparatorAsBorderStyle}"/>
+                    <TreeView x:Name="ConnectedCamerasView" VerticalAlignment="Top" DockPanel.Dock="Top"
+                              BorderThickness="0">
                             
                     </TreeView>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" >
-                        <Button x:Name="ConnectNewCamerasButton" 
-                            Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" Content="Connect"/>
-                        <Button x:Name="ReleaseExistingCamerasButton" 
-                            Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
-                        Content="Disconnect"/>
-                    </StackPanel>
+                    <Border DockPanel.Dock="Bottom" VerticalAlignment="Bottom" 
+                            Style="{StaticResource ResourceKey=BorderStyle}"
+                            BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
+                        <StackPanel Orientation="Horizontal" >
+                            <Button x:Name="ConnectNewCamerasButton" 
+                                Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" Content="Connect"/>
+                            <Button x:Name="ReleaseExistingCamerasButton" 
+                                Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
+                            Content="Disconnect"/>
+                        </StackPanel>
+                    </Border>
                 </DockPanel>
             </Border>
         </Grid>
