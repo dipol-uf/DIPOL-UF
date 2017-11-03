@@ -8,6 +8,8 @@
     <SolidColorBrush x:Key="PositiveEffectButtonBackgroundColor" Color="#FF8CB284"/>
     <SolidColorBrush x:Key="PositiveEffectButtonForegroundColor" Color="Black"/>
 
+    <SolidColorBrush x:Key="ListContainerBackgroundColor" Color="White"/>
+
     <SolidColorBrush x:Key="BorderColor" Color="Black"/>
     <sys:Double x:Key="BorderThicknessValue">1</sys:Double>
     <Thickness x:Key="BorderThickness" 
@@ -18,5 +20,8 @@
                />
     <Thickness x:Key="TopOnlyBorderThickness" 
                Top="{StaticResource BorderThicknessValue}"
+               />
+    <Thickness x:Key="BottomOnlyBorderThickness" 
+               Bottom="{StaticResource BorderThicknessValue}"
                />
 </ResourceDictionary>
