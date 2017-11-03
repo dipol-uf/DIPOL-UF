@@ -16,4 +16,7 @@
                Right="{StaticResource BorderThicknessValue}" 
                Bottom="{StaticResource BorderThicknessValue}" 
                />
+    <Thickness x:Key="TopOnlyBorderThickness" 
+               Top="{StaticResource BorderThicknessValue}"
+               />
 </ResourceDictionary>
