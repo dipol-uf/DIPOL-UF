@@ -8,13 +8,16 @@ namespace DIPOL_UF
         [STAThread]
         public static int Main(string[] args)
         {
+            System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
+            System.Diagnostics.Debug.AutoFlush = true;
+
             App applicationInstance = new App();
             applicationInstance.InitializeComponent();
 
 
             using (var mainModel = new Models.DipolMainWindow())
             {
-                var view = new ViewModels.DipolMainWindowViewMode(mainModel);
+                var view = new ViewModels.DipolMainWindowViewModel(mainModel);
 
                 applicationInstance.Run(new Views.DipolMainWindow(view));
             }
