@@ -55,9 +55,15 @@
     </Style>
     
     <!--Border style-->
-    <Style x:Key="UIBorderStyle" TargetType="{x:Type Border}">
+    <Style x:Key="BorderStyle" TargetType="{x:Type Border}">
         <Setter Property="BorderBrush" Value="{StaticResource ResourceKey=BorderColor}"/>
         <Setter Property="BorderThickness" Value="{StaticResource ResourceKey=BorderThickness}"/>
     </Style>
 
+    <!--Separator/Border style-->
+    <Style x:Key="SeparatorAsBorderStyle" TargetType="{x:Type Separator}">
+        <Setter Property="Background" Value="{StaticResource ResourceKey=BorderColor}"/>
+        <Setter Property="Height" Value="{StaticResource ResourceKey=BorderThicknessValue}"/>   
+    </Style>
+    
 </ResourceDictionary>
