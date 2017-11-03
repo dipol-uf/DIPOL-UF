@@ -127,7 +127,11 @@ namespace DIPOL_UF.Models
             => !connectedCameras.IsEmpty;
         private void ListAndSelectAvailableCameras(object parameter)
         {
+            var cameraQueryModel = new AvailableCamerasModel();
+            var viewModel = new ViewModels.AvailableCamerasViewModel(cameraQueryModel);
+            var wind = new Views.AvailableCameraViewexaml(viewModel);
 
+            wind.Show();
         }
     }
 }

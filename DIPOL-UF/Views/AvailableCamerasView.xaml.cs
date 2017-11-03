@@ -19,9 +19,10 @@ namespace DIPOL_UF.Views
     /// </summary>
     public partial class AvailableCameraViewexaml : Window
     {
-        public AvailableCameraViewexaml()
+        public AvailableCameraViewexaml(object context)
         {
             InitializeComponent();
+            DataContext = context;
         }
     }
 }
