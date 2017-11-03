@@ -58,7 +58,7 @@ namespace DIPOL_UF.Models
 
         public MenuItemModel()
         {
-           
+            //menuItems.CollectionChanged += (sender, e) => RaisePropertyChanged(nameof(MenuItems));
         }
 
     }
