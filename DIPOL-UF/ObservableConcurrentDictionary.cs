@@ -150,7 +150,7 @@ namespace DIPOL_UF
             {
                 if (isAdd)
                 {
-                    OnNotifyCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new KeyValuePair<TKey, TValue>(key, value)));
+                    OnNotifyCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add));
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Count)));
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Keys)));
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Values)));
