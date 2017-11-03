@@ -32,8 +32,7 @@ namespace DIPOL_UF.Commands
 
             return canExecute;
         }
-
-
+                
         public void Execute(object parameter)
             => worker(parameter);
 
@@ -43,6 +42,9 @@ namespace DIPOL_UF.Commands
             this.canExecute = canExecute ?? throw new ArgumentNullException();
             OnCanExecuteChanged(this, new EventArgs());
         }
+
+        public void OnCanExecuteChanged() 
+            => OnCanExecuteChanged(this, new EventArgs());
 
         protected virtual void OnCanExecuteChanged(object sender, EventArgs e)
             => CanExecuteChanged?.Invoke(sender, e);

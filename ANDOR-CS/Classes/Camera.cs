@@ -1246,8 +1246,7 @@ namespace ANDOR_CS.Classes
            
             var result = Call(null, SDKInstance.GetAvailableCameras, out int cameraCount);
             ThrowIfError(result, nameof(SDKInstance.GetAvailableCameras));
-
-
+                         
             return cameraCount;
         }
 

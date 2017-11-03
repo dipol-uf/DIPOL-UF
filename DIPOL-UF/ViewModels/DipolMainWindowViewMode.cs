@@ -14,9 +14,12 @@ namespace DIPOL_UF.ViewModels
     {
         private Models.DipolMainWindow model;
 
+        public ICommand ConnectButtonCommand => model.ConnectButtonCommand as ICommand;
+        public ICommand DisconnectButtonCommand => model.DisconnectButtonCommand as ICommand;
 
         public ObservableCollection<MenuItemViewModel> MenuBarItems 
             => model.MenuBarItems;
+
 
         public DipolMainWindowViewMode(Models.DipolMainWindow model)
         {
