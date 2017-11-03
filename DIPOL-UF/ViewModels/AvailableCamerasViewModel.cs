@@ -17,6 +17,9 @@ namespace DIPOL_UF.ViewModels
     {
         public ObservableConcurrentDictionary<string, CameraBase> FoundCameras => model.FoundCameras;
 
+        public ICommand SelectionChangedCommand => model.SelectionChangedCommand as ICommand;
+
+
         public AvailableCamerasViewModel(AvailableCamerasModel model) 
             : base(model)
         {
