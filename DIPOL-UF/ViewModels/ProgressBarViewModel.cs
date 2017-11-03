@@ -9,50 +9,49 @@ using System.Windows;
 
 namespace DIPOL_UF.ViewModels
 {
-    class ProgressBarViewModel : ObservableObject
+    class ProgressBarViewModel : ViewModel<Models.ProgressBar>
     {
-        private Models.ProgressBar progressBar = new Models.ProgressBar();
 
         public int Minimum
         {
-            get => progressBar.Minimum;
-            set => progressBar.Minimum = value;
+            get => model.Minimum;
+            set => model.Minimum = value;
         }
 
         public int Maximum
         {
-            get => progressBar.Maximum;
-            set => progressBar.Maximum = value;
+            get => model.Maximum;
+            set => model.Maximum = value;
         }
 
         public int Value
         {
-            get => progressBar.Value;
-            set => progressBar.Value = value;
+            get => model.Value;
+            set => model.Value = value;
         }
 
         public bool IsIndeterminate
         {
-            get => progressBar.IsIndeterminate;
-            set => progressBar.IsIndeterminate = value;
+            get => model.IsIndeterminate;
+            set => model.IsIndeterminate = value;
         }
 
         public bool DisplayPercents
         {
-            get => progressBar.DisplayPercents;
-            set => progressBar.DisplayPercents = value;
-        }    
+            get => model.DisplayPercents;
+            set => model.DisplayPercents = value;
+        }
 
         public string BarTitle
         {
-            get => progressBar.BarTitle;
-            set => progressBar.BarTitle = value;            
+            get => model.BarTitle;
+            set => model.BarTitle = value;
         }
 
         public string BarComment
         {
-            get => progressBar.BarComment;
-            set => progressBar.BarComment = value;
+            get => model.BarComment;
+            set => model.BarComment = value;
         }
 
         public string ProgressText
@@ -61,10 +60,10 @@ namespace DIPOL_UF.ViewModels
             {
                 if (IsIndeterminate)
                     return String.Empty;
-                    
+
                 if (DisplayPercents)
                     return String.Format("{0:F0}%", 100.0 * Value / (Maximum - Minimum));
-                else 
+                else
                 {
                     double decDigits = Math.Ceiling(Math.Log10(Maximum % 10 == 0 ? Maximum + 1 : Maximum));
 
@@ -76,40 +75,26 @@ namespace DIPOL_UF.ViewModels
                     else
                     {
                         var format = String.Format("{{0, {0:F0} }} in ({{1, {0:F0} }}, {{2, {0:F0} }})", decDigits);
-                                                
+
                         return String.Format(format, Value, Minimum, Maximum);
                     }
-                    
+
                 }
-                    
+
             }
         }
 
-        public bool CanAbort => progressBar.CanAbort;
+        public bool CanAbort => model.CanAbort;
 
-        public ICommand MouseDragEventHandler => progressBar.WindowDragCommand;
+        public ICommand MouseDragEventHandler => model.WindowDragCommand;
 
-        public ICommand CancelCommand => progressBar.CancelCommand;
-        
-        public ProgressBarViewModel(Models.ProgressBar model)
+        public ICommand CancelCommand => model.CancelCommand;
+
+        public ProgressBarViewModel(Models.ProgressBar model) : base(model)
         {
-            progressBar = model ?? throw new ArgumentNullException();
 
-            model.PropertyChanged += ModelPropertyChanged;
+        } 
 
-            PropertyChanged += (sender, e) => Console.WriteLine(e.PropertyName);
-        }
-
-
-        protected virtual void ModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            RaisePropertyChanged(e.PropertyName);
-
-            if (e.PropertyName != nameof(BarTitle) &&
-                e.PropertyName != nameof(BarComment))
-                RaisePropertyChanged(nameof(ProgressText));
-
-        }
     }
 }
 
