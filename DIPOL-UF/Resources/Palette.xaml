@@ -1,0 +1,9 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:DIPOL_UF.Resources">
+    <SolidColorBrush x:Key="NegativeEffectButtonBackgroundColor" Color="#FFB28484"/>
+    <SolidColorBrush x:Key="NegativeEffectButtonForegroundColor" Color="Black"/>
+
+    <SolidColorBrush x:Key="PositiveEffectButtonBackgroundColor" Color="#FF8CB284"/>
+    <SolidColorBrush x:Key="PositiveEffectButtonForegroundColor" Color="Black"/>
+</ResourceDictionary>
