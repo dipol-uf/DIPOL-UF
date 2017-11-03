@@ -1,6 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:DIPOL_UF.Resources">
+    
+    <!--Basic font styles-->
     <Style x:Key="TitleFont"  TargetType="{x:Type Control}">
         <Setter Property="FontSize" Value="20"/>
         <Setter Property="FontStyle" Value="Normal"/>
@@ -11,7 +13,9 @@
         <Setter Property="FontStyle" Value="Normal"/>
         <Setter Property="FontWeight" Value="Normal"/>
     </Style>
-
+    
+    
+    <!--Menu bar styles-->
 
     <Style x:Key="MenuItemStyle" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource ContentFont}">
         <Setter Property="Command" Value="{Binding Command}"/>
@@ -23,17 +27,25 @@
         <Setter Property="ItemContainerStyle" Value="{StaticResource MenuItemStyle}"/>
     </Style>
 
+    <!--Button styles-->
+    
     <Style x:Key="BasicButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource ContentFont}">
         <Setter Property="Width" Value="80"/>
         <Setter Property="Height" Value="30"/>
+        <Setter Property="Padding" Value="5, 2, 5, 2"/>
+        <Setter Property="Margin" Value="3"/>
     </Style>
     
-    <Style x:Key="CancelButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource BasicButtonStyle}">
-        <Setter Property="Background" Value="#FFED8383"/>
-        <Setter Property="Padding" Value="5, 2, 5, 2"/>
-        <Setter Property="IsCancel" Value="True"/>
+    <Style x:Key="NegativeEffectButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource BasicButtonStyle}">
+        <Setter Property="Background" Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource ResourceKey=NegativeEffectButtonForegroundColor}"/>
+    </Style>
+    <Style x:Key="PositiveEffectButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource BasicButtonStyle}">
+        <Setter Property="Background" Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource ResourceKey=PositiveEffectButtonForegroundColor}"/>
     </Style>
 
+    <!--Derived font styles for text controls-->
 
     <Style x:Key="TitleFont_Label" TargetType="{x:Type Label}" BasedOn="{StaticResource TitleFont}">
         <Setter Property="Margin" Value="1"/>
