@@ -21,10 +21,10 @@ namespace DIPOL_UF.Views
     {
        
 
-        public ProgressWindow(object dataContext)
+        public ProgressWindow(object context)
         {
             InitializeComponent();
-            DataContext = dataContext;
+            DataContext = context;
         }
     }
 }
