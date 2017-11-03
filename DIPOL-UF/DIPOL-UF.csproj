@@ -81,15 +81,21 @@
     <Compile Include="Commands\EventToCommndExtension.cs" />
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="Models\AvailableCamerasModel.cs" />
     <Compile Include="Models\DipolMainWindow.cs" />
     <Compile Include="Models\MenuItemModel.cs" />
     <Compile Include="Models\ProgressBar.cs" />
     <Compile Include="Commands\WindowDragCommandProvider.cs" />
     <Compile Include="ObservableConcurrentDictionary.cs" />
     <Compile Include="ObservableObject.cs" />
-    <Compile Include="ViewModels\DipolMainWindowViewMode.cs" />
+    <Compile Include="ViewModels\AvailableCamerasViewModel.cs" />
+    <Compile Include="ViewModels\DipolMainWindowViewModel.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
+    <Compile Include="ViewModels\ViewModel.cs" />
+    <Compile Include="Views\AvailableCamerasView.xaml.cs">
+      <DependentUpon>AvailableCamerasView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ProgressWindow.xaml.cs">
       <DependentUpon>ProgressWindow.xaml</DependentUpon>
     </Compile>
@@ -102,6 +108,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Resources\Palette.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\AvailableCamerasView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
