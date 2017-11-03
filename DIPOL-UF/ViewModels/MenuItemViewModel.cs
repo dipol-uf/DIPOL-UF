@@ -9,22 +9,17 @@ using System.Windows;
 
 namespace DIPOL_UF.ViewModels
 {
-    class MenuItemViewModel : ObservableObject
+    class MenuItemViewModel : ViewModel<Models.MenuItemModel>
     {
-        private Models.MenuItemModel model;
 
         public MenuItemViewModel(Models.MenuItemModel model)
+            :base(model)
         {
-            this.model = model ?? throw new ArgumentNullException();
         }
 
         public string Header => model.Header;
         public ICommand Command => model.Command as ICommand;
         public ObservableCollection<MenuItemViewModel> MenuItems => model.MenuItems;
-
-        protected virtual void ModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            RaisePropertyChanged(e.PropertyName);
-        }
+                
     }
 }
