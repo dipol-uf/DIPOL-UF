@@ -30,6 +30,7 @@ namespace ANDOR_CS.Classes
 {
     public class DebugCamera : CameraBase
     {
+        private static Random r = new Random();
         private static volatile object locker = new object();
         private static readonly ConsoleColor Green = ConsoleColor.DarkGreen;
         private static readonly ConsoleColor Red = ConsoleColor.Red;
@@ -126,7 +127,7 @@ namespace ANDOR_CS.Classes
         public DebugCamera(int camIndex)
         {
             CameraIndex = camIndex;
-            SerialNumber = "XYZ-1234";
+            SerialNumber = $"XYZ-{r.Next(9999).ToString("0000")}";
             Capabilities = new DeviceCapabilities()
             {
                 CameraType = CameraType.iXonUltra
