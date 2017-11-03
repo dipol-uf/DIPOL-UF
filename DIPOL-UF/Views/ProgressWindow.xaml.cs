@@ -25,7 +25,6 @@ namespace DIPOL_UF.Views
         {
             InitializeComponent();
             DataContext = dataContext;
-          
         }
     }
 }
