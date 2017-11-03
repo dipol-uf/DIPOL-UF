@@ -14,19 +14,20 @@
               ItemsSource="{Binding MenuBarItems}"
               ItemTemplate="{StaticResource ResourceKey=MenuBarItemTemplate}"/>
         <Grid x:Name="MainWindowGrid" DockPanel.Dock="Top">
-            <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Margin="2">
+            <Border HorizontalAlignment="Right" VerticalAlignment="Stretch" Margin="2"
+                    Style="{StaticResource ResourceKey=UIBorderStyle}">
                 <DockPanel >
                     <Label x:Name="ConnectedCamerasLabel" Content="Camera Manager" DockPanel.Dock="Top"
                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
                      <TreeView x:Name="ConnectedCamerasView" VerticalAlignment="Top" DockPanel.Dock="Top" >
                             
                     </TreeView>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" >
                         <Button x:Name="ConnectNewCamerasButton" 
-                            Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" Content="+ New"/>
+                            Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" Content="Connect"/>
                         <Button x:Name="ReleaseExistingCamerasButton" 
                             Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
-                        Content="- Release"/>
+                        Content="Disconnect"/>
                     </StackPanel>
                 </DockPanel>
             </Border>
