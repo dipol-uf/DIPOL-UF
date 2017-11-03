@@ -51,5 +51,13 @@ namespace DIPOL_UF
             return (bool)(showingAsDialogField?.GetValue(window) ?? false);
         }
 
+        public static void WriteLog(string entry)
+        {
+            System.Diagnostics.Debug.WriteLine(entry);
+        }
+        public static void WriteLog(ANDOR_CS.Exceptions.AndorSDKException entry)
+        {
+            System.Diagnostics.Debug.WriteLine($"{entry.Message} [{entry.ErrorCode}]");
+        }
     }
 }
