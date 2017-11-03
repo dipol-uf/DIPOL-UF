@@ -17,9 +17,9 @@ namespace DIPOL_UF.Views
     /// <summary>
     /// Interaction logic for AvailableCameraViewexaml.xaml
     /// </summary>
-    public partial class AvailableCameraViewexaml : Window
+    public partial class AvailableCameraView : Window
     {
-        public AvailableCameraViewexaml(object context)
+        public AvailableCameraView(object context)
         {
             InitializeComponent();
             DataContext = context;

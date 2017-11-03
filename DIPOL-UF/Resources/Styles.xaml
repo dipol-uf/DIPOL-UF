@@ -1,6 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:DIPOL_UF.Resources">
+                    xmlns:local="clr-namespace:DIPOL_UF.Resources"
+                    xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
+                    >
     
     <!--Basic font styles-->
     <Style x:Key="TitleFont"  TargetType="{x:Type Control}">
@@ -70,6 +72,13 @@
     <Style x:Key="ListViewStyle" TargetType="{x:Type ListView}">
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Background" Value="{StaticResource ResourceKey=ListContainerBackgroundColor}"/>
+    </Style>
+
+    <Style x:Key="NonSelectableListViewItemStyle" TargetType="{x:Type ListViewItem}">
+        <Setter Property="Focusable" Value="True"/>
+        <!-- <Setter Property="Focusable" Value="False"/>
+        <Setter Property="IsSelected" Value="True"/>
+        <Setter Property="IsSelected" Value="{Binding Value.Item2, Mode=OneWay}"/>-->
     </Style>
     
 </ResourceDictionary>
