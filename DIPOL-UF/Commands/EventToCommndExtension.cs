@@ -18,6 +18,7 @@ namespace DIPOL_UF.Commands
     /// <summary>
     /// XAML extension used to reroute events to ViewModel commands.
     /// </summary>
+    [ContentProperty(nameof(DataContextProviderControl))]
     class EventToCommndExtension : MarkupExtension
     {
        
@@ -25,6 +26,12 @@ namespace DIPOL_UF.Commands
         /// ViewModel command name.
         /// </summary>
         private IEnumerable<string> commandNames = null;
+
+        public string DataContextProviderControl
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Invoked by XAML code when property value is needed.
@@ -83,14 +90,17 @@ namespace DIPOL_UF.Commands
                 // Packages sender and e into container class sent to ICommand.Execute(object) parameter
                 var commandArgs = new EventCommandArgs<T>(sender, e);
 
+                var context = String.IsNullOrWhiteSpace(DataContextProviderControl)
+                    ? element.DataContext
+                    : (Helper.FindParentByName(element, DataContextProviderControl) as FrameworkElement)?.DataContext;
+
                 foreach (var commandName in commandNames)
                 {
                     // Retrieves ViewModel, then property to which event is bound, then value of this property, which should be ICommand.
-                    var delegateCommand = element
-                        .DataContext
-                        .GetType()
+                    var delegateCommand = context
+                        ?.GetType()
                         .GetProperty(commandName, BindingFlags.Instance | BindingFlags.Public)
-                        ?.GetValue(element.DataContext) as ICommand;
+                        ?.GetValue(context) as ICommand;
 
                     // If can be executed, executes
                     if (delegateCommand?.CanExecute(commandArgs) ?? false)
@@ -113,5 +123,7 @@ namespace DIPOL_UF.Commands
             else throw new ArgumentException();
                         
         }
+
+       
     }
 }
