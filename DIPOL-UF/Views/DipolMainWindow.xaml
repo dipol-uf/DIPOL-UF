@@ -9,11 +9,26 @@
         Style="{StaticResource ResourceKey=ContentFont}">
 
     <DockPanel x:Name="MainContainer" VerticalAlignment="Stretch">
-        <Menu DockPanel.Dock="Top" x:Name="MenuBar" VerticalAlignment="Top"
+        <Menu DockPanel.Dock="Top" x:Name="MenuBar" VerticalAlignment="Top" VerticalContentAlignment="Center"
               Style="{StaticResource ResourceKey=MenuBarStyle}"      
               ItemsSource="{Binding MenuBarItems}"
-              ItemTemplate="{StaticResource ResourceKey=MenuBarItemTemplate}">
-            
-        </Menu>
+              ItemTemplate="{StaticResource ResourceKey=MenuBarItemTemplate}"/>
+        <Grid x:Name="AvailableCamerasPanel" DockPanel.Dock="Right" VerticalAlignment="Stretch" HorizontalAlignment="Right">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            <TreeView x:Name="ConnectedCamerasView" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"></TreeView>
+            <Button x:Name="ConnectNewCamerasButton" Grid.Row="1" Grid.Column="0"
+                    Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" Content="+ New"/>
+            <Button x:Name="ReleaseExistingCamerasButton" Grid.Row="1" Grid.Column="1"
+                    Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
+                    Content="- Release"/>
+        </Grid>
     </DockPanel>
 </Window>
