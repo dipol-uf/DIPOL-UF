@@ -85,6 +85,8 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
+        public bool CanAbort => progressBar.CanAbort;
+
         public ICommand MouseDragEventHandler => progressBar.WindowDragCommand;
 
         public ICommand CancelCommand => progressBar.CancelCommand;
