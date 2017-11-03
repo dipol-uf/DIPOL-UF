@@ -20,6 +20,7 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Linq;
 
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
@@ -330,6 +331,33 @@ namespace ANDOR_CS.Classes
         public abstract void AbortAcquisition();
 
         public abstract Task StartAcquistionAsync(CancellationTokenSource token, int timeout);
+
+        /// <summary>
+        /// String representation of the camera instance.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return $"{CameraModel} [{SerialNumber}]";
+        }
+        public override int GetHashCode()
+        {
+            var strRep = $"{CameraIndex} {ToString()}";
+            int hash = 0;
+            foreach (var ch in strRep)
+                foreach (var b in BitConverter.GetBytes(ch))
+                    hash += b;
+            return hash;
+        }
+        public override bool Equals(object obj)
+        {
+            if (obj is CameraBase cam)
+                return
+                    cam.CameraIndex == this.CameraIndex &
+                    cam.CameraModel == this.CameraModel &
+                    cam.SerialNumber == this.SerialNumber;
+            else return false;
+        }
 
         /// <summary>
         /// Fires <see cref="PropertyChanged"/> event
