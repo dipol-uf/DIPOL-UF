@@ -40,7 +40,17 @@ namespace DIPOL_UF
             while(!(parent is T))
                 parent = VisualTreeHelper.GetParent(parent);
 
-            return parent;
+            return parent is T ? parent : null;
+        }
+
+        public static DependencyObject FindParentByName(DependencyObject element, string name)
+        {
+            var parent = VisualTreeHelper.GetParent(element);
+
+            while ((parent as FrameworkElement)?.Name != name)
+                parent = VisualTreeHelper.GetParent(parent);
+
+            return (parent is FrameworkElement e && e.Name == name) ? parent : null;
         }
 
         public static bool IsDialogWindow(Window window)
