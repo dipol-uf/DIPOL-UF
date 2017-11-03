@@ -129,8 +129,9 @@ namespace DIPOL_UF.Models
         {
             var cameraQueryModel = new AvailableCamerasModel();
             var viewModel = new ViewModels.AvailableCamerasViewModel(cameraQueryModel);
-            var wind = new Views.AvailableCameraViewexaml(viewModel);
-
+            var wind = new Views.AvailableCameraView(viewModel);
+            if (parameter is Window owner)
+                wind.Owner = owner;
             wind.Show();
         }
     }

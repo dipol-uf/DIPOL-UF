@@ -33,6 +33,7 @@
                                    Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" 
                                    Content="Connect"
                                    Command="{Binding ConnectButtonCommand}"
+                                   CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
                                     />
                            <Button x:Name="ReleaseExistingCamerasButton"
                                    Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
