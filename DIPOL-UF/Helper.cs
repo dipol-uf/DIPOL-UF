@@ -43,5 +43,13 @@ namespace DIPOL_UF
             return parent;
         }
 
+        public static bool IsDialogWindow(Window window)
+        {
+            var showingAsDialogField = window.GetType().GetField("_showingAsDialog", 
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+            return (bool)(showingAsDialogField?.GetValue(window) ?? false);
+        }
+
     }
 }
