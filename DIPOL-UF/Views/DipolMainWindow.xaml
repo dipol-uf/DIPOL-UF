@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DIPOL_UF"
+        xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
         mc:Ignorable="d"
         Title="Dipol-UF" Height="768" Width="1024" HorizontalContentAlignment="Stretch" MinWidth="800" MinHeight="600"
         Style="{StaticResource ResourceKey=ContentFont}">
@@ -21,18 +22,23 @@
                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <Separator DockPanel.Dock="Top" Style="{StaticResource ResourceKey=SeparatorAsBorderStyle}"/>
                     <TreeView x:Name="ConnectedCamerasView" VerticalAlignment="Top" DockPanel.Dock="Top"
-                              BorderThickness="0">
+                            BorderThickness="0">
                             
                     </TreeView>
                     <Border DockPanel.Dock="Bottom" VerticalAlignment="Bottom" 
                             Style="{StaticResource ResourceKey=BorderStyle}"
                             BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
                         <StackPanel Orientation="Horizontal" >
-                            <Button x:Name="ConnectNewCamerasButton" 
-                                Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" Content="Connect"/>
-                            <Button x:Name="ReleaseExistingCamerasButton" 
-                                Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
-                            Content="Disconnect"/>
+                           <Button x:Name="ConnectNewCamerasButton" 
+                                   Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" 
+                                   Content="Connect"
+                                   Command="{Binding ConnectButtonCommand}"
+                                    />
+                           <Button x:Name="ReleaseExistingCamerasButton"
+                                   Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
+                                   Content="Disconnect"
+                                   Command="{Binding DisconnectButtonCommand}"
+                                    />
                         </StackPanel>
                     </Border>
                 </DockPanel>
