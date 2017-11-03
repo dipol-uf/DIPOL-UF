@@ -87,8 +87,7 @@ namespace DIPOL_UF.Models
             InitializeMenu();
             InitializeCommands();
         }
-
-                                            
+                                                        
 
         public void Dispose()
         {
