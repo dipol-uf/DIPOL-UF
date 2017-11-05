@@ -69,5 +69,8 @@ namespace DIPOL_UF
         {
             System.Diagnostics.Debug.WriteLine($"{entry.Message} [{entry.ErrorCode}]");
         }
+        public static void WriteLog(object entry)
+            => WriteLog(entry.ToString());
+
     }
 }

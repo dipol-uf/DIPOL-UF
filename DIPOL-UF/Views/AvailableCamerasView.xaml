@@ -5,11 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DIPOL_UF.Views"
         xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         x:Name="AvailableCamerasWindow"
         mc:Ignorable="d"
         Style="{StaticResource ResourceKey=ContentFont}"
         Title="Available Cameras" Height="auto" Width="auto" 
-        WindowStyle="ThreeDBorderWindow" SizeToContent="WidthAndHeight" Topmost="True" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+        WindowStyle="ThreeDBorderWindow" SizeToContent="WidthAndHeight" Topmost="True" 
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Closing="{cmnds:EventToCommnd WindowClosingCommand}">
     <DockPanel Margin="10, 5, 10, 5">
         <Label DockPanel.Dock="Top" Content="Found:" 
                BorderBrush="{StaticResource ResourceKey=BorderColor}"
@@ -20,7 +23,7 @@
                   ItemContainerStyle="{StaticResource ResourceKey=NonSelectableListViewItemStyle}"
                   ItemsSource="{Binding FoundCameras}"
                   ItemTemplate="{StaticResource ResourceKey=FoundCamerasListViewItemTemplate}"
-                  SelectionMode="Multiple"
+                  SelectionMode="Multiple" SelectedIndex="-1"
                   SelectionChanged="{cmnds:EventToCommnd SelectionChangedCommand}">
             
         </ListView>
@@ -30,10 +33,13 @@
             
             <DockPanel>
                 <Button Content="Connect"
+                        Command="{Binding ConnectButtonCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
                         Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" HorizontalAlignment="Left"/>
                 <Button Content="Connect All"
+                        Command="{Binding ConnectAllButtonCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
                         Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}"/>
-                <Button Content="Cancel" 
+                <Button Content="Cancel" IsCancel="True" 
+                        Command="{Binding CancelButtonCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
                         Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" HorizontalAlignment="Right"/>
             </DockPanel>
         </Border>

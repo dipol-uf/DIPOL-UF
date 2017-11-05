@@ -13,7 +13,7 @@ using System.Windows.Shapes;
 
 namespace DIPOL_UF.Commands
 {
-    class EventCommandArgs<T> where T : RoutedEventArgs
+    class CommandEventArgs<T> where T : EventArgs
     {
         public T EventArgs
         {
@@ -27,7 +27,7 @@ namespace DIPOL_UF.Commands
             private set;
         }
 
-        public EventCommandArgs(object sender, T args)
+        public CommandEventArgs(object sender, T args)
         {
             Sender = sender;
             EventArgs = args;

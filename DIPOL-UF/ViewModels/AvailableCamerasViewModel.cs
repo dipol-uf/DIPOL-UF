@@ -13,11 +13,15 @@ using ANDOR_CS.Classes;
 
 namespace DIPOL_UF.ViewModels
 {
-    class AvailableCamerasViewModel : ViewModel<Models.AvailableCamerasModel>
+    class AvailableCamerasViewModel : ViewModel<AvailableCamerasModel>
     {
         public ObservableConcurrentDictionary<string, CameraBase> FoundCameras => model.FoundCameras;
 
         public ICommand SelectionChangedCommand => model.SelectionChangedCommand as ICommand;
+        public ICommand WindowClosingCommand => model.WindowClosingCommand as ICommand;
+        public ICommand CancelButtonCommand => model.CancelButtonCommand as ICommand;
+        public ICommand ConnectButtonCommand => model.ConnectButtonCommand as ICommand;
+        public ICommand ConnectAllButtonCommand => model.ConnectAllButtonCommand as ICommand;
 
 
         public AvailableCamerasViewModel(AvailableCamerasModel model) 
