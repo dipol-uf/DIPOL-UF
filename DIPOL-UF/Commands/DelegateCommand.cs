@@ -15,9 +15,16 @@ namespace DIPOL_UF.Commands
 {
     class DelegateCommand : ICommand
     {
+        private static readonly Func<object, bool> canExecuteAlways = (param) => true;
+        private static readonly Func<object, bool> canExecuteNever = (param) => false;
+
         private Action<object> worker;
         private Func<object, bool> canExecute;
         private bool oldCanExecuteState;
+
+        public static Func<object, bool> CanExecuteAlways => canExecuteAlways;
+        public static Func<object, bool> CanExecuteNever => canExecuteNever;
+
 
         public event EventHandler CanExecuteChanged;
 
