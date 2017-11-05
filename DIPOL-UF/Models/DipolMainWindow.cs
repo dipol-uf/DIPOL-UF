@@ -133,6 +133,13 @@ namespace DIPOL_UF.Models
             if (parameter is Window owner)
                 wind.Owner = owner;
             wind.Show();
+
+            cameraQueryModel.CameraSelectionsMade += (e) =>
+            {
+                foreach (var x in e as IEnumerable<KeyValuePair<string, CameraBase>>)
+                    Helper.WriteLog(x);
+            };
+
         }
     }
 }

@@ -77,7 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\DelegateCommand.cs" />
-    <Compile Include="Commands\EventCommandArgs.cs" />
+    <Compile Include="Commands\CommandEventArgs.cs" />
     <Compile Include="Commands\EventToCommndExtension.cs" />
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
     <Compile Include="Helper.cs" />

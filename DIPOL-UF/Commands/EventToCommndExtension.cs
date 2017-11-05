@@ -82,13 +82,13 @@ namespace DIPOL_UF.Commands
         /// <typeparam name="T">Type of event EventArgs.</typeparam>
         /// <param name="sender">Sender.</param>
         /// <param name="e">Event arguments.</param>
-        private void DoAction<T>(object sender, T e) where T: RoutedEventArgs
+        private void DoAction<T>(object sender, T e) where T: EventArgs
         {
             // Just to make sure we are dealing with UI element
             if (sender is FrameworkElement element)
             {
                 // Packages sender and e into container class sent to ICommand.Execute(object) parameter
-                var commandArgs = new EventCommandArgs<T>(sender, e);
+                var commandArgs = new CommandEventArgs<T>(sender, e);
 
                 var context = String.IsNullOrWhiteSpace(DataContextProviderControl)
                     ? element.DataContext
