@@ -47,7 +47,7 @@ namespace DIPOL_UF.Commands
         {
             this.worker = worker ?? throw new ArgumentNullException();
             this.canExecute = canExecute ?? throw new ArgumentNullException();
-            OnCanExecuteChanged(this, new EventArgs());
+            OnCanExecuteChanged();
         }
 
         public void OnCanExecuteChanged() 

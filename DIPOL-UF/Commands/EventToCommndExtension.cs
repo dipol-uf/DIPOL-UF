@@ -64,6 +64,9 @@ namespace DIPOL_UF.Commands
                 .Select(p => p.ParameterType)
                 .ToArray();
 
+            if (delegateParameterTypes == null)
+                throw new ArgumentNullException("Failed to retrieve types of delegate parameters. Either illegal binidng or unsupported event type.");
+
             // Constructs appropriate *EventHandler from generic DoAction<T>, substituting *EventArgs type for T
             var eventHandlerMethodInfo = this
                 .GetType()
