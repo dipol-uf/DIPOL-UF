@@ -1,23 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Linq;
 
 using ANDOR_CS.Classes;
 
 using DIPOL_Remote.Classes;
+
 
 
 namespace DIPOL_UF.Models
@@ -36,6 +27,8 @@ namespace DIPOL_UF.Models
             = new ObservableCollection<ViewModels.MenuItemViewModel>();
         private ObservableConcurrentDictionary<string, CameraBase> connectedCameras 
             = new ObservableConcurrentDictionary<string, CameraBase>();
+        private ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel> treeCameraRepresentation
+            = new ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel>();
 
 
         public ObservableCollection<ViewModels.MenuItemViewModel> MenuBarItems
@@ -58,6 +51,18 @@ namespace DIPOL_UF.Models
                 if (value != connectedCameras)
                 {
                     connectedCameras = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        public ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel> TreeCameraRepresentation
+        {
+            get => treeCameraRepresentation;
+            set
+            {
+                if (value != treeCameraRepresentation)
+                {
+                    treeCameraRepresentation = value;
                     RaisePropertyChanged();
                 }
             }
@@ -106,6 +111,7 @@ namespace DIPOL_UF.Models
         {
             InitializeMenu();
             InitializeCommands();
+            HookCollectionEvents();
             InitializeRemoteSessions();
         }
                                                         
@@ -160,7 +166,9 @@ namespace DIPOL_UF.Models
                 remoteClients[i].Connect();
             });
         }
-
+        private void HookCollectionEvents()
+        {
+        }
         
         private bool CanDisconnectCameras(object parameter)
             => !connectedCameras.IsEmpty;
@@ -177,6 +185,18 @@ namespace DIPOL_UF.Models
             {
                 foreach (var x in e as IEnumerable<KeyValuePair<string, CameraBase>>)
                     ConnectedCameras.TryAdd(x.Key, x.Value);
+
+                string[]  categories = ConnectedCameras.Keys.Select((item) => item.Split(':')[0]).ToArray();
+
+                foreach (var cat in categories)
+                {
+                    treeCameraRepresentation.Add(new ViewModels.ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
+                    {
+                        Name = cat,
+                        CameraList = new ObservableConcurrentDictionary<string, CameraBase>(ConnectedCameras.Where(item => item.Key.Substring(0, cat.Length) == cat))
+                    }));
+                }
+
             };
 
         }

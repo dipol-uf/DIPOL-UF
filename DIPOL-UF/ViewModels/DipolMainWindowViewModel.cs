@@ -14,11 +14,11 @@ using ANDOR_CS.Classes;
 
 namespace DIPOL_UF.ViewModels
 {
-    class DipolMainWindowViewModel : ViewModel<Models.DipolMainWindow>
+    class DipolMainWindowViewModel : ViewModel<DipolMainWindow>
     {
-
         public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
         {
+            model.PropertyChanged += (sender, e) => Helper.WriteLog(e.PropertyName);
         }
 
         public ICommand ConnectButtonCommand => model.ConnectButtonCommand as ICommand;
@@ -26,6 +26,8 @@ namespace DIPOL_UF.ViewModels
 
         public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
         public ObservableConcurrentDictionary<string, CameraBase> ConnectedCameras => model.ConnectedCameras;
-            
+
+        public ObservableCollection<ConnectedCamerasTreeViewModel> TreeCameraRepresentation => model.TreeCameraRepresentation;
+
     }
 }
