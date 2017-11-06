@@ -187,7 +187,7 @@ namespace DIPOL_UF
             {
                 if (removed)
                 {
-                    OnNotifyCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove));
+                    OnNotifyCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Count)));
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Keys)));
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Values)));

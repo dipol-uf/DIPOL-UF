@@ -17,7 +17,7 @@ namespace DIPOL_UF.Models
     {
         private bool isDisposed = false;
         private string[] remoteLocations =
-           { "dipol-2" };
+           { "dipol-2", "dipol-3" };
         private DipolClient[] remoteClients;
 
 
@@ -111,7 +111,6 @@ namespace DIPOL_UF.Models
         {
             InitializeMenu();
             InitializeCommands();
-            HookCollectionEvents();
             InitializeRemoteSessions();
         }
                                                         
@@ -128,7 +127,7 @@ namespace DIPOL_UF.Models
             {
                 foreach (var cam in connectedCameras)
                 {
-                    connectedCameras.TryRemove($"{cam.Value.CameraModel}{cam.Value.SerialNumber}", out CameraBase camInstance);
+                    connectedCameras.TryRemove(cam.Key, out CameraBase camInstance);
                     camInstance?.Dispose();
                 }
 
@@ -166,9 +165,7 @@ namespace DIPOL_UF.Models
                 remoteClients[i].Connect();
             });
         }
-        private void HookCollectionEvents()
-        {
-        }
+       
         
         private bool CanDisconnectCameras(object parameter)
             => !connectedCameras.IsEmpty;
