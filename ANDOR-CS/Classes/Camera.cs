@@ -1059,7 +1059,7 @@ namespace ANDOR_CS.Classes
                 throw new ArgumentException($"Camera with index {camIndex} is already created.");
 
             // Stores the handle (SDK private pointer) to the camera. A unique identifier
-            result = Call(CameraHandle, SDKInstance.GetCameraHandle, camIndex, out int handle);
+            result = CallWithoutHandle(SDKInstance.GetCameraHandle, camIndex, out int handle);
             ThrowIfError(result, nameof(SDKInstance.GetCameraHandle));
 
             // If succede, assigns handle to Camera property

@@ -205,6 +205,26 @@ namespace ANDOR_CS.Classes
 
         }
 
+        public static uint CallWithoutHandle<T1, T2>(AndorSDK<T1, T2> method, T1 p1, out T2 p2)
+        {
+            // Stores return code
+            uint result = 0;
+            p2 = default(T2);
+            try
+            {// Waits until SDKInstance is available
+                locker.Wait();
+
+                // Calls function
+                result = method(p1, ref p2);
+
+                return result;
+            }
+            finally
+            {// Releases semaphore
+                locker.Release();
+            }
+        }
+
         private static void SetActiveCamera(SafeSDKCameraHandle handle)
         {
             if (handle != null)
