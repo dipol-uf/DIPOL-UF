@@ -8,12 +8,18 @@ using System.Windows.Threading;
 
 namespace DIPOL_UF
 {
-    class ObservableConcurrentDictionary<TKey, TValue> : ConcurrentDictionary<TKey, TValue>, INotifyPropertyChanged, INotifyCollectionChanged 
+    class ObservableConcurrentDictionary<TKey, TValue> : ConcurrentDictionary<TKey, TValue>, INotifyPropertyChanged, INotifyCollectionChanged
     {
         protected Dispatcher dispatcher = System.Windows.Application.Current?.Dispatcher;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+
+        public ObservableConcurrentDictionary() : base()
+        {}
+        public ObservableConcurrentDictionary(IEnumerable<KeyValuePair<TKey, TValue>> source) : base(source)
+        { }
 
         [System.Runtime.CompilerServices.IndexerName("Item")]
         public new TValue this[TKey key]
@@ -212,9 +218,9 @@ namespace DIPOL_UF
         protected virtual void OnNotifyCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (dispatcher == null)
-                CollectionChanged(sender, e);
+                CollectionChanged?.Invoke(sender, e);
             else
-                dispatcher.Invoke(() => CollectionChanged(sender, e));
+                dispatcher.Invoke(() => CollectionChanged?.Invoke(sender, e));
         }
 
         protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
