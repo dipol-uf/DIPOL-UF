@@ -16,8 +16,8 @@ namespace DIPOL_UF.Models
     class DipolMainWindow : ObservableObject, IDisposable
     {
         private bool isDisposed = false;
-        private string[] remoteLocations =
-           { "dipol-2", "dipol-3" };
+        private string[] remoteLocations = new string[0];
+           //{ "dipol-2", "dipol-3" };
         private DipolClient[] remoteClients;
 
 
@@ -180,17 +180,20 @@ namespace DIPOL_UF.Models
 
             cameraQueryModel.CameraSelectionsMade += (e) =>
             {
-                foreach (var x in e as IEnumerable<KeyValuePair<string, CameraBase>>)
+                var providedCameras = e as IEnumerable<KeyValuePair<string, CameraBase>>;
+
+                foreach (var x in providedCameras)
                     ConnectedCameras.TryAdd(x.Key, x.Value);
 
-                string[]  categories = ConnectedCameras.Keys.Select((item) => item.Split(':')[0]).ToArray();
+                string[]  categories = providedCameras.Select(item => item.Key.Split(':')[0])
+                .ToArray();
 
                 foreach (var cat in categories)
                 {
                     treeCameraRepresentation.Add(new ViewModels.ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
                     {
                         Name = cat,
-                        CameraList = new ObservableConcurrentDictionary<string, CameraBase>(ConnectedCameras.Where(item => item.Key.Substring(0, cat.Length) == cat))
+                        CameraList = new ObservableConcurrentDictionary<string, CameraBase>(providedCameras.Where(item => item.Key.Substring(0, cat.Length) == cat))
                     }));
                 }
 
