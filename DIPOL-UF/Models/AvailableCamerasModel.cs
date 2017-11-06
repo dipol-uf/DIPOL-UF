@@ -284,8 +284,8 @@ namespace DIPOL_UF.Models
                 CameraBase cam = null;
                 try
                 {
-                    cam = new Camera(camIndex);
-                    //cam = Camera.GetDebugInterface(camIndex);
+                    if(!Camera.CamerasInUse.Values.Select(item => item.CameraIndex).Contains(camIndex))
+                        cam = new Camera(camIndex);
                 }
                 catch (Exception aExp)
                 {
