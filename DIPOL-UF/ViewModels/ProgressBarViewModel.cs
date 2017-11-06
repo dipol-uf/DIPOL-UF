@@ -92,8 +92,15 @@ namespace DIPOL_UF.ViewModels
 
         public ProgressBarViewModel(Models.ProgressBar model) : base(model)
         {
+        }
 
-        } 
+        protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            base.OnModelPropertyChanged(sender, e);
+
+            if (e.PropertyName != nameof(BarTitle) && e.PropertyName != nameof(BarComment))
+                OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(ProgressText)));
+        }
 
     }
 }

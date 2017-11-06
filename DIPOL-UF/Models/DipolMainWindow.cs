@@ -17,15 +17,23 @@ using System.Windows.Shapes;
 
 using ANDOR_CS.Classes;
 
+using DIPOL_Remote.Classes;
+
+
 namespace DIPOL_UF.Models
 {
     class DipolMainWindow : ObservableObject, IDisposable
     {
         private bool isDisposed = false;
+        private string[] remoteLocations =
+           { "dipol-2" };
+        private DipolClient[] remoteClients;
+
 
         private Commands.DelegateCommand connectButtonCommand;
         private Commands.DelegateCommand disconnectButtonCommand;
-        private ObservableCollection<ViewModels.MenuItemViewModel> menuBarItems;
+        private ObservableCollection<ViewModels.MenuItemViewModel> menuBarItems
+            = new ObservableCollection<ViewModels.MenuItemViewModel>();
         private ObservableConcurrentDictionary<string, CameraBase> connectedCameras 
             = new ObservableConcurrentDictionary<string, CameraBase>();
 
@@ -38,6 +46,18 @@ namespace DIPOL_UF.Models
                 if (value != menuBarItems)
                 {
                     menuBarItems = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        public ObservableConcurrentDictionary<string, CameraBase> ConnectedCameras
+        {
+            get => connectedCameras;
+            set
+            {
+                if (value != connectedCameras)
+                {
+                    connectedCameras = value;
                     RaisePropertyChanged();
                 }
             }
@@ -86,6 +106,7 @@ namespace DIPOL_UF.Models
         {
             InitializeMenu();
             InitializeCommands();
+            InitializeRemoteSessions();
         }
                                                         
 
@@ -104,6 +125,13 @@ namespace DIPOL_UF.Models
                     connectedCameras.TryRemove($"{cam.Value.CameraModel}{cam.Value.SerialNumber}", out CameraBase camInstance);
                     camInstance?.Dispose();
                 }
+
+                foreach (var client in remoteClients)
+                {
+                    client?.Disconnect();
+                    client?.Dispose();
+                }
+
                 IsDisposed = true;
 
             }
@@ -123,11 +151,22 @@ namespace DIPOL_UF.Models
                 CanDisconnectCameras);
 
         }
+        private void InitializeRemoteSessions()
+        {
+            remoteClients = new DipolClient[remoteLocations.Length];
+            Parallel.For(0, remoteClients.Length, (i) =>
+            {
+                remoteClients[i] = new DipolClient(remoteLocations[i]);
+                remoteClients[i].Connect();
+            });
+        }
+
+        
         private bool CanDisconnectCameras(object parameter)
             => !connectedCameras.IsEmpty;
         private void ListAndSelectAvailableCameras(object parameter)
         {
-            var cameraQueryModel = new AvailableCamerasModel();
+            var cameraQueryModel = new AvailableCamerasModel(remoteClients);
             var viewModel = new ViewModels.AvailableCamerasViewModel(cameraQueryModel);
             var wind = new Views.AvailableCameraView(viewModel);
             if (parameter is Window owner)
@@ -137,7 +176,7 @@ namespace DIPOL_UF.Models
             cameraQueryModel.CameraSelectionsMade += (e) =>
             {
                 foreach (var x in e as IEnumerable<KeyValuePair<string, CameraBase>>)
-                    Helper.WriteLog(x);
+                    ConnectedCameras.TryAdd(x.Key, x.Value);
             };
 
         }

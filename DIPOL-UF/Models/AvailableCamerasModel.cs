@@ -5,11 +5,17 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Threading;
 using System.Threading.Tasks;
 
 using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
+
+using DIPOL_Remote.Classes;
+
 using DIPOL_UF.Commands;
+
+
 
 namespace DIPOL_UF.Models
 {
@@ -23,6 +29,9 @@ namespace DIPOL_UF.Models
             ConnectAll = 2
         }
 
+        private ProgressBar progressBar = null;
+        private Views.ProgressWindow progressView = null;
+        private DipolClient[] remoteClients = null;
         private ClosingState closingWindowState = ClosingState.Canceled;
         private ObservableConcurrentDictionary<string, CameraBase> foundCameras = new ObservableConcurrentDictionary<string, CameraBase>();
         private ObservableCollection<string> selectedItems = new ObservableCollection<string>();
@@ -32,6 +41,7 @@ namespace DIPOL_UF.Models
         private DelegateCommand connectButtonCommand;
         private DelegateCommand connectAllButtonCommand;
         private DelegateCommand windowClosingCommand;
+        private DelegateCommand windowShownCommand;
 
         private ObservableCollection<string> SelectedItems
         {
@@ -122,28 +132,109 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-
-        public AvailableCamerasModel()
+        public DelegateCommand WindowShownCommand
         {
+            get => windowShownCommand;
+            private set
+            {
+                if (value != windowShownCommand)
+                {
+                    windowShownCommand = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public AvailableCamerasModel(DipolClient[] remoteClients = null)
+        {
+            this.remoteClients = remoteClients;
+
             InitializeCommands();
 
-            foundCameras.PropertyChanged += (sender, e) => Helper.WriteLog(e.PropertyName);
-            Task.Run(() =>
+            int nLocal = 0;
+            int nRemote = 0;
+
+            try
             {
+                nLocal = Camera.GetNumberOfCameras();
+            }
+            catch (AndorSDKException aExp)
+            {
+                Helper.WriteLog(aExp);
+            }
+
+            foreach (var client in remoteClients)
                 try
                 {
-                    QueryLocalCameras();
-                    QueryRemoteCameras();
+                    nRemote += client?.GetNumberOfCameras() ?? 0;
                 }
                 catch (Exception e)
                 {
                     Helper.WriteLog(e.Message);
                 }
-            });
+
+            CancellationTokenSource cancelSource = new CancellationTokenSource();
+
+            if (nLocal + nRemote > 0)
+            {
+                progressBar = new ProgressBar()
+                {
+                    Minimum = 0,
+                    Value = 0,
+                    Maximum = nLocal + nRemote,
+                    IsIndeterminate = false,
+                    CanAbort = true,
+                    DisplayPercents = false,
+                    BarTitle = "Checking connections...."
+                };
+
+                progressBar.AbortButtonClick += (sender, e) => cancelSource.Cancel();
+            }
+
+            if(nLocal > 0)
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        QueryLocalCameras(cancelSource.Token);
+                    }
+                    catch (Exception e)
+                    {
+                        Helper.WriteLog(e.Message);
+                    }
+                });
+
+            if(nRemote > 0)
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        QueryRemoteCameras(cancelSource.Token);
+                    }
+                    catch (Exception e)
+                    {
+                        Helper.WriteLog(e.Message);
+                    }
+
+                });
+
         }
 
         private void InitializeCommands()
         {
+            WindowShownCommand = new DelegateCommand(
+                (param) =>
+                {
+                    if (progressBar != null)
+                    {
+                        progressView = new Views.ProgressWindow(new ViewModels.ProgressBarViewModel(progressBar));
+                        progressView.Owner = (param as CommandEventArgs<EventArgs>)?.Sender as Window;
+                        progressView.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                        progressView.Show();
+                    }
+                },
+                DelegateCommand.CanExecuteAlways);
+
             
             SelectionChangedCommand = new DelegateCommand(
                 SelectionChangedHandler,
@@ -171,7 +262,7 @@ namespace DIPOL_UF.Models
 
         }
 
-        private void QueryLocalCameras()
+        private void QueryLocalCameras(CancellationToken token)
         {
             int nCams;
             try
@@ -184,29 +275,103 @@ namespace DIPOL_UF.Models
                 nCams = 0;
             }
 
-            nCams = 10;
 
 
             for (int camIndex = 0; camIndex < nCams; camIndex++)
             {
+                if (token.IsCancellationRequested)
+                    break;
                 CameraBase cam = null;
                 try
                 {
-                    //cam = new Camera(camIndex);
-                    cam = Camera.GetDebugInterface(camIndex);
+                    cam = new Camera(camIndex);
+                    //cam = Camera.GetDebugInterface(camIndex);
                 }
                 catch (AndorSDKException aExp)
                 {
                     Helper.WriteLog(aExp);
                 }
 
+                if (token.IsCancellationRequested)
+                {
+                    cam?.Dispose();
+                    break;
+                }
+
                 if (cam != null)
                     FoundCameras.TryAdd($"localhost:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
 
+
+                if (progressBar?.TryIncrement() ?? false)
+                {
+                    progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired local camera {cam.ToString()}";
+                }
+
+                if (progressBar?.Value == progressBar?.Maximum)
+                {
+                    Task.Delay(750).Wait();
+                    Application.Current.Dispatcher.Invoke(progressView.Close);
+                }
+
             }
         }
-        private void QueryRemoteCameras()
+        private void QueryRemoteCameras(CancellationToken token)
         {
+            foreach (var client in remoteClients)
+            {
+                if (token.IsCancellationRequested)
+                    break;
+                Task.Run(() =>
+                {
+                    try
+                    {
+
+                        int nCams = client.GetNumberOfCameras();
+
+                        for (int camIndex = 0; camIndex < nCams; camIndex++)
+                        {
+                            if (token.IsCancellationRequested)
+                                break;
+
+                            CameraBase cam = null;
+                            try
+                            {
+                                cam = client.CreateRemoteCamera(camIndex);
+                            }
+                            catch (Exception aExp)
+                            {
+                                Helper.WriteLog(aExp);
+                            }
+
+                            if (token.IsCancellationRequested)
+                            {
+                                cam?.Dispose();
+                                break;
+                            }
+
+                            if (cam != null)
+                                FoundCameras.TryAdd($"{client.HostAddress}:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
+
+                            if (progressBar?.TryIncrement() ?? false)
+                            {
+                                progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired remote camera {cam.ToString()}";
+                            }
+
+                            if (progressBar?.Value == progressBar?.Maximum)
+                            {
+                                Task.Delay(750).Wait();
+                                Application.Current.Dispatcher.Invoke(progressView.Close);
+
+                            }
+
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Helper.WriteLog(e);
+                    }
+                }, token);
+            }
         }
 
         private void ButtonClickCloseWindow(Window window, ClosingState state)
@@ -234,9 +399,8 @@ namespace DIPOL_UF.Models
         private void WindowClosingHandler(object parameter)
         {
             OnCameraSelectionsMade();
-            foreach (var camObj in FoundCameras.Where(item => !SelectedItems.Contains(item.Key)))
-                camObj.Value.Dispose();
-
+            Parallel.ForEach(FoundCameras.Where(item => !SelectedItems.Contains(item.Key)), (item) => item.Value?.Dispose());
+                        
             FoundCameras.Clear();
             SelectedItems.Clear();
                 
