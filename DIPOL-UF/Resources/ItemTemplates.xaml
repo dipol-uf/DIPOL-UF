@@ -8,6 +8,16 @@
         <Label Content="{Binding Header}"/>
     </HierarchicalDataTemplate>
 
+    <HierarchicalDataTemplate x:Key="CameraTreeViewItemTemplate" DataType="{x:Type vm:ConnectedCamerasTreeViewModel}"
+                              ItemsSource="{Binding CameraList}">
+        <ContentPresenter Content="{Binding Name}"/>
+        <HierarchicalDataTemplate.ItemTemplate>
+            <DataTemplate>
+                <ContentPresenter Content="{Binding Value}"/>
+            </DataTemplate>
+        </HierarchicalDataTemplate.ItemTemplate>
+     </HierarchicalDataTemplate>
+
     <DataTemplate x:Key="FoundCamerasListViewItemTemplate">
         <DockPanel  Background="Transparent">
             <Label DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Value}"/>
