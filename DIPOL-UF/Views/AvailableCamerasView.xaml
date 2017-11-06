@@ -12,7 +12,8 @@
         Title="Available Cameras" Height="auto" Width="auto" 
         WindowStyle="ThreeDBorderWindow" SizeToContent="WidthAndHeight" Topmost="True" 
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Closing="{cmnds:EventToCommnd WindowClosingCommand}">
+        Closing="{cmnds:EventToCommnd WindowClosingCommand}"
+        ContentRendered="{cmnds:EventToCommnd WindowShownCommand}">
     <DockPanel Margin="10, 5, 10, 5">
         <Label DockPanel.Dock="Top" Content="Found:" 
                BorderBrush="{StaticResource ResourceKey=BorderColor}"
