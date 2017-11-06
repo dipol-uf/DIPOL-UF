@@ -37,11 +37,18 @@ namespace DIPOL_Remote.Classes
         private IRemoteControl Remote
             => remote ?? throw CommunicationException;
 
+        public string HostAddress
+        {
+            get;
+            private set;
+        }
+
         public string SessionID
             => Remote.SessionID;
 
         public DipolClient(string host)
         {
+            HostAddress = host;
             var bnd = new NetTcpBinding(SecurityMode.None);
             // IMPORTANT! Limits the size of SOAP message. For larger images requires another implementation
             bnd.MaxReceivedMessageSize = 512 * 512 * 8 * 2;
