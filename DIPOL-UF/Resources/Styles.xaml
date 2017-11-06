@@ -80,5 +80,9 @@
         <Setter Property="IsSelected" Value="True"/>
         <Setter Property="IsSelected" Value="{Binding Value.Item2, Mode=OneWay}"/>-->
     </Style>
+
+    <Style x:Key="TreeViewStyle" TargetType="{x:Type TreeViewItem}">
+        <Setter Property="IsExpanded" Value="True"/>
+    </Style>
     
 </ResourceDictionary>
