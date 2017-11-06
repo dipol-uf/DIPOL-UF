@@ -220,9 +220,9 @@ namespace DIPOL_UF
         protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (dispatcher == null)
-                PropertyChanged(sender, e);
+                PropertyChanged?.Invoke(sender, e);
             else
-                dispatcher.Invoke(() => PropertyChanged(sender, e));
+                dispatcher.Invoke(() => PropertyChanged?.Invoke(sender, e));
         }
 
         

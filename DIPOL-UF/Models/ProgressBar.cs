@@ -21,6 +21,8 @@ namespace DIPOL_UF.Models
         private bool isAborted = false;
         private bool canAbort = true;
 
+        public event EventHandler AbortButtonClick;
+
         public int Minimum
         {
             get => minimum;
@@ -187,6 +189,7 @@ namespace DIPOL_UF.Models
                         if(Helper.IsDialogWindow(w))
                             w.DialogResult = false;
                         IsAborted = true;
+                        OnAbortButtonClick(this, new EventArgs());
                         w.Close();
                     }
                 },
@@ -194,6 +197,10 @@ namespace DIPOL_UF.Models
 
             WindowDragCommand = new Commands.WindowDragCommandProvider().Command;
         }
+
+
+        protected virtual void OnAbortButtonClick(object sender, EventArgs e)
+            => AbortButtonClick?.Invoke(this, e);
 
     }
 }

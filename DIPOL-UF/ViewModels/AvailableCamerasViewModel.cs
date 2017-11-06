@@ -22,7 +22,7 @@ namespace DIPOL_UF.ViewModels
         public ICommand CancelButtonCommand => model.CancelButtonCommand as ICommand;
         public ICommand ConnectButtonCommand => model.ConnectButtonCommand as ICommand;
         public ICommand ConnectAllButtonCommand => model.ConnectAllButtonCommand as ICommand;
-
+        public ICommand WindowShownCommand => model.WindowShownCommand as ICommand;
 
         public AvailableCamerasViewModel(AvailableCamerasModel model) 
             : base(model)
