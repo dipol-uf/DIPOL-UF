@@ -287,7 +287,7 @@ namespace DIPOL_UF.Models
                     cam = new Camera(camIndex);
                     //cam = Camera.GetDebugInterface(camIndex);
                 }
-                catch (AndorSDKException aExp)
+                catch (Exception aExp)
                 {
                     Helper.WriteLog(aExp);
                 }
