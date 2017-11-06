@@ -7,7 +7,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
 using System.Windows;
+
 using DIPOL_UF.Models;
+
+using ANDOR_CS.Classes;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -21,8 +24,8 @@ namespace DIPOL_UF.ViewModels
         public ICommand ConnectButtonCommand => model.ConnectButtonCommand as ICommand;
         public ICommand DisconnectButtonCommand => model.DisconnectButtonCommand as ICommand;
 
-        public ObservableCollection<MenuItemViewModel> MenuBarItems 
-            => model.MenuBarItems;
+        public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
+        public ObservableConcurrentDictionary<string, CameraBase> ConnectedCameras => model.ConnectedCameras;
             
     }
 }
