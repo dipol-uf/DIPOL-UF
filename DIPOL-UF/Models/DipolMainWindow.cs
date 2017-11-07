@@ -16,8 +16,8 @@ namespace DIPOL_UF.Models
     class DipolMainWindow : ObservableObject, IDisposable
     {
         private bool isDisposed = false;
-        private string[] remoteLocations = new string[0];
-           //{ "dipol-2", "dipol-3" };
+        private string[] remoteLocations = //new string[0];
+           { "dipol-2", "dipol-3" };
         private DipolClient[] remoteClients;
 
 
@@ -125,17 +125,21 @@ namespace DIPOL_UF.Models
         {
             if (diposing)
             {
+                Task[] pool = new Task[connectedCameras.Count];
+                int taskInd = 0;
                 foreach (var cam in connectedCameras)
                 {
                     connectedCameras.TryRemove(cam.Key, out CameraBase camInstance);
-                    camInstance?.Dispose();
+                    pool[taskInd++] = Task.Run(() => camInstance?.Dispose());
                 }
 
-                foreach (var client in remoteClients)
+                Task.WaitAll(pool);
+
+                Parallel.ForEach(remoteClients, (client) =>
                 {
                     client?.Disconnect();
                     client?.Dispose();
-                }
+                });
 
                 IsDisposed = true;
 
