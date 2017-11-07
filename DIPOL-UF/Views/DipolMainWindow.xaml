@@ -30,7 +30,15 @@
                     <Border DockPanel.Dock="Bottom" VerticalAlignment="Bottom" 
                             Style="{StaticResource ResourceKey=BorderStyle}"
                             BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
-                        <StackPanel Orientation="Horizontal" >
+                        <Button 
+                            Style="{StaticResource ResourceKey=BasicButtonStyle}"
+                            Content="Remote Sessions"
+                            Width="auto" HorizontalAlignment="Center"/>
+                    </Border>
+                    <Border DockPanel.Dock="Bottom" VerticalAlignment="Bottom" 
+                            Style="{StaticResource ResourceKey=BorderStyle}"
+                            BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
+                        <StackPanel Orientation="Horizontal">
                            <Button x:Name="ConnectNewCamerasButton" 
                                    Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" 
                                    Content="Connect"

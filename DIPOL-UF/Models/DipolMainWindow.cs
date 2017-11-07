@@ -15,6 +15,7 @@ namespace DIPOL_UF.Models
 {
     class DipolMainWindow : ObservableObject, IDisposable
     {
+        private bool canEnterSessionManager = true;
         private bool canConnect = true;
         private bool isDisposed = false;
         private string[] remoteLocations = //new string[0];
@@ -189,6 +190,8 @@ namespace DIPOL_UF.Models
                 CanDisconnectCameras);
             connectedCameras.CollectionChanged += (sender, e) => DisconnectButtonCommand.OnCanExecuteChanged();
             cameraTreeViewSelectedItems.CollectionChanged += (sender, e) => DisconnectButtonCommand.OnCanExecuteChanged();
+            
+
 
 
             CameraTreeViewSelectionChangedCommand = new Commands.DelegateCommand(
