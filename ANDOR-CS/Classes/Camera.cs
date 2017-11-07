@@ -1096,7 +1096,6 @@ namespace ANDOR_CS.Classes
         //        (cam.Value as Camera).OnPropertyChanged(nameof(IsActive));
         //}
 
-
     }
 
 }

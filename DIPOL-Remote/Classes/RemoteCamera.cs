@@ -251,7 +251,7 @@ namespace DIPOL_Remote.Classes
             Software = session.GetSoftware(CameraIndex);
             Hardware = session.GetHardware(CameraIndex);
         }
-        
+
         public override CameraStatus GetStatus()
             => session.CallGetStatus(CameraIndex);
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
@@ -279,12 +279,7 @@ namespace DIPOL_Remote.Classes
                 type);
         public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMS)
             => session.CallTemperatureMonitor(CameraIndex, mode, timeout);
-        public override void Dispose()
-        {
-            session.RemoveCamera(CameraIndex);
-            remoteCameras.TryRemove((session.SessionID, CameraIndex), out _);
-            session = null;
-        }
+
         public override SettingsBase GetAcquisitionSettingsTemplate()
             => new RemoteSettings(session.SessionID, CameraIndex, session.CreateSettings(CameraIndex), session);
 
@@ -319,6 +314,17 @@ namespace DIPOL_Remote.Classes
         public override void AbortAcquisition()
             => session.CallAbortAcquisition(CameraIndex);
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                session.RemoveCamera(CameraIndex);
+                remoteCameras.TryRemove((session.SessionID, CameraIndex), out _);
+                session = null;
+            }
+            base.Dispose(disposing);
+        }
+
         protected sealed override void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
             => OnPropertyChangedRemotely(property, true);
 
@@ -326,10 +332,10 @@ namespace DIPOL_Remote.Classes
             [System.Runtime.CompilerServices.CallerMemberName] string property = "",
             bool suppressBaseEvent = false)
         {
+            CheckIsDisposed();
             if (!suppressBaseEvent)
                 base.OnPropertyChanged(property);
-
-        }
+                    }
 
         internal static void NotifyRemotePropertyChanged(int camIndex, string sessionID, string property)
         {
@@ -389,7 +395,6 @@ namespace DIPOL_Remote.Classes
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
-
-       
+               
     }
 }
