@@ -9,13 +9,7 @@ namespace DIPOL_UF.Converters
     class CameraKeyToStringValueConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            string val = (value as string)?.Split(':')[0] ?? "Unknown";
-            if (val.ToLowerInvariant() == "localhost")
-                val = "Local";
-
-            return val + ":";
-        }
+        => value is string ? Helper.GetCameraHostName(value as string) + ":" : String.Empty;
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {

@@ -31,7 +31,8 @@ namespace DIPOL_UF.Models
             = new ObservableConcurrentDictionary<string, CameraBase>();
         private ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel> treeCameraRepresentation
             = new ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel>();
-
+        private ObservableCollection<string> cameraTreeViewSelectedItems
+            = new ObservableCollection<string>();           
 
         public ObservableCollection<ViewModels.MenuItemViewModel> MenuBarItems
         {
@@ -65,6 +66,21 @@ namespace DIPOL_UF.Models
                 if (value != treeCameraRepresentation)
                 {
                     treeCameraRepresentation = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        /// <summary>
+        /// List of camera IDs that are currently selected in the TreeView
+        /// </summary>
+        public ObservableCollection<string> CameraTreeViewSelectedItems
+        {
+            get => cameraTreeViewSelectedItems;
+            set
+            {
+                if (value != cameraTreeViewSelectedItems)
+                {
+                    cameraTreeViewSelectedItems = value;
                     RaisePropertyChanged();
                 }
             }
@@ -142,11 +158,9 @@ namespace DIPOL_UF.Models
             {
                 Task[] pool = new Task[connectedCameras.Count];
                 int taskInd = 0;
+
                 foreach (var cam in connectedCameras)
-                {
-                    connectedCameras.TryRemove(cam.Key, out CameraBase camInstance);
-                    pool[taskInd++] = Task.Run(() => camInstance?.Dispose());
-                }
+                    pool[taskInd++] = DisposeCamera(cam.Key);
 
                 Task.WaitAll(pool);
 
@@ -157,7 +171,6 @@ namespace DIPOL_UF.Models
                 });
 
                 IsDisposed = true;
-
             }
         }
 
@@ -174,6 +187,9 @@ namespace DIPOL_UF.Models
             DisconnectButtonCommand = new Commands.DelegateCommand(
                 (param) => { },
                 CanDisconnectCameras);
+            connectedCameras.CollectionChanged += (sender, e) => DisconnectButtonCommand.OnCanExecuteChanged();
+            cameraTreeViewSelectedItems.CollectionChanged += (sender, e) => DisconnectButtonCommand.OnCanExecuteChanged();
+
 
             CameraTreeViewSelectionChangedCommand = new Commands.DelegateCommand(
                 CameraTreeViewSelectionChangedCommandHandler,
@@ -203,12 +219,17 @@ namespace DIPOL_UF.Models
                     var camID = (context is KeyValuePair<string, CameraBase>) ? ((KeyValuePair<string, CameraBase>)context).Key : null;
 
                     var state = (sender as System.Windows.Controls.CheckBox)?.IsChecked ?? false;
+
+                    if (state)
+                        CameraTreeViewSelectedItems.Add(camID);
+                    else
+                        CameraTreeViewSelectedItems.Remove(camID);
                 }              
             }
         }
-        
         private bool CanDisconnectCameras(object parameter)
-            => !connectedCameras.IsEmpty;
+            => !connectedCameras.IsEmpty && cameraTreeViewSelectedItems.Count > 0;
+
         private void ListAndSelectAvailableCameras(object parameter)
         {
             var cameraQueryModel = new AvailableCamerasModel(remoteClients);
@@ -239,6 +260,24 @@ namespace DIPOL_UF.Models
 
             };
 
+        }
+        private void DisconnectCameras(object parameter)
+        {
+            for (int camIndex = 0; camIndex < CameraTreeViewSelectedItems.Count; camIndex++)
+            {
+                string category = Helper.GetCameraHostName(CameraTreeViewSelectedItems[camIndex]);
+                if(!String.IsNullOrWhiteSpace(category))
+                {
+                    var node = TreeCameraRepresentation.Select(item => item.Name == category);
+                }
+            }
+        }
+
+        private async Task DisposeCamera(string camID)
+        {
+            connectedCameras.TryRemove(camID, out CameraBase camInstance);
+            cameraTreeViewSelectedItems.Remove(camID);
+            await Task.Run(() => camInstance?.Dispose());
         }
     }
 }
