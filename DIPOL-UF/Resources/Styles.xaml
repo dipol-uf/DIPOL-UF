@@ -32,7 +32,7 @@
     <!--Button styles-->
     
     <Style x:Key="BasicButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource ContentFont}">
-        <Setter Property="Width" Value="100"/>
+        <Setter Property="Width" Value="120"/>
         <Setter Property="Height" Value="38"/>
         <Setter Property="Padding" Value="7, 2, 7, 2"/>
         <Setter Property="Margin" Value="3"/>

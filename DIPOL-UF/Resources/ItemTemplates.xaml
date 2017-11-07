@@ -30,7 +30,17 @@
                                       Checked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
                                       Unchecked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
                                       TabIndex="{Binding TabIndex, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListViewItem}}"/>
-                            <Label Content="{Binding Value}" VerticalAlignment="Center"/>
+                            <Label Content="{Binding Value}" VerticalAlignment="Center" Width="155"/>
+                            <Label VerticalAlignment="Center" Width="30"  HorizontalAlignment="Right">
+                                <Label.Content>
+                                    <MultiBinding
+                                        Converter="{StaticResource ResourceKey=CameraStatsToStringConverter}"
+                                        ConverterParameter="Item1">
+                                        <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
+                                        <Binding Path="Key"/>
+                                    </MultiBinding>
+                                </Label.Content>
+                            </Label>
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
