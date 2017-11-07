@@ -36,6 +36,7 @@
         <Setter Property="Height" Value="38"/>
         <Setter Property="Padding" Value="7, 2, 7, 2"/>
         <Setter Property="Margin" Value="3"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
     </Style>
     
     <Style x:Key="NegativeEffectButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource BasicButtonStyle}">
