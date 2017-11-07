@@ -33,7 +33,9 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <CheckBox Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}" VerticalAlignment="Center"/>
+                            <CheckBox Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}" VerticalAlignment="Center"
+                                      Checked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
+                                      Unchecked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"/>
                             <Label Content="{Binding Value}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </DataTemplate>

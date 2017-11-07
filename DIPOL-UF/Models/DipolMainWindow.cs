@@ -23,6 +23,8 @@ namespace DIPOL_UF.Models
 
         private Commands.DelegateCommand connectButtonCommand;
         private Commands.DelegateCommand disconnectButtonCommand;
+        private Commands.DelegateCommand cameraTreeViewSelectionChangedCommand;
+
         private ObservableCollection<ViewModels.MenuItemViewModel> menuBarItems
             = new ObservableCollection<ViewModels.MenuItemViewModel>();
         private ObservableConcurrentDictionary<string, CameraBase> connectedCameras 
@@ -92,6 +94,19 @@ namespace DIPOL_UF.Models
                 }
             }
         }
+        public Commands.DelegateCommand CameraTreeViewSelectionChangedCommand
+        {
+            get => cameraTreeViewSelectionChangedCommand;
+            set
+            {
+                if (value != cameraTreeViewSelectionChangedCommand)
+                {
+                    cameraTreeViewSelectionChangedCommand = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
 
         public bool IsDisposed
         {
@@ -152,12 +167,17 @@ namespace DIPOL_UF.Models
         }
         private void InitializeCommands()
         {
-            connectButtonCommand = new Commands.DelegateCommand(
+            ConnectButtonCommand = new Commands.DelegateCommand(
                 ListAndSelectAvailableCameras,
                 (param) => true);
-            disconnectButtonCommand = new Commands.DelegateCommand(
+
+            DisconnectButtonCommand = new Commands.DelegateCommand(
                 (param) => { },
                 CanDisconnectCameras);
+
+            CameraTreeViewSelectionChangedCommand = new Commands.DelegateCommand(
+                CameraTreeViewSelectionChangedCommandHandler,
+                Commands.DelegateCommand.CanExecuteAlways);
 
         }
         private void InitializeRemoteSessions()
@@ -170,6 +190,22 @@ namespace DIPOL_UF.Models
             });
         }
        
+        private void CameraTreeViewSelectionChangedCommandHandler(object parameter)
+        {
+            if (parameter is Commands.CommandEventArgs<RoutedEventArgs> args)
+            {
+                args.EventArgs.Handled = true;
+
+                if (args.Sender is FrameworkElement sender)
+                {
+                    var context = sender.DataContext;
+
+                    var camID = (context is KeyValuePair<string, CameraBase>) ? ((KeyValuePair<string, CameraBase>)context).Key : null;
+
+                    var state = (sender as System.Windows.Controls.CheckBox)?.IsChecked ?? false;
+                }              
+            }
+        }
         
         private bool CanDisconnectCameras(object parameter)
             => !connectedCameras.IsEmpty;
