@@ -255,7 +255,7 @@ namespace DIPOL_UF.Models
                 {
                     treeCameraRepresentation.Add(new ViewModels.ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
                     {
-                        Name = cat,
+                        Name = Helper.GetCameraHostName(cat),
                         CameraList = new ObservableConcurrentDictionary<string, CameraBase>(providedCameras.Where(item => item.Key.Substring(0, cat.Length) == cat))
                     }));
                 }
@@ -266,22 +266,43 @@ namespace DIPOL_UF.Models
             };
 
         }
-        private void DisconnectCameras(object parameter)
+
+        /// <summary>
+        /// Disconnects cameras
+        /// </summary>
+        /// <param name="parameter">Command parameter</param>
+        private async void DisconnectCameras(object parameter)
         {
+            List<Task> workers = new List<Task>();
+
             for (int camIndex = 0; camIndex < CameraTreeViewSelectedItems.Count; camIndex++)
             {
                 string category = Helper.GetCameraHostName(CameraTreeViewSelectedItems[camIndex]);
                 if(!String.IsNullOrWhiteSpace(category))
                 {
-                    var node = TreeCameraRepresentation.Select(item => item.Name == category);
+                    var node = TreeCameraRepresentation.Where(item => item.Name == category).DefaultIfEmpty(null).FirstOrDefault();
+
+                    foreach (var camItem in node.CameraList.Where(item => item.Key == CameraTreeViewSelectedItems[camIndex]))
+                    {
+                        node.CameraList.TryRemove(camItem.Key, out _);
+                        workers.Add(DisposeCamera(camItem.Key, false));
+                        if (node.CameraList.IsEmpty)
+                            TreeCameraRepresentation.Remove(node);
+                    }
+
                 }
             }
+
+            CameraTreeViewSelectedItems.Clear();
+
+            await Task.WhenAll(workers);
         }
 
-        private async Task DisposeCamera(string camID)
+        private async Task DisposeCamera(string camID, bool removeSelection = true)
         {
             connectedCameras.TryRemove(camID, out CameraBase camInstance);
-            cameraTreeViewSelectedItems.Remove(camID);
+            if(removeSelection)
+                cameraTreeViewSelectedItems.Remove(camID);
             await Task.Run(() => camInstance?.Dispose());
         }
     }
