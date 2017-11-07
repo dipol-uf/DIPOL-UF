@@ -71,20 +71,7 @@ namespace ANDOR_CS.Classes
 
             }
             set => throw new NotSupportedException();
-            //{
-            //    if (value != _ActiveCamera)
-            //    {
-            //        //if (LockDepth++ == 0)
-            //        //    ActivityLocker.Wait();
-
-            //        _ActiveCamera = value;
-
-            //        //if (--LockDepth == 0)
-            //        //    ActivityLocker.Release();
-
-            //        OnActiveCameraChanged();
-            //    }
-            //}
+           
         }
         private static object Locker = new object();
        
@@ -999,37 +986,43 @@ namespace ANDOR_CS.Classes
         /// A realisation of <see cref="IDisposable.Dispose"/> method.
         /// Frees SDK-related resources
         /// </summary>
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            // If camera has valid SDK pointer and is initialized
-            if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
+            if (!_IsDisposed)
             {
-                if (CoolerMode == Switch.Enabled)
-                    CoolerControl(Switch.Disabled);
-                //if (TemperatureMonitorWorker?.Status == TaskStatus.Running)
-                //    TemperatureMonitor(Switch.Disabled);
-
-                if (TemperatureMonitorTimer != null)
+                if (disposing)
                 {
-                    if (TemperatureMonitorTimer.Enabled)
-                        TemperatureMonitorTimer.Stop();
+                    // If camera has valid SDK pointer and is initialized
+                    if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
+                    {
+                        if (CoolerMode == Switch.Enabled)
+                            CoolerControl(Switch.Disabled);
+                        //if (TemperatureMonitorWorker?.Status == TaskStatus.Running)
+                        //    TemperatureMonitor(Switch.Disabled);
 
-                    TemperatureMonitorTimer.Close();
+                        if (TemperatureMonitorTimer != null)
+                        {
+                            if (TemperatureMonitorTimer.Enabled)
+                                TemperatureMonitorTimer.Stop();
+
+                            TemperatureMonitorTimer.Close();
+                        }
+
+                        foreach (var key in runningTasks.Keys)
+                        {
+                            runningTasks.TryRemove(key, out (Task Task, CancellationTokenSource Source) item);
+                            item.Source.Cancel();
+                        }
+                    }
+
+                    // If succeeded, removes camera instance from the list of cameras
+                    CreatedCameras.TryRemove(CameraHandle.SDKPtr, out _);
+                    // ShutsDown camera
+                    CameraHandle.Dispose();
                 }
-
-                foreach (var key in runningTasks.Keys)
-                {
-                    runningTasks.TryRemove(key, out (Task Task, CancellationTokenSource Source) item);
-                    item.Source.Cancel();
-                }
-
-                // ShutsDown camera
-                CameraHandle.Dispose();
-
-                // If succeeded, removes camera instance from the list of cameras
-                CreatedCameras.TryRemove(CameraHandle.SDKPtr, out _);
-
             }
+
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -1260,13 +1253,13 @@ namespace ANDOR_CS.Classes
         public static CameraBase GetDebugInterface(int camIndex = 0) 
             => new DebugCamera(camIndex);
 #endif
-        private static void OnActiveCameraChanged()
-        {
-            foreach (var cam in CreatedCameras)
-                (cam.Value as Camera).OnPropertyChanged(nameof(IsActive));
-        }
 
-        
+        //private static void OnActiveCameraChanged()
+        //{
+        //    foreach (var cam in CreatedCameras)
+        //        (cam.Value as Camera).OnPropertyChanged(nameof(IsActive));
+        //}
+               
         
     }
 

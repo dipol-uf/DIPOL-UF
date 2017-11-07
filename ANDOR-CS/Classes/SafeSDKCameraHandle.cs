@@ -69,26 +69,12 @@ namespace ANDOR_CS.Classes
             uint result = 0;
             int cameraHandle = 0;
             //// Used to check the currently active camera. 
-            //int cameraHandle = 0;
-
-            // Gets currently active camera
-            //SDKInit.SDKInstance.GetCurrentCamera(ref cameraHandle);
-
-            return SDKInit.Call(this, () =>
+            
+            return SDKInit.CallWithoutHandle(() =>
             {
                 result = SDKInit.SDKInstance.GetCurrentCamera(ref cameraHandle);
                 if (result != ATMCD64CS.AndorSDK.DRV_SUCCESS)
                     return result;
-
-                //// Checks if currently active camera is not the one that is being disposed
-                //if (cameraHandle != handle.ToInt32())
-                //{
-                //    // Force-sets disposing camera as active
-                //    result = SDKInit.SDKInstance.SetCurrentCamera(handle.ToInt32());
-                //    if (result != ATMCD64CS.AndorSDK.DRV_SUCCESS)
-                //        return result;
-
-                //}
 
                 // Frees camera handles
                 result = SDKInit.SDKInstance.ShutDown();
@@ -97,5 +83,6 @@ namespace ANDOR_CS.Classes
             }) == ATMCD64CS.AndorSDK.DRV_SUCCESS;
            
         }
+
     }
 }
