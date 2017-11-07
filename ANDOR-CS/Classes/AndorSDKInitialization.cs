@@ -224,6 +224,25 @@ namespace ANDOR_CS.Classes
                 locker.Release();
             }
         }
+        public static uint CallWithoutHandle(Func<uint> method)
+        {
+            // Stores return code
+            uint result = 0;
+            try
+            {// Waits until SDKInstance is available
+                locker.Wait();
+
+                // Calls function
+                result = method();
+
+                return result;
+            }
+            finally
+            {// Releases semaphore
+                locker.Release();
+            }
+        }
+
 
         private static void SetActiveCamera(SafeSDKCameraHandle handle)
         {
