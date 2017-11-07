@@ -9,23 +9,15 @@
         <Label Content="{Binding Header}"/>
     </HierarchicalDataTemplate>
 
-    <HierarchicalDataTemplate x:Key="CameraTreeViewItemTemplate" DataType="{x:Type vm:ConnectedCamerasTreeViewModel}"
-                              ItemsSource="{Binding CameraList}">
-        <ContentPresenter Content="{Binding Name}"/>
-        <HierarchicalDataTemplate.ItemTemplate>
-            <DataTemplate>
-                <ContentPresenter Content="{Binding Value}"/>
-            </DataTemplate>
-        </HierarchicalDataTemplate.ItemTemplate>
-     </HierarchicalDataTemplate>
-
+    <!--Active cameras list representation-->
     <DataTemplate x:Key="FoundCamerasListViewItemTemplate">
         <StackPanel Orientation="Horizontal">
-            <Label Width="125" Content="{Binding Key, Converter={StaticResource ResourceKey=CameraKeyToStringConverter}}"/>
-            <Label Content="{Binding Value}"/>
+            <Label Width="80" Content="{Binding Key, Converter={StaticResource ResourceKey=CameraKeyToStringConverter}}" HorizontalContentAlignment="Right"/>
+            <Label Content="{Binding Value}" HorizontalContentAlignment="Right"/>
         </StackPanel>
     </DataTemplate>
-
+    
+    <!--Main window tree view of connected cameras.-->
     <DataTemplate x:Key="ListTreeViewItemTemplate">
         <Expander Header="{Binding Name}" IsExpanded="True">
             <ListView ItemsSource="{Binding CameraList}" 
