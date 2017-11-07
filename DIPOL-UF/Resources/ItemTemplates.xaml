@@ -2,7 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:DIPOL_UF.Resources"
                     xmlns:vm="clr-namespace:DIPOL_UF.ViewModels"
-                    xmlns:cmnds="clr-namespace:DIPOL_UF.Commands">
+                    xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
+                    xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters">
     <HierarchicalDataTemplate x:Key="MenuBarItemTemplate" DataType="{x:Type vm:MenuItemViewModel}"
                               ItemsSource="{Binding MenuItems}">
         <Label Content="{Binding Header}"/>
@@ -19,8 +20,13 @@
      </HierarchicalDataTemplate>
 
     <DataTemplate x:Key="FoundCamerasListViewItemTemplate">
-        <DockPanel  Background="Transparent">
+        <!--<DockPanel  Background="Transparent">
             <Label DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Value}"/>
-        </DockPanel>
+        </DockPanel>-->
+        <!--<ContentPresenter Content="{Binding Key, Converter={StaticResource ResourceKey=CameraKeyToStringConverter}}"/>-->
+        <StackPanel Orientation="Horizontal">
+            <Label Width="125" Content="{Binding Key, Converter={StaticResource ResourceKey=CameraKeyToStringConverter}}"/>
+            <Label Content="{Binding Value}"/>
+        </StackPanel>
     </DataTemplate>
 </ResourceDictionary>

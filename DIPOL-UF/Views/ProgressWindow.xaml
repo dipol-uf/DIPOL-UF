@@ -3,8 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:views="clr-namespace:DIPOL_UF.Views"
-        xmlns:cnvs="clr-namespace:DIPOL_UF.Converters"
         xmlns:cmds="clr-namespace:DIPOL_UF.Commands"
         xmlns:local="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
@@ -12,11 +10,8 @@
         Title="ProgressWindow" Height="auto" Width="auto" WindowStyle="None" ResizeMode="NoResize"
         SizeToContent="WidthAndHeight"
         Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" 
-        BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" IsTabStop="False">
-    <Window.Resources>
-            <cnvs:BoolToVisibilityValueConverter x:Key="BoolToVisibilityConverter"/>
-    </Window.Resources>
-        <Grid Margin="5" Background="Transparent"  MouseDown="{cmds:EventToCommnd 'MouseDragEventHandler | MouseEventHandler'}">
+        BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" IsTabStop="False" ShowInTaskbar="False">
+    <Grid Margin="5" Background="Transparent"  MouseDown="{cmds:EventToCommnd 'MouseDragEventHandler | MouseEventHandler'}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>

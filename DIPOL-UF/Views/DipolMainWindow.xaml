@@ -25,7 +25,8 @@
                             BorderThickness="0"
                             ItemsSource="{Binding TreeCameraRepresentation}"
                             ItemTemplate="{StaticResource ResourceKey=CameraTreeViewItemTemplate}"
-                            ItemContainerStyle="{StaticResource ResourceKey=TreeViewStyle}">
+                            ItemContainerStyle="{StaticResource ResourceKey=TreeViewStyle}"
+                            >
                     </TreeView>
                     <Border DockPanel.Dock="Bottom" VerticalAlignment="Bottom" 
                             Style="{StaticResource ResourceKey=BorderStyle}"
