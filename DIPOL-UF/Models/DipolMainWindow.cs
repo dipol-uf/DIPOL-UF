@@ -15,6 +15,7 @@ namespace DIPOL_UF.Models
 {
     class DipolMainWindow : ObservableObject, IDisposable
     {
+        private bool canConnect = true;
         private bool isDisposed = false;
         private string[] remoteLocations = //new string[0];
            { "dipol-2", "dipol-3" };
@@ -123,7 +124,6 @@ namespace DIPOL_UF.Models
             }
         }
 
-
         public bool IsDisposed
         {
             get => isDisposed;
@@ -182,10 +182,10 @@ namespace DIPOL_UF.Models
         {
             ConnectButtonCommand = new Commands.DelegateCommand(
                 ListAndSelectAvailableCameras,
-                (param) => true);
+                (param) => canConnect);
 
             DisconnectButtonCommand = new Commands.DelegateCommand(
-                (param) => { },
+                DisconnectCameras,
                 CanDisconnectCameras);
             connectedCameras.CollectionChanged += (sender, e) => DisconnectButtonCommand.OnCanExecuteChanged();
             cameraTreeViewSelectedItems.CollectionChanged += (sender, e) => DisconnectButtonCommand.OnCanExecuteChanged();
@@ -237,6 +237,8 @@ namespace DIPOL_UF.Models
             var wind = new Views.AvailableCameraView(viewModel);
             if (parameter is Window owner)
                 wind.Owner = owner;
+            canConnect = false;
+            ConnectButtonCommand?.OnCanExecuteChanged();
             wind.Show();
 
             cameraQueryModel.CameraSelectionsMade += (e) =>
@@ -257,6 +259,9 @@ namespace DIPOL_UF.Models
                         CameraList = new ObservableConcurrentDictionary<string, CameraBase>(providedCameras.Where(item => item.Key.Substring(0, cat.Length) == cat))
                     }));
                 }
+
+                canConnect = true;
+                ConnectButtonCommand?.OnCanExecuteChanged();
 
             };
 

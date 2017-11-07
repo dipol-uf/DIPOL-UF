@@ -22,7 +22,8 @@
                     <Label x:Name="ConnectedCamerasLabel" Content="Camera Manager" DockPanel.Dock="Top"
                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <Separator DockPanel.Dock="Top" Style="{StaticResource ResourceKey=SeparatorAsBorderStyle}"/>
-                    <ListView DockPanel.Dock="Top" BorderThickness="0"
+                    <ListView DockPanel.Dock="Top" BorderThickness="0" TabIndex="0"
+                            KeyboardNavigation.ControlTabNavigation="Cycle"
                             ItemsSource="{Binding TreeCameraRepresentation}"
                             Style="{StaticResource ResourceKey=ListTreeViewStyle}"
                             ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"/>
