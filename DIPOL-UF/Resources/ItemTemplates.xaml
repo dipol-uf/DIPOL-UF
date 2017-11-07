@@ -29,13 +29,15 @@
     <DataTemplate x:Key="ListTreeViewItemTemplate">
         <Expander Header="{Binding Name}" IsExpanded="True">
             <ListView ItemsSource="{Binding CameraList}" 
-                      Style="{StaticResource ResourceKey=ListTreeViewStyle}">
+                      Style="{StaticResource ResourceKey=ListTreeViewStyle}"
+                      KeyboardNavigation.TabNavigation="Continue">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
                             <CheckBox Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}" VerticalAlignment="Center"
                                       Checked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
-                                      Unchecked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"/>
+                                      Unchecked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
+                                      TabIndex="{Binding TabIndex, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListViewItem}}"/>
                             <Label Content="{Binding Value}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </DataTemplate>

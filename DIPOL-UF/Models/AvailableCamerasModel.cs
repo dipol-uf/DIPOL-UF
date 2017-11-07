@@ -14,8 +14,7 @@ using ANDOR_CS.Exceptions;
 using DIPOL_Remote.Classes;
 
 using DIPOL_UF.Commands;
-
-
+using System.ComponentModel;
 
 namespace DIPOL_UF.Models
 {
@@ -28,6 +27,8 @@ namespace DIPOL_UF.Models
             Connect = 1,
             ConnectAll = 2
         }
+
+        private bool canCancel = false;
 
         private ProgressBar progressBar = null;
         private Views.ProgressWindow progressView = null;
@@ -56,7 +57,6 @@ namespace DIPOL_UF.Models
             }
         }
 
-
         public event Action<object> CameraSelectionsMade;
 
         public ObservableConcurrentDictionary<string, CameraBase> FoundCameras
@@ -72,6 +72,19 @@ namespace DIPOL_UF.Models
             }
         }
        
+        public bool CanCancel
+        {
+            get => canCancel;
+            set
+            {
+                if (value != canCancel)
+                {
+                    canCancel = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
         public DelegateCommand SelectionChangedCommand
         {
             get => selectionChangedCommand;
@@ -149,8 +162,66 @@ namespace DIPOL_UF.Models
         {
             this.remoteClients = remoteClients;
 
-            InitializeCommands();
+            progressBar = new ProgressBar()
+            {
+                Minimum = 0,
+                Value = 0,
+                Maximum = 1,
+                IsIndeterminate = false,
+                CanAbort = true,
+                DisplayPercents = false,
+                BarTitle = "Checking connections...."
+            };
 
+            InitializeCommands();
+            QueryAvailableCameras();
+        
+        }
+
+        private void InitializeCommands()
+        {
+            WindowShownCommand = new DelegateCommand(
+                (param) =>
+                {
+                    if (progressBar != null)
+                    {
+                        progressView = new Views.ProgressWindow(new ViewModels.ProgressBarViewModel(progressBar));
+                        progressView.Owner = (param as CommandEventArgs<EventArgs>)?.Sender as Window;
+                        progressView.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                        progressView.Show();
+                        progressBar.AbortButtonClick += (sender, e) => CanCancel = true;
+                    }
+                },
+                DelegateCommand.CanExecuteAlways);
+
+            
+            SelectionChangedCommand = new DelegateCommand(
+                SelectionChangedHandler,
+                DelegateCommand.CanExecuteAlways);
+
+            WindowClosingCommand = new DelegateCommand(
+                WindowClosingHandler,
+                DelegateCommand.CanExecuteAlways);
+
+            CancelButtonCommand = new DelegateCommand(
+                (param) => ButtonClickCloseWindow(param as Window, ClosingState.Canceled),
+                (param) => CanCancel);
+            
+            ConnectButtonCommand = new DelegateCommand(
+                (param) => ButtonClickCloseWindow(param as Window, ClosingState.Connect),
+                (param) => SelectedItems.Count > 0);
+            SelectedItems.CollectionChanged += (sender, e) => ConnectButtonCommand.OnCanExecuteChanged();
+
+            ConnectAllButtonCommand = new DelegateCommand(
+                (param) => ButtonClickCloseWindow(param as Window, ClosingState.ConnectAll),
+                (param) => FoundCameras.Count > 0);
+            FoundCameras.CollectionChanged += (sender, e) => ConnectAllButtonCommand.OnCanExecuteChanged();
+
+
+
+        }
+        private void QueryAvailableCameras()
+        {
             int nLocal = 0;
             int nRemote = 0;
 
@@ -177,21 +248,12 @@ namespace DIPOL_UF.Models
 
             if (nLocal + nRemote > 0)
             {
-                progressBar = new ProgressBar()
-                {
-                    Minimum = 0,
-                    Value = 0,
-                    Maximum = nLocal + nRemote,
-                    IsIndeterminate = false,
-                    CanAbort = true,
-                    DisplayPercents = false,
-                    BarTitle = "Checking connections...."
-                };
+                progressBar.Maximum = nLocal + nRemote;
 
                 progressBar.AbortButtonClick += (sender, e) => cancelSource.Cancel();
             }
 
-            if(nLocal > 0)
+            if (nLocal > 0)
                 Task.Run(() =>
                 {
                     try
@@ -204,7 +266,7 @@ namespace DIPOL_UF.Models
                     }
                 });
 
-            if(nRemote > 0)
+            if (nRemote > 0)
                 Task.Run(() =>
                 {
                     try
@@ -217,48 +279,6 @@ namespace DIPOL_UF.Models
                     }
 
                 });
-
-        }
-
-        private void InitializeCommands()
-        {
-            WindowShownCommand = new DelegateCommand(
-                (param) =>
-                {
-                    if (progressBar != null)
-                    {
-                        progressView = new Views.ProgressWindow(new ViewModels.ProgressBarViewModel(progressBar));
-                        progressView.Owner = (param as CommandEventArgs<EventArgs>)?.Sender as Window;
-                        progressView.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-                        progressView.Show();
-                    }
-                },
-                DelegateCommand.CanExecuteAlways);
-
-            
-            SelectionChangedCommand = new DelegateCommand(
-                SelectionChangedHandler,
-                DelegateCommand.CanExecuteAlways);
-
-            WindowClosingCommand = new DelegateCommand(
-                WindowClosingHandler,
-                DelegateCommand.CanExecuteAlways);
-
-            CancelButtonCommand = new DelegateCommand(
-                (param) => ButtonClickCloseWindow(param as Window, ClosingState.Canceled),
-                DelegateCommand.CanExecuteAlways);
-
-            ConnectButtonCommand = new DelegateCommand(
-                (param) => ButtonClickCloseWindow(param as Window, ClosingState.Connect),
-                (param) => SelectedItems.Count > 0);
-            SelectedItems.CollectionChanged += (sender, e) => ConnectButtonCommand.OnCanExecuteChanged();
-
-            ConnectAllButtonCommand = new DelegateCommand(
-                (param) => ButtonClickCloseWindow(param as Window, ClosingState.ConnectAll),
-                (param) => FoundCameras.Count > 0);
-            FoundCameras.CollectionChanged += (sender, e) => ConnectAllButtonCommand.OnCanExecuteChanged();
-
-
 
         }
 
@@ -275,12 +295,11 @@ namespace DIPOL_UF.Models
                 nCams = 0;
             }
 
-
-
             for (int camIndex = 0; camIndex < nCams; camIndex++)
             {
                 if (token.IsCancellationRequested)
                     break;
+
                 CameraBase cam = null;
                 try
                 {
@@ -295,6 +314,7 @@ namespace DIPOL_UF.Models
                 if (token.IsCancellationRequested)
                 {
                     cam?.Dispose();
+                    cam = null;
                     break;
                 }
 
@@ -311,6 +331,7 @@ namespace DIPOL_UF.Models
                 {
                     Task.Delay(750).Wait();
                     Application.Current.Dispatcher.Invoke(progressView.Close);
+                    CanCancel = true;
                 }
 
             }
@@ -332,7 +353,6 @@ namespace DIPOL_UF.Models
                         {
                             if (token.IsCancellationRequested)
                                 break;
-
                             CameraBase cam = null;
                             try
                             {
@@ -362,7 +382,7 @@ namespace DIPOL_UF.Models
                             {
                                 Task.Delay(750).Wait();
                                 Application.Current.Dispatcher.Invoke(progressView.Close);
-
+                                CanCancel = true;
                             }
 
                         }
@@ -386,7 +406,7 @@ namespace DIPOL_UF.Models
 
         private void SelectionChangedHandler(object parameter)
         {
-            if (parameter is Commands.CommandEventArgs<SelectionChangedEventArgs> commandPar)
+            if (parameter is CommandEventArgs<SelectionChangedEventArgs> commandPar)
             {
                 foreach (var remItem in commandPar.EventArgs.RemovedItems)
                     if (remItem is KeyValuePair<string, CameraBase> rawItem)
@@ -395,6 +415,7 @@ namespace DIPOL_UF.Models
                 foreach (var addItem in commandPar.EventArgs.AddedItems)
                     if (addItem is KeyValuePair<string, CameraBase> rawItem)
                         selectedItems.Add(rawItem.Key);
+
             }
         }
         private void WindowClosingHandler(object parameter)
@@ -407,6 +428,7 @@ namespace DIPOL_UF.Models
                 
         }
 
+
         protected virtual void OnCameraSelectionsMade()
         {
             var query = from camObj in FoundCameras
@@ -416,5 +438,12 @@ namespace DIPOL_UF.Models
             CameraSelectionsMade?.Invoke(query.ToArray());
         }
 
+        protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(sender, e);
+
+            if (e.PropertyName == nameof(CanCancel) && CancelButtonCommand != null)
+                Application.Current.Dispatcher.Invoke(CancelButtonCommand.OnCanExecuteChanged);
+        }
     }
 }
