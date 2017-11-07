@@ -6,9 +6,10 @@ using System.Windows;
 using System.Linq;
 
 using ANDOR_CS.Classes;
+using ANDOR_CS.Enums;
+using ANDOR_CS.Events;
 
 using DIPOL_Remote.Classes;
-
 
 
 namespace DIPOL_UF.Models
@@ -29,12 +30,14 @@ namespace DIPOL_UF.Models
 
         private ObservableCollection<ViewModels.MenuItemViewModel> menuBarItems
             = new ObservableCollection<ViewModels.MenuItemViewModel>();
-        private ObservableConcurrentDictionary<string, CameraBase> connectedCameras 
+        private ObservableConcurrentDictionary<string, CameraBase> connectedCameras
             = new ObservableConcurrentDictionary<string, CameraBase>();
         private ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel> treeCameraRepresentation
             = new ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel>();
         private ObservableCollection<string> cameraTreeViewSelectedItems
-            = new ObservableCollection<string>();           
+            = new ObservableCollection<string>();
+        private ObservableConcurrentDictionary<string, Tuple<double>> cameraRealTimeStats
+            = new ObservableConcurrentDictionary<string, Tuple<double>>();
 
         public ObservableCollection<ViewModels.MenuItemViewModel> MenuBarItems
         {
@@ -83,6 +86,18 @@ namespace DIPOL_UF.Models
                 if (value != cameraTreeViewSelectedItems)
                 {
                     cameraTreeViewSelectedItems = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        public ObservableConcurrentDictionary<string, Tuple<double>> CameraRealTimeStats
+        {
+            get => cameraRealTimeStats;
+            set
+            {
+                if (value != cameraRealTimeStats)
+                {
+                    cameraRealTimeStats = value;
                     RaisePropertyChanged();
                 }
             }
@@ -192,8 +207,6 @@ namespace DIPOL_UF.Models
             cameraTreeViewSelectedItems.CollectionChanged += (sender, e) => DisconnectButtonCommand.OnCanExecuteChanged();
             
 
-
-
             CameraTreeViewSelectionChangedCommand = new Commands.DelegateCommand(
                 CameraTreeViewSelectionChangedCommandHandler,
                 Commands.DelegateCommand.CanExecuteAlways);
@@ -230,6 +243,7 @@ namespace DIPOL_UF.Models
                 }              
             }
         }
+
         private bool CanDisconnectCameras(object parameter)
             => !connectedCameras.IsEmpty && cameraTreeViewSelectedItems.Count > 0;
 
@@ -249,23 +263,41 @@ namespace DIPOL_UF.Models
                 var providedCameras = e as IEnumerable<KeyValuePair<string, CameraBase>>;
 
                 foreach (var x in providedCameras)
-                    ConnectedCameras.TryAdd(x.Key, x.Value);
+                    if (ConnectedCameras.TryAdd(x.Key, x.Value))
+                        HookCamera(x.Key, x.Value);
 
-                string[]  categories = providedCameras.Select(item => item.Key.Split(':')[0])
-                .ToArray();
+                string[]  categories = providedCameras.Select(item => Helper.GetCameraHostName(item.Key)).ToArray();
 
                 foreach (var cat in categories)
                 {
                     treeCameraRepresentation.Add(new ViewModels.ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
                     {
-                        Name = Helper.GetCameraHostName(cat),
-                        CameraList = new ObservableConcurrentDictionary<string, CameraBase>(providedCameras.Where(item => item.Key.Substring(0, cat.Length) == cat))
+                        Name = cat,
+                        CameraList = new ObservableConcurrentDictionary<string, CameraBase>(
+                            providedCameras
+                            .Where(item => Helper.GetCameraHostName(item.Key) == cat))
                     }));
                 }
 
                 canConnect = true;
                 ConnectButtonCommand?.OnCanExecuteChanged();
 
+            };
+
+        }
+
+
+        private void HookCamera(string key, CameraBase camera)
+        {
+
+            camera.TemperatureMonitor(Switch.Enabled, 250);
+            camera.TemperatureStatusChecked += (sender, e) =>
+            {
+                var node = TreeCameraRepresentation.Where(item => item.Name == Helper.GetCameraHostName(key)).DefaultIfEmpty(null).FirstOrDefault();
+
+                if (node != null)
+                {
+                }
             };
 
         }
@@ -306,7 +338,11 @@ namespace DIPOL_UF.Models
             connectedCameras.TryRemove(camID, out CameraBase camInstance);
             if(removeSelection)
                 cameraTreeViewSelectedItems.Remove(camID);
-            await Task.Run(() => camInstance?.Dispose());
+            await Task.Run(() =>
+            {
+                camInstance.TemperatureMonitor(Switch.Disabled);
+                camInstance?.Dispose();
+            });
         }
     }
 }

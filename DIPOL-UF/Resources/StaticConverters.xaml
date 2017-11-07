@@ -4,4 +4,5 @@
                     xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters">
     <cnvrt:BoolToVisibilityValueConverter x:Key="BoolToVisibilityConverter"/>
     <cnvrt:CameraKeyToStringValueConverter x:Key="CameraKeyToStringConverter"/>
+    <cnvrt:CameraStatsToStringValueConverter x:Key="CameraStatsToStringConverter"/>
 </ResourceDictionary>
