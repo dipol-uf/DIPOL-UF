@@ -6,6 +6,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DIPOL-UF;component/Resources/StaticConverters.xaml"/>
                 <ResourceDictionary Source="/DIPOL-UF;component/Resources/Palette.xaml"/>
                 <ResourceDictionary Source="/DIPOL-UF;component/Resources/Styles.xaml"/>
                 <ResourceDictionary Source="/DIPOL-UF;component/Resources/ItemTemplates.xaml"/>
