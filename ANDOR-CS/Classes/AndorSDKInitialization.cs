@@ -224,6 +224,26 @@ namespace ANDOR_CS.Classes
                 locker.Release();
             }
         }
+        public static uint CallWithoutHandle<T1>(AndorSDK<T1> method, out T1 p1)
+        {
+            // Stores return code
+            uint result = 0;
+            p1 = default(T1);
+            try
+            {// Waits until SDKInstance is available
+                locker.Wait();
+
+                // Calls function
+                result = method(ref p1);
+
+                return result;
+            }
+            finally
+            {// Releases semaphore
+                locker.Release();
+            }
+        }
+
         public static uint CallWithoutHandle(Func<uint> method)
         {
             // Stores return code
