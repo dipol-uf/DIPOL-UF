@@ -315,7 +315,7 @@ namespace ANDOR_CS.Classes
            ShutterMode inter,
            ShutterMode exter = ShutterMode.FullyAuto,
            TTLShutterSignal type = TTLShutterSignal.Low);
-        public abstract void TemperatureMonitor(Switch mode, int timeout);
+        public abstract void TemperatureMonitor(Switch mode, int timeout = 150);
         public abstract SettingsBase GetAcquisitionSettingsTemplate();
 
         public abstract void StartAcquisition();
