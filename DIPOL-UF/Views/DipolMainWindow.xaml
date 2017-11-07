@@ -38,19 +38,19 @@
                     <Border DockPanel.Dock="Bottom" VerticalAlignment="Bottom" 
                             Style="{StaticResource ResourceKey=BorderStyle}"
                             BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
-                        <StackPanel Orientation="Horizontal">
-                           <Button x:Name="ConnectNewCamerasButton" 
+                        <DockPanel >
+                           <Button x:Name="ConnectNewCamerasButton" DockPanel.Dock="Left"
                                    Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" 
                                    Content="Connect"
                                    Command="{Binding ConnectButtonCommand}"
                                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" 
                                     />
-                           <Button x:Name="ReleaseExistingCamerasButton"
+                            <Button x:Name="ReleaseExistingCamerasButton" DockPanel.Dock="Right"
                                    Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
                                    Content="Disconnect"
                                    Command="{Binding DisconnectButtonCommand}" 
                                     />
-                        </StackPanel>
+                        </DockPanel>
                     </Border>
                 </DockPanel>
             </Border>
