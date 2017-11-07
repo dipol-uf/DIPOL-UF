@@ -336,7 +336,8 @@ namespace DIPOL_UF.Models
                             CameraBase cam = null;
                             try
                             {
-                                cam = client.CreateRemoteCamera(camIndex);
+                                if(!client.ActiveRemoteCameras().Contains(camIndex))
+                                    cam = client.CreateRemoteCamera(camIndex);  
                             }
                             catch (Exception aExp)
                             {
