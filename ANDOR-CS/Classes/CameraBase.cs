@@ -55,7 +55,7 @@ namespace ANDOR_CS.Classes
            ShutterMode? External,
            TTLShutterSignal Type,
            int OpenTime,
-           int CloseTime) _Shutter 
+           int CloseTime) _Shutter
             = (ShutterMode.FullyAuto, null, TTLShutterSignal.Low, 0, 0);
         private (Version EPROM, Version COFFile, Version Driver, Version Dll) _Software
             = default((Version EPROM, Version COFFile, Version Driver, Version Dll));
@@ -360,7 +360,14 @@ namespace ANDOR_CS.Classes
             else return false;
         }
 
-         /// <summary>
+
+        public virtual void CheckIsDisposed()
+        {
+            if (_IsDisposed)
+                throw new ObjectDisposedException("Camera instance is already disposed");
+        }
+
+        /// <summary>
         /// When overriden in derived class, disposes camera instance and frees all resources.
         /// </summary>
         public virtual void Dispose()
@@ -382,47 +389,68 @@ namespace ANDOR_CS.Classes
         /// <param name="property">Compiler-filled name of the property that fires event.</param>
         protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
         {
-            //Console.WriteLine($"CameraBase.OnPropertyChanged({property})");
+            CheckIsDisposed();
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
         /// <summary>
         /// Fires <see cref="AcquisitionStarted"/> event.
         /// </summary>
         /// <param name="e">Status of camera at the beginning of acquisition</param>
-        protected virtual void OnAcquisitionStarted(AcquisitionStatusEventArgs e) 
-            => AcquisitionStarted?.Invoke(this, e);
+        protected virtual void OnAcquisitionStarted(AcquisitionStatusEventArgs e)
+        {
+            if (!IsDisposed)
+                AcquisitionStarted?.Invoke(this, e);
+        }
         /// <summary>
         /// Fires <see cref="AcquisitionStatusChecked"/> event.
         /// </summary>
         /// <param name="e">Status of camera during acquisition</param>
-        protected virtual void OnAcquisitionStatusChecked(AcquisitionStatusEventArgs e) 
-            => AcquisitionStatusChecked?.Invoke(this, e);
+        protected virtual void OnAcquisitionStatusChecked(AcquisitionStatusEventArgs e)
+        {
+            if (!IsDisposed)
+                AcquisitionStatusChecked?.Invoke(this, e);
+        }
         /// <summary>
         /// Fires <see cref="AcquisitionFinished"/> event.
         /// </summary>
         /// <param name="e">Status of camera at the end of acquisition</param>
-        protected virtual void OnAcquisitionFinished(AcquisitionStatusEventArgs e) 
-            => AcquisitionFinished?.Invoke(this, e);
+        protected virtual void OnAcquisitionFinished(AcquisitionStatusEventArgs e)
+        {
+            if (!IsDisposed)
+                AcquisitionFinished?.Invoke(this, e);
+        }
         /// <summary>
         /// Fires <see cref="AcquisitionErrorReturned"/> event.
         /// </summary>
         /// <param name="e">Status of camera when exception was thrown</param>
-        protected virtual void OnAcquisitionErrorReturned(AcquisitionStatusEventArgs e) 
-            => AcquisitionErrorReturned?.Invoke(this, e);
+        protected virtual void OnAcquisitionErrorReturned(AcquisitionStatusEventArgs e)
+        {
+            CheckIsDisposed();
+            AcquisitionErrorReturned?.Invoke(this, e);
+        }
         /// <summary>
         /// Fires <see cref="AcquisitionAborted"/> event.
         /// </summary>
         /// <param name="e">Status of camera when abortion happeed</param>
-        protected virtual void OnAcquisitionAborted(AcquisitionStatusEventArgs e) 
-            => AcquisitionAborted?.Invoke(this, e);
+        protected virtual void OnAcquisitionAborted(AcquisitionStatusEventArgs e)
+        {
+            CheckIsDisposed();
+            AcquisitionAborted?.Invoke(this, e);
+        }
         /// <summary>
         /// Fires <see cref="TemperatureStatusChecked"/> event
         /// </summary>
         /// <param name="e">Status of the camera when temperature was checked.</param>
-        protected virtual void OnTemperatureStatusChecked(TemperatureStatusEventArgs e) 
-            => TemperatureStatusChecked?.Invoke(this, e);
+        protected virtual void OnTemperatureStatusChecked(TemperatureStatusEventArgs e)
+        {
+            CheckIsDisposed();
+            TemperatureStatusChecked?.Invoke(this, e);
+        }
         protected virtual void OnNewImageReceived(NewImageReceivedEventArgs e)
-           => NewImageReceived?.Invoke(this, e);
+        {
+            if (!IsDisposed)
+                NewImageReceived?.Invoke(this, e);
+        }
 
         ~CameraBase()
         {
