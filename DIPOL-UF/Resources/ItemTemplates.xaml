@@ -20,13 +20,25 @@
      </HierarchicalDataTemplate>
 
     <DataTemplate x:Key="FoundCamerasListViewItemTemplate">
-        <!--<DockPanel  Background="Transparent">
-            <Label DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{Binding Value}"/>
-        </DockPanel>-->
-        <!--<ContentPresenter Content="{Binding Key, Converter={StaticResource ResourceKey=CameraKeyToStringConverter}}"/>-->
         <StackPanel Orientation="Horizontal">
             <Label Width="125" Content="{Binding Key, Converter={StaticResource ResourceKey=CameraKeyToStringConverter}}"/>
             <Label Content="{Binding Value}"/>
         </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ListTreeViewItemTemplate">
+        <Expander Header="{Binding Name}" IsExpanded="True">
+            <ListView ItemsSource="{Binding CameraList}" 
+                      Style="{StaticResource ResourceKey=ListTreeViewStyle}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}" VerticalAlignment="Center"/>
+                            <Label Content="{Binding Value}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Expander>
     </DataTemplate>
 </ResourceDictionary>
