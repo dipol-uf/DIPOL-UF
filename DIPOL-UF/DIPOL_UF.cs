@@ -8,6 +8,11 @@ namespace DIPOL_UF
         [STAThread]
         public static int Main(string[] args)
         {
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+            System.Globalization.CultureInfo.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
+
+            //TestSettingsWriter();
+
             System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
             System.Diagnostics.Debug.AutoFlush = true;
 
@@ -21,8 +26,29 @@ namespace DIPOL_UF
 
                 applicationInstance.Run(new Views.DipolMainWindow(view));
             }
-            
+
             return 0;
+        }
+
+        public static void TestSettingsWriter()
+        {
+            using (var str = new System.IO.StreamWriter("test.dipolconfig"))
+            {
+                System.Collections.Generic.Dictionary<string, object> pars = new System.Collections.Generic.Dictionary<string, object>();
+
+                pars.Add("Settings1", true);
+                pars.Add("Settings2", 123);
+                pars.Add("Settings3", 123.1);
+                pars.Add("Settings4", "str");
+
+                SettingsManager.Write(str, pars);
+
+
+            }
+            using (var str = new System.IO.StreamReader("test.dipolconfig"))
+            {
+                var sets = SettingsManager.Read(str);
+            }
         }
     }
 }
