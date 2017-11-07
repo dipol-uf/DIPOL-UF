@@ -18,7 +18,6 @@ namespace DIPOL_UF.ViewModels
     {
         public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
         {
-            model.PropertyChanged += (sender, e) => Helper.WriteLog(e.PropertyName);
         }
 
         public ICommand ConnectButtonCommand => model.ConnectButtonCommand as ICommand;
