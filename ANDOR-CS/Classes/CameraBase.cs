@@ -39,6 +39,8 @@ namespace ANDOR_CS.Classes
         protected const int StatusCheckTimeOutMS = 100;
         protected const int TempCheckTimeOutMS = 5000;
 
+        protected bool _IsDisposed = false;
+
         private bool _IsActive = false;
         private bool _IsInitialized = false;
         private DeviceCapabilities _Capabilities = default(DeviceCapabilities);
@@ -65,6 +67,11 @@ namespace ANDOR_CS.Classes
         protected ConcurrentQueue<Image> acquiredImages = new ConcurrentQueue<Image>();
 
 
+        public bool IsDisposed
+        {
+            get => _IsDisposed;
+            private set => _IsDisposed = value;
+        }
         public virtual DeviceCapabilities Capabilities
         {
             get => _Capabilities;
@@ -289,17 +296,11 @@ namespace ANDOR_CS.Classes
         public event TemperatureStatusEventHandler TemperatureStatusChecked;
         public event NewImageReceivedHandler NewImageReceived;
 
-       
-
         /// <summary>
         /// When overriden in a derived class, returns current status of the camera
         /// </summary>
         /// <returns>Status of a camera</returns>
         public abstract CameraStatus GetStatus();
-        /// <summary>
-        /// When overriden in derived class, disposes camera instance and frees all resources.
-        /// </summary>
-        public abstract void Dispose();
         /// <summary>
         /// When overriden in derived class, returns current camera temperature and temperature status
         /// </summary>
@@ -359,6 +360,22 @@ namespace ANDOR_CS.Classes
             else return false;
         }
 
+         /// <summary>
+        /// When overriden in derived class, disposes camera instance and frees all resources.
+        /// </summary>
+        public virtual void Dispose()
+        {
+            if (!_IsDisposed)
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            _IsDisposed = true;
+        }
+
         /// <summary>
         /// Fires <see cref="PropertyChanged"/> event
         /// </summary>
@@ -406,6 +423,11 @@ namespace ANDOR_CS.Classes
             => TemperatureStatusChecked?.Invoke(this, e);
         protected virtual void OnNewImageReceived(NewImageReceivedEventArgs e)
            => NewImageReceived?.Invoke(this, e);
+
+        ~CameraBase()
+        {
+            Dispose(false);
+        }
     }
 
 
