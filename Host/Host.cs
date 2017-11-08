@@ -13,7 +13,8 @@ namespace Host
 
         static void Main(string[] args)
         {
-            Console.WindowWidth = 120;
+            Console.WindowWidth = 180;
+            Console.WindowHeight = 60;
 
             using (var host = new DIPOL_Remote.Classes.DipolHost())
             {
@@ -41,10 +42,13 @@ namespace Host
                     }
 
                 };
-  
+
                 //Console.WriteLine($"Service instances: {DIPOL_Remote.Classes.RemoteControl.ActiveConnections.Count}");
-  
-                Console.ReadKey();
+
+                ConsoleKeyInfo key = default(ConsoleKeyInfo);
+
+                while (!((key = Console.ReadKey()).Key == ConsoleKey.Escape && key.Modifiers == ConsoleModifiers.Shift))
+                { }
             }
         }
     }
