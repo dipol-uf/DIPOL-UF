@@ -28,8 +28,9 @@ namespace DIPOL_UF.Models
             ConnectAll = 2
         }
 
+        private List<Task> workerPool = new List<Task>();
         private bool canCancel = false;
-
+        private bool camerasPresent = false;
         private ProgressBar progressBar = null;
         private Views.ProgressWindow progressView = null;
         private DipolClient[] remoteClients = null;
@@ -167,7 +168,7 @@ namespace DIPOL_UF.Models
                 Minimum = 0,
                 Value = 0,
                 Maximum = 1,
-                IsIndeterminate = false,
+                IsIndeterminate = true,
                 CanAbort = true,
                 DisplayPercents = false,
                 BarTitle = "Checking connections...."
@@ -188,6 +189,16 @@ namespace DIPOL_UF.Models
                         progressView = new Views.ProgressWindow(new ViewModels.ProgressBarViewModel(progressBar));
                         progressView.Owner = (param as CommandEventArgs<EventArgs>)?.Sender as Window;
                         progressView.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+
+                        if (!camerasPresent)
+                        {
+                            progressBar.BarComment = "No cameras found. Check your connections.";
+                                workerPool.Add(Task.Run(() => {
+                                    Task.Delay(3750).Wait();
+                                    Application.Current.Dispatcher.Invoke(progressView.Close);
+                            }));
+                        }
+
                         progressView.Show();
                         progressBar.AbortButtonClick += (sender, e) => CanCancel = true;
                     }
@@ -244,42 +255,43 @@ namespace DIPOL_UF.Models
                     Helper.WriteLog(e.Message);
                 }
 
-            CancellationTokenSource cancelSource = new CancellationTokenSource();
 
             if (nLocal + nRemote > 0)
             {
+                camerasPresent = true;
+                CancellationTokenSource cancelSource = new CancellationTokenSource();
                 progressBar.Maximum = nLocal + nRemote;
 
                 progressBar.AbortButtonClick += (sender, e) => cancelSource.Cancel();
+
+                if (nLocal > 0)
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            QueryLocalCameras(cancelSource.Token);
+                        }
+                        catch (Exception e)
+                        {
+                            Helper.WriteLog(e.Message);
+                        }
+                    });
+
+                if (nRemote > 0)
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            QueryRemoteCameras(cancelSource.Token);
+                        }
+                        catch (Exception e)
+                        {
+                            Helper.WriteLog(e.Message);
+                        }
+
+                    });
             }
-
-            if (nLocal > 0)
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        QueryLocalCameras(cancelSource.Token);
-                    }
-                    catch (Exception e)
-                    {
-                        Helper.WriteLog(e.Message);
-                    }
-                });
-
-            if (nRemote > 0)
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        QueryRemoteCameras(cancelSource.Token);
-                    }
-                    catch (Exception e)
-                    {
-                        Helper.WriteLog(e.Message);
-                    }
-
-                });
-
+            
         }
 
         private void QueryLocalCameras(CancellationToken token)
