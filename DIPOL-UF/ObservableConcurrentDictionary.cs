@@ -27,12 +27,23 @@ namespace DIPOL_UF
             get => base[key];
             set
             {
+                TValue old = default(TValue);
                 bool keyExists = ContainsKey(key);
+
+                if (keyExists)
+                    old = base[key];
+                
                 base[key] = value;
 
-                OnNotifyCollectionChanged(this, new NotifyCollectionChangedEventArgs(keyExists ? NotifyCollectionChangedAction.Replace : NotifyCollectionChangedAction.Add, 
-                    new KeyValuePair<TKey, TValue>(key, value)));
-                OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Values)));
+                if (keyExists)
+                    OnNotifyCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace,
+                        new KeyValuePair<TKey, TValue>(key, value),
+                        new KeyValuePair<TKey, TValue>(key, old)));
+                else
+                    OnNotifyCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                       new KeyValuePair<TKey, TValue>(key, value)));
+
+               OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Values)));
                 OnPropertyChanged(this, new PropertyChangedEventArgs("Item[]"));
 
                 if (!keyExists)
@@ -220,7 +231,7 @@ namespace DIPOL_UF
             if (dispatcher == null)
                 CollectionChanged?.Invoke(sender, e);
             else
-                dispatcher.Invoke(() => CollectionChanged?.Invoke(sender, e));
+                dispatcher.Invoke(() => CollectionChanged?.Invoke(sender, e), DispatcherPriority.DataBind);
         }
 
         protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -231,6 +242,9 @@ namespace DIPOL_UF
                 dispatcher.Invoke(() => PropertyChanged?.Invoke(sender, e));
         }
 
-        
+        public void OnNotifyCollectionChanged(NotifyCollectionChangedEventArgs e)
+            => OnNotifyCollectionChanged(this, e);
+
+
     }
 }
