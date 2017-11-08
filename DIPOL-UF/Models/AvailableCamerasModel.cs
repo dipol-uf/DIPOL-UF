@@ -261,6 +261,7 @@ namespace DIPOL_UF.Models
                 camerasPresent = true;
                 CancellationTokenSource cancelSource = new CancellationTokenSource();
                 progressBar.Maximum = nLocal + nRemote;
+                progressBar.IsIndeterminate = false;
 
                 progressBar.AbortButtonClick += (sender, e) => cancelSource.Cancel();
 

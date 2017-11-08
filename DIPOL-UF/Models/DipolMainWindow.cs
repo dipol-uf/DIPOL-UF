@@ -23,21 +23,48 @@ namespace DIPOL_UF.Models
            { "dipol-2", "dipol-3" };
         private DipolClient[] remoteClients;
 
-
+        /// <summary>
+        /// Connect button command
+        /// </summary>
         private Commands.DelegateCommand connectButtonCommand;
+        /// <summary>
+        /// Disconnect button command
+        /// </summary>
         private Commands.DelegateCommand disconnectButtonCommand;
+        /// <summary>
+        /// Handles selection changed event of the tree view
+        /// </summary>
         private Commands.DelegateCommand cameraTreeViewSelectionChangedCommand;
 
+        /// <summary>
+        /// Menu bar source
+        /// </summary>
         private ObservableCollection<ViewModels.MenuItemViewModel> menuBarItems
             = new ObservableCollection<ViewModels.MenuItemViewModel>();
+
+        /// <summary>
+        /// Connected cameras. This one is for work.
+        /// </summary>
         private ObservableConcurrentDictionary<string, CameraBase> connectedCameras
             = new ObservableConcurrentDictionary<string, CameraBase>();
+
+        /// <summary>
+        /// Tree represencation of connected cameras (grouped by location)
+        /// </summary>
         private ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel> treeCameraRepresentation
             = new ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel>();
+
+        /// <summary>
+        /// Collection of selected cameras (checked with checkboxes)
+        /// </summary>
         private ObservableCollection<string> cameraTreeViewSelectedItems
             = new ObservableCollection<string>();
-        private ObservableConcurrentDictionary<string, Tuple<double>> cameraRealTimeStats
-            = new ObservableConcurrentDictionary<string, Tuple<double>>();
+
+        /// <summary>
+        /// Updates camera stats
+        /// </summary>
+        private ObservableConcurrentDictionary<string, Dictionary<string, object>> cameraRealTimeStats
+            = new ObservableConcurrentDictionary<string, Dictionary<string, object>>();
 
         public ObservableCollection<ViewModels.MenuItemViewModel> MenuBarItems
         {
@@ -90,7 +117,7 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public ObservableConcurrentDictionary<string, Tuple<double>> CameraRealTimeStats
+        public ObservableConcurrentDictionary<string, Dictionary<string, object>> CameraRealTimeStats
         {
             get => cameraRealTimeStats;
             set
@@ -159,6 +186,7 @@ namespace DIPOL_UF.Models
             InitializeMenu();
             InitializeCommands();
             InitializeRemoteSessions();
+            cameraRealTimeStats.CollectionChanged += (sender, e) => Helper.WriteLog("Changed");
         }
                                                         
 
@@ -289,15 +317,17 @@ namespace DIPOL_UF.Models
 
         private void HookCamera(string key, CameraBase camera)
         {
+            if (cameraRealTimeStats.ContainsKey(key))
+                cameraRealTimeStats.TryRemove(key, out _);
 
+            cameraRealTimeStats.TryAdd(key, new Dictionary<string, object>());
+            
             camera.TemperatureMonitor(Switch.Enabled, 250);
             camera.TemperatureStatusChecked += (sender, e) =>
             {
-                var node = TreeCameraRepresentation.Where(item => item.Name == Helper.GetCameraHostName(key)).DefaultIfEmpty(null).FirstOrDefault();
+                cameraRealTimeStats[key]["Temp"] = e.Temperature;
 
-                if (node != null)
-                {
-                }
+                RaisePropertyChanged(nameof(CameraRealTimeStats));
             };
 
         }
@@ -335,14 +365,22 @@ namespace DIPOL_UF.Models
 
         private async Task DisposeCamera(string camID, bool removeSelection = true)
         {
-            connectedCameras.TryRemove(camID, out CameraBase camInstance);
-            if(removeSelection)
-                cameraTreeViewSelectedItems.Remove(camID);
-            await Task.Run(() =>
+            try
             {
-                camInstance.TemperatureMonitor(Switch.Disabled);
-                camInstance?.Dispose();
-            });
+                connectedCameras.TryRemove(camID, out CameraBase camInstance);
+                if (removeSelection)
+                    cameraTreeViewSelectedItems.Remove(camID);
+                
+
+                    camInstance?.CoolerControl(Switch.Disabled);
+                    camInstance.TemperatureMonitor(Switch.Disabled);
+                    camInstance?.Dispose();
+                await Task.Run(() =>
+                {
+                });
+            }
+            catch (Exception e)
+            { }
         }
     }
 }
