@@ -81,6 +81,11 @@ namespace DIPOL_UF
                 return String.Empty;
         }
 
+        /// <summary>
+        /// Checks if dispatcher has not been shut down yet.
+        /// </summary>
+        /// <param name="d">Dispatcher instance (usually <see cref="Application.Current.Dispatcher"/>)</param>
+        /// <returns>True if Dispatcher.Invoke can still be called.</returns>
         public static bool IsAvailable(this Dispatcher d)
             => !d.HasShutdownStarted && !d.HasShutdownFinished;        
     }
