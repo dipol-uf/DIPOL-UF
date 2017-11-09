@@ -15,6 +15,7 @@ using ANDOR_CS.Events;
 using DIPOL_Remote.Classes;
 
 using MenuCollection = System.Collections.ObjectModel.ObservableCollection<DIPOL_UF.ViewModels.MenuItemViewModel>;
+using DelegateCommand = DIPOL_UF.Commands.DelegateCommand;
 
 using static DIPOL_UF.DIPOL_UF_App;
 
@@ -141,7 +142,7 @@ namespace DIPOL_UF.Models
             }
         }
 
-        public Commands.DelegateCommand ConnectButtonCommand
+        public DelegateCommmand ConnectButtonCommand
         {
             get => connectButtonCommand;
             set
@@ -153,7 +154,7 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public Commands.DelegateCommand DisconnectButtonCommand
+        public DelegateCommand DisconnectButtonCommand
         {
             get => disconnectButtonCommand;
             set
@@ -165,7 +166,7 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public Commands.DelegateCommand CameraTreeViewSelectionChangedCommand
+        public DelegateCommand CameraTreeViewSelectionChangedCommand
         {
             get => cameraTreeViewSelectionChangedCommand;
             set
@@ -331,6 +332,8 @@ namespace DIPOL_UF.Models
 
         private void CameraSelectionMade(object e)
         {
+           
+
             var providedCameras = e as IEnumerable<KeyValuePair<string, CameraBase>>;
 
             foreach (var x in providedCameras)
@@ -350,7 +353,20 @@ namespace DIPOL_UF.Models
                         .Select(item => new KeyValuePair<string, ConnectedCameraTreeItemViewModel>(
                             item.Key,
                             new ConnectedCameraTreeItemViewModel(
-                                new ConnectedCameraTreeItemModel(item.Value)))))
+                                new ConnectedCameraTreeItemModel(item.Value)
+                                {
+                                    ContextMenu = new MenuCollection()
+                                     {
+                                    new MenuItemViewModel(
+                                        new MenuItemModel()
+                                        {
+                                            Header = "Properties",
+                                            Command = new DelegateCommand(
+                                                (param) => Helper.WriteLog(param),
+                                                DelegateCommand.CanExecuteAlways)
+                                        })
+                                    }
+                                }))))
                 }));
             }
 
