@@ -99,7 +99,17 @@ namespace DIPOL_UF
         public static object GetValueOrNullSafe(this Dictionary<string, object> settings, string key)
             => (settings ?? throw new ArgumentNullException($"{nameof(settings)} argument cannot be null."))
                 .TryGetValue(key, out object item) ? item : null;
-                  
+
+
+        public static T GetValueOrNullSafe<T>(this Dictionary<string, object> settings, string key, T nullReplacement = default(T))
+        {
+            var value = GetValueOrNullSafe(settings, key);
+
+            if (value is T)
+                return (T)value;
+            else
+                return nullReplacement;
+        }
 
     }
 }

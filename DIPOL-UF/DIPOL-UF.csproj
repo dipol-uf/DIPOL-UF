@@ -94,7 +94,9 @@
     <Compile Include="Commands\EventToCommndExtension.cs" />
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToStringValueConverter.cs" />
-    <Compile Include="Converters\CameraStatsToStringValueConverter.cs" />
+    <Compile Include="Converters\CameraStatsToStringMultiValueConverter.cs" />
+    <Compile Include="Converters\TemperatureStatusToBrushMultiValueConverter.cs" />
+    <Compile Include="Converters\TemperatureToBrushMultiValueConverter.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
     <Compile Include="Models\ConnectedCamerasTreeModel.cs" />

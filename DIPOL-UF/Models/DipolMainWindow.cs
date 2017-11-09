@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using System.Linq;
 
 using ANDOR_CS.Classes;
@@ -11,16 +12,21 @@ using ANDOR_CS.Events;
 
 using DIPOL_Remote.Classes;
 
+using static DIPOL_UF.DIPOL_UF_App;
 
 namespace DIPOL_UF.Models
 {
     class DipolMainWindow : ObservableObject, IDisposable
     {
+        private DispatcherTimer _UIStatusUpdateTimer = null;
+
+        private DispatcherTimer _TestTimer = null;
+
         private bool canEnterSessionManager = true;
         private bool canConnect = true;
         private bool isDisposed = false;
         private string[] remoteLocations
-            = (DIPOL_UF_App.Settings.GetValueOrNullSafe("RemoteLocations") as object[])?.Cast<String>()?.ToArray() 
+            = Settings.GetValueOrNullSafe<object[]>("RemoteLocations")?.Cast<String>()?.ToArray() 
             ?? new string[0]; 
         private DipolClient[] remoteClients;
 
@@ -187,7 +193,32 @@ namespace DIPOL_UF.Models
             InitializeMenu();
             InitializeCommands();
             InitializeRemoteSessions();
-            cameraRealTimeStats.CollectionChanged += (sender, e) => Helper.WriteLog("Changed");
+
+            _UIStatusUpdateTimer = new DispatcherTimer(
+                TimeSpan.FromMilliseconds(Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 1000)),
+                DispatcherPriority.DataBind,
+                DispatcherTimerTickHandler,
+                Application.Current.Dispatcher
+            );
+
+            _TestTimer = new DispatcherTimer()
+            {
+                Interval = new TimeSpan(0, 3, 30),
+                IsEnabled = false
+            };
+
+            _TestTimer.Tick += (sender, e) =>
+            {
+                foreach (var cam in ConnectedCameras)
+                {
+                    cam.Value.SetTemperature(20);
+                    cam.Value.CoolerControl(Switch.Disabled);
+                }
+
+                _TestTimer.Stop();
+            };
+
+            _TestTimer.Start();
         }
                                                         
 
@@ -201,6 +232,7 @@ namespace DIPOL_UF.Models
         {
             if (diposing)
             {
+                _UIStatusUpdateTimer.Stop();
                 Task[] pool = new Task[connectedCameras.Count];
                 int taskInd = 0;
 
@@ -327,12 +359,22 @@ namespace DIPOL_UF.Models
 
             cameraRealTimeStats.TryAdd(key, new Dictionary<string, object>());
             
-            camera.TemperatureMonitor(Switch.Enabled, 250);
+            camera.TemperatureMonitor(Switch.Enabled, Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
+            camera.SetTemperature(-20);
+            camera.CoolerControl(Switch.Enabled);
+            camera.FanControl(FanMode.FullSpeed);
             camera.TemperatureStatusChecked += (sender, e) =>
             {
                 cameraRealTimeStats[key]["Temp"] = e.Temperature;
+                cameraRealTimeStats[key]["TempStatus"] = e.Status;
+
             };
 
+        }
+
+        private void DispatcherTimerTickHandler(object sener, EventArgs e)
+        {
+            RaisePropertyChanged(nameof(CameraRealTimeStats));
         }
 
         /// <summary>

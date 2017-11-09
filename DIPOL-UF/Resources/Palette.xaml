@@ -25,6 +25,24 @@
                Bottom="{StaticResource BorderThicknessValue}"
                />
 
+    
     <sys:Double x:Key="TreeItemMarginValue">20</sys:Double>
     <Thickness x:Key="OneLevelTreeItemMarginLeft" Left="{StaticResource TreeItemMarginValue}"/>
+    
+    <!--Temperature text colors-->
+    <x:Array x:Key="TemperatureColorBrushCollection" Type="{x:Type SolidColorBrush}">
+        <SolidColorBrush Color="Red"/>
+        <SolidColorBrush Color="Orange"/>
+        <SolidColorBrush Color="LimeGreen"/>
+        <SolidColorBrush Color="CornflowerBlue"/>
+    </x:Array>
+    
+    <!--Temperature status colors-->
+    <x:Array x:Key="TemperatureStatusColorBrushCollection" Type="{x:Type SolidColorBrush}">
+        <SolidColorBrush Color="Black"/>
+        <SolidColorBrush Color="LimeGreen"/>
+        <SolidColorBrush Color="Red"/>
+        <SolidColorBrush Color="Orange"/>
+        <SolidColorBrush Color="Crimson"/>
+    </x:Array>
 </ResourceDictionary>
