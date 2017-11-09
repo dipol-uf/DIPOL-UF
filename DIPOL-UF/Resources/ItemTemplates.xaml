@@ -17,20 +17,26 @@
     </DataTemplate>
     
     <!--Main window tree view of connected cameras.-->
+    <!--Cameras a grouped by location (e.g. Local or network address)-->
     <DataTemplate x:Key="ListTreeViewItemTemplate">
+        <!--For each group there is expander with sublist of all associated cameras-->
+        <!--Name is group name (i.e. location)-->
         <Expander Header="{Binding Name}" IsExpanded="True">
+            <!--List of cameras in a group-->
             <ListView ItemsSource="{Binding CameraList}" 
                       Style="{StaticResource ResourceKey=ListTreeViewStyle}"
                       KeyboardNavigation.TabNavigation="Continue">
                 <ListView.ItemTemplate>
                     <DataTemplate>
+                        <!--Vertical StackPanel contains horizontal panels per each row-->
                         <StackPanel Orientation="Vertical">
+                            <!--First horizontal panel is selection CheckBox and CameraName-->
                             <StackPanel Orientation="Horizontal">
                                 <CheckBox Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}" VerticalAlignment="Center"
                                       Checked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
                                       Unchecked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
                                       TabIndex="{Binding TabIndex, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListViewItem}}"/>
-                                <Label Content="{Binding Value}" VerticalAlignment="Center" Width="155"/>
+                                <Label Content="{Binding Value.Camera}" VerticalAlignment="Center" Width="155"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <Label VerticalAlignment="Center" Width="70"  HorizontalAlignment="Right"
