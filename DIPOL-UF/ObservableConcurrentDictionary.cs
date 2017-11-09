@@ -228,7 +228,7 @@ namespace DIPOL_UF
 
         protected virtual void OnNotifyCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (dispatcher == null)
+            if (dispatcher == null || !dispatcher.IsAvailable())
                 CollectionChanged?.Invoke(sender, e);
             else
                 dispatcher.Invoke(() => CollectionChanged?.Invoke(sender, e), DispatcherPriority.DataBind);
@@ -236,7 +236,7 @@ namespace DIPOL_UF
 
         protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (dispatcher == null)
+            if (dispatcher == null || !dispatcher.IsAvailable())
                 PropertyChanged?.Invoke(sender, e);
             else
                 dispatcher.Invoke(() => PropertyChanged?.Invoke(sender, e));
