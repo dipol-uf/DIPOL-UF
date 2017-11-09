@@ -142,7 +142,7 @@ namespace DIPOL_UF.Models
             }
         }
 
-        public DelegateCommmand ConnectButtonCommand
+        public DelegateCommand ConnectButtonCommand
         {
             get => connectButtonCommand;
             set
