@@ -1,6 +1,5 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:DIPOL_UF.Resources"
                     xmlns:vm="clr-namespace:DIPOL_UF.ViewModels"
                     xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
                     xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters">
