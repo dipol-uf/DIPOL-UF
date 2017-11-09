@@ -33,7 +33,14 @@
                             <StackPanel.ContextMenu>
                                 <ContextMenu 
                                     ItemsSource="{Binding Value.ContextMenu}"
-                                    ItemTemplate="{StaticResource MenuBarItemTemplate}"/>
+                                    ItemTemplate="{StaticResource MenuBarItemTemplate}">
+                                    <ContextMenu.ItemContainerStyle>
+                                        <Style TargetType="{x:Type MenuItem}">
+                                            <Setter Property="Command" Value="{Binding Command}"/>
+                                            <Setter Property="CommandParameter" Value="{Binding RelativeSource={RelativeSource Self}}"/>
+                                        </Style>
+                                    </ContextMenu.ItemContainerStyle>
+                                </ContextMenu>
                             </StackPanel.ContextMenu>
                             <!--First horizontal panel is selection CheckBox and CameraName-->
                             <StackPanel Orientation="Horizontal">
