@@ -325,38 +325,39 @@ namespace DIPOL_UF.Models
             ConnectButtonCommand?.OnCanExecuteChanged();
             wind.Show();
 
-            cameraQueryModel.CameraSelectionsMade += (e) =>
-            {
-                var providedCameras = e as IEnumerable<KeyValuePair<string, CameraBase>>;
-
-                foreach (var x in providedCameras)
-                    if (ConnectedCameras.TryAdd(x.Key, x.Value))
-                        HookCamera(x.Key, x.Value);
-
-                string[]  categories = providedCameras.Select(item => Helper.GetCameraHostName(item.Key)).ToArray();
-
-                foreach (var cat in categories)
-                {
-                    treeCameraRepresentation.Add(new ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
-                    {
-                        Name = cat,
-                        CameraList = new ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel>(
-                            providedCameras
-                            .Where(item => Helper.GetCameraHostName(item.Key) == cat)
-                            .Select(item => new KeyValuePair<string, ConnectedCameraTreeItemViewModel>(
-                                item.Key,
-                                new ConnectedCameraTreeItemViewModel(
-                                    new ConnectedCameraTreeItemModel(item.Value)))))
-                    }));
-                }
-
-                canConnect = true;
-                ConnectButtonCommand?.OnCanExecuteChanged();
-
-            };
+            cameraQueryModel.CameraSelectionsMade += CameraSelectionMade;           
 
         }
 
+        private void CameraSelectionMade(object e)
+        {
+            var providedCameras = e as IEnumerable<KeyValuePair<string, CameraBase>>;
+
+            foreach (var x in providedCameras)
+                if (ConnectedCameras.TryAdd(x.Key, x.Value))
+                    HookCamera(x.Key, x.Value);
+
+            string[] categories = providedCameras.Select(item => Helper.GetCameraHostName(item.Key)).ToArray();
+
+            foreach (var cat in categories)
+            {
+                treeCameraRepresentation.Add(new ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
+                {
+                    Name = cat,
+                    CameraList = new ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel>(
+                        providedCameras
+                        .Where(item => Helper.GetCameraHostName(item.Key) == cat)
+                        .Select(item => new KeyValuePair<string, ConnectedCameraTreeItemViewModel>(
+                            item.Key,
+                            new ConnectedCameraTreeItemViewModel(
+                                new ConnectedCameraTreeItemModel(item.Value)))))
+                }));
+            }
+
+            canConnect = true;
+            ConnectButtonCommand?.OnCanExecuteChanged();
+
+        }
         /// <summary>
         /// Attaches event handlers to each camera to monitor status & progress.
         /// </summary>
