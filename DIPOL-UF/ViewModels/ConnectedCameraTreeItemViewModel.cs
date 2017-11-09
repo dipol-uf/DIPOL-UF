@@ -1,5 +1,4 @@
-﻿
-namespace DIPOL_UF.ViewModels
+﻿namespace DIPOL_UF.ViewModels
 {
     class ConnectedCameraTreeItemViewModel : ViewModel<Models.ConnectedCameraTreeItemModel>
     {
