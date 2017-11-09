@@ -20,6 +20,6 @@ namespace DIPOL_UF.ViewModels
         }
 
         public string Name => model.Name;
-        public ObservableConcurrentDictionary<string, CameraBase> CameraList => model.CameraList;
+        public ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel> CameraList => model.CameraList;
     }
 }
