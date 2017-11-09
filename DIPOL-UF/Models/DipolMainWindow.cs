@@ -6,11 +6,15 @@ using System.Windows;
 using System.Windows.Threading;
 using System.Linq;
 
+using DIPOL_UF.ViewModels;
+
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 
 using DIPOL_Remote.Classes;
+
+using MenuCollection = System.Collections.ObjectModel.ObservableCollection<DIPOL_UF.ViewModels.MenuItemViewModel>;
 
 using static DIPOL_UF.DIPOL_UF_App;
 
@@ -46,8 +50,8 @@ namespace DIPOL_UF.Models
         /// <summary>
         /// Menu bar source
         /// </summary>
-        private ObservableCollection<ViewModels.MenuItemViewModel> menuBarItems
-            = new ObservableCollection<ViewModels.MenuItemViewModel>();
+        private ObservableCollection<MenuItemViewModel> menuBarItems
+            = new ObservableCollection<MenuItemViewModel>();
 
         /// <summary>
         /// Connected cameras. This one is for work.
@@ -58,8 +62,8 @@ namespace DIPOL_UF.Models
         /// <summary>
         /// Tree represencation of connected cameras (grouped by location)
         /// </summary>
-        private ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel> treeCameraRepresentation
-            = new ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel>();
+        private ObservableCollection<ConnectedCamerasTreeViewModel> treeCameraRepresentation
+            = new ObservableCollection<ConnectedCamerasTreeViewModel>();
 
         /// <summary>
         /// Collection of selected cameras (checked with checkboxes)
@@ -73,7 +77,7 @@ namespace DIPOL_UF.Models
         private ObservableConcurrentDictionary<string, Dictionary<string, object>> cameraRealTimeStats
             = new ObservableConcurrentDictionary<string, Dictionary<string, object>>();
 
-        public ObservableCollection<ViewModels.MenuItemViewModel> MenuBarItems
+        public ObservableCollection<MenuItemViewModel> MenuBarItems
         {
             get => menuBarItems;
             set
@@ -97,7 +101,7 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public ObservableCollection<ViewModels.ConnectedCamerasTreeViewModel> TreeCameraRepresentation
+        public ObservableCollection<ConnectedCamerasTreeViewModel> TreeCameraRepresentation
         {
             get => treeCameraRepresentation;
             set
@@ -331,12 +335,16 @@ namespace DIPOL_UF.Models
 
                 foreach (var cat in categories)
                 {
-                    treeCameraRepresentation.Add(new ViewModels.ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
+                    treeCameraRepresentation.Add(new ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
                     {
                         Name = cat,
-                        CameraList = new ObservableConcurrentDictionary<string, CameraBase>(
+                        CameraList = new ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel>(
                             providedCameras
-                            .Where(item => Helper.GetCameraHostName(item.Key) == cat))
+                            .Where(item => Helper.GetCameraHostName(item.Key) == cat)
+                            .Select(item => new KeyValuePair<string, ConnectedCameraTreeItemViewModel>(
+                                item.Key,
+                                new ConnectedCameraTreeItemViewModel(
+                                    new ConnectedCameraTreeItemModel(item.Value)))))
                     }));
                 }
 

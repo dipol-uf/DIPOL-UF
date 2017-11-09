@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Windows.Input;
-using System.Windows;
+﻿using DIPOL_UF.ViewModels;
 
 using ANDOR_CS.Classes;
 
@@ -13,10 +6,11 @@ namespace DIPOL_UF.Models
 {
     class ConnectedCamerasTreeModel : ObservableObject
     {
-        private ObservableConcurrentDictionary<string, CameraBase> cameraList = new ObservableConcurrentDictionary<string, CameraBase>();
+        private ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel> cameraList 
+            = new ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel>();
         private string name = "";
 
-        public ObservableConcurrentDictionary<string, CameraBase> CameraList
+        public ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel> CameraList
         {
             get => cameraList;
             set
