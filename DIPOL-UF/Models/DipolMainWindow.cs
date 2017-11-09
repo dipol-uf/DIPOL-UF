@@ -19,8 +19,9 @@ namespace DIPOL_UF.Models
         private bool canEnterSessionManager = true;
         private bool canConnect = true;
         private bool isDisposed = false;
-        private string[] remoteLocations = new string[0];
-          // { "dipol-2", "dipol-3" };
+        private string[] remoteLocations
+            = (DIPOL_UF_App.Settings.GetValueOrNullSafe("RemoteLocations") as object[])?.Cast<String>()?.ToArray() 
+            ?? new string[0]; 
         private DipolClient[] remoteClients;
 
         /// <summary>
@@ -314,7 +315,11 @@ namespace DIPOL_UF.Models
 
         }
 
-
+        /// <summary>
+        /// Attaches event handlers to each camera to monitor status & progress.
+        /// </summary>
+        /// <param name="key">CameraID.</param>
+        /// <param name="camera">Camera instance.</param>
         private void HookCamera(string key, CameraBase camera)
         {
             if (cameraRealTimeStats.ContainsKey(key))
@@ -326,8 +331,6 @@ namespace DIPOL_UF.Models
             camera.TemperatureStatusChecked += (sender, e) =>
             {
                 cameraRealTimeStats[key]["Temp"] = e.Temperature;
-
-                //RaisePropertyChanged(nameof(CameraRealTimeStats));
             };
 
         }
