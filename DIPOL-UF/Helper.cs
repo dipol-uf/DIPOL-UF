@@ -87,6 +87,19 @@ namespace DIPOL_UF
         /// <param name="d">Dispatcher instance (usually <see cref="Application.Current.Dispatcher"/>)</param>
         /// <returns>True if Dispatcher.Invoke can still be called.</returns>
         public static bool IsAvailable(this Dispatcher d)
-            => !d.HasShutdownStarted && !d.HasShutdownFinished;        
+            => !d.HasShutdownStarted && !d.HasShutdownFinished;
+
+        /// <summary>
+        /// Retrieves an item from a dictionary if specified key is present; otherwise, returns <see cref="null"/>.
+        /// </summary>
+        /// <param name="settings">The dictionary.</param>
+        /// <param name="key">Key.</param>
+        /// <exception cref="ArgumentNullException"/>
+        /// <returns>Either item associated with key, or null, if not present.</returns>
+        public static object GetValueOrNullSafe(this Dictionary<string, object> settings, string key)
+            => (settings ?? throw new ArgumentNullException($"{nameof(settings)} argument cannot be null."))
+                .TryGetValue(key, out object item) ? item : null;
+                  
+
     }
 }
