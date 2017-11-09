@@ -29,7 +29,12 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <!--Vertical StackPanel contains horizontal panels per each row-->
-                        <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Vertical" Background="Transparent">
+                            <StackPanel.ContextMenu>
+                                <ContextMenu 
+                                    ItemsSource="{Binding Value.ContextMenu}"
+                                    ItemTemplate="{StaticResource MenuBarItemTemplate}"/>
+                            </StackPanel.ContextMenu>
                             <!--First horizontal panel is selection CheckBox and CameraName-->
                             <StackPanel Orientation="Horizontal">
                                 <!--Checked/Unchecked events are forwarded to DipolWindow's context commands-->
