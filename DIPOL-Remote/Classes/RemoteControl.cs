@@ -90,6 +90,7 @@ namespace DIPOL_Remote.Classes
             = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
 
 
+       
         /// <summary>
         /// Unique ID of current session
         /// </summary>
@@ -312,7 +313,8 @@ namespace DIPOL_Remote.Classes
 
             // Remotely fires event, informing that some property has changed
             camera.PropertyChanged += (sender, e)
-                => context.GetCallbackChannel<IRemoteCallback>()
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemotePropertyChanged(
                     camera.CameraIndex,
                     SessionID,
@@ -320,14 +322,16 @@ namespace DIPOL_Remote.Classes
 
             // Remotely fires event, informing that temperature status was checked.
             camera.TemperatureStatusChecked += (sender, e)
-                => context.GetCallbackChannel<IRemoteCallback>()
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemoteTemperatureStatusChecked(
                     camera.CameraIndex,
                     SessionID,
                     e);
             // Remotely fires event, informing that acquisition was started.
             camera.AcquisitionStarted += (snder, e)
-                => context.GetCallbackChannel<IRemoteCallback>()
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -335,7 +339,8 @@ namespace DIPOL_Remote.Classes
                     e);
             // Remotely fires event, informing that acquisition was finished.
             camera.AcquisitionFinished += (snder, e)
-                => context.GetCallbackChannel<IRemoteCallback>()
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -343,7 +348,8 @@ namespace DIPOL_Remote.Classes
                     e);
             // Remotely fires event, informing that acquisition progress was checked.
             camera.AcquisitionStatusChecked += (snder, e)
-                => context.GetCallbackChannel<IRemoteCallback>()
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -351,7 +357,8 @@ namespace DIPOL_Remote.Classes
                     e);
             // Remotely fires event, informing that acquisition was aborted.
             camera.AcquisitionAborted += (snder, e)
-                => context.GetCallbackChannel<IRemoteCallback>()
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -359,7 +366,8 @@ namespace DIPOL_Remote.Classes
                     e);
             // Remotely fires event, informing that an error happened during acquisition process.
             camera.AcquisitionErrorReturned += (snder, e)
-                => context.GetCallbackChannel<IRemoteCallback>()
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -367,7 +375,8 @@ namespace DIPOL_Remote.Classes
                     e);
             // Remotely fires event, informing that new image was acquired
             camera.NewImageReceived += (sndr, e)
-                => context.GetCallbackChannel<IRemoteCallback>()
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
                 .NotifyRemoteNewImageReceivedEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -712,6 +721,16 @@ namespace DIPOL_Remote.Classes
                 return taskInfo;
             else
                 throw new Exception();
+        }
+
+        private OperationContext GetContext()
+        {
+
+            if (context.Channel.State == CommunicationState.Opened)
+                return context;
+            else
+                return null;
+
         }
     }
 }
