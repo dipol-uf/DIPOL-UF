@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using System.IO;
 
 namespace DIPOL_UF
@@ -21,18 +21,20 @@ namespace DIPOL_UF
                 int ind = line.IndexOf('=');
                 if (ind > 0)
                 {
-                    var key = line.Substring(0, ind);
+                    var key = line.Substring(0, ind).Trim();
                     if (!pars.ContainsKey(key))
                     {
                         string val = line.Substring(ind + 1).Trim();
-                        if (val == bool.TrueString || val == bool.FalseString)
-                            pars.Add(key, val == bool.TrueString);
-                        else if (val.Contains("\""))
-                            pars.Add(key, val.Trim('"'));
-                        else if (int.TryParse(val, out int intVal))
-                            pars.Add(key, intVal);
-                        else if (double.TryParse(val, out double doubleVal))
-                            pars.Add(key, doubleVal);
+
+                        if (val.StartsWith("{"))
+                        {
+                            val = val.Trim('{', '}').Trim();
+
+                            pars.Add(key, val.Split(new[] { ",\t" }, StringSplitOptions.RemoveEmptyEntries).Select(StrToObject).ToArray());
+
+                        }
+                        else
+                            pars.Add(key, StrToObject(val));
                     }
                 }
             }
@@ -42,23 +44,60 @@ namespace DIPOL_UF
 
         public static void Write(StreamWriter str, Dictionary<string, object> pars)
         {
-            if (!pars.Values.Select(item => item.GetType()).All(item => AllowedTypes.Contains(item)))
+            if (!pars.Values.Select(item => item.GetType()).All(item => AllowedTypes.Contains(item) || item.BaseType == typeof(Array)))
                 throw new ArgumentException("One or more provided parameter values are of illegal type.");
 
             foreach (var item in pars)
             {
                 string valStr = "";
-                if (item.Value.GetType() == AllowedTypes[0])
-                    valStr = item.Value.ToString();
-                else if(item.Value.GetType() == AllowedTypes[1])
-                    valStr = ((double)item.Value).ToString("e");
-                else if (item.Value.GetType() == AllowedTypes[2])
-                    valStr = (bool)item.Value ? bool.TrueString : bool.FalseString;
+                if (item.Value is Array arr)
+                {
+                    var strBuilder = new StringBuilder("{ ");
+                    var enumer = arr.GetEnumerator();
+
+                    if(enumer.MoveNext())
+                        strBuilder.Append(ObjToString(enumer.Current));
+
+                    while (enumer.MoveNext())
+                        strBuilder.Append(",\t" + ObjToString(enumer.Current));
+
+
+                    valStr = strBuilder.Append(" }").ToString();
+
+                }
                 else
-                    valStr = "\"" + ((item.Value as string) ?? "") + "\"";
+                    valStr = ObjToString(item.Value);
 
                 str.WriteLine($"{item.Key} = {valStr}");
             }
+        }
+
+        private static string ObjToString(object o)
+        {
+            string result = String.Empty;
+            if (o.GetType() == AllowedTypes[0])
+                result = o.ToString();
+            else if (o.GetType() == AllowedTypes[1])
+                result = ((double)o).ToString("e");
+            else if (o.GetType() == AllowedTypes[2])
+                result = (bool)o ? bool.TrueString : bool.FalseString;
+            else
+                result = "\"" + ((o as string) ?? "") + "\"";
+            return result.Replace("\t", @"\\t").Replace("\n", @"\\n");
+        }
+
+        private static object StrToObject(string s)
+        {
+            if (s == bool.TrueString || s == bool.FalseString)
+                return s == bool.TrueString;
+            else if (s.Contains("\""))
+                return s.Trim('"').Replace(@"\\t", "\t").Replace(@"\\n", "\n");
+            else if (int.TryParse(s, out int intVal))
+                return intVal;
+            else if (double.TryParse(s, out double doubleVal))
+                return doubleVal;
+            else
+                return null;
         }
     }
 }
