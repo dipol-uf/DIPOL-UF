@@ -19,8 +19,8 @@ namespace DIPOL_UF.Models
         private bool canEnterSessionManager = true;
         private bool canConnect = true;
         private bool isDisposed = false;
-        private string[] remoteLocations = //new string[0];
-           { "dipol-2", "dipol-3" };
+        private string[] remoteLocations = new string[0];
+          // { "dipol-2", "dipol-3" };
         private DipolClient[] remoteClients;
 
         /// <summary>
@@ -327,7 +327,7 @@ namespace DIPOL_UF.Models
             {
                 cameraRealTimeStats[key]["Temp"] = e.Temperature;
 
-                RaisePropertyChanged(nameof(CameraRealTimeStats));
+                //RaisePropertyChanged(nameof(CameraRealTimeStats));
             };
 
         }
@@ -365,22 +365,19 @@ namespace DIPOL_UF.Models
 
         private async Task DisposeCamera(string camID, bool removeSelection = true)
         {
-            try
-            {
-                connectedCameras.TryRemove(camID, out CameraBase camInstance);
-                if (removeSelection)
-                    cameraTreeViewSelectedItems.Remove(camID);
-                
 
+            connectedCameras.TryRemove(camID, out CameraBase camInstance);
+            if (removeSelection)
+                cameraTreeViewSelectedItems.Remove(camID);
+
+
+            await Task.Run(() =>
+                {
                     camInstance?.CoolerControl(Switch.Disabled);
                     camInstance.TemperatureMonitor(Switch.Disabled);
                     camInstance?.Dispose();
-                await Task.Run(() =>
-                {
                 });
-            }
-            catch (Exception e)
-            { }
+           
         }
     }
 }

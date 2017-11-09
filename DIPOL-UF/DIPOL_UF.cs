@@ -25,6 +25,7 @@ namespace DIPOL_UF
                 var view = new ViewModels.DipolMainWindowViewModel(mainModel);
 
                 applicationInstance.Run(new Views.DipolMainWindow(view));
+
             }
 
             return 0;
