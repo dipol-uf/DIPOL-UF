@@ -370,8 +370,8 @@ namespace DIPOL_UF.Models
             cameraRealTimeStats.TryAdd(key, new Dictionary<string, object>());
             
             camera.TemperatureMonitor(Switch.Enabled, Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
-            camera.SetTemperature(-20);
-            camera.CoolerControl(Switch.Enabled);
+            //camera.SetTemperature(-20);
+            //camera.CoolerControl(Switch.Enabled);
             camera.FanControl(FanMode.FullSpeed);
             camera.TemperatureStatusChecked += (sender, e) =>
             {
