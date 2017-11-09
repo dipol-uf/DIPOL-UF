@@ -14,15 +14,14 @@ namespace DIPOL_UF
             private set;
         }
 
+       
         [STAThread]
-        public static int Main(string[] args)
+        static int Main(string[] args)
         {
-            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
-            System.Globalization.CultureInfo.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
 
             //TestSettingsWriter();
 
-            //System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
+            System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
             System.Diagnostics.Debug.AutoFlush = true;
 
             App applicationInstance = new App();
@@ -42,6 +41,9 @@ namespace DIPOL_UF
 
         static DIPOL_UF_App()
         {
+            System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+            System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
+
             try
             {
                 if (File.Exists(coreConfigPath))
