@@ -87,4 +87,5 @@
         <Setter Property="ItemContainerStyle" Value="{StaticResource NonSelectableListViewItemStyle}"/>
     </Style>
     
+    
 </ResourceDictionary>
