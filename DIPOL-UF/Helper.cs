@@ -10,7 +10,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace DIPOL_UF
 {
@@ -80,5 +80,8 @@ namespace DIPOL_UF
             else
                 return String.Empty;
         }
+
+        public static bool IsAvailable(this Dispatcher d)
+            => !d.HasShutdownStarted && !d.HasShutdownFinished;        
     }
 }
