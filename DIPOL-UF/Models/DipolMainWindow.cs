@@ -357,14 +357,14 @@ namespace DIPOL_UF.Models
                                 {
                                     ContextMenu = new MenuCollection()
                                      {
-                                    new MenuItemViewModel(
-                                        new MenuItemModel()
-                                        {
-                                            Header = "Properties",
-                                            Command = new DelegateCommand(
-                                                (param) => Helper.WriteLog(param),
-                                                DelegateCommand.CanExecuteAlways)
-                                        })
+                                        new MenuItemViewModel(
+                                            new MenuItemModel()
+                                            {
+                                                Header = "Properties",
+                                                Command = new DelegateCommand(
+                                                    (param) => ContextMenuCommandHandler("Properties", param),
+                                                    DelegateCommand.CanExecuteAlways)
+                                            })
                                     }
                                 }))))
                 }));
@@ -373,6 +373,20 @@ namespace DIPOL_UF.Models
             canConnect = true;
             ConnectButtonCommand?.OnCanExecuteChanged();
 
+        }
+
+        private void ContextMenuCommandHandler(string command, object param)
+        {
+            if(command == "Properties")
+                if (param is DependencyObject obj)
+                {
+                    var parentObj = Helper.FindParentOfType<System.Windows.Controls.StackPanel>(obj);
+                    if (parentObj is System.Windows.Controls.StackPanel parent)
+                        if (parent.DataContext is KeyValuePair<string,ConnectedCameraTreeItemViewModel> viewmodel)
+                        {
+                            Helper.WriteLog(viewmodel.Value.Camera.Capabilities.AcquisitionModes);
+                        }
+                }
         }
         /// <summary>
         /// Attaches event handlers to each camera to monitor status & progress.
