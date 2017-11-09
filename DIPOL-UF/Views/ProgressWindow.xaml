@@ -26,7 +26,7 @@
                      Margin="10, 5, 10, 5" Height="15" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                      Width="360"
                      IsIndeterminate="{Binding Path=IsIndeterminate, UpdateSourceTrigger=PropertyChanged}"
-                     Minimum="{Binding Minium, UpdateSourceTrigger=PropertyChanged}"
+                     Minimum="{Binding Minimum, UpdateSourceTrigger=PropertyChanged}"
                      Maximum="{Binding Maximum, UpdateSourceTrigger=PropertyChanged}"
                      Value="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
         <Label Name="TitleBox" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Center"
