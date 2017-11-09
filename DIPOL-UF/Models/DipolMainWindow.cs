@@ -297,7 +297,9 @@ namespace DIPOL_UF.Models
                 {
                     var context = sender.DataContext;
 
-                    var camID = (context is KeyValuePair<string, CameraBase>) ? ((KeyValuePair<string, CameraBase>)context).Key : null;
+                    var camID = (context is KeyValuePair<string, ConnectedCameraTreeItemViewModel>)
+                        ? ((KeyValuePair<string, ConnectedCameraTreeItemViewModel>)context).Key 
+                        : null;
 
                     var state = (sender as System.Windows.Controls.CheckBox)?.IsChecked ?? false;
 
