@@ -318,9 +318,9 @@ namespace DIPOL_Remote.Classes
 
         protected override void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
             if (disposing)
             {
+                base.Dispose(disposing);
                 session.RemoveCamera(CameraIndex);
                 remoteCameras.TryRemove((session.SessionID, CameraIndex), out _);
                 session = null;
