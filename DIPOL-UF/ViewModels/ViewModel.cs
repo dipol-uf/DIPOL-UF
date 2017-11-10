@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace DIPOL_UF.ViewModels
 {
-    abstract class ViewModel<T> : ObservableObject where T : ObservableObject
+    abstract class ViewModel<T> : ObservableObject where T : class, INotifyPropertyChanged
     {
         protected static string[] declaredProperties = null;
 
