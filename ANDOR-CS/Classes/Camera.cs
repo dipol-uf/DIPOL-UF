@@ -822,10 +822,10 @@ namespace ANDOR_CS.Classes
         /// </summary>
         protected override void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
 
             if (!_IsDisposed)
             {
+                base.Dispose(disposing);
                 if (disposing)
                 {
                     // If camera has valid SDK pointer and is initialized
