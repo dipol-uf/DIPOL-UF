@@ -22,6 +22,8 @@ namespace DIPOL_UF.Models
         private bool canAbort = true;
 
         public event EventHandler AbortButtonClick;
+        public event EventHandler MaximumReached;
+        public event EventHandler MinimumReached;
 
         public int Minimum
         {
@@ -68,9 +70,10 @@ namespace DIPOL_UF.Models
             get => value;
             set
             {
-
                 if (value != this.value)
                 {
+                    int old = this.value;
+
                     if (value < minimum)
                         this.value = minimum;
                     else if (value > maximum)
@@ -78,7 +81,15 @@ namespace DIPOL_UF.Models
                     else
                         this.value = value;
 
-                    RaisePropertyChanged();
+                    if (this.value != old)
+                    {
+                        RaisePropertyChanged();
+
+                        if (this.value == maximum)
+                            OnMaximumReached(this, new EventArgs());
+                        else if (this.value == minimum)
+                            OnMinimumReached(this, new EventArgs());
+                    }
                 }
             }
         }
@@ -201,6 +212,9 @@ namespace DIPOL_UF.Models
 
         protected virtual void OnAbortButtonClick(object sender, EventArgs e)
             => AbortButtonClick?.Invoke(this, e);
-
+        protected virtual void OnMaximumReached(object sender, EventArgs e)
+            => MaximumReached?.Invoke(this, e);
+        protected virtual void OnMinimumReached(object sender, EventArgs e)
+            => MinimumReached?.Invoke(this, e);
     }
 }
