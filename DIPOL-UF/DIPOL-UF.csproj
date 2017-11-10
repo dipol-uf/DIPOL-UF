@@ -110,6 +110,7 @@
     <Compile Include="ObservableObject.cs" />
     <Compile Include="SettingsManager.cs" />
     <Compile Include="ViewModels\AvailableCamerasViewModel.cs" />
+    <Compile Include="ViewModels\CameraPropertiesViewModel.cs" />
     <Compile Include="ViewModels\ConnectedCameraTreeItemViewModel.cs" />
     <Compile Include="ViewModels\DipolMainWindowViewModel.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
@@ -118,6 +119,9 @@
     <Compile Include="ViewModels\ViewModel.cs" />
     <Compile Include="Views\AvailableCamerasView.xaml.cs">
       <DependentUpon>AvailableCamerasView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\CameraPropertiesView.xaml.cs">
+      <DependentUpon>CameraPropertiesView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ProgressWindow.xaml.cs">
       <DependentUpon>ProgressWindow.xaml</DependentUpon>
@@ -139,6 +143,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\AvailableCamerasView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\CameraPropertiesView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

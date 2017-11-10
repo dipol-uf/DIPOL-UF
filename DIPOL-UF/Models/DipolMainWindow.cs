@@ -399,7 +399,10 @@ namespace DIPOL_UF.Models
                     if (parentObj is System.Windows.Controls.StackPanel parent)
                         if (parent.DataContext is KeyValuePair<string,ConnectedCameraTreeItemViewModel> viewmodel)
                         {
-                            Helper.WriteLog(viewmodel.Value.Camera.Capabilities.AcquisitionModes);
+                            var vm = new CameraPropertiesViewModel(viewmodel.Value.Camera);
+                            var window = new Views.CameraPropertiesView(vm);
+                            window.Owner = Helper.FindParentOfType<Window>(parent) as Window;
+                            window.Show();
                         }
                 }
         }
@@ -416,6 +419,7 @@ namespace DIPOL_UF.Models
             cameraRealTimeStats.TryAdd(key, new Dictionary<string, object>());
             
             camera.TemperatureMonitor(Switch.Enabled, Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
+
             //camera.SetTemperature(-20);
             //camera.CoolerControl(Switch.Enabled);
             camera.FanControl(FanMode.FullSpeed);
