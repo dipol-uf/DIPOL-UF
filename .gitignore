@@ -72,6 +72,7 @@ Temporary Items
 
 **/*.resources
 
+**/*.xml
 **/*.dll
 **/*.dpb
 
