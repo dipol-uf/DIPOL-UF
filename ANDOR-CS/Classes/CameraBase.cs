@@ -389,8 +389,8 @@ namespace ANDOR_CS.Classes
         /// <param name="property">Compiler-filled name of the property that fires event.</param>
         protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
         {
-            CheckIsDisposed();
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            if (!IsDisposed)
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
         /// <summary>
         /// Fires <see cref="AcquisitionStarted"/> event.
@@ -425,8 +425,8 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Status of camera when exception was thrown</param>
         protected virtual void OnAcquisitionErrorReturned(AcquisitionStatusEventArgs e)
         {
-            CheckIsDisposed();
-            AcquisitionErrorReturned?.Invoke(this, e);
+            if (!IsDisposed)
+                AcquisitionErrorReturned?.Invoke(this, e);
         }
         /// <summary>
         /// Fires <see cref="AcquisitionAborted"/> event.
@@ -434,8 +434,8 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Status of camera when abortion happeed</param>
         protected virtual void OnAcquisitionAborted(AcquisitionStatusEventArgs e)
         {
-            CheckIsDisposed();
-            AcquisitionAborted?.Invoke(this, e);
+            if (!IsDisposed)
+                AcquisitionAborted?.Invoke(this, e);
         }
         /// <summary>
         /// Fires <see cref="TemperatureStatusChecked"/> event
@@ -443,8 +443,8 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Status of the camera when temperature was checked.</param>
         protected virtual void OnTemperatureStatusChecked(TemperatureStatusEventArgs e)
         {
-            CheckIsDisposed();
-            TemperatureStatusChecked?.Invoke(this, e);
+            if (!IsDisposed)
+                TemperatureStatusChecked?.Invoke(this, e);
         }
         protected virtual void OnNewImageReceived(NewImageReceivedEventArgs e)
         {
