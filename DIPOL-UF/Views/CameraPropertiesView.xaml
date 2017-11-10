@@ -1,0 +1,27 @@
+﻿<Window x:Class="DIPOL_UF.Views.CameraPropertiesView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DIPOL_UF.Views"
+        mc:Ignorable="d"
+        Title="CameraPropertiesView" Height="300" Width="300">
+    <Grid>
+        <ListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                  ItemsSource="{Binding DeviceProperties, UpdateSourceTrigger=PropertyChanged}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock >
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0} = {1} Test">
+                                <Binding Path="Item1"/>
+                                <Binding Path="Item2"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+
+        </ListView>        
+    </Grid>
+</Window>
