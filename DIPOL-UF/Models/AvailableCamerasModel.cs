@@ -342,7 +342,7 @@ namespace DIPOL_UF.Models
                 if (cam != null)
                     FoundCameras.TryAdd($"localhost:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
 
-
+                // Try thread-safely increment progress bar
                 if (progressBar != null)
                 {
                     if (Application.Current.Dispatcher.IsAvailable())
@@ -354,6 +354,7 @@ namespace DIPOL_UF.Models
                     progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired local camera {cam.ToString()}";
                 }
 
+                // Close progress bar if everything is done ?
                 if (progressBar?.Value == progressBar?.Maximum)
                 {
                     Task.Delay(750).Wait();
@@ -365,41 +366,53 @@ namespace DIPOL_UF.Models
         }
         private void QueryRemoteCameras(CancellationToken token)
         {
+            // For each remote client
             foreach (var client in remoteClients)
             {
+                // Checks if cancellation is requested
                 if (token.IsCancellationRequested)
                     break;
+                // Runs task in parallel
                 Task.Run(() =>
                 {
                     try
                     {
-
+                        // Number of available cameras
                         int nCams = client.GetNumberOfCameras();
 
+                        // For each camera
                         for (int camIndex = 0; camIndex < nCams; camIndex++)
                         {
+                            // If cancellation requested
                             if (token.IsCancellationRequested)
                                 break;
+
+                            // Try to create remote camera
                             CameraBase cam = null;
                             try
                             {
                                 if(!client.ActiveRemoteCameras().Contains(camIndex))
                                     cam = client.CreateRemoteCamera(camIndex);  
                             }
+                            // Catch silently
                             catch (Exception aExp)
                             {
                                 Helper.WriteLog(aExp);
                             }
 
+                            // Free camera if cancelled
                             if (token.IsCancellationRequested)
                             {
                                 cam?.Dispose();
+                                cam = null;
                                 break;
                             }
 
+                            // Add to collection
                             if (cam != null)
                                 FoundCameras.TryAdd($"{client.HostAddress}:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
 
+                            // Try increment progress bar
                             if (progressBar != null)
                             {
                                 if (Application.Current.Dispatcher.IsAvailable())
@@ -410,6 +423,8 @@ namespace DIPOL_UF.Models
 
                                 progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired remote camera {cam.ToString()}";
                             }
+
+                            // Close window?
                             if (progressBar?.Value == progressBar?.Maximum)
                             {
                                 Task.Delay(750).Wait();

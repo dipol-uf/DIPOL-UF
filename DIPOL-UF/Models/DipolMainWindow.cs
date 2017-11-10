@@ -346,14 +346,16 @@ namespace DIPOL_UF.Models
         private void CameraSelectionMade(object e)
         {
            
-
             var providedCameras = e as IEnumerable<KeyValuePair<string, CameraBase>>;
 
             foreach (var x in providedCameras)
                 if (ConnectedCameras.TryAdd(x.Key, x.Value))
                     HookCamera(x.Key, x.Value);
 
-            string[] categories = providedCameras.Select(item => Helper.GetCameraHostName(item.Key)).ToArray();
+            string[] categories = providedCameras
+                .Select(item => Helper.GetCameraHostName(item.Key))
+                .Distinct()
+                .ToArray();
 
             foreach (var cat in categories)
             {
