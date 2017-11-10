@@ -40,15 +40,7 @@
                         ItemsSource="{Binding TreeCameraRepresentation}"
                             Style="{StaticResource ResourceKey=ListTreeViewStyle}"
                             ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"/>
-                    <Border  VerticalAlignment="Bottom" Grid.Row="2"
-                            Style="{StaticResource ResourceKey=BorderStyle}"
-                            BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
-                        <Button 
-                            Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                            Content="Remote Sessions"
-                            Width="auto" HorizontalAlignment="Center"/>
-                    </Border>
-                    <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Grid.Row="3"
+                    <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Grid.Row="2"
                             Style="{StaticResource ResourceKey=BorderStyle}"
                             BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
                         <DockPanel>
@@ -64,6 +56,14 @@
                                    Command="{Binding DisconnectButtonCommand}" 
                                     />
                         </DockPanel>
+                    </Border>
+                    <Border  VerticalAlignment="Bottom" Grid.Row="3"
+                            Style="{StaticResource ResourceKey=BorderStyle}"
+                            BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
+                        <Button 
+                            Style="{StaticResource ResourceKey=BasicButtonStyle}"
+                            Content="Remote Sessions"
+                            Width="auto" HorizontalAlignment="Center"/>
                     </Border>
                 </Grid>
             </Border>
