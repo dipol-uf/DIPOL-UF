@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DIPOL_UF"
         xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
         mc:Ignorable="d"
-        Title="Dipol-UF" Height="788" Width="1024" HorizontalContentAlignment="Stretch" MinWidth="800"
+        Title="Dipol-UF" Height="788" Width="1024" HorizontalContentAlignment="Stretch" MinWidth="768" MinHeight="576"
         Style="{StaticResource ResourceKey=ContentFont}"
         x:Name="DipolWindow">
 
@@ -29,7 +29,8 @@
                             Style="{StaticResource ResourceKey=BorderStyle}"
                             BorderThickness="{StaticResource ResourceKey=BottomOnlyBorderThickness}">
                         <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                            <CheckBox VerticalAlignment="Center" HorizontalAlignment="Left" Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}"/>
+                            <CheckBox VerticalAlignment="Center" HorizontalAlignment="Left" 
+                                      Margin="10, 0, 0, 0"/>
                             <Label x:Name="ConnectedCamerasLabel" Content="Camera Manager" 
                                    HorizontalAlignment="Center" VerticalAlignment="Stretch" 
                                    VerticalContentAlignment="Center"/>
