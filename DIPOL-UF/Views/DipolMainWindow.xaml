@@ -36,12 +36,10 @@
                         </Grid>
                     </Border>
                     <ListView  BorderThickness="0" TabIndex="0" Grid.Row="1"
-                            KeyboardNavigation.ControlTabNavigation="Cycle">
-                        <!--ItemsSource="{Binding TreeCameraRepresentation}"-->
-                            <!--Style="{StaticResource ResourceKey=ListTreeViewStyle}"-->
-                            <!--ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"-->
-                             <!-->-->
-                    </ListView>
+                            KeyboardNavigation.ControlTabNavigation="Cycle"
+                        ItemsSource="{Binding TreeCameraRepresentation}"
+                            Style="{StaticResource ResourceKey=ListTreeViewStyle}"
+                            ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"/>
                     <Border  VerticalAlignment="Bottom" Grid.Row="2"
                             Style="{StaticResource ResourceKey=BorderStyle}"
                             BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
