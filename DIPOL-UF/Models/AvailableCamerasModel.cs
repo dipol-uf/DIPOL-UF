@@ -297,33 +297,40 @@ namespace DIPOL_UF.Models
 
         private void QueryLocalCameras(CancellationToken token)
         {
+            // Number of cameras
             int nCams;
             try
             {
                 nCams = Camera.GetNumberOfCameras();
             }
+            // If for some reason camera retrieval number fails
             catch (AndorSDKException aExp)
             {
                 Helper.WriteLog(aExp);
                 nCams = 0;
             }
 
+            // For each found local camera
             for (int camIndex = 0; camIndex < nCams; camIndex++)
             {
+                // Check cancellation request
                 if (token.IsCancellationRequested)
                     break;
 
+                // If camera is nor present on the active list
                 CameraBase cam = null;
                 try
                 {
                     if(!Camera.CamerasInUse.Values.Select(item => item.CameraIndex).Contains(camIndex))
                         cam = new Camera(camIndex);
                 }
+                // Silently catch exception and continue
                 catch (Exception aExp)
                 {
                     Helper.WriteLog(aExp);
                 }
 
+                // If canceled, free camera
                 if (token.IsCancellationRequested)
                 {
                     cam?.Dispose();
@@ -331,12 +338,19 @@ namespace DIPOL_UF.Models
                     break;
                 }
 
+                // If camera is OK, add it to the list
                 if (cam != null)
                     FoundCameras.TryAdd($"localhost:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
 
 
-                if (progressBar?.TryIncrement() ?? false)
+                if (progressBar != null)
                 {
+                    if (Application.Current.Dispatcher.IsAvailable())
+                        Application.Current.Dispatcher.Invoke(progressBar.TryIncrement);
+                    else
+                        lock (progressBar)
+                            progressBar.TryIncrement();
+
                     progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired local camera {cam.ToString()}";
                 }
 
@@ -386,11 +400,16 @@ namespace DIPOL_UF.Models
                             if (cam != null)
                                 FoundCameras.TryAdd($"{client.HostAddress}:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
 
-                            if (progressBar?.TryIncrement() ?? false)
+                            if (progressBar != null)
                             {
+                                if (Application.Current.Dispatcher.IsAvailable())
+                                    Application.Current.Dispatcher.Invoke(progressBar.TryIncrement);
+                                else
+                                    lock (progressBar)
+                                        progressBar.TryIncrement();
+
                                 progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired remote camera {cam.ToString()}";
                             }
-
                             if (progressBar?.Value == progressBar?.Maximum)
                             {
                                 Task.Delay(750).Wait();
