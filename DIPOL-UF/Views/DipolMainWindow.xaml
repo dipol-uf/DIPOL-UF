@@ -29,15 +29,15 @@
                             Style="{StaticResource ResourceKey=BorderStyle}"
                             BorderThickness="{StaticResource ResourceKey=BottomOnlyBorderThickness}">
                         <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                            <CheckBox VerticalAlignment="Center" Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}"/>
+                            <CheckBox VerticalAlignment="Center" HorizontalAlignment="Left" Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}"/>
                             <Label x:Name="ConnectedCamerasLabel" Content="Camera Manager" 
-                                HorizontalAlignment="Center" VerticalAlignment="Stretch" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Stretch" 
                                    VerticalContentAlignment="Center"/>
                         </Grid>
                     </Border>
-                    <ListView  BorderThickness="0" TabIndex="0" Grid.Row="1"
+                    <ListView BorderThickness="0" TabIndex="0" Grid.Row="1"
                             KeyboardNavigation.ControlTabNavigation="Cycle"
-                        ItemsSource="{Binding TreeCameraRepresentation}"
+                            ItemsSource="{Binding TreeCameraRepresentation}"
                             Style="{StaticResource ResourceKey=ListTreeViewStyle}"
                             ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"/>
                     <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Grid.Row="2"
