@@ -47,5 +47,10 @@ namespace ANDOR_CS.DataStructures
             Horizontal = width;
             Vertical = height;
         }
+
+        public override string ToString()
+        {
+            return $"({Horizontal}, {Vertical})";
+        }
     }
 }
