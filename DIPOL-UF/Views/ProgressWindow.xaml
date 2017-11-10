@@ -24,7 +24,7 @@
         </Grid.ColumnDefinitions>
         <ProgressBar Name="Bar" VerticalAlignment="Center" 
                      Margin="10, 5, 10, 5" Height="15" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                     Width="360"
+                     Width="420"
                      IsIndeterminate="{Binding Path=IsIndeterminate, UpdateSourceTrigger=PropertyChanged}"
                      Minimum="{Binding Minimum, UpdateSourceTrigger=PropertyChanged}"
                      Maximum="{Binding Maximum, UpdateSourceTrigger=PropertyChanged}"
