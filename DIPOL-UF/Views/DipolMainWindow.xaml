@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DIPOL_UF"
         xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
         mc:Ignorable="d"
-        Title="Dipol-UF" Height="768" Width="1024" HorizontalContentAlignment="Stretch" MinWidth="800" MinHeight="600"
+        Title="Dipol-UF" Height="788" Width="1024" HorizontalContentAlignment="Stretch" MinWidth="800"
         Style="{StaticResource ResourceKey=ContentFont}"
         x:Name="DipolWindow">
 
@@ -18,16 +18,31 @@
         <Grid x:Name="MainWindowGrid" DockPanel.Dock="Top">
             <Border HorizontalAlignment="Right" VerticalAlignment="Stretch" Margin="2"
                     Style="{StaticResource ResourceKey=BorderStyle}">
-                <DockPanel>
-                    <Label x:Name="ConnectedCamerasLabel" Content="Camera Manager" DockPanel.Dock="Top"
-                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    <Separator DockPanel.Dock="Top" Style="{StaticResource ResourceKey=SeparatorAsBorderStyle}"/>
-                    <ListView DockPanel.Dock="Top" BorderThickness="0" TabIndex="0"
-                            KeyboardNavigation.ControlTabNavigation="Cycle"
-                            ItemsSource="{Binding TreeCameraRepresentation}"
-                            Style="{StaticResource ResourceKey=ListTreeViewStyle}"
-                            ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"/>
-                    <Border DockPanel.Dock="Bottom" VerticalAlignment="Bottom" 
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto" x:Name="GridButtonRowHeight"/>
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                            Style="{StaticResource ResourceKey=BorderStyle}"
+                            BorderThickness="{StaticResource ResourceKey=BottomOnlyBorderThickness}">
+                        <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                            <CheckBox VerticalAlignment="Center" Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}"/>
+                            <Label x:Name="ConnectedCamerasLabel" Content="Camera Manager" 
+                                HorizontalAlignment="Center" VerticalAlignment="Stretch" 
+                                   VerticalContentAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <ListView  BorderThickness="0" TabIndex="0" Grid.Row="1"
+                            KeyboardNavigation.ControlTabNavigation="Cycle">
+                        <!--ItemsSource="{Binding TreeCameraRepresentation}"-->
+                            <!--Style="{StaticResource ResourceKey=ListTreeViewStyle}"-->
+                            <!--ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"-->
+                             <!-->-->
+                    </ListView>
+                    <Border  VerticalAlignment="Bottom" Grid.Row="2"
                             Style="{StaticResource ResourceKey=BorderStyle}"
                             BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
                         <Button 
@@ -35,7 +50,7 @@
                             Content="Remote Sessions"
                             Width="auto" HorizontalAlignment="Center"/>
                     </Border>
-                    <Border DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                    <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Grid.Row="3"
                             Style="{StaticResource ResourceKey=BorderStyle}"
                             BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
                         <DockPanel>
@@ -52,7 +67,7 @@
                                     />
                         </DockPanel>
                     </Border>
-                </DockPanel>
+                </Grid>
             </Border>
         </Grid>
     </DockPanel>
