@@ -822,6 +822,8 @@ namespace ANDOR_CS.Classes
         /// </summary>
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             if (!_IsDisposed)
             {
                 if (disposing)
@@ -855,8 +857,6 @@ namespace ANDOR_CS.Classes
                     CameraHandle.Dispose();
                 }
             }
-
-            base.Dispose(disposing);
         }
 
         /// <summary>
