@@ -37,7 +37,7 @@ namespace DIPOL_UF
         {
             var parent = VisualTreeHelper.GetParent(element);
 
-            while(!(parent is T))
+            while(parent != null && !(parent is T))
                 parent = VisualTreeHelper.GetParent(parent);
 
             return parent is T ? parent : null;
@@ -109,6 +109,21 @@ namespace DIPOL_UF
                 return (T)value;
             else
                 return nullReplacement;
+        }
+
+        public static string ArrayToString(this Array array)
+        {
+            var enumer = array.GetEnumerator();
+
+            var s = new StringBuilder();
+
+            if (enumer.MoveNext())
+                s.Append(enumer.Current.ToString());
+
+            while (enumer.MoveNext())
+                s.Append(", " + enumer.Current.ToString());
+
+            return s.ToString();
         }
 
     }
