@@ -318,13 +318,13 @@ namespace DIPOL_Remote.Classes
 
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
             if (disposing)
             {
                 session.RemoveCamera(CameraIndex);
                 remoteCameras.TryRemove((session.SessionID, CameraIndex), out _);
                 session = null;
             }
-            base.Dispose(disposing);
         }
 
         protected sealed override void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
