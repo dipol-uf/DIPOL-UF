@@ -38,15 +38,15 @@ namespace DIPOL_UF.Models
         /// <summary>
         /// Connect button command
         /// </summary>
-        private Commands.DelegateCommand connectButtonCommand;
+        private DelegateCommand connectButtonCommand;
         /// <summary>
         /// Disconnect button command
         /// </summary>
-        private Commands.DelegateCommand disconnectButtonCommand;
+        private DelegateCommand disconnectButtonCommand;
         /// <summary>
         /// Handles selection changed event of the tree view
         /// </summary>
-        private Commands.DelegateCommand cameraTreeViewSelectionChangedCommand;
+        private DelegateCommand cameraTreeViewSelectionChangedCommand;
 
         /// <summary>
         /// Menu bar source
@@ -280,12 +280,25 @@ namespace DIPOL_UF.Models
         }
         private void InitializeRemoteSessions()
         {
-            remoteClients = new DipolClient[remoteLocations.Length];
-            Parallel.For(0, remoteClients.Length, (i) =>
+            var connectedClients = new List<DipolClient>(remoteLocations.Length);
+            Parallel.For(0, remoteLocations.Length, (i) =>
             {
-                remoteClients[i] = new DipolClient(remoteLocations[i]);
-                remoteClients[i].Connect();
+                try
+                {
+                    var client = new DipolClient(remoteLocations[i]);
+                    client.Connect();
+                    connectedClients.Add(client);
+                    
+                }
+                catch (System.ServiceModel.EndpointNotFoundException enfe)
+                {
+                    Helper.WriteLog(enfe.Message);
+                    MessageBox.Show(enfe.Message, "Host not found or unreachable",
+                        MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                }
             });
+
+            remoteClients = connectedClients.ToArray();
         }
        
         private void CameraTreeViewSelectionChangedCommandHandler(object parameter)
