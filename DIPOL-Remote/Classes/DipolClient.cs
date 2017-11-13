@@ -56,11 +56,12 @@ namespace DIPOL_Remote.Classes
             remote = new DuplexChannelFactory<IRemoteControl>(
                 context, 
                 bnd, 
-                new EndpointAddress(endpoint)).CreateChannel();            
+                new EndpointAddress(endpoint)).CreateChannel();
+
             
         }
 
-        public DipolClient(string host, TimeSpan openTimeout, TimeSpan sendTimeout, TimeSpan closeTimeout)
+        public DipolClient(string host, TimeSpan openTimeout, TimeSpan sendTimeout, TimeSpan operationTimeout, TimeSpan closeTimeout)
         {
             HostAddress = host;
             var bnd = new NetTcpBinding(SecurityMode.None);
@@ -77,6 +78,7 @@ namespace DIPOL_Remote.Classes
                 bnd,
                 new EndpointAddress(endpoint)).CreateChannel();
 
+            ((IDuplexContextChannel)remote).OperationTimeout = operationTimeout;
         }
 
 
