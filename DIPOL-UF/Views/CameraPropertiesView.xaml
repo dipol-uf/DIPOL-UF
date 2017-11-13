@@ -4,24 +4,24 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DIPOL_UF.Views"
-        mc:Ignorable="d"
-        Title="CameraPropertiesView" Height="300" Width="300">
-    <Grid>
-        <ListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                  ItemsSource="{Binding DeviceProperties, UpdateSourceTrigger=PropertyChanged}">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock >
-                        <TextBlock.Text>
-                            <MultiBinding StringFormat="{}{0} = {1} Test">
-                                <Binding Path="Item1"/>
-                                <Binding Path="Item2"/>
-                            </MultiBinding>
-                        </TextBlock.Text>
-                    </TextBlock>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-
-        </ListView>        
-    </Grid>
+        mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
+        Title="{Binding Camera}" Height="600" Width="800"  ResizeMode="CanResizeWithGrip"
+        MinHeight="200">
+    <DataGrid ItemsSource="{Binding AllProperties, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
+              AutoGenerateColumns="False" SelectionMode="Single" SelectionUnit="FullRow" 
+              CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserResizeColumns="False" 
+              CanUserResizeRows="False" CanUserSortColumns="False"
+              IsReadOnly="True" HeadersVisibility="Column"
+              HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Property" Binding="{Binding Item1, Mode=OneWay}" Width="*" />
+                <DataGridTemplateColumn Header="Value" Width="3*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding Item2, Mode=OneWay}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
 </Window>
