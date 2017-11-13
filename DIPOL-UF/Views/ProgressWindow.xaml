@@ -12,9 +12,9 @@
         BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" IsTabStop="False" ShowInTaskbar="False">
     <Grid Margin="5" Background="Transparent"  MouseDown="{cmds:EventToCommnd 'MouseDragEventHandler | MouseEventHandler'}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1.25*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -29,11 +29,13 @@
                      Maximum="{Binding Maximum, UpdateSourceTrigger=PropertyChanged}"
                      Value="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
         <Label Name="TitleBox" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                 Content="{Binding BarTitle, UpdateSourceTrigger=PropertyChanged}" 
-                Style="{StaticResource ResourceKey=TitleFont_Label}"/>
-        <Label Name="CommentBox" Grid.Row="2" Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                 Content="{Binding BarComment, UpdateSourceTrigger=PropertyChanged}"
-                Style="{StaticResource ResourceKey=ContentFont_Label}"/>
+               Content="{Binding BarTitle, UpdateSourceTrigger=PropertyChanged}" 
+               Style="{StaticResource ResourceKey=TitleFont_Label}"/>
+        <TextBlock Name="CommentBox" Grid.Row="2" Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+               Text="{Binding BarComment, UpdateSourceTrigger=PropertyChanged}" 
+               TextWrapping="WrapWithOverflow"
+                   Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+               />
         <Label Name="ProgressNumberBox" Grid.Row ="1" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" 
                Content="{Binding ProgressText, UpdateSourceTrigger=PropertyChanged}"
                Style="{StaticResource ResourceKey=ContentFont_Label}"/>
