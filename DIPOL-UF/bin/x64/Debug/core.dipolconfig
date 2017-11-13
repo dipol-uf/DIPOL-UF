@@ -1,2 +1,2 @@
-RemoteLocations = { "dipol-2",	"dipol-3" }
+RemoteLocations = { "dipol-2" }
 UICamStatusUpdateDelay = 1500

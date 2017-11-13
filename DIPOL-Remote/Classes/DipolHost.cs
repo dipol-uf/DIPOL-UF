@@ -48,7 +48,11 @@ namespace DIPOL_Remote.Classes
                 EventLog.CreateEventSource(sourceName, logName);
 
             var bnd = new NetTcpBinding(SecurityMode.None);
-          
+
+            bnd.OpenTimeout = TimeSpan.FromHours(24);
+            bnd.CloseTimeout = TimeSpan.FromSeconds(15);
+            bnd.SendTimeout = TimeSpan.FromHours(12);
+            bnd.ReceiveTimeout = TimeSpan.FromHours(12);
 
             host = new ServiceHost(typeof(RemoteControl), endpoint);
 
@@ -71,7 +75,7 @@ namespace DIPOL_Remote.Classes
 
             };
         }
-
+        
         public void Host() => host?.Open();
 
       
@@ -79,7 +83,7 @@ namespace DIPOL_Remote.Classes
         {
             var baseAddress = host.BaseAddresses[0];
 
-            host?.Close();
+            host?.Close(TimeSpan.FromSeconds(15));
 
             _OpenedHosts.TryRemove(baseAddress.GetHashCode(), out _);
         }
