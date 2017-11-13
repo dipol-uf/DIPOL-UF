@@ -46,9 +46,21 @@
                             <StackPanel Orientation="Horizontal">
                                 <!--Checked/Unchecked events are forwarded to DipolWindow's context commands-->
                                 <CheckBox Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}" VerticalAlignment="Center"
-                                      Checked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
-                                      Unchecked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
-                                      TabIndex="{Binding TabIndex, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListViewItem}}"/>
+                                          Command="{Binding Path=DataContext.CameraTreeViewSelectionChangedCommand, 
+                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" 
+                                          CommandParameter="{Binding Key}"
+                                          TabIndex="{Binding TabIndex, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListViewItem}}">
+                                    <CheckBox.IsChecked>
+                                        <MultiBinding Converter="{StaticResource ResourceKey=CameraKeyToValueMultiConverter}" 
+                                                      UpdateSourceTrigger="PropertyChanged" Mode="OneWay">
+                                            <Binding Path="Key" Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" 
+                                                     Path="DataContext.CameraTreeViewSelectedItems" Mode="OneWay"/>
+                                        </MultiBinding>
+                                    </CheckBox.IsChecked>
+                                </CheckBox>
+                                      <!--Checked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
+                                      Unchecked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"-->
                                 <!--CameraBase.ToString() to get camera name-->
                                 <Label Content="{Binding Value.Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}" VerticalAlignment="Center" Width="155"/>
                             </StackPanel>

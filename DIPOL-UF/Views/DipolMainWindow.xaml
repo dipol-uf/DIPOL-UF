@@ -30,13 +30,21 @@
                             BorderThickness="{StaticResource ResourceKey=BottomOnlyBorderThickness}">
                         <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                             <CheckBox VerticalAlignment="Center" HorizontalAlignment="Left" 
-                                      Margin="10, 0, 0, 0"/>
+                                      Margin="10, 0, 0, 0"
+                                      IsThreeState="True"
+                                      x:Name="SelectAllCheckBox"
+                                      IsChecked="{Binding CameraTreeViewSelectedAll, Mode=OneWay}"
+                                      Command="{Binding CameraTreeViewSelectAllCommand}"
+                                      CommandParameter="{Binding ElementName=CameraTreeListView}"
+                                      />
+
                             <Label x:Name="ConnectedCamerasLabel" Content="Camera Manager" 
                                    HorizontalAlignment="Center" VerticalAlignment="Stretch" 
                                    VerticalContentAlignment="Center"/>
                         </Grid>
                     </Border>
-                    <ListView BorderThickness="0" TabIndex="0" Grid.Row="1"
+                    <ListView x:Name="CameraTreeListView" 
+                            BorderThickness="0" TabIndex="0" Grid.Row="1"
                             KeyboardNavigation.ControlTabNavigation="Cycle"
                             ItemsSource="{Binding TreeCameraRepresentation}"
                             Style="{StaticResource ResourceKey=ListTreeViewStyle}"
