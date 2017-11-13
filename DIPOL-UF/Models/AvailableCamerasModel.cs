@@ -351,7 +351,8 @@ namespace DIPOL_UF.Models
                         lock (progressBar)
                             progressBar.TryIncrement();
 
-                    progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired local camera {cam.ToString()}";
+                    progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired local camera " +
+                        $"{new Converters.CameraToStringAliasValueConverter().Convert(cam, typeof(string), null, System.Globalization.CultureInfo.CurrentUICulture)}";
                 }
 
                 // Close progress bar if everything is done ?
@@ -421,7 +422,8 @@ namespace DIPOL_UF.Models
                                     lock (progressBar)
                                         progressBar.TryIncrement();
 
-                                progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired remote camera {cam.ToString()}";
+                                progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired remote camera " +
+                                    $"{new Converters.CameraToStringAliasValueConverter().Convert(cam, typeof(string), null, System.Globalization.CultureInfo.CurrentUICulture)}";
                             }
 
                             // Close window?
