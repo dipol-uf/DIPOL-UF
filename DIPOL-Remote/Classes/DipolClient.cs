@@ -60,6 +60,26 @@ namespace DIPOL_Remote.Classes
             
         }
 
+        public DipolClient(string host, TimeSpan openTimeout, TimeSpan sendTimeout, TimeSpan closeTimeout)
+        {
+            HostAddress = host;
+            var bnd = new NetTcpBinding(SecurityMode.None);
+            // IMPORTANT! Limits the size of SOAP message. For larger images requires another implementation
+            bnd.MaxReceivedMessageSize = 512 * 512 * 8 * 2;
+
+            bnd.OpenTimeout = openTimeout;
+            bnd.SendTimeout = sendTimeout;
+            bnd.CloseTimeout = closeTimeout;
+
+            var endpoint = new Uri(string.Format(endpointTemplate, host));
+            remote = new DuplexChannelFactory<IRemoteControl>(
+                context,
+                bnd,
+                new EndpointAddress(endpoint)).CreateChannel();
+
+        }
+
+
         public void Connect()
             => Remote.Connect();
 
