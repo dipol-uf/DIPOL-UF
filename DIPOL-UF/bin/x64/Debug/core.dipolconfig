@@ -6,3 +6,5 @@ RemoteSendTimeout = "00:30:00"
 RemoteOperationTimeout = "00:00:20"
 RemoteCloseTimeout = "00:00:30"
 PopUpDelay = "00:00:01.0"
+Cameras = { "DU897_EX_9237",	DU897_BV_10001",	"DU897_EX_10012" }
+CameraAlias = { "Dipol-1 EX Cam",	"Dipol-3 BV Cam",	"Dipol-2 EX Cam" }
