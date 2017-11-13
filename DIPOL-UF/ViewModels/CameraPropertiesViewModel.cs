@@ -48,6 +48,8 @@ namespace DIPOL_UF.ViewModels
 
             allProperties = new ObservableCollection<Tuple<string, string>>(
                 (new[] {
+                    new Tuple<string, string>("Alias", new Converters.CameraToStringAliasValueConverter()
+                        .Convert(model, typeof(String), null, System.Globalization.CultureInfo.CurrentUICulture).ToString()),
                     new Tuple<string, string>("Camera Model", model.CameraModel) ,
                     new Tuple<string, string>("Serial Number", model.SerialNumber),
                     new Tuple<string, string>("Software Version", model.Software.ToString()),
