@@ -12,7 +12,7 @@
     <DataTemplate x:Key="FoundCamerasListViewItemTemplate">
         <StackPanel Orientation="Horizontal">
             <Label Width="80" Content="{Binding Key, Converter={StaticResource ResourceKey=CameraKeyToStringConverter}}" HorizontalContentAlignment="Right"/>
-            <Label Content="{Binding Value}" HorizontalContentAlignment="Right"/>
+            <Label Content="{Binding Value, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}" HorizontalContentAlignment="Right"/>
         </StackPanel>
     </DataTemplate>
     
