@@ -33,7 +33,7 @@ namespace DIPOL_UF.Models
         private string[] remoteLocations
             = Settings.GetValueOrNullSafe<object[]>("RemoteLocations")?.Cast<String>()?.ToArray() 
             ?? new string[0]; 
-        private DipolClient[] remoteClients;
+        private DipolClient[] remoteClients = null;
 
         /// <summary>
         /// Connect button command
@@ -280,7 +280,21 @@ namespace DIPOL_UF.Models
         }
         private void InitializeRemoteSessions()
         {
+            var pb = new ProgressBar()
+            {
+                IsIndeterminate = true,
+                CanAbort = false,
+                BarTitle = "Connecting to remote locations..."
+            };
+
+            var pbWindow = new Views.ProgressWindow(new ProgressBarViewModel(pb));
+
+            var timeOut = TimeSpan.Parse(Settings.GetValueOrNullSafe<string>("RemoteEstablishPBTimeout", "00:00:03"));
+
+            pbWindow.Show();
+
             var connectedClients = new List<DipolClient>(remoteLocations.Length);
+            Task connect = Task.Run(() => 
             Parallel.For(0, remoteLocations.Length, (i) =>
             {
                 try
@@ -297,12 +311,25 @@ namespace DIPOL_UF.Models
                 catch (System.ServiceModel.EndpointNotFoundException enfe)
                 {
                     Helper.WriteLog(enfe.Message);
-                    MessageBox.Show(enfe.Message, "Host not found or unreachable",
-                        MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                    if (Application.Current.Dispatcher.IsAvailable())
+                        Application.Current.Dispatcher.Invoke(() => MessageBox.Show(pbWindow, enfe.Message, "Host not found or unreachable",
+                            MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
+                    else
+                        MessageBox.Show(enfe.Message, "Host not found or unreachable",
+                            MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+
                 }
+            }));
+
+            connect.ContinueWith((task) =>
+            {
+                remoteClients = connectedClients.ToArray();
+
+                if(Application.Current.Dispatcher.IsAvailable())
+                    Application.Current.Dispatcher.Invoke(pbWindow.Close);
             });
 
-            remoteClients = connectedClients.ToArray();
+
         }
        
         private void CameraTreeViewSelectionChangedCommandHandler(object parameter)
