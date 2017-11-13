@@ -324,6 +324,9 @@ namespace DIPOL_UF.Models
             connect.ContinueWith((task) =>
             {
                 remoteClients = connectedClients.ToArray();
+                pb.BarComment = $"Connected to {remoteClients.Length} out of {remoteLocations.Length} locations.";
+
+                Task.Delay(TimeSpan.Parse(DIPOL_UF_App.Settings.GetValueOrNullSafe<string>("PopUpDelay", "00:00:00.750"))).Wait();
 
                 if(Application.Current.Dispatcher.IsAvailable())
                     Application.Current.Dispatcher.Invoke(pbWindow.Close);

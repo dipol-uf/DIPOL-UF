@@ -427,7 +427,7 @@ namespace DIPOL_UF.Models
                             // Close window?
                             if (progressBar?.Value == progressBar?.Maximum)
                             {
-                                Task.Delay(750).Wait();
+                                Task.Delay(TimeSpan.Parse(DIPOL_UF_App.Settings.GetValueOrNullSafe<string>("PopUpDelay", "00:00:00.750"))).Wait();
                                 Application.Current.Dispatcher.Invoke(progressView.Close);
                                 CanCancel = true;
                             }
