@@ -20,12 +20,17 @@ namespace DIPOL_UF.ViewModels
         {
         }
 
+        public bool? CameraTreeViewSelectedAll => model.CameraTreeViewSelectedAll;
+
+
+        public ICommand CameraTreeViewSelectAllCommand => model.CameraTreeViewSelectAllCommand;
         public ICommand ConnectButtonCommand => model.ConnectButtonCommand as ICommand;
         public ICommand DisconnectButtonCommand => model.DisconnectButtonCommand as ICommand;
         public ICommand CameraTreeViewSelectionChangedCommand => model.CameraTreeViewSelectionChangedCommand as ICommand;
 
         public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
         public ObservableConcurrentDictionary<string, CameraBase> ConnectedCameras => model.ConnectedCameras;
+        public ObservableConcurrentDictionary<string, bool> CameraTreeViewSelectedItems => model.CameraTreeViewSelectedItems;
 
         public ObservableCollection<ConnectedCamerasTreeViewModel> TreeCameraRepresentation => model.TreeCameraRepresentation;
         public ObservableConcurrentDictionary<string, Dictionary<string, object>> CameraRealTimeStats => model.CameraRealTimeStats;

@@ -95,6 +95,7 @@
     <Compile Include="Commands\CommandEventArgs.cs" />
     <Compile Include="Commands\EventToCommndExtension.cs" />
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
+    <Compile Include="Converters\CameraKeyToDictionaryValueMultiValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToStringValueConverter.cs" />
     <Compile Include="Converters\CameraStatsToStringMultiValueConverter.cs" />
     <Compile Include="Converters\CameraToStringAliasValueConverter.cs" />
