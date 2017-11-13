@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DIPOL_UF.Views"
         mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
-        Title="{Binding Camera}" Height="600" Width="800"  ResizeMode="CanResizeWithGrip" 
+        Title="{Binding Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}" Height="600" Width="800"  ResizeMode="CanResizeWithGrip" 
         MinWidth="600" MinHeight="200">
     <DataGrid ItemsSource="{Binding AllProperties, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
               AutoGenerateColumns="False" SelectionMode="Single" SelectionUnit="FullRow" 
