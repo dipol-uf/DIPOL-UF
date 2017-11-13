@@ -56,6 +56,13 @@
     <Style x:Key="ContentFont_Label" TargetType="{x:Type Label}" BasedOn="{StaticResource ContentFont}">
         <Setter Property="Margin" Value="1"/>
     </Style>
+
+    <Style x:Key="ContentFont_TextBlock" TargetType="{x:Type TextBlock}">
+        <Setter Property="Margin" Value="1"/>
+        <Setter Property="FontSize" Value="17"/>
+        <Setter Property="FontStyle" Value="Normal"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+    </Style>
     
     <!--Border style-->
     <Style x:Key="BorderStyle" TargetType="{x:Type Border}">
