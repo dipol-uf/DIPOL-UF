@@ -452,19 +452,21 @@ namespace DIPOL_UF.Models
                 cameraRealTimeStats.TryRemove(key, out _);
 
             cameraRealTimeStats.TryAdd(key, new Dictionary<string, object>());
-            
-            camera.TemperatureMonitor(Switch.Enabled, Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
 
+            if (camera.Capabilities.Features.HasFlag(SDKFeatures.FanControl)) ;
+                camera.FanControl(FanMode.FullSpeed);
+
+            if (camera.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
+            { camera.TemperatureMonitor(Switch.Enabled, Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
+                camera.TemperatureStatusChecked += (sender, e) =>
+                {
+                    cameraRealTimeStats[key]["Temp"] = e.Temperature;
+                    cameraRealTimeStats[key]["TempStatus"] = e.Status;
+
+                };
+            }
             //camera.SetTemperature(-20);
             //camera.CoolerControl(Switch.Enabled);
-            camera.FanControl(FanMode.FullSpeed);
-            camera.TemperatureStatusChecked += (sender, e) =>
-            {
-                cameraRealTimeStats[key]["Temp"] = e.Temperature;
-                cameraRealTimeStats[key]["TempStatus"] = e.Status;
-
-            };
-
         }
 
         private void DispatcherTimerTickHandler(object sener, EventArgs e)
