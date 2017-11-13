@@ -285,7 +285,11 @@ namespace DIPOL_UF.Models
             {
                 try
                 {
-                    var client = new DipolClient(remoteLocations[i]);
+                    var client = new DipolClient(remoteLocations[i],
+                        TimeSpan.Parse(Settings.GetValueOrNullSafe<string>("RemoteOpenTimeout", "00:00:30")),
+                        TimeSpan.Parse(Settings.GetValueOrNullSafe<string>("RemoteSendTimeout", "00:05:00")),
+                        TimeSpan.Parse(Settings.GetValueOrNullSafe<string>("RemoteOperationTimeout", "00:00:45")),
+                        TimeSpan.Parse(Settings.GetValueOrNullSafe<string>("RemoteCloseTimeout", "00:00:45")));
                     client.Connect();
                     connectedClients.Add(client);
                     
