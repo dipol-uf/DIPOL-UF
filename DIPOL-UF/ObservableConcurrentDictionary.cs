@@ -217,7 +217,8 @@ namespace DIPOL_UF
             }
             finally
             {
-                OnNotifyCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace));
+                OnNotifyCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace,
+                    newValue, comparisonValue));
                 OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Count)));
                 OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Keys)));
                 OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Values)));
