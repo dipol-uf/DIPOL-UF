@@ -13,6 +13,16 @@ namespace DIPOL_UF.ViewModels
 {
     class CameraPropertiesViewModel : ViewModel<CameraBase>
     {
+        public CameraBase Camera => model;
+
+        public ObservableCollection<Tuple<string, string>> AllProperties
+        {
+            get
+            {
+                return new ObservableCollection<Tuple<string, string>>( DeviceCapabilities.Concat(DeviceProperties));
+            }
+        }
+
         public ObservableCollection<Tuple<string, string>> DeviceCapabilities
         {
             get
