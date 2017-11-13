@@ -1,5 +1,6 @@
 RemoteLocations = { "dipol-2",	"dipol-3" }
 UICamStatusUpdateDelay = 1500
+RemoteEstablishPBTimeout = "00:00:05"
 RemoteOpenTimeout = "00:00:15"
 RemoteSendTimeout = "00:30:00"
 RemoteOperationTimeout = "00:00:20"
