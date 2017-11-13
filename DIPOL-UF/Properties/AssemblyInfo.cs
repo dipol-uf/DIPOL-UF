@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyTitle("DIPOL-UF")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Tuorla Observatory")]
 [assembly: AssemblyProduct("DIPOL-UF")]
 [assembly: AssemblyCopyright("Copyright Ilia Kosenkov ©  2017")]
 [assembly: AssemblyTrademark("")]
