@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DIPOL_UF.Views"
         mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
-        Title="{Binding Camera}" Height="600" Width="800"  ResizeMode="CanResizeWithGrip"
-        MinHeight="200">
+        Title="{Binding Camera}" Height="600" Width="800"  ResizeMode="CanResizeWithGrip" 
+        MinWidth="600" MinHeight="200">
     <DataGrid ItemsSource="{Binding AllProperties, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
               AutoGenerateColumns="False" SelectionMode="Single" SelectionUnit="FullRow" 
               CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserResizeColumns="False" 
@@ -15,13 +15,14 @@
               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Property" Binding="{Binding Item1, Mode=OneWay}" Width="*" />
-                <DataGridTemplateColumn Header="Value" Width="3*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding Item2, Mode=OneWay}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
+            <DataGridTextColumn Header="Value" Binding="{Binding Item2, Mode=OneWay}" Width="3*">
+                <DataGridTextColumn.ElementStyle>
+                    <Style>
+                        <Setter Property="TextBlock.TextWrapping" Value="WrapWithOverflow"/>
+                    </Style>
+                </DataGridTextColumn.ElementStyle>
+            </DataGridTextColumn>
+
+        </DataGrid.Columns>
         </DataGrid>
 </Window>
