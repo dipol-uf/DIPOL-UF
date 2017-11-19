@@ -532,7 +532,7 @@ namespace DIPOL_UF.Models
         {
             List<Task> workers = new List<Task>();
 
-            foreach(var key in CameraTreeViewSelectedItems.Keys)
+            foreach (var key in CameraTreeViewSelectedItems.Where(item => item.Value).Select(item => item.Key))
             {
                 string category = Helper.GetCameraHostName(key);
                 if(!String.IsNullOrWhiteSpace(category))
@@ -548,9 +548,10 @@ namespace DIPOL_UF.Models
                     }
 
                 }
+
+                CameraTreeViewSelectedItems.TryRemove(key, out _);
             }
 
-            CameraTreeViewSelectedItems.Clear();
 
             await Task.WhenAll(workers);
         }
