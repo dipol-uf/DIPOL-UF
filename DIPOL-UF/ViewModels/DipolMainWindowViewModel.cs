@@ -32,7 +32,7 @@ namespace DIPOL_UF.ViewModels
         public ObservableConcurrentDictionary<string, CameraBase> ConnectedCameras => model.ConnectedCameras;
         public ObservableConcurrentDictionary<string, bool> CameraTreeViewSelectedItems => model.CameraTreeViewSelectedItems;
 
-        public ObservableCollection<ConnectedCamerasTreeViewModel> TreeCameraRepresentation => model.TreeCameraRepresentation;
+        public ObservableCollection<ConnectedCamerasTreeViewModel> CameraTreeRepresentation => model.CameraTreeRepresentation;
         public ObservableConcurrentDictionary<string, Dictionary<string, object>> CameraRealTimeStats => model.CameraRealTimeStats;
     }
 }

@@ -65,7 +65,7 @@ namespace DIPOL_UF.Models
         /// <summary>
         /// Tree represencation of connected cameras (grouped by location)
         /// </summary>
-        private ObservableCollection<ConnectedCamerasTreeViewModel> treeCameraRepresentation
+        private ObservableCollection<ConnectedCamerasTreeViewModel> cameraTreeRepresentation
             = new ObservableCollection<ConnectedCamerasTreeViewModel>();
 
         /// <summary>
@@ -104,14 +104,14 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public ObservableCollection<ConnectedCamerasTreeViewModel> TreeCameraRepresentation
+        public ObservableCollection<ConnectedCamerasTreeViewModel> CameraTreeRepresentation
         {
-            get => treeCameraRepresentation;
+            get => cameraTreeRepresentation;
             set
             {
-                if (value != treeCameraRepresentation)
+                if (value != cameraTreeRepresentation)
                 {
-                    treeCameraRepresentation = value;
+                    cameraTreeRepresentation = value;
                     RaisePropertyChanged();
                 }
             }
@@ -305,7 +305,7 @@ namespace DIPOL_UF.Models
 
 
             CameraTreeViewSelectAllCommand = new DelegateCommand(
-                (param) => { },
+                CameraTreeViewSelectAllCommandHandler,
                 DelegateCommand.CanExecuteAlways);
 
         }
@@ -373,42 +373,21 @@ namespace DIPOL_UF.Models
                 if (CameraTreeViewSelectedItems.TryGetValue(key, out bool value))
                 {
                     CameraTreeViewSelectedItems.TryUpdate(key, !value, value);
+                    int count = CameraTreeViewSelectedItems.Count;
+                    int selectedCount = CameraTreeViewSelectedItems.Where(item => item.Value).Count();
+
+                    if (selectedCount == 0)
+                        CameraTreeViewSelectedAll = false;
+                    else if (selectedCount < count)
+                        CameraTreeViewSelectedAll = null;
+                    else CameraTreeViewSelectedAll = true;
+
                 }
             }
-
-            //if (parameter is Commands.CommandEventArgs<RoutedEventArgs> args)
-            //{
-            //    args.EventArgs.Handled = true;
-
-            //    if (args.Sender is FrameworkElement sender)
-            //    {
-            //        var context = sender.DataContext;
-
-            //        var camID = (context is KeyValuePair<string, ConnectedCameraTreeItemViewModel>)
-            //            ? ((KeyValuePair<string, ConnectedCameraTreeItemViewModel>)context).Key
-            //            : null;
-
-            //        var state = (sender as System.Windows.Controls.CheckBox)?.IsChecked ?? false;
-
-            //        if (state)
-            //            CameraTreeViewSelectedItems.Add(camID);
-            //        else
-            //            CameraTreeViewSelectedItems.Remove(camID);
-
-
-            //        if (cameraTreeViewSelectedItems.Count == 0)
-            //            CameraTreeViewSelectedAll = false;
-            //        else if (cameraTreeViewSelectedItems.Count < connectedCameras.Count)
-            //            CameraTreeViewSelectedAll = null;
-            //        else
-            //            CameraTreeViewSelectedAll = true;
-            //    }
-            //}
+            
         }
-
         private bool CanDisconnectCameras(object parameter)
             => CameraTreeViewSelectedItems.Any(item => item.Value);
-
         private void ListAndSelectAvailableCameras(object parameter)
         {
             var cameraQueryModel = new AvailableCamerasModel(remoteClients);
@@ -423,7 +402,62 @@ namespace DIPOL_UF.Models
             cameraQueryModel.CameraSelectionsMade += CameraSelectionMade;           
 
         }
-       
+        /// <summary>
+        /// Disconnects cameras
+        /// </summary>
+        /// <param name="parameter">Command parameter</param>
+        private async void DisconnectCameras(object parameter)
+        {
+            List<Task> workers = new List<Task>();
+
+            foreach (var key in CameraTreeViewSelectedItems.Where(item => item.Value).Select(item => item.Key))
+            {
+                string category = Helper.GetCameraHostName(key);
+                if(!String.IsNullOrWhiteSpace(category))
+                {
+                    var node = CameraTreeRepresentation.Where(item => item.Name == category).DefaultIfEmpty(null).FirstOrDefault();
+
+                    foreach (var camItem in node.CameraList.Where(item => item.Key == key))
+                    {
+                        node.CameraList.TryRemove(camItem.Key, out _);
+                        workers.Add(DisposeCamera(camItem.Key, false));
+                        if (node.CameraList.IsEmpty)
+                            CameraTreeRepresentation.Remove(node);
+                    }
+
+                }
+
+                CameraTreeViewSelectedItems.TryRemove(key, out _);
+            }
+
+            if (CameraTreeViewSelectedItems.Where(item => item.Value).Count() == 0)
+                CameraTreeViewSelectedAll = false;
+            await Task.WhenAll(workers);
+        }
+        private void CameraTreeViewSelectAllCommandHandler(object parameter)
+        {
+            if (CameraTreeViewSelectedAll == null || CameraTreeViewSelectedAll == false)
+            {
+                foreach (var key in CameraTreeViewSelectedItems.Keys)
+                {
+                    if (CameraTreeViewSelectedItems.TryGetValue(key, out bool oldVal))
+                        CameraTreeViewSelectedItems.TryUpdate(key, true, oldVal);
+                }
+                RaisePropertyChanged(nameof(CameraTreeViewSelectedItems));
+                CameraTreeViewSelectedAll = true;
+            }
+            else
+            {
+                foreach (var key in CameraTreeViewSelectedItems.Keys)
+                {
+                    if (CameraTreeViewSelectedItems.TryGetValue(key, out bool oldVal))
+                        CameraTreeViewSelectedItems.TryUpdate(key, false, oldVal);
+                }
+                RaisePropertyChanged(nameof(CameraTreeViewSelectedItems));
+                CameraTreeViewSelectedAll = false;
+            }
+        }
+
         private void CameraSelectionMade(object e)
         {
            
@@ -443,7 +477,7 @@ namespace DIPOL_UF.Models
 
             foreach (var cat in categories)
             {
-                treeCameraRepresentation.Add(new ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
+                CameraTreeRepresentation.Add(new ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
                 {
                     Name = cat,
                     CameraList = new ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel>(
@@ -524,37 +558,6 @@ namespace DIPOL_UF.Models
             RaisePropertyChanged(nameof(CameraRealTimeStats));
         }
 
-        /// <summary>
-        /// Disconnects cameras
-        /// </summary>
-        /// <param name="parameter">Command parameter</param>
-        private async void DisconnectCameras(object parameter)
-        {
-            List<Task> workers = new List<Task>();
-
-            foreach (var key in CameraTreeViewSelectedItems.Where(item => item.Value).Select(item => item.Key))
-            {
-                string category = Helper.GetCameraHostName(key);
-                if(!String.IsNullOrWhiteSpace(category))
-                {
-                    var node = TreeCameraRepresentation.Where(item => item.Name == category).DefaultIfEmpty(null).FirstOrDefault();
-
-                    foreach (var camItem in node.CameraList.Where(item => item.Key == key))
-                    {
-                        node.CameraList.TryRemove(camItem.Key, out _);
-                        workers.Add(DisposeCamera(camItem.Key, false));
-                        if (node.CameraList.IsEmpty)
-                            TreeCameraRepresentation.Remove(node);
-                    }
-
-                }
-
-                CameraTreeViewSelectedItems.TryRemove(key, out _);
-            }
-
-
-            await Task.WhenAll(workers);
-        }
 
         private async Task DisposeCamera(string camID, bool removeSelection = true)
         {
