@@ -29,7 +29,7 @@ namespace DIPOL_UF.Models
 
         private bool? cameraTreeViewSelectedAll = false;
         private bool canEnterSessionManager = true;
-        private bool canConnect = true;
+        private bool canConnect = false;
         private bool isDisposed = false;
         private string[] remoteLocations
             = Settings.GetValueOrNullSafe<object[]>("RemoteLocations")?.Cast<String>()?.ToArray()
@@ -217,7 +217,18 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-
+        public bool CanConnect
+        {
+            get => canConnect;
+            set
+            {
+                if (value != canConnect)
+                {
+                    canConnect = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
 
         public DipolMainWindow()
         {
@@ -290,8 +301,18 @@ namespace DIPOL_UF.Models
         {
             ConnectButtonCommand = new DelegateCommand(
                 ListAndSelectAvailableCameras,
-                (param) => canConnect);
-
+                (param) => CanConnect);
+            PropertyChanged += (sender, e) =>
+                {
+                    if (e.PropertyName == nameof(CanConnect))
+                    {
+                        if (Application.Current.Dispatcher.IsAvailable())
+                            Application.Current.Dispatcher.Invoke(ConnectButtonCommand.OnCanExecuteChanged);
+                        else
+                            ConnectButtonCommand.OnCanExecuteChanged();
+                    }   
+                };
+                    
             DisconnectButtonCommand = new DelegateCommand(
                 DisconnectCameras,
                 CanDisconnectCameras);
@@ -357,10 +378,13 @@ namespace DIPOL_UF.Models
                 remoteClients = connectedClients.ToArray();
                 pb.BarComment = $"Connected to {remoteClients.Length} out of {remoteLocations.Length} locations.";
 
-                Task.Delay(TimeSpan.Parse(DIPOL_UF_App.Settings.GetValueOrNullSafe<string>("PopUpDelay", "00:00:00.750"))).Wait();
+                Task.Delay(TimeSpan.Parse(Settings.GetValueOrNullSafe<string>("PopUpDelay", "00:00:00.750"))).Wait();
 
                 if(Application.Current.Dispatcher.IsAvailable())
                     Application.Current.Dispatcher.Invoke(pbWindow.Close);
+
+                CanConnect = true;
+
             });
 
 
@@ -391,12 +415,11 @@ namespace DIPOL_UF.Models
         private void ListAndSelectAvailableCameras(object parameter)
         {
             var cameraQueryModel = new AvailableCamerasModel(remoteClients);
-            var viewModel = new ViewModels.AvailableCamerasViewModel(cameraQueryModel);
+            var viewModel = new AvailableCamerasViewModel(cameraQueryModel);
             var wind = new Views.AvailableCameraView(viewModel);
             if (parameter is Window owner)
                 wind.Owner = owner;
-            canConnect = false;
-            ConnectButtonCommand?.OnCanExecuteChanged();
+            CanConnect = false;
             wind.Show();
 
             cameraQueryModel.CameraSelectionsMade += CameraSelectionMade;           
