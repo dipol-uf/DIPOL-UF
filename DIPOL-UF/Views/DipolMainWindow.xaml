@@ -46,7 +46,7 @@
                     <ListView x:Name="CameraTreeListView" 
                             BorderThickness="0" TabIndex="0" Grid.Row="1"
                             KeyboardNavigation.ControlTabNavigation="Cycle"
-                            ItemsSource="{Binding TreeCameraRepresentation}"
+                            ItemsSource="{Binding CameraTreeRepresentation}"
                             Style="{StaticResource ResourceKey=ListTreeViewStyle}"
                             ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"/>
                     <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Grid.Row="2"
