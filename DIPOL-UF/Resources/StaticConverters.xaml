@@ -10,4 +10,5 @@
     <cnvrt:TemperatureStatusToBrushMultiValueConverter x:Key="TemperatureStatusToBrushMultiConverter"/>
     <cnvrt:CameraToStringAliasValueConverter x:Key="CameraToStringAliasConverter"/>
     <cnvrt:CameraKeyToDictionaryValueMultiValueConverter x:Key="CameraKeyToValueMultiConverter"/>
+    <cnvrt:CameraStatsToValueMultiValueConverter x:Key="CameraStatsToValueMultiConverter"/>
 </ResourceDictionary>

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DIPOL_UF.Models;
 
 using ANDOR_CS.Classes;
+using ANDOR_CS.Enums;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -13,7 +14,10 @@ namespace DIPOL_UF.ViewModels
     {
         public CameraBase Camera => model.Camera;
 
-        
+        public float MinimumAllowedTemperature => model.Camera.Properties.AllowedTemperatures.Minimum;
+        public float MaximumAllowedTemperature => model.Camera.Properties.AllowedTemperatures.Maximum;
+
+
         public ConnectedCameraViewModel(ConnectedCamera model) : base(model)
         {
             
