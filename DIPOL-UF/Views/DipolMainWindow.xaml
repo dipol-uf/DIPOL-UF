@@ -16,13 +16,17 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
         <Menu DockPanel.Dock="Top" x:Name="MenuBar" VerticalAlignment="Top" VerticalContentAlignment="Center"
-              Grid.Row="0"
+              Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
               Style="{StaticResource ResourceKey=MenuBarStyle}"      
               ItemsSource="{Binding MenuBarItems}"
               ItemTemplate="{StaticResource ResourceKey=MenuBarItemTemplate}"/>
         <Border HorizontalAlignment="Right" VerticalAlignment="Stretch" Margin="2"
-                Grid.Row="1"
+                Grid.Row="1" Grid.Column="1"
                 Style="{StaticResource ResourceKey=BorderStyle}">
             <Grid>
                 <Grid.RowDefinitions>
@@ -31,7 +35,9 @@
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto" x:Name="GridButtonRowHeight"/>
                 </Grid.RowDefinitions>
-                <Border Grid.Row="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                
+                <Border Grid.Row="0"
+                        VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                         Style="{StaticResource ResourceKey=BorderStyle}"
                         BorderThickness="{StaticResource ResourceKey=BottomOnlyBorderThickness}">
                     <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
@@ -50,12 +56,14 @@
                     </Grid>
                 </Border>
                 <ListView x:Name="CameraTreeListView" 
-                        BorderThickness="0" TabIndex="0" Grid.Row="1"
-                        KeyboardNavigation.ControlTabNavigation="Cycle"
-                        ItemsSource="{Binding CameraPanel}"
-                        Style="{StaticResource ResourceKey=ListTreeViewStyle}"
-                        ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"/>
-                <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Grid.Row="2"
+                            BorderThickness="0" TabIndex="0" 
+                            Grid.Row="1" 
+                            KeyboardNavigation.ControlTabNavigation="Cycle"
+                            ItemsSource="{Binding CameraPanel}"
+                            Style="{StaticResource ResourceKey=ListTreeViewStyle}"
+                            ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"/>
+                <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                        Grid.Row="2" 
                         Style="{StaticResource ResourceKey=BorderStyle}"
                         BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
                     <DockPanel>
@@ -72,7 +80,8 @@
                                 />
                     </DockPanel>
                 </Border>
-                <Border  VerticalAlignment="Bottom" Grid.Row="3"
+                <Border  VerticalAlignment="Bottom" 
+                         Grid.Row="3" 
                         Style="{StaticResource ResourceKey=BorderStyle}"
                         BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
                     <Button 
@@ -82,7 +91,9 @@
                 </Border>
             </Grid>
         </Border>
-        <StatusBar Name="DipolStatusBar" Grid.Row="2" VerticalAlignment="Bottom"
+        <StatusBar Name="DipolStatusBar" 
+                   Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                   VerticalAlignment="Bottom"
                    Style="{StaticResource ResourceKey=StatusBarStyle}"></StatusBar>
     </Grid>
 </Window>
