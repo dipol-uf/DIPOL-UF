@@ -26,7 +26,8 @@
               ItemsSource="{Binding MenuBarItems}"
               ItemTemplate="{StaticResource ResourceKey=MenuBarItemTemplate}"/>
 
-        <TabControl x:Name="CameraTabs"
+        
+        <TabControl x:Name="CameraTabs" Margin="2"
                     Grid.Row="1" Grid.Column="0"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                     ItemsSource="{Binding ConnectedCameras, UpdateSourceTrigger=PropertyChanged}"

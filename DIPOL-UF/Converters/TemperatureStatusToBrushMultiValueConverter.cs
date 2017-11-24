@@ -12,7 +12,7 @@ namespace DIPOL_UF.Converters
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            var value = new CameraStatsToStringMultiValueConverter().ConvertWorker(values, targetType, "TempStatus", culture);
+            var value = new CameraStatsToValueMultiValueConverter().ConvertWorker(values, targetType, "TempStatus", culture);
 
             if (value is TemperatureStatus status && parameter is Brush[])
             {
