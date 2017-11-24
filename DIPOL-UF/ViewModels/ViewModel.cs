@@ -38,5 +38,7 @@ namespace DIPOL_UF.ViewModels
             if(declaredProperties?.Contains(e.PropertyName) ?? true)
                 RaisePropertyChanged(e.PropertyName);
         }
+
+        public T Model => model;
     } 
 }
