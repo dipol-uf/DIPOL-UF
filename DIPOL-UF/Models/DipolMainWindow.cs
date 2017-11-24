@@ -59,8 +59,8 @@ namespace DIPOL_UF.Models
         /// <summary>
         /// Connected cams. This one is for work.
         /// </summary>
-        private ObservableConcurrentDictionary<string, CameraBase> connectedCams
-            = new ObservableConcurrentDictionary<string, CameraBase>();
+        private ObservableConcurrentDictionary<string, ConnectedCameraViewModel> connectedCams
+            = new ObservableConcurrentDictionary<string, ConnectedCameraViewModel>();
 
         /// <summary>
         /// Tree represencation of connected cams (grouped by location)
@@ -92,7 +92,7 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public ObservableConcurrentDictionary<string, CameraBase> ConnectedCameras
+        public ObservableConcurrentDictionary<string, ConnectedCameraViewModel> ConnectedCameras
         {
             get => connectedCams;
             set
@@ -253,8 +253,8 @@ namespace DIPOL_UF.Models
             {
                 foreach (var cam in ConnectedCameras)
                 {
-                    cam.Value.SetTemperature(20);
-                    cam.Value.CoolerControl(Switch.Disabled);
+                    cam.Value.Model.Camera.SetTemperature(20);
+                    cam.Value.Model.Camera.CoolerControl(Switch.Disabled);
                 }
 
                 _TestTimer.Stop();
@@ -487,7 +487,8 @@ namespace DIPOL_UF.Models
             var providedCameras = e as IEnumerable<KeyValuePair<string, CameraBase>>;
 
             foreach (var x in providedCameras)
-                if (ConnectedCameras.TryAdd(x.Key, x.Value))
+                if (ConnectedCameras.TryAdd(x.Key, 
+                    new ConnectedCameraViewModel(new ConnectedCamera(x.Value))))
                     HookCamera(x.Key, x.Value);
 
             foreach (var x in providedCameras)
@@ -585,16 +586,19 @@ namespace DIPOL_UF.Models
         private async Task DisposeCamera(string camID, bool removeSelection = true)
         {
 
-            connectedCams.TryRemove(camID, out CameraBase camInstance);
+            connectedCams.TryRemove(camID, out ConnectedCameraViewModel camInstance);
             if (removeSelection)
                 camPanelSelectedItems.TryRemove(camID, out _);
 
 
             await Task.Run(() =>
                 {
-                    camInstance?.CoolerControl(Switch.Disabled);
-                    camInstance.TemperatureMonitor(Switch.Disabled);
-                    camInstance?.Dispose();
+                    if (camInstance != null && camInstance.Model != null && camInstance.Model.Camera != null)
+                    {
+                        camInstance.Model.Camera.CoolerControl(Switch.Disabled);
+                        camInstance.Model.Camera.TemperatureMonitor(Switch.Disabled);
+                        camInstance.Model.Camera.Dispose();
+                    }
                 });
            
         }

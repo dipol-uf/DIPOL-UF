@@ -29,7 +29,7 @@ namespace DIPOL_UF.ViewModels
         public ICommand CameraPanelSelectionChangedCommand => model.CameraPanelSelectionChangedCommand as ICommand;
 
         public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
-        public ObservableConcurrentDictionary<string, CameraBase> ConnectedCameras => model.ConnectedCameras;
+        public ObservableConcurrentDictionary<string, ConnectedCameraViewModel> ConnectedCameras => model.ConnectedCameras;
         public ObservableConcurrentDictionary<string, bool> CameraPanelSelectedItems =>
             model.CameraPanelSelectedItems;
 
