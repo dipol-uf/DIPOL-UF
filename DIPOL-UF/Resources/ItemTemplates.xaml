@@ -46,7 +46,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <!--Checked/Unchecked events are forwarded to DipolWindow's context commands-->
                                 <CheckBox Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}" VerticalAlignment="Center"
-                                          Command="{Binding Path=DataContext.CameraTreeViewSelectionChangedCommand, 
+                                          Command="{Binding Path=DataContext.CameraPanelSelectionChangedCommand, 
                                                 RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" 
                                           CommandParameter="{Binding Key}"
                                           TabIndex="{Binding TabIndex, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListViewItem}}">
@@ -55,7 +55,7 @@
                                                       UpdateSourceTrigger="PropertyChanged" Mode="OneWay">
                                             <Binding Path="Key" Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
                                             <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" 
-                                                     Path="DataContext.CameraTreeViewSelectedItems" Mode="OneWay"
+                                                     Path="DataContext.CameraPanelSelectedItems" Mode="OneWay"
                                                      UpdateSourceTrigger="PropertyChanged"/>
                                         </MultiBinding>
                                     </CheckBox.IsChecked>
