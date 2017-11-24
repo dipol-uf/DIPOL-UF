@@ -27,7 +27,7 @@ namespace DIPOL_UF.Models
 
         private DispatcherTimer _TestTimer = null;
 
-        private bool? cameraTreeViewSelectedAll = false;
+        private bool? camPanelAreAllSelected = false;
         private bool canEnterSessionManager = true;
         private bool canConnect = false;
         private bool isDisposed = false;
@@ -47,8 +47,8 @@ namespace DIPOL_UF.Models
         /// <summary>
         /// Handles selection changed event of the tree view
         /// </summary>
-        private DelegateCommand cameraTreeViewSelectionChangedCommand;
-        private DelegateCommand cameraTreeViewSelectAllCommand;
+        private DelegateCommand camPanelSelectionChangedCommand;
+        private DelegateCommand camPanelSelectedAllCommand;
 
         /// <summary>
         /// Menu bar source
@@ -57,27 +57,27 @@ namespace DIPOL_UF.Models
             = new ObservableCollection<MenuItemViewModel>();
 
         /// <summary>
-        /// Connected cameras. This one is for work.
+        /// Connected cams. This one is for work.
         /// </summary>
-        private ObservableConcurrentDictionary<string, CameraBase> connectedCameras
+        private ObservableConcurrentDictionary<string, CameraBase> connectedCams
             = new ObservableConcurrentDictionary<string, CameraBase>();
 
         /// <summary>
-        /// Tree represencation of connected cameras (grouped by location)
+        /// Tree represencation of connected cams (grouped by location)
         /// </summary>
-        private ObservableCollection<ConnectedCamerasTreeViewModel> cameraTreeRepresentation
+        private ObservableCollection<ConnectedCamerasTreeViewModel> camPanel
             = new ObservableCollection<ConnectedCamerasTreeViewModel>();
 
         /// <summary>
-        /// Collection of selected cameras (checked with checkboxes)
+        /// Collection of selected cams (checked with checkboxes)
         /// </summary>
-        private ObservableConcurrentDictionary<string, bool> cameraTreeViewSelectedItems
+        private ObservableConcurrentDictionary<string, bool> camPanelSelectedItems
             = new ObservableConcurrentDictionary<string, bool>();
 
         /// <summary>
-        /// Updates camera stats
+        /// Updates cam stats
         /// </summary>
-        private ObservableConcurrentDictionary<string, Dictionary<string, object>> cameraRealTimeStats
+        private ObservableConcurrentDictionary<string, Dictionary<string, object>> camRealTimeStats
             = new ObservableConcurrentDictionary<string, Dictionary<string, object>>();
 
         public ObservableCollection<MenuItemViewModel> MenuBarItems
@@ -94,51 +94,51 @@ namespace DIPOL_UF.Models
         }
         public ObservableConcurrentDictionary<string, CameraBase> ConnectedCameras
         {
-            get => connectedCameras;
+            get => connectedCams;
             set
             {
-                if (value != connectedCameras)
+                if (value != connectedCams)
                 {
-                    connectedCameras = value;
+                    connectedCams = value;
                     RaisePropertyChanged();
                 }
             }
         }
-        public ObservableCollection<ConnectedCamerasTreeViewModel> CameraTreeRepresentation
+        public ObservableCollection<ConnectedCamerasTreeViewModel> CameraPanel
         {
-            get => cameraTreeRepresentation;
+            get => camPanel;
             set
             {
-                if (value != cameraTreeRepresentation)
+                if (value != camPanel)
                 {
-                    cameraTreeRepresentation = value;
+                    camPanel = value;
                     RaisePropertyChanged();
                 }
             }
         }
         /// <summary>
-        /// List of camera IDs that are currently selected in the TreeView
+        /// List of cam IDs that are currently selected in the TreeView
         /// </summary>
-        public ObservableConcurrentDictionary<string, bool> CameraTreeViewSelectedItems
+        public ObservableConcurrentDictionary<string, bool> CameraPanelSelectedItems
         {
-            get => cameraTreeViewSelectedItems;
+            get => camPanelSelectedItems;
             set
             {
-                if (value != cameraTreeViewSelectedItems)
+                if (value != camPanelSelectedItems)
                 {
-                    cameraTreeViewSelectedItems = value;
+                    camPanelSelectedItems = value;
                     RaisePropertyChanged();
                 }
             }
         }
         public ObservableConcurrentDictionary<string, Dictionary<string, object>> CameraRealTimeStats
         {
-            get => cameraRealTimeStats;
+            get => camRealTimeStats;
             set
             {
-                if (value != cameraRealTimeStats)
+                if (value != camRealTimeStats)
                 {
-                    cameraRealTimeStats = value;
+                    camRealTimeStats = value;
                     RaisePropertyChanged();
                 }
             }
@@ -168,39 +168,39 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public DelegateCommand CameraTreeViewSelectionChangedCommand
+        public DelegateCommand CameraPanelSelectionChangedCommand
         {
-            get => cameraTreeViewSelectionChangedCommand;
+            get => camPanelSelectionChangedCommand;
             set
             {
-                if (value != cameraTreeViewSelectionChangedCommand)
+                if (value != camPanelSelectionChangedCommand)
                 {
-                    cameraTreeViewSelectionChangedCommand = value;
+                    camPanelSelectionChangedCommand = value;
                     RaisePropertyChanged();
                 }
             }
         }
-        public DelegateCommand CameraTreeViewSelectAllCommand
+        public DelegateCommand CameraPanelSelectedAllCommand
         {
-            get => cameraTreeViewSelectAllCommand;
+            get => camPanelSelectedAllCommand;
             set
             {
-                if (value != cameraTreeViewSelectAllCommand)
+                if (value != camPanelSelectedAllCommand)
                 {
-                    cameraTreeViewSelectAllCommand = value;
+                    camPanelSelectedAllCommand = value;
                     RaisePropertyChanged();
                 }
             }
         }
 
-        public bool? CameraTreeViewSelectedAll
+        public bool? CameraPanelAreAllSelected
         {
-            get => cameraTreeViewSelectedAll;
+            get => camPanelAreAllSelected;
             set
             {
-                if (value != cameraTreeViewSelectedAll)
+                if (value != camPanelAreAllSelected)
                 {
-                    cameraTreeViewSelectedAll = value;
+                    camPanelAreAllSelected = value;
                     RaisePropertyChanged();
                 }
             }
@@ -275,10 +275,10 @@ namespace DIPOL_UF.Models
             if (diposing)
             {
                 _UIStatusUpdateTimer.Stop();
-                Task[] pool = new Task[connectedCameras.Count];
+                Task[] pool = new Task[connectedCams.Count];
                 int taskInd = 0;
 
-                foreach (var cam in connectedCameras)
+                foreach (var cam in connectedCams)
                     pool[taskInd++] = DisposeCamera(cam.Key);
 
                 Task.WaitAll(pool);
@@ -300,7 +300,7 @@ namespace DIPOL_UF.Models
         private void InitializeCommands()
         {
             ConnectButtonCommand = new DelegateCommand(
-                ListAndSelectAvailableCameras,
+                ConnectButtonCommandExecute,
                 (param) => CanConnect);
             PropertyChanged += (sender, e) =>
                 {
@@ -314,19 +314,19 @@ namespace DIPOL_UF.Models
                 };
                     
             DisconnectButtonCommand = new DelegateCommand(
-                DisconnectCameras,
-                CanDisconnectCameras);
-            connectedCameras.CollectionChanged += (sender, e) => DisconnectButtonCommand.OnCanExecuteChanged();
-            CameraTreeViewSelectedItems.CollectionChanged += (sender, e) 
+                DisconnectButtonCommandExecute,
+                CanDisconnectButtonCommandExecute);
+            connectedCams.CollectionChanged += (sender, e) => DisconnectButtonCommand.OnCanExecuteChanged();
+            CameraPanelSelectedItems.CollectionChanged += (sender, e) 
                 => DisconnectButtonCommand.OnCanExecuteChanged();
             
-            CameraTreeViewSelectionChangedCommand = new DelegateCommand(
-                CameraTreeViewSelectionChangedCommandHandler,
+            CameraPanelSelectionChangedCommand = new DelegateCommand(
+                CameraPanelSelectionChangedCommandExecute,
                 DelegateCommand.CanExecuteAlways);
 
 
-            CameraTreeViewSelectAllCommand = new DelegateCommand(
-                CameraTreeViewSelectAllCommandHandler,
+            CameraPanelSelectedAllCommand = new DelegateCommand(
+                CameraPanelSelectedAllCommandExecute,
                 DelegateCommand.CanExecuteAlways);
 
         }
@@ -390,98 +390,98 @@ namespace DIPOL_UF.Models
 
         }
        
-        private void CameraTreeViewSelectionChangedCommandHandler(object parameter)
+        private void CameraPanelSelectionChangedCommandExecute(object parameter)
         {
             if (parameter is string key)
             {
-                if (CameraTreeViewSelectedItems.TryGetValue(key, out bool value))
+                if (CameraPanelSelectedItems.TryGetValue(key, out bool value))
                 {
-                    CameraTreeViewSelectedItems.TryUpdate(key, !value, value);
-                    int count = CameraTreeViewSelectedItems.Count;
-                    int selectedCount = CameraTreeViewSelectedItems.Where(item => item.Value).Count();
+                    CameraPanelSelectedItems.TryUpdate(key, !value, value);
+                    int count = CameraPanelSelectedItems.Count;
+                    int selectedCount = CameraPanelSelectedItems.Where(item => item.Value).Count();
 
                     if (selectedCount == 0)
-                        CameraTreeViewSelectedAll = false;
+                        CameraPanelAreAllSelected = false;
                     else if (selectedCount < count)
-                        CameraTreeViewSelectedAll = null;
-                    else CameraTreeViewSelectedAll = true;
+                        CameraPanelAreAllSelected = null;
+                    else CameraPanelAreAllSelected = true;
 
                 }
             }
             
         }
-        private bool CanDisconnectCameras(object parameter)
-            => CameraTreeViewSelectedItems.Any(item => item.Value);
-        private void ListAndSelectAvailableCameras(object parameter)
+        private bool CanDisconnectButtonCommandExecute(object parameter)
+            => CameraPanelSelectedItems.Any(item => item.Value);
+        private void ConnectButtonCommandExecute(object parameter)
         {
-            var cameraQueryModel = new AvailableCamerasModel(remoteClients);
-            var viewModel = new AvailableCamerasViewModel(cameraQueryModel);
+            var camQueryModel = new AvailableCamerasModel(remoteClients);
+            var viewModel = new AvailableCamerasViewModel(camQueryModel);
             var wind = new Views.AvailableCameraView(viewModel);
             if (parameter is Window owner)
                 wind.Owner = owner;
             CanConnect = false;
             wind.Show();
 
-            cameraQueryModel.CameraSelectionsMade += CameraSelectionMade;           
+            camQueryModel.CameraSelectionsMade += CameraSelectionsMade;           
 
         }
         /// <summary>
-        /// Disconnects cameras
+        /// Disconnects cams
         /// </summary>
         /// <param name="parameter">Command parameter</param>
-        private async void DisconnectCameras(object parameter)
+        private async void DisconnectButtonCommandExecute(object parameter)
         {
             List<Task> workers = new List<Task>();
 
-            foreach (var key in CameraTreeViewSelectedItems.Where(item => item.Value).Select(item => item.Key))
+            foreach (var key in CameraPanelSelectedItems.Where(item => item.Value).Select(item => item.Key))
             {
                 string category = Helper.GetCameraHostName(key);
                 if(!String.IsNullOrWhiteSpace(category))
                 {
-                    var node = CameraTreeRepresentation.Where(item => item.Name == category).DefaultIfEmpty(null).FirstOrDefault();
+                    var node = CameraPanel.Where(item => item.Name == category).DefaultIfEmpty(null).FirstOrDefault();
 
                     foreach (var camItem in node.CameraList.Where(item => item.Key == key))
                     {
                         node.CameraList.TryRemove(camItem.Key, out _);
                         workers.Add(DisposeCamera(camItem.Key, false));
                         if (node.CameraList.IsEmpty)
-                            CameraTreeRepresentation.Remove(node);
+                            CameraPanel.Remove(node);
                     }
 
                 }
 
-                CameraTreeViewSelectedItems.TryRemove(key, out _);
+                CameraPanelSelectedItems.TryRemove(key, out _);
             }
 
-            if (CameraTreeViewSelectedItems.Where(item => item.Value).Count() == 0)
-                CameraTreeViewSelectedAll = false;
+            if (CameraPanelSelectedItems.Where(item => item.Value).Count() == 0)
+                CameraPanelAreAllSelected = false;
             await Task.WhenAll(workers);
         }
-        private void CameraTreeViewSelectAllCommandHandler(object parameter)
+        private void CameraPanelSelectedAllCommandExecute(object parameter)
         {
-            if (CameraTreeViewSelectedAll == null || CameraTreeViewSelectedAll == false)
+            if (CameraPanelAreAllSelected == null || CameraPanelAreAllSelected == false)
             {
-                foreach (var key in CameraTreeViewSelectedItems.Keys)
+                foreach (var key in CameraPanelSelectedItems.Keys)
                 {
-                    if (CameraTreeViewSelectedItems.TryGetValue(key, out bool oldVal))
-                        CameraTreeViewSelectedItems.TryUpdate(key, true, oldVal);
+                    if (CameraPanelSelectedItems.TryGetValue(key, out bool oldVal))
+                        CameraPanelSelectedItems.TryUpdate(key, true, oldVal);
                 }
-                RaisePropertyChanged(nameof(CameraTreeViewSelectedItems));
-                CameraTreeViewSelectedAll = true;
+                RaisePropertyChanged(nameof(CameraPanelSelectedItems));
+                CameraPanelAreAllSelected = true;
             }
             else
             {
-                foreach (var key in CameraTreeViewSelectedItems.Keys)
+                foreach (var key in CameraPanelSelectedItems.Keys)
                 {
-                    if (CameraTreeViewSelectedItems.TryGetValue(key, out bool oldVal))
-                        CameraTreeViewSelectedItems.TryUpdate(key, false, oldVal);
+                    if (CameraPanelSelectedItems.TryGetValue(key, out bool oldVal))
+                        CameraPanelSelectedItems.TryUpdate(key, false, oldVal);
                 }
-                RaisePropertyChanged(nameof(CameraTreeViewSelectedItems));
-                CameraTreeViewSelectedAll = false;
+                RaisePropertyChanged(nameof(CameraPanelSelectedItems));
+                CameraPanelAreAllSelected = false;
             }
         }
 
-        private void CameraSelectionMade(object e)
+        private void CameraSelectionsMade(object e)
         {
            
             var providedCameras = e as IEnumerable<KeyValuePair<string, CameraBase>>;
@@ -491,7 +491,7 @@ namespace DIPOL_UF.Models
                     HookCamera(x.Key, x.Value);
 
             foreach (var x in providedCameras)
-                CameraTreeViewSelectedItems.TryAdd(x.Key, false);
+                CameraPanelSelectedItems.TryAdd(x.Key, false);
 
             string[] categories = providedCameras
                 .Select(item => Helper.GetCameraHostName(item.Key))
@@ -500,7 +500,7 @@ namespace DIPOL_UF.Models
 
             foreach (var cat in categories)
             {
-                CameraTreeRepresentation.Add(new ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
+                CameraPanel.Add(new ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
                 {
                     Name = cat,
                     CameraList = new ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel>(
@@ -518,7 +518,7 @@ namespace DIPOL_UF.Models
                                             {
                                                 Header = "Properties",
                                                 Command = new DelegateCommand(
-                                                    (param) => ContextMenuCommandHandler("Properties", param),
+                                                    (param) => ContextMenuCommandExecute("Properties", param),
                                                     DelegateCommand.CanExecuteAlways)
                                             })
                                     }
@@ -531,7 +531,7 @@ namespace DIPOL_UF.Models
 
         }
 
-        private void ContextMenuCommandHandler(string command, object param)
+        private void ContextMenuCommandExecute(string command, object param)
         {
             if(command == "Properties")
                 if (param is DependencyObject obj)
@@ -549,31 +549,31 @@ namespace DIPOL_UF.Models
                 }
         }
         /// <summary>
-        /// Attaches event handlers to each camera to monitor status & progress.
+        /// Attaches event handlers to each cam to monitor status & progress.
         /// </summary>
         /// <param name="key">CameraID.</param>
-        /// <param name="camera">Camera instance.</param>
-        private void HookCamera(string key, CameraBase camera)
+        /// <param name="cam">Camera instance.</param>
+        private void HookCamera(string key, CameraBase cam)
         {
-            if (cameraRealTimeStats.ContainsKey(key))
-                cameraRealTimeStats.TryRemove(key, out _);
+            if (camRealTimeStats.ContainsKey(key))
+                camRealTimeStats.TryRemove(key, out _);
 
-            cameraRealTimeStats.TryAdd(key, new Dictionary<string, object>());
+            camRealTimeStats.TryAdd(key, new Dictionary<string, object>());
 
-            if (camera.Capabilities.Features.HasFlag(SDKFeatures.FanControl)) 
-                camera.FanControl(FanMode.FullSpeed);
+            if (cam.Capabilities.Features.HasFlag(SDKFeatures.FanControl)) 
+                cam.FanControl(FanMode.FullSpeed);
 
-            if (camera.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
-            { camera.TemperatureMonitor(Switch.Enabled, Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
-                camera.TemperatureStatusChecked += (sender, e) =>
+            if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
+            { cam.TemperatureMonitor(Switch.Enabled, Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
+                cam.TemperatureStatusChecked += (sender, e) =>
                 {
-                    cameraRealTimeStats[key]["Temp"] = e.Temperature;
-                    cameraRealTimeStats[key]["TempStatus"] = e.Status;
+                    camRealTimeStats[key]["Temp"] = e.Temperature;
+                    camRealTimeStats[key]["TempStatus"] = e.Status;
 
                 };
             }
-            //camera.SetTemperature(-20);
-            //camera.CoolerControl(Switch.Enabled);
+            //cam.SetTemperature(-20);
+            //cam.CoolerControl(Switch.Enabled);
         }
 
         private void DispatcherTimerTickHandler(object sener, EventArgs e)
@@ -585,9 +585,9 @@ namespace DIPOL_UF.Models
         private async Task DisposeCamera(string camID, bool removeSelection = true)
         {
 
-            connectedCameras.TryRemove(camID, out CameraBase camInstance);
+            connectedCams.TryRemove(camID, out CameraBase camInstance);
             if (removeSelection)
-                cameraTreeViewSelectedItems.TryRemove(camID, out _);
+                camPanelSelectedItems.TryRemove(camID, out _);
 
 
             await Task.Run(() =>
