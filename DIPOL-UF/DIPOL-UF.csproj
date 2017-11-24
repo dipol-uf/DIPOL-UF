@@ -103,6 +103,7 @@
     <Compile Include="Converters\TemperatureToBrushMultiValueConverter.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
+    <Compile Include="Models\ConnectedCamera.cs" />
     <Compile Include="Models\ConnectedCamerasTreeModel.cs" />
     <Compile Include="Models\ConnectedCameraTreeItemModel.cs" />
     <Compile Include="Models\DipolMainWindow.cs" />
@@ -115,6 +116,7 @@
     <Compile Include="ViewModels\AvailableCamerasViewModel.cs" />
     <Compile Include="ViewModels\CameraPropertiesViewModel.cs" />
     <Compile Include="ViewModels\ConnectedCameraTreeItemViewModel.cs" />
+    <Compile Include="ViewModels\ConnectedCameraViewModel.cs" />
     <Compile Include="ViewModels\DipolMainWindowViewModel.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="ViewModels\ConnectedCamerasTreeViewModel.cs" />
