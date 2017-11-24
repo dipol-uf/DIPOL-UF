@@ -549,7 +549,7 @@ namespace DIPOL_UF.Models
                 }
         }
         /// <summary>
-        /// Attaches event handlers to each cam to monitor status & progress.
+        /// Attaches event handlers to each cam to monitor status and progress.
         /// </summary>
         /// <param name="key">CameraID.</param>
         /// <param name="cam">Camera instance.</param>
