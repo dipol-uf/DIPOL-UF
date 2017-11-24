@@ -128,4 +128,10 @@
             </ListView>
         </Expander>
     </DataTemplate>
+    
+    
+    <!--Camera tab view template-->
+    <DataTemplate x:Key="TabControlItemTemplate" DataType="{x:Type vm:ConnectedCameraViewModel}">
+        
+    </DataTemplate>
 </ResourceDictionary>
