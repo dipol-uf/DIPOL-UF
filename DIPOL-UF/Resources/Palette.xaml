@@ -25,6 +25,8 @@
                Bottom="{StaticResource BorderThicknessValue}"
                />
 
+    <sys:Double x:Key="StatusBarHeight">25</sys:Double>
+    
     
     <sys:Double x:Key="TreeItemMarginValue">20</sys:Double>
     <Thickness x:Key="OneLevelTreeItemMarginLeft" Left="{StaticResource TreeItemMarginValue}"/>
