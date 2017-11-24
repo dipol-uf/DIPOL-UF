@@ -90,7 +90,7 @@ namespace DIPOL_UF
             => !d.HasShutdownStarted && !d.HasShutdownFinished;
 
         /// <summary>
-        /// Retrieves an item from a dictionary if specified key is present; otherwise, returns <see cref="null"/>.
+        /// Retrieves an item from a dictionary if specified key is present; otherwise, returns null.
         /// </summary>
         /// <param name="settings">The dictionary.</param>
         /// <param name="key">Key.</param>

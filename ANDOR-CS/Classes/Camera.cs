@@ -447,8 +447,8 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Represents a worker that runs infinite loop until cancellation is requested.
         /// </summary>
-        /// <param name="token">Cancellation token used to break the loop.</param>
-        /// <param name="delay">Time delay between loop cycles</param>
+        /// <param name="sender">Timer</param>
+        /// <param name="e">Timer event arguments</param>
         private void TemperatureMonitorCycler(object sender, ElapsedEventArgs e)
         {
             CheckIsDisposed();
