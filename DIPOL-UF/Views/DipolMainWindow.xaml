@@ -30,6 +30,7 @@
                     Grid.Row="1" Grid.Column="0"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                     ItemsSource="{Binding ConnectedCameras, UpdateSourceTrigger=PropertyChanged}"
+                    ContentTemplate="{StaticResource ResourceKey=TabControlItemTemplate}"
                     ItemContainerStyle="{StaticResource ResourceKey=TabItemStyle}">
             
         </TabControl>
