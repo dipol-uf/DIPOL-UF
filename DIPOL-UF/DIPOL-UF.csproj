@@ -100,6 +100,7 @@
     <Compile Include="Converters\CameraStatsToStringMultiValueConverter.cs" />
     <Compile Include="Converters\CameraStatsToValueMultiValueConverter.cs" />
     <Compile Include="Converters\CameraToStringAliasValueConverter.cs" />
+    <Compile Include="Converters\StringToSingleDoubleValueConverter.cs" />
     <Compile Include="Converters\TemperatureStatusToBrushMultiValueConverter.cs" />
     <Compile Include="Converters\TemperatureToBrushMultiValueConverter.cs" />
     <Compile Include="Helper.cs" />
