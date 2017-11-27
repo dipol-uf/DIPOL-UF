@@ -11,9 +11,20 @@ namespace DIPOL_UF.Models
     class ConnectedCamera : ObservableObject
     {
         private CameraBase camera = null;
+        private float targetTemperature = 0.0f;
 
-
-
+        public float TargetTemperature
+        {
+            get => targetTemperature;
+            set
+            {
+                if (value != targetTemperature)
+                {
+                    targetTemperature = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
         public CameraBase Camera
         {
             get => camera;

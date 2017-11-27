@@ -21,7 +21,7 @@ namespace DIPOL_UF.Commands
         private void Execute(object parameter)
         {
 
-            if (parameter is Commands.CommandEventArgs<MouseButtonEventArgs> commandArgs)
+            if (parameter is CommandEventArgs<MouseButtonEventArgs> commandArgs)
             {
                 var sender = commandArgs.Sender as FrameworkElement;
                 var parent = VisualTreeHelper.GetParent(sender);
