@@ -12,8 +12,8 @@
         Title="Available Cameras" Height="auto" Width="auto" 
         WindowStyle="ThreeDBorderWindow" SizeToContent="WidthAndHeight" Topmost="True" 
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Closing="{cmnds:EventToCommnd WindowClosingCommand}"
-        ContentRendered="{cmnds:EventToCommnd WindowShownCommand}">
+        Closing="{cmnds:EventToCommand WindowClosingCommand}"
+        ContentRendered="{cmnds:EventToCommand WindowShownCommand}">
     <DockPanel Margin="10, 5, 10, 5">
         <Label DockPanel.Dock="Top" Content="Found:" 
                BorderBrush="{StaticResource ResourceKey=BorderColor}"
@@ -25,7 +25,7 @@
                   ItemsSource="{Binding FoundCameras}"
                   ItemTemplate="{StaticResource ResourceKey=FoundCamerasListViewItemTemplate}"
                   SelectionMode="Multiple" SelectedIndex="-1"
-                  SelectionChanged="{cmnds:EventToCommnd SelectionChangedCommand}">
+                  SelectionChanged="{cmnds:EventToCommand SelectionChangedCommand}">
             
         </ListView>
         <Border DockPanel.Dock="Top" VerticalAlignment="Bottom" 

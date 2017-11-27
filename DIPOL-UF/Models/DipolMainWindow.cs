@@ -564,6 +564,9 @@ namespace DIPOL_UF.Models
             if (cam.Capabilities.Features.HasFlag(SDKFeatures.FanControl)) 
                 cam.FanControl(FanMode.FullSpeed);
 
+            //cam.SetTemperature(0);
+            cam.CoolerControl(Switch.Disabled);
+
             if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
             { cam.TemperatureMonitor(Switch.Enabled, Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
                 cam.TemperatureStatusChecked += (sender, e) =>

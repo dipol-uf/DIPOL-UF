@@ -18,10 +18,12 @@ namespace DIPOL_UF.ViewModels
     {
         public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
         {
+            ConnectedCameras.CollectionChanged += (sender, e) => RaisePropertyChanged(nameof(AnyCameraConnected));
         }
 
         public bool? CameraPanelAreAllSelected => model.CameraPanelAreAllSelected;
 
+        public bool AnyCameraConnected => !model.ConnectedCameras.IsEmpty;
 
         public ICommand CameraPanelSelectedAllCommand => model.CameraPanelSelectedAllCommand;
         public ICommand ConnectButtonCommand => model.ConnectButtonCommand as ICommand;
@@ -37,5 +39,7 @@ namespace DIPOL_UF.ViewModels
             model.CameraPanel;
         public ObservableConcurrentDictionary<string, Dictionary<string, object>> CameraRealTimeStats => 
             model.CameraRealTimeStats;
+
+       
     }
 }
