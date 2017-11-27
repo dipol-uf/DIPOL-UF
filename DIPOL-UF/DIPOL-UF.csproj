@@ -103,6 +103,7 @@
     <Compile Include="Converters\StringToSingleDoubleValueConverter.cs" />
     <Compile Include="Converters\TemperatureStatusToBrushMultiValueConverter.cs" />
     <Compile Include="Converters\TemperatureToBrushMultiValueConverter.cs" />
+    <Compile Include="Converters\TypeValueConverter.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
     <Compile Include="Models\ConnectedCamera.cs" />

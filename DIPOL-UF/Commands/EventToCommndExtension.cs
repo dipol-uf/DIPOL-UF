@@ -19,7 +19,7 @@ namespace DIPOL_UF.Commands
     /// XAML extension used to reroute events to ViewModel commands.
     /// </summary>
     [ContentProperty(nameof(DataContextProviderControl))]
-    class EventToCommndExtension : MarkupExtension
+    class EventToCommandExtension : MarkupExtension
     {
        
         /// <summary>
@@ -32,6 +32,12 @@ namespace DIPOL_UF.Commands
             get;
             set;
         }
+        public string PropertyName
+        {
+            get;
+            set;
+        }
+
 
         /// <summary>
         /// Invoked by XAML code when property value is needed.
@@ -93,9 +99,15 @@ namespace DIPOL_UF.Commands
                 // Packages sender and e into container class sent to ICommand.Execute(object) parameter
                 var commandArgs = new CommandEventArgs<T>(sender, e);
 
+                
                 var context = String.IsNullOrWhiteSpace(DataContextProviderControl)
                     ? element.DataContext
                     : (Helper.FindParentByName(element, DataContextProviderControl) as FrameworkElement)?.DataContext;
+
+                if (!string.IsNullOrWhiteSpace(PropertyName))
+                {
+                    context = context.GetType().GetProperty(PropertyName, BindingFlags.Public | BindingFlags.Instance)?.GetValue(context) ?? context;
+                }
 
                 foreach (var commandName in commandNames)
                 {
@@ -116,7 +128,7 @@ namespace DIPOL_UF.Commands
         /// Constructor.
         /// </summary>
         /// <param name="commandName">First parameter of the binding. Text name of the <see cref="ICommand"/> ViewModel property.</param>
-        public EventToCommndExtension(object commandName)
+        public EventToCommandExtension(object commandName)
         {
             // Right now supports only property name binding.
             if (commandName is string commands)
