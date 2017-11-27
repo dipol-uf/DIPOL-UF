@@ -10,7 +10,20 @@ namespace DIPOL_UF.Converters
     class CameraStatsToValueMultiValueConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-            => ConvertWorker(values, targetType, parameter, culture);
+        {
+            object result = ConvertWorker(values, targetType, parameter, culture);
+
+            object val = result == null ? null : System.Convert.ChangeType(result, targetType);
+
+            if (val == null)
+            {
+                if (targetType.IsValueType)
+                    return Activator.CreateInstance(targetType);
+                else return null;
+            }
+            else return val;
+        }
+        
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {

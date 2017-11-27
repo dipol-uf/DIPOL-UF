@@ -1,4 +1,4 @@
-RemoteLocations = { "dipol-2",	"dipol-3" }
+RemoteLocations  { "dipol-2",	"dipol-3" }
 UICamStatusUpdateDelay = 1500
 RemoteEstablishPBTimeout = "00:00:05"
 RemoteOpenTimeout = "00:00:15"
