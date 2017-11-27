@@ -36,10 +36,10 @@
             
         </TabControl>
         
-        <Border HorizontalAlignment="Right" VerticalAlignment="Stretch" Margin="2"
+        <Border HorizontalAlignment="Right" VerticalAlignment="Stretch" Margin="2, 4, 2, 2"
                 Grid.Row="1" Grid.Column="1"
                 Style="{StaticResource ResourceKey=BorderStyle}">
-            <Grid>
+            <Grid Margin="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="*"/>
@@ -47,7 +47,7 @@
                     <RowDefinition Height="auto" x:Name="GridButtonRowHeight"/>
                 </Grid.RowDefinitions>
                 
-                <Border Grid.Row="0"
+                <Border Grid.Row="0" 
                         VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                         Style="{StaticResource ResourceKey=BorderStyle}"
                         BorderThickness="{StaticResource ResourceKey=BottomOnlyBorderThickness}">
@@ -55,10 +55,10 @@
                         <CheckBox VerticalAlignment="Center" HorizontalAlignment="Left" 
                                     Margin="10, 0, 0, 0"
                                     IsThreeState="True"
+                                    IsEnabled="{Binding AnyCameraConnected}"
                                     x:Name="SelectAllCheckBox"
                                     IsChecked="{Binding CameraPanelAreAllSelected, Mode=OneWay}"
                                     Command="{Binding CameraPanelSelectedAllCommand}"
-                                    CommandParameter="{Binding ElementName=CameraPanel}"
                                     />
 
                         <Label x:Name="ConnectedCamerasLabel" Content="Camera Manager" 

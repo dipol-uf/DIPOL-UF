@@ -60,8 +60,8 @@
                                         </MultiBinding>
                                     </CheckBox.IsChecked>
                                 </CheckBox>
-                                      <!--Checked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
-                                      Unchecked="{cmnds:EventToCommnd CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"-->
+                                      <!--Checked="{cmnds:EventToCommand CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
+                                      Unchecked="{cmnds:EventToCommand CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"-->
                                 <!--CameraBase.ToString() to get camera name-->
                                 <Label Content="{Binding Value.Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}" VerticalAlignment="Center" Width="155"/>
                             </StackPanel>
@@ -140,8 +140,8 @@
                 <RowDefinition Height="3*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="5.5*"/>
-                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="4.5*"/>
+                <ColumnDefinition Width="2.5*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <!--PLACEHOLDER FOR IMAGE CONTROL-->
@@ -150,7 +150,7 @@
                     VerticalAlignment="Stretch" HorizontalAlignment="Stretch"></Canvas>
             <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding}"/>
             <Label Grid.Row="1" Grid.Column="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
-            <Grid Grid.Column="2" Grid.Row="1">
+            <Grid Grid.Column="2" Grid.Row="1" Margin="5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
@@ -160,15 +160,22 @@
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
-                <Slider Grid.Column="0" Grid.Row="0"
+                <Slider Grid.Column="0" Grid.Row="0" HorizontalAlignment="Center"
                         Orientation="Vertical" Name="TempSetSlider"
+                        IsEnabled="{Binding Value.CanControlCooler, Mode=OneTime}"
                         Minimum="{Binding Value.MinimumAllowedTemperature, Mode=OneTime}"
                         Maximum="{Binding Value.MaximumAllowedTemperature, Mode=OneTime}"
-                        ></Slider>
-                <ProgressBar Grid.Column="1" Grid.Row="0" Width="10"
+                        Value="{Binding
+                            Path=Value.TargetTemperature,
+                            Mode=OneWayToSource,
+                            Converter={StaticResource ResourceKey=TypeConverter}}">
+                    
+                </Slider>
+                <ProgressBar Grid.Column="1" Grid.Row="0" Width="10" HorizontalAlignment="Center"
                              Orientation="Vertical" IsIndeterminate="False"
                              Minimum="{Binding Value.MinimumAllowedTemperature, Mode=OneTime}"
-                             Maximum="{Binding Value.MaximumAllowedTemperature, Mode=OneTime}">
+                             Maximum="{Binding Value.MaximumAllowedTemperature, Mode=OneTime}"
+                             IsEnabled="{Binding Value.CanQueryTemperature, Mode=OneTime}">
                     <ProgressBar.Value>
                         <MultiBinding Mode="OneWay"
                             Converter="{StaticResource ResourceKey=CameraStatsToValueMultiConverter}"
@@ -190,13 +197,20 @@
                         </MultiBinding>
                     </ProgressBar.Foreground>
                 </ProgressBar>
-                <TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1"
-                         Text = "{
-                    Binding ElementName=TempSetSlider, 
-                    Mode=TwoWay, 
-                    Converter={StaticResource ResourceKey=StringToSingleDoubleConverter}, 
-                    ConverterParameter='F1'}"
-                    />
+                <TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" 
+                         Name="TempControlTextBox"
+                         IsEnabled="{Binding Value.CanControlCooler, Mode=OneTime}"
+                         TextChanged="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"
+                         PreviewTextInput="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"
+                         >
+
+                </TextBox>
+                <Button Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" 
+                        Command="{Binding Value.ControlCoolerCommand}">
+                    <Button.Content>
+                        <TextBlock Text="{Binding Value.Camera.CoolerMode, Mode=OneWay}"/>
+                    </Button.Content>
+                </Button>
             </Grid>
         </Grid>
     </DataTemplate>
