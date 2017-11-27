@@ -17,6 +17,16 @@ namespace DIPOL_UF.ViewModels
         public float MinimumAllowedTemperature => model.Camera.Properties.AllowedTemperatures.Minimum;
         public float MaximumAllowedTemperature => model.Camera.Properties.AllowedTemperatures.Maximum;
 
+        public float TargetTemperature
+        {
+            get => model.TargetTemperature;
+            set
+            {
+                if (value != model.TargetTemperature)
+                    model.TargetTemperature = value;
+            }
+        }
+
 
         public ConnectedCameraViewModel(ConnectedCamera model) : base(model)
         {
