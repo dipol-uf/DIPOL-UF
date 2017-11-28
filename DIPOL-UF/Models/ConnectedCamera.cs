@@ -28,7 +28,7 @@ namespace DIPOL_UF.Models
             get => targetTemperature;
             set
             {
-                if (value != targetTemperature)
+                if (Math.Abs(value - targetTemperature) < float.Epsilon)
                 {
                     targetTemperature = value;
                     RaisePropertyChanged();
