@@ -244,6 +244,10 @@
             <ComboBox Grid.Column="1" Grid.Row="1"
                       IsEnabled="{Binding Value.CanControlInternalExternalShutter}"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
+                      SelectedValue="{Binding
+                        Value.ExternalShutterState,
+                        Mode=TwoWay,
+                        UpdateSourceTrigger=PropertyChanged}"
                       ItemsSource="{Binding 
                         Source={StaticResource ResourceKey=ShutterModeEnumProvider}}"/>
         </Grid>
