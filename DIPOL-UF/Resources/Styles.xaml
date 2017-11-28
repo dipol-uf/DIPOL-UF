@@ -112,7 +112,7 @@
     
     <!--ComboBox style-->
     <Style x:Key="ComboBoxStyle" TargetType="{x:Type ComboBox}" BasedOn="{StaticResource ContentFont}">
-        <Setter Property="Height" Value="33"/>
+        <Setter Property="Height" Value="25"/>
         <Setter Property="Margin" Value="{StaticResource ResourceKey=DefaultMargin}"/>
     </Style>
 </ResourceDictionary>
