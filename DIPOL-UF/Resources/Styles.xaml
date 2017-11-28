@@ -70,6 +70,7 @@
         <Setter Property="FontSize" Value="17"/>
         <Setter Property="FontStyle" Value="Normal"/>
         <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Margin" Value="1"/>
     </Style>
     
     <!--Border style-->
