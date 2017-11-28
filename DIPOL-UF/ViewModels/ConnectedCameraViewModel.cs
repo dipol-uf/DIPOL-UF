@@ -14,18 +14,37 @@ namespace DIPOL_UF.ViewModels
     class ConnectedCameraViewModel : ViewModel<ConnectedCamera>
     {
         public CameraBase Camera => model.Camera;
-
+        
+        /// <summary>
+        /// Minimum allowed cooling temperature
+        /// </summary>
         public float MinimumAllowedTemperature => model.Camera.Properties.AllowedTemperatures.Minimum;
+        /// <summary>
+        /// Maximum allowed cooling temperature
+        /// </summary>
         public float MaximumAllowedTemperature => model.Camera.Properties.AllowedTemperatures.Maximum;
+
+        /// <summary>
+        /// Indicates if camera supports temperature queries (gets).
+        /// </summary>
         public bool CanQueryTemperature => model.Camera.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature);
+        /// <summary>
+        /// Indicates if camera supports active cooling (set temperature and cooler control)
+        /// </summary>
         public bool CanControlCooler => model.Camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature);
 
+        /// <summary>
+        /// Target temperature for camera's cooler.
+        /// </summary>
         public float TargetTemperature
         {
             get => model.TargetTemperature;
             set
             {
-                if (value != model.TargetTemperature)
+                if (CanControlCooler &&
+                    value != model.TargetTemperature &&
+                    value <= MaximumAllowedTemperature &&
+                    value >= MinimumAllowedTemperature)
                     model.TargetTemperature = value;
             }
         }
