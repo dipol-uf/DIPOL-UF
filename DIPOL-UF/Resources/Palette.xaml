@@ -52,4 +52,10 @@
         <sys:String>Cooling</sys:String>
         <sys:String>Off</sys:String>
     </x:Array>
+    
+    <!--Slider margin-->
+    <Thickness x:Key="VerticalSliderMargin" Left="0" Top="5" Right="0" Bottom="7"/>
+
+    <!--PB margin-->
+    <Thickness x:Key="VerticalPBMargin" Left="0" Top="8" Right="0" Bottom="9"/>
 </ResourceDictionary>
