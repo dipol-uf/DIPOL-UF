@@ -1,6 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:DIPOL_UF.ViewModels"
+                    xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS"
                     xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
                     xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters">
     <HierarchicalDataTemplate x:Key="MenuBarItemTemplate" DataType="{x:Type vm:MenuItemViewModel}"
@@ -167,7 +168,8 @@
                         Maximum="{Binding Value.MaximumAllowedTemperature, Mode=OneTime}"
                         Value="{Binding
                             Path=Value.TargetTemperature,
-                            Mode=OneWayToSource,
+                            Mode=TwoWay,
+                            UpdateSourceTrigger=PropertyChanged,
                             Converter={StaticResource ResourceKey=TypeConverter}}">
                     
                 </Slider>
@@ -198,17 +200,44 @@
                     </ProgressBar.Foreground>
                 </ProgressBar>
                 <TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" 
-                         Name="TempControlTextBox"
+                         Name="TempControlTextBox" Margin="2"
                          IsEnabled="{Binding Value.CanControlCooler, Mode=OneTime}"
                          TextChanged="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"
                          PreviewTextInput="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"
-                         >
+                         Text="{Binding
+                            Path=Value.TargetTemperature,
+                            Mode=TwoWay,
+                            UpdateSourceTrigger=PropertyChanged,
+                            Converter={StaticResource ResourceKey=SingleDoubleToStringConverter}}">
 
                 </TextBox>
                 <Button Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" 
                         Command="{Binding Value.ControlCoolerCommand}">
                     <Button.Content>
-                        <TextBlock Text="{Binding Value.Camera.CoolerMode, Mode=OneWay}"/>
+                        <TextBlock>
+                            <TextBlock.Style>
+                                <Style>
+                                    <Style.Triggers>
+                                        <DataTrigger 
+                                            Binding="{Binding
+                                                Path = Value.Camera.CoolerMode,
+                                                Mode=OneWay,
+                                                UpdateSourceTrigger=PropertyChanged}" 
+                                            Value="{x:Static enm:Switch.Enabled}">
+                                            <Setter Property="TextBlock.Text" Value="Enabled"/>
+                                        </DataTrigger>
+                                        <DataTrigger 
+                                            Binding="{Binding
+                                                Path = Value.Camera.CoolerMode,
+                                                Mode=OneWay,
+                                                UpdateSourceTrigger=PropertyChanged}" 
+                                            Value="{x:Static enm:Switch.Disabled}">
+                                            <Setter Property="TextBlock.Text" Value="Disabled"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </Button.Content>
                 </Button>
             </Grid>
