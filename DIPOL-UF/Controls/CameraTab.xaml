@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS"
              xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
+             xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters"
              xmlns:local="clr-namespace:DIPOL_UF.Controls"
              mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
              d:DesignHeight="500" d:DesignWidth="700">
@@ -233,6 +234,7 @@
                        VerticalAlignment="Center"
                        Text="External"/>
             <ComboBox Grid.Column="1" Grid.Row="0"
+                      FontSize="{StaticResource ResourceKey=SmallFontSize}"
                       IsEnabled="{Binding Value.CanControlShutter}"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding 
@@ -242,6 +244,7 @@
                         Mode=TwoWay, 
                         UpdateSourceTrigger=PropertyChanged}"/>
             <ComboBox Grid.Column="1" Grid.Row="1"
+                      FontSize="{StaticResource ResourceKey=SmallFontSize}"
                       IsEnabled="{Binding Value.CanControlInternalExternalShutter}"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       SelectedValue="{Binding

@@ -1,4 +1,4 @@
-RemoteLocations  { "dipol-2",	"dipol-3" }
+RemoteLocations2 = { "dipol-2",	"dipol-3" }
 UICamStatusUpdateDelay = 1500
 RemoteEstablishPBTimeout = "00:00:05"
 RemoteOpenTimeout = "00:00:15"
@@ -8,3 +8,6 @@ RemoteCloseTimeout = "00:00:30"
 PopUpDelay = "00:00:01.0"
 Cameras = { "DU897_EX_9237",	DU897_BV_10001",	"DU897_EX_10012" }
 CameraAlias = { "Dipol-1 EX Cam",	"Dipol-3 BV Cam",	"Dipol-2 EX Cam" }
+ShutterCloseTimeMS = 27
+ShutterOpenTimeMS = 27
+TTLShutterSignal = 1

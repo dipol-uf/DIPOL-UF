@@ -7,10 +7,13 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls;
 
-using DIPOL_UF.Commands;
 
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
+
+using DIPOL_UF.Commands;
+
+using static DIPOL_UF.DIPOL_UF_App;
 
 namespace DIPOL_UF.Models
 {
@@ -74,7 +77,12 @@ namespace DIPOL_UF.Models
                 if (camera.Capabilities.Features.HasFlag(SDKFeatures.Shutter) &&
                     value != camera.Shutter.Internal)
                 {
-                    camera.ShutterControl(27, 27, value, camera.Shutter.External ?? ShutterMode.PermanentlyOpen, TTLShutterSignal.High);
+                    camera.ShutterControl(
+                       Settings.GetValueOrNullSafe("ShutterOpenTimeMS", 27),
+                       Settings.GetValueOrNullSafe("ShutterCloseTimeMS", 27),
+                       value,
+                       camera.Shutter.External ?? ShutterMode.PermanentlyOpen,
+                       (TTLShutterSignal)Settings.GetValueOrNullSafe("TTLShutterSignal", 1));
                     RaisePropertyChanged();
                 }
             }
@@ -87,7 +95,12 @@ namespace DIPOL_UF.Models
                 if (camera.Capabilities.Features.HasFlag(SDKFeatures.ShutterEx) &&
                     value != camera.Shutter.Internal)
                 {
-                    camera.ShutterControl(27, 27, camera.Shutter.Internal, value ?? ShutterMode.PermanentlyOpen, TTLShutterSignal.High);
+                    camera.ShutterControl(
+                        Settings.GetValueOrNullSafe("ShutterOpenTimeMS", 27),
+                        Settings.GetValueOrNullSafe("ShutterCloseTimeMS", 27), 
+                        camera.Shutter.Internal, 
+                        value ?? ShutterMode.PermanentlyOpen, 
+                        (TTLShutterSignal)Settings.GetValueOrNullSafe("TTLShutterSignal", 1));
                     RaisePropertyChanged();
                 }
             }
