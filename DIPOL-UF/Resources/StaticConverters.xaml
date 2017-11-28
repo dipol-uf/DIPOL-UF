@@ -11,6 +11,6 @@
     <cnvrt:CameraToStringAliasValueConverter x:Key="CameraToStringAliasConverter"/>
     <cnvrt:CameraKeyToDictionaryValueMultiValueConverter x:Key="CameraKeyToValueMultiConverter"/>
     <cnvrt:CameraStatsToValueMultiValueConverter x:Key="CameraStatsToValueMultiConverter"/>
-    <cnvrt:StringToSingleDoubleValueConverter x:Key="StringToSingleDoubleConverter"/>
+    <cnvrt:SingleDoubleToStringValueConverter x:Key="SingleDoubleToStringConverter"/>
     <cnvrt:TypeValueConverter x:Key="TypeConverter"/>
 </ResourceDictionary>

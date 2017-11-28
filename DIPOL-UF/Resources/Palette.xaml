@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:DIPOL_UF.Resources"
-                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    >
     <SolidColorBrush x:Key="NegativeEffectButtonBackgroundColor" Color="#FFB28484"/>
     <SolidColorBrush x:Key="NegativeEffectButtonForegroundColor" Color="Black"/>
 
@@ -26,8 +27,6 @@
                />
 
     <sys:Double x:Key="StatusBarHeight">25</sys:Double>
-    
-    
     <sys:Double x:Key="TreeItemMarginValue">20</sys:Double>
     <Thickness x:Key="OneLevelTreeItemMarginLeft" Left="{StaticResource TreeItemMarginValue}"/>
     
@@ -46,5 +45,11 @@
         <SolidColorBrush Color="Red"/>
         <SolidColorBrush Color="Orange"/>
         <SolidColorBrush Color="Crimson"/>
+    </x:Array>
+    
+    <!--Enum text representations-->
+    <x:Array x:Key="SwitchEnumTextRepresentation" Type="{x:Type sys:String}">
+        <sys:String>Cooling</sys:String>
+        <sys:String>Off</sys:String>
     </x:Array>
 </ResourceDictionary>
