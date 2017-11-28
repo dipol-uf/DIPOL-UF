@@ -7,10 +7,28 @@ namespace DIPOL_UF.Converters
 {
     [ValueConversion(typeof(string), typeof(double))]
     [ValueConversion(typeof(string), typeof(float))]
-    class StringToSingleDoubleValueConverter : IValueConverter
+    class SingleDoubleToStringValueConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            if (value is double dVal)
+            {
+                if (parameter is string dFrmt && !string.IsNullOrWhiteSpace(dFrmt))
+                    return dVal.ToString(dFrmt);
+                else return dVal.ToString();
+            }
+            else if (value is float fVal)
+            {
+                if (parameter is string fFrmt && !string.IsNullOrWhiteSpace(fFrmt))
+                    return fVal.ToString(fFrmt);
+                else return fVal.ToString();
+            }
+            else return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            
             if (value is string s)
             {
                 if (targetType == typeof(double))
@@ -28,23 +46,6 @@ namespace DIPOL_UF.Converters
             }
 
             return null;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is double dVal)
-            {
-                if (parameter is string dFrmt && !string.IsNullOrWhiteSpace(dFrmt))
-                    return dVal.ToString(dFrmt);
-                else return dVal.ToString();
-            }
-            else if (value is float fVal)
-            {
-                if (parameter is string fFrmt && !string.IsNullOrWhiteSpace(fFrmt))
-                    return fVal.ToString(fFrmt);
-                else return fVal.ToString();
-            }
-            else return null;
         }
     }
 }
