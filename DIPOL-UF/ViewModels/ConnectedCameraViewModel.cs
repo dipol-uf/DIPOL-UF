@@ -33,6 +33,8 @@ namespace DIPOL_UF.ViewModels
         /// </summary>
         public bool CanControlCooler => model.Camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature);
 
+        public bool CanControlTemperature => model.CanControlTemperature;
+
         /// <summary>
         /// Target temperature for camera's cooler.
         /// </summary>
