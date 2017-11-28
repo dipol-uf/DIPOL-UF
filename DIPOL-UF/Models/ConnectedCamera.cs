@@ -28,7 +28,7 @@ namespace DIPOL_UF.Models
             get => targetTemperature;
             set
             {
-                if (Math.Abs(value - targetTemperature) < float.Epsilon)
+                if (Math.Abs(value - targetTemperature) > float.Epsilon)
                 {
                     targetTemperature = value;
                     RaisePropertyChanged();
@@ -44,6 +44,24 @@ namespace DIPOL_UF.Models
                     value != canControlTemperature)
                 {
                     canControlTemperature = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        public FanMode FanMode
+        {
+            get => camera.FanMode;
+            set
+            {
+                if (camera.Capabilities.Features.HasFlag(SDKFeatures.FanControl) &&
+                    value != FanMode)
+                {
+                    if (value == FanMode.LowSpeed &&
+                        !camera.Capabilities.Features.HasFlag(SDKFeatures.LowFanMode))
+                        camera.FanControl(FanMode.LowSpeed);
+                    else
+                        camera.FanControl(value);
+
                     RaisePropertyChanged();
                 }
             }

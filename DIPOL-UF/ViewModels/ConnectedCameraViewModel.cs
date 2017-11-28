@@ -44,6 +44,16 @@ namespace DIPOL_UF.ViewModels
             ? 1
             : 2;
 
+        public int FanMode
+        {
+            get => (int)(2 - (uint)model.FanMode);
+            set
+            {
+                model.FanMode = (FanMode)(2 - value);
+            }
+            
+        }
+
         /// <summary>
         /// Target temperature for camera's cooler.
         /// </summary>
@@ -53,7 +63,7 @@ namespace DIPOL_UF.ViewModels
             set
             {
                 if (CanControlCooler &&
-                    Math.Abs(value - model.TargetTemperature) < float.Epsilon &&
+                    Math.Abs(value - model.TargetTemperature) > float.Epsilon &&
                     value <= MaximumAllowedTemperature &&
                     value >= MinimumAllowedTemperature)
                     model.TargetTemperature = value;
