@@ -46,7 +46,7 @@ namespace DIPOL_UF.Commands
         /// <returns>A delegate of type compatible with the bound event handler.</returns>
         public override object ProvideValue(IServiceProvider serviceProvider)
         {
-            // Retrieves information about bound target (FrameworkElement) and preoprty (event)
+            // Retrieves information about bound target (FrameworkElement) and property (event)
             var valueTarget = (serviceProvider.GetService(typeof(IProvideValueTarget)) as IProvideValueTarget);
 
             // Type of the event handler
