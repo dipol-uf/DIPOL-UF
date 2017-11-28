@@ -67,4 +67,7 @@
 
     <!--PB margin-->
     <Thickness x:Key="VerticalPBMargin" Left="0" Top="8" Right="0" Bottom="9"/>
+    
+    <!--Fonts-->
+    <sys:Double x:Key="SmallFontSize">12</sys:Double>
 </ResourceDictionary>
