@@ -106,21 +106,26 @@ namespace DIPOL_UF.Commands
 
                 if (!string.IsNullOrWhiteSpace(PropertyName))
                 {
-                    context = context.GetType().GetProperty(PropertyName, BindingFlags.Public | BindingFlags.Instance)?.GetValue(context) ?? context;
-                }
-
-                foreach (var commandName in commandNames)
-                {
-                    // Retrieves ViewModel, then property to which event is bound, then value of this property, which should be ICommand.
-                    var delegateCommand = context
+                    context = context
                         ?.GetType()
-                        .GetProperty(commandName, BindingFlags.Instance | BindingFlags.Public)
-                        ?.GetValue(context) as ICommand;
-
-                    // If can be executed, executes
-                    if (delegateCommand?.CanExecute(commandArgs) ?? false)
-                        delegateCommand.Execute(commandArgs);
+                        .GetProperty(PropertyName, BindingFlags.Public | BindingFlags.Instance)
+                        ?.GetValue(context) 
+                        ?? context;
                 }
+
+                if (context != null)
+                    foreach (var commandName in commandNames)
+                    {
+                        // Retrieves ViewModel, then property to which event is bound, then value of this property, which should be ICommand.
+                        var delegateCommand = context
+                            ?.GetType()
+                            .GetProperty(commandName, BindingFlags.Instance | BindingFlags.Public)
+                            ?.GetValue(context) as ICommand;
+
+                        // If can be executed, executes
+                        if (delegateCommand?.CanExecute(commandArgs) ?? false)
+                            delegateCommand.Execute(commandArgs);
+                    }
             }
         }
 
