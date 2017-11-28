@@ -18,6 +18,7 @@ namespace DIPOL_UF.Models
     {
         private CameraBase camera = null;
         private float targetTemperature = 0.0f;
+        private bool canControlTemperature = false;
 
         private DelegateCommand controlCoolerCommand = null;
         private DelegateCommand verifyTextInputCommand = null;
@@ -30,6 +31,19 @@ namespace DIPOL_UF.Models
                 if (value != targetTemperature)
                 {
                     targetTemperature = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        public bool CanControlTemperature
+        {
+            get => canControlTemperature;
+            set
+            {
+                if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature) &&
+                    value != canControlTemperature)
+                {
+                    canControlTemperature = value;
                     RaisePropertyChanged();
                 }
             }
@@ -71,9 +85,11 @@ namespace DIPOL_UF.Models
             }
         }
 
+
         public ConnectedCamera(CameraBase camera)
         {
             Camera = camera;
+            CanControlTemperature = camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature);
             InitializeCommands();
         }
 
@@ -108,11 +124,15 @@ namespace DIPOL_UF.Models
         {
             if (camera.CoolerMode == Switch.Disabled)
             {
+                CanControlTemperature = false;
                 camera.SetTemperature((int)targetTemperature);
                 camera.CoolerControl(Switch.Enabled);
             }
             else
+            {
                 camera.CoolerControl(Switch.Disabled);
+                CanControlTemperature = true;
+            }
         }
     }
 }
