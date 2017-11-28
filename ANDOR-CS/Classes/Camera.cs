@@ -939,6 +939,18 @@ namespace ANDOR_CS.Classes
             {
                 // ReleaseLock();
             }
+
+            // Default state of fan - FullSpeed
+            if (Capabilities.Features.HasFlag(SDKFeatures.FanControl))
+                FanControl(FanMode.FullSpeed);
+
+            // Default state of cooler - Off
+            if (Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
+                CoolerControl(Switch.Disabled);
+
+            // Default state of shutter(s) - Closed
+            if (Capabilities.Features.HasFlag(SDKFeatures.Shutter))
+                ShutterControl(27, 27, ShutterMode.PermanentlyClosed, ShutterMode.PermanentlyClosed, TTLShutterSignal.High);
         }
 
         /// <summary>
