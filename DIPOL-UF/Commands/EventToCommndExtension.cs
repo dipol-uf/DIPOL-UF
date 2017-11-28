@@ -118,7 +118,7 @@ namespace DIPOL_UF.Commands
                     {
                         // Retrieves ViewModel, then property to which event is bound, then value of this property, which should be ICommand.
                         var delegateCommand = context
-                            ?.GetType()
+                            .GetType()
                             .GetProperty(commandName, BindingFlags.Instance | BindingFlags.Public)
                             ?.GetValue(context) as ICommand;
 
