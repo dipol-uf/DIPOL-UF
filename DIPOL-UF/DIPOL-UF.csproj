@@ -94,6 +94,9 @@
     <Compile Include="Commands\DelegateCommand.cs" />
     <Compile Include="Commands\CommandEventArgs.cs" />
     <Compile Include="Commands\EventToCommndExtension.cs" />
+    <Compile Include="Controls\CameraTab.xaml.cs">
+      <DependentUpon>CameraTab.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToDictionaryValueMultiValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToStringValueConverter.cs" />
@@ -137,6 +140,10 @@
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\CameraTab.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Resources\ItemTemplates.xaml">
       <SubType>Designer</SubType>
