@@ -27,15 +27,15 @@ namespace ANDOR_CS.Enums
     public enum Switch : uint
     {
         /// <summary>
-        /// Funcion is enabled/turned on
-        /// </summary>
-        [EnumMember]
-        Enabled = 1,
-        
-        /// <summary>
         /// Function is disabled/turned of
         /// </summary>
         [EnumMember]
-        Disabled = 0
+        Disabled = 0,
+
+        /// <summary>
+        /// Funcion is enabled/turned on
+        /// </summary>
+        [EnumMember]
+        Enabled = 1        
     }
 }
