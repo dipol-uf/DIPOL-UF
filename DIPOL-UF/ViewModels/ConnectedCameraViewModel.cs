@@ -95,7 +95,7 @@ namespace DIPOL_UF.ViewModels
 
             
         }
-        public ShutterMode ExternalShuuterState
+        public ShutterMode ExternalShutterState
         {
             get => model.ExternalShutterState ?? ShutterMode.PermanentlyOpen;
             set => model.ExternalShutterState = value;
