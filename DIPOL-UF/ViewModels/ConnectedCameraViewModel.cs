@@ -33,7 +33,16 @@ namespace DIPOL_UF.ViewModels
         /// </summary>
         public bool CanControlCooler => model.Camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature);
 
+        /// <summary>
+        /// Indicates if temperature can be controled. False if cooling is on.
+        /// </summary>
         public bool CanControlTemperature => model.CanControlTemperature;
+
+        public bool CanControlFan => model.Camera.Capabilities.Features.HasFlag(SDKFeatures.FanControl);
+        public int LowFanModeTickStep =>
+            model.Camera.Capabilities.Features.HasFlag(SDKFeatures.LowFanMode)
+            ? 1
+            : 2;
 
         /// <summary>
         /// Target temperature for camera's cooler.
@@ -44,7 +53,7 @@ namespace DIPOL_UF.ViewModels
             set
             {
                 if (CanControlCooler &&
-                    value != model.TargetTemperature &&
+                    Math.Abs(value - model.TargetTemperature) < float.Epsilon &&
                     value <= MaximumAllowedTemperature &&
                     value >= MinimumAllowedTemperature)
                     model.TargetTemperature = value;
