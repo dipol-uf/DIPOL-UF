@@ -2,6 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:DIPOL_UF.ViewModels"
                     xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS"
+                    xmlns:cntrl="clr-namespace:DIPOL_UF.Controls"
                     xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
                     xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters">
     <HierarchicalDataTemplate x:Key="MenuBarItemTemplate" DataType="{x:Type vm:MenuItemViewModel}"
@@ -133,7 +134,7 @@
     
     <!--Camera tab view template-->
     <DataTemplate x:Key="TabControlItemTemplate" DataType="{x:Type vm:ConnectedCameraViewModel}">
-        <Grid>
+        <!--<Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="0.5*"/>
                 <RowDefinition Height="3*"/>
@@ -145,7 +146,7 @@
                 <ColumnDefinition Width="2.5*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <!--PLACEHOLDER FOR IMAGE CONTROL-->
+            --><!--PLACEHOLDER FOR IMAGE CONTROL--><!--
             <Canvas Grid.Row="0" Grid.Column="0"
                     Grid.RowSpan="3"
                     VerticalAlignment="Stretch" HorizontalAlignment="Stretch"></Canvas>
@@ -270,6 +271,7 @@
                     </Button.Style>
                 </Button>
             </Grid>
-        </Grid>
+        </Grid>-->
+        <cntrl:CameraTab/>
     </DataTemplate>
 </ResourceDictionary>
