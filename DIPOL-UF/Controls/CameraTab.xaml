@@ -11,15 +11,16 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="0.5*"/>
-            <RowDefinition Height="3.5*"/>
+            <RowDefinition Height="250"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="3*"/>
             <RowDefinition Height="3*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="4*"/>
             <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="135"/>
+            <ColumnDefinition Width="90"/>
         </Grid.ColumnDefinitions>
         <!--PLACEHOLDER FOR IMAGE CONTROL-->
         <Canvas Grid.Row="0" Grid.Column="0"
@@ -30,32 +31,44 @@
         <Label Grid.Row="1" Grid.Column="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
         <Grid Grid.Column="2" Grid.Row="1" Margin="2">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
                 <RowDefinition/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
+                <RowDefinition/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
-            <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" 
+            <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="0" 
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="Cooler"/>
-            <Slider Grid.Column="0" Grid.Row="1" HorizontalAlignment="Center"
-                        Orientation="Vertical" Name="TempSetSlider"
-                        IsEnabled="{Binding Value.CanControlTemperature, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                        Minimum="{Binding Value.MinimumAllowedTemperature, Mode=OneTime}"
-                        Maximum="{Binding Value.MaximumAllowedTemperature, Mode=OneTime}"
-                        Value="{Binding
-                            Path=Value.TargetTemperature,
-                            Mode=TwoWay,
-                            UpdateSourceTrigger=PropertyChanged,
-                            Converter={StaticResource ResourceKey=TypeConverter}}">
+            <TextBlock Grid.Column="0" Grid.Row="1"
+                       VerticalAlignment="Top" HorizontalAlignment="Right"
+                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                       Text="{Binding Value.MaximumAllowedTemperature, StringFormat='\{0:F0} C'}"/>
+            <TextBlock Grid.Column="0" Grid.Row="3" 
+                       VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                       Text="{Binding Value.MinimumAllowedTemperature, StringFormat='\{0:F0} C'}"/>
+            <Slider Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" 
+                    HorizontalAlignment="Center"
+                    Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
+                    Orientation="Vertical" Name="TempSetSlider"
+                    IsEnabled="{Binding Value.CanControlTemperature, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                    Minimum="{Binding Value.MinimumAllowedTemperature, Mode=OneTime}"
+                    Maximum="{Binding Value.MaximumAllowedTemperature, Mode=OneTime}"
+                    Value="{Binding
+                        Path=Value.TargetTemperature,
+                        Mode=TwoWay,
+                        UpdateSourceTrigger=PropertyChanged,
+                        Converter={StaticResource ResourceKey=TypeConverter}}"/>
 
-            </Slider>
-            <ProgressBar Grid.Column="1" Grid.Row="1" Width="10" HorizontalAlignment="Center"
+            <ProgressBar Grid.Column="2" Grid.Row="1" Grid.RowSpan="3"
+                         Width="13" HorizontalAlignment="Center"
+                         Margin="{StaticResource ResourceKey=VerticalPBMargin}"
                              Orientation="Vertical" IsIndeterminate="False"
                              Minimum="{Binding Value.MinimumAllowedTemperature, Mode=OneTime}"
                              Maximum="{Binding Value.MaximumAllowedTemperature, Mode=OneTime}"
@@ -81,22 +94,24 @@
                     </MultiBinding>
                 </ProgressBar.Foreground>
             </ProgressBar>
-            <TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" 
-                         Name="TempControlTextBox" Margin="2"
-                         HorizontalContentAlignment="Right"
-                         IsEnabled="{Binding Value.CanControlTemperature, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                         TextChanged="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"
-                         PreviewTextInput="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"
-                         Text="{Binding
-                            Path=Value.TargetTemperature,
-                            Mode=TwoWay,
-                            UpdateSourceTrigger=PropertyChanged,
-                            Converter={StaticResource ResourceKey=SingleDoubleToStringConverter},
-                            ConverterParameter='F1'}">
+         
+        </Grid>
+        <StackPanel Grid.Column="2" Grid.Row="2" Margin="2">
+            <TextBox 
+                    Name="TempControlTextBox" Margin="2"
+                    HorizontalContentAlignment="Right"
+                    IsEnabled="{Binding Value.CanControlTemperature, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextChanged="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"
+                    PreviewTextInput="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"
+                    Text="{Binding
+                        Path=Value.TargetTemperature,
+                        Mode=TwoWay,
+                        UpdateSourceTrigger=PropertyChanged,
+                        Converter={StaticResource ResourceKey=SingleDoubleToStringConverter},
+                        ConverterParameter='F1'}">
 
             </TextBox>
-            <Button Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3" 
-                        Command="{Binding Value.ControlCoolerCommand}">
+            <Button Command="{Binding Value.ControlCoolerCommand}">
                 <Button.Content>
                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock.Style>
@@ -158,9 +173,8 @@
                     </Style>
                 </Button.Style>
             </Button>
-        </Grid>
+        </StackPanel>
         <Grid Grid.Column="3" Grid.Row="1" Margin="2">
-            <Grid Margin="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition Width="auto"/>
@@ -176,7 +190,7 @@
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="Fan"/>
                 <Slider Grid.Column="0" Grid.Row="1" Grid.RowSpan="3"
-                        Orientation="Vertical" Margin="0, 7, 0, 5"
+                        Orientation="Vertical" Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
                         TickFrequency="{Binding 
                             Path=Value.LowFanModeTickStep, 
                             Converter={StaticResource ResourceKey=TypeConverter}}" 
@@ -185,7 +199,7 @@
                 <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1" 
                        HorizontalAlignment="Left" VerticalAlignment="Top"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                       Text="- Full"/>
+                       Text="- Full" Margin="0,-5, 0, 0"/>
                 <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
@@ -194,7 +208,6 @@
                        HorizontalAlignment="Left" VerticalAlignment="Bottom"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="- Off"/>
-            </Grid>
         </Grid>
     </Grid>
 </UserControl>
