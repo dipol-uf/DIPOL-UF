@@ -53,6 +53,15 @@
         <sys:String>Off</sys:String>
     </x:Array>
     
+    <!--Margins-->
+    <sys:Double x:Key="MarginValue">3.5</sys:Double>
+
+    <Thickness x:Key="DefaultMargin"
+               Left="{StaticResource MarginValue}" 
+               Top="{StaticResource MarginValue}"
+               Right="{StaticResource MarginValue}" 
+               Bottom="{StaticResource MarginValue}"/>
+
     <!--Slider margin-->
     <Thickness x:Key="VerticalSliderMargin" Left="0" Top="5" Right="0" Bottom="7"/>
 
