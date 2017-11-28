@@ -195,7 +195,8 @@
                             Path=Value.LowFanModeTickStep, 
                             Converter={StaticResource ResourceKey=TypeConverter}}" 
                         IsSnapToTickEnabled="True"
-                        Minimum="0" Maximum="2"/>
+                        Minimum="0" Maximum="2"
+                        Value="{Binding Value.FanMode, Mode=TwoWay, Converter={StaticResource ResourceKey=TypeConverter}, UpdateSourceTrigger=PropertyChanged}"/>
                 <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1" 
                        HorizontalAlignment="Left" VerticalAlignment="Top"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
