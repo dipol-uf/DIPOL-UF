@@ -105,9 +105,14 @@
     </Style>
     
     
-    <!--TabItem Style-->
+    <!--TabItem style-->
     <Style x:Key="TabItemStyle" TargetType="{x:Type TabItem}">
         <Setter Property="Header" Value="{Binding Value.Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}"/>
     </Style>
     
+    <!--ComboBox style-->
+    <Style x:Key="ComboBoxStyle" TargetType="{x:Type ComboBox}" BasedOn="{StaticResource ContentFont}">
+        <Setter Property="Height" Value="33"/>
+        <Setter Property="Margin" Value="{StaticResource ResourceKey=DefaultMargin}"/>
+    </Style>
 </ResourceDictionary>

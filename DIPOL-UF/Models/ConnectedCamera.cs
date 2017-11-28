@@ -66,6 +66,32 @@ namespace DIPOL_UF.Models
                 }
             }
         }
+        public ShutterMode InternalShutterState
+        {
+            get => camera.Shutter.Internal;
+            set
+            {
+                if (camera.Capabilities.Features.HasFlag(SDKFeatures.Shutter) &&
+                    value != camera.Shutter.Internal)
+                {
+                    camera.ShutterControl(27, 27, value, camera.Shutter.External ?? ShutterMode.PermanentlyOpen, TTLShutterSignal.High);
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        public ShutterMode? ExternalShutterState
+        {
+            get => camera.Shutter.External;
+            set
+            {
+                if (camera.Capabilities.Features.HasFlag(SDKFeatures.ShutterEx) &&
+                    value != camera.Shutter.Internal)
+                {
+                    camera.ShutterControl(27, 27, camera.Shutter.Internal, value ?? ShutterMode.PermanentlyOpen, TTLShutterSignal.High);
+                    RaisePropertyChanged();
+                }
+            }
+        }
         public CameraBase Camera
         {
             get => camera;
@@ -127,7 +153,6 @@ namespace DIPOL_UF.Models
         {
             if (parameter is CommandEventArgs<TextCompositionEventArgs> txtCompEA)
             {
-
                 txtCompEA.EventArgs.Handled = !Regex.IsMatch(txtCompEA.EventArgs.Text, @"[-.\d]");
             }
             else if (parameter is CommandEventArgs<TextChangedEventArgs> txtChEA)
