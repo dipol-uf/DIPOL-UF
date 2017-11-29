@@ -16,6 +16,7 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 
 using SDK = ATMCD64CS.AndorSDK;
@@ -26,14 +27,23 @@ namespace ANDOR_CS.Enums
     [DataContract]
     public enum TemperatureStatus : uint
     {
+        [Description("Off")]
         [EnumMember]
         Off = SDK.DRV_TEMPERATURE_OFF,
+
+        [Description("Stabilized")]
         [EnumMember]
         Stabilized = SDK.DRV_TEMPERATURE_STABILIZED,
+
+        [Description("Not Reached")]
         [EnumMember]
         NotReached = SDK.DRV_TEMPERATURE_NOT_REACHED,
+
+        [Description("Drifting")]
         [EnumMember]
         Drift = SDK.DRV_TEMPERATURE_DRIFT,
+
+        [Description("Not Stabilized")]
         [EnumMember]
         NotStabilized = SDK.DRV_TEMPERATURE_NOT_STABILIZED
     }
