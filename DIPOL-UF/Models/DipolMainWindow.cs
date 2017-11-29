@@ -549,10 +549,17 @@ namespace DIPOL_UF.Models
                         }
                 }
         }
+        /// <summary>
+        /// Hooks events of the connected camera instance.
+        /// </summary>
+        /// <param name="cam">Camera instance.</param>
         private void HookEvents(CameraBase cam)
         {
-            cam.PropertyChanged += Camera_PropertyChanged;
-
+            if (cam != null)
+            {
+                cam.PropertyChanged += Camera_PropertyChanged;
+                cam.TemperatureStatusChecked += Camera_TemperatureStatusChecked;
+            }
         }
         /// <summary>
         /// Attaches event handlers to each cam to monitor status and progress.
@@ -566,26 +573,45 @@ namespace DIPOL_UF.Models
 
             camRealTimeStats.TryAdd(key, new Dictionary<string, object>());
 
+            // Hooks events of the current camera
             HookEvents(cam);
 
             if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
-            { cam.TemperatureMonitor(Switch.Enabled, Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
-                cam.TemperatureStatusChecked += (sender, e) =>
-                {
-                    camRealTimeStats[key]["Temp"] = e.Temperature;
-                    camRealTimeStats[key]["TempStatus"] = e.Status;
-
-                };
-            }
+                cam.TemperatureMonitor(Switch.Enabled, 
+                    Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
         }
 
+        /// <summary>
+        /// Handles <see cref="CameraBase.PropertyChanged"/> event of the <see cref="CameraBase"/>.
+        /// </summary>
+        /// <param name="sender"><see cref="CameraBase"/> sender.</param>
+        /// <param name="e">Event arguments.</param>
         private void Camera_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            Helper.WriteLog($"[{GetCameraKey(sender as CameraBase)}]: {e.PropertyName}");
+            if (sender is CameraBase cam)
+            {
+                string key = GetCameraKey(cam);
+                Helper.WriteLog($"[{key}]: {e.PropertyName}");
+
+                if (e.PropertyName == nameof(CameraBase.FanMode))
+                {
+                    CameraRealTimeStats[key]["FanMode"] = cam.FanMode;
+                }
+            }
         }
+        /// <summary>
+        /// Handles <see cref="CameraBase.TemperatureStatusChecked"/> event of the <see cref="CameraBase"/>.
+        /// </summary>
+        /// <param name="sender"><see cref="CameraBase"/> sender.</param>
+        /// <param name="e">Event arguments.</param>
         private void Camera_TemperatureStatusChecked(object sender, TemperatureStatusEventArgs e)
         {
-
+            if (sender is CameraBase cam)
+            {
+                string key = GetCameraKey(cam);
+                CameraRealTimeStats[key]["Temp"] = e.Temperature;
+                CameraRealTimeStats[key]["TempStatus"] = e.Status;
+            }
         }
 
         private string GetCameraKey(CameraBase instance)
