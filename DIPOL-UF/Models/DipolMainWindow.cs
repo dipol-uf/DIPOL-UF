@@ -577,8 +577,11 @@ namespace DIPOL_UF.Models
             HookEvents(cam);
 
             if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
-                cam.TemperatureMonitor(Switch.Enabled, 
-                    Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
+            {
+                cam.TemperatureMonitor(Switch.Enabled,
+                     Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
+                Camera_PropertyChanged(cam, new System.ComponentModel.PropertyChangedEventArgs(nameof(cam.FanMode)));
+            }
         }
 
         /// <summary>
@@ -593,10 +596,12 @@ namespace DIPOL_UF.Models
                 string key = GetCameraKey(cam);
                 Helper.WriteLog($"[{key}]: {e.PropertyName}");
 
-                if (e.PropertyName == nameof(CameraBase.FanMode))
-                {
-                    CameraRealTimeStats[key]["FanMode"] = cam.FanMode;
-                }
+                //if (e.PropertyName == nameof(CameraBase.FanMode))
+                //{
+                //    int count = (int)(2 - (uint)cam.FanMode);
+                //    CameraRealTimeStats[key]["FanStr"] = 
+                //        "|" + new String('X', count) + new string('*', 2 - count) + "|";
+                //}
             }
         }
         /// <summary>
