@@ -549,6 +549,11 @@ namespace DIPOL_UF.Models
                         }
                 }
         }
+        private void HookEvents(CameraBase cam)
+        {
+            cam.PropertyChanged += Camera_PropertyChanged;
+
+        }
         /// <summary>
         /// Attaches event handlers to each cam to monitor status and progress.
         /// </summary>
@@ -561,11 +566,7 @@ namespace DIPOL_UF.Models
 
             camRealTimeStats.TryAdd(key, new Dictionary<string, object>());
 
-            if (cam.Capabilities.Features.HasFlag(SDKFeatures.FanControl)) 
-                cam.FanControl(FanMode.FullSpeed);
-
-            //cam.SetTemperature(0);
-            cam.CoolerControl(Switch.Disabled);
+            HookEvents(cam);
 
             if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
             { cam.TemperatureMonitor(Switch.Enabled, Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
@@ -576,14 +577,21 @@ namespace DIPOL_UF.Models
 
                 };
             }
-            //cam.SetTemperature(-20);
-            //cam.CoolerControl(Switch.Enabled);
         }
 
-        private void DispatcherTimerTickHandler(object sener, EventArgs e)
+        private void Camera_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            RaisePropertyChanged(nameof(CameraRealTimeStats));
+            Helper.WriteLog($"[{GetCameraKey(sender as CameraBase)}]: {e.PropertyName}");
         }
+        private void Camera_TemperatureStatusChecked(object sender, TemperatureStatusEventArgs e)
+        {
+
+        }
+
+        private string GetCameraKey(CameraBase instance)
+            => ConnectedCameras.FirstOrDefault(item => item.Value.Camera == instance).Key;
+        private void DispatcherTimerTickHandler(object sener, EventArgs e)
+            =>   RaisePropertyChanged(nameof(CameraRealTimeStats));
 
 
         private async Task DisposeCamera(string camID, bool removeSelection = true)
