@@ -252,9 +252,11 @@
                       SelectedValue="{Binding
                         Value.ExternalShutterState,
                         Mode=TwoWay,
-                        UpdateSourceTrigger=PropertyChanged}"
+                        UpdateSourceTrigger=PropertyChanged,
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
                       ItemsSource="{Binding 
-                        Source={StaticResource ResourceKey=ShutterModeEnumProvider}}"/>
+                        Source={StaticResource ResourceKey=ShutterModeEnumProvider},
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"/>
         </Grid>
     </Grid>
 </UserControl>
