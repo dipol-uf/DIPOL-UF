@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -124,6 +125,59 @@ namespace DIPOL_UF
                 s.Append(", " + enumer.Current.ToString());
 
             return s.ToString();
+        }
+
+        /// <summary>
+        /// Gets value of <see cref="DescriptionAttribute"/> for an item from a given enum.
+        /// </summary>
+        /// <param name="enumValue">Value from the enum.</param>
+        /// <param name="enumType">Enum type. If types mismatch, returns name of the field or null.</param>
+        /// <returns></returns>
+        public static string GetEnumDescription(object enumValue, Type enumType)
+        {
+            // Retrieves string representation of the enum value
+            string fieldName = Enum.GetName(enumType, enumValue);
+
+            // Which corresponds to field name of Enum-derived class
+            var descriptionAttr = enumType
+                .GetField(fieldName)
+                // It is possible that such field is not defined (type error), from this point return null
+                ?.GetCustomAttributes(typeof(DescriptionAttribute), false) 
+                .DefaultIfEmpty(null)
+                .FirstOrDefault();
+
+            // Casts result to DescriptionAttribute. 
+            // If attribute is not found or value is of wrong type, cast gives null and method returns fieldName
+            return (descriptionAttr as DescriptionAttribute)?.Description ?? (fieldName ?? "");
+            
+        }
+
+        /// <summary>
+        /// Gets value of <see cref="Enum"/> for a given value of <see cref="DescriptionAttribute"/>.
+        /// </summary>
+        /// <param name="description">Description string as defined in attribute constructor.</param>
+        /// <param name="enumType">Enum type.</param>
+        /// <returns></returns>
+        public static object GetEnumFromDescription(string description, Type enumType)
+        {
+            // Gets all declared enum values
+            Array values = Enum.GetValues(enumType);
+            
+            // If any present
+            if (values.Length > 0)
+            {
+                // Itereates through values, retrieves description for each
+                for (int i = 0; i < values.Length; i++)
+                {
+                    var local = values.GetValue(i);
+                    // If retrieved description equals to passed argument, returns this value.
+                    if (GetEnumDescription(local, enumType) == description)
+                        return local;
+                }    
+            }
+
+            // If Enum is empty or description is not found/defined, returns null
+            return null;
         }
 
     }
