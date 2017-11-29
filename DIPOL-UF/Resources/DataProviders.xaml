@@ -10,4 +10,12 @@
             <x:Type TypeName="enm:ShutterMode"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
+
+    <ObjectDataProvider x:Key="FanModeEnumProvider"
+                        MethodName="GetValues"
+                        ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type TypeName="enm:FanMode"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
 </ResourceDictionary>

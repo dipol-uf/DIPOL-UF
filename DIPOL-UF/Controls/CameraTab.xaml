@@ -32,8 +32,8 @@
         <Label Grid.Row="1" Grid.Column="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
         <Grid Grid.Column="2" Grid.Row="1" Margin="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto"/>
                 <ColumnDefinition/>
+                <ColumnDefinition Width="auto"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
@@ -46,15 +46,15 @@
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="Cooler"/>
-            <TextBlock Grid.Column="0" Grid.Row="1"
+            <TextBlock Grid.Column="1" Grid.Row="1"
                        VerticalAlignment="Top" HorizontalAlignment="Right"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="{Binding Value.MaximumAllowedTemperature, StringFormat='\{0:F0} C'}"/>
-            <TextBlock Grid.Column="0" Grid.Row="3" 
+            <TextBlock Grid.Column="1" Grid.Row="3" 
                        VerticalAlignment="Bottom" HorizontalAlignment="Right"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="{Binding Value.MinimumAllowedTemperature, StringFormat='\{0:F0} C'}"/>
-            <Slider Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" 
+            <Slider Grid.Column="0" Grid.Row="1" Grid.RowSpan="3" 
                     HorizontalAlignment="Center"
                     Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
                     Orientation="Vertical" Name="TempSetSlider"
@@ -199,17 +199,32 @@
                         Minimum="0" Maximum="2"
                         Value="{Binding Value.FanMode, Mode=TwoWay, Converter={StaticResource ResourceKey=TypeConverter}, UpdateSourceTrigger=PropertyChanged}"/>
                 <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1" 
-                       HorizontalAlignment="Left" VerticalAlignment="Top"
-                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                       Text="- Full" Margin="0,-5, 0, 0"/>
+                           HorizontalAlignment="Left" VerticalAlignment="Top"
+                           Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                           Margin="0,-5, 0, 0"
+                           Text="{Binding 
+                             Source={StaticResource ResourceKey=FanModeEnumProvider},
+                             Path='[0]',
+                             Converter={StaticResource ResourceKey=EnumToDescriptionConverter},
+                             StringFormat='- {0}'}"/>
                 <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2" 
-                       HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                       Text="- Low"/>
+                           HorizontalAlignment="Left" VerticalAlignment="Center"
+                           Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                           Margin="0, -5, 0, 0"
+                           Text="{Binding 
+                             Source={StaticResource ResourceKey=FanModeEnumProvider},
+                             Path='[1]',
+                             Converter={StaticResource ResourceKey=EnumToDescriptionConverter},
+                             StringFormat='- {0}'}"/>
                 <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="3" 
-                       HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                       Text="- Off"/>
+                           HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                           Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                           Margin="0, -5, 0, 0"
+                           Text="{Binding 
+                             Source={StaticResource ResourceKey=FanModeEnumProvider},
+                             Path='[2]',
+                             Converter={StaticResource ResourceKey=EnumToDescriptionConverter},
+                             StringFormat='- {0}'}"/>
         </Grid>
         <Grid Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="3"
               VerticalAlignment="Top">
