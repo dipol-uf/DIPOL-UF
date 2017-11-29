@@ -13,4 +13,5 @@
     <cnvrt:CameraStatsToValueMultiValueConverter x:Key="CameraStatsToValueMultiConverter"/>
     <cnvrt:SingleDoubleToStringValueConverter x:Key="SingleDoubleToStringConverter"/>
     <cnvrt:TypeValueConverter x:Key="TypeConverter"/>
+    <cnvrt:EnumToDescriptionValueConverter x:Key="EnumToDescriptionConverter"/>
 </ResourceDictionary>
