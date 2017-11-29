@@ -101,15 +101,18 @@
                                 </Label>
                                 <Label VerticalAlignment="Center" HorizontalAlignment="Right">
                                     <!--Content comes from TempStatus TemperatureStatus enum-->
-                                    <Label.Content>
+                                    <Label.DataContext>
                                         <MultiBinding
-                                            Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
+                                            Converter="{StaticResource ResourceKey=CameraStatsToValueMultiConverter}"
                                             ConverterParameter="TempStatus"
                                             UpdateSourceTrigger="PropertyChanged">
                                             <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
                                                  UpdateSourceTrigger="PropertyChanged"/>
                                             <Binding Path="Key"/>
                                         </MultiBinding>
+                                    </Label.DataContext>
+                                    <Label.Content>
+                                        <Binding Converter="{StaticResource ResourceKey=EnumToDescriptionConverter}"/>
                                     </Label.Content>
                                     <!--Color comes from the same status in accordance to static dictionary-->
                                     <Label.Foreground>
@@ -123,6 +126,19 @@
                                         </MultiBinding>
                                     </Label.Foreground>
                                 </Label>
+                                <!--<Label VerticalAlignment="Center" HorizontalAlignment="Right">
+                                    --><!--Content comes from TempStatus TemperatureStatus enum--><!--
+                                    <Label.Content>
+                                        <MultiBinding
+                                            Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
+                                            ConverterParameter="FanStr"
+                                            UpdateSourceTrigger="PropertyChanged">
+                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
+                                                 UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding Path="Key"/>
+                                        </MultiBinding>
+                                    </Label.Content>
+                                </Label>-->
                             </StackPanel>
                         </StackPanel>
                     </DataTemplate>
