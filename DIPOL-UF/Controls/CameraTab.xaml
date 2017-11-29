@@ -238,11 +238,13 @@
                       IsEnabled="{Binding Value.CanControlShutter}"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding 
-                        Source={StaticResource ResourceKey=ShutterModeEnumProvider}}"
+                        Source={StaticResource ResourceKey=ShutterModeEnumProvider},
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
                       SelectedValue="{Binding 
                         Value.InternalShutterState, 
                         Mode=TwoWay, 
-                        UpdateSourceTrigger=PropertyChanged}"/>
+                        UpdateSourceTrigger=PropertyChanged,
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"/>
             <ComboBox Grid.Column="1" Grid.Row="1"
                       FontSize="{StaticResource ResourceKey=SmallFontSize}"
                       IsEnabled="{Binding Value.CanControlInternalExternalShutter}"
