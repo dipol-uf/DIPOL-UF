@@ -16,6 +16,7 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System.Runtime.Serialization;
+using System.ComponentModel;
 
 namespace ANDOR_CS.Enums
 {
@@ -29,18 +30,21 @@ namespace ANDOR_CS.Enums
         /// <summary>
         /// Full speed
         /// </summary>
+        [Description("Full")]
         [EnumMember]
         FullSpeed = 0,
 
         /// <summary>
         /// Low speed; available only on some devices
         /// </summary>
+        [Description("Low")]
         [EnumMember]
         LowSpeed = 1,
 
         /// <summary>
         /// Disabled
         /// </summary>
+        [Description("Off")]
         [EnumMember]
         Off = 2
     }
