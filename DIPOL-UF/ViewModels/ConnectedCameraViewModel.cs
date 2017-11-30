@@ -8,6 +8,7 @@ using DIPOL_UF.Commands;
 
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
+using System.ComponentModel;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -102,6 +103,8 @@ namespace DIPOL_UF.ViewModels
           
         }
 
+        public ObservableConcurrentDictionary<string, bool> EnabledControls => model.EnabledControls;
+
         /// <summary>
         /// Command that handles text input and allows only numerics.
         /// </summary>
@@ -111,6 +114,7 @@ namespace DIPOL_UF.ViewModels
         /// </summary>
         public DelegateCommand ControlCoolerCommand => model.ControlCoolerCommand;
 
+        public DelegateCommand SetUpAcquisitionCommand => model.SetUpAcquisitionCommand;
 
         public ConnectedCameraViewModel(ConnectedCamera model) : base(model)
         {
@@ -120,5 +124,6 @@ namespace DIPOL_UF.ViewModels
                         RaisePropertyChanged(nameof(IsCoolerEnabled));
             };
         }
+
     }
 }
