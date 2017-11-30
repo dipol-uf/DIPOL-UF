@@ -184,6 +184,8 @@ namespace DIPOL_UF.ViewModels
                     = ADConverterIndex.HasValue && 
                       AmplifierIndex.HasValue))
             {
+                RaisePropertyChanged(nameof(PreAmpGainIndex));
+                RaisePropertyChanged(nameof(HSSpeedIndex));
                 RaisePropertyChanged(nameof(AvailableHSSpeeds));
             }
             if ((e.PropertyName == nameof(AmplifierIndex) ||
@@ -194,15 +196,16 @@ namespace DIPOL_UF.ViewModels
                       ADConverterIndex.HasValue &&
                       HSSpeedIndex.HasValue))
             {
+                RaisePropertyChanged(nameof(PreAmpGainIndex));
                 RaisePropertyChanged(nameof(AvailablePreAmpGains));
             }
-            if (e.PropertyName == nameof(AvailableHSSpeeds))
-            {
-                RaisePropertyChanged(nameof(HSSpeedIndex));
-                RaisePropertyChanged(nameof(PreAmpGainIndex));
-            }
-            if (e.PropertyName == nameof(AvailablePreAmpGains))
-                RaisePropertyChanged(nameof(PreAmpGainIndex));
+            //if (e.PropertyName == nameof(AvailableHSSpeeds))
+            //{
+            //    RaisePropertyChanged(nameof(HSSpeedIndex));
+            //    RaisePropertyChanged(nameof(PreAmpGainIndex));
+            //}
+            //if (e.PropertyName == nameof(AvailablePreAmpGains))
+            //    RaisePropertyChanged(nameof(PreAmpGainIndex));
         }
 
        

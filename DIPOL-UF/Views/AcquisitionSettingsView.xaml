@@ -95,16 +95,11 @@
             <!--Amplifer-->
             <ComboBox Grid.Row="4" Grid.Column="1"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
-                      ItemsSource="{Binding Camera.Properties.Amplifiers}"
+                      ItemsSource="{Binding 
+                        Camera.Properties.Amplifiers, 
+                        Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
+                        ConverterParameter=Item1}"
                       SelectedIndex="{Binding AmplifierIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <ContentPresenter 
-                            Content="{Binding 
-                                Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
-                                ConverterParameter=Item1}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[Amplifier]" Mode="OneTime"/>
@@ -119,7 +114,9 @@
                       ItemsSource="{Binding
                         Path=AvailableHSSpeeds,
                         Mode=OneWay,
-                        UpdateSourceTrigger=PropertyChanged}"
+                        UpdateSourceTrigger=PropertyChanged,
+                        Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
+                        ConverterParameter=Item2}"
                       SelectedIndex="{Binding HSSpeedIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
@@ -135,7 +132,9 @@
                       ItemsSource="{Binding
                         Path=AvailablePreAmpGains,
                         Mode=OneWay,
-                        UpdateSourceTrigger=PropertyChanged}"
+                        UpdateSourceTrigger=PropertyChanged,
+                        Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
+                        ConverterParameter=Item2}"
                       SelectedIndex="{Binding PreAmpGainIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
