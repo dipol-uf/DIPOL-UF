@@ -48,6 +48,11 @@ namespace DIPOL_UF.ViewModels
             model
             .GetAvailableHSSpeeds(ADConverterIndex ?? 0, AmplifierIndex ?? 0)
             .ToArray();
+        public (int Index, string Name)[] AvailablePreAmpGains =>
+            model
+            .GetAvailablePreAmpGain(ADConverterIndex ?? 0, 
+                AmplifierIndex ?? 0, HSSpeedIndex?? 0)
+            .ToArray();
 
         /// <summary>
         /// Index of VS Speed.
@@ -97,13 +102,32 @@ namespace DIPOL_UF.ViewModels
                 RaisePropertyChanged();
             }
         }
-        public (int Index, float Speed)? HSSpeed
+        /// <summary>
+        /// HS Speed.
+        /// </summary>
+        public int? HSSpeedIndex
         {
-            get => model.HSSpeed;
+            get => model.HSSpeed?.Index;
             set
             {
-                model.SetHSSpeed(value?.Index ?? 0);
-                RaisePropertyChanged();
+                if (value >= 0)
+                {
+                    model.SetHSSpeed(value.Value);
+                    RaisePropertyChanged();
+                }                
+            }
+        }
+
+        public int? PreAmpGainIndex
+        {
+            get => model.PreAmpGain?.Index;
+            set
+            {
+                if (value >= 0)
+                {
+                    model.SetPreAmpGain(value.Value);
+                    RaisePropertyChanged();
+                }
             }
         }
 
@@ -125,7 +149,8 @@ namespace DIPOL_UF.ViewModels
                 { nameof(model.VSAmplitude), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
                 { nameof(model.ADConverter), true },
                 { nameof(model.Amplifier), true },
-                { nameof(model.HSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) }
+                { nameof(model.HSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) },
+                { nameof(model.PreAmpGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain) }
             };
         }
 
@@ -139,7 +164,12 @@ namespace DIPOL_UF.ViewModels
                     new KeyValuePair<string, bool>(nameof(model.ADConverter), true),
                     new KeyValuePair<string, bool>(nameof(model.Amplifier), true),
                     new KeyValuePair<string, bool>(nameof(model.HSSpeed), 
-                        ADConverterIndex.HasValue && AmplifierIndex.HasValue)
+                        ADConverterIndex.HasValue 
+                        && AmplifierIndex.HasValue),
+                    new KeyValuePair<string, bool>(nameof(model.PreAmpGain),
+                        ADConverterIndex.HasValue 
+                        && AmplifierIndex.HasValue 
+                        && HSSpeedIndex.HasValue)
                 }
                 );
         }
@@ -148,13 +178,31 @@ namespace DIPOL_UF.ViewModels
         {
             base.OnPropertyChanged(sender, e);
 
-            if ((e.PropertyName == nameof(AmplifierIndex) || e.PropertyName == nameof(ADConverterIndex)) &&
-                (AllowedSettings[nameof(model.HSSpeed)] = ADConverterIndex.HasValue && AmplifierIndex.HasValue))
+            if ((e.PropertyName == nameof(AmplifierIndex) || 
+                 e.PropertyName == nameof(ADConverterIndex)) &&
+                (AllowedSettings[nameof(model.HSSpeed)] 
+                    = ADConverterIndex.HasValue && 
+                      AmplifierIndex.HasValue))
             {
                 RaisePropertyChanged(nameof(AvailableHSSpeeds));
             }
-            
-
+            if ((e.PropertyName == nameof(AmplifierIndex) ||
+                 e.PropertyName == nameof(ADConverterIndex) ||
+                 e.PropertyName == nameof(HSSpeedIndex)) &&
+                (AllowedSettings[nameof(model.PreAmpGain)]
+                    = AmplifierIndex.HasValue &&
+                      ADConverterIndex.HasValue &&
+                      HSSpeedIndex.HasValue))
+            {
+                RaisePropertyChanged(nameof(AvailablePreAmpGains));
+            }
+            if (e.PropertyName == nameof(AvailableHSSpeeds))
+            {
+                RaisePropertyChanged(nameof(HSSpeedIndex));
+                RaisePropertyChanged(nameof(PreAmpGainIndex));
+            }
+            if (e.PropertyName == nameof(AvailablePreAmpGains))
+                RaisePropertyChanged(nameof(PreAmpGainIndex));
         }
 
        
