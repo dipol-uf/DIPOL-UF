@@ -43,6 +43,24 @@ namespace DIPOL_UF.ViewModels
                 RaisePropertyChanged();
             }
         }
+        public VSAmplitude VSAmplitudeValue
+        {
+            get => model.VSAmplitude ?? VSAmplitude.Normal;
+            set
+            {
+                model.SetVSAmplitude(value);
+                RaisePropertyChanged();
+            }
+        }
+        public int ADConverterIndex
+        {
+            get => model.ADConverter?.Index ?? 0;
+            set
+            {
+                model.SetADConverter(value);
+                RaisePropertyChanged();
+            }
+        }
 
 
 
@@ -60,7 +78,8 @@ namespace DIPOL_UF.ViewModels
             supportedSettings = new Dictionary<string, bool>()
             {
                 { nameof(model.VSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed)},
-                {nameof(model.VSAmplitude), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) }
+                { nameof(model.VSAmplitude), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
+                { nameof(model.ADConverter), true }
             };
         }
 
@@ -70,7 +89,8 @@ namespace DIPOL_UF.ViewModels
                 new KeyValuePair<string, bool>[]
                 {
                     new KeyValuePair<string, bool>(nameof(model.VSSpeed), true),
-                    new KeyValuePair<string, bool>(nameof(model.VSAmplitude), true)
+                    new KeyValuePair<string, bool>(nameof(model.VSAmplitude), true),
+                    new KeyValuePair<string, bool>(nameof(model.ADConverter), true)
                 }
                 );
         }

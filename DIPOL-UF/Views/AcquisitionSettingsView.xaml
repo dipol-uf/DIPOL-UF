@@ -32,7 +32,9 @@
             <TextBlock Grid.Row="2" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="VS Amplitude" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-
+            <TextBlock Grid.Row="3" Grid.Column="0"
+                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                       Text="ADC bit depth" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <!--Right-hand side controls-->
             <ComboBox Grid.Row="1" Grid.Column="1"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
@@ -41,11 +43,39 @@
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[VSSpeed]" Mode="OneTime"/>
-                        <Binding Path="AllowedSettings[VSSpeed]" Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                        <Binding Path="AllowedSettings[VSSpeed]" 
+                                 Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
                     </MultiBinding>
                 </ComboBox.IsEnabled>
             </ComboBox>
-
+            <ComboBox Grid.Row="2" Grid.Column="1"
+                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
+                      ItemsSource="{Binding 
+                        Source={StaticResource ResourceKey=VSAmplitudeEnumProvider},
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
+                      SelectedItem="{Binding 
+                        Path=VSAmplitudeValue, 
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}">
+                <ComboBox.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="SupportedSettings[VSAmplitude]" Mode="OneTime"/>
+                        <Binding Path="AllowedSettings[VSAmplitude]" 
+                                 Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                    </MultiBinding>
+                </ComboBox.IsEnabled>
+            </ComboBox>
+            <ComboBox Grid.Row="3" Grid.Column="1"
+                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
+                      ItemsSource="{Binding Camera.Properties.ADConverters}"
+                      SelectedIndex="{Binding ADConverterIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <ComboBox.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="SupportedSettings[ADConverter]" Mode="OneTime"/>
+                        <Binding Path="AllowedSettings[ADConverter]" 
+                                 Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                    </MultiBinding>
+                </ComboBox.IsEnabled>
+            </ComboBox>
         </Grid>
     </ScrollViewer>
 </Window>
