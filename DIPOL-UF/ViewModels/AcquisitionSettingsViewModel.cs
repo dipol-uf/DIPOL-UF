@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -43,52 +44,68 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
+        public (int Index, float Speed)[] AvailableHSSpeeds =>
+            model
+            .GetAvailableHSSpeeds(ADConverterIndex ?? 0, AmplifierIndex ?? 0)
+            .ToArray();
+
         /// <summary>
         /// Index of VS Speed.
         /// </summary>
-        public int VSSpeedIndex
+        public int? VSSpeedIndex
         {
-            get => model.VSSpeed?.Index ?? 0;
+            get => model.VSSpeed?.Index;
             set
             {
-                model.SetVSSpeed(value);
+                model.SetVSSpeed(value ?? 0);
                 RaisePropertyChanged();
             }
         }
         /// <summary>
         /// VS Amplitude.
         /// </summary>
-        public VSAmplitude VSAmplitudeValue
+        public VSAmplitude? VSAmplitudeValue
         {
-            get => model.VSAmplitude ?? VSAmplitude.Normal;
+            get => model.VSAmplitude;
             set
             {
-                model.SetVSAmplitude(value);
+                model.SetVSAmplitude(value?? VSAmplitude.Normal);
                 RaisePropertyChanged();
             }
         }
         /// <summary>
         /// Analog-Digital COnverter index.
         /// </summary>
-        public int ADConverterIndex
+        public int? ADConverterIndex
         {
-            get => model.ADConverter?.Index ?? 0;
+            get => model.ADConverter?.Index;
             set
             {
-                model.SetADConverter(value);
+                model.SetADConverter(value ?? 0);
                 RaisePropertyChanged();
             }
         }
-        public int AmplifierIndex
+        /// <summary>
+        /// Output Amplifier index.
+        /// </summary>
+        public int? AmplifierIndex
         {
-            get => model.Amplifier?.Index ?? 0;
+            get => model.Amplifier?.Index;
             set
             {
-                model.SetOutputAmplifier(camera.Properties.Amplifiers[value].Amplifier);
+                model.SetOutputAmplifier(camera.Properties.Amplifiers[value ?? 0].Amplifier);
                 RaisePropertyChanged();
             }
         }
-
+        public (int Index, float Speed)? HSSpeed
+        {
+            get => model.HSSpeed;
+            set
+            {
+                model.SetHSSpeed(value?.Index ?? 0);
+                RaisePropertyChanged();
+            }
+        }
 
         public AcquisitionSettingsViewModel(SettingsBase model, CameraBase camera) 
         {
@@ -99,6 +116,7 @@ namespace DIPOL_UF.ViewModels
             InitializeAllowedSettings();
         }
 
+
         private void CheckSupportedFeatures()
         {
             supportedSettings = new Dictionary<string, bool>()
@@ -106,7 +124,8 @@ namespace DIPOL_UF.ViewModels
                 { nameof(model.VSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed)},
                 { nameof(model.VSAmplitude), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
                 { nameof(model.ADConverter), true },
-                { nameof(model.Amplifier), true }
+                { nameof(model.Amplifier), true },
+                { nameof(model.HSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) }
             };
         }
 
@@ -118,9 +137,26 @@ namespace DIPOL_UF.ViewModels
                     new KeyValuePair<string, bool>(nameof(model.VSSpeed), true),
                     new KeyValuePair<string, bool>(nameof(model.VSAmplitude), true),
                     new KeyValuePair<string, bool>(nameof(model.ADConverter), true),
-                    new KeyValuePair<string, bool>(nameof(model.Amplifier), true)
+                    new KeyValuePair<string, bool>(nameof(model.Amplifier), true),
+                    new KeyValuePair<string, bool>(nameof(model.HSSpeed), 
+                        ADConverterIndex.HasValue && AmplifierIndex.HasValue)
                 }
                 );
         }
+
+        protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(sender, e);
+
+            if ((e.PropertyName == nameof(AmplifierIndex) || e.PropertyName == nameof(ADConverterIndex)) &&
+                (AllowedSettings[nameof(model.HSSpeed)] = ADConverterIndex.HasValue && AmplifierIndex.HasValue))
+            {
+                RaisePropertyChanged(nameof(AvailableHSSpeeds));
+            }
+            
+
+        }
+
+       
     }
 }

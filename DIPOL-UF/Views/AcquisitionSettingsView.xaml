@@ -23,6 +23,10 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
 
             <!--Left-hand side labels-->
@@ -38,6 +42,9 @@
             <TextBlock Grid.Row="4" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="Amplifier" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="5" Grid.Column="0"
+                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                       Text="HS Speed" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <!--Right-hand side controls-->
             <!--VS Speed-->
             <ComboBox Grid.Row="1" Grid.Column="1"
@@ -99,6 +106,22 @@
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[Amplifier]" Mode="OneTime"/>
                         <Binding Path="AllowedSettings[Amplifier]" 
+                                 Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                    </MultiBinding>
+                </ComboBox.IsEnabled>
+            </ComboBox>
+            <!--HS Speed-->
+            <ComboBox Grid.Row="5" Grid.Column="1"
+                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
+                      ItemsSource="{Binding
+                        Path=AvailableHSSpeeds,
+                        Mode=OneWay,
+                        UpdateSourceTrigger=PropertyChanged}"
+                      SelectedItem="{Binding HSSpeed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <ComboBox.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="SupportedSettings[HSSpeed]" Mode="OneTime"/>
+                        <Binding Path="AllowedSettings[HSSpeed]" 
                                  Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
                     </MultiBinding>
                 </ComboBox.IsEnabled>
