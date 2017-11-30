@@ -22,10 +22,18 @@ namespace DIPOL_UF.Models
         private CameraBase camera = null;
         private float targetTemperature = 0.0f;
         private bool canControlTemperature = false;
-
+        private ObservableConcurrentDictionary<string, bool> enabledControls =
+            new ObservableConcurrentDictionary<string, bool>(
+                new KeyValuePair<string, bool>[]
+                {
+                    
+                }
+                );
+        
         private DelegateCommand controlCoolerCommand = null;
         private DelegateCommand verifyTextInputCommand = null;
-        
+        private DelegateCommand setUpAcquisitionCommand = null;
+
         public float TargetTemperature
         {
             get => targetTemperature;
@@ -141,7 +149,32 @@ namespace DIPOL_UF.Models
                 }
             }
         }
+        public DelegateCommand SetUpAcquisitionCommand
+        {
+            get => setUpAcquisitionCommand;
+            set
+            {
+                if (value != setUpAcquisitionCommand)
+                {
+                    setUpAcquisitionCommand = value;
+                    RaisePropertyChanged();                    
+                }
+            }
 
+        }
+
+        public ObservableConcurrentDictionary<string, bool> EnabledControls
+        {
+            get => enabledControls;
+            set
+            {
+                if (value != enabledControls)
+                {
+                    enabledControls = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
 
         public ConnectedCamera(CameraBase camera)
         {
@@ -159,6 +192,11 @@ namespace DIPOL_UF.Models
             ControlCoolerCommand = new DelegateCommand(
                 ControlCoolerCommandExecute,
                 (par) => camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature)
+                );
+
+            SetUpAcquisitionCommand = new DelegateCommand(
+                SetUpAcquisitionCommandExecute,
+                DelegateCommand.CanExecuteAlways
                 );
         }
 
@@ -189,6 +227,14 @@ namespace DIPOL_UF.Models
                 camera.CoolerControl(Switch.Disabled);
                 CanControlTemperature = true;
             }
+        }
+        private void SetUpAcquisitionCommandExecute(object parameter)
+        {
+            var settings = Camera.GetAcquisitionSettingsTemplate();
+
+            var viewModel = new ViewModels.AcquisitionSettingsViewModel(settings, Camera);
+
+            var result = new Views.AcquisitionSettingsView(viewModel).ShowDialog();
         }
     }
 }
