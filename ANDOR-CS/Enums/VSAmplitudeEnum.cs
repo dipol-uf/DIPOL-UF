@@ -15,11 +15,8 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
+using System.ComponentModel;
 
 namespace ANDOR_CS.Enums
 {
@@ -27,31 +24,42 @@ namespace ANDOR_CS.Enums
     /// Available vertical clock voltage amplitudes to set. 
     /// Not all camera support this feature, not all amplitudes may be available.
     /// </summary>
+    [DataContract]
     public enum VSAmplitude : int
     {
         /// <summary>
         /// 0, default
         /// </summary>
+        [Description("Normal")]
+        [EnumMember]
         Normal = 0,
 
         /// <summary>
         /// +1
         /// </summary>
+        [Description("+1")]
+        [EnumMember]
         Plus1 = 1,
 
         /// <summary>
         /// +2
         /// </summary>
+        [Description("+2")]
+        [EnumMember]
         Plus2 = 2,
 
         /// <summary>
         /// +3
         /// </summary>
+        [Description("+3")]
+        [EnumMember]
         Plus3 = 3,
 
         /// <summary>
         /// +4
         /// </summary>
+        [Description("+4")]
+        [EnumMember]
         Plus4 = 4
     }
 }
