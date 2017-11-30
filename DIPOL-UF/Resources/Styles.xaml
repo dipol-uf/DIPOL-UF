@@ -41,7 +41,7 @@
     
     <Style x:Key="BasicButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource ContentFont}">
         <Setter Property="Width" Value="120"/>
-        <Setter Property="Height" Value="38"/>
+        <Setter Property="Height" Value="33"/>
         <Setter Property="Padding" Value="7, 2, 7, 2"/>
         <Setter Property="Margin" Value="3"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -66,11 +66,11 @@
     </Style>
 
     <Style x:Key="ContentFont_TextBlock" TargetType="{x:Type TextBlock}">
-        <Setter Property="Margin" Value="1"/>
         <Setter Property="FontSize" Value="17"/>
         <Setter Property="FontStyle" Value="Normal"/>
         <Setter Property="FontWeight" Value="Normal"/>
-        <Setter Property="Margin" Value="1"/>
+        <Setter Property="Padding" Value="{StaticResource ResourceKey=DefaultPadding}"/>
+        <Setter Property="Margin" Value="{StaticResource ResourceKey=DefaultMargin}"/>
         <Setter Property="MinHeight" Value="15"/>
     </Style>
     
@@ -114,5 +114,7 @@
     <Style x:Key="ComboBoxStyle" TargetType="{x:Type ComboBox}" BasedOn="{StaticResource ContentFont}">
         <Setter Property="Height" Value="25"/>
         <Setter Property="Margin" Value="{StaticResource ResourceKey=DefaultMargin}"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="{StaticResource ResourceKey=SmallFontSize}"/>
     </Style>
 </ResourceDictionary>
