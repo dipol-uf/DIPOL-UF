@@ -97,6 +97,7 @@
     <Compile Include="Controls\CameraTab.xaml.cs">
       <DependentUpon>CameraTab.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\BoolToBoolMultiValueConverter.cs" />
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToDictionaryValueMultiValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToStringValueConverter.cs" />
@@ -120,6 +121,7 @@
     <Compile Include="ObservableConcurrentDictionary.cs" />
     <Compile Include="ObservableObject.cs" />
     <Compile Include="SettingsManager.cs" />
+    <Compile Include="ViewModels\AcquisitionSettingsViewModel.cs" />
     <Compile Include="ViewModels\AvailableCamerasViewModel.cs" />
     <Compile Include="ViewModels\CameraPropertiesViewModel.cs" />
     <Compile Include="ViewModels\ConnectedCameraTreeItemViewModel.cs" />
@@ -129,6 +131,9 @@
     <Compile Include="ViewModels\ConnectedCamerasTreeViewModel.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />
+    <Compile Include="Views\AcquisitionSettingsView.xaml.cs">
+      <DependentUpon>AcquisitionSettingsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\AvailableCamerasView.xaml.cs">
       <DependentUpon>AvailableCamerasView.xaml</DependentUpon>
     </Compile>
@@ -159,6 +164,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Resources\StaticConverters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\AcquisitionSettingsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
