@@ -68,6 +68,16 @@
     <!--PB margin-->
     <Thickness x:Key="VerticalPBMargin" Left="0" Top="8" Right="0" Bottom="9"/>
     
+    <!--Paddings-->
+
+    <sys:Double x:Key="PaddingValue">2</sys:Double>
+    
+    <Thickness x:Key="DefaultPadding"
+               Left="{StaticResource PaddingValue}" 
+               Top="{StaticResource PaddingValue}"
+               Right="{StaticResource PaddingValue}" 
+               Bottom="{StaticResource PaddingValue}"/>
+    
     <!--Fonts-->
     <sys:Double x:Key="SmallFontSize">12</sys:Double>
 </ResourceDictionary>
