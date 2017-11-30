@@ -148,8 +148,8 @@
                     <Style 
                         BasedOn="{StaticResource ResourceKey=BasicButtonStyle}"
                         TargetType="{x:Type Button}">
-                        <Setter Property="Width" Value="auto"/>
-                        <Setter Property="Height" Value="auto"/>
+                        <!--<Setter Property="Width" Value="auto"/>
+                        <Setter Property="Height" Value="auto"/>-->
                         <Style.Triggers>
                             <DataTrigger 
                                             Binding="{Binding
