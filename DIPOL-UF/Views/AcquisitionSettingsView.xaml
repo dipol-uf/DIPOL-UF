@@ -45,6 +45,9 @@
             <TextBlock Grid.Row="5" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="HS Speed" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="6" Grid.Column="0"
+                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                       Text="Pre Amp Gain" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <!--Right-hand side controls-->
             <!--VS Speed-->
             <ComboBox Grid.Row="1" Grid.Column="1"
@@ -117,11 +120,27 @@
                         Path=AvailableHSSpeeds,
                         Mode=OneWay,
                         UpdateSourceTrigger=PropertyChanged}"
-                      SelectedItem="{Binding HSSpeed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding HSSpeedIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[HSSpeed]" Mode="OneTime"/>
                         <Binding Path="AllowedSettings[HSSpeed]" 
+                                 Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                    </MultiBinding>
+                </ComboBox.IsEnabled>
+            </ComboBox>
+            <!--Pre Amp Gain-->
+            <ComboBox Grid.Row="6" Grid.Column="1"
+                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
+                      ItemsSource="{Binding
+                        Path=AvailablePreAmpGains,
+                        Mode=OneWay,
+                        UpdateSourceTrigger=PropertyChanged}"
+                      SelectedIndex="{Binding PreAmpGainIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <ComboBox.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="SupportedSettings[PreAmpGain]" Mode="OneTime"/>
+                        <Binding Path="AllowedSettings[PreAmpGain]" 
                                  Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
                     </MultiBinding>
                 </ComboBox.IsEnabled>
