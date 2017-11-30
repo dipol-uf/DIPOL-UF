@@ -223,6 +223,8 @@ namespace ANDOR_CS.Classes
                     $"(should be in [{0}, {camera.Properties.ADConverters.Length - 1}]).");
 
             ADConverter = (Index: converterIndex, BitDepth: camera.Properties.ADConverters[converterIndex]);
+            HSSpeed = null;
+            PreAmpGain = null;
         }
 
         /// <summary>
@@ -251,6 +253,8 @@ namespace ANDOR_CS.Classes
             var element = query.First();
 
             Amplifier = (Name: element.Name, Amplifier: element.Amplifier, Index: camera.Properties.Amplifiers.IndexOf(element));
+            HSSpeed = null;
+            PreAmpGain = null;
         }
 
         /// <summary>
@@ -310,7 +314,10 @@ namespace ANDOR_CS.Classes
             // Checks if camera supports horizontal readout speed control
             if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed)
                 && IsHSSpeedSupported(speedIndex, out float speed))
+            {
                 HSSpeed = (Index: speedIndex, Speed: speed);
+                PreAmpGain = null;
+            }
             //{
             //    // Checks if both AD converter and Amplifier are already set
             //    if (ADConverter == null || Amplifier == null)
