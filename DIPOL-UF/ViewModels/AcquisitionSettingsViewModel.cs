@@ -19,8 +19,17 @@ namespace DIPOL_UF.ViewModels
         private Dictionary<string, bool> supportedSettings = null;
         private ObservableConcurrentDictionary<string, bool> allowedSettings = null;
 
+        /// <summary>
+        /// Reference to Camera instance.
+        /// </summary>
         public CameraBase Camera => camera;
+        /// <summary>
+        /// Collection of supported by a given Camera settings.
+        /// </summary>
         public Dictionary<string, bool> SupportedSettings => supportedSettings;
+        /// <summary>
+        /// Collection of settings that can be set now.
+        /// </summary>
         public ObservableConcurrentDictionary<string, bool> AllowedSettings
         {
             get => allowedSettings;
@@ -34,6 +43,9 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
+        /// <summary>
+        /// Index of VS Speed.
+        /// </summary>
         public int VSSpeedIndex
         {
             get => model.VSSpeed?.Index ?? 0;
@@ -43,6 +55,9 @@ namespace DIPOL_UF.ViewModels
                 RaisePropertyChanged();
             }
         }
+        /// <summary>
+        /// VS Amplitude.
+        /// </summary>
         public VSAmplitude VSAmplitudeValue
         {
             get => model.VSAmplitude ?? VSAmplitude.Normal;
@@ -52,6 +67,9 @@ namespace DIPOL_UF.ViewModels
                 RaisePropertyChanged();
             }
         }
+        /// <summary>
+        /// Analog-Digital COnverter index.
+        /// </summary>
         public int ADConverterIndex
         {
             get => model.ADConverter?.Index ?? 0;
@@ -61,7 +79,15 @@ namespace DIPOL_UF.ViewModels
                 RaisePropertyChanged();
             }
         }
-
+        public int AmplifierIndex
+        {
+            get => model.Amplifier?.Index ?? 0;
+            set
+            {
+                model.SetOutputAmplifier(camera.Properties.Amplifiers[value].Amplifier);
+                RaisePropertyChanged();
+            }
+        }
 
 
         public AcquisitionSettingsViewModel(SettingsBase model, CameraBase camera) 
@@ -79,7 +105,8 @@ namespace DIPOL_UF.ViewModels
             {
                 { nameof(model.VSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed)},
                 { nameof(model.VSAmplitude), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
-                { nameof(model.ADConverter), true }
+                { nameof(model.ADConverter), true },
+                { nameof(model.Amplifier), true }
             };
         }
 
@@ -90,7 +117,8 @@ namespace DIPOL_UF.ViewModels
                 {
                     new KeyValuePair<string, bool>(nameof(model.VSSpeed), true),
                     new KeyValuePair<string, bool>(nameof(model.VSAmplitude), true),
-                    new KeyValuePair<string, bool>(nameof(model.ADConverter), true)
+                    new KeyValuePair<string, bool>(nameof(model.ADConverter), true),
+                    new KeyValuePair<string, bool>(nameof(model.Amplifier), true)
                 }
                 );
         }

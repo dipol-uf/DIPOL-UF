@@ -35,7 +35,11 @@
             <TextBlock Grid.Row="3" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="ADC bit depth" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="4" Grid.Column="0"
+                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                       Text="Amplifier" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <!--Right-hand side controls-->
+            <!--VS Speed-->
             <ComboBox Grid.Row="1" Grid.Column="1"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding Camera.Properties.VSSpeeds}"
@@ -48,6 +52,7 @@
                     </MultiBinding>
                 </ComboBox.IsEnabled>
             </ComboBox>
+            <!--VS Amplitude-->
             <ComboBox Grid.Row="2" Grid.Column="1"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding 
@@ -64,6 +69,7 @@
                     </MultiBinding>
                 </ComboBox.IsEnabled>
             </ComboBox>
+            <!--AD Converter-->
             <ComboBox Grid.Row="3" Grid.Column="1"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding Camera.Properties.ADConverters}"
@@ -72,6 +78,27 @@
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[ADConverter]" Mode="OneTime"/>
                         <Binding Path="AllowedSettings[ADConverter]" 
+                                 Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                    </MultiBinding>
+                </ComboBox.IsEnabled>
+            </ComboBox>
+            <!--Amplifer-->
+            <ComboBox Grid.Row="4" Grid.Column="1"
+                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
+                      ItemsSource="{Binding Camera.Properties.Amplifiers}"
+                      SelectedIndex="{Binding AmplifierIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <ContentPresenter 
+                            Content="{Binding 
+                                Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
+                                ConverterParameter=Item1}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+                <ComboBox.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="SupportedSettings[Amplifier]" Mode="OneTime"/>
+                        <Binding Path="AllowedSettings[Amplifier]" 
                                  Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
                     </MultiBinding>
                 </ComboBox.IsEnabled>
