@@ -24,5 +24,6 @@ namespace DIPOL_UF.Controls
         {
             InitializeComponent();
         }
+
     }
 }
