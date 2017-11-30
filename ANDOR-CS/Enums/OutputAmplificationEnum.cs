@@ -16,6 +16,7 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System.Runtime.Serialization;
+using System.ComponentModel;
 
 namespace ANDOR_CS.Enums
 {
@@ -28,18 +29,21 @@ namespace ANDOR_CS.Enums
         /// <summary>
         /// Electron multiplication. Not available for Clara 
         /// </summary>
+        [Description("Electron Multiplying")]
         [EnumMember]
         ElectronMultiplication = 0,
 
         /// <summary>
         /// Standard conventional 
         /// </summary>
+        [Description("Conventional")]
         [EnumMember]
         Conventional = 1,
 
         /// <summary>
         /// Only supported by Clara
         /// </summary>
+        [Description("Extended NIR")]
         [EnumMember] 
         ExtendedNIR = 2
     }
