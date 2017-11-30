@@ -18,4 +18,12 @@
             <x:Type TypeName="enm:FanMode"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
+
+    <ObjectDataProvider x:Key="VSAmplitudeEnumProvider"
+                        MethodName="GetValues"
+                        ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type TypeName="enm:VSAmplitude"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
 </ResourceDictionary>
