@@ -16,6 +16,7 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 
 using SDK = ATMCD64CS.AndorSDK;
@@ -33,6 +34,7 @@ namespace ANDOR_CS.Enums
         /// <summary>
         /// Single Scan
         /// </summary>
+        [Description("Single scan")]
         [EnumMember]
         SingleScan = SDK.AC_ACQMODE_SINGLE,
 
@@ -40,42 +42,49 @@ namespace ANDOR_CS.Enums
         /// Run till abort or Video
         /// </summary>
         [EnumMember]
+        [Description("Video mode")]
         RunTillAbort = SDK.AC_ACQMODE_VIDEO,
 
         /// <summary>
         /// Accumulation
         /// </summary>
         [EnumMember]
+        [Description("Accumulate")]
         Accumulation = SDK.AC_ACQMODE_ACCUMULATE,
 
         /// <summary>
         /// Kinetic series
         /// </summary>
         [EnumMember]
+        [Description("Kinetic cycle")]
         Kinetic = SDK.AC_ACQMODE_KINETIC,
 
         /// <summary>
         /// Frame transfer
         /// </summary>
         [EnumMember]
+        [Description("Frame transfer")]
         FrameTransfer = SDK.AC_ACQMODE_FRAMETRANSFER,
 
         /// <summary>
         /// Fast kinetics
         /// </summary>
         [EnumMember]
+        [Description("Fast kinetic cycle")]
         FastKinetics = SDK.AC_ACQMODE_FASTKINETICS,
 
         /// <summary>
         /// Overlap
         /// </summary>
         [EnumMember]
+        [Description("Overlap")]
         Overlap = SDK.AC_ACQMODE_OVERLAP,
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [EnumMember]
+        [Description("Unknown")]
         UnspecifiedMode = 1 << 7
     }
 }
