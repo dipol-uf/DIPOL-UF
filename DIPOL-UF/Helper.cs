@@ -38,7 +38,7 @@ namespace DIPOL_UF
         {
             var parent = VisualTreeHelper.GetParent(element);
 
-            while(parent != null && !(parent is T))
+            while (parent != null && !(parent is T))
                 parent = VisualTreeHelper.GetParent(parent);
 
             return parent is T ? parent : null;
@@ -56,7 +56,7 @@ namespace DIPOL_UF
 
         public static bool IsDialogWindow(Window window)
         {
-            var showingAsDialogField = window.GetType().GetField("_showingAsDialog", 
+            var showingAsDialogField = window.GetType().GetField("_showingAsDialog",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
 
             return (bool)(showingAsDialogField?.GetValue(window) ?? false);
@@ -142,14 +142,14 @@ namespace DIPOL_UF
             var descriptionAttr = enumType
                 .GetField(fieldName)
                 // It is possible that such field is not defined (type error), from this point return null
-                ?.GetCustomAttributes(typeof(DescriptionAttribute), false) 
+                ?.GetCustomAttributes(typeof(DescriptionAttribute), false)
                 .DefaultIfEmpty(null)
                 .FirstOrDefault();
 
             // Casts result to DescriptionAttribute. 
             // If attribute is not found or value is of wrong type, cast gives null and method returns fieldName
             return (descriptionAttr as DescriptionAttribute)?.Description ?? (fieldName ?? "");
-            
+
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace DIPOL_UF
         {
             // Gets all declared enum values
             Array values = Enum.GetValues(enumType);
-            
+
             // If any present
             if (values.Length > 0)
             {
@@ -173,12 +173,33 @@ namespace DIPOL_UF
                     // If retrieved description equals to passed argument, returns this value.
                     if (GetEnumDescription(local, enumType) == description)
                         return local;
-                }    
+                }
             }
 
             // If Enum is empty or description is not found/defined, returns null
             return null;
         }
 
+        /// <summary>
+        /// Converts <see cref="Enum"/> flags to an array of <see cref="Enum"/> values.
+        /// Useful for combobox-like representations.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Enum"/> type. If not, throws <see cref="ArgumentException"/></typeparam>
+        /// <param name="enm">Flags to convert to array.</param>
+        /// <exception cref="ArgumentException"/>
+        /// <returns>An array of flags found in input parameter, one flag per each aray item.</returns>
+        public static T[] EnumFlagsToArray<T>(T enm) 
+        {
+            if (typeof(T).BaseType != typeof(Enum))
+                throw new ArgumentException($"Provided type {typeof(T)} should be {typeof(Enum)}-based ");
+
+            var castEnm = enm as Enum;
+
+            return Enum
+                .GetValues(typeof(T))
+                .OfType<T>()
+                .Where(item => castEnm.HasFlag(item as Enum))
+                .ToArray();
+        }
     }
 }
