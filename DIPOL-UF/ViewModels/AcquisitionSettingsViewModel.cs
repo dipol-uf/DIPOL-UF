@@ -43,6 +43,14 @@ namespace DIPOL_UF.ViewModels
                 }
             }
         }
+        /// <summary>
+        /// Supported acquisition modes.
+        /// </summary>
+        public AcquisitionMode[] AllowedAcquisitionModes =>
+           Helper.EnumFlagsToArray(Camera.Capabilities.AcquisitionModes)
+            .Where(item => item != AcquisitionMode.FrameTransfer)
+            .Where(item => ANDOR_CS.Classes.EnumConverter.IsAcquisitionModeSupported(item))            
+            .ToArray();
 
         public (int Index, float Speed)[] AvailableHSSpeeds =>
             model
@@ -117,7 +125,9 @@ namespace DIPOL_UF.ViewModels
                 }                
             }
         }
-
+        /// <summary>
+        /// Index of Pre Amplifier Gain.
+        /// </summary>
         public int? PreAmpGainIndex
         {
             get => model.PreAmpGain?.Index;
@@ -131,6 +141,16 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
+        public AcquisitionMode? AcquisitionModeValue
+        {
+            get => model.AcquisitionMode;
+            set
+            {
+                model.SetAcquisitionMode(value ?? AcquisitionMode.SingleScan);
+                RaisePropertyChanged();
+            }
+        }
+
         public AcquisitionSettingsViewModel(SettingsBase model, CameraBase camera) 
         {
             this.model = model;
@@ -138,6 +158,7 @@ namespace DIPOL_UF.ViewModels
 
             CheckSupportedFeatures();
             InitializeAllowedSettings();
+
         }
 
 
@@ -150,7 +171,8 @@ namespace DIPOL_UF.ViewModels
                 { nameof(model.ADConverter), true },
                 { nameof(model.Amplifier), true },
                 { nameof(model.HSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) },
-                { nameof(model.PreAmpGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain) }
+                { nameof(model.PreAmpGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain) },
+                { nameof(model.AcquisitionMode), true }
             };
         }
 
@@ -169,7 +191,8 @@ namespace DIPOL_UF.ViewModels
                     new KeyValuePair<string, bool>(nameof(model.PreAmpGain),
                         ADConverterIndex.HasValue 
                         && AmplifierIndex.HasValue 
-                        && HSSpeedIndex.HasValue)
+                        && HSSpeedIndex.HasValue),
+                    new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true)
                 }
                 );
         }
