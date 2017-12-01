@@ -30,15 +30,24 @@ namespace DIPOL_UF.Converters
             }
             else if (value is Enum enumVal)
                 return Helper.GetEnumDescription(enumVal, enumVal.GetType());
+           
             return null;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (targetType.BaseType == typeof(Enum) && value is string desc)
-                return Helper.GetEnumFromDescription(desc, targetType);
-            else
-                return null;
+            if (value is string desc)
+            {
+                Type type; ;
+
+                if (targetType.BaseType == typeof(Enum))
+                    return Helper.GetEnumFromDescription(desc, targetType);
+                else if ((type = Nullable.GetUnderlyingType(targetType)) != null &&
+                    type.BaseType == typeof(Enum))
+                    return Helper.GetEnumFromDescription(desc, type);
+
+            }
+            return null;
         }
     }
 }
