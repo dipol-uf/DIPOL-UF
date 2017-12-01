@@ -25,9 +25,12 @@ using ANDOR_CS.Enums;
 
 namespace ANDOR_CS.Classes
 {
-    internal static class EnumConverter
+    public static class EnumConverter
     {
-   
+
+        public static bool IsAcquisitionModeSupported(AcquisitionMode mode)
+            => AcquisitionModeTable.ContainsKey(mode);
+
         internal static readonly Dictionary<AcquisitionMode, int> AcquisitionModeTable = new Dictionary<AcquisitionMode, int>
         {
             { AcquisitionMode.SingleScan, 1},
