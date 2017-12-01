@@ -1078,6 +1078,8 @@ namespace ANDOR_CS.Classes
         /// Throws exceptions if SDK communication fails.
         /// </summary>
         /// <param name="speedIndex">Speed index to test.</param>
+        /// <param name="ADConverter">AD Converter index.</param>
+        /// <param name="amplifier">Amplifier index.</param>
         /// <param name="speed">If call is successfull, assigns float value of HS speed,
         /// otherwies, is initialized to 0.0f.</param>
         /// <exception cref="AndorSDKException"/>
