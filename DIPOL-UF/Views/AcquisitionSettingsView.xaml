@@ -48,6 +48,9 @@
             <TextBlock Grid.Row="6" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="Pre Amp Gain" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="7" Grid.Column="0"
+                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                       Text="Acquisition mode" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <!--Right-hand side controls-->
             <!--VS Speed-->
             <ComboBox Grid.Row="1" Grid.Column="1"
@@ -140,6 +143,26 @@
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[PreAmpGain]" Mode="OneTime"/>
                         <Binding Path="AllowedSettings[PreAmpGain]" 
+                                 Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                    </MultiBinding>
+                </ComboBox.IsEnabled>
+            </ComboBox>
+            <!--Acquisition Mode-->
+            <ComboBox Grid.Row="7" Grid.Column="1"
+                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
+                      ItemsSource="{Binding
+                        Path=AllowedAcquisitionModes,
+                        Mode=OneWay,
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
+                      SelectedItem="{Binding
+                        Path=AcquisitionModeValue,
+                        Mode=TwoWay,
+                        UpdateSourceTrigger=PropertyChanged,
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}">
+                <ComboBox.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="SupportedSettings[AcquisitionMode]" Mode="OneTime"/>
+                        <Binding Path="AllowedSettings[AcquisitionMode]" 
                                  Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
                     </MultiBinding>
                 </ComboBox.IsEnabled>
