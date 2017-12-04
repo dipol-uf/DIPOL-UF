@@ -94,7 +94,7 @@ namespace DIPOL_UF.ViewModels
             {
                 if(IsValid(value))
                 {
-                    model.TargetTemperatureText = value;
+                    model.TargetTemperatureText = string.IsNullOrWhiteSpace(value) ? "0": value;
                 }
             }
         }
@@ -167,10 +167,14 @@ namespace DIPOL_UF.ViewModels
         {
             if (value is string s)
             {
+                if (string.IsNullOrWhiteSpace(s))
+                    return true;
                 if (Regex.IsMatch(s, @"^[-+0-9\.]+?$"))
                 {
                     RemoveError(
-                        errorMessages["NotANumber"],
+                        new ValidationErrorInstance(
+                            "NotANumber", 
+                            ""),
                         nameof(TargetTemperatureText));
                     if (float.TryParse(s,
                         System.Globalization.NumberStyles.Any,
@@ -178,17 +182,20 @@ namespace DIPOL_UF.ViewModels
                         out float floatVal) &&
                         (floatVal >= MinimumAllowedTemperature && floatVal <= MaximumAllowedTemperature))
                     {
-                        RemoveError(String.Format(errorMessages["OutOfRange"],
-                                MinimumAllowedTemperature,
-                                MaximumAllowedTemperature),
+                        RemoveError(
+                            new ValidationErrorInstance(
+                                "OutOfRange",                           
+                                ""),
                             nameof(TargetTemperatureText));
                         return true;
                     }
                     else
                     {
-                        AddError(String.Format(errorMessages["OutOfRange"],
+                        AddError(new ValidationErrorInstance(
+                                "OutOfRange",
+                                String.Format(errorMessages["OutOfRange"],
                                     MinimumAllowedTemperature,
-                                    MaximumAllowedTemperature),
+                                    MaximumAllowedTemperature)),
                                 ErrorPriority.High,
                                 nameof(TargetTemperatureText));
                         return false;
@@ -196,7 +203,10 @@ namespace DIPOL_UF.ViewModels
                 }
                 else
                 {
-                    AddError(errorMessages["NotANumber"],
+                    AddError(
+                        new ValidationErrorInstance(
+                            "NotANumber",
+                            errorMessages["NotANumber"]),
                         ErrorPriority.High,
                         nameof(TargetTemperatureText));
                     return false;
