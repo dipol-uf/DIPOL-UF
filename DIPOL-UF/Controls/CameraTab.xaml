@@ -120,6 +120,18 @@
                              >
                     </Binding>
                 </TextBox.Text>
+                <TextBox.Style>
+                    <Style TargetType="TextBox">
+                        <Style.Triggers>
+                            <Trigger Property="Validation.HasError" Value="true">
+                                <Setter Property="ToolTip" 
+                                        Value="{Binding 
+                                            Value.LatestErrors[TargetTemperatureText],
+                                            UpdateSourceTrigger=PropertyChanged}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
             </TextBox>
             <Button Command="{Binding Value.ControlCoolerCommand}">
                 <Button.Content>
