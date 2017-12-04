@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace DIPOL_UF.ViewModels
 {
-    abstract class ViewModel<T> : ObservableObject, INotifyDataErrorInfo where T : class, INotifyPropertyChanged
+    abstract class ViewModel<T> : ObservableObject, INotifyDataErrorInfo where T : class
     {
         protected enum ErrorPriority : byte
         {
@@ -18,21 +18,21 @@ namespace DIPOL_UF.ViewModels
             High = 1
         }
 
-        protected Dictionary<string, List<string>> errorCollection
-            = new Dictionary<string, List<string>>();
+        protected Dictionary<string, List<ValidationErrorInstance>> errorCollection
+            = new Dictionary<string, List<ValidationErrorInstance>>();
         protected static string[] declaredProperties = null;
         protected T model;
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
         public T Model => model;
-        public bool HasErrors => errorCollection.Count > 0;
+        public bool HasErrors => errorCollection.Any(item => item.Value.Any());
         public IEnumerable GetErrors(string propertyName)
            => errorCollection.ContainsKey(propertyName)
            ? errorCollection[propertyName]
            : null;
         public Dictionary<string, string> LatestErrors => errorCollection
-            .Select(item => new KeyValuePair<string, string>(item.Key, item.Value.First()))
+            .Select(item => new KeyValuePair<string, string>(item.Key, item.Value.First().Message))
             .ToDictionary(item => item.Key, item => item.Value);
 
         protected ViewModel(T model)
@@ -42,7 +42,8 @@ namespace DIPOL_UF.ViewModels
             if(declaredProperties == null)
                 declaredProperties = ListProperties();
 
-            model.PropertyChanged += OnModelPropertyChanged;
+            if(model is INotifyPropertyChanged notifiable)
+                notifiable.PropertyChanged += OnModelPropertyChanged;
             ErrorsChanged += (sender, e) => RaisePropertyChanged(nameof(LatestErrors));
         }
 
@@ -67,14 +68,14 @@ namespace DIPOL_UF.ViewModels
            => OnErrorChanged(this, new DataErrorsChangedEventArgs(propertyName));
 
         protected virtual void AddError(
-            string error = "",
+            ValidationErrorInstance error,
             ErrorPriority priority = ErrorPriority.Low,
             [System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
         {
             if (!string.IsNullOrWhiteSpace(propertyName))
             {
                 if (!errorCollection.ContainsKey(propertyName))
-                    errorCollection[propertyName] = new List<string>();
+                    errorCollection[propertyName] = new List<ValidationErrorInstance>();
 
                 if (!errorCollection[propertyName].Contains(error))
                 {
@@ -88,7 +89,7 @@ namespace DIPOL_UF.ViewModels
         }
 
         protected virtual void RemoveError(
-            string error = "",
+            ValidationErrorInstance error,
             [System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
         {
             if (errorCollection.ContainsKey(propertyName) &&
