@@ -449,7 +449,7 @@ namespace ANDOR_CS.Classes
 
 
             // If there are no matches in the pre-defined table, then this mode cannot be set explicitly
-            if (!EnumConverter.AcquisitionModeTable.ContainsKey(mode))
+            if (!EnumConverter.AcquisitionModeTable.ContainsKey(mode.HasFlag(Enums.AcquisitionMode.FrameTransfer)? mode^Enums.AcquisitionMode.FrameTransfer : mode))
                 throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({Extensions.GetEnumNames(typeof(AcquisitionMode), mode).FirstOrDefault()})");
 
             AcquisitionMode = mode;
