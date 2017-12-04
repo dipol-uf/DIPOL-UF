@@ -614,8 +614,11 @@ namespace DIPOL_UF.Models
             if (sender is CameraBase cam)
             {
                 string key = GetCameraKey(cam);
-                CameraRealTimeStats[key]["Temp"] = e.Temperature;
-                CameraRealTimeStats[key]["TempStatus"] = e.Status;
+                if (CameraRealTimeStats.ContainsKey(key))
+                {
+                    CameraRealTimeStats[key]["Temp"] = e.Temperature;
+                    CameraRealTimeStats[key]["TempStatus"] = e.Status;
+                }
             }
         }
 
@@ -631,7 +634,7 @@ namespace DIPOL_UF.Models
             connectedCams.TryRemove(camID, out ConnectedCameraViewModel camInstance);
             if (removeSelection)
                 camPanelSelectedItems.TryRemove(camID, out _);
-
+            CameraRealTimeStats.TryRemove(camID, out _);
 
             await Task.Run(() =>
                 {
