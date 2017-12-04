@@ -32,10 +32,10 @@
             <!--Left-hand side labels-->
             <TextBlock Grid.Row="1" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                       Text="VS Speed" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                       Text="VS speed" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <TextBlock Grid.Row="2" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                       Text="VS Amplitude" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                       Text="VS amplitude" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <TextBlock Grid.Row="3" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="ADC bit depth" HorizontalAlignment="Left" VerticalAlignment="Center"/>
@@ -44,19 +44,23 @@
                        Text="Amplifier" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <TextBlock Grid.Row="5" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                       Text="HS Speed" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                       Text="HS speed" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <TextBlock Grid.Row="6" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                       Text="Pre Amp Gain" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                       Text="Preamp gain" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <TextBlock Grid.Row="7" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="Acquisition mode" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="8" Grid.Column="0"
+                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                       Text="Frame transfer" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <!--Right-hand side controls-->
             <!--VS Speed-->
             <ComboBox Grid.Row="1" Grid.Column="1"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding Camera.Properties.VSSpeeds}"
-                      SelectedIndex="{Binding VSSpeedIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding VSSpeedIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                      ToolTip="{Binding LatestErrors[VSSpeedIndex], UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[VSSpeed]" Mode="OneTime"/>
@@ -73,7 +77,9 @@
                         Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
                       SelectedItem="{Binding 
                         Path=VSAmplitudeValue, 
-                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}">
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}, 
+                        ValidatesOnNotifyDataErrors=True}"
+                      ToolTip="{Binding LatestErrors[VSAmplitudeValue], UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[VSAmplitude]" Mode="OneTime"/>
@@ -86,7 +92,8 @@
             <ComboBox Grid.Row="3" Grid.Column="1"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding Camera.Properties.ADConverters}"
-                      SelectedIndex="{Binding ADConverterIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding ADConverterIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                      ToolTip="{Binding LatestErrors[ADConverterIndex], UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[ADConverter]" Mode="OneTime"/>
@@ -102,7 +109,8 @@
                         Camera.Properties.Amplifiers, 
                         Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
                         ConverterParameter=Item1}"
-                      SelectedIndex="{Binding AmplifierIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding AmplifierIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                      ToolTip="{Binding LatestErrors[AmplifierIndex], UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[Amplifier]" Mode="OneTime"/>
@@ -120,7 +128,8 @@
                         UpdateSourceTrigger=PropertyChanged,
                         Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
                         ConverterParameter=Item2}"
-                      SelectedIndex="{Binding HSSpeedIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding HSSpeedIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                      ToolTip="{Binding LatestErrors[HSSpeedIndex], UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[HSSpeed]" Mode="OneTime"/>
@@ -138,7 +147,8 @@
                         UpdateSourceTrigger=PropertyChanged,
                         Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
                         ConverterParameter=Item2}"
-                      SelectedIndex="{Binding PreAmpGainIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding PreAmpGainIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                      ToolTip="{Binding LatestErrors[PreAmpGain], UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[PreAmpGain]" Mode="OneTime"/>
@@ -158,7 +168,9 @@
                         Path=AcquisitionModeValue,
                         Mode=TwoWay,
                         UpdateSourceTrigger=PropertyChanged,
-                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}">
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}, 
+                        ValidatesOnNotifyDataErrors=True}"
+                      ToolTip="{Binding LatestErrors[AcquisitionModeValue], UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[AcquisitionMode]" Mode="OneTime"/>
@@ -167,6 +179,19 @@
                     </MultiBinding>
                 </ComboBox.IsEnabled>
             </ComboBox>
+            <!--Frame transfer-->
+            <CheckBox Grid.Row="8" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center"
+                      Margin="{StaticResource ResourceKey=DefaultMargin}" IsThreeState="False"
+                      IsChecked="{Binding FrameTransferValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                      ToolTip="{Binding LatestErrors[FrameTransferValue], UpdateSourceTrigger=PropertyChanged }">
+                <CheckBox.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="SupportedSettings[FrameTransferValue]" Mode="OneTime"/>
+                        <Binding Path="AllowedSettings[FrameTransferValue]" 
+                                 Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                    </MultiBinding>
+                </CheckBox.IsEnabled>
+            </CheckBox>
         </Grid>
     </ScrollViewer>
 </Window>
