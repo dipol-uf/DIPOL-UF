@@ -105,15 +105,21 @@
                     Name="TempControlTextBox" Margin="2"
                     HorizontalContentAlignment="Right"
                     IsEnabled="{Binding Value.CanControlTemperature, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                    TextChanged="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"
-                    PreviewTextInput="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"
-                    Text="{Binding
+                    >
+                <!--TextChanged="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"-->
+                    <!--PreviewTextInput="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"-->
+                <!--Text="{Binding
                         Path=Value.TargetTemperature,
                         Mode=TwoWay,
                         UpdateSourceTrigger=PropertyChanged,
                         Converter={StaticResource ResourceKey=SingleDoubleToStringConverter},
-                        ConverterParameter='F1'}">
-
+                        ConverterParameter='F1'}">-->
+                <TextBox.Text>
+                    <Binding Path="Value.TargetTemperatureText" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged"
+                             NotifyOnValidationError="True"
+                             >
+                    </Binding>
+                </TextBox.Text>
             </TextBox>
             <Button Command="{Binding Value.ControlCoolerCommand}">
                 <Button.Content>
