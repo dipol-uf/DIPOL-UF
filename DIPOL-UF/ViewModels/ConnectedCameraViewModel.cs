@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DIPOL_UF.Models;
 using DIPOL_UF.Commands;
@@ -9,11 +9,22 @@ using DIPOL_UF.Commands;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using System.ComponentModel;
+using System.Collections;
+using System.Runtime.CompilerServices;
 
 namespace DIPOL_UF.ViewModels
 {
-    class ConnectedCameraViewModel : ViewModel<ConnectedCamera>
+    class ConnectedCameraViewModel : ViewModel<ConnectedCamera>, INotifyDataErrorInfo
     {
+        protected Dictionary<string, Func<object, bool>> validators =
+            new Dictionary<string, Func<object, bool>>();
+
+        protected Dictionary<string, string> errorMessages = new Dictionary<string, string>()
+        {
+            { "NotANumber" , "The input contains characters and/or illegal symbols."},
+            { "OutOfRange", @"The value is expected to be in [{0}, {1}] range." }
+        };
+
         public CameraBase Camera => model.Camera;
         /// <summary>
         /// Minimum allowed cooling temperature
@@ -59,7 +70,7 @@ namespace DIPOL_UF.ViewModels
             {
                 model.FanMode = (FanMode)(2 - value);
             }
-            
+
         }
         /// <summary>
         /// Target temperature for camera's cooler.
@@ -74,6 +85,17 @@ namespace DIPOL_UF.ViewModels
                     value <= MaximumAllowedTemperature &&
                     value >= MinimumAllowedTemperature)
                     model.TargetTemperature = value;
+            }
+        }
+        public string TargetTemperatureText
+        {
+            get => model.TargetTemperatureText;
+            set
+            {
+                if(IsValid(value))
+                {
+                    model.TargetTemperatureText = value;
+                }
             }
         }
         /// <summary>
@@ -94,13 +116,13 @@ namespace DIPOL_UF.ViewModels
             get => model.InternalShutterState;
             set => model.InternalShutterState = value;
 
-            
+
         }
         public ShutterMode ExternalShutterState
         {
             get => model.ExternalShutterState ?? ShutterMode.PermanentlyOpen;
             set => model.ExternalShutterState = value;
-          
+
         }
 
         public ObservableConcurrentDictionary<string, bool> EnabledControls => model.EnabledControls;
@@ -118,12 +140,69 @@ namespace DIPOL_UF.ViewModels
 
         public ConnectedCameraViewModel(ConnectedCamera model) : base(model)
         {
+            InitializeValidators();
+
             model.Camera.PropertyChanged += (sender, e) =>
             {
-                    if (e.PropertyName == nameof(model.Camera.CoolerMode))
-                        RaisePropertyChanged(nameof(IsCoolerEnabled));
+                if (e.PropertyName == nameof(model.Camera.CoolerMode))
+                    RaisePropertyChanged(nameof(IsCoolerEnabled));
             };
         }
+
+        protected override bool IsValid(object value, [CallerMemberName] string propertyName = "")
+        {
+            if (validators.ContainsKey(propertyName))
+                return validators[propertyName](value);
+
+            return base.IsValid(value, propertyName);
+        }
+
+        protected void InitializeValidators()
+        {
+            validators.Add(nameof(TargetTemperatureText),
+                (value) =>
+                {
+                    if (value is string s)
+                    {
+                        if(Regex.IsMatch(s, @"^[-+0-9\.]+?$"))
+                        {
+                            RemoveError(
+                                errorMessages["NotANumber"], 
+                                nameof(TargetTemperatureText));
+                            if (float.TryParse(s,
+                                System.Globalization.NumberStyles.Any,
+                                System.Globalization.NumberFormatInfo.InvariantInfo,
+                                out float floatVal) &&
+                                (floatVal >= MinimumAllowedTemperature && floatVal <= MaximumAllowedTemperature))
+                            {
+                                RemoveError(String.Format(errorMessages["OutOfRange"], 
+                                        MinimumAllowedTemperature, 
+                                        MaximumAllowedTemperature), 
+                                    nameof(TargetTemperatureText));
+                                return true;
+                            }
+                            else
+                            {
+                                AddError(String.Format(errorMessages["OutOfRange"],
+                                            MinimumAllowedTemperature,
+                                            MaximumAllowedTemperature),
+                                        ErrorPriority.High, 
+                                        nameof(TargetTemperatureText));
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            AddError(errorMessages["NotANumber"], 
+                                ErrorPriority.High, 
+                                nameof(TargetTemperatureText));
+                            return false;
+                        }
+                    }
+                    return true;
+                    });
+        }
+      
 
     }
 }
