@@ -12,10 +12,10 @@ using ANDOR_CS.Exceptions;
 
 namespace DIPOL_UF.ViewModels
 {
-    class AcquisitionSettingsViewModel : ObservableObject
+    class AcquisitionSettingsViewModel : ViewModel<SettingsBase>
     {
-        private SettingsBase model;
         private CameraBase camera;
+
 
         private Dictionary<string, bool> supportedSettings = null;
         private ObservableConcurrentDictionary<string, bool> allowedSettings = null;
@@ -61,6 +61,7 @@ namespace DIPOL_UF.ViewModels
             .GetAvailablePreAmpGain(ADConverterIndex ?? 0, 
                 AmplifierIndex ?? 0, HSSpeedIndex?? 0)
             .ToArray();
+                 
 
         /// <summary>
         /// Index of VS Speed.
@@ -70,8 +71,17 @@ namespace DIPOL_UF.ViewModels
             get => model.VSSpeed?.Index;
             set
             {
-                model.SetVSSpeed(value ?? 0);
-                RaisePropertyChanged();
+                try
+                {
+                    model.SetVSSpeed(value ?? 0);
+                    ValidateProperty(null);
+                    RaisePropertyChanged();
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
+                
             }
         }
         /// <summary>
@@ -82,8 +92,16 @@ namespace DIPOL_UF.ViewModels
             get => model.VSAmplitude;
             set
             {
-                model.SetVSAmplitude(value?? VSAmplitude.Normal);
-                RaisePropertyChanged();
+                try
+                {
+                    model.SetVSAmplitude(value ?? VSAmplitude.Normal);
+                    ValidateProperty(null);
+                    RaisePropertyChanged();
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
             }
         }
         /// <summary>
@@ -94,8 +112,16 @@ namespace DIPOL_UF.ViewModels
             get => model.ADConverter?.Index;
             set
             {
-                model.SetADConverter(value ?? 0);
-                RaisePropertyChanged();
+                try
+                {
+                    model.SetADConverter(value ?? 0);
+                    ValidateProperty(null);
+                    RaisePropertyChanged();
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
             }
         }
         /// <summary>
@@ -106,8 +132,16 @@ namespace DIPOL_UF.ViewModels
             get => model.Amplifier?.Index;
             set
             {
-                model.SetOutputAmplifier(camera.Properties.Amplifiers[value ?? 0].Amplifier);
-                RaisePropertyChanged();
+                try
+                {
+                    model.SetOutputAmplifier(camera.Properties.Amplifiers[value ?? 0].Amplifier);
+                    ValidateProperty(null);
+                    RaisePropertyChanged();
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
             }
         }
         /// <summary>
@@ -120,8 +154,16 @@ namespace DIPOL_UF.ViewModels
             {
                 if (value >= 0)
                 {
-                    model.SetHSSpeed(value.Value);
-                    RaisePropertyChanged();
+                    try
+                    {
+                        model.SetHSSpeed(value.Value);
+                        ValidateProperty(null);
+                        RaisePropertyChanged();
+                    }
+                    catch (Exception e)
+                    {
+                        ValidateProperty(e);
+                    }
                 }                
             }
         }
@@ -133,10 +175,18 @@ namespace DIPOL_UF.ViewModels
             get => model.PreAmpGain?.Index;
             set
             {
-                if (value >= 0)
+                try
                 {
-                    model.SetPreAmpGain(value.Value);
-                    RaisePropertyChanged();
+                    if (value >= 0)
+                    {
+                        model.SetPreAmpGain(value.Value);
+                        ValidateProperty(null);
+                        RaisePropertyChanged();
+                    }
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
                 }
             }
         }
@@ -146,12 +196,58 @@ namespace DIPOL_UF.ViewModels
             get => model.AcquisitionMode;
             set
             {
-                model.SetAcquisitionMode(value ?? AcquisitionMode.SingleScan);
-                RaisePropertyChanged();
+                try
+                {
+                    model.SetAcquisitionMode(value ?? AcquisitionMode.SingleScan);
+                    if (value == AcquisitionMode.RunTillAbort)
+                        ValidateProperty(new Exception("test"));
+                    else
+                        ValidateProperty(null);
+                    RaisePropertyChanged();
+                }
+                catch(Exception e)
+                {
+                    ValidateProperty(e);
+                }
+            }
+        }
+
+        public bool FrameTransferValue
+        {
+            get => model.AcquisitionMode?.HasFlag(AcquisitionMode.FrameTransfer) ?? false;
+            set
+            {
+                try
+                {
+                    if (value)
+                    {
+                        if (!model.AcquisitionMode?.HasFlag(AcquisitionMode.FrameTransfer) ?? false)
+                        {
+                            model.SetAcquisitionMode((model.AcquisitionMode | AcquisitionMode.FrameTransfer) ?? AcquisitionMode.FrameTransfer);
+                            ValidateProperty(null);
+                            RaisePropertyChanged();
+                        }
+                    }
+                    else
+                    {
+                        if (model.AcquisitionMode?.HasFlag(AcquisitionMode.FrameTransfer) ?? false)
+                        {
+                            model.SetAcquisitionMode((model.AcquisitionMode ^ AcquisitionMode.FrameTransfer) ?? AcquisitionMode.SingleScan);
+                            ValidateProperty(null);
+                            RaisePropertyChanged();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
+
             }
         }
 
         public AcquisitionSettingsViewModel(SettingsBase model, CameraBase camera) 
+            :base(model)
         {
             this.model = model;
             this.camera = camera;
@@ -172,7 +268,8 @@ namespace DIPOL_UF.ViewModels
                 { nameof(model.Amplifier), true },
                 { nameof(model.HSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) },
                 { nameof(model.PreAmpGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain) },
-                { nameof(model.AcquisitionMode), true }
+                { nameof(model.AcquisitionMode), true },
+                { nameof(FrameTransferValue), true}
             };
         }
 
@@ -192,9 +289,26 @@ namespace DIPOL_UF.ViewModels
                         ADConverterIndex.HasValue 
                         && AmplifierIndex.HasValue 
                         && HSSpeedIndex.HasValue),
-                    new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true)
+                    new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true),
+                    new KeyValuePair<string, bool>(nameof(FrameTransferValue), false)
                 }
                 );
+        }
+
+        private void ValidateProperty(Exception e,
+            [System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
+        {
+            if (!string.IsNullOrWhiteSpace(propertyName))
+            {
+                if (e != null)
+                    AddError(new ValidationErrorInstance("DefaultError", e.Message),
+                       ErrorPriority.High,
+                       propertyName);
+                else
+                    RemoveError(new ValidationErrorInstance("DefaultError", ""),
+                        propertyName);
+
+            }
         }
 
         protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -211,6 +325,7 @@ namespace DIPOL_UF.ViewModels
                 RaisePropertyChanged(nameof(HSSpeedIndex));
                 RaisePropertyChanged(nameof(AvailableHSSpeeds));
             }
+
             if ((e.PropertyName == nameof(AmplifierIndex) ||
                  e.PropertyName == nameof(ADConverterIndex) ||
                  e.PropertyName == nameof(HSSpeedIndex)) &&
@@ -222,13 +337,16 @@ namespace DIPOL_UF.ViewModels
                 RaisePropertyChanged(nameof(PreAmpGainIndex));
                 RaisePropertyChanged(nameof(AvailablePreAmpGains));
             }
-            //if (e.PropertyName == nameof(AvailableHSSpeeds))
-            //{
-            //    RaisePropertyChanged(nameof(HSSpeedIndex));
-            //    RaisePropertyChanged(nameof(PreAmpGainIndex));
-            //}
-            //if (e.PropertyName == nameof(AvailablePreAmpGains))
-            //    RaisePropertyChanged(nameof(PreAmpGainIndex));
+
+            if (e.PropertyName == nameof(AcquisitionModeValue) &&
+                (AllowedSettings[nameof(FrameTransferValue)] 
+                = AcquisitionModeValue.HasValue &&
+                AcquisitionModeValue != AcquisitionMode.SingleScan &&
+                AcquisitionModeValue != AcquisitionMode.FastKinetics))
+            {
+                RaisePropertyChanged(nameof(FrameTransferValue));
+            }
+            
         }
 
        
