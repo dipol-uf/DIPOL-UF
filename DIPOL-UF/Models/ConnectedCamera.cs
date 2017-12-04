@@ -21,6 +21,7 @@ namespace DIPOL_UF.Models
     {
         private CameraBase camera = null;
         private float targetTemperature = 0.0f;
+        private string targetTemperatureText = "0";
         private bool canControlTemperature = false;
         private ObservableConcurrentDictionary<string, bool> enabledControls =
             new ObservableConcurrentDictionary<string, bool>(
@@ -42,7 +43,26 @@ namespace DIPOL_UF.Models
                 if (Math.Abs(value - targetTemperature) > float.Epsilon)
                 {
                     targetTemperature = value;
+                    targetTemperatureText = value.ToString("F1");
                     RaisePropertyChanged();
+                    RaisePropertyChanged(nameof(TargetTemperatureText));
+                }
+            }
+        }
+        public string TargetTemperatureText
+        {
+            get => targetTemperatureText;
+            set
+            {
+                if (value != targetTemperatureText)
+                {
+                    targetTemperatureText = value;
+                    targetTemperature = float.Parse(value,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.NumberFormatInfo.InvariantInfo);
+                    RaisePropertyChanged();
+                    RaisePropertyChanged(nameof(TargetTemperature));
+
                 }
             }
         }
