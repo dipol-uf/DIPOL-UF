@@ -159,50 +159,51 @@ namespace DIPOL_UF.ViewModels
 
         protected void InitializeValidators()
         {
-            validators.Add(nameof(TargetTemperatureText),
-                (value) =>
-                {
-                    if (value is string s)
-                    {
-                        if(Regex.IsMatch(s, @"^[-+0-9\.]+?$"))
-                        {
-                            RemoveError(
-                                errorMessages["NotANumber"], 
-                                nameof(TargetTemperatureText));
-                            if (float.TryParse(s,
-                                System.Globalization.NumberStyles.Any,
-                                System.Globalization.NumberFormatInfo.InvariantInfo,
-                                out float floatVal) &&
-                                (floatVal >= MinimumAllowedTemperature && floatVal <= MaximumAllowedTemperature))
-                            {
-                                RemoveError(String.Format(errorMessages["OutOfRange"], 
-                                        MinimumAllowedTemperature, 
-                                        MaximumAllowedTemperature), 
-                                    nameof(TargetTemperatureText));
-                                return true;
-                            }
-                            else
-                            {
-                                AddError(String.Format(errorMessages["OutOfRange"],
-                                            MinimumAllowedTemperature,
-                                            MaximumAllowedTemperature),
-                                        ErrorPriority.High, 
-                                        nameof(TargetTemperatureText));
-                                return false;
-                            }
-                        }
-                        else
-                        {
-                            AddError(errorMessages["NotANumber"], 
-                                ErrorPriority.High, 
-                                nameof(TargetTemperatureText));
-                            return false;
-                        }
-                    }
-                    return true;
-                    });
+            validators.Add(nameof(TargetTemperatureText), IsTemperatureTextInRange);
+                
         }
-      
+
+        private bool IsTemperatureTextInRange(object value)
+        {
+            if (value is string s)
+            {
+                if (Regex.IsMatch(s, @"^[-+0-9\.]+?$"))
+                {
+                    RemoveError(
+                        errorMessages["NotANumber"],
+                        nameof(TargetTemperatureText));
+                    if (float.TryParse(s,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.NumberFormatInfo.InvariantInfo,
+                        out float floatVal) &&
+                        (floatVal >= MinimumAllowedTemperature && floatVal <= MaximumAllowedTemperature))
+                    {
+                        RemoveError(String.Format(errorMessages["OutOfRange"],
+                                MinimumAllowedTemperature,
+                                MaximumAllowedTemperature),
+                            nameof(TargetTemperatureText));
+                        return true;
+                    }
+                    else
+                    {
+                        AddError(String.Format(errorMessages["OutOfRange"],
+                                    MinimumAllowedTemperature,
+                                    MaximumAllowedTemperature),
+                                ErrorPriority.High,
+                                nameof(TargetTemperatureText));
+                        return false;
+                    }
+                }
+                else
+                {
+                    AddError(errorMessages["NotANumber"],
+                        ErrorPriority.High,
+                        nameof(TargetTemperatureText));
+                    return false;
+                }
+            }
+            return true;
+        }
 
     }
 }

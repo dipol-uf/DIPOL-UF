@@ -23,7 +23,6 @@ namespace DIPOL_UF.ViewModels
         protected static string[] declaredProperties = null;
         protected T model;
 
-
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
         public T Model => model;
@@ -32,6 +31,9 @@ namespace DIPOL_UF.ViewModels
            => errorCollection.ContainsKey(propertyName)
            ? errorCollection[propertyName]
            : null;
+        public Dictionary<string, string> LatestErrors => errorCollection
+            .Select(item => new KeyValuePair<string, string>(item.Key, item.Value.First()))
+            .ToDictionary(item => item.Key, item => item.Value);
 
         protected ViewModel(T model)
         {
@@ -41,6 +43,7 @@ namespace DIPOL_UF.ViewModels
                 declaredProperties = ListProperties();
 
             model.PropertyChanged += OnModelPropertyChanged;
+            ErrorsChanged += (sender, e) => RaisePropertyChanged(nameof(LatestErrors));
         }
 
         protected string[] ListProperties()
