@@ -99,9 +99,10 @@
                                         </MultiBinding>
                                     </Label.Foreground>
                                 </Label>
-                                <Label VerticalAlignment="Center" HorizontalAlignment="Right">
+                                <Label VerticalAlignment="Center" HorizontalAlignment="Right"
+                                       x:Name="TemperatureStatusLabel">
                                     <!--Content comes from TempStatus TemperatureStatus enum-->
-                                    <Label.DataContext>
+                                    <Label.Content>
                                         <MultiBinding
                                             Converter="{StaticResource ResourceKey=CameraStatsToValueMultiConverter}"
                                             ConverterParameter="TempStatus"
@@ -110,9 +111,6 @@
                                                  UpdateSourceTrigger="PropertyChanged"/>
                                             <Binding Path="Key"/>
                                         </MultiBinding>
-                                    </Label.DataContext>
-                                    <Label.Content>
-                                        <Binding Converter="{StaticResource ResourceKey=EnumToDescriptionConverter}"/>
                                     </Label.Content>
                                     <!--Color comes from the same status in accordance to static dictionary-->
                                     <Label.Foreground>
