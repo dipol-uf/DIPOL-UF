@@ -10,8 +10,8 @@ namespace DIPOL_UF.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var type = value.GetType();
-            if (parameter is string fieldName)
+            var type = value?.GetType();
+            if (type != null && parameter is string fieldName)
             {
                 if (type.BaseType == typeof(Array))
                 {
