@@ -104,7 +104,7 @@
                                     <!--Content comes from TempStatus TemperatureStatus enum-->
                                     <Label.Content>
                                         <MultiBinding
-                                            Converter="{StaticResource ResourceKey=CameraStatsToValueMultiConverter}"
+                                            Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
                                             ConverterParameter="TempStatus"
                                             UpdateSourceTrigger="PropertyChanged">
                                             <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
