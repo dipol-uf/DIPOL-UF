@@ -34,6 +34,9 @@ namespace DIPOL_UF.ViewModels
         public Dictionary<string, string> LatestErrors => errorCollection
             .Select(item => new KeyValuePair<string, string>(item.Key, item.Value.FirstOrDefault()?.Message))
             .ToDictionary(item => item.Key, item => item.Value);
+        public Dictionary<string, bool> HasErrorsOfProperties => errorCollection
+            .Select(item => new KeyValuePair<string, bool>(item.Key, item.Value.Any()))
+            .ToDictionary(item => item.Key, item => item.Value);
 
         protected ViewModel(T model)
         {
@@ -48,7 +51,11 @@ namespace DIPOL_UF.ViewModels
             if(model is INotifyPropertyChanged notifiable)
                 notifiable.PropertyChanged += OnModelPropertyChanged;
 
-            ErrorsChanged += (sender, e) => RaisePropertyChanged(nameof(LatestErrors));
+            ErrorsChanged += (sender, e) =>
+            {
+                RaisePropertyChanged(nameof(LatestErrors));
+                RaisePropertyChanged(nameof(HasErrorsOfProperties));
+            };
         }
 
         protected string[] ListProperties()
