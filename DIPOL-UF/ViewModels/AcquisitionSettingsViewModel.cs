@@ -290,6 +290,32 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
+        public string ExposureTimeValueText
+        {
+            get => model?.ExposureTime?.ToString();
+            set
+            {
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(value))
+                        model.SetExposureTime(0f);
+                    else if (float.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out float flVal))
+                    {
+                        model.SetExposureTime(flVal);
+                    }
+                    else throw new ArgumentException("Provided value is not a number.");
+
+                    ValidateProperty(null);
+                    RaisePropertyChanged();
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
+            }
+
+        }
+
         public AcquisitionSettingsViewModel(SettingsBase model, CameraBase camera) 
             :base(model)
         {
@@ -300,8 +326,7 @@ namespace DIPOL_UF.ViewModels
             InitializeAllowedSettings();
 
         }
-
-
+        
         private void CheckSupportedFeatures()
         {
             supportedSettings = new Dictionary<string, bool>()
@@ -315,7 +340,8 @@ namespace DIPOL_UF.ViewModels
                 { nameof(model.AcquisitionMode), true },
                 { nameof(FrameTransferValue), true},
                 { nameof(model.ReadMode), true },
-                { nameof(model.TriggerMode), true }
+                { nameof(model.TriggerMode), true },
+                { nameof(model.ExposureTime), true }
             };
         }
 
@@ -338,8 +364,8 @@ namespace DIPOL_UF.ViewModels
                     new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true),
                     new KeyValuePair<string, bool>(nameof(FrameTransferValue), false),
                     new KeyValuePair<string, bool>(nameof(model.ReadMode), true),
-                    new KeyValuePair<string, bool>(nameof(model.TriggerMode), true)
-
+                    new KeyValuePair<string, bool>(nameof(model.TriggerMode), true),
+                    new KeyValuePair<string, bool>(nameof(model.ExposureTime), true)
                 }
                 );
         }
