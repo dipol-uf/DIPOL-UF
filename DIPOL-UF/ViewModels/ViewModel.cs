@@ -32,7 +32,7 @@ namespace DIPOL_UF.ViewModels
            ? errorCollection[propertyName]
            : null;
         public Dictionary<string, string> LatestErrors => errorCollection
-            .Select(item => new KeyValuePair<string, string>(item.Key, item.Value.First().Message))
+            .Select(item => new KeyValuePair<string, string>(item.Key, item.Value.FirstOrDefault()?.Message))
             .ToDictionary(item => item.Key, item => item.Value);
 
         protected ViewModel(T model)
@@ -42,8 +42,12 @@ namespace DIPOL_UF.ViewModels
             if(declaredProperties == null)
                 declaredProperties = ListProperties();
 
+            foreach (var propName in declaredProperties)
+                errorCollection.Add(propName, new List<ValidationErrorInstance>());
+
             if(model is INotifyPropertyChanged notifiable)
                 notifiable.PropertyChanged += OnModelPropertyChanged;
+
             ErrorsChanged += (sender, e) => RaisePropertyChanged(nameof(LatestErrors));
         }
 
@@ -96,8 +100,8 @@ namespace DIPOL_UF.ViewModels
                 errorCollection[propertyName].Contains(error))
             {
                 errorCollection[propertyName].Remove(error);
-                if (errorCollection[propertyName].Count <= 0)
-                    errorCollection.Remove(propertyName);
+                //if (errorCollection[propertyName].Count <= 0)
+                //    errorCollection.Remove(propertyName);
 
                 RaiseErrorChanged(propertyName);
             }
