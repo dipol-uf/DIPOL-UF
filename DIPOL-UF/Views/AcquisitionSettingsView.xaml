@@ -81,6 +81,9 @@
                         <TextBlock Grid.Row="10" Grid.Column="0"
                                    Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                    Text="Trigger mode" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="11" Grid.Column="0"
+                                   Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                                   Text="EM CCD gain" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                         <!--Right-hand side controls-->
                         <!--Exposure time-->
                         <TextBox Grid.Row="0" Grid.Column="1"
@@ -500,22 +503,70 @@
                                 </MultiBinding>
                             </ComboBox.IsEnabled>
                         </ComboBox>
+                        <!--EMCCD gain-->
+                        <TextBox Grid.Row="11" Grid.Column="1"
+                                 Text="{Binding 
+                                    EMCCDGainValueText,
+                                    Mode=TwoWay,
+                                    UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.Style>
+                                <Style BasedOn="{StaticResource ResourceKey=TextBoxStyle}" 
+                                       TargetType="TextBox">
+                                    <Style.Triggers>
+                                            <DataTrigger 
+                                                Binding="{Binding
+                                                    HasErrorsOfProperties[EMCCDGainValueText],
+                                                    Mode=OneWay,
+                                                    UpdateSourceTrigger=PropertyChanged}"
+                                                Value="true">
+                                                <Setter 
+                                                    Property="ToolTip"
+                                                    Value="{Binding 
+                                                        LatestErrors[EMCCDGainValueText], 
+                                                        Mode=OneWay,
+                                                        UpdateSourceTrigger=PropertyChanged}"/>
+                                            </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                            <TextBox.IsEnabled>
+                                <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                                    <Binding Path="SupportedSettings[EMCCDGain]" Mode="OneTime"/>
+                                    <Binding Path="AllowedSettings[EMCCDGain]" 
+                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                                </MultiBinding>
+                            </TextBox.IsEnabled>
+                        </TextBox>
+
                     </Grid>
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="Image size"/>
+            <TabItem Header="Cycles">
+                
+            </TabItem>
         </TabControl>
+        <!--Save-->
         <Button Grid.Column="0" Grid.Row="1" 
                 Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                Content="Save"/>
+                Content="Save"
+                Command="{Binding SaveCommand}"/>
+        <!--Load-->
         <Button Grid.Column="1" Grid.Row="1"
                 Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                Content="Load"/>
+                Content="Load"
+                Command="{Binding LoadCommand}"/>
+        <!--Submit-->
         <Button Grid.Column="0" Grid.Row="2" 
                 Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}"
-                Content="Submit" />
+                Content="Submit"
+                Command="{Binding SubmitCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
+        <!--Cancel-->
         <Button Grid.Column="1" Grid.Row="2"
                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}"
-                Content="Cancel"/>
+                Content="Cancel"
+                Command="{Binding CancelCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
     </Grid>
 </Window>

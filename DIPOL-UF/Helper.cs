@@ -34,14 +34,17 @@ namespace DIPOL_UF
             return new Size(formattedText.Width, formattedText.Height);
         }
 
-        public static DependencyObject FindParentOfType<T>(DependencyObject element)
+        public static T FindParentOfType<T>(DependencyObject element) where T:DependencyObject
         {
+            if (element is T)
+                return element as T;
+
             var parent = VisualTreeHelper.GetParent(element);
 
             while (parent != null && !(parent is T))
                 parent = VisualTreeHelper.GetParent(parent);
 
-            return parent is T ? parent : null;
+            return parent as T;
         }
 
         public static DependencyObject FindParentByName(DependencyObject element, string name)
@@ -56,9 +59,9 @@ namespace DIPOL_UF
 
         public static bool IsDialogWindow(Window window)
         {
-            var showingAsDialogField = window.GetType().GetField("_showingAsDialog",
+            var showingAsDialogField = typeof(Window).GetField("_showingAsDialog",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-
+                       
             return (bool)(showingAsDialogField?.GetValue(window) ?? false);
         }
 
