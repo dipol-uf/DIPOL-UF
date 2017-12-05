@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
+
+using DIPOL_UF.Commands;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -19,6 +23,24 @@ namespace DIPOL_UF.ViewModels
 
         private Dictionary<string, bool> supportedSettings = null;
         private ObservableConcurrentDictionary<string, bool> allowedSettings = null;
+
+
+        private DelegateCommand saveCommand;
+        private DelegateCommand loadCommand;
+        private DelegateCommand submitCommand = new DelegateCommand(
+            (param) => CloseView(param, false),
+            DelegateCommand.CanExecuteAlways
+            );
+        private DelegateCommand cancelCommand = new DelegateCommand(
+          (param) => CloseView(param, true),
+          DelegateCommand.CanExecuteAlways
+          );
+
+
+        public DelegateCommand SubmitCommand => submitCommand;
+        public DelegateCommand CancelCommand => cancelCommand;
+        public DelegateCommand SaveCommand => saveCommand;
+        public DelegateCommand LoadCommand => loadCommand;
 
         /// <summary>
         /// Reference to Camera instance.
@@ -76,6 +98,9 @@ namespace DIPOL_UF.ViewModels
                 AmplifierIndex, HSSpeedIndex)
             .ToArray();
 
+        public int[] AvailableEMCCDGains =>
+            Enumerable.Range(Camera.Properties.EMCCDGainRange.Low, Camera.Properties.EMCCDGainRange.High)
+            .ToArray();
 
         /// <summary>
         /// Index of VS Speed.
@@ -201,7 +226,9 @@ namespace DIPOL_UF.ViewModels
                 }
             }
         }
-
+        /// <summary>
+        /// Acquisition mode value.
+        /// </summary>
         public AcquisitionMode? AcquisitionModeValue
         {
             get => model.AcquisitionMode;
@@ -219,7 +246,9 @@ namespace DIPOL_UF.ViewModels
                 }
             }
         }
-
+        /// <summary>
+        /// Frame transfer flag; applied to acquisition mode
+        /// </summary>
         public bool FrameTransferValue
         {
             get => model.AcquisitionMode?.HasFlag(AcquisitionMode.FrameTransfer) ?? false;
@@ -253,7 +282,9 @@ namespace DIPOL_UF.ViewModels
 
             }
         }
-
+        /// <summary>
+        /// Read mode value
+        /// </summary>
         public ReadMode? ReadModeValue
         {
             get => model.ReadMode;
@@ -271,7 +302,9 @@ namespace DIPOL_UF.ViewModels
                 }
             }
         }
-
+        /// <summary>
+        /// Trigger mode value
+        /// </summary>
         public TriggerMode? TriggerModeValue
         {
             get => model.TriggerMode;
@@ -289,7 +322,9 @@ namespace DIPOL_UF.ViewModels
                 }
             }
         }
-
+        /// <summary>
+        /// Exposure time; text field
+        /// </summary>
         public string ExposureTimeValueText
         {
             get => model?.ExposureTime?.ToString();
@@ -298,15 +333,20 @@ namespace DIPOL_UF.ViewModels
                 try
                 {
                     if (string.IsNullOrWhiteSpace(value))
+                    {
                         model.SetExposureTime(0f);
+                        ValidateProperty(null);
+                        RaisePropertyChanged();
+                    }
                     else if (float.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out float flVal))
                     {
                         model.SetExposureTime(flVal);
+                        ValidateProperty(null);
+                        RaisePropertyChanged();
                     }
-                    else throw new ArgumentException("Provided value is not a number.");
+                    else
+                        ValidateProperty(new ArgumentException("Provided value is not a number."));
 
-                    ValidateProperty(null);
-                    RaisePropertyChanged();
                 }
                 catch (Exception e)
                 {
@@ -315,12 +355,49 @@ namespace DIPOL_UF.ViewModels
             }
 
         }
+        /// <summary>
+        /// EM CCD gain; text field
+        /// </summary>
+        public string EMCCDGainValueText
+        {
+            get => model.EMCCDGain.ToString();
+            set
+            {
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(value))
+                    {
+                        model.SetEMCCDGain(Camera.Properties.EMCCDGainRange.Low);
+                        ValidateProperty();
+                        RaisePropertyChanged();
+                    }
+                    else if (int.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out int intVal))
+                    {
+                        model.SetEMCCDGain(intVal);
+                        ValidateProperty();
+                        RaisePropertyChanged();
+                    }
+                    else
+                        ValidateProperty(new ArgumentException("Provided value is not a number."));
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
+                finally
+                {
+                    RaisePropertyChanged();
+                }
+            }
+        }
 
         public AcquisitionSettingsViewModel(SettingsBase model, CameraBase camera) 
             :base(model)
         {
             this.model = model;
             this.camera = camera;
+
+            InitializeCommands();
 
             CheckSupportedFeatures();
             InitializeAllowedSettings();
@@ -341,7 +418,8 @@ namespace DIPOL_UF.ViewModels
                 { nameof(FrameTransferValue), true},
                 { nameof(model.ReadMode), true },
                 { nameof(model.TriggerMode), true },
-                { nameof(model.ExposureTime), true }
+                { nameof(model.ExposureTime), true },
+                { nameof(model.EMCCDGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) }
             };
         }
 
@@ -365,12 +443,46 @@ namespace DIPOL_UF.ViewModels
                     new KeyValuePair<string, bool>(nameof(FrameTransferValue), false),
                     new KeyValuePair<string, bool>(nameof(model.ReadMode), true),
                     new KeyValuePair<string, bool>(nameof(model.TriggerMode), true),
-                    new KeyValuePair<string, bool>(nameof(model.ExposureTime), true)
+                    new KeyValuePair<string, bool>(nameof(model.ExposureTime), true),
+                    new KeyValuePair<string, bool>(nameof(model.EMCCDGain), 
+                        (AmplifierIndex >= 0)
+                        && Camera.Properties.Amplifiers[AmplifierIndex].Amplifier == OutputAmplification.Conventional)
                 }
                 );
         }
 
-        private void ValidateProperty(Exception e,
+        private void InitializeCommands()
+        {
+            saveCommand = new DelegateCommand(
+                SaveTo,
+                DelegateCommand.CanExecuteAlways
+                );
+        }
+
+        private void SaveTo(object parameter)
+        {
+            Microsoft.Win32.SaveFileDialog dialog = new Microsoft.Win32.SaveFileDialog();
+            dialog.AddExtension = true;
+            dialog.CheckPathExists = true;
+            dialog.DefaultExt = ".acq";
+            dialog.FileName = camera.ToString();
+            dialog.Filter = $@"Acquisition settings (*{dialog.DefaultExt})|*{dialog.DefaultExt}|All files (*.*)|*.*";
+            dialog.FilterIndex = 0;
+            dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            dialog.Title = "Save current acquisition settings";
+            
+
+
+            if (dialog.ShowDialog() == true)
+            {
+                using (var fl = File.Open(dialog.FileName, FileMode.Create, FileAccess.Write, FileShare.Read))
+                {
+                    model.Serialize(fl);
+                }
+            }
+        }
+
+        private void ValidateProperty(Exception e = null,
             [System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
         {
             if (!string.IsNullOrWhiteSpace(propertyName))
@@ -422,9 +534,29 @@ namespace DIPOL_UF.ViewModels
                     AcquisitionModeValue != AcquisitionMode.SingleScan &&
                     AcquisitionModeValue != AcquisitionMode.FastKinetics;
             }
+
+            if (e.PropertyName == nameof(AmplifierIndex))
+            {
+                AllowedSettings[nameof(model.EMCCDGain)] = (AmplifierIndex >= 0) &&
+                    (Camera.Properties.Amplifiers[AmplifierIndex].Amplifier == OutputAmplification.Conventional);
+                RaisePropertyChanged(nameof(EMCCDGainValueText));
+            }
             
         }
 
        
+        private static void CloseView(object parameter, bool isCanceled)
+        {
+            if (parameter is DependencyObject elem)
+            {
+                var window = Helper.FindParentOfType<Window>(elem);
+                if (window != null && Helper.IsDialogWindow(window))
+                {
+                    window.DialogResult = !isCanceled;
+                }
+
+                window?.Close();
+            }
+        }
     }
 }

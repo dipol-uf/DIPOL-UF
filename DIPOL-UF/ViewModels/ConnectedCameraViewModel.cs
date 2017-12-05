@@ -128,10 +128,6 @@ namespace DIPOL_UF.ViewModels
         public ObservableConcurrentDictionary<string, bool> EnabledControls => model.EnabledControls;
 
         /// <summary>
-        /// Command that handles text input and allows only numerics.
-        /// </summary>
-        public DelegateCommand VerifyTextInputCommand => model.VerifyTextInputCommand;
-        /// <summary>
         /// Controls cooler.
         /// </summary>
         public DelegateCommand ControlCoolerCommand => model.ControlCoolerCommand;
