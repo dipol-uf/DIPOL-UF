@@ -255,6 +255,7 @@ namespace ANDOR_CS.Classes
             Amplifier = (Name: element.Name, Amplifier: element.Amplifier, Index: camera.Properties.Amplifiers.IndexOf(element));
             HSSpeed = null;
             PreAmpGain = null;
+            EMCCDGain = null;
         }
 
         /// <summary>

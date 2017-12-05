@@ -32,7 +32,7 @@ namespace DIPOL_UF.Models
                 );
         
         private DelegateCommand controlCoolerCommand = null;
-        private DelegateCommand verifyTextInputCommand = null;
+        //private DelegateCommand verifyTextInputCommand = null;
         private DelegateCommand setUpAcquisitionCommand = null;
 
         public float TargetTemperature
@@ -145,18 +145,6 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public DelegateCommand VerifyTextInputCommand
-        {
-            get => verifyTextInputCommand;
-            set
-            {
-                if (value != verifyTextInputCommand)
-                {
-                    verifyTextInputCommand = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
         public DelegateCommand ControlCoolerCommand
         {
             get => controlCoolerCommand;
@@ -205,10 +193,6 @@ namespace DIPOL_UF.Models
 
         private void InitializeCommands()
         {
-            VerifyTextInputCommand = new DelegateCommand(
-                VerifyTextInputCommandExecute,
-                DelegateCommand.CanExecuteAlways);
-
             ControlCoolerCommand = new DelegateCommand(
                 ControlCoolerCommandExecute,
                 (par) => camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature)
@@ -220,20 +204,6 @@ namespace DIPOL_UF.Models
                 );
         }
 
-        private void VerifyTextInputCommandExecute(object parameter)
-        {
-            if (parameter is CommandEventArgs<TextCompositionEventArgs> txtCompEA)
-            {
-                txtCompEA.EventArgs.Handled = !Regex.IsMatch(txtCompEA.EventArgs.Text, @"[-.\d]");
-            }
-            else if (parameter is CommandEventArgs<TextChangedEventArgs> txtChEA)
-            {
-                if (txtChEA.Sender is TextBox box && !Regex.IsMatch(box.Text, @"-?\d+\.?\d*"))
-                {
-                    box.Text = "0.0";
-                }
-            }
-        }
         private void ControlCoolerCommandExecute(object parameter)
         {
             if (camera.CoolerMode == Switch.Disabled)
