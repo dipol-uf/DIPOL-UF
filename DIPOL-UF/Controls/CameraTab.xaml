@@ -102,18 +102,10 @@
         </Grid>
         <StackPanel Grid.Column="2" Grid.Row="2" Margin="2">
             <TextBox 
-                    Name="TempControlTextBox" Margin="2"
+                    Name="TempControlTextBox" 
                     HorizontalContentAlignment="Right"
                     IsEnabled="{Binding Value.CanControlTemperature, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                     >
-                <!--TextChanged="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"-->
-                    <!--PreviewTextInput="{cmnds:EventToCommand VerifyTextInputCommand, PropertyName=Value}"-->
-                <!--Text="{Binding
-                        Path=Value.TargetTemperature,
-                        Mode=TwoWay,
-                        UpdateSourceTrigger=PropertyChanged,
-                        Converter={StaticResource ResourceKey=SingleDoubleToStringConverter},
-                        ConverterParameter='F1'}">-->
                 <TextBox.Text>
                     <Binding Path="Value.TargetTemperatureText" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged"
                              NotifyOnValidationError="True"
@@ -121,14 +113,14 @@
                     </Binding>
                 </TextBox.Text>
                 <TextBox.Style>
-                    <Style TargetType="TextBox">
+                    <Style TargetType="TextBox" BasedOn="{StaticResource ResourceKey=TextBoxStyle}">
                         <Style.Triggers>
-                            <Trigger Property="Validation.HasError" Value="true">
+                            <DataTrigger Binding="{Binding Value.HasErrorsOfProperties[TargetTemperatureText], Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="true">
                                 <Setter Property="ToolTip" 
                                         Value="{Binding 
                                             Value.LatestErrors[TargetTemperatureText],
                                             UpdateSourceTrigger=PropertyChanged}"/>
-                            </Trigger>
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </TextBox.Style>
