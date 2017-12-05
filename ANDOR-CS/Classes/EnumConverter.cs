@@ -31,6 +31,9 @@ namespace ANDOR_CS.Classes
         public static bool IsAcquisitionModeSupported(AcquisitionMode mode)
             => AcquisitionModeTable.ContainsKey(mode);
 
+        public static bool IsReadModeSupported(ReadMode mode)
+            => ReadModeTable.ContainsKey(mode);
+
         internal static readonly Dictionary<AcquisitionMode, int> AcquisitionModeTable = new Dictionary<AcquisitionMode, int>
         {
             { AcquisitionMode.SingleScan, 1},
