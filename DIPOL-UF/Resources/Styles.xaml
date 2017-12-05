@@ -117,4 +117,9 @@
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="FontSize" Value="{StaticResource ResourceKey=SmallFontSize}"/>
     </Style>
+    
+    <!--TextBox style-->
+    <Style x:Key="TextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource ResourceKey=ContentFont}">
+        <Setter Property="Margin" Value="{StaticResource ResourceKey=DefaultMargin}"/>
+    </Style>
 </ResourceDictionary>
