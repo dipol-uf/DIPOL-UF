@@ -46,15 +46,15 @@
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="Cooler"/>
-            <TextBlock Grid.Column="1" Grid.Row="1"
+            <TextBlock Grid.Column="0" Grid.Row="1"
                        VerticalAlignment="Top" HorizontalAlignment="Right"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="{Binding Value.MaximumAllowedTemperature, StringFormat='\{0:F0} C'}"/>
-            <TextBlock Grid.Column="1" Grid.Row="3" 
+            <TextBlock Grid.Column="0" Grid.Row="3" 
                        VerticalAlignment="Bottom" HorizontalAlignment="Right"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="{Binding Value.MinimumAllowedTemperature, StringFormat='\{0:F0} C'}"/>
-            <Slider Grid.Column="0" Grid.Row="1" Grid.RowSpan="3" 
+            <Slider Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" 
                     HorizontalAlignment="Center"
                     Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
                     Orientation="Vertical" Name="TempSetSlider"
