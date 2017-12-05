@@ -16,6 +16,7 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 
 using SDK = ATMCD64CS.AndorSDK;
@@ -27,28 +28,46 @@ namespace ANDOR_CS.Enums
     [DataContract]
     public enum TriggerMode : uint
     {
+        [Description("Unknown")]
         [EnumMember]
         Unknown = 0,
+
+        [Description("Internal")]
         [EnumMember]
         Internal = SDK.AC_TRIGGERMODE_INTERNAL,
         [EnumMember]
+
+        [Description("External")]
         External = SDK.AC_TRIGGERMODE_EXTERNAL,
         [EnumMember]
+
+        [Description("External full v-bin")]
         ExternalFVBEM = SDK.AC_TRIGGERMODE_EXTERNAL_FVB_EM,
         [EnumMember]
+
+        [Description("Continuous")]
         Continuous = SDK.AC_TRIGGERMODE_CONTINUOUS,
+
+        [Description("External start")]
         [EnumMember]
         ExternalStart = SDK.AC_TRIGGERMODE_EXTERNALSTART,
 
         /// <summary>
         /// WARNING! Deprecated by <see cref="TriggerMode.ExternalExposure"/>
         /// </summary>
+        [Description("Depricated")]
         [EnumMember]
         Bulb = SDK.AC_TRIGGERMODE_BULB,
+
+        [Description("External exposure")]
         [EnumMember]
         ExternalExposure = SDK.AC_TRIGGERMODE_EXTERNALEXPOSURE,
+
+        [Description("Inverted")]
         [EnumMember]
         Inverted = SDK.AC_TRIGGERMODE_INVERTED,
+
+        [Description("External charge shifting")]
         [EnumMember]
         ExternalChargeshifting = SDK.AC_TRIGGERMODE_EXTERNAL_CHARGESHIFTING
     }
