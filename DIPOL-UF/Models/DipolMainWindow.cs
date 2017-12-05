@@ -614,7 +614,7 @@ namespace DIPOL_UF.Models
             if (sender is CameraBase cam)
             {
                 string key = GetCameraKey(cam);
-                if (CameraRealTimeStats.ContainsKey(key))
+                if (key != null && CameraRealTimeStats.ContainsKey(key))
                 {
                     CameraRealTimeStats[key]["Temp"] = e.Temperature;
                     CameraRealTimeStats[key]["TempStatus"] = e.Status;
