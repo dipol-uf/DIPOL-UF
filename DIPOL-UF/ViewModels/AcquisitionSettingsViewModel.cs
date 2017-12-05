@@ -49,7 +49,7 @@ namespace DIPOL_UF.ViewModels
         public AcquisitionMode[] AllowedAcquisitionModes =>
            Helper.EnumFlagsToArray(Camera.Capabilities.AcquisitionModes)
             .Where(item => item != AcquisitionMode.FrameTransfer)
-            .Where(item => ANDOR_CS.Classes.EnumConverter.IsAcquisitionModeSupported(item))            
+            .Where(item => ANDOR_CS.Classes.EnumConverter.IsAcquisitionModeSupported(item))
             .ToArray();
 
         public ReadMode[] AllowedReadModes =>
@@ -57,8 +57,13 @@ namespace DIPOL_UF.ViewModels
             .Where(item => ANDOR_CS.Classes.EnumConverter.IsReadModeSupported(item))
             .ToArray();
 
-        public (int Index, float Speed)[] AvailableHSSpeeds => 
-            (ADConverterIndex < 0 || AmplifierIndex < 0) 
+        public TriggerMode[] AllowedTriggerModes =>
+            Helper.EnumFlagsToArray(Camera.Capabilities.TriggerModes)
+            .Where(item => ANDOR_CS.Classes.EnumConverter.IsTriggerModeSupported(item))
+            .ToArray();
+
+        public (int Index, float Speed)[] AvailableHSSpeeds =>
+            (ADConverterIndex < 0 || AmplifierIndex < 0)
             ? null
             : model
             .GetAvailableHSSpeeds(ADConverterIndex, AmplifierIndex)
@@ -67,10 +72,10 @@ namespace DIPOL_UF.ViewModels
             (ADConverterIndex < 0 || AmplifierIndex < 0 || HSSpeedIndex < 0)
             ? null
             : model
-            .GetAvailablePreAmpGain(ADConverterIndex, 
+            .GetAvailablePreAmpGain(ADConverterIndex,
                 AmplifierIndex, HSSpeedIndex)
             .ToArray();
-                 
+
 
         /// <summary>
         /// Index of VS Speed.
@@ -90,7 +95,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     ValidateProperty(e);
                 }
-                
+
             }
         }
         /// <summary>
@@ -208,7 +213,7 @@ namespace DIPOL_UF.ViewModels
                     ValidateProperty(null);
                     RaisePropertyChanged();
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     ValidateProperty(e);
                 }
@@ -257,11 +262,26 @@ namespace DIPOL_UF.ViewModels
                 try
                 {
                     model.SetReadoutMode(value ?? ReadMode.FullImage);
-                    if (value == ReadMode.FullImage)
-                        ValidateProperty(new Exception("Test exception messsage."));
-                    else
-                        ValidateProperty(null);
-                    RaiseErrorChanged();
+                    ValidateProperty(null);
+                    RaisePropertyChanged();
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
+            }
+        }
+
+        public TriggerMode? TriggerModeValue
+        {
+            get => model.TriggerMode;
+            set
+                {
+                try
+                {
+                    model.SetTriggerMode(value ?? TriggerMode.Internal);
+                    ValidateProperty(null);
+                    RaisePropertyChanged();
                 }
                 catch (Exception e)
                 {
@@ -294,7 +314,8 @@ namespace DIPOL_UF.ViewModels
                 { nameof(model.PreAmpGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain) },
                 { nameof(model.AcquisitionMode), true },
                 { nameof(FrameTransferValue), true},
-                { nameof(model.ReadMode), true }
+                { nameof(model.ReadMode), true },
+                { nameof(model.TriggerMode), true }
             };
         }
 
@@ -316,7 +337,9 @@ namespace DIPOL_UF.ViewModels
                         && HSSpeedIndex >= 0),
                     new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true),
                     new KeyValuePair<string, bool>(nameof(FrameTransferValue), false),
-                    new KeyValuePair<string, bool>(nameof(model.ReadMode), true)
+                    new KeyValuePair<string, bool>(nameof(model.ReadMode), true),
+                    new KeyValuePair<string, bool>(nameof(model.TriggerMode), true)
+
                 }
                 );
         }
