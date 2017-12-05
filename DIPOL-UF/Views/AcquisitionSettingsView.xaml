@@ -27,6 +27,12 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
 
             <!--Left-hand side labels-->
@@ -54,13 +60,38 @@
             <TextBlock Grid.Row="8" Grid.Column="0"
                        Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                        Text="Frame transfer" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="9" Grid.Column="0"
+                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                       Text="Read mode" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <!--Right-hand side controls-->
             <!--VS Speed-->
             <ComboBox Grid.Row="1" Grid.Column="1"
-                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding Camera.Properties.VSSpeeds}"
-                      SelectedIndex="{Binding VSSpeedIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                      ToolTip="{Binding LatestErrors[VSSpeedIndex], UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding 
+                        VSSpeedIndex, 
+                        Mode=TwoWay,
+                        UpdateSourceTrigger=PropertyChanged, 
+                        ValidatesOnNotifyDataErrors=True}">
+                <ComboBox.Style>
+                    <Style BasedOn="{StaticResource ResourceKey=ComboBoxStyle}"
+                           TargetType="ComboBox">
+                        <Style.Triggers>
+                            <DataTrigger 
+                                Binding="{Binding 
+                                    HasErrorsOfProperties[VSSpeedIndex], 
+                                    Mode=OneWay,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                                Value="True">
+                                <Setter 
+                                    Property="ToolTip" 
+                                    Value="{Binding 
+                                        LatestErrors[VSSpeedIndex], 
+                                        Mode=OneWay,
+                                        UpdateSourceTrigger=PropertyChanged}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ComboBox.Style>
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[VSSpeed]" Mode="OneTime"/>
@@ -71,15 +102,33 @@
             </ComboBox>
             <!--VS Amplitude-->
             <ComboBox Grid.Row="2" Grid.Column="1"
-                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding 
                         Source={StaticResource ResourceKey=VSAmplitudeEnumProvider},
                         Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
                       SelectedItem="{Binding 
                         Path=VSAmplitudeValue, 
                         Converter={StaticResource ResourceKey=EnumToDescriptionConverter}, 
-                        ValidatesOnNotifyDataErrors=True}"
-                      ToolTip="{Binding LatestErrors[VSAmplitudeValue], UpdateSourceTrigger=PropertyChanged}">
+                        ValidatesOnNotifyDataErrors=True}">
+                <ComboBox.Style>
+                    <Style BasedOn="{StaticResource ResourceKey=ComboBoxStyle}"
+                           TargetType="ComboBox">
+                        <Style.Triggers>
+                            <DataTrigger 
+                                Binding="{Binding 
+                                    HasErrorsOfProperties[VSAmplitudeValue], 
+                                    Mode=OneWay,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                                Value="True">
+                                <Setter 
+                                    Property="ToolTip" 
+                                    Value="{Binding 
+                                        LatestErrors[VSAmplitudeValue], 
+                                        Mode=OneWay,
+                                        UpdateSourceTrigger=PropertyChanged}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ComboBox.Style>
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[VSAmplitude]" Mode="OneTime"/>
@@ -90,10 +139,32 @@
             </ComboBox>
             <!--AD Converter-->
             <ComboBox Grid.Row="3" Grid.Column="1"
-                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding Camera.Properties.ADConverters}"
-                      SelectedIndex="{Binding ADConverterIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                      ToolTip="{Binding LatestErrors[ADConverterIndex], UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding 
+                        ADConverterIndex, 
+                        Mode=TwoWay, 
+                        UpdateSourceTrigger=PropertyChanged, 
+                        ValidatesOnNotifyDataErrors=True}">
+                <ComboBox.Style>
+                    <Style BasedOn="{StaticResource ResourceKey=ComboBoxStyle}"
+                           TargetType="ComboBox">
+                        <Style.Triggers>
+                            <DataTrigger 
+                                Binding="{Binding 
+                                    HasErrorsOfProperties[ADConverterIndex], 
+                                    Mode=OneWay,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                                Value="True">
+                                <Setter 
+                                    Property="ToolTip" 
+                                    Value="{Binding 
+                                        LatestErrors[ADConverterIndex], 
+                                        Mode=OneWay,
+                                        UpdateSourceTrigger=PropertyChanged}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ComboBox.Style>
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[ADConverter]" Mode="OneTime"/>
@@ -104,13 +175,35 @@
             </ComboBox>
             <!--Amplifer-->
             <ComboBox Grid.Row="4" Grid.Column="1"
-                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding 
                         Camera.Properties.Amplifiers, 
                         Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
                         ConverterParameter=Item1}"
-                      SelectedIndex="{Binding AmplifierIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                      ToolTip="{Binding LatestErrors[AmplifierIndex], UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding 
+                        AmplifierIndex, 
+                        Mode=TwoWay, 
+                        UpdateSourceTrigger=PropertyChanged, 
+                        ValidatesOnNotifyDataErrors=True}">
+                <ComboBox.Style>
+                <Style BasedOn="{StaticResource ResourceKey=ComboBoxStyle}"
+                           TargetType="ComboBox">
+                    <Style.Triggers>
+                        <DataTrigger 
+                                Binding="{Binding 
+                                    HasErrorsOfProperties[AmplifierIndex], 
+                                    Mode=OneWay,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                                Value="True">
+                            <Setter 
+                                    Property="ToolTip" 
+                                    Value="{Binding 
+                                        LatestErrors[AmplifierIndex], 
+                                        Mode=OneWay,
+                                        UpdateSourceTrigger=PropertyChanged}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+                </ComboBox.Style>
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[Amplifier]" Mode="OneTime"/>
@@ -121,15 +214,37 @@
             </ComboBox>
             <!--HS Speed-->
             <ComboBox Grid.Row="5" Grid.Column="1"
-                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding
                         Path=AvailableHSSpeeds,
                         Mode=OneWay,
                         UpdateSourceTrigger=PropertyChanged,
                         Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
                         ConverterParameter=Item2}"
-                      SelectedIndex="{Binding HSSpeedIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                      ToolTip="{Binding LatestErrors[HSSpeedIndex], UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding 
+                        HSSpeedIndex, 
+                        Mode=TwoWay, 
+                        UpdateSourceTrigger=PropertyChanged, 
+                        ValidatesOnNotifyDataErrors=True}">
+                <ComboBox.Style>
+                    <Style BasedOn="{StaticResource ResourceKey=ComboBoxStyle}"
+                           TargetType="ComboBox">
+                        <Style.Triggers>
+                            <DataTrigger 
+                                Binding="{Binding 
+                                    HasErrorsOfProperties[HSSpeedIndex], 
+                                    Mode=OneWay,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                                Value="True">
+                                <Setter 
+                                    Property="ToolTip" 
+                                    Value="{Binding 
+                                        LatestErrors[HSSpeedIndex], 
+                                        Mode=OneWay,
+                                        UpdateSourceTrigger=PropertyChanged}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ComboBox.Style>
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[HSSpeed]" Mode="OneTime"/>
@@ -140,15 +255,37 @@
             </ComboBox>
             <!--Pre Amp Gain-->
             <ComboBox Grid.Row="6" Grid.Column="1"
-                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding
                         Path=AvailablePreAmpGains,
                         Mode=OneWay,
                         UpdateSourceTrigger=PropertyChanged,
                         Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
                         ConverterParameter=Item2}"
-                      SelectedIndex="{Binding PreAmpGainIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                      ToolTip="{Binding LatestErrors[PreAmpGain], UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding 
+                        PreAmpGainIndex, 
+                        Mode=TwoWay, 
+                        UpdateSourceTrigger=PropertyChanged, 
+                        ValidatesOnNotifyDataErrors=True}">
+                <ComboBox.Style>
+                    <Style BasedOn="{StaticResource ResourceKey=ComboBoxStyle}"
+                           TargetType="ComboBox">
+                        <Style.Triggers>
+                            <DataTrigger 
+                                Binding="{Binding 
+                                    HasErrorsOfProperties[PreAmpGainIndex], 
+                                    Mode=OneWay,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                                Value="True">
+                                <Setter 
+                                    Property="ToolTip" 
+                                    Value="{Binding 
+                                        LatestErrors[PreAmpGainIndex], 
+                                        Mode=OneWay,
+                                        UpdateSourceTrigger=PropertyChanged}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ComboBox.Style>
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[PreAmpGain]" Mode="OneTime"/>
@@ -159,7 +296,6 @@
             </ComboBox>
             <!--Acquisition Mode-->
             <ComboBox Grid.Row="7" Grid.Column="1"
-                      Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding
                         Path=AllowedAcquisitionModes,
                         Mode=OneWay,
@@ -169,8 +305,27 @@
                         Mode=TwoWay,
                         UpdateSourceTrigger=PropertyChanged,
                         Converter={StaticResource ResourceKey=EnumToDescriptionConverter}, 
-                        ValidatesOnNotifyDataErrors=True}"
-                      ToolTip="{Binding LatestErrors[AcquisitionModeValue], UpdateSourceTrigger=PropertyChanged}">
+                        ValidatesOnNotifyDataErrors=True}">
+                <ComboBox.Style>
+                    <Style BasedOn="{StaticResource ResourceKey=ComboBoxStyle}"
+                           TargetType="ComboBox">
+                        <Style.Triggers>
+                            <DataTrigger 
+                                Binding="{Binding 
+                                    HasErrorsOfProperties[AcquisitionModeValue], 
+                                    Mode=OneWay,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                                Value="True">
+                                <Setter 
+                                    Property="ToolTip" 
+                                    Value="{Binding 
+                                        LatestErrors[AcquisitionModeValue], 
+                                        Mode=OneWay,
+                                        UpdateSourceTrigger=PropertyChanged}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ComboBox.Style>
                 <ComboBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[AcquisitionMode]" Mode="OneTime"/>
@@ -182,8 +337,30 @@
             <!--Frame transfer-->
             <CheckBox Grid.Row="8" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center"
                       Margin="{StaticResource ResourceKey=DefaultMargin}" IsThreeState="False"
-                      IsChecked="{Binding FrameTransferValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                      ToolTip="{Binding LatestErrors[FrameTransferValue], UpdateSourceTrigger=PropertyChanged }">
+                      IsChecked="{Binding 
+                        FrameTransferValue, 
+                        Mode=TwoWay, 
+                        UpdateSourceTrigger=PropertyChanged, 
+                        ValidatesOnNotifyDataErrors=True}">
+                <CheckBox.Style>
+                    <Style TargetType="CheckBox">
+                        <Style.Triggers>
+                             <DataTrigger 
+                                Binding="{Binding 
+                                    HasErrorsOfProperties[FrameTransferValue], 
+                                    Mode=OneWay,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                                Value="True">
+                                        <Setter 
+                                    Property="ToolTip" 
+                                    Value="{Binding 
+                                        LatestErrors[FrameTransferValue], 
+                                        Mode=OneWay,
+                                        UpdateSourceTrigger=PropertyChanged}"/>
+                             </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </CheckBox.Style>
                 <CheckBox.IsEnabled>
                     <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                         <Binding Path="SupportedSettings[FrameTransferValue]" Mode="OneTime"/>
@@ -192,6 +369,46 @@
                     </MultiBinding>
                 </CheckBox.IsEnabled>
             </CheckBox>
+            <!--Read mode-->
+            <ComboBox Grid.Row="9" Grid.Column="1"
+                      ItemsSource="{Binding
+                        Path=AllowedReadModes,
+                        Mode=OneWay,
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
+                      SelectedItem="{Binding
+                        Path=ReadModeValue,
+                        Mode=TwoWay,
+                        UpdateSourceTrigger=PropertyChanged,
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}, 
+                        ValidatesOnNotifyDataErrors=True}">
+                <ComboBox.Style>
+                    <Style BasedOn="{StaticResource ResourceKey=ComboBoxStyle}"
+                           TargetType="ComboBox">
+                        <Style.Triggers>
+                            <DataTrigger 
+                                Binding="{Binding 
+                                    HasErrorsOfProperties[ReadModeValue], 
+                                    Mode=OneWay,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                                Value="True">
+                                <Setter 
+                                    Property="ToolTip" 
+                                    Value="{Binding 
+                                        LatestErrors[ReadModeValue], 
+                                        Mode=OneWay,
+                                        UpdateSourceTrigger=PropertyChanged}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ComboBox.Style>
+                <ComboBox.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="SupportedSettings[ReadMode]" Mode="OneTime"/>
+                        <Binding Path="AllowedSettings[ReadMode]" 
+                                 Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                    </MultiBinding>
+                </ComboBox.IsEnabled>
+            </ComboBox>
         </Grid>
     </ScrollViewer>
 </Window>
