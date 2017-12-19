@@ -48,6 +48,9 @@ namespace DIPOL_UF.Models
         /// Handles selection changed event of the tree view
         /// </summary>
         private DelegateCommand camPanelSelectionChangedCommand;
+        /// <summary>
+        /// Handles selection/deselection of all cameras
+        /// </summary>
         private DelegateCommand camPanelSelectedAllCommand;
 
         /// <summary>
@@ -80,6 +83,9 @@ namespace DIPOL_UF.Models
         private ObservableConcurrentDictionary<string, Dictionary<string, object>> camRealTimeStats
             = new ObservableConcurrentDictionary<string, Dictionary<string, object>>();
 
+        /// <summary>
+        /// Collection of menu bar items' viewmodels
+        /// </summary>
         public ObservableCollection<MenuItemViewModel> MenuBarItems
         {
             get => menuBarItems;
@@ -92,6 +98,10 @@ namespace DIPOL_UF.Models
                 }
             }
         }
+
+        /// <summary>
+        /// Collection of all connected cameras.
+        /// </summary>
         public ObservableConcurrentDictionary<string, ConnectedCameraViewModel> ConnectedCameras
         {
             get => connectedCams;
@@ -104,6 +114,10 @@ namespace DIPOL_UF.Models
                 }
             }
         }
+
+        /// <summary>
+        /// Tree representation of connected cameras.
+        /// </summary>
         public ObservableCollection<ConnectedCamerasTreeViewModel> CameraPanel
         {
             get => camPanel;
