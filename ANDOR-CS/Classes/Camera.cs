@@ -451,16 +451,19 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Timer event arguments</param>
         private void TemperatureMonitorCycler(object sender, ElapsedEventArgs e)
         {
-            if(!_IsDisposed && 
-                (   !IsAcquiring || 
+            // Checks if temperature can be queried
+            if (!_IsDisposed && // camera is not disposed
+                (   !IsAcquiring ||  // either it is not acquiring or it supports run-time queries
                     Capabilities.Features.HasFlag(SDKFeatures.ReadTemperatureDuringAcquisition)) &&
-                sender is Timer t &&
-                t.Enabled)
-                {
-                    (var status, var temp) = GetCurrentTemperature();
+                sender is Timer t && // sender is Timer
+                t.Enabled) // and Timer is enabled (not stopped and not in process of disposal)
+            {
+                // Gets temperature and status
+                (var status, var temp) = GetCurrentTemperature();
 
-                    OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
-                }
+                // Fires event
+                OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
+            }
         }
         /// <summary>
         /// Retrives new image from camera buffer and pushes it to queue.
