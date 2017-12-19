@@ -451,10 +451,11 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Timer event arguments</param>
         private void TemperatureMonitorCycler(object sender, ElapsedEventArgs e)
         {
-            CheckIsDisposed();
-
-            if (sender is Timer t)
-                if (t.Enabled)
+            if(!_IsDisposed && 
+                (   !IsAcquiring || 
+                    Capabilities.Features.HasFlag(SDKFeatures.ReadTemperatureDuringAcquisition)) &&
+                sender is Timer t &&
+                t.Enabled)
                 {
                     (var status, var temp) = GetCurrentTemperature();
 
