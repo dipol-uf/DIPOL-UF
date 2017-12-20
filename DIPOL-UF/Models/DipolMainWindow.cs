@@ -558,7 +558,7 @@ namespace DIPOL_UF.Models
                             var vm = new CameraPropertiesViewModel(viewmodel.Value.Camera);
                             var window = new Views.CameraPropertiesView(vm);
                             window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-                            window.Owner = Helper.FindParentOfType<Window>(parent) as Window;
+                            window.Owner = Helper.FindParentOfType<Window>(parent);
                             window.Show();
                         }
                 }
