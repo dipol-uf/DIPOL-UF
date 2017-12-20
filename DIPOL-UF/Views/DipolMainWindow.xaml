@@ -98,7 +98,7 @@
                     <Button 
                         Style="{StaticResource ResourceKey=BasicButtonStyle}"
                         Content="Remote Sessions"
-                        Width="auto" HorizontalAlignment="Center"/>
+                        Width="auto" HorizontalAlignment="Center" IsEnabled="False"/>
                 </Border>
             </Grid>
         </Border>
