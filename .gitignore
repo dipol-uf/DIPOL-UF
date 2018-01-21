@@ -1,6 +1,6 @@
-# FORCE INCLUDED ANDOR LIBS
-!**/*ATMCD64CD.dll
-!**/*atmcd64d.dll
+# IGNORE ANDOR LIBS
+**/*ATMCD64CD.dll
+**/*atmcd64d.dll
 
 
 # Windows image file caches
