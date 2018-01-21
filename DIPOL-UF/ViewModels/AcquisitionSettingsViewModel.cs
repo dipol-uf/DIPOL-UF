@@ -20,22 +20,13 @@ namespace DIPOL_UF.ViewModels
     {
         private CameraBase camera;
 
-
         private Dictionary<string, bool> supportedSettings = null;
         private ObservableConcurrentDictionary<string, bool> allowedSettings = null;
 
-
         private DelegateCommand saveCommand;
         private DelegateCommand loadCommand;
-        private DelegateCommand submitCommand = new DelegateCommand(
-            (param) => CloseView(param, false),
-            DelegateCommand.CanExecuteAlways
-            );
-        private DelegateCommand cancelCommand = new DelegateCommand(
-          (param) => CloseView(param, true),
-          DelegateCommand.CanExecuteAlways
-          );
-
+        private DelegateCommand submitCommand;
+        private DelegateCommand cancelCommand;
 
         public DelegateCommand SubmitCommand => submitCommand;
         public DelegateCommand CancelCommand => cancelCommand;
@@ -453,6 +444,16 @@ namespace DIPOL_UF.ViewModels
 
         private void InitializeCommands()
         {
+            submitCommand = new DelegateCommand(
+                (param) => CloseView(param, false),
+                DelegateCommand.CanExecuteAlways
+                );
+
+            cancelCommand = new DelegateCommand(
+                (param) => CloseView(param, true),
+                DelegateCommand.CanExecuteAlways
+                );
+
             saveCommand = new DelegateCommand(
                 SaveTo,
                 DelegateCommand.CanExecuteAlways
@@ -545,7 +546,7 @@ namespace DIPOL_UF.ViewModels
         }
 
        
-        private static void CloseView(object parameter, bool isCanceled)
+        private void CloseView(object parameter, bool isCanceled)
         {
             if (parameter is DependencyObject elem)
             {
@@ -553,6 +554,18 @@ namespace DIPOL_UF.ViewModels
                 if (window != null && Helper.IsDialogWindow(window))
                 {
                     window.DialogResult = !isCanceled;
+                }
+
+                if (!isCanceled)
+                {
+                    var fields = this
+                        .GetType()
+                        .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                        .Where(x => x.SetMethod != null && !x.PropertyType.IsArray)
+                        .Select(x => x.Name)
+                        .ToArray();
+
+                    var result = model.ApplySettings(out (float, float, float, int) timig);
                 }
 
                 window?.Close();
