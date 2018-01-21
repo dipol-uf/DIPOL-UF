@@ -225,6 +225,8 @@ namespace DIPOL_UF.Models
             var viewModel = new ViewModels.AcquisitionSettingsViewModel(settings, Camera);
 
             var result = new Views.AcquisitionSettingsView(viewModel).ShowDialog();
+
+            
         }
     }
 }
