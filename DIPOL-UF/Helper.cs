@@ -107,7 +107,14 @@ namespace DIPOL_UF
 
         public static T GetValueOrNullSafe<T>(this Dictionary<string, object> settings, string key, T nullReplacement = default(T))
         {
-            var value = GetValueOrNullSafe(settings, key);
+            var tempValue = GetValueOrNullSafe(settings, key);
+
+            object value = null;
+
+            if (tempValue is System.Collections.ArrayList list)
+                value = list.ToArray();
+            else
+                value = tempValue;
 
             if (value is T)
                 return (T)value;

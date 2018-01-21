@@ -2,7 +2,7 @@
 using System.Windows.Data;
 using System.Linq;
 using System.Globalization;
-
+using System.Collections;
 namespace DIPOL_UF.Converters
 {
     [ValueConversion(typeof(ANDOR_CS.Classes.CameraBase), typeof(string))]
