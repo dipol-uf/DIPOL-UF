@@ -1,0 +1,15 @@
+{
+	"TTLShutterSignal" : 1,
+	"ShutterOpenTimeMS" : 27,
+	"ShutterCloseTimeMS" : 27,
+	"CameraAlias" : ["Dipol-1 EX Cam","Dipol-3 BV Cam","Dipol-2 EX Cam"],
+	"Cameras" : ["DU897_EX_9237","DU897_BV_10001","DU897_EX_10012"],
+	"PopUpDelay" : "00:00:01.0",
+	"RemoteCloseTimeout" : "00:00:30",
+	"RemoteOperationTimeout" : "00:00:20",
+	"RemoteSendTimeout" : "00:30:00",
+	"RemoteOpenTimeout" : "00:00:15",
+	"RemoteEstablishPBTimeout" : "00:00:05",
+	"UICamStatusUpdateDelay" : 1500,
+	"RemoteLocations2" : ["dipol-2","dipol-3"]
+}
