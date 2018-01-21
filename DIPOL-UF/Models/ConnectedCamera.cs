@@ -220,8 +220,8 @@ namespace DIPOL_UF.Models
         }
         private void SetUpAcquisitionCommandExecute(object parameter)
         {
-            var settings = Camera.GetAcquisitionSettingsTemplate();
-
+            var settings = Camera.CurrentSettings ?? Camera.GetAcquisitionSettingsTemplate();
+            
             var viewModel = new ViewModels.AcquisitionSettingsViewModel(settings, Camera);
 
             var result = new Views.AcquisitionSettingsView(viewModel).ShowDialog();
