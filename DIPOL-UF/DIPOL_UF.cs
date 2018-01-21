@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+
 using System.Linq;
 
 using System.Web.Script.Serialization;
+
 
 namespace DIPOL_UF
 {
     public static class DIPOL_UF_App
     {
+
         private static readonly string coreConfigPath = "core.dipolconfig.json";
 
         public static Dictionary<string, object> Settings
@@ -21,6 +24,7 @@ namespace DIPOL_UF
         [STAThread]
         static int Main(string[] args)
         {
+
 
             System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
             System.Diagnostics.Debug.AutoFlush = true;
@@ -58,8 +62,9 @@ namespace DIPOL_UF
                 Settings = null;
                 Helper.WriteLog(e);
             }
-
+        
         }
 
+        
     }
 }
