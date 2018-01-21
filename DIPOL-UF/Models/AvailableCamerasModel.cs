@@ -196,6 +196,7 @@ namespace DIPOL_UF.Models
                                 workerPool.Add(Task.Run(() => {
                                     Task.Delay(3750).Wait();
                                     Application.Current.Dispatcher.Invoke(progressView.Close);
+                                    CanCancel = true;
                             }));
                         }
 
