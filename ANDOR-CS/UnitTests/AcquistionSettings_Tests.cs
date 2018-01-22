@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Xml;
+using System.Text;
 using System.Linq;
 using System.IO;
 using System.Reflection;
@@ -18,9 +20,16 @@ namespace ANDOR_CS.UnitTests
         public static void Main()
         {
             var setts = new AcquisitionSettings();
+            var sb = new StringBuilder();
+
+            using (var xml = XmlWriter.Create(sb, new XmlWriterSettings() { Indent = true, NewLineOnAttributes = true }))
+                setts.WriteXml(xml);
 
 
-           
+            using (var xml = XmlReader.Create(new System.IO.StringReader(sb.ToString()), new XmlReaderSettings()))
+                setts.ReadXml(xml);
+
+            Console.WriteLine(sb.ToString());
             Console.ReadKey();
         }
         [TestInitialize]

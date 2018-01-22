@@ -22,6 +22,8 @@ using System.Xml.Serialization;
 using System.Xml.Linq;
 using System.IO;
 using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
@@ -33,6 +35,14 @@ namespace ANDOR_CS.Classes
 {
     public abstract class SettingsBase : IDisposable, IXmlSerializable
     {
+        protected static Regex TupleTypeParser = new Regex(@"ValueTuple`(\d)+\[(.+?,)+?\]");
+        protected static Type[] AllowedTypes = {
+            typeof(int),
+            typeof(float),
+            typeof(double),
+            typeof(string)
+        };
+
         protected CameraBase camera = null;
 
         [ANDOR_CS.Attributes.NotSerializeProperty]
@@ -969,12 +979,120 @@ namespace ANDOR_CS.Classes
 
         public void ReadXml(XmlReader reader)
         {
-            throw new NotImplementedException();
+            while (reader.Read())
+            {
+                if (reader.NodeType != XmlNodeType.Whitespace && 
+                    reader.NodeType != XmlNodeType.DocumentType &&
+                    reader.NodeType != XmlNodeType.XmlDeclaration)
+                    Console.WriteLine(DeserializeElement(reader));
+            }
         }
 
         public void WriteXml(XmlWriter writer)
         {
-           
+            var props = this.GetType()
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(p => p.SetMethod != null && p.GetMethod != null);
+
+            writer.WriteStartDocument();
+            writer.WriteStartElement("Settings");
+
+            object value = null;
+
+            foreach (var p in props)
+                if((value = p.GetValue(this)) != null)
+                    SerializeElement(value, p.Name, writer);
+
+            writer.WriteEndElement();
+            writer.WriteEndDocument();
+        }
+
+        private static void SerializeElement(object element, string name, XmlWriter writer)
+        {
+            var elemType = element.GetType();
+            writer.WriteStartElement(name);
+            writer.WriteAttributeString("Type", elemType.ToString());
+
+            if (elemType.GetCustomAttributes(typeof(DataContractAttribute), true).Any())
+            {
+                var prvFields = elemType
+                     .GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
+                     .Where(f => f.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
+
+                var pubFields = elemType
+                     .GetFields(BindingFlags.Instance | BindingFlags.Public)
+                     .Where(f => f.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
+
+                var prvProps = elemType
+                     .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
+                     .Where(p => p.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
+
+                var pubProps = elemType
+                     .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                     .Where(p => p.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
+
+                foreach (var f in prvFields)
+                    SerializeElement(f.GetValue(element), f.Name, writer);
+
+                foreach (var f in pubFields)
+                    SerializeElement(f.GetValue(element), f.Name, writer);
+
+                foreach (var p in prvProps)
+                    SerializeElement(p.GetValue(element), p.Name, writer);
+
+                foreach (var p in pubProps)
+                    SerializeElement(p.GetValue(element), p.Name, writer);
+
+            }
+            else if (element is System.Runtime.CompilerServices.ITuple tuple)
+            {
+                for (int i = 0; i < tuple.Length; i++)
+                    SerializeElement(tuple[i], "Tpl_" + i.ToString(), writer);
+            }
+            else
+                writer.WriteAttributeString("Value", element.ToString());
+            
+            writer.WriteEndElement();
+        }
+
+        private static object DeserializeElement(XmlReader reader)
+        {
+
+            if (reader.AttributeCount == 2)
+            {
+                string type = reader.GetAttribute("Type");
+                string value = reader.GetAttribute("Value");
+                if (type == typeof(string).FullName &&
+                    !String.IsNullOrWhiteSpace(value))
+                    return new KeyValuePair<string, string>(reader.Name, value);
+                else
+                {
+                    Type tp = null;
+                    if ((tp = AllowedTypes.Where(t => t.FullName == type).FirstOrDefault()) != null &&
+                        !String.IsNullOrWhiteSpace(value))
+
+                        return new KeyValuePair<string, object>(reader.Name,
+                                tp.GetMethod("Parse",
+                                new[] {
+                                typeof(string),
+                                typeof(System.Globalization.NumberStyles),
+                                typeof(System.IFormatProvider)})
+                                .Invoke(null, new object[] {
+                                value,
+                                System.Globalization.NumberStyles.Any,
+                                System.Globalization.NumberFormatInfo.InvariantInfo
+                                }));
+                }
+            }
+            else if (reader.AttributeCount == 1)
+            {
+                string type = reader.GetAttribute("Type");
+                var match = TupleTypeParser.Match(type);
+            }
+            else
+                Console.WriteLine(reader.NodeType + "\t" + reader.Name);
+
+            return null;
         }
     }
 }
