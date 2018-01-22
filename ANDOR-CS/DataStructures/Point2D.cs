@@ -26,7 +26,7 @@ namespace ANDOR_CS.DataStructures
     [DataContract]
     public struct Point2D
     {
-        [DataMember(IsRequired = true)s]
+        [DataMember(IsRequired = true)]
         public int X
         {
             get;
