@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
-using System.Text;
+using System.Text.RegularExpressions;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.IO;
 
@@ -18,6 +19,8 @@ namespace DIPOL_UF.ViewModels
 {
     class AcquisitionSettingsViewModel : ViewModel<SettingsBase>
     {
+        private static Regex PropNameTrimmer = new Regex("((Value)|(Index))+(Text)?");
+
         private CameraBase camera;
 
         private Dictionary<string, bool> supportedSettings = null;
@@ -300,7 +303,7 @@ namespace DIPOL_UF.ViewModels
         {
             get => model.TriggerMode;
             set
-                {
+            {
                 try
                 {
                     model.SetTriggerMode(value ?? TriggerMode.Internal);
@@ -382,19 +385,19 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
-        public AcquisitionSettingsViewModel(SettingsBase model, CameraBase camera) 
-            :base(model)
+        public AcquisitionSettingsViewModel(SettingsBase model, CameraBase camera)
+            : base(model)
         {
             this.model = model;
             this.camera = camera;
 
-            InitializeCommands();
 
             CheckSupportedFeatures();
             InitializeAllowedSettings();
+            InitializeCommands();
 
         }
-        
+
         private void CheckSupportedFeatures()
         {
             supportedSettings = new Dictionary<string, bool>()
@@ -423,19 +426,19 @@ namespace DIPOL_UF.ViewModels
                     new KeyValuePair<string, bool>(nameof(model.VSAmplitude), true),
                     new KeyValuePair<string, bool>(nameof(model.ADConverter), true),
                     new KeyValuePair<string, bool>(nameof(model.Amplifier), true),
-                    new KeyValuePair<string, bool>(nameof(model.HSSpeed), 
+                    new KeyValuePair<string, bool>(nameof(model.HSSpeed),
                         ADConverterIndex >= 0
                         && AmplifierIndex >= 0),
                     new KeyValuePair<string, bool>(nameof(model.PreAmpGain),
                         ADConverterIndex >= 0
-                        && AmplifierIndex >= 0 
+                        && AmplifierIndex >= 0
                         && HSSpeedIndex >= 0),
                     new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true),
                     new KeyValuePair<string, bool>(nameof(FrameTransferValue), false),
                     new KeyValuePair<string, bool>(nameof(model.ReadMode), true),
                     new KeyValuePair<string, bool>(nameof(model.TriggerMode), true),
                     new KeyValuePair<string, bool>(nameof(model.ExposureTime), true),
-                    new KeyValuePair<string, bool>(nameof(model.EMCCDGain), 
+                    new KeyValuePair<string, bool>(nameof(model.EMCCDGain),
                         (AmplifierIndex >= 0)
                         && Camera.Properties.Amplifiers[AmplifierIndex].Amplifier == OutputAmplification.Conventional)
                 }
@@ -446,7 +449,7 @@ namespace DIPOL_UF.ViewModels
         {
             submitCommand = new DelegateCommand(
                 (param) => CloseView(param, false),
-                DelegateCommand.CanExecuteAlways
+                CanSubmit
                 );
 
             cancelCommand = new DelegateCommand(
@@ -471,7 +474,7 @@ namespace DIPOL_UF.ViewModels
             dialog.FilterIndex = 0;
             dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             dialog.Title = "Save current acquisition settings";
-            
+
 
 
             if (dialog.ShowDialog() == true)
@@ -503,10 +506,10 @@ namespace DIPOL_UF.ViewModels
         {
             base.OnPropertyChanged(sender, e);
 
-            if ((e.PropertyName == nameof(AmplifierIndex) || 
+            if ((e.PropertyName == nameof(AmplifierIndex) ||
                  e.PropertyName == nameof(ADConverterIndex)) &&
-                (AllowedSettings[nameof(model.HSSpeed)] 
-                    = ADConverterIndex >= 0 && 
+                (AllowedSettings[nameof(model.HSSpeed)]
+                    = ADConverterIndex >= 0 &&
                       AmplifierIndex >= 0))
             {
                 RaisePropertyChanged(nameof(PreAmpGainIndex));
@@ -527,11 +530,11 @@ namespace DIPOL_UF.ViewModels
             }
 
             if (e.PropertyName == nameof(AcquisitionModeValue) &&
-                AcquisitionModeValue.HasValue)                
+                AcquisitionModeValue.HasValue)
             {
                 FrameTransferValue = false;
                 RaisePropertyChanged(nameof(FrameTransferValue));
-                AllowedSettings[nameof(FrameTransferValue)] = 
+                AllowedSettings[nameof(FrameTransferValue)] =
                     AcquisitionModeValue != AcquisitionMode.SingleScan &&
                     AcquisitionModeValue != AcquisitionMode.FastKinetics;
             }
@@ -542,10 +545,12 @@ namespace DIPOL_UF.ViewModels
                     (Camera.Properties.Amplifiers[AmplifierIndex].Amplifier == OutputAmplification.Conventional);
                 RaisePropertyChanged(nameof(EMCCDGainValueText));
             }
-            
+
+            SubmitCommand?.OnCanExecuteChanged();
+
         }
 
-       
+
         private void CloseView(object parameter, bool isCanceled)
         {
             if (parameter is DependencyObject elem)
@@ -556,20 +561,53 @@ namespace DIPOL_UF.ViewModels
                     window.DialogResult = !isCanceled;
                 }
 
-                if (!isCanceled)
-                {
-                    var fields = this
-                        .GetType()
-                        .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
-                        .Where(x => x.SetMethod != null && !x.PropertyType.IsArray)
-                        .Select(x => x.Name)
-                        .ToArray();
+                //if (!isCanceled)
+                //{
+                //    var fields = this
+                //        .GetType()
+                //        .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                //        .Where(x => x.SetMethod != null && !x.PropertyType.IsArray)
+                //        .Select(x => x.Name)
+                //        .ToArray();
 
-                    var result = model.ApplySettings(out (float, float, float, int) timig);
-                }
+                //    var result = model.ApplySettings(out (float, float, float, int) timig);
+                //}
 
                 window?.Close();
             }
+        }
+
+        /// <summary>
+        /// Checks if Acquisiotn Settings form can be submitted.
+        /// </summary>
+        /// <param name="parameter">Unused parameter for compatibility with <see cref="Commands.DelegateCommand"/>.</param>
+        /// <returns>True if all required fields are set.</returns>
+        private bool CanSubmit(object parameter)
+        {
+            // Helper function, checks if value is set.
+            bool ValueIsSet(PropertyInfo p)
+            {
+                if (Nullable.GetUnderlyingType(p.PropertyType) != null)
+                    return p.GetValue(this) != null;
+                else if (p.PropertyType == typeof(int))
+                    return (int)p.GetValue(this) != -1;
+                else if (p.PropertyType == typeof(string))
+                    return !String.IsNullOrWhiteSpace((string)p.GetValue(this));
+                else
+                    return false;
+            }
+
+            // Query that joins pulic Properties to Allowed settings with true value.
+            // As a result, propsQuery stores all Proprties that should have values set.
+            var propsQuery =
+                from prop in (typeof(AcquisitionSettingsViewModel)
+                    .GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                join allowedProp in AllowedSettings on PropNameTrimmer.Replace(prop.Name, "") equals allowedProp.Key
+                where allowedProp.Value == true
+                select prop;
+
+            // Runs check of values on all selected properties.
+            return propsQuery.All(ValueIsSet);
         }
     }
 }
