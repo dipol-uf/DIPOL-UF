@@ -461,6 +461,10 @@ namespace DIPOL_UF.ViewModels
                 SaveTo,
                 DelegateCommand.CanExecuteAlways
                 );
+
+            loadCommand = new DelegateCommand(
+                LoadFrom,
+                DelegateCommand.CanExecuteAlways);
         }
 
         private void SaveTo(object parameter)
@@ -484,6 +488,41 @@ namespace DIPOL_UF.ViewModels
                     model.Serialize(fl);
                 }
             }
+        }
+
+        private void LoadFrom(object parameter)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog()
+            {
+                AddExtension = true,
+                CheckFileExists = true,
+                CheckPathExists = true,
+                DefaultExt = ".acq",
+                FileName = Camera.ToString(),
+                FilterIndex = 0,
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                Title = "Load acquisition settings from file"
+            };
+            dialog.Filter = $@"Acquisition settings (*{dialog.DefaultExt})|*{dialog.DefaultExt}|All files (*.*)|*.*";
+
+            if (dialog.ShowDialog() == true)
+            {
+                using (var fl = File.Open(dialog.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    model.Deserialize(fl);
+
+                var propNames =
+                    from prop in typeof(AcquisitionSettings)
+                        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    join allowedProp in AllowedSettings
+                    on PropNameTrimmer.Replace(prop.Name, "") equals allowedProp.Key
+                    where allowedProp.Value == true
+                    select prop.Name;
+
+                foreach (var prop in propNames)
+                    RaisePropertyChanged(prop);
+                    
+            }
+
         }
 
         private void ValidateProperty(Exception e = null,
