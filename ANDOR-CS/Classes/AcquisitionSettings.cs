@@ -1124,24 +1124,29 @@ namespace ANDOR_CS.Classes
         /// SERIALIZATION TEST CONSTRUCTOR; DO NOT USE
         /// </summary>
         #if DEBUG
-        internal AcquisitionSettings()
+        internal AcquisitionSettings(bool empty = false)
         {
-            this.AccumulateCycle = (1, 10f);
-            this.AcquisitionMode = Enums.AcquisitionMode.FastKinetics;
-            this.ADConverter = (0, 16);
-            this.Amplifier = ("Amp", OutputAmplification.Conventional, 0);
-            this.ExposureTime = 123;
-            this.HSSpeed = (0, 12);
-            this.ImageArea = new Rectangle(1, 1, 128, 256);
+            if (!empty)
+            {
 
-            this.KineticCycle = (12, 23);
-            this.PreAmpGain = (0, "Gain");
-            this.ReadMode = Enums.ReadMode.MultiTrack;
+                this.AcquisitionMode = Enums.AcquisitionMode.SingleScan;
+                this.ADConverter = (0, 16);
+                this.Amplifier = ("Conventional", OutputAmplification.Conventional, 1);
+                this.ExposureTime = 123;
+                this.HSSpeed = (0, 3);
+                this.ImageArea = new Rectangle(1, 1, 128, 256);
 
-            this.TriggerMode = Enums.TriggerMode.Bulb;
-            this.VSAmplitude = Enums.VSAmplitude.Plus2;
-            this.VSSpeed = (0, 500);
+                //this.KineticCycle = (12, 23);
+                this.PreAmpGain = (0, "Gain 1");
+                this.ReadMode = Enums.ReadMode.FullImage;
+
+                this.TriggerMode = Enums.TriggerMode.Bulb;
+                this.VSAmplitude = Enums.VSAmplitude.Plus2;
+                this.VSSpeed = (0, 0.3f);
+            }
+
         }
+
         #endif
     }
 }
