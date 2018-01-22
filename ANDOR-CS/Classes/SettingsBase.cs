@@ -18,17 +18,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Xml.Serialization;
 using System.Xml.Linq;
 using System.IO;
+using System.Reflection;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
+using System.Xml;
+using System.Xml.Schema;
 
 namespace ANDOR_CS.Classes
 {
-    public abstract class SettingsBase : IDisposable
+    public abstract class SettingsBase : IDisposable, IXmlSerializable
     {
         protected CameraBase camera = null;
 
@@ -959,6 +962,19 @@ namespace ANDOR_CS.Classes
         public virtual void Dispose()
         {
             camera = null;
+        }
+
+        public XmlSchema GetSchema()
+            => null;
+
+        public void ReadXml(XmlReader reader)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+           
         }
     }
 }

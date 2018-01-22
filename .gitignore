@@ -2,6 +2,9 @@
 **/*ATMCD64CD.dll
 **/*atmcd64d.dll
 
+# NUGET pacakges
+**/*package*
+*package*
 
 # Windows image file caches
 Thumbs.db

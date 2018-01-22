@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AcquisitionSettings Camera="TEST" Name="">
+	<VSSpeed Tuple="True" TupleSize="2">
+		<TupleElement FieldName="Index" FieldType="System.Int32">
+			0
+		</TupleElement>
+		<TupleElement FieldName="Speed" FieldType="System.Single">
+			0.3
+		</TupleElement>
+	</VSSpeed>
+	<HSSpeed Tuple="True" TupleSize="2">
+		<TupleElement FieldName="Index" FieldType="System.Int32">
+			0
+		</TupleElement>
+		<TupleElement FieldName="Speed" FieldType="System.Single">
+			3
+		</TupleElement>
+	</HSSpeed>
+	<ADConverter Tuple="True" TupleSize="2">
+		<TupleElement FieldName="Index" FieldType="System.Int32">
+			0
+		</TupleElement>
+		<TupleElement FieldName="BitDepth" FieldType="System.Int32">
+			16
+		</TupleElement>
+	</ADConverter>
+	<VSAmplitude Tuple="False" Type="ANDOR_CS.Enums.VSAmplitude">
+		Plus2
+	</VSAmplitude>
+	<Amplifier Tuple="True" TupleSize="3">
+		<TupleElement FieldName="Name" FieldType="System.String">
+			Conventional
+		</TupleElement>
+		<TupleElement FieldName="Amplifier" FieldType="ANDOR_CS.Enums.OutputAmplification">
+			Conventional
+		</TupleElement>
+		<TupleElement FieldName="Index" FieldType="System.Int32">
+			1
+		</TupleElement>
+	</Amplifier>
+	<PreAmpGain Tuple="True" TupleSize="2">
+		<TupleElement FieldName="Index" FieldType="System.Int32">
+			0
+		</TupleElement>
+		<TupleElement FieldName="Name" FieldType="System.String">
+			Gain 1
+		</TupleElement>
+	</PreAmpGain>
+	<AcquisitionMode Tuple="False" Type="ANDOR_CS.Enums.AcquisitionMode">
+		SingleScan
+	</AcquisitionMode>
+	<ReadMode Tuple="False" Type="ANDOR_CS.Enums.ReadMode">
+		FullImage
+	</ReadMode>
+	<TriggerMode Tuple="False" Type="ANDOR_CS.Enums.TriggerMode">
+		ExternalExposure
+	</TriggerMode>
+	<ExposureTime Tuple="False" Type="System.Single">
+		123
+	</ExposureTime>
+	<ImageArea Tuple="False" Type="ANDOR_CS.DataStructures.Rectangle">
+		1, 1, 128, 256
+	</ImageArea>
+</AcquisitionSettings>

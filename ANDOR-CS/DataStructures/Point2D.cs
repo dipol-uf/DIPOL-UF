@@ -18,19 +18,22 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace ANDOR_CS.DataStructures
 {
+    [DataContract]
     public struct Point2D
     {
+        [DataMember(IsRequired = true)s]
         public int X
         {
             get;
             private set;
         }
 
+        [DataMember(IsRequired = true)]
         public int Y
         {
             get;

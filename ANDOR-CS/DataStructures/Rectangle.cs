@@ -18,14 +18,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace ANDOR_CS.DataStructures
 {
+    [DataContract]
     public struct Rectangle
     {
+        [DataMember(IsRequired = true)]
         private Point2D start;
+        [DataMember(IsRequired = true)]
         private Point2D end;
 
         public int X1 => start.X;
