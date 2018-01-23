@@ -3,7 +3,7 @@
 namespace ANDOR_CS.Enums
 {
     [DataContract]
-    public enum TtlShutterSignal : int
+    public enum TtlShutterSignal
     {
         [EnumMember]
         Low = 0,

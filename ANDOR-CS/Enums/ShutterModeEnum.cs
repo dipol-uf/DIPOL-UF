@@ -4,8 +4,8 @@ using System.ComponentModel;
 namespace ANDOR_CS.Enums
 {
    [DataContract]
-    public enum ShutterMode : int
-    {
+    public enum ShutterMode
+   {
         [Description("Fully Automatic")]
         [EnumMember]
         FullyAuto = 0,

@@ -24,7 +24,7 @@ namespace ANDOR_CS.Enums
 {
     [Flags]
     [DataContract]
-    public enum SdkFeatures : UInt64
+    public enum SdkFeatures : ulong
     {
         [EnumMember]
         Unknown = 0,
@@ -91,8 +91,8 @@ namespace ANDOR_CS.Enums
         [EnumMember]
         SensorCompensation = 1 << 30, // SDK.AC_FEATURES_SENSOR_COMPENSATION,
         [EnumMember]
-        IrigSupport = (UInt64)1 << 31, //AC_FEATURES_IRIG_SUPPORT,
+        IrigSupport = (ulong)1 << 31, //AC_FEATURES_IRIG_SUPPORT,
         [EnumMember]
-        EsdEvent = (UInt64)1 << 32 //AC_FEATURES2_ESD_EVENTS
+        EsdEvent = 4294967296UL //AC_FEATURES2_ESD_EVENTS
     }
 }
