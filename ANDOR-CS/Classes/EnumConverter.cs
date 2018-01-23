@@ -62,7 +62,7 @@ namespace ANDOR_CS.Classes
             {TriggerMode.External, 1 },
             {TriggerMode.ExternalStart, 6 },
             {TriggerMode.ExternalExposure, 7 },
-            {TriggerMode.ExternalFVBEM, 9 },
+            {TriggerMode.ExternalFvbem, 9 },
             {TriggerMode.Continuous, 10 },
             {TriggerMode.ExternalChargeshifting, 12 }
         };

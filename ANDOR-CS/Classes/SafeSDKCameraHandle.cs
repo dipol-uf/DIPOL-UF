@@ -16,38 +16,31 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using System.Runtime.ConstrainedExecution;
-
-using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
 
 namespace ANDOR_CS.Classes
 {
+    /// <inheritdoc />
     /// <summary>
-    /// A safe handle class based on <see cref="System.Runtime.InteropServices.SafeHandle"/> class tha uses internal <see cref="IntPtr"/> handle to store
+    /// A safe handle class based on <see cref="T:System.Runtime.InteropServices.SafeHandle" /> class that uses internal <see cref="T:System.IntPtr" /> handle to store
     /// intrinsic AndorSDK camera handle/pointer.
     /// </summary>
-    public class SafeSDKCameraHandle : Microsoft.Win32.SafeHandles.SafeHandleZeroOrMinusOneIsInvalid
+    public class SafeSdkCameraHandle : Microsoft.Win32.SafeHandles.SafeHandleZeroOrMinusOneIsInvalid
     {
         /// <summary>
         /// A property with getter that returns stored raw Andor SDK camera handle
         /// </summary>
-        public int SDKPtr => handle.ToInt32();
+        public int SdkPtr => handle.ToInt32();
 
+        /// <inheritdoc />
         /// <summary>
         /// A constructor. Calls base constructor with ownsHandle = true
         /// </summary>
         /// <param name="handle"></param>
-        public SafeSDKCameraHandle(int handle)
-            : base(true)
-        {
-            SetHandle((IntPtr)handle);
-        }
+        public SafeSdkCameraHandle(int handle)
+            : base(true) => SetHandle((IntPtr)handle);
 
+        /// <inheritdoc />
         /// <summary>
         /// An overriden ReleaseHandle method that performs all the cleanup procedures. 
         /// Marked for safe execution
@@ -62,22 +55,21 @@ namespace ANDOR_CS.Classes
                 return false;
 
             // If SDK handle is null, resource cannot be freed
-            if (SDKInit.SDKInstance == null)
+            if (AndorSdkInitialization.SdkInstance == null)
                 return false;
 
             // Variable holds return codes of some Andor SDK methods
-            uint result = 0;
-            int cameraHandle = 0;
+            var cameraHandle = 0;
             //// Used to check the currently active camera. 
             
-            return SDKInit.CallWithoutHandle(() =>
+            return AndorSdkInitialization.CallWithoutHandle(() =>
             {
-                result = SDKInit.SDKInstance.GetCurrentCamera(ref cameraHandle);
+                var result = AndorSdkInitialization.SdkInstance.GetCurrentCamera(ref cameraHandle);
                 if (result != ATMCD64CS.AndorSDK.DRV_SUCCESS)
                     return result;
 
                 // Frees camera handles
-                result = SDKInit.SDKInstance.ShutDown();
+                result = AndorSdkInitialization.SdkInstance.ShutDown();
 
                 return result;
             }) == ATMCD64CS.AndorSDK.DRV_SUCCESS;

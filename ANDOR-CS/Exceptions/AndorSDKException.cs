@@ -26,7 +26,7 @@ using System.Runtime.Serialization;
 namespace ANDOR_CS.Exceptions
 {
    
-    public class AndorSDKException : Exception
+    public class AndorSdkException : Exception
     {
         
         public uint ErrorCode
@@ -35,11 +35,11 @@ namespace ANDOR_CS.Exceptions
             private set;
         } = 0;
 
-        public AndorSDKException(string message, Exception innerException) 
+        public AndorSdkException(string message, Exception innerException) 
             : base(message, innerException)
         { }
 
-        public AndorSDKException(string message, uint errorCode)
+        public AndorSdkException(string message, uint errorCode)
             : base(message)
         {
             ErrorCode = errorCode;
@@ -54,7 +54,7 @@ namespace ANDOR_CS.Exceptions
         {
             if (returnCode != ATMCD64CS.AndorSDK.DRV_SUCCESS 
                 & returnCode != ATMCD64CS.AndorSDK.DRV_NO_NEW_DATA)
-                throw new AndorSDKException($"{name} returned error code.",
+                throw new AndorSdkException($"{name} returned error code.",
                     returnCode);
         }
     }

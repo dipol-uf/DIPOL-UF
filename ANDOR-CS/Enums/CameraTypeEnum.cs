@@ -26,50 +26,50 @@ namespace ANDOR_CS.Enums
     {
 
         [EnumMember]
-        PDA = SDK.AC_CAMERATYPE_PDA,
+        Pda = SDK.AC_CAMERATYPE_PDA,
         [EnumMember]
-        iXon = SDK.AC_CAMERATYPE_IXON,
+        IXon = SDK.AC_CAMERATYPE_IXON,
         [EnumMember]
-        ICCD = SDK.AC_CAMERATYPE_ICCD,
+        Iccd = SDK.AC_CAMERATYPE_ICCD,
         [EnumMember]
-        EMCCD = SDK.AC_CAMERATYPE_EMCCD,
+        Emccd = SDK.AC_CAMERATYPE_EMCCD,
         [EnumMember]
-        CCD = SDK.AC_CAMERATYPE_CCD,
+        Ccd = SDK.AC_CAMERATYPE_CCD,
         [EnumMember]
-        iStar = SDK.AC_CAMERATYPE_ISTAR,
+        IStar = SDK.AC_CAMERATYPE_ISTAR,
         [EnumMember]
         ThirdPartyVideo = SDK.AC_CAMERATYPE_VIDEO,
         [EnumMember]
-        iDus = SDK.AC_CAMERATYPE_IDUS,
+        IDus = SDK.AC_CAMERATYPE_IDUS,
         [EnumMember]
         Newton = SDK.AC_CAMERATYPE_NEWTON,
         [EnumMember]
         Surcam = SDK.AC_CAMERATYPE_SURCAM,
         [EnumMember]
-        USBICCD = SDK.AC_CAMERATYPE_USBICCD,
+        Usbiccd = SDK.AC_CAMERATYPE_USBICCD,
         [EnumMember]
         Luca = SDK.AC_CAMERATYPE_LUCA,
         [EnumMember]
         Reserved = SDK.AC_CAMERATYPE_RESERVED,
         [EnumMember]
-        iKon = SDK.AC_CAMERATYPE_IKON,
+        IKon = SDK.AC_CAMERATYPE_IKON,
         [EnumMember]
         InGaAs = SDK.AC_CAMERATYPE_INGAAS,
         [EnumMember]
-        iVac = SDK.AC_CAMERATYPE_IVAC,
+        IVac = SDK.AC_CAMERATYPE_IVAC,
         [EnumMember]
         Clara = SDK.AC_CAMERATYPE_CLARA,
         [EnumMember]
-        USBiStar = SDK.AC_CAMERATYPE_USBISTAR,
+        UsBiStar = SDK.AC_CAMERATYPE_USBISTAR,
         [EnumMember]
-        iXonUltra = SDK.AC_CAMERATYPE_IXONULTRA,
+        IXonUltra = SDK.AC_CAMERATYPE_IXONULTRA,
         [EnumMember]
-        iVacCCD = SDK.AC_CAMERATYPE_IVAC_CCD,
+        IVacCcd = SDK.AC_CAMERATYPE_IVAC_CCD,
         [EnumMember]
-        iKonXL = SDK.AC_CAMERATYPE_IKONXL,
+        IKonXl = SDK.AC_CAMERATYPE_IKONXL,
         [EnumMember]
-        iStarSCMOS = SDK.AC_CAMERATYPE_ISTAR_SCMOS,
+        IStarScmos = SDK.AC_CAMERATYPE_ISTAR_SCMOS,
         [EnumMember]
-        iKonLR = 31 //SDK.AC_CAMERATYPE_IKONLR
+        IKonLr = 31 //SDK.AC_CAMERATYPE_IKONLR
     }
 }

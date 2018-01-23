@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ANDOR_CS.Attributes
 {
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+    /// <inheritdoc />
+    /// <summary>
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class NonSerializedAttribute : Attribute
     {
     }
