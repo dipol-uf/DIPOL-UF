@@ -18,120 +18,120 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-using System.IO;
-
-using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
+using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
-
-
-using SDKInit = ANDOR_CS.Classes.AndorSDKInitialization;
-using SDK = ATMCD64CS.AndorSDK;
-
-using static ANDOR_CS.Exceptions.AndorSDKException;
 using static ANDOR_CS.Classes.AndorSDKInitialization;
+using static ANDOR_CS.Exceptions.AndorSDKException;
+using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Classes
 {
-
     /// <summary>
-    /// Represents all possible acuisition/camera settings that can be adjusted before taking any images
+    ///     Represents all possible acuisition/Camera settings that can be adjusted before taking any images
     /// </summary>
-     public class AcquisitionSettings : SettingsBase
+    public class AcquisitionSettings : SettingsBase
     {
-        private SafeSDKCameraHandle Handle
-            => camera is Camera cam ? cam.CameraHandle 
-            : throw new NullReferenceException($"Camera object in {nameof(AcquisitionSettings)} is of type {camera.GetType()}, " +
-                $"while it is expected to be ${typeof(Camera)}");
-
         /// <summary>
-        /// Constructor adds reference to parent <see cref="Camera"/> object.
+        ///     Constructor adds reference to parent <see cref="Camera" /> object.
         /// </summary>
         /// <param name="camera">Parent object. Camera, to which settings should be applied.</param>
-        internal AcquisitionSettings(Camera camera)
-        {
-            this.camera = camera;
-        }
-        
-        ///// <summary>
-        ///// Checks camera parent <see cref="Camera"/>. If it is not initialized or active, throws exception.
-        ///// </summary>
-        ///// <exception cref="NullReferenceException"/>
-        ///// <exception cref="AndorSDKException"/>
-        //private void CheckCamera()
-        //{
-        //    // Checks if camera object is null
-        //    if (camera == null)
-        //        throw new NullReferenceException("Camera is null.");
-
-        //    // Checks if camera is initialized
-        //    if (!camera.IsInitialized)
-        //        throw new AndorSDKException("Camera is not properly initialized.", null);
-
-        //}
+        internal AcquisitionSettings(CameraBase camera) 
+            => Camera = camera;
 
         /// <summary>
-        /// Applys currenlty selected settings to the camera.
+        ///     SERIALIZATION TEST CONSTRUCTOR; DO NOT USE
         /// </summary>
-        /// <exception cref="ArgumentNullException"/>
+#if DEBUG
+        internal AcquisitionSettings(bool empty = false)
+        {
+            if (empty) 
+                return;
+
+            AcquisitionMode = Enums.AcquisitionMode.SingleScan;
+            ADConverter = (0, 16);
+            OutputAmplifier = (OutputAmplification.Conventional, "Conventional", 1);
+            ExposureTime = 123;
+            HSSpeed = (0, 3);
+            ImageArea = new Rectangle(1, 1, 128, 256);
+
+            //this.KineticCycle = (12, 23);
+            PreAmpGain = (0, "Gain 1");
+            ReadoutMode = ReadMode.FullImage;
+
+            TriggerMode = Enums.TriggerMode.Bulb;
+            VSAmplitude = Enums.VSAmplitude.Plus2;
+            VSSpeed = (0, 0.3f);
+        }
+
+#endif
+        private SafeSDKCameraHandle Handle
+            => Camera is Camera cam
+                ? cam.CameraHandle
+                : throw new NullReferenceException(
+                    $"Camera object in {nameof(AcquisitionSettings)} is of type {Camera.GetType()}, " +
+                    $"while it is expected to be ${typeof(Camera)}");
+
+
+        /// <summary>
+        ///     Applys currenlty selected settings to the Camera.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
         /// <returns>Result of application of each non-null setting</returns>
         public override List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
             out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
         {
-            List<(string Option, bool Success, uint ReturnCode)> output = new List<(string Option, bool Success, uint ReturnCode)>();
+            var output = new List<(string Option, bool Success, uint ReturnCode)>();
 
-            SafeSDKCameraHandle Handle = null;
-            if (camera is Camera locCam)
-                Handle = locCam.CameraHandle;
+            SafeSDKCameraHandle handle = null;
+            if (Camera is Camera locCam)
+                handle = locCam.CameraHandle;
             else
-                throw new Exception("Type of camera is wrong.");
+                throw new Exception("Type of Camera is wrong.");
 
             CheckCamera();
-            try
-            {
-                uint result = 0;
 
+            uint result;
 
-                if (VSSpeed.HasValue)
+            if (VSSpeed.HasValue)
                 {
-                    result = Call(Handle, SDKInstance.SetVSSpeed, VSSpeed.Value.Index);
+                    result = Call(handle, SDKInstance.SetVSSpeed, VSSpeed.Value.Index);
 
                     output.Add(("VS Speed", result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (VSAmplitude.HasValue)
                 {
-                    result = Call(Handle, SDKInstance.SetVSAmplitude, (int)(VSAmplitude.Value));
+                    result = Call(handle, SDKInstance.SetVSAmplitude, (int) VSAmplitude.Value);
 
                     output.Add(("VS Amplitude", result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (ADConverter.HasValue)
                 {
-                    result = Call(Handle, SDKInstance.SetADChannel, ADConverter.Value.Index);
+                    result = Call(handle, SDKInstance.SetADChannel, ADConverter.Value.Index);
 
                     output.Add(("AD Converter", result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (OutputAmplifier.HasValue)
                 {
-                    result = Call(Handle, SDKInstance.SetOutputAmplifier, OutputAmplifier.Value.Index);
+                    result = Call(handle, SDKInstance.SetOutputAmplifier, OutputAmplifier.Value.Index);
 
                     output.Add(("OutputAmplifier", result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (HSSpeed.HasValue)
                 {
-                    result = Call(Handle, () => SDKInstance.SetHSSpeed( OutputAmplifier?.Item3 ?? 0, HSSpeed.Value.Index));
+                    result = Call(handle,
+                        () => SDKInstance.SetHSSpeed(OutputAmplifier?.Item3 ?? 0, HSSpeed.Value.Index));
 
                     output.Add(("HS Speed", result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (PreAmpGain.HasValue)
                 {
-                    result = Call(Handle, SDKInstance.SetPreAmpGain, PreAmpGain.Value.Index);
+                    result = Call(handle, SDKInstance.SetPreAmpGain, PreAmpGain.Value.Index);
 
                     output.Add(("PreAmp Gain", result == SDK.DRV_SUCCESS, result));
                 }
@@ -139,7 +139,9 @@ namespace ANDOR_CS.Classes
 
                 if (ImageArea.HasValue)
                 {
-                    result = Call(Handle, () => SDKInstance.SetImage(1, 1, ImageArea.Value.X1, ImageArea.Value.X2, ImageArea.Value.Y1, ImageArea.Value.Y2));
+                    result = Call(handle,
+                        () => SDKInstance.SetImage(1, 1, ImageArea.Value.X1, ImageArea.Value.X2, ImageArea.Value.Y1,
+                            ImageArea.Value.Y2));
 
 
                     output.Add(("Image", result == SDK.DRV_SUCCESS, result));
@@ -151,253 +153,205 @@ namespace ANDOR_CS.Classes
 
                     if (mode.HasFlag(Enums.AcquisitionMode.FrameTransfer))
                     {
-                        result = Call(Handle, SDKInstance.SetFrameTransferMode, 1);
+                        result = Call(handle, SDKInstance.SetFrameTransferMode, 1);
                         ThrowIfError(result, nameof(SDKInstance.SetFrameTransferMode));
                         mode ^= Enums.AcquisitionMode.FrameTransfer;
 
                         output.Add(("Frame transfer", result == SDK.DRV_SUCCESS, result));
                     }
                     else
-                        ThrowIfError(Call(Handle, SDKInstance.SetFrameTransferMode, 0), nameof(SDKInstance.SetFrameTransferMode));
+                    {
+                        ThrowIfError(Call(handle, SDKInstance.SetFrameTransferMode, 0),
+                            nameof(SDKInstance.SetFrameTransferMode));
+                    }
 
-                    result = Call(Handle, SDKInstance.SetAcquisitionMode, EnumConverter.AcquisitionModeTable[mode]);
+                    result = Call(handle, SDKInstance.SetAcquisitionMode, EnumConverter.AcquisitionModeTable[mode]);
 
                     output.Add(("Acquisition mode", result == SDK.DRV_SUCCESS, result));
                 }
-                else throw new ArgumentNullException("Acquisition mode should be set before applying settings.");
+                else
+                {
+                    throw new NullReferenceException("Acquisition mode should be set before applying settings.");
+                }
 
 
                 if (ReadoutMode.HasValue)
                 {
-                    result = Call(Handle, SDKInstance.SetReadMode, EnumConverter.ReadModeTable[ReadoutMode.Value]);
+                    result = Call(handle, SDKInstance.SetReadMode, EnumConverter.ReadModeTable[ReadoutMode.Value]);
 
                     output.Add(("Read mode", result == SDK.DRV_SUCCESS, result));
-
                 }
-                else throw new ArgumentNullException("Read mode should be set before applying settings.");
+                else
+                {
+                    throw new NullReferenceException("Read mode should be set before applying settings.");
+                }
 
 
                 if (TriggerMode.HasValue)
                 {
-                    result = Call(Handle, SDKInstance.SetTriggerMode, EnumConverter.TriggerModeTable[TriggerMode.Value]);
+                    result = Call(handle, SDKInstance.SetTriggerMode,
+                        EnumConverter.TriggerModeTable[TriggerMode.Value]);
 
                     output.Add(("Trigger mode", result == SDK.DRV_SUCCESS, result));
-
                 }
-                else throw new ArgumentNullException("Trigger mode should be set before applying settings.");
+                else
+                {
+                    throw new NullReferenceException("Trigger mode should be set before applying settings.");
+                }
 
                 if (ExposureTime.HasValue)
                 {
-                    result = Call(Handle, SDKInstance.SetExposureTime, ExposureTime.Value);
+                    result = Call(handle, SDKInstance.SetExposureTime, ExposureTime.Value);
 
                     output.Add(("Exposure time", result == SDK.DRV_SUCCESS, result));
                 }
-                else throw new ArgumentNullException("Exposure time should be set before applying settings.");
+                else
+                {
+                    throw new NullReferenceException("Exposure time should be set before applying settings.");
+                }
 
                 if (AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Accumulation))
                 {
                     if (!AccumulateCycle.HasValue)
-                        throw new ArgumentNullException($"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
+                        throw new NullReferenceException(
+                            $"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
 
-                    result = Call(Handle, SDKInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
+                    result = Call(handle, SDKInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
                     // ThrowIfError(result, nameof(SDKInstance.SetNumberAccumulations));
                     output.Add(("Number of accumulations", result == SDK.DRV_SUCCESS, result));
 
 
-                    result = Call(Handle, SDKInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
+                    result = Call(handle, SDKInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
                     //ThrowIfError(result, nameof(SDKInstance.SetAccumulationCycleTime));
                     output.Add(("Accumulation cycle time", result == SDK.DRV_SUCCESS, result));
-
                 }
 
 
                 if (AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Kinetic))
                 {
                     if (!AccumulateCycle.HasValue)
-                        throw new ArgumentNullException($"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
+                        throw new NullReferenceException(
+                            $"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
                     if (!KineticCycle.HasValue)
-                        throw new ArgumentNullException($"Kinetic cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
+                        throw new NullReferenceException(
+                            $"Kinetic cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
 
-                    result = Call(Handle, SDKInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
+                    result = Call(handle, SDKInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
                     //ThrowIfError(result, nameof(SDKInstance.SetNumberAccumulations));
                     output.Add(("Number of accumulations", result == SDK.DRV_SUCCESS, result));
 
 
-                    result = Call(Handle, SDKInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
+                    result = Call(handle, SDKInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
                     //ThrowIfError(result, nameof(SDKInstance.SetAccumulationCycleTime));
                     output.Add(("Accumulation cycle time", result == SDK.DRV_SUCCESS, result));
 
-                    result = Call(Handle, SDKInstance.SetNumberKinetics, KineticCycle.Value.Frames);
+                    result = Call(handle, SDKInstance.SetNumberKinetics, KineticCycle.Value.Frames);
                     //ThrowIfError(result, nameof(SDKInstance.SetNumberKinetics));
                     output.Add(("Number of kinetics", result == SDK.DRV_SUCCESS, result));
 
 
-                    result = Call(Handle, SDKInstance.SetKineticCycleTime, KineticCycle.Value.Time);
+                    result = Call(handle, SDKInstance.SetKineticCycleTime, KineticCycle.Value.Time);
                     //ThrowIfError(result, nameof(SDKInstance.SetKineticCycleTime));
                     output.Add(("Kinetic cycle time", result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (EMCCDGain.HasValue)
                 {
-                    if (!OutputAmplifier.HasValue || !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.Conventional))
-                        throw new ArgumentNullException($"OutputAmplifier should be set to {OutputAmplification.Conventional}");
+                    if (!OutputAmplifier.HasValue ||
+                        !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.Conventional))
+                        throw new NullReferenceException(
+                            $"OutputAmplifier should be set to {OutputAmplification.Conventional}");
 
-                    result = Call(Handle, SDKInstance.SetEMCCDGain, EMCCDGain.Value);
+                    result = Call(handle, SDKInstance.SetEMCCDGain, EMCCDGain.Value);
                     //ThrowIfError(result, nameof(SDKInstance.SetEMCCDGain));
                     output.Add(("EMCCDGain", result == SDK.DRV_SUCCESS, result));
                 }
 
-                float expTime = 0f;
-                float accTime = 0f;
-                float kinTime = 0f;
-                int size = 0;
+                var expTime = 0f;
+                var accTime = 0f;
+                var kinTime = 0f;
 
-                result = Call(Handle, () => SDKInstance.GetAcquisitionTimings(ref expTime, ref accTime, ref kinTime));
+                result = Call(handle, () => SDKInstance.GetAcquisitionTimings(ref expTime, ref accTime, ref kinTime));
                 ThrowIfError(result, nameof(SDKInstance.GetAcquisitionTimings));
 
-                result = Call(Handle, SDKInstance.GetSizeOfCircularBuffer, out size);
+                result = Call(handle, SDKInstance.GetSizeOfCircularBuffer, out int size);
                 ThrowIfError(result, nameof(SDKInstance.GetSizeOfCircularBuffer));
 
-                timing = (ExposureTime: expTime, AccumulationCycleTime: accTime, KineticCycleTime: kinTime, BufferSize: size);
+                timing =
+                    (ExposureTime: expTime, AccumulationCycleTime: accTime, KineticCycleTime: kinTime, BufferSize: size
+                    );
 
-                camera.CurrentSettings = this;
+                Camera.CurrentSettings = this;
 
                 return output;
-            }
-            finally
-            {
-               
-
-            }
+            
         }
 
 
-
         /// <summary>
-        /// Tries to set vertical speed to fastest recommended speed. 
-        /// Requires camera to be active.
+        ///     Tries to set vertical speed to fastest recommended speed.
+        ///     Requires Camera to be active.
         /// </summary>
-        /// <exception cref="AndorSDKException"/>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <exception cref="NotSupportedException"/>
+        /// <exception cref="AndorSDKException" />
+        /// <exception cref="ArgumentOutOfRangeException" />
+        /// <exception cref="NotSupportedException" />
         public void SetVSSpeed()
         {
             // Checks if Camera is OK
             CheckCamera();
 
 
-            // Checks if camera actually supports changing vertical readout speed
-            if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed))
+            // Checks if Camera actually supports changing vertical readout speed
+            if (Camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed))
             {
                 // Stores retrieved recommended vertical speed
-                int speedIndex = -1;
-                float speedVal = 0;
+                var speedIndex = -1;
+                var speedVal = 0.0f;
 
-                uint result = Call(Handle, () => SDKInstance.GetFastestRecommendedVSSpeed(ref speedIndex, ref speedVal));
+                var result = Call(Handle, () => SDKInstance.GetFastestRecommendedVSSpeed(ref speedIndex, ref speedVal));
                 ThrowIfError(result, nameof(SDKInstance.GetFastestRecommendedVSSpeed));
 
                 // Available speeds max index
-                int length = camera.Properties.VSSpeeds.Length;
+                var length = Camera.Properties.VSSpeeds.Length;
 
                 // If speed index is invalid
                 if (speedIndex < 0 || speedIndex >= length)
-                    throw new ArgumentOutOfRangeException($"Fastest recommended vertical speed index({nameof(speedIndex)}) " +
+                    throw new ArgumentOutOfRangeException(
+                        $"Fastest recommended vertical speed index({nameof(speedIndex)}) " +
                         $"is out of range (should be in [{0},  {length - 1}]).");
 
                 // Calls overloaded version of current method with obtained speedIndex as argument
                 SetVSSpeed(speedIndex);
-
             }
             else
+            {
                 throw new NotSupportedException("Camera does not support vertical readout speed control.");
-
+            }
         }
 
-        ///// <summary>
-        ///// Sets the vertical clock voltage amplitude (if camera supports it).
-        ///// Camera may be not active.
-        ///// </summary>
-        ///// <param name="amplitude">New amplitude </param>
-        //public void SetVSAmplitude(VSAmplitude amplitude)
-        //{
-        //    // Checks if Camera is OK
-        //    CheckCamera();
-
-        //    // Checks if Camera supports vertical clock voltage amplitude changes
-        //    if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage))
-        //    {
-        //        VSAmplitude = amplitude;
-        //    }
-        //    else
-        //        throw new NotSupportedException("Camera does not support vertical clock voltage amplitude control.");
-        //}
-
-        ///// <summary>
-        ///// Sets Analogue-Digital converter.
-        ///// Does not require camera to be active
-        ///// </summary>
-        ///// <exception cref="ArgumentOutOfRangeException"/>
-        ///// <param name="converterIndex"></param>
-        //public void SetADConverter(int converterIndex)
-        //{
-        //    // Checks if Camera is OK
-        //    CheckCamera();
-
-        //    if (converterIndex < 0 || converterIndex >= camera.Properties.ADConverters.Length)
-        //        throw new ArgumentOutOfRangeException($"AD converter index {converterIndex} if out of range " +
-        //            $"(should be in [{0}, {camera.Properties.ADConverters.Length - 1}]).");
-
-        //    ADConverter = (Index: converterIndex, BitDepth: camera.Properties.ADConverters[converterIndex]);
-
-        //}
-
-        ///// <summary>
-        ///// Sets output amplifier. 
-        ///// Does not require camera to be active.
-        ///// </summary>
-        ///// <exception cref="ArgumentOutOfRangeException"/>
-        ///// <param name="amplifier"></param>
-        //public void SetOutputOutputAmplifier(OutputAmplification amplifier)
-        //{
-        //    // Checks camera object
-        //    CheckCamera();
-
-        //    // Queries available amplifiers, looking for the one, which type mathces input parameter
-        //    var query = from amp
-        //                in camera.Properties.OutputAmplifiers
-        //                where amp.OutputAmplifier == amplifier
-        //                select amp;
-
-        //    // If no mathces found, throws an exception
-        //    if (query.Count() == 0)
-        //        throw new ArgumentOutOfRangeException($"Provided amplifier i sout of range " +
-        //            $"{(Enum.IsDefined(typeof(OutputAmplification), amplifier) ? Enum.GetName(typeof(OutputAmplification), amplifier) : "Unknown")}.");
-
-        //    // Otherwise, assigns name and type of the amplifier 
-        //    var element = query.First();
-
-        //    OutputAmplifier = (Name: element.Name, OutputAmplifier: element.OutputAmplifier, Index: camera.Properties.OutputAmplifiers.IndexOf(element));
-
-        //}
 
         /// <summary>
-        /// Returns a collection of available Horizonal Readout Speeds for currently selected OutputAmplifier and AD Converter.
-        /// Requires camera to be active.
-        /// Note: <see cref="AcquisitionSettings.ADConverter"/> and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
-        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/> and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>
-        /// before calling this method.
+        ///     Returns a collection of available Horizonal Readout Speeds for currently selected OutputAmplifier and AD Converter.
+        ///     Requires Camera to be active.
+        ///     Note: <see cref="SettingsBase.ADConverter" /> and <see cref="SettingsBase.OutputAmplifier" /> should
+        ///     be set
+        ///     via <see cref="SettingsBase.SetADConverter(int)" /> and
+        ///     <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)" />
+        ///     before calling this method.
         /// </summary>
-        /// <exception cref="NullReferenceException"/>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <exception cref="NotSupportedException"/>
+        /// <exception cref="NullReferenceException" />
+        /// <exception cref="ArgumentOutOfRangeException" />
+        /// <exception cref="NotSupportedException" />
         /// <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
         public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int ADConverter, int amplifier)
         {
-            // Checks if camera is OK and is active
+            // Checks if Camera is OK and is active
             CheckCamera();
 
-            // Checks if camera support horizontal speed controls
-            if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
+            // Checks if Camera support horizontal speed controls
+            if (!Camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
+                throw new NotSupportedException("Camera does not support horizontal readout speed controls.");
+            else
             {
                 // Gets the number of availab;e speeds
                 var result = Call(Handle, SDKInstance.GetNumberHSSpeeds, ADConverter, amplifier, out int nSpeeds);
@@ -405,748 +359,118 @@ namespace ANDOR_CS.Classes
 
                 // Checks if obtained value is valid
                 if (nSpeeds < 0)
-                    throw new ArgumentOutOfRangeException($"Returned number of available speeds is less than 0 ({nSpeeds}).");
+                    throw new ArgumentOutOfRangeException(
+                        $"Returned number of available speeds is less than 0 ({nSpeeds}).");
 
                 // Iterates through speed indexes
-                for (int speedIndex = 0; speedIndex < nSpeeds; speedIndex++)
+                for (var speedIndex = 0; speedIndex < nSpeeds; speedIndex++)
                 {
                     float locSpeed = 0;
 
-                    result = Call(Handle, () => SDKInstance.GetHSSpeed(ADConverter, amplifier, speedIndex, ref locSpeed));
+                    result = Call(Handle,
+                        () => SDKInstance.GetHSSpeed(ADConverter, amplifier, speedIndex, ref locSpeed));
                     ThrowIfError(result, nameof(SDKInstance.GetHSSpeed));
 
                     // Returns speed index and speed value for evvery subsequent call
                     yield return (Index: speedIndex, Speed: locSpeed);
                 }
-
             }
-            else
-                throw new NotSupportedException("Camera does not support horizontal readout speed controls.");
-
         }
 
+      
         /// <summary>
-        /// Sets Horizontal Readout Speed for currently selected OutputAmplifier and AD Converter.
-        /// Requires camera to be active.
-        /// Note: <see cref="SettingsBase.ADConverter"/> and <see cref="SettingsBase.OutputAmplifier"/> should be set
-        /// via <see cref="SettingsBase.SetADConverter(int)"/> and <see cref="SettingsBase.SetOutputOutputAmplifier(OutputAmplification)"/>
-        /// before calling this method.
+        ///     Returns a collection of available PreAmp gains for currently selected HSSpeed, OutputAmplifier, Converter.
+        ///     Requires Camera to be active.
+        ///     Note: <see cref="SettingsBase.ADConverter" />, <see cref="SettingsBase.HSSpeed" />
+        ///     and <see cref="SettingsBase.OutputAmplifier" /> should be set
+        ///     via <see cref="SettingsBase.SetADConverter(int)" />, <see cref="SettingsBase.SetHSSpeed(int)" />
+        ///     and <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)" />.
         /// </summary>
-        /// <exception cref="NullReferenceException"/>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <exception cref="NotSupportedException"/>
-        /// <param name="speedIndex">Index of horizontal speed</param>
-        //public override void SetHSSpeed(int speedIndex)
-        //{
-        //    // Checks if camera is OK and is active
-        //    CheckCamera();
-
-        //    //try
-        //    //{
-        //    //    var locCam = camera as Camera;
-        //    // Checks if camera supports horizontal readout speed control
-        //    if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed)
-        //        && IsHSSpeedSupported(speedIndex, out float speed))
-        //        HSSpeed = (Index: speedIndex, Speed: speed);
-        //    //{
-        //    //    // Checks if both AD converter and OutputAmplifier are already set
-        //    //    if (ADConverter == null || OutputAmplifier == null)
-        //    //        throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or OutputAmplifier ({nameof(OutputAmplifier)}) are not set.");
-
-        //    //    // Determines indexes of converter and amplifier
-        //    //    int channel = ADConverter.Value.Index;
-        //    //    int amp = OutputAmplifier.Value.Index;
-        //    //    int nSpeeds = 0;
-
-        //    //    // Gets the number of availab;e speeds
-        //    //    var result = SDKInit.SDKInstance.GetNumberHSSpeeds(channel, amp, ref nSpeeds);
-        //    //    ThrowIfError(result, nameof(SDKInstance.GetNumberHSSpeeds));
-
-        //    //    // Checks if speedIndex is in allowed range
-        //    //    if (speedIndex < 0 || speedIndex >= nSpeeds)
-        //    //        throw new ArgumentOutOfRangeException($"Horizontal speed index ({speedIndex}) is out of range (should be in [{0}, {speedIndex - 1}]).");
-
-        //    //    float speed = 0;
-
-        //    //    // Retrieves float value of currently selected horizontal speed
-        //    //    result = SDKInit.SDKInstance.GetHSSpeed(channel, amp, speedIndex, ref speed);
-        //    //    ThrowIfError(result, nameof(SDKInstance.GetHSSpeed));
-
-        //    //    // Assigns speed index and speed value
-        //    //    HSSpeed = (Index: speedIndex, Speed: speed);
-
-        //    //}
-        //    else
-        //        throw new NotSupportedException("Camera does not support horizontal readout speed controls");
-        //    //}
-        //    //finally
-        //    //{
-        //    //   
-        //    //}
-        //}
-
-        /// <summary>
-        /// Returns a collection of available PreAmp gains for currently selected HSSpeed, OutputAmplifier, Converter.
-        /// Requires camera to be active.
-        /// Note: <see cref="AcquisitionSettings.ADConverter"/>, <see cref="AcquisitionSettings.HSSpeed"/>
-        /// and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
-        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/>, <see cref="AcquisitionSettings.SetHSSpeed(int)"/>
-        /// and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>.
-        /// </summary>
-        /// <exception cref="NullReferenceException"/>
-        /// <exception cref="NotSupportedException"/>
+        /// <exception cref="NullReferenceException" />
+        /// <exception cref="NotSupportedException" />
         /// <returns>Available PreAmp gains</returns>
         public override IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain(
             int ADConverter,
             int amplifier,
             int HSSpeed)
         {
-            // Checks if camera is OK and is active
+            // Checks if Camera is OK and is active
             CheckCamera();
 
 
-            // Checks if camera supports PreAmp Gain control
-            if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
+            // Checks if Camera supports PreAmp Gain control
+            if (Camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
             {
-
                 // Total number of gain settings available
-                int gainNumber = camera.Properties.PreAmpGains.Length;
+                var gainNumber = Camera.Properties.PreAmpGains.Length;
 
-                for (int gainIndex = 0; gainIndex < gainNumber; gainIndex++)
+                for (var gainIndex = 0; gainIndex < gainNumber; gainIndex++)
                 {
-                    int status = -1;
+                    var status = -1;
 
-                    uint result = Call(Handle, () => SDKInstance.IsPreAmpGainAvailable(
+                    var result = Call(Handle, () => SDKInstance.IsPreAmpGainAvailable(
                         ADConverter, amplifier, HSSpeed, gainIndex, ref status));
                     ThrowIfError(result, nameof(SDKInstance.IsPreAmpGainAvailable));
 
                     // If status of a certain combination of settings is 1, return it
                     if (status == 1)
-                        yield return (Index: gainIndex, Name: camera.Properties.PreAmpGains[gainIndex]);
+                        yield return (Index: gainIndex, Name: Camera.Properties.PreAmpGains[gainIndex]);
                 }
-
             }
             else
+            {
                 throw new NotSupportedException("Camera does not support Pre Amp Gain controls.");
+            }
         }
 
-        /// <summary>
-        /// Sets PreAmp gain for currently selected HSSpeed, OutputAmplifier, Converter.
-        /// Requires camera to be active.
-        /// Note: <see cref="AcquisitionSettings.ADConverter"/>, <see cref="AcquisitionSettings.HSSpeed"/>
-        /// and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
-        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/>, <see cref="AcquisitionSettings.SetHSSpeed(int)"/>
-        /// and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>.
-        /// </summary>
-        /// <exception cref="NullReferenceException"/>
-        /// <exception cref="ArgumentOutOfRangeException"/>
-        /// <param name="gainIndex">Index of gain</param>
-        //public override void SetPreAmpGain(int gainIndex)
-        //{
-        //    // Checks if camera is OK and is active
-        //    CheckCamera();
-
-        //    try
-        //    {
-        //        var locCam = camera as Camera;
-
-        //        // Checks if camera supports PreAmp Gain control
-        //        if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
-        //        {
-        //            // Check if all required settings are already set
-        //            if (HSSpeed == null || OutputAmplifier == null || ADConverter == null)
-        //                throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(ADConverter)})," +
-        //                    $"OutputAmplifier ({nameof(OutputAmplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
-
-
-        //            // Stores indexes of ADConverter, OutputAmplifier and Horizontal Speed
-        //            int channel = ADConverter.Value.Index;
-        //            int amp = OutputAmplifier.Value.Index;
-        //            int speed = HSSpeed.Value.Index;
-
-        //            // Total number of gain settings available
-        //            int gainNumber = camera.Properties.PreAmpGains.Length;
-
-        //            // Checks if argument is in valid range
-        //            if (gainIndex < 0 || gainIndex >= gainNumber)
-        //                throw new ArgumentOutOfRangeException($"Gain index (nameof{gainIndex}) is out of range (should be in [{0}, {gainNumber}]).");
-
-        //            int status = -1;
-
-        //            uint result = SDKInit.SDKInstance.IsPreAmpGainAvailable(channel, amp, speed, gainIndex, ref status);
-        //            ThrowIfError(result, nameof(SDKInstance.IsPreAmpGainAvailable));
-
-        //            if (status != 1)
-        //                throw new ArgumentOutOfRangeException($"Pre amp gain index ({gainIndex}) is out of range.");
-
-        //            PreAmpGain = (Index: gainIndex, Name: camera.Properties.PreAmpGains[gainIndex]);
-        //        }
-        //    }
-        //    finally
-        //    {
-        //       
-        //    }
-        //}
-
-        ///// <summary>
-        ///// Sets acquisition mode. 
-        ///// Camera may be inactive.
-        ///// </summary>
-        ///// <exception cref="NotSupportedException"/>
-        ///// <exception cref="InvalidOperationException"/>
-        ///// <param name="mode">Acquisition mode</param>
-        //public void SetAcquisitionMode(AcquisitionMode mode)
-        //{
-        //    // Checks if camera is OK
-        //    CheckCamera();
-
-
-        //    // Checks if camera supports specifed mode
-        //    if (!camera.Capabilities.AcquisitionModes.HasFlag(mode))
-        //        throw new NotSupportedException($"Camera does not support specified regime ({Extensions.GetEnumNames(typeof(AcquisitionMode), mode).FirstOrDefault()})");
-
-
-        //    // If there are no matches in the pre-defined table, then this mode cannot be set explicitly
-        //    if (!EnumConverter.AcquisitionModeTable.ContainsKey(mode))
-        //        throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({Extensions.GetEnumNames(typeof(AcquisitionMode), mode).FirstOrDefault()})");
-
-        //    AcquisitionMode = mode;
-        //}
-
-        ///// <summary>
-        ///// Sets trigger mode. 
-        ///// Camera may be inactive.
-        ///// </summary>
-        ///// <exception cref="NotSupportedException"/>
-        ///// <exception cref="InvalidOperationException"/>
-        ///// <param name="mode">Trigger mode</param>
-        //public void SetTriggerMode(TriggerMode mode)
-        //{
-        //    // Checks if camera is OK
-        //    CheckCamera();
-
-        //    // Checks if camera supports specifed mode
-        //    if (!camera.Capabilities.TriggerModes.HasFlag(mode))
-        //        throw new NotSupportedException($"Camera does not support specified regime ({Extensions.GetEnumNames(typeof(TriggerMode), mode).FirstOrDefault()})");
-
-        //    // If there are no matches in the pre-defined table, then this mode cannot be set explicitly
-        //    if (!EnumConverter.TriggerModeTable.ContainsKey(mode))
-        //        throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({Extensions.GetEnumNames(typeof(TriggerMode), mode).FirstOrDefault()})");
-
-        //    TriggerMode = mode;
-        //}
-
-        ///// <summary>
-        ///// Sets read mode.
-        ///// Camera may be inactive.
-        ///// </summary>
-        ///// <exception cref="NotSupportedException"/>
-        ///// <exception cref="InvalidOperationException"/>
-        ///// <param name="mode">Read mode</param>
-        //public void SetReadoutMode(ReadoutMode mode)
-        //{
-        //    // Checks camera
-        //    CheckCamera();
-
-        //    // Checks if camera support read mode control
-        //    if(!camera.Capabilities.ReadModes.HasFlag(mode))
-        //        throw new NotSupportedException($"Camera does not support specified regime ({Extensions.GetEnumNames(typeof(ReadoutMode), mode).FirstOrDefault()})");
-
-        //    // If there are no matches in the pre-defiend table, then this mode cannot be set explicitly
-        //    if (!EnumConverter.ReadModeTable.ContainsKey(mode))
-        //        throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({Extensions.GetEnumNames(typeof(ReadoutMode), mode).FirstOrDefault()})");
-
-
-        //    ReadoutMode = mode;
-        //}
-
-        ///// <summary>
-        ///// Sets exposure time.
-        ///// Camera may be inactive.
-        ///// </summary>
-        ///// <exception cref="ArgumentOutOfRangeException"/>
-        ///// <param name="time">Exposure time</param>
-        //public void SetExposureTime(float time)
-        //{
-        //    CheckCamera();
-
-        //    // If time is negative throws exception
-        //    if (time < 0)
-        //        throw new ArgumentOutOfRangeException($"Exposure time cannot be less than 0 (provided {time}).");
-
-
-        //    ExposureTime = time;
-        //}
-
-        ///// <summary>
-        ///// Sets image area.
-        ///// Camera may be inactive.
-        ///// </summary>
-        ///// <exception cref="ArgumentOutOfRangeException"/>
-        ///// <param name="area">Image rectangle</param>
-        //public void SetImageArea(Rectangle area)
-        //{
-        //    CheckCamera();
-
-        //    if (area.X1 <= 0 || area.Y1 <= 0)
-        //        throw new ArgumentOutOfRangeException($"Start position of rectangel cannot be to the lower-left of {new Point2D(1,1)} (provided {area.Start}).");
-
-
-
-        //    if (camera.Capabilities.GetFunctions.HasFlag(GetFunction.DetectorSize))
-        //    {
-        //        var size = camera.Properties.DetectorSize;
-
-        //        if (area.X2 > size.Horizontal)
-        //            throw new ArgumentOutOfRangeException($"Right boundary exceeds CCD size ({area.X2} >= {size.Horizontal}).");
-
-        //        if(area.Y2 > size.Vertical)
-        //            throw new ArgumentOutOfRangeException($"Top boundary exceeds CCD size ({area.Y2} >= {size.Vertical}).");
-        //    }
-
-        //    ImageArea = area;
-        //}
-
-        //public void SetEMCCDGain(int gain)
-        //{
-        //    if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain))
-        //    {
-
-        //        if (!OutputAmplifier.HasValue || !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.ElectronMultiplication))
-        //            throw new NullReferenceException($"OutputAmplifier should be set to {OutputAmplification.Conventional} before accessing EMCCDGain.");
-
-        //        var range = camera.Properties.EMCCDGainRange;
-
-        //        if (gain > range.High || gain < range.Low)
-        //            throw new ArgumentOutOfRangeException($"Gain is out of range. (Provided value {gain} should be in [{range.Low}, {range.High}].)");
-
-        //        EMCCDGain = gain;
-        //    }
-        //    else
-        //        throw new NotSupportedException("EM CCD Gain feature is not supported.");
-        //}
-
-        //public void SetAccumulationCycle(int number, float time)
-        //{
-
-        //    CheckCamera();
-
-        //    if (!AcquisitionMode.HasValue ||
-        //        AcquisitionMode.Value != Enums.AcquisitionMode.Accumulation &&
-        //        AcquisitionMode.Value != Enums.AcquisitionMode.Kinetic &&
-        //        AcquisitionMode.Value != Enums.AcquisitionMode.FastKinetics)
-        //        throw new ArgumentException($"Current {nameof(AcquisitionMode)} ({AcquisitionMode}) does not support accumulation.");
-
-        //    //ThrowIfError(SDKInit.SDKInstance.SetNumberAccumulations(number), nameof(SDKInstance.SetNumberAccumulations));
-        //    //ThrowIfError(SDKInit.SDKInstance.SetAccumulationCycleTime(time), nameof(SDKInstance.SetAccumulationCycleTime));
-
-        //    AccumulateCycle = (Frames: number, Time: time);
-
-        //}
-
-        //public void SetKineticCycle(int number, float time)
-        //{
-        //    CheckCamera();
-
-        //    if (!AcquisitionMode.HasValue ||
-        //        AcquisitionMode.Value != Enums.AcquisitionMode.RunTillAbort &&
-        //        AcquisitionMode.Value != Enums.AcquisitionMode.Kinetic &&
-        //        AcquisitionMode.Value != Enums.AcquisitionMode.FastKinetics)
-        //        throw new ArgumentException($"Current {nameof(AcquisitionMode)} ({AcquisitionMode}) does not support kinetic cycle.");
-
-        //    //ThrowIfError(SDKInit.SDKInstance.SetNumberKinetics(number), nameof(SDKInstance.SetNumberKinetics));
-        //    //ThrowIfError(SDKInit.SDKInstance.SetKineticCycleTime(time), nameof(SDKInstance.SetKineticCycleTime));
-
-        //    KineticCycle = (Frames: number, Time: time);
-
-        //}
-
-        //public void Serialize(Stream stream, string name = "")
-        //{
-        //    using (var str = System.Xml.XmlWriter.Create(
-        //        stream,
-        //        new System.Xml.XmlWriterSettings()
-        //        { Indent = true,
-        //        IndentChars = "\t"}))
-        //    {
-        //        str.WriteStartDocument();
-
-        //        str.WriteStartElement("AcquisitionSettings");
-        //        str.WriteAttributeString("Camera", camera?.CameraModel ?? "TEST");
-        //        str.WriteAttributeString("Name", name);
-
-
-        //        var elementsToWrite = from prop
-        //                              in this.GetType().GetProperties()
-        //                              where prop.GetMethod.IsPublic && prop.SetMethod.IsPrivate
-        //                              select prop;
-
-        //        elementsToWrite = from prop
-        //                           in elementsToWrite
-        //                           where prop.GetMethod.Invoke(this, new object[] { }) != null
-        //                           select prop;
-
-        //        foreach (var element in elementsToWrite)
-        //        {
-        //            str.WriteStartElement(element.Name);
-
-        //            var t = element.PropertyType;
-        //            if (element.PropertyType.Name.Contains("Nullable"))
-        //                t = t.GenericTypeArguments[0];
-
-        //            if (t.Name.Contains("ValueTuple"))
-        //            {
-        //                str.WriteAttributeString("Tuple", "True");
-        //                var f = t.GetFields();
-        //                str.WriteAttributeString("TupleSize", f.Length.ToString());
-
-        //                var tupleNames = ((System.Collections.ICollection)
-        //                    element
-        //                    .CustomAttributes
-        //                    .First()
-        //                    .ConstructorArguments
-        //                    .First()
-        //                    .Value)
-        //                .Cast<System.Reflection.CustomAttributeTypedArgument>()
-        //                .Select((arg) => (string)arg.Value)
-        //                .ToArray();
-
-        //                var elementVal = element.GetValue(this);
-
-        //                var vals = elementVal.GetType().GetFields().Select((v) => v.GetValue(elementVal)).ToArray();
-
-        //                for (int i = 0; i < f.Length; i++)
-        //                {
-        //                    str.WriteStartElement("TupleElement");
-        //                    str.WriteAttributeString("FieldName", tupleNames[i]);
-        //                    str.WriteAttributeString("FieldType", f[i].FieldType.ToString());
-        //                    str.WriteValue("\r\n\t\t\t" + vals[i].ToString() + "\r\n\t\t");
-
-        //                    str.WriteEndElement();
-
-        //                }
-        //            }
-        //            else
-        //            {
-        //                str.WriteAttributeString("Tuple", "False");
-        //                str.WriteAttributeString("Type", element.PropertyType.GenericTypeArguments.First().ToString());
-        //                str.WriteValue("\r\n\t\t" + element.GetValue(this).ToString() + "\r\n\t");
-        //            }
-
-
-
-        //            str.WriteEndElement();
-
-        //        }
-
-        //        str.WriteEndElement();
-
-        //        str.WriteEndDocument();
-        //    }
-        //}
-
-        //public void Deserialize(Stream stream)
-        //{
-        //    try
-        //    {
-        //        var locCam = camera as Camera;
-
-        //        XDocument doc = XDocument.Load(stream);
-
-        //        if (doc.Elements().Count() < 1)
-        //            throw new Exception();
-
-        //        var root = doc.Elements().First();
-
-        //        var cameraName = root.Attribute(XName.Get("Camera"))?.Value;
-        //        var settingsName = root.Attribute(XName.Get("Name"))?.Value;
-
-        //        XElement element;
-        //        var query = root.Elements().Where(e => e.Name == "VSSpeed");
-        //        if (query.Count() == 1)
-        //        {
-        //            element = query.First();
-
-        //            var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
-        //                .FirstOrDefault()
-        //                ?.Value
-        //                .Trim();
-        //            if (value != null)
-        //            {
-        //                int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-        //                SetVSSpeed(index);
-        //            }
-        //        }
-
-
-        //        if ((query = root.Elements().Where(e => e.Name == "VSAmplitude")).Count() == 1)
-        //        {
-        //            var value = query.First()?.Value;
-
-        //            if (value != null)
-        //            {
-        //                Enums.VSAmplitude vsAmp = (Enums.VSAmplitude)Enum.Parse(typeof(Enums.VSAmplitude), value);
-
-        //                SetVSAmplitude(vsAmp);
-        //            }
-        //        }
-
-        //        if ((query = root.Elements().Where(e => e.Name == "ADConverter")).Count() == 1)
-        //        {
-        //            element = query.First();
-
-        //            var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
-        //                .FirstOrDefault()
-        //                ?.Value
-        //                .Trim();
-        //            if (value != null)
-        //            {
-        //                int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-        //                SetADConverter(index);
-        //            }
-        //        }
-
-        //        if ((query = root.Elements().Where(e => e.Name == "OutputAmplifier")).Count() == 1)
-        //        {
-        //            element = query.First();
-
-        //            var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "OutputAmplifier")
-        //                .FirstOrDefault()
-        //                ?.Value
-        //                .Trim();
-        //            if (value != null)
-        //            {
-        //                var amp = (Enums.OutputAmplification)Enum.Parse(typeof(Enums.OutputAmplification), value);
-
-        //                SetOutputOutputAmplifier(amp);
-        //            }
-        //        }
-
-
-        //        if ((query = root.Elements().Where(e => e.Name == "HSSpeed")).Count() == 1)
-        //        {
-        //            element = query.First();
-
-        //            var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
-        //                .FirstOrDefault()
-        //                ?.Value
-        //                .Trim();
-        //            if (value != null)
-        //            {
-        //                int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-        //                SetHSSpeed(index);
-        //            }
-        //        }
-
-        //        if ((query = root.Elements().Where(e => e.Name == "PreAmpGain")).Count() == 1)
-        //        {
-        //            element = query.First();
-
-        //            var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
-        //                .FirstOrDefault()
-        //                ?.Value
-        //                .Trim();
-        //            if (value != null)
-        //            {
-        //                int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-        //                SetPreAmpGain(index);
-        //            }
-        //        }
-
-        //        if ((query = root.Elements().Where(e => e.Name == "AcquisitionMode")).Count() == 1)
-        //        {
-        //            var value = query.First()?.Value;
-
-        //            if (value != null)
-        //            {
-        //                var mode = (Enums.AcquisitionMode)Enum.Parse(typeof(Enums.AcquisitionMode), value);
-
-        //                SetAcquisitionMode(mode);
-        //            }
-        //        }
-
-        //        if ((query = root.Elements().Where(e => e.Name == "ReadoutMode")).Count() == 1)
-        //        {
-        //            var value = query.First()?.Value;
-
-        //            if (value != null)
-        //            {
-        //                var mode = (Enums.ReadoutMode)Enum.Parse(typeof(Enums.ReadoutMode), value);
-
-        //                SetReadoutMode(mode);
-        //            }
-        //        }
-
-        //        if ((query = root.Elements().Where(e => e.Name == "TriggerMode")).Count() == 1)
-        //        {
-        //            var value = query.First()?.Value;
-
-        //            if (value != null)
-        //            {
-        //                var mode = (Enums.TriggerMode)Enum.Parse(typeof(Enums.TriggerMode), value);
-
-        //                SetTriggerMode(mode);
-        //            }
-        //        }
-
-        //        if ((query = root.Elements().Where(e => e.Name == "ExposureTime")).Count() == 1)
-        //        {
-        //            var value = query.First()?.Value;
-
-        //            if (value != null)
-        //            {
-        //                var time = System.Single.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-        //                SetExposureTime(time);
-        //            }
-        //        }
-
-        //        if ((query = root.Elements().Where(e => e.Name == "ImageArea")).Count() == 1)
-        //        {
-        //            var value = query.First()?.Value;
-
-        //            if (value != null)
-        //            {
-        //                var rect = Rectangle.Parse(value);
-
-        //                SetImageArea(rect);
-        //            }
-        //        }
-
-        //        if ((query = root.Elements().Where(e => e.Name == "AccumulateCycle")).Count() == 1)
-        //        {
-        //            element = query.First();
-
-        //            var value1 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Frames")
-        //                .FirstOrDefault()
-        //                ?.Value
-        //                .Trim();
-
-        //            var value2 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Time")
-        //                .FirstOrDefault()
-        //                ?.Value
-        //                .Trim();
-
-        //            if (value1 != null && value2 != null)
-        //            {
-        //                int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-        //                float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-        //                SetAccumulationCycle(number, time);
-        //            }
-
-
-        //        }
-
-        //        if ((query = root.Elements().Where(e => e.Name == "KineticCycle")).Count() == 1)
-        //        {
-        //            element = query.First();
-
-        //            var value1 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Frames")
-        //                .FirstOrDefault()
-        //                ?.Value
-        //                .Trim();
-
-        //            var value2 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Time")
-        //                .FirstOrDefault()
-        //                ?.Value
-        //                .Trim();
-
-        //            if (value1 != null && value2 != null)
-        //            {
-        //                int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-        //                float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-        //                SetKineticCycle(number, time);
-        //            }
-
-
-        //        }
-        //    }
-        //    finally
-        //    {
-        //       
-        //    }
-        //}
 
         /// <summary>
-        /// Checks if HS Speed is supported in current configuration.
-        /// Throws exceptions if SDK communication fails.
+        ///     Checks if HS Speed is supported in current configuration.
+        ///     Throws exceptions if SDK communication fails.
         /// </summary>
         /// <param name="speedIndex">Speed index to test.</param>
         /// <param name="ADConverter">AD Converter index.</param>
         /// <param name="amplifier">OutputAmplifier index.</param>
-        /// <param name="speed">If call is successfull, assigns float value of HS speed,
-        /// otherwies, is initialized to 0.0f.</param>
-        /// <exception cref="AndorSDKException"/>
-        /// <returns>true if HS Speed is supported, 
-        /// throws exception if SDK communication fails; false, otherwise.</returns>
+        /// <param name="speed">
+        ///     If call is successfull, assigns float value of HS speed,
+        ///     otherwies, is initialized to 0.0f.
+        /// </param>
+        /// <exception cref="AndorSDKException" />
+        /// <returns>
+        ///     true if HS Speed is supported,
+        ///     throws exception if SDK communication fails; false, otherwise.
+        /// </returns>
         public override bool IsHSSpeedSupported(
             int speedIndex,
             int ADConverter,
             int amplifier,
             out float speed)
         {
-            // Checks if camera is OK and is active
+            // Checks if Camera is OK and is active
             CheckCamera();
             speed = 0;
             float locSpeed = 0;
-            var locCam = camera as Camera;
-            // Checks if camera supports horizontal readout speed control
-            if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
-            {
-
-                // Gets the number of availab;e speeds
-                var result = Call(Handle, SDKInstance.GetNumberHSSpeeds, ADConverter, amplifier, out int nSpeeds);
-                ThrowIfError(result, nameof(SDKInstance.GetNumberHSSpeeds));
-
-                // Checks if speedIndex is in allowed range
-                if (speedIndex < 0 || speedIndex >= nSpeeds)
-                    return false;
-
-                // Retrieves float value of currently selected horizontal speed
-                result = Call(Handle, () => SDKInstance.GetHSSpeed(ADConverter, amplifier, speedIndex, ref locSpeed));
-                ThrowIfError(result, nameof(SDKInstance.GetHSSpeed));
-
-                speed = locSpeed;
-
-                return true;
-            }
-            else
+            var locCam = Camera as Camera;
+            // Checks if Camera supports horizontal readout speed control
+            if (!Camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
                 return false;
-        }
 
-        /// <summary>
-        /// SERIALIZATION TEST CONSTRUCTOR; DO NOT USE
-        /// </summary>
-        #if DEBUG
-        internal AcquisitionSettings(bool empty = false)
-        {
-            if (!empty)
-            {
+            // Gets the number of availab;e speeds
+            var result = Call(Handle, SDKInstance.GetNumberHSSpeeds, ADConverter, amplifier, out int nSpeeds);
+            ThrowIfError(result, nameof(SDKInstance.GetNumberHSSpeeds));
 
-                this.AcquisitionMode = Enums.AcquisitionMode.SingleScan;
-                this.ADConverter = (0, 16);
-                this.OutputAmplifier = (OutputAmplification.Conventional, "Conventional", 1);
-                this.ExposureTime = 123;
-                this.HSSpeed = (0, 3);
-                this.ImageArea = new Rectangle(1, 1, 128, 256);
+            // Checks if speedIndex is in allowed range
+            if (speedIndex < 0 || speedIndex >= nSpeeds)
+                return false;
 
-                //this.KineticCycle = (12, 23);
-                this.PreAmpGain = (0, "Gain 1");
-                this.ReadoutMode = Enums.ReadMode.FullImage;
+            // Retrieves float value of currently selected horizontal speed
+            result = Call(Handle, () => SDKInstance.GetHSSpeed(ADConverter, amplifier, speedIndex, ref locSpeed));
+            ThrowIfError(result, nameof(SDKInstance.GetHSSpeed));
 
-                this.TriggerMode = Enums.TriggerMode.Bulb;
-                this.VSAmplitude = Enums.VSAmplitude.Plus2;
-                this.VSSpeed = (0, 0.3f);
-            }
+            speed = locSpeed;
+
+            return true;
 
         }
-
-        #endif
     }
 }

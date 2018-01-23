@@ -54,9 +54,10 @@ namespace DIPOL_Remote.Classes
             SessionID = sessionID;
                SettingsID = settingsID;
             this.session = session;
-
-            if (!RemoteCamera.RemoteCameras.TryGetValue((sessionID, cameraIndex), out camera))
+            
+            if (!RemoteCamera.RemoteCameras.TryGetValue((sessionID, cameraIndex), out var cam))
                 throw new Exception();
+            Camera = cam;
         }
 
         public override List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
