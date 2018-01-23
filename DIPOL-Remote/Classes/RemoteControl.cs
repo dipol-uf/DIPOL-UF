@@ -411,7 +411,7 @@ namespace DIPOL_Remote.Classes
                 foreach (var settsKey in
                     from item
                     in settings
-                    where item.Value.CameraIndex == camIndex
+                    where item.Value.Camera.CameraIndex == camIndex
                     select item.Key)
                     RemoveSettings(settsKey);
 

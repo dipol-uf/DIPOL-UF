@@ -50,6 +50,10 @@ namespace ANDOR_CS.Classes
 
             writer.WriteStartDocument();
             writer.WriteStartElement("Settings");
+#if DEBUG
+            if(settings.Camera != null)
+#endif
+                writer.WriteAttributeString("CompatibleDevice", settings.Camera.Capabilities.CameraType.ToString());
 
             object value = null;
 
@@ -138,6 +142,9 @@ namespace ANDOR_CS.Classes
             }
             else if (reader.AttributeCount == 1)
             {
+                if (name == @"Settings")
+                    return new KeyValuePair<string, object>(@"CompatibleDevice",
+                        Enum.Parse(typeof(Enums.CameraType), reader.GetAttribute(0)));
                 var match = TupleTypeParser.Match(typeStr);
                 if (match.Success && match.Groups.Count == 2)
                 {
