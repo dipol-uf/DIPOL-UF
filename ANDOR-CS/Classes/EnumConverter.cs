@@ -15,12 +15,7 @@
 //
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using ANDOR_CS.Enums;
 
 namespace ANDOR_CS.Classes

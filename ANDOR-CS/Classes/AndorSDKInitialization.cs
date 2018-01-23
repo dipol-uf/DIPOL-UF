@@ -40,16 +40,11 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Gets an singleton instance of a basic AndorSDK class
         /// </summary>
-        public static ATMCD64CS.AndorSDK SdkInstance
+        public static ATMCD64CS.AndorSDK SDKInstance
         {
             get;
-            private set;
-
         } = new ATMCD64CS.AndorSDK();
 
-        //public static void Lock() => locker.Wait();
-
-        //public static void Release() => locker.Release();
 
         public delegate uint AndorSdk<T1>(ref T1 p1);
         public delegate uint AndorSdk<in T1, T2>(T1 p1, ref T2 p2);
@@ -60,13 +55,12 @@ namespace ANDOR_CS.Classes
         /// Task-safely invokes SDK method with one output ref parameter
         /// </summary>
         /// <typeparam name="T1">Type of first parameter</typeparam>
-        /// <param name="method"><see cref="SdkInstance"/> method to invoke</param>
+        /// <param name="method"><see cref="SDKInstance"/> method to invoke</param>
         /// <param name="p1">Stores result of the function call</param>
         /// <returns>Return code</returns>
         public static uint Call<T1>(SafeSdkCameraHandle handle, AndorSdk<T1> method, out T1 p1)
         {
             // Stores return code
-            uint result = 0;
 
             try
             {
@@ -77,7 +71,7 @@ namespace ANDOR_CS.Classes
                 
 
                 // Calls function
-                result = method(ref p1);
+                var result = method(ref p1);
                 return result;
             }
             finally
@@ -93,14 +87,13 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <typeparam name="T1">Type of first parameter</typeparam>
         /// <typeparam name="T2">Type of second parameter</typeparam>
-        /// <param name="method"><see cref="SdkInstance"/> method to invoke</param>
+        /// <param name="method"><see cref="SDKInstance"/> method to invoke</param>
         /// <param name="p1">Inpput argument of the method</param>
         /// <param name="p2">Stores result of the function call</param>
         /// <returns>Return code</returns>
         public static uint Call<T1, T2>(SafeSdkCameraHandle handle, AndorSdk<T1, T2> method, T1 p1, out T2 p2)
         {
             // Stores return code
-            uint result = 0;
             p2 = default(T2);
 
             try
@@ -109,7 +102,7 @@ namespace ANDOR_CS.Classes
                 _locker.Wait();
                 SetActiveCamera(handle);
                 // Calls function
-                result = method(p1, ref p2);
+                var result = method(p1, ref p2);
 
                 return result;
             }
@@ -118,8 +111,6 @@ namespace ANDOR_CS.Classes
                 // Releases semaphore
                 _locker.Release();
             }
-
-            return result;
         }
 
         /// <summary>
@@ -128,7 +119,7 @@ namespace ANDOR_CS.Classes
         /// <typeparam name="T1">Type of first parameter</typeparam>
         /// <typeparam name="T2">Type of second parameter</typeparam>
         /// <typeparam name="T3">Type of third parameter</typeparam>
-        /// <param name="method"><see cref="SdkInstance"/> method to invoke</param>
+        /// <param name="method"><see cref="SDKInstance"/> method to invoke</param>
         /// <param name="p1">First inpput argument of the method</param>
         /// <param name="p2">Second inpput argument of the method</param>
         /// <param name="p3">Stores result of the function call</param>
@@ -136,7 +127,6 @@ namespace ANDOR_CS.Classes
         public static uint Call<T1, T2, T3>(SafeSdkCameraHandle handle, AndorSdk<T1, T2, T3> method, T1 p1, T2 p2, out T3 p3)
         {
             // Stores return code
-            uint result = 0;
             p3 = default(T3);
 
             try
@@ -145,7 +135,7 @@ namespace ANDOR_CS.Classes
                 _locker.Wait();
                 SetActiveCamera(handle);
                 // Calls function
-                result = method(p1, p2, ref p3);
+                var result = method(p1, p2, ref p3);
 
                 return result;
             }
@@ -160,7 +150,6 @@ namespace ANDOR_CS.Classes
         public static uint Call<T1>(SafeSdkCameraHandle handle, Func<T1, uint> method, T1 p1)
         {
             // Stores return code
-            uint result = 0;
 
 
             try
@@ -169,7 +158,7 @@ namespace ANDOR_CS.Classes
 
                 // Calls function
                 SetActiveCamera(handle);
-                result = method(p1);
+                var result = method(p1);
 
                 return result;
             }
@@ -185,7 +174,6 @@ namespace ANDOR_CS.Classes
         {
 
             // Stores return code
-            uint result = 0;
 
             try
             {
@@ -193,7 +181,7 @@ namespace ANDOR_CS.Classes
                 _locker.Wait();
                 SetActiveCamera(handle);
                 // Calls function
-                result = method();
+                var result = method();
                 return result;
             }
             finally
@@ -208,14 +196,13 @@ namespace ANDOR_CS.Classes
         public static uint CallWithoutHandle<T1, T2>(AndorSdk<T1, T2> method, T1 p1, out T2 p2)
         {
             // Stores return code
-            uint result = 0;
             p2 = default(T2);
             try
             {// Waits until SDKInstance is available
                 _locker.Wait();
 
                 // Calls function
-                result = method(p1, ref p2);
+                var result = method(p1, ref p2);
 
                 return result;
             }
@@ -227,14 +214,13 @@ namespace ANDOR_CS.Classes
         public static uint CallWithoutHandle<T1>(AndorSdk<T1> method, out T1 p1)
         {
             // Stores return code
-            uint result = 0;
             p1 = default(T1);
             try
             {// Waits until SDKInstance is available
                 _locker.Wait();
 
                 // Calls function
-                result = method(ref p1);
+                var result = method(ref p1);
 
                 return result;
             }
@@ -247,13 +233,12 @@ namespace ANDOR_CS.Classes
         public static uint CallWithoutHandle(Func<uint> method)
         {
             // Stores return code
-            uint result = 0;
             try
             {// Waits until SDKInstance is available
                 _locker.Wait();
 
                 // Calls function
-                result = method();
+                var result = method();
 
                 return result;
             }
@@ -266,35 +251,18 @@ namespace ANDOR_CS.Classes
 
         private static void SetActiveCamera(SafeSdkCameraHandle handle)
         {
-            if (handle != null)
-            {
-                int currHandle = 0;
-                if (SdkInstance.GetCurrentCamera(ref currHandle) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
-                    throw new Exception();
+            if (handle == null) return;
 
-                if (currHandle != handle.SdkPtr)
-                    if (SdkInstance.SetCurrentCamera(handle.SdkPtr) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
-                        throw new Exception();
-            }
+            var currHandle = 0;
+            if (SDKInstance.GetCurrentCamera(ref currHandle) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+                throw new Exception();
+
+            if (currHandle == handle.SdkPtr) return;
+
+            if (SDKInstance.SetCurrentCamera(handle.SdkPtr) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+                throw new Exception();
         }
-        ///// <summary>
-        ///// Manually waits while other tasks access SDK instance
-        ///// </summary>
-        //internal static void LockManually()
-        //{
-        //    if (LockDepth++ == 0)
-        //        locker.Wait();
-
-        //}
-
-        ///// <summary>
-        ///// Manually releases semaphore and allows other tasks to call SDK functions
-        ///// </summary>
-        //internal static void ReleaseManually()
-        //{
-        //    if (--LockDepth == 0)
-        //        locker.Release();
-        //}
+        
 
     }
 }

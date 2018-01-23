@@ -28,16 +28,16 @@ using System.Collections.Concurrent;
 
 namespace ANDOR_CS.Classes
 {
-    public class DebugCamera : CameraBase
+    public sealed class DebugCamera : CameraBase
     {
-        private static Random _r = new Random();
+        private static readonly Random _r = new Random();
         private static volatile object _locker = new object();
-        private static readonly ConsoleColor Green = ConsoleColor.DarkGreen;
-        private static readonly ConsoleColor Red = ConsoleColor.Red;
-        private static readonly ConsoleColor Blue = ConsoleColor.Blue;
+        private const ConsoleColor Green = ConsoleColor.DarkGreen;
+        private const ConsoleColor Red = ConsoleColor.Red;
+        private const ConsoleColor Blue = ConsoleColor.Blue;
 
         private Task _temperatureMonitorWorker;
-        private CancellationTokenSource _temperatureMonitorCancellationSource
+        private readonly CancellationTokenSource _temperatureMonitorCancellationSource
             = new CancellationTokenSource();
 
         public override ConcurrentQueue<Image> AcquiredImages => throw new NotImplementedException();
@@ -53,7 +53,7 @@ namespace ANDOR_CS.Classes
 
                 OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
 
-                Task.Delay(delay).Wait();
+                Task.Delay(delay, token).Wait(token);
             }
 
         }
@@ -66,7 +66,7 @@ namespace ANDOR_CS.Classes
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
         {
             WriteMessage("Current temperature returned.", Blue);
-            return (TemperatureStatus: TemperatureStatus.Stabilized, Temperature: 10.0f);
+            return (Status: TemperatureStatus.Stabilized, Temperature: 10.0f);
         }
         public override void SetActive()
             => WriteMessage("Camera is manually set active.", Green);
@@ -80,20 +80,17 @@ namespace ANDOR_CS.Classes
             CoolerMode = mode;
             WriteMessage($"Cooler mode is set to {mode}", Blue);
         }
-        public override void SetTemperature(int temperature)
-        {
-            WriteMessage($"Temperature was set to {temperature}.", Blue);
-        }
-        public override void ShutterControl(int clTime, int opTime, ShutterMode inter, ShutterMode exter = ShutterMode.FullyAuto, TtlShutterSignal type = TtlShutterSignal.Low)
-        {
-            WriteMessage("Shutter settings were changed.", Blue);
-        }
+        public override void SetTemperature(int temperature) 
+            => WriteMessage($"Temperature was set to {temperature}.", Blue);
+
+        public override void ShutterControl(int clTime, int opTime, ShutterMode inter, ShutterMode exter = ShutterMode.FullyAuto, TtlShutterSignal type = TtlShutterSignal.Low) 
+            => WriteMessage("Shutter settings were changed.", Blue);
+
         public override void TemperatureMonitor(Switch mode, int timeout)
         {
             // If monitor shold be enbled
             if (mode == Switch.Enabled)
             {
-                
                 // If background task has not been started yet
                 if (_temperatureMonitorWorker == null ||
                     _temperatureMonitorWorker.Status == TaskStatus.Canceled ||
@@ -109,10 +106,8 @@ namespace ANDOR_CS.Classes
                     _temperatureMonitorWorker.Start();
 
                 WriteMessage("Temperature monitor enabled.", Green);
-
             }
-            // If monitor should be disabled
-            if (mode == Switch.Disabled)
+            else if (mode == Switch.Disabled)
             {
                 // if there is a working background monitor
                 if (_temperatureMonitorWorker?.Status == TaskStatus.Running ||
@@ -123,11 +118,13 @@ namespace ANDOR_CS.Classes
 
                 WriteMessage("Temperature monitor disabled.", Red);
             }
+
+            // If monitor should be disabled
         }
         public DebugCamera(int camIndex)
         {
             CameraIndex = camIndex;
-            SerialNumber = $"XYZ-{_r.Next(9999).ToString("0000")}";
+            SerialNumber = $"XYZ-{_r.Next(9999):0000}";
             Capabilities = new DeviceCapabilities()
             {
                 CameraType = CameraType.IXonUltra

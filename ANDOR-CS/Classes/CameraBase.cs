@@ -18,10 +18,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using System.Threading.Tasks;
-using System.Threading;
 using System.Linq;
-
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
@@ -39,10 +39,10 @@ namespace ANDOR_CS.Classes
         protected const int StatusCheckTimeOutMs = 100;
         protected const int TempCheckTimeOutMs = 5000;
 
-        protected bool _isDisposed = false;
+        protected bool _isDisposed;
 
-        private bool _isActive = false;
-        private bool _isInitialized = false;
+        private bool _isActive;
+        private bool _isInitialized;
         private DeviceCapabilities _capabilities = default(DeviceCapabilities);
         private CameraProperties _properties = default(CameraProperties);
         private string _serialNumber = "";
@@ -61,17 +61,14 @@ namespace ANDOR_CS.Classes
             = default((Version EPROM, Version COFFile, Version Driver, Version Dll));
         private (Version PCB, Version Decode, Version CameraFirmware) _hardware
             = default((Version PCB, Version Decode, Version CameraFirmware));
-        private volatile bool _isAcquiring = false;
-        private volatile bool _isAsyncAcquisition = false;
+        private volatile bool _isAcquiring;
+        private volatile bool _isAsyncAcquisition;
 
         protected ConcurrentQueue<Image> _acquiredImages = new ConcurrentQueue<Image>();
 
 
-        public bool IsDisposed
-        {
-            get => _isDisposed;
-            private set => _isDisposed = value;
-        }
+        public bool IsDisposed => _isDisposed;
+
         public virtual DeviceCapabilities Capabilities
         {
             get => _capabilities;
@@ -346,18 +343,17 @@ namespace ANDOR_CS.Classes
             var strRep = $"{CameraIndex} {ToString()}";
             int hash = 0;
             foreach (var ch in strRep)
-                foreach (var b in BitConverter.GetBytes(ch))
-                    hash += b;
+                hash += BitConverter.GetBytes(ch).Aggregate(hash, (current, b) => current + b);
             return hash;
         }
         public override bool Equals(object obj)
         {
             if (obj is CameraBase cam)
                 return
-                    cam.CameraIndex == this.CameraIndex &
-                    cam.CameraModel == this.CameraModel &
-                    cam.SerialNumber == this.SerialNumber;
-            else return false;
+                    cam.CameraIndex == CameraIndex &
+                    cam.CameraModel == CameraModel &
+                    cam.SerialNumber == SerialNumber;
+            return false;
         }
 
 
@@ -367,6 +363,7 @@ namespace ANDOR_CS.Classes
                 throw new ObjectDisposedException("Camera instance is already disposed");
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// When overriden in derived class, disposes camera instance and frees all resources.
         /// </summary>
@@ -387,7 +384,7 @@ namespace ANDOR_CS.Classes
         /// Fires <see cref="PropertyChanged"/> event
         /// </summary>
         /// <param name="property">Compiler-filled name of the property that fires event.</param>
-        protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
+        protected virtual void OnPropertyChanged([CallerMemberName] string property = "")
         {
             if (!IsDisposed)
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
