@@ -28,7 +28,8 @@ namespace ANDOR_CS.UnitTests
 
 
             using (var xml = XmlReader.Create(new System.IO.StringReader(sb.ToString()), new XmlReaderSettings()))
-                setts.ReadXml(xml);
+                foreach (var item in XMLParser.ReadXml(xml).Where(x => x.Value != null))
+                    Console.WriteLine(item);
 
             Console.WriteLine(sb.ToString());
             Console.ReadKey();
