@@ -20,7 +20,13 @@ namespace ANDOR_CS.UnitTests
         public static void Main()
         {
 
-            var setts = new AcquisitionSettings();
+            var cam = new Camera();
+            var setts = cam.GetAcquisitionSettingsTemplate();
+            setts.SetImageArea(new DataStructures.Rectangle(new DataStructures.Point2D(1, 1), 128, 256));
+            setts.SetExposureTime(123.0f);
+            setts.SetVSSpeed(0);
+            setts.SetAcquisitionMode(Enums.AcquisitionMode.SingleScan);
+            var setts2 = cam.GetAcquisitionSettingsTemplate();
             var sb = new StringBuilder();
 
             using (var xml = XmlWriter.Create(sb, new XmlWriterSettings() { Indent = true, NewLineOnAttributes = true }))
@@ -28,8 +34,9 @@ namespace ANDOR_CS.UnitTests
 
 
             using (var xml = XmlReader.Create(new System.IO.StringReader(sb.ToString()), new XmlReaderSettings()))
-                setts.ReadXml(xml);
+                setts2.ReadXml(xml);
 
+            cam.Dispose();
             Console.WriteLine(sb.ToString());
             Console.ReadKey();
         }
