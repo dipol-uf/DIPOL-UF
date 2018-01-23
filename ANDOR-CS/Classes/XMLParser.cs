@@ -102,7 +102,7 @@ namespace ANDOR_CS.Classes
         {
             var name = reader.Name;
             var typeStr = reader.GetAttribute("Type");
-            if (string.IsNullOrWhiteSpace(typeStr))
+            if (string.IsNullOrWhiteSpace(typeStr) && name != @"Settings")
                 throw new XmlException("Parsed node does not provide type information where it was expected.");
 
             Type type;

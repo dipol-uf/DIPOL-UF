@@ -46,35 +46,16 @@ namespace ANDOR_CS.DataStructures
             Y = y;
         }
 
-        public static Point2D operator + (Point2D a, Point2D b)
-        {
-            return new Point2D(a.X + b.X, a.Y + b.Y);
+        public static Point2D operator + (Point2D a, Point2D b) => new Point2D(a.X + b.X, a.Y + b.Y);
 
-        }
+        public static Point2D operator -(Point2D a) => new Point2D(-a.X, -a.Y);
 
-        public static Point2D operator -(Point2D a)
-        {
-            return new Point2D(-a.X, -a.Y);
-        }
+        public static Point2D operator -(Point2D a, Point2D b) => a + (-b);
 
-        public static Point2D operator -(Point2D a, Point2D b)
-        {
-            return a + (-b);
-        }
+        public static Point2D operator +(Point2D a, Size b) => new Point2D(a.X + b.Horizontal, a.Y + b.Vertical);
 
-        public static Point2D operator +(Point2D a, Size b)
-        {
-            return new Point2D(a.X + b.Horizontal, a.Y + b.Vertical);
-        }
+        public static Point2D operator -(Point2D a, Size b) => new Point2D(a.X - b.Horizontal, a.Y - b.Vertical);
 
-        public static Point2D operator -(Point2D a, Size b)
-        {
-            return new Point2D(a.X - b.Horizontal, a.Y - b.Vertical);
-        }
-
-        public override string ToString()
-        {
-            return String.Format("({0}, {1})", X, Y);
-        }
+        public override string ToString() => $"({X}, {Y})";
     }
 }
