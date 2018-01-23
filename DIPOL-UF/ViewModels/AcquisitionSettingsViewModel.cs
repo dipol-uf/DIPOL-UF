@@ -162,12 +162,12 @@ namespace DIPOL_UF.ViewModels
         /// </summary>
         public int AmplifierIndex
         {
-            get => model.Amplifier?.Index ?? -1;
+            get => model.OutputAmplifier?.Index ?? -1;
             set
             {
                 try
                 {
-                    model.SetOutputAmplifier(camera.Properties.Amplifiers[value < 0 ? 0 : value].Amplifier);
+                    model.SetOutputAmplifier(camera.Properties.OutputAmplifiers[value < 0 ? 0 : value].OutputAmplifier);
                     ValidateProperty(null);
                     RaisePropertyChanged();
                 }
@@ -281,7 +281,7 @@ namespace DIPOL_UF.ViewModels
         /// </summary>
         public ReadMode? ReadModeValue
         {
-            get => model.ReadMode;
+            get => model.ReadoutMode;
             set
             {
                 try
@@ -405,12 +405,12 @@ namespace DIPOL_UF.ViewModels
                 { nameof(model.VSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed)},
                 { nameof(model.VSAmplitude), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
                 { nameof(model.ADConverter), true },
-                { nameof(model.Amplifier), true },
+                { nameof(model.OutputAmplifier), true },
                 { nameof(model.HSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) },
                 { nameof(model.PreAmpGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain) },
                 { nameof(model.AcquisitionMode), true },
                 { nameof(FrameTransferValue), true},
-                { nameof(model.ReadMode), true },
+                { nameof(model.ReadoutMode), true },
                 { nameof(model.TriggerMode), true },
                 { nameof(model.ExposureTime), true },
                 { nameof(model.EMCCDGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) }
@@ -425,7 +425,7 @@ namespace DIPOL_UF.ViewModels
                     new KeyValuePair<string, bool>(nameof(model.VSSpeed), true),
                     new KeyValuePair<string, bool>(nameof(model.VSAmplitude), true),
                     new KeyValuePair<string, bool>(nameof(model.ADConverter), true),
-                    new KeyValuePair<string, bool>(nameof(model.Amplifier), true),
+                    new KeyValuePair<string, bool>(nameof(model.OutputAmplifier), true),
                     new KeyValuePair<string, bool>(nameof(model.HSSpeed),
                         ADConverterIndex >= 0
                         && AmplifierIndex >= 0),
@@ -435,12 +435,12 @@ namespace DIPOL_UF.ViewModels
                         && HSSpeedIndex >= 0),
                     new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true),
                     new KeyValuePair<string, bool>(nameof(FrameTransferValue), false),
-                    new KeyValuePair<string, bool>(nameof(model.ReadMode), true),
+                    new KeyValuePair<string, bool>(nameof(model.ReadoutMode), true),
                     new KeyValuePair<string, bool>(nameof(model.TriggerMode), true),
                     new KeyValuePair<string, bool>(nameof(model.ExposureTime), true),
                     new KeyValuePair<string, bool>(nameof(model.EMCCDGain),
                         (AmplifierIndex >= 0)
-                        && Camera.Properties.Amplifiers[AmplifierIndex].Amplifier == OutputAmplification.Conventional)
+                        && Camera.Properties.OutputAmplifiers[AmplifierIndex].OutputAmplifier == OutputAmplification.Conventional)
                 }
                 );
         }
@@ -581,7 +581,8 @@ namespace DIPOL_UF.ViewModels
             if (e.PropertyName == nameof(AmplifierIndex))
             {
                 AllowedSettings[nameof(model.EMCCDGain)] = (AmplifierIndex >= 0) &&
-                    (Camera.Properties.Amplifiers[AmplifierIndex].Amplifier == OutputAmplification.Conventional);
+                    (Camera.Properties.OutputAmplifiers[AmplifierIndex].OutputAmplifier 
+                    == OutputAmplification.Conventional);
                 RaisePropertyChanged(nameof(EMCCDGainValueText));
             }
 

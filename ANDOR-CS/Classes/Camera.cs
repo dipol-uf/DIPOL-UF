@@ -380,7 +380,7 @@ namespace ANDOR_CS.Classes
                 DetectorSize = new Size(h, v),
                 HasInternalMechanicalShutter = shutter,
                 ADConverters = ADsBitRange,
-                Amplifiers = amplifiers,
+                OutputAmplifiers = amplifiers,
                 PreAmpGains = preAmpGainDesc,
                 VSSpeeds = speedArray,
                 EMCCDGainRange = (Low, High)

@@ -71,7 +71,7 @@ namespace ANDOR_CS.DataStructures
         /// An array of available amplifiers with respective maximum allowed horizontal speed
         /// </summary>
         [DataMember(IsRequired = true)]
-        public (string Name, OutputAmplification Amplifier, float MaxSpeed)[] Amplifiers
+        public (string Name, OutputAmplification OutputAmplifier, float MaxSpeed)[] OutputAmplifiers
         {
             get;
             internal set;
