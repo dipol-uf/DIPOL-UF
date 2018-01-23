@@ -68,7 +68,7 @@ namespace DIPOL_Remote.Classes
             // Creates MemoryStream and serializes settings into it.
             using (var memStr = new MemoryStream())
             {
-                Serialize(memStr, $"RemoteSettings_{camera.CameraModel}/{camera.SerialNumber}");
+                Serialize(memStr);
                 
                 // Writes stream bytes to array.
                 data = memStr.ToArray();

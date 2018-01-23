@@ -59,9 +59,11 @@ namespace ANDOR_CS.Classes
         [ANDOR_CS.Attributes.NonSerialized]
         protected CameraBase camera = null;
 
+        //[ANDOR_CS.Attributes.NonSerialized]
+        //public int CameraIndex
+        //=> camera.CameraIndex;
         [ANDOR_CS.Attributes.NonSerialized]
-        public int CameraIndex
-            => camera.CameraIndex;
+        public CameraBase Camera => camera;
 
         /// <summary>
         /// Stores the value of currently set vertical speed
@@ -682,7 +684,7 @@ namespace ANDOR_CS.Classes
                 throw new AndorSDKException("Camera is not properly initialized.", null);
         }
 
-        public virtual void Serialize(Stream stream, string name = "")
+        public virtual void Serialize(Stream stream)
         {
             using (var str = System.Xml.XmlWriter.Create(
                 stream,
@@ -1011,12 +1013,17 @@ namespace ANDOR_CS.Classes
 
         public void ReadXml(XmlReader reader)
         {
-            //var result = SerializedProperties
-            //    .Join(XMLParser.ReadXml(reader), x => x.Name, y => y.Key, (x, y) => y);
+            var result = XMLParser.ReadXml(reader);
+
+            if (result.Any(x => 
+                x.Key == @"CompatibleDevice" &&
+                (Enums.CameraType)x.Value != Camera.Capabilities.CameraType))
+                throw new AndorSDKException("Failed to deserialize acquisition settings: " +
+                    "device type mismatch. Check attribute \"CompatibleDevice\" of Settings node", null);
 
             foreach (var item in
                     from r in SerializedProperties
-                        .Join(XMLParser.ReadXml(reader), x => x.Name, y => y.Key, (x, y) => y)
+                        .Join(result, x => x.Name, y => y.Key, (x, y) => y)
                     from m in DeserializationSetMethods
                     let regexName = new {Method = m, Regex = SetFnctionNameParser.Match(m.Name)}
                     where regexName.Regex.Success && regexName.Regex.Groups.Count == 2

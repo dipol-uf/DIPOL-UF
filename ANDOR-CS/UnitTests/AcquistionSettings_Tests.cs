@@ -36,6 +36,8 @@ namespace ANDOR_CS.UnitTests
             using (var xml = XmlReader.Create(new System.IO.StringReader(sb.ToString()), new XmlReaderSettings()))
                 setts2.ReadXml(xml);
 
+            setts.Dispose();
+            setts2.Dispose();
             cam.Dispose();
             Console.WriteLine(sb.ToString());
             Console.ReadKey();
@@ -54,7 +56,7 @@ namespace ANDOR_CS.UnitTests
         public void AcquisitionSettings_Serialize_Deserialize()
         {
             var settings_output = new AcquisitionSettings();
-            using (var str = new StreamWriter("AcquistionSettings_Serialize_Deserizalie.test"))
+            using (var str = new StreamWriter("UnitTests/AcquistionSettings_Serialize_Deserizalie.xml"))
                 settings_output.Serialize(str.BaseStream);
 
             var settings_input = new AcquisitionSettings(camera);
@@ -68,12 +70,16 @@ namespace ANDOR_CS.UnitTests
 
             CollectionAssert.AreNotEquivalent(initialVals, intermVals);
 
-            using (var str = new StreamReader("AcquistionSettings_Serialize_Deserizalie.test"))
+            using (var str = new StreamReader("UnitTests/AcquistionSettings_Serialize_Deserizalie.xml"))
                 settings_input.Deserialize(str.BaseStream);
 
             var finalVals = publicProps.Select(p => p.GetValue(settings_input)).ToArray();
 
             CollectionAssert.AreEquivalent(initialVals, finalVals);
+
+            settings_input.Dispose();
+            settings_output.Dispose();
         }
     }
 }
+    
