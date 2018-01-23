@@ -16,12 +16,6 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.Runtime.Serialization;
 
 namespace ANDOR_CS.Exceptions
 {
@@ -32,8 +26,7 @@ namespace ANDOR_CS.Exceptions
         public uint ErrorCode
         {
             get;
-            private set;
-        } = 0;
+        }
 
         public AndorSdkException(string message, Exception innerException) 
             : base(message, innerException)
@@ -47,7 +40,7 @@ namespace ANDOR_CS.Exceptions
 
         public override string ToString()
         {
-            return string.Format("{0} [{1}]", base.Message, ErrorCode);
+            return $"{Message} [{ErrorCode}]";
         }
 
         public static void ThrowIfError(uint returnCode, string name)
