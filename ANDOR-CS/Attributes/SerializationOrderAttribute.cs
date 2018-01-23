@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace ANDOR_CS.Attributes
 {
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
     public class SerializationOrderAttribute : Attribute
     {
         public int Index
