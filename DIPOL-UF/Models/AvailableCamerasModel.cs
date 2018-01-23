@@ -241,7 +241,7 @@ namespace DIPOL_UF.Models
             {
                 nLocal = Camera.GetNumberOfCameras();
             }
-            catch (AndorSDKException aExp)
+            catch (AndorSdkException aExp)
             {
                 Helper.WriteLog(aExp);
             }
@@ -305,7 +305,7 @@ namespace DIPOL_UF.Models
                 nCams = Camera.GetNumberOfCameras();
             }
             // If for some reason camera retrieval number fails
-            catch (AndorSDKException aExp)
+            catch (AndorSdkException aExp)
             {
                 Helper.WriteLog(aExp);
                 nCams = 0;

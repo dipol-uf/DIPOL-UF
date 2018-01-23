@@ -84,11 +84,11 @@ namespace DIPOL_UF.Models
             get => camera.FanMode;
             set
             {
-                if (camera.Capabilities.Features.HasFlag(SDKFeatures.FanControl) &&
+                if (camera.Capabilities.Features.HasFlag(SdkFeatures.FanControl) &&
                     value != FanMode)
                 {
                     if (value == FanMode.LowSpeed &&
-                        !camera.Capabilities.Features.HasFlag(SDKFeatures.LowFanMode))
+                        !camera.Capabilities.Features.HasFlag(SdkFeatures.LowFanMode))
                         camera.FanControl(FanMode.LowSpeed);
                     else
                         camera.FanControl(value);
@@ -102,7 +102,7 @@ namespace DIPOL_UF.Models
             get => camera.Shutter.Internal;
             set
             {
-                if (camera.Capabilities.Features.HasFlag(SDKFeatures.Shutter) &&
+                if (camera.Capabilities.Features.HasFlag(SdkFeatures.Shutter) &&
                     value != camera.Shutter.Internal)
                 {
                     camera.ShutterControl(
@@ -110,7 +110,7 @@ namespace DIPOL_UF.Models
                        Settings.GetValueOrNullSafe("ShutterCloseTimeMS", 27),
                        value,
                        camera.Shutter.External ?? ShutterMode.PermanentlyOpen,
-                       (TTLShutterSignal)Settings.GetValueOrNullSafe("TTLShutterSignal", 1));
+                       (TtlShutterSignal)Settings.GetValueOrNullSafe("TTLShutterSignal", 1));
                     RaisePropertyChanged();
                 }
             }
@@ -120,7 +120,7 @@ namespace DIPOL_UF.Models
             get => camera.Shutter.External;
             set
             {
-                if (camera.Capabilities.Features.HasFlag(SDKFeatures.ShutterEx) &&
+                if (camera.Capabilities.Features.HasFlag(SdkFeatures.ShutterEx) &&
                     value != camera.Shutter.Internal)
                 {
                     camera.ShutterControl(
@@ -128,7 +128,7 @@ namespace DIPOL_UF.Models
                         Settings.GetValueOrNullSafe("ShutterCloseTimeMS", 27), 
                         camera.Shutter.Internal, 
                         value ?? ShutterMode.PermanentlyOpen, 
-                        (TTLShutterSignal)Settings.GetValueOrNullSafe("TTLShutterSignal", 1));
+                        (TtlShutterSignal)Settings.GetValueOrNullSafe("TTLShutterSignal", 1));
                     RaisePropertyChanged();
                 }
             }

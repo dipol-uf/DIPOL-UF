@@ -46,11 +46,11 @@ namespace DIPOL_Remote.Interfaces
     [ServiceKnownType(typeof(PixelMode))]
     [ServiceKnownType(typeof(SetFunction))]
     [ServiceKnownType(typeof(GetFunction))]
-    [ServiceKnownType(typeof(SDKFeatures))]
-    [ServiceKnownType(typeof(EMGain))]
+    [ServiceKnownType(typeof(SdkFeatures))]
+    [ServiceKnownType(typeof(EmGain))]
     [ServiceKnownType(typeof(CameraStatus))]
     [ServiceKnownType(typeof(ShutterMode))]
-    [ServiceKnownType(typeof(TTLShutterSignal))]
+    [ServiceKnownType(typeof(TtlShutterSignal))]
     [ServiceKnownType(typeof(TemperatureStatus))]
     [ServiceKnownType(typeof(AcquisitionEventType))]
     [ServiceKnownType(typeof(AcquisitionStatusEventArgs))]
@@ -135,7 +135,7 @@ namespace DIPOL_Remote.Interfaces
         [OperationContract(IsOneWay = false)]
         (ShutterMode Internal,
            ShutterMode? External,
-           TTLShutterSignal Type,
+           TtlShutterSignal Type,
            int OpenTime,
            int CloseTime) GetShutter(int camIndex);
         [OperationContract(IsOneWay = false)]
@@ -166,7 +166,7 @@ namespace DIPOL_Remote.Interfaces
             int opTime,
             ShutterMode inter,
             ShutterMode exter = ShutterMode.FullyAuto,
-            TTLShutterSignal type = TTLShutterSignal.Low);
+            TtlShutterSignal type = TtlShutterSignal.Low);
         [OperationContract(IsOneWay = false)]
         void CallTemperatureMonitor(int camIndex, Switch mode, int timeout);
         [OperationContract(IsOneWay = false)]

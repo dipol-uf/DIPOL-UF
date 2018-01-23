@@ -27,17 +27,17 @@ namespace ANDOR_CS.DataStructures
     public struct Rectangle
     {
         [DataMember(IsRequired = true)]
-        private Point2D start;
+        private Point2D _start;
         [DataMember(IsRequired = true)]
-        private Point2D end;
+        private Point2D _end;
 
-        public int X1 => start.X;
-        public int X2 => end.X;
-        public int Y1 => start.Y;
-        public int Y2 => end.Y;
+        public int X1 => _start.X;
+        public int X2 => _end.X;
+        public int Y1 => _start.Y;
+        public int Y2 => _end.Y;
 
-        public Point2D Start => start;
-        public Point2D End => end;
+        public Point2D Start => _start;
+        public Point2D End => _end;
 
         public Size Size => new Size(X2 - X1 + 1, Y2 - Y1 + 1);
         public int Width => X2 - X1 + 1;
@@ -48,8 +48,8 @@ namespace ANDOR_CS.DataStructures
             if (start.X > end.X || start.Y > end.Y)
                 throw new ArgumentOutOfRangeException($"{nameof(start)} should point to lower left corner, {nameof(end)} - to upper right. (start: {start} and end: {end})");
 
-            this.start = start;
-            this.end = end;
+            this._start = start;
+            this._end = end;
         }
 
         public Rectangle(int x1, int y1, int x2, int y2)
@@ -59,8 +59,8 @@ namespace ANDOR_CS.DataStructures
             if (y2 < y1)
                 throw new ArgumentOutOfRangeException($"{nameof(y2)} should be greater than or equal to {nameof(y1)} ({y1} <= {y2})");
 
-            start = new Point2D(x1, y1);
-            end = new Point2D(x2, y2);
+            _start = new Point2D(x1, y1);
+            _end = new Point2D(x2, y2);
         }
 
         public Rectangle(Point2D start, int width, int height)
@@ -71,14 +71,14 @@ namespace ANDOR_CS.DataStructures
             if (height < 0)
                 throw new ArgumentOutOfRangeException($"{nameof(height)} should be greater than or equal to {0} ({height} >= {0})");
 
-            this.start = start;
-            end = start + new Size(width, height);
+            this._start = start;
+            _end = start + new Size(width, height);
         }
 
         public Rectangle(Point2D start, Size size)
         {
-            this.start = start;
-            end = start - new Point2D(1, 1) +  size;
+            this._start = start;
+            _end = start - new Point2D(1, 1) +  size;
         }
 
         public override string ToString()

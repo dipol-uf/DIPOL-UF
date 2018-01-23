@@ -238,7 +238,7 @@ namespace DIPOL_Remote.Classes
 
             }
             // If method fails and Andor-related exception is thrown
-            catch (AndorSDKException andorEx)
+            catch (AndorSdkException andorEx)
             {
                 // rethrow it, wrapped in FaultException<>, to the client side
                 throw AndorSDKServiceException.WrapAndorSDKException(andorEx, nameof(Camera.GetNumberOfCameras));
@@ -276,7 +276,7 @@ namespace DIPOL_Remote.Classes
 #endif
             }
             // Andor-related exception
-            catch (AndorSDKException andorEx)
+            catch (AndorSdkException andorEx)
             {
                 throw AndorSDKServiceException.WrapAndorSDKException(andorEx, nameof(Camera));
             }
@@ -552,7 +552,7 @@ namespace DIPOL_Remote.Classes
         public (
            ShutterMode Internal,
            ShutterMode? External,
-           TTLShutterSignal Type,
+           TtlShutterSignal Type,
            int OpenTime,
            int CloseTime) GetShutter(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Shutter;
@@ -598,7 +598,7 @@ namespace DIPOL_Remote.Classes
             int opTime,
             ShutterMode inter,
             ShutterMode exter = ShutterMode.FullyAuto,
-            TTLShutterSignal type = TTLShutterSignal.Low)
+            TtlShutterSignal type = TtlShutterSignal.Low)
             => GetCameraSafe(sessionID, camIndex).ShutterControl(
                 clTime,
                 opTime,
@@ -621,7 +621,7 @@ namespace DIPOL_Remote.Classes
             string settingsID,
             int ADConverterIndex,
             int amplifier)
-        => GetSettingsSafe(settingsID).GetAvailableHSSpeeds(ADConverterIndex, amplifier).ToArray();
+        => GetSettingsSafe(settingsID).GetAvailableHsSpeeds(ADConverterIndex, amplifier).ToArray();
 
         [OperationBehavior]
         public (int Index, string Name)[] GetAvailablePreAmpGain(
@@ -640,7 +640,7 @@ namespace DIPOL_Remote.Classes
             int speedIndex)
             => (
             IsSupported: GetSettingsSafe(settingsID)
-                .IsHSSpeedSupported(speedIndex, ADConverter, amplifier, out float speed),
+                .IsHsSpeedSupported(speedIndex, ADConverter, amplifier, out float speed),
             Speed: speed);
 
         /// <summary>

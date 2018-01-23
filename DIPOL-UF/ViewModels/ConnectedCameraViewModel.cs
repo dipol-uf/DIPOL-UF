@@ -49,14 +49,14 @@ namespace DIPOL_UF.ViewModels
         /// <summary>
         /// Indicates if Fan Control is available.
         /// </summary>
-        public bool CanControlFan => model.Camera.Capabilities.Features.HasFlag(SDKFeatures.FanControl);
+        public bool CanControlFan => model.Camera.Capabilities.Features.HasFlag(SdkFeatures.FanControl);
         /// <summary>
         /// The number of allowed regimes: 
         /// Tick spaceing is 2 for On/Off,
         /// or 1 for On/Low/Off.
         /// </summary>
         public int LowFanModeTickStep =>
-            model.Camera.Capabilities.Features.HasFlag(SDKFeatures.LowFanMode)
+            model.Camera.Capabilities.Features.HasFlag(SdkFeatures.LowFanMode)
             ? 1
             : 2;
         /// <summary>
@@ -105,11 +105,11 @@ namespace DIPOL_UF.ViewModels
         /// <summary>
         /// Indicates if internal shutter can be controlled.
         /// </summary>
-        public bool CanControlShutter => model.Camera.Capabilities.Features.HasFlag(SDKFeatures.Shutter);
+        public bool CanControlShutter => model.Camera.Capabilities.Features.HasFlag(SdkFeatures.Shutter);
         /// <summary>
         /// Indicates if internal and external shutters can be controlled separately.
         /// </summary>
-        public bool CanControlInternalExternalShutter => model.Camera.Capabilities.Features.HasFlag(SDKFeatures.ShutterEx);
+        public bool CanControlInternalExternalShutter => model.Camera.Capabilities.Features.HasFlag(SdkFeatures.ShutterEx);
 
         public ShutterMode InternalShutterState
         {
