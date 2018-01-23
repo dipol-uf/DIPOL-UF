@@ -1,24 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
-using System.Xml;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Xml;
 
 using ANDOR_CS.Attributes;
+using ANDOR_CS.Enums;
+using NonSerializedAttribute = ANDOR_CS.Attributes.NonSerializedAttribute;
 
 namespace ANDOR_CS.Classes
 {
     static class XMLParser
     {
-        private static Regex TupleTypeParser = new Regex(@"ValueTuple`(\d)+\[?.?\]?");
+        private static readonly Regex TupleTypeParser = new Regex(@"ValueTuple`(\d)+\[?.?\]?");
 
-        private static Type[] AllowedTypes = {
+        private static readonly Type[] AllowedTypes = {
             typeof(int),
             typeof(float),
-            typeof(double),
+            typeof(double)
         };
 
         public static  Dictionary<string, object>  ReadXml(XmlReader reader)
@@ -43,7 +46,7 @@ namespace ANDOR_CS.Classes
             var props = settings.GetType()
                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                 .Where(p => 
-                    p.GetCustomAttribute<ANDOR_CS.Attributes.NonSerializedAttribute>(true) == null &&
+                    p.GetCustomAttribute<NonSerializedAttribute>(true) == null &&
                     p.SetMethod != null &&
                     p.GetMethod != null)
                 .OrderBy(p => p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0);
@@ -55,7 +58,7 @@ namespace ANDOR_CS.Classes
 #endif
                 writer.WriteAttributeString("CompatibleDevice", settings.Camera.Capabilities.CameraType.ToString());
 
-            object value = null;
+            object value;
 
             foreach (var p in props)
                 if ((value = p.GetValue(settings)) != null)
@@ -84,10 +87,10 @@ namespace ANDOR_CS.Classes
                     SerializeElement(p.GetValue(element), p.Name, writer);
 
             }
-            else if (element is System.Runtime.CompilerServices.ITuple tuple)
+            else if (element is ITuple tuple)
             {
                 for (int i = 0; i < tuple.Length; i++)
-                    SerializeElement(tuple[i], "Tpl_" + i.ToString(), writer);
+                    SerializeElement(tuple[i], "Tpl_" + i, writer);
             }
             else
                 writer.WriteAttributeString("Value", element.ToString());
@@ -97,13 +100,16 @@ namespace ANDOR_CS.Classes
 
         private static KeyValuePair<string, object> DeserializeElement(XmlReader reader)
         {
-            string name = reader.Name;
-            string typeStr = reader.GetAttribute("Type");
-            Type type = null;
+            var name = reader.Name;
+            var typeStr = reader.GetAttribute("Type");
+            if (string.IsNullOrWhiteSpace(typeStr))
+                throw new XmlException("Parsed node does not provide type information where it was expected.");
+
+            Type type;
 
             if (reader.AttributeCount == 2)
             {
-                string valStr = reader.GetAttribute("Value");
+                var valStr = reader.GetAttribute("Value");
 
                 if (string.IsNullOrWhiteSpace(valStr))
                     return new KeyValuePair<string, object>(name, null);
@@ -112,10 +118,11 @@ namespace ANDOR_CS.Classes
                     return new KeyValuePair<string, object>(name, valStr);
 
 
-                if ((type = AllowedTypes.Where(tp => tp.FullName == typeStr).FirstOrDefault()) != null)
+                if ((type = AllowedTypes.FirstOrDefault(tp => tp.FullName == typeStr)) != null)
                 {
                     var mi = type.GetMethod("Parse",
-                        new[] {
+                        new[]
+                        {
                             typeof(string),
                             typeof(NumberStyles),
                             typeof(IFormatProvider)
@@ -123,103 +130,99 @@ namespace ANDOR_CS.Classes
 
                     return new KeyValuePair<string, object>(name, mi?.Invoke(
                         null,
-                        new object[] {
+                        new object[]
+                        {
                             valStr,
                             NumberStyles.Any,
                             NumberFormatInfo.InvariantInfo
                         }
-                        ) ?? null);
+                    ));
                 }
 
-                else if ((type = typeof(AndorSDKInitialization)
-                    .Assembly
-                    .ExportedTypes
-                    .Where(tp => tp.FullName == typeStr)
-                    .FirstOrDefault()) != null &&
+                if ((type = typeof(AndorSDKInitialization)
+                        .Assembly
+                        .ExportedTypes
+                        .FirstOrDefault(tp => tp.FullName == typeStr)) != null &&
                     type.IsEnum)
                     return new KeyValuePair<string, object>(name, Enum.Parse(type, valStr));
-
             }
             else if (reader.AttributeCount == 1)
             {
-                if (name == @"Settings")
+                if (name == @"Settings" && reader.AttributeCount > 0)
                     return new KeyValuePair<string, object>(@"CompatibleDevice",
-                        Enum.Parse(typeof(Enums.CameraType), reader.GetAttribute(0)));
+                        Enum.Parse(typeof(CameraType), reader.GetAttribute(0)));
+
                 var match = TupleTypeParser.Match(typeStr);
                 if (match.Success && match.Groups.Count == 2)
                 {
-                    int size = int.Parse(match.Groups[1].Value, NumberStyles.Any, NumberFormatInfo.InvariantInfo);
-                    KeyValuePair<string, object>[] results = new KeyValuePair<string, object>[size];
+                    var size = int.Parse(match.Groups[1].Value, NumberStyles.Any, NumberFormatInfo.InvariantInfo);
+                    var results = new KeyValuePair<string, object>[size];
 
-                    for (int i = 0; i < size; i++)
+                    for (var i = 0; i < size; i++)
                     {
                         ReadUntilData(reader);
 
                         results[i] = DeserializeElement(reader);
-
                     }
 
                     var ctor = typeof(ValueTuple)
                         .GetMethods()
-                        .Where(m =>
+                        .FirstOrDefault(m => 
                             m.Name == "Create" &&
                             m.IsGenericMethod &&
-                            m.GetGenericArguments().Length == size
-                        ).FirstOrDefault();
+                            m.GetGenericArguments().Length == size);
 
                     if (ctor is null)
                         throw
                             new XmlException($"Unable to parse XML file: " +
-                            $"element {name} of ValueTuple type has too many parameters ({size}).");
-                    else
-                    {
-                        var tupleVal = ctor
-                            .MakeGenericMethod(results.Select(res => res.Value.GetType()).ToArray())
-                            .Invoke(null, results.Select(res => res.Value).ToArray());
+                                             $"element {name} of ValueTuple type has too many parameters ({size}).");
+                    var tupleVal = ctor
+                        .MakeGenericMethod(results.Select(res => res.Value.GetType()).ToArray())
+                        .Invoke(null, results.Select(res => res.Value).ToArray());
 
-                        return new KeyValuePair<string, object>(name, tupleVal);
-                    }
-
+                    return new KeyValuePair<string, object>(name, tupleVal);
                 }
-                else if ((type = typeof(AndorSDKInitialization)
+
+                if ((type = typeof(AndorSDKInitialization)
                         .Assembly
                         .ExportedTypes
-                        .Where(tp => tp.FullName == typeStr)
-                        .FirstOrDefault()) != null &&
-                    !type.IsEnum &&
-                    !type.IsClass &&
-                    type.GetCustomAttribute<DataContractAttribute>(true) != null)
+                        .FirstOrDefault(tp => tp.FullName == typeStr)) == null || 
+                    type.IsEnum || 
+                    type.IsClass ||
+                    type.GetCustomAttribute<DataContractAttribute>(true) == null)
+                    return new KeyValuePair<string, object>(reader.Name, null);
                 {
                     var fields = GetFieldsWithAttribute<DataMemberAttribute>(type);
                     var props = GetPropertiesWithAttribute<DataMemberAttribute>(type);
 
-                    KeyValuePair<string, object>[] results_fields = new KeyValuePair<string, object>[fields.Length];
-                    KeyValuePair<string, object>[] results_props = new KeyValuePair<string, object>[props.Length];
+                    var resultsFields = new KeyValuePair<string, object>[fields.Length];
+                    var resultsProps = new KeyValuePair<string, object>[props.Length];
 
 
-                    for (int i = 0; i < fields.Length; i++)
+                    for (var i = 0; i < fields.Length; i++)
                     {
                         ReadUntilData(reader);
-                        results_fields[i] = DeserializeElement(reader);
+                        resultsFields[i] = DeserializeElement(reader);
                     }
-                    for (int i = 0; i < props.Length; i++)
+
+                    for (var i = 0; i < props.Length; i++)
                     {
                         ReadUntilData(reader);
-                        results_props[i] = DeserializeElement(reader);
+                        resultsProps[i] = DeserializeElement(reader);
                     }
 
                     var complexTypeVal = Activator.CreateInstance(type);
 
 
-                    for (int i = 0; i < fields.Length; i++)
+                    for (var i = 0; i < fields.Length; i++)
                         fields
-                            .FirstOrDefault(fi => fi.Name == results_fields[i].Key)
-                            ?.SetValue(complexTypeVal, results_fields[i].Value);
+                            .FirstOrDefault(fi => fi.Name == resultsFields[i].Key)
+                            ?.SetValue(complexTypeVal, resultsFields[i].Value);
 
-                    for (int i = 0; i < props.Length; i++)
+                    for (var i = 0; i < props.Length; i++)
                         props
-                            .FirstOrDefault(pi => pi.Name == results_props[i].Key)
-                            ?.SetValue(complexTypeVal, results_props[i].Value);
+                            .FirstOrDefault(pi => pi.Name == resultsProps[i].Key)
+                            ?.SetValue(complexTypeVal, resultsProps[i].Value);
 
                     return new KeyValuePair<string, object>(name, complexTypeVal);
                 }
