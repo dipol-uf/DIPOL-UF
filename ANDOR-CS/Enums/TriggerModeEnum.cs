@@ -42,7 +42,7 @@ namespace ANDOR_CS.Enums
         [EnumMember]
 
         [Description("External full v-bin")]
-        ExternalFVBEM = SDK.AC_TRIGGERMODE_EXTERNAL_FVB_EM,
+        ExternalFvbem = SDK.AC_TRIGGERMODE_EXTERNAL_FVB_EM,
         [EnumMember]
 
         [Description("Continuous")]

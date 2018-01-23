@@ -184,7 +184,7 @@ namespace DIPOL_Remote.Classes
         public override (
            ShutterMode Internal,
            ShutterMode? External,
-           TTLShutterSignal Type,
+           TtlShutterSignal Type,
            int OpenTime,
            int CloseTime) Shutter
         {
@@ -269,7 +269,7 @@ namespace DIPOL_Remote.Classes
             int opTime,
             ShutterMode inter,
             ShutterMode exter = ShutterMode.FullyAuto,
-            TTLShutterSignal type = TTLShutterSignal.Low)
+            TtlShutterSignal type = TtlShutterSignal.Low)
             => session.CallShutterControl(
                 CameraIndex,
                 clTime,
@@ -277,7 +277,7 @@ namespace DIPOL_Remote.Classes
                 inter,
                 exter,
                 type);
-        public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMS)
+        public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs)
             => session.CallTemperatureMonitor(CameraIndex, mode, timeout);
 
         public override SettingsBase GetAcquisitionSettingsTemplate()

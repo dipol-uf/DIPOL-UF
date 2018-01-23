@@ -24,7 +24,7 @@ namespace ANDOR_CS.Enums
 {
     [Flags]
     [DataContract]
-    public enum EMGain : uint
+    public enum EmGain : uint
     {
         [EnumMember]
         Unknown = 0,

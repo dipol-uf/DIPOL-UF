@@ -35,15 +35,15 @@ namespace ANDOR_CS.Enums
         [EnumMember]
         DetectorSize = SDK.AC_GETFUNCTION_DETECTORSIZE,
         [EnumMember]
-        MCPGain = SDK.AC_GETFUNCTION_MCPGAIN,
+        McpGain = SDK.AC_GETFUNCTION_MCPGAIN,
         [EnumMember]
-        EMCCDGain = SDK.AC_GETFUNCTION_EMCCDGAIN,
+        EmccdGain = SDK.AC_GETFUNCTION_EMCCDGAIN,
         [EnumMember]
         GateMode = SDK.AC_GETFUNCTION_GATEMODE,
         [EnumMember]
-        DDGTimes = SDK.AC_GETFUNCTION_DDGTIMES,
+        DdgTimes = SDK.AC_GETFUNCTION_DDGTIMES,
         [EnumMember]
-        DDGIntegrateOnChip = SDK.AC_GETFUNCTION_IOC,
+        DdgIntegrateOnChip = SDK.AC_GETFUNCTION_IOC,
         [EnumMember]
         Intelligate = SDK.AC_GETFUNCTION_INTELLIGATE,
         [EnumMember]

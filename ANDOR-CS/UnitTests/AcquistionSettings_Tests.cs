@@ -13,9 +13,9 @@ using ANDOR_CS.Classes;
 namespace ANDOR_CS.UnitTests
 {
     [TestClass]
-    public class AcquistionSettings_Tests
+    public class AcquistionSettingsTests
     {
-        private Camera camera;
+        private Camera _camera;
 
         public static void Main()
         {
@@ -24,7 +24,7 @@ namespace ANDOR_CS.UnitTests
             var setts = cam.GetAcquisitionSettingsTemplate();
             setts.SetImageArea(new DataStructures.Rectangle(new DataStructures.Point2D(1, 1), 128, 256));
             setts.SetExposureTime(123.0f);
-            setts.SetVSSpeed(0);
+            setts.SetVsSpeed(0);
             setts.SetAcquisitionMode(Enums.AcquisitionMode.SingleScan);
             var setts2 = cam.GetAcquisitionSettingsTemplate();
             var sb = new StringBuilder();
@@ -45,40 +45,40 @@ namespace ANDOR_CS.UnitTests
         [TestInitialize]
         public void Initiazlie()
         {
-            camera = new Camera();
+            _camera = new Camera();
         }
         [TestCleanup]
         public void Cleanup()
         {
-            camera.Dispose();
+            _camera.Dispose();
         }
         [TestMethod]
         public void AcquisitionSettings_Serialize_Deserialize()
         {
-            var settings_output = new AcquisitionSettings();
+            var settingsOutput = new AcquisitionSettings();
             using (var str = new StreamWriter("UnitTests/AcquistionSettings_Serialize_Deserizalie.xml"))
-                settings_output.Serialize(str.BaseStream);
+                settingsOutput.Serialize(str.BaseStream);
 
-            var settings_input = new AcquisitionSettings(camera);
+            var settingsInput = new AcquisitionSettings(_camera);
 
             var publicProps = typeof(AcquisitionSettings)
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.SetMethod != null);
 
-            var initialVals = publicProps.Select(p => p.GetValue(settings_output)).ToArray();
-            var intermVals = publicProps.Select(p => p.GetValue(settings_input)).ToArray();
+            var initialVals = publicProps.Select(p => p.GetValue(settingsOutput)).ToArray();
+            var intermVals = publicProps.Select(p => p.GetValue(settingsInput)).ToArray();
 
             CollectionAssert.AreNotEquivalent(initialVals, intermVals);
 
             using (var str = new StreamReader("UnitTests/AcquistionSettings_Serialize_Deserizalie.xml"))
-                settings_input.Deserialize(str.BaseStream);
+                settingsInput.Deserialize(str.BaseStream);
 
-            var finalVals = publicProps.Select(p => p.GetValue(settings_input)).ToArray();
+            var finalVals = publicProps.Select(p => p.GetValue(settingsInput)).ToArray();
 
             CollectionAssert.AreEquivalent(initialVals, finalVals);
 
-            settings_input.Dispose();
-            settings_output.Dispose();
+            settingsInput.Dispose();
+            settingsOutput.Dispose();
         }
     }
 }

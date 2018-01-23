@@ -17,7 +17,7 @@ namespace ANDOR_CS.Enums
         PermanentlyClosed = 2,
         [Description("Open for Full Vertical Binning")]
         [EnumMember]
-        OpenForFVBSeries = 4,
+        OpenForFvbSeries = 4,
         [Description("Open for Any Series")]
         [EnumMember]
         OpenForAnySeries = 5
