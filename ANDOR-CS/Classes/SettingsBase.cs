@@ -695,80 +695,82 @@ namespace ANDOR_CS.Classes
                 var sourceCulture = System.Threading.Thread.CurrentThread.CurrentCulture;
                 System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
-                str.WriteStartDocument();
+                WriteXml(str);
 
-                str.WriteStartElement("AcquisitionSettings");
-                str.WriteAttributeString("Camera", camera?.CameraModel ?? "TEST");
-                str.WriteAttributeString("Name", name);
+                //    str.WriteStartDocument();
 
-
-                var elementsToWrite = from prop
-                                      in this.GetType().GetProperties()
-                                      where !Attribute.IsDefined(prop, typeof(ANDOR_CS.Attributes.NonSerializedAttribute))
-                                      where prop.GetMethod.IsPublic && prop.SetMethod.IsFamily
-                                      select prop;
-
-                elementsToWrite = from prop
-                                  in elementsToWrite
-                                  where prop.GetMethod.Invoke(this, new object[] { }) != null
-                                  select prop;
-
-                foreach (var element in elementsToWrite)
-                {
-                    str.WriteStartElement(element.Name);
-
-                    var t = element.PropertyType;
-                    if (element.PropertyType.Name.Contains("Nullable"))
-                        t = t.GenericTypeArguments[0];
-
-                    if (t.Name.Contains("ValueTuple"))
-                    {
-                        str.WriteAttributeString("Tuple", "True");
-                        var f = t.GetFields();
-                        str.WriteAttributeString("TupleSize", f.Length.ToString());
-
-                        var tupleNames = ((System.Collections.ICollection)
-                            element
-                            .CustomAttributes
-                            .First()
-                            .ConstructorArguments
-                            .First()
-                            .Value)
-                        .Cast<System.Reflection.CustomAttributeTypedArgument>()
-                        .Select((arg) => (string)arg.Value)
-                        .ToArray();
-
-                        var elementVal = element.GetValue(this);
-
-                        var vals = elementVal.GetType().GetFields().Select((v) => v.GetValue(elementVal)).ToArray();
-
-                        for (int i = 0; i < f.Length; i++)
-                        {
-                            str.WriteStartElement("TupleElement");
-                            str.WriteAttributeString("FieldName", tupleNames[i]);
-                            str.WriteAttributeString("FieldType", f[i].FieldType.ToString());
-                            str.WriteValue("\r\n\t\t\t" + vals[i].ToString() + "\r\n\t\t");
-
-                            str.WriteEndElement();
-
-                        }
-                    }
-                    else
-                    {
-                        str.WriteAttributeString("Tuple", "False");
-                        str.WriteAttributeString("Type", element.PropertyType.GenericTypeArguments.First().ToString());
-                        str.WriteValue("\r\n\t\t" + element.GetValue(this).ToString() + "\r\n\t");
-                    }
+                //    str.WriteStartElement("AcquisitionSettings");
+                //    str.WriteAttributeString("Camera", camera?.CameraModel ?? "TEST");
+                //    str.WriteAttributeString("Name", name);
 
 
+                //    var elementsToWrite = from prop
+                //                          in this.GetType().GetProperties()
+                //                          where !Attribute.IsDefined(prop, typeof(ANDOR_CS.Attributes.NonSerializedAttribute))
+                //                          where prop.GetMethod.IsPublic && prop.SetMethod.IsFamily
+                //                          select prop;
 
-                    str.WriteEndElement();
+                //    elementsToWrite = from prop
+                //                      in elementsToWrite
+                //                      where prop.GetMethod.Invoke(this, new object[] { }) != null
+                //                      select prop;
 
-                }
+                //    foreach (var element in elementsToWrite)
+                //    {
+                //        str.WriteStartElement(element.Name);
 
-                str.WriteEndElement();
+                //        var t = element.PropertyType;
+                //        if (element.PropertyType.Name.Contains("Nullable"))
+                //            t = t.GenericTypeArguments[0];
 
-                str.WriteEndDocument();
+                //        if (t.Name.Contains("ValueTuple"))
+                //        {
+                //            str.WriteAttributeString("Tuple", "True");
+                //            var f = t.GetFields();
+                //            str.WriteAttributeString("TupleSize", f.Length.ToString());
+
+                //            var tupleNames = ((System.Collections.ICollection)
+                //                element
+                //                .CustomAttributes
+                //                .First()
+                //                .ConstructorArguments
+                //                .First()
+                //                .Value)
+                //            .Cast<System.Reflection.CustomAttributeTypedArgument>()
+                //            .Select((arg) => (string)arg.Value)
+                //            .ToArray();
+
+                //            var elementVal = element.GetValue(this);
+
+                //            var vals = elementVal.GetType().GetFields().Select((v) => v.GetValue(elementVal)).ToArray();
+
+                //            for (int i = 0; i < f.Length; i++)
+                //            {
+                //                str.WriteStartElement("TupleElement");
+                //                str.WriteAttributeString("FieldName", tupleNames[i]);
+                //                str.WriteAttributeString("FieldType", f[i].FieldType.ToString());
+                //                str.WriteValue("\r\n\t\t\t" + vals[i].ToString() + "\r\n\t\t");
+
+                //                str.WriteEndElement();
+
+                //            }
+                //        }
+                //        else
+                //        {
+                //            str.WriteAttributeString("Tuple", "False");
+                //            str.WriteAttributeString("Type", element.PropertyType.GenericTypeArguments.First().ToString());
+                //            str.WriteValue("\r\n\t\t" + element.GetValue(this).ToString() + "\r\n\t");
+                //        }
+
+
+
+                //        str.WriteEndElement();
+
+                //    }
+
+                //    str.WriteEndElement();
+
+                //    str.WriteEndDocument();
 
                 System.Threading.Thread.CurrentThread.CurrentCulture = sourceCulture;
             }
@@ -776,224 +778,226 @@ namespace ANDOR_CS.Classes
 
         public virtual void Deserialize(Stream stream)
         {
+            using (var str = XmlReader.Create(stream))
+                ReadXml(str);
 
             //(camera as Camera).SetActiveAndLock();
 
-            XDocument doc = XDocument.Load(stream);
+            //XDocument doc = XDocument.Load(stream);
 
-            if (doc.Elements().Count() < 1)
-                throw new Exception();
+            //if (doc.Elements().Count() < 1)
+            //    throw new Exception();
 
-            var root = doc.Elements().First();
+            //var root = doc.Elements().First();
 
-            var cameraName = root.Attribute(XName.Get("Camera"))?.Value;
-            var settingsName = root.Attribute(XName.Get("Name"))?.Value;
+            //var cameraName = root.Attribute(XName.Get("Camera"))?.Value;
+            //var settingsName = root.Attribute(XName.Get("Name"))?.Value;
 
-            XElement element;
-            var query = root.Elements().Where(e => e.Name == "VSSpeed");
-            if (query.Count() == 1)
-            {
-                element = query.First();
+            //XElement element;
+            //var query = root.Elements().Where(e => e.Name == "VSSpeed");
+            //if (query.Count() == 1)
+            //{
+            //    element = query.First();
 
-                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
-                    .FirstOrDefault()
-                    ?.Value
-                    .Trim();
-                if (value != null)
-                {
-                    int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+            //    var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
+            //        .FirstOrDefault()
+            //        ?.Value
+            //        .Trim();
+            //    if (value != null)
+            //    {
+            //        int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
 
-                    SetVSSpeed(index);
-                }
-            }
-
-
-            if ((query = root.Elements().Where(e => e.Name == "VSAmplitude")).Count() == 1)
-            {
-                var value = query.First()?.Value;
-
-                if (value != null)
-                {
-                    Enums.VSAmplitude vsAmp = (Enums.VSAmplitude)Enum.Parse(typeof(Enums.VSAmplitude), value);
-
-                    SetVSAmplitude(vsAmp);
-                }
-            }
-
-            if ((query = root.Elements().Where(e => e.Name == "ADConverter")).Count() == 1)
-            {
-                element = query.First();
-
-                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
-                    .FirstOrDefault()
-                    ?.Value
-                    .Trim();
-                if (value != null)
-                {
-                    int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-                    SetADConverter(index);
-                }
-            }
-
-            if ((query = root.Elements().Where(e => e.Name == "OutputAmplifier")).Count() == 1)
-            {
-                element = query.First();
-
-                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "OutputAmplifier")
-                    .FirstOrDefault()
-                    ?.Value
-                    .Trim();
-                if (value != null)
-                {
-                    var amp = (Enums.OutputAmplification)Enum.Parse(typeof(Enums.OutputAmplification), value);
-
-                    SetOutputAmplifier(amp);
-                }
-            }
+            //        SetVSSpeed(index);
+            //    }
+            //}
 
 
-            if ((query = root.Elements().Where(e => e.Name == "HSSpeed")).Count() == 1)
-            {
-                element = query.First();
+            //if ((query = root.Elements().Where(e => e.Name == "VSAmplitude")).Count() == 1)
+            //{
+            //    var value = query.First()?.Value;
 
-                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
-                    .FirstOrDefault()
-                    ?.Value
-                    .Trim();
-                if (value != null)
-                {
-                    int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+            //    if (value != null)
+            //    {
+            //        Enums.VSAmplitude vsAmp = (Enums.VSAmplitude)Enum.Parse(typeof(Enums.VSAmplitude), value);
 
-                    SetHSSpeed(index);
-                }
-            }
+            //        SetVSAmplitude(vsAmp);
+            //    }
+            //}
 
-            if ((query = root.Elements().Where(e => e.Name == "PreAmpGain")).Count() == 1)
-            {
-                element = query.First();
+            //if ((query = root.Elements().Where(e => e.Name == "ADConverter")).Count() == 1)
+            //{
+            //    element = query.First();
 
-                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
-                    .FirstOrDefault()
-                    ?.Value
-                    .Trim();
-                if (value != null)
-                {
-                    int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+            //    var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
+            //        .FirstOrDefault()
+            //        ?.Value
+            //        .Trim();
+            //    if (value != null)
+            //    {
+            //        int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
 
-                    SetPreAmpGain(index);
-                }
-            }
+            //        SetADConverter(index);
+            //    }
+            //}
 
-            if ((query = root.Elements().Where(e => e.Name == "AcquisitionMode")).Count() == 1)
-            {
-                var value = query.First()?.Value;
+            //if ((query = root.Elements().Where(e => e.Name == "OutputAmplifier")).Count() == 1)
+            //{
+            //    element = query.First();
 
-                if (value != null)
-                {
-                    var mode = (Enums.AcquisitionMode)Enum.Parse(typeof(Enums.AcquisitionMode), value);
+            //    var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "OutputAmplifier")
+            //        .FirstOrDefault()
+            //        ?.Value
+            //        .Trim();
+            //    if (value != null)
+            //    {
+            //        var amp = (Enums.OutputAmplification)Enum.Parse(typeof(Enums.OutputAmplification), value);
 
-                    SetAcquisitionMode(mode);
-                }
-            }
-
-            if ((query = root.Elements().Where(e => e.Name == "ReadMode")).Count() == 1)
-            {
-                var value = query.First()?.Value;
-
-                if (value != null)
-                {
-                    var mode = (Enums.ReadMode)Enum.Parse(typeof(Enums.ReadMode), value);
-
-                    SetReadoutMode(mode);
-                }
-            }
-
-            if ((query = root.Elements().Where(e => e.Name == "TriggerMode")).Count() == 1)
-            {
-                var value = query.First()?.Value;
-
-                if (value != null)
-                {
-                    var mode = (Enums.TriggerMode)Enum.Parse(typeof(Enums.TriggerMode), value);
-
-                    SetTriggerMode(mode);
-                }
-            }
-
-            if ((query = root.Elements().Where(e => e.Name == "ExposureTime")).Count() == 1)
-            {
-                var value = query.First()?.Value;
-
-                if (value != null)
-                {
-                    var time = System.Single.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-                    SetExposureTime(time);
-                }
-            }
-
-            if ((query = root.Elements().Where(e => e.Name == "ImageArea")).Count() == 1)
-            {
-                var value = query.First()?.Value;
-
-                if (value != null)
-                {
-                    var rect = Rectangle.Parse(value);
-
-                    SetImageArea(rect);
-                }
-            }
-
-            if ((query = root.Elements().Where(e => e.Name == "AccumulateCycle")).Count() == 1)
-            {
-                element = query.First();
-
-                var value1 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Frames")
-                    .FirstOrDefault()
-                    ?.Value
-                    .Trim();
-
-                var value2 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Time")
-                    .FirstOrDefault()
-                    ?.Value
-                    .Trim();
-
-                if (value1 != null && value2 != null)
-                {
-                    int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-                    float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-                    SetAccumulationCycle(number, time);
-                }
+            //        SetOutputAmplifier(amp);
+            //    }
+            //}
 
 
-            }
+            //if ((query = root.Elements().Where(e => e.Name == "HSSpeed")).Count() == 1)
+            //{
+            //    element = query.First();
 
-            if ((query = root.Elements().Where(e => e.Name == "KineticCycle")).Count() == 1)
-            {
-                element = query.First();
+            //    var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
+            //        .FirstOrDefault()
+            //        ?.Value
+            //        .Trim();
+            //    if (value != null)
+            //    {
+            //        int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
 
-                var value1 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Frames")
-                    .FirstOrDefault()
-                    ?.Value
-                    .Trim();
+            //        SetHSSpeed(index);
+            //    }
+            //}
 
-                var value2 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Time")
-                    .FirstOrDefault()
-                    ?.Value
-                    .Trim();
+            //if ((query = root.Elements().Where(e => e.Name == "PreAmpGain")).Count() == 1)
+            //{
+            //    element = query.First();
 
-                if (value1 != null && value2 != null)
-                {
-                    int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
-                    float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+            //    var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Index")
+            //        .FirstOrDefault()
+            //        ?.Value
+            //        .Trim();
+            //    if (value != null)
+            //    {
+            //        int index = int.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
 
-                    SetKineticCycle(number, time);
-                }
+            //        SetPreAmpGain(index);
+            //    }
+            //}
+
+            //if ((query = root.Elements().Where(e => e.Name == "AcquisitionMode")).Count() == 1)
+            //{
+            //    var value = query.First()?.Value;
+
+            //    if (value != null)
+            //    {
+            //        var mode = (Enums.AcquisitionMode)Enum.Parse(typeof(Enums.AcquisitionMode), value);
+
+            //        SetAcquisitionMode(mode);
+            //    }
+            //}
+
+            //if ((query = root.Elements().Where(e => e.Name == "ReadMode")).Count() == 1)
+            //{
+            //    var value = query.First()?.Value;
+
+            //    if (value != null)
+            //    {
+            //        var mode = (Enums.ReadMode)Enum.Parse(typeof(Enums.ReadMode), value);
+
+            //        SetReadoutMode(mode);
+            //    }
+            //}
+
+            //if ((query = root.Elements().Where(e => e.Name == "TriggerMode")).Count() == 1)
+            //{
+            //    var value = query.First()?.Value;
+
+            //    if (value != null)
+            //    {
+            //        var mode = (Enums.TriggerMode)Enum.Parse(typeof(Enums.TriggerMode), value);
+
+            //        SetTriggerMode(mode);
+            //    }
+            //}
+
+            //if ((query = root.Elements().Where(e => e.Name == "ExposureTime")).Count() == 1)
+            //{
+            //    var value = query.First()?.Value;
+
+            //    if (value != null)
+            //    {
+            //        var time = System.Single.Parse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+            //        SetExposureTime(time);
+            //    }
+            //}
+
+            //if ((query = root.Elements().Where(e => e.Name == "ImageArea")).Count() == 1)
+            //{
+            //    var value = query.First()?.Value;
+
+            //    if (value != null)
+            //    {
+            //        var rect = Rectangle.Parse(value);
+
+            //        SetImageArea(rect);
+            //    }
+            //}
+
+            //if ((query = root.Elements().Where(e => e.Name == "AccumulateCycle")).Count() == 1)
+            //{
+            //    element = query.First();
+
+            //    var value1 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Frames")
+            //        .FirstOrDefault()
+            //        ?.Value
+            //        .Trim();
+
+            //    var value2 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Time")
+            //        .FirstOrDefault()
+            //        ?.Value
+            //        .Trim();
+
+            //    if (value1 != null && value2 != null)
+            //    {
+            //        int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+            //        float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+            //        SetAccumulationCycle(number, time);
+            //    }
 
 
-            }
+            //}
+
+            //if ((query = root.Elements().Where(e => e.Name == "KineticCycle")).Count() == 1)
+            //{
+            //    element = query.First();
+
+            //    var value1 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Frames")
+            //        .FirstOrDefault()
+            //        ?.Value
+            //        .Trim();
+
+            //    var value2 = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Time")
+            //        .FirstOrDefault()
+            //        ?.Value
+            //        .Trim();
+
+            //    if (value1 != null && value2 != null)
+            //    {
+            //        int number = int.Parse(value1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+            //        float time = System.Single.Parse(value2, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo);
+
+            //        SetKineticCycle(number, time);
+            //    }
+
+
+            //}
 
         }
 
