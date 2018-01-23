@@ -19,6 +19,7 @@ namespace ANDOR_CS.UnitTests
 
         public static void Main()
         {
+
             var setts = new AcquisitionSettings();
             var sb = new StringBuilder();
 

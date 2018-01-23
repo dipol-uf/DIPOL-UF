@@ -24,6 +24,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
@@ -35,12 +36,11 @@ namespace ANDOR_CS.Classes
 {
     public abstract class SettingsBase : IDisposable, IXmlSerializable
     {
-        protected static Regex TupleTypeParser = new Regex(@"ValueTuple`(\d)+\[(.+?,)+?\]");
-        protected static Type[] AllowedTypes = {
+        private static Regex TupleTypeParser = new Regex(@"ValueTuple`(\d)+\[?.?\]?");
+        private static Type[] AllowedTypes = {
             typeof(int),
             typeof(float),
             typeof(double),
-            typeof(string)
         };
 
         protected CameraBase camera = null;
@@ -981,9 +981,10 @@ namespace ANDOR_CS.Classes
         {
             while (reader.Read())
             {
-                if (reader.NodeType != XmlNodeType.Whitespace && 
+                if (reader.NodeType != XmlNodeType.Whitespace &&
                     reader.NodeType != XmlNodeType.DocumentType &&
-                    reader.NodeType != XmlNodeType.XmlDeclaration)
+                    reader.NodeType != XmlNodeType.XmlDeclaration &&
+                    reader.NodeType != XmlNodeType.EndElement)
                     Console.WriteLine(DeserializeElement(reader));
             }
         }
@@ -1013,23 +1014,25 @@ namespace ANDOR_CS.Classes
             writer.WriteStartElement(name);
             writer.WriteAttributeString("Type", elemType.ToString());
 
-            if (elemType.GetCustomAttributes(typeof(DataContractAttribute), true).Any())
+            if (!elemType.IsEnum &&
+                elemType.GetCustomAttributes(typeof(DataContractAttribute), true).Any())
             {
+               
                 var prvFields = elemType
-                     .GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
-                     .Where(f => f.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
+                        .GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
+                        .Where(f => f.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
 
                 var pubFields = elemType
-                     .GetFields(BindingFlags.Instance | BindingFlags.Public)
-                     .Where(f => f.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
+                        .GetFields(BindingFlags.Instance | BindingFlags.Public)
+                        .Where(f => f.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
 
                 var prvProps = elemType
-                     .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
-                     .Where(p => p.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
+                        .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
+                        .Where(p => p.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
 
                 var pubProps = elemType
-                     .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                     .Where(p => p.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
+                        .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                        .Where(p => p.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
 
                 foreach (var f in prvFields)
                     SerializeElement(f.GetValue(element), f.Name, writer);
@@ -1055,44 +1058,98 @@ namespace ANDOR_CS.Classes
             writer.WriteEndElement();
         }
 
-        private static object DeserializeElement(XmlReader reader)
+        private static KeyValuePair<string, object> DeserializeElement(XmlReader reader)
         {
-
+            string name = reader.Name;
             if (reader.AttributeCount == 2)
             {
-                string type = reader.GetAttribute("Type");
-                string value = reader.GetAttribute("Value");
-                if (type == typeof(string).FullName &&
-                    !String.IsNullOrWhiteSpace(value))
-                    return new KeyValuePair<string, string>(reader.Name, value);
-                else
-                {
-                    Type tp = null;
-                    if ((tp = AllowedTypes.Where(t => t.FullName == type).FirstOrDefault()) != null &&
-                        !String.IsNullOrWhiteSpace(value))
+                string typeStr = reader.GetAttribute("Type");
+                string valStr = reader.GetAttribute("Value");
 
-                        return new KeyValuePair<string, object>(reader.Name,
-                                tp.GetMethod("Parse",
-                                new[] {
-                                typeof(string),
-                                typeof(System.Globalization.NumberStyles),
-                                typeof(System.IFormatProvider)})
-                                .Invoke(null, new object[] {
-                                value,
-                                System.Globalization.NumberStyles.Any,
-                                System.Globalization.NumberFormatInfo.InvariantInfo
-                                }));
+                if (string.IsNullOrWhiteSpace(valStr))
+                    return new KeyValuePair<string, object>(name, null);
+
+                if (typeStr == typeof(string).FullName)
+                    return new KeyValuePair<string, object>(name, valStr);
+
+                Type type = null;
+
+                if ((type = AllowedTypes.Where(tp => tp.FullName == typeStr).FirstOrDefault()) != null)
+                {
+                    var mi = type.GetMethod("Parse",
+                        new[] {
+                            typeof(string),
+                            typeof(NumberStyles),
+                            typeof(IFormatProvider)
+                        });
+
+                    return new KeyValuePair<string, object>(name, mi?.Invoke(
+                        null,
+                        new object[] {
+                            valStr,
+                            NumberStyles.Any,
+                            NumberFormatInfo.InvariantInfo
+                        }
+                        ) ?? null);
                 }
+
+                else if ((type = typeof(AndorSDKInitialization)
+                    .Assembly
+                    .ExportedTypes
+                    .Where(tp => tp.FullName == typeStr)
+                    .FirstOrDefault()) != null &&
+                    type.IsEnum)
+                    return new KeyValuePair<string, object>(name, Enum.Parse(type, valStr));
+
             }
             else if (reader.AttributeCount == 1)
             {
                 string type = reader.GetAttribute("Type");
                 var match = TupleTypeParser.Match(type);
-            }
-            else
-                Console.WriteLine(reader.NodeType + "\t" + reader.Name);
+                if (match.Success && match.Groups.Count == 2)
+                {
+                    int size = int.Parse(match.Groups[1].Value, NumberStyles.Any, NumberFormatInfo.InvariantInfo);
+                    KeyValuePair<string, object>[] results = new KeyValuePair<string, object>[size];
 
-            return null;
+                    for (int i = 0; i < size; i++)
+                    {
+                        while (reader.Read() && 
+                                (reader.NodeType == XmlNodeType.Whitespace ||
+                                reader.NodeType == XmlNodeType.DocumentType ||
+                                reader.NodeType == XmlNodeType.XmlDeclaration ||
+                                reader.NodeType == XmlNodeType.EndElement))
+                        { }
+
+                        results[i] = DeserializeElement(reader);
+                        
+                    }
+
+                    var ctor = typeof(ValueTuple)
+                        .GetMethods()
+                        .Where(m =>
+                            m.Name == "Create" &&
+                            m.IsGenericMethod &&
+                            m.GetGenericArguments().Length == size
+                        ).FirstOrDefault();
+
+                    if (ctor is null)
+                        throw
+                            new XmlException($"Unable to parse XML file: " +
+                            $"element {name} of ValueTuple type has too many parameters ({size}).");
+                    else
+                    {
+                        var tupleVal = ctor
+                            .MakeGenericMethod(results.Select(res => res.Value.GetType()).ToArray())
+                            .Invoke(null, results.Select(res => res.Value).ToArray());
+
+                        return new KeyValuePair<string, object>(name, tupleVal);
+                    }
+
+                }
+            }
+
+
+            return new KeyValuePair<string, object>(reader.Name, null);
         }
     }
 }
