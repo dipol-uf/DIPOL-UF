@@ -45,6 +45,6 @@ namespace ANDOR_CS.Enums
         /// </summary>
         [Description("Extended NIR")]
         [EnumMember] 
-        ExtendedNIR = 2
+        ExtendedNir = 2
     }
 }

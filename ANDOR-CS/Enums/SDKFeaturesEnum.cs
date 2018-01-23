@@ -24,7 +24,7 @@ namespace ANDOR_CS.Enums
 {
     [Flags]
     [DataContract]
-    public enum SDKFeatures : UInt64
+    public enum SdkFeatures : UInt64
     {
         [EnumMember]
         Unknown = 0,
@@ -51,17 +51,17 @@ namespace ANDOR_CS.Enums
         [EnumMember]
         KeepCleanControl = SDK.AC_FEATURES_KEEPCLEANCONTROL,
         [EnumMember]
-        DDGLite = SDK.AC_FEATURES_DDGLITE,
+        DdgLite = SDK.AC_FEATURES_DDGLITE,
         [EnumMember]
         FrameTransferAndExternalExposure = SDK.AC_FEATURES_FTEXTERNALEXPOSURE,
         [EnumMember]
         KineticAndExternalExposure = SDK.AC_FEATURES_KINETICEXTERNALEXPOSURE,
         [EnumMember]
-        DACCntrol = SDK.AC_FEATURES_DACCONTROL,
+        DacCntrol = SDK.AC_FEATURES_DACCONTROL,
         [EnumMember]
         MetaData = SDK.AC_FEATURES_METADATA,
         [EnumMember]
-        IOControl = SDK.AC_FEATURES_IOCONTROL,
+        IoControl = SDK.AC_FEATURES_IOCONTROL,
         [EnumMember]
         PhotonCounting = SDK.AC_FEATURES_PHOTONCOUNTING,
         [EnumMember]
@@ -85,14 +85,14 @@ namespace ANDOR_CS.Enums
         [EnumMember]
         CameraLink = SDK.AC_FEATURES_CAMERALINK,
         [EnumMember]
-        FIFOFullEvent = 1 << 28, //SDK.AC_FEATURES_FIFOFULL_EVENT,
+        FifoFullEvent = 1 << 28, //SDK.AC_FEATURES_FIFOFULL_EVENT,
         [EnumMember]
         MultipleSensorPort = 1 << 29, // SDK.AC_FEATURES_SENSOR_PORT_CONFIGURATION,
         [EnumMember]
         SensorCompensation = 1 << 30, // SDK.AC_FEATURES_SENSOR_COMPENSATION,
         [EnumMember]
-        IRIGSupport = (UInt64)1 << 31, //AC_FEATURES_IRIG_SUPPORT,
+        IrigSupport = (UInt64)1 << 31, //AC_FEATURES_IRIG_SUPPORT,
         [EnumMember]
-        ESDEvent = (UInt64)1 << 32 //AC_FEATURES2_ESD_EVENTS
+        EsdEvent = (UInt64)1 << 32 //AC_FEATURES2_ESD_EVENTS
     }
 }

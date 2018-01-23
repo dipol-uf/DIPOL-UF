@@ -31,7 +31,7 @@ namespace DIPOL_Remote.Faults
     public class AndorSDKServiceException : ServiceException
     {
         public static FaultException<AndorSDKServiceException> WrapAndorSDKException(
-            ANDOR_CS.Exceptions.AndorSDKException e,
+            ANDOR_CS.Exceptions.AndorSdkException e,
             string method)
             => new FaultException<AndorSDKServiceException>(
                 new AndorSDKServiceException()

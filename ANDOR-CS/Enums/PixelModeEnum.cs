@@ -60,13 +60,13 @@ namespace ANDOR_CS.Enums
         /// RGB colors
         /// </summary>
         [EnumMember]
-        RGB =  SDK.AC_PIXELMODE_RGB,
+        Rgb =  SDK.AC_PIXELMODE_RGB,
 
         /// <summary>
         /// CMY colors
         /// </summary>
         [EnumMember]
-        CMY = SDK.AC_PIXELMODE_CMY
+        Cmy = SDK.AC_PIXELMODE_CMY
 
     }
 }

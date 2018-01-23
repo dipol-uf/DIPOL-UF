@@ -69,7 +69,7 @@ namespace DIPOL_UF
         {
             System.Diagnostics.Debug.WriteLine(entry);
         }
-        public static void WriteLog(ANDOR_CS.Exceptions.AndorSDKException entry)
+        public static void WriteLog(ANDOR_CS.Exceptions.AndorSdkException entry)
         {
             System.Diagnostics.Debug.WriteLine($"{entry.Message} [{entry.ErrorCode}]");
         }

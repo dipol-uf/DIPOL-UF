@@ -43,7 +43,7 @@ namespace ANDOR_CS.DataStructures
             internal set;
         }
         [DataMember(IsRequired = true)]
-        public ReadMode FTReadModes
+        public ReadMode FtReadModes
         {
             get;
             internal set;
@@ -79,20 +79,20 @@ namespace ANDOR_CS.DataStructures
             internal set;
         }
         [DataMember(IsRequired = true)]
-        public SDKFeatures Features
+        public SdkFeatures Features
         {
             get;
             // internal set;
             set;
         }
         [DataMember(IsRequired = true)]
-        public uint PCICardMaxSpeed
+        public uint PciCardMaxSpeed
         {
             get;
             internal set;
         }
         [DataMember(IsRequired = true)]
-        public EMGain EMGainFeatures
+        public EmGain EmGainFeatures
         {
             get;
             internal set;
@@ -107,10 +107,10 @@ namespace ANDOR_CS.DataStructures
             PixelModes = (PixelMode)capabilities.ulPixelMode;
             SetFunctions = (SetFunction)capabilities.ulSetFunctions;
             GetFunctions = (GetFunction)capabilities.ulGetFunctions;
-            Features = (SDKFeatures)capabilities.ulFeatures;
-            PCICardMaxSpeed = capabilities.ulPCICard;
-            EMGainFeatures = (EMGain)capabilities.ulEMGainCapability;
-            FTReadModes = (ReadMode)capabilities.ulFTReadModes;
+            Features = (SdkFeatures)capabilities.ulFeatures;
+            PciCardMaxSpeed = capabilities.ulPCICard;
+            EmGainFeatures = (EmGain)capabilities.ulEMGainCapability;
+            FtReadModes = (ReadMode)capabilities.ulFTReadModes;
         }
 
     }

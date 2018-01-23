@@ -36,35 +36,35 @@ namespace ANDOR_CS.Classes
     {
         protected const int AmpDescriptorMaxLength = 21;
         protected const int PreAmpGainDescriptorMaxLength = 30;
-        protected const int StatusCheckTimeOutMS = 100;
-        protected const int TempCheckTimeOutMS = 5000;
+        protected const int StatusCheckTimeOutMs = 100;
+        protected const int TempCheckTimeOutMs = 5000;
 
-        protected bool _IsDisposed = false;
+        protected bool IsDisposed = false;
 
-        private bool _IsActive = false;
-        private bool _IsInitialized = false;
-        private DeviceCapabilities _Capabilities = default(DeviceCapabilities);
-        private CameraProperties _Properties = default(CameraProperties);
-        private string _SerialNumber = "";
-        private string _CameraModel = "";
-        private FanMode _FanMode = FanMode.Off;
-        private Switch _CoolerMode = Switch.Disabled;
-        private int _CameraIndex = -1;
+        private bool _isActive = false;
+        private bool _isInitialized = false;
+        private DeviceCapabilities _capabilities = default(DeviceCapabilities);
+        private CameraProperties _properties = default(CameraProperties);
+        private string _serialNumber = "";
+        private string _cameraModel = "";
+        private FanMode _fanMode = FanMode.Off;
+        private Switch _coolerMode = Switch.Disabled;
+        private int _cameraIndex = -1;
         private (
            ShutterMode Internal,
            ShutterMode? External,
-           TTLShutterSignal Type,
+           TtlShutterSignal Type,
            int OpenTime,
-           int CloseTime) _Shutter
-            = (ShutterMode.FullyAuto, null, TTLShutterSignal.Low, 0, 0);
-        private (Version EPROM, Version COFFile, Version Driver, Version Dll) _Software
+           int CloseTime) _shutter
+            = (ShutterMode.FullyAuto, null, TtlShutterSignal.Low, 0, 0);
+        private (Version EPROM, Version COFFile, Version Driver, Version Dll) _software
             = default((Version EPROM, Version COFFile, Version Driver, Version Dll));
-        private (Version PCB, Version Decode, Version CameraFirmware) _Hardware
+        private (Version PCB, Version Decode, Version CameraFirmware) _hardware
             = default((Version PCB, Version Decode, Version CameraFirmware));
-        private volatile bool _IsAcquiring = false;
-        private volatile bool _IsAsyncAcquisition = false;
+        private volatile bool _isAcquiring = false;
+        private volatile bool _isAsyncAcquisition = false;
 
-        protected ConcurrentQueue<Image> acquiredImages = new ConcurrentQueue<Image>();
+        protected ConcurrentQueue<Image> AcquiredImages = new ConcurrentQueue<Image>();
 
 
         public bool IsDisposed
@@ -74,96 +74,96 @@ namespace ANDOR_CS.Classes
         }
         public virtual DeviceCapabilities Capabilities
         {
-            get => _Capabilities;
+            get => _capabilities;
             protected set
             {
-                if (!(value as ValueType).Equals(_Capabilities))
+                if (!(value as ValueType).Equals(_capabilities))
                 {
-                    _Capabilities = value;
+                    _capabilities = value;
                     OnPropertyChanged();
                 }
             }
         }
         public virtual CameraProperties Properties
         {
-            get => _Properties;
+            get => _properties;
             protected set
             {
-                if (!(value as ValueType).Equals(_Properties))
+                if (!(value as ValueType).Equals(_properties))
                 {
-                    _Properties = value;
+                    _properties = value;
                     OnPropertyChanged();
                 }
             }
         }
         public virtual bool IsActive
         {
-            get => _IsActive;
+            get => _isActive;
             protected set
             {
-                if (value != _IsActive)
+                if (value != _isActive)
                 {
-                    _IsActive = value;
+                    _isActive = value;
                     OnPropertyChanged();
                 }
             }
         }
         public virtual bool IsInitialized
         {
-            get => _IsInitialized;
+            get => _isInitialized;
             protected set
             {
-                if (value != _IsInitialized)
+                if (value != _isInitialized)
                 {
-                    _IsInitialized = value;
+                    _isInitialized = value;
                     OnPropertyChanged();
                 }
             }
         }
         public virtual string SerialNumber
         {
-            get => _SerialNumber;
+            get => _serialNumber;
             protected set
             {
-                if (value != _SerialNumber)
+                if (value != _serialNumber)
                 {
-                    _SerialNumber = value;
+                    _serialNumber = value;
                     OnPropertyChanged();
                 }
             }
         }
         public virtual string CameraModel
         {
-            get => _CameraModel;
+            get => _cameraModel;
             set
             {
-                if (value != _CameraModel)
+                if (value != _cameraModel)
                 {
-                    _CameraModel = value;
+                    _cameraModel = value;
                     OnPropertyChanged();
                 }
             }
         }
         public virtual FanMode FanMode
         {
-            get => _FanMode;
+            get => _fanMode;
             protected set
             {
-                if (value != _FanMode)
+                if (value != _fanMode)
                 {
-                    _FanMode = value;
+                    _fanMode = value;
                     OnPropertyChanged();
                 }
             }
         }
         public virtual Switch CoolerMode
         {
-            get => _CoolerMode;
+            get => _coolerMode;
             protected set
             {
-                if (value != _CoolerMode)
+                if (value != _coolerMode)
                 {
-                    _CoolerMode = value;
+                    _coolerMode = value;
                     OnPropertyChanged();
                 }
 
@@ -174,12 +174,12 @@ namespace ANDOR_CS.Classes
         /// </summary>
         public virtual int CameraIndex
         {
-            get => _CameraIndex;
+            get => _cameraIndex;
             protected set
             {
-                if (value != _CameraIndex)
+                if (value != _cameraIndex)
                 {
-                    _CameraIndex = value;
+                    _cameraIndex = value;
                     OnPropertyChanged();
                 }
             }
@@ -189,12 +189,12 @@ namespace ANDOR_CS.Classes
         /// </summary>
         public virtual bool IsAcquiring
         {
-            get => _IsAcquiring;
+            get => _isAcquiring;
             protected set
             {
-                if (value != _IsAcquiring)
+                if (value != _isAcquiring)
                 {
-                    _IsAcquiring = value;
+                    _isAcquiring = value;
                     OnPropertyChanged();
                 }
             }
@@ -205,12 +205,12 @@ namespace ANDOR_CS.Classes
         /// </summary>
         public virtual bool IsAsyncAcquisition
         {
-            get => _IsAsyncAcquisition;
+            get => _isAsyncAcquisition;
             protected set
             {
-                if (value != _IsAsyncAcquisition)
+                if (value != _isAsyncAcquisition)
                 {
-                    _IsAsyncAcquisition = value;
+                    _isAsyncAcquisition = value;
                     OnPropertyChanged();
                 }
             }
@@ -218,16 +218,16 @@ namespace ANDOR_CS.Classes
         public virtual (
            ShutterMode Internal,
            ShutterMode? External,
-           TTLShutterSignal Type,
+           TtlShutterSignal Type,
            int OpenTime,
            int CloseTime) Shutter
         {
-            get => _Shutter;
+            get => _shutter;
             protected set
             {
-                if (!value.Equals(_Shutter))
+                if (!value.Equals(_shutter))
                 {
-                    _Shutter = value;
+                    _shutter = value;
                     OnPropertyChanged();
                 }
             }
@@ -235,12 +235,12 @@ namespace ANDOR_CS.Classes
         public virtual (Version EPROM, Version COFFile, Version Driver, Version Dll)
             Software
         {
-            get => _Software;
+            get => _software;
             protected set
             {
-                if (!value.Equals(_Software))
+                if (!value.Equals(_software))
                 {
-                    _Software = value;
+                    _software = value;
                     OnPropertyChanged();
                 }
             }
@@ -248,12 +248,12 @@ namespace ANDOR_CS.Classes
         public virtual (Version PCB, Version Decode, Version CameraFirmware)
             Hardware
         {
-            get => _Hardware;
+            get => _hardware;
             protected set
             {
-                if (!value.Equals(_Hardware))
+                if (!value.Equals(_hardware))
                 {
-                    _Hardware = value;
+                    _hardware = value;
                     OnPropertyChanged();
                 }
             }
@@ -315,7 +315,7 @@ namespace ANDOR_CS.Classes
            int opTime,
            ShutterMode inter,
            ShutterMode exter = ShutterMode.FullyAuto,
-           TTLShutterSignal type = TTLShutterSignal.Low);
+           TtlShutterSignal type = TtlShutterSignal.Low);
         public abstract void TemperatureMonitor(Switch mode, int timeout = 150);
         public abstract SettingsBase GetAcquisitionSettingsTemplate();
 

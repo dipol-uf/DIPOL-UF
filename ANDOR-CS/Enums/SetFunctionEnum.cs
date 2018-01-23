@@ -45,9 +45,9 @@ namespace ANDOR_CS.Enums
         [EnumMember]
         Temperature = SDK.AC_SETFUNCTION_TEMPERATURE,
         [EnumMember]
-        MCPGain = SDK.AC_SETFUNCTION_MCPGAIN,
+        McpGain = SDK.AC_SETFUNCTION_MCPGAIN,
         [EnumMember]
-        EMCCDGain = SDK.AC_SETFUNCTION_EMCCDGAIN,
+        EmccdGain = SDK.AC_SETFUNCTION_EMCCDGAIN,
         [EnumMember]
         BaselineClamp =  SDK.AC_SETFUNCTION_BASELINECLAMP,
 
@@ -70,7 +70,7 @@ namespace ANDOR_CS.Enums
         [EnumMember]
         CropMode = SDK.AC_SETFUNCTION_CROPMODE,
         [EnumMember]
-        DMAPArameters = SDK.AC_SETFUNCTION_DMAPARAMETERS,
+        DmapArameters = SDK.AC_SETFUNCTION_DMAPARAMETERS,
         [EnumMember]
         HorizontalBinning = SDK.AC_SETFUNCTION_HORIZONTALBIN,
         [EnumMember]
@@ -78,13 +78,13 @@ namespace ANDOR_CS.Enums
         [EnumMember]
         RandomTrackNoGaps = SDK.AC_SETFUNCTION_RANDOMTRACKNOGAPS,
         [EnumMember]
-        EMGainAdvanced = SDK.AC_SETFUNCTION_EMADVANCED,
+        EmGainAdvanced = SDK.AC_SETFUNCTION_EMADVANCED,
         [EnumMember]
         GateMode = SDK.AC_SETFUNCTION_GATEMODE,
         [EnumMember]
-        DDGTimes = SDK.AC_SETFUNCTION_DDGTIMES,
+        DdgTimes = SDK.AC_SETFUNCTION_DDGTIMES,
         [EnumMember]
-        DDGIntegrateOnChip = SDK.AC_SETFUNCTION_IOC,
+        DdgIntegrateOnChip = SDK.AC_SETFUNCTION_IOC,
         [EnumMember]
         Intelligate = SDK.AC_SETFUNCTION_INTELLIGATE,
         [EnumMember]
@@ -94,7 +94,7 @@ namespace ANDOR_CS.Enums
         [EnumMember]
         TriggerTermination = SDK.AC_SETFUNCTION_TRIGGERTERMINATION,
         [EnumMember]
-        ExtendedNIRMode = SDK.AC_SETFUNCTION_EXTENDEDNIR,
+        ExtendedNirMode = SDK.AC_SETFUNCTION_EXTENDEDNIR,
         [EnumMember]
         SpoolThreadCount = SDK.AC_SETFUNCTION_SPOOLTHREADCOUNT,
         [EnumMember]

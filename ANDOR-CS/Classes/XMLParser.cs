@@ -14,7 +14,7 @@ using NonSerializedAttribute = ANDOR_CS.Attributes.NonSerializedAttribute;
 
 namespace ANDOR_CS.Classes
 {
-    static class XMLParser
+    static class XmlParser
     {
         private static readonly Regex TupleTypeParser = new Regex(@"ValueTuple`(\d)+\[?.?\]?");
 
@@ -139,7 +139,7 @@ namespace ANDOR_CS.Classes
                     ));
                 }
 
-                if ((type = typeof(AndorSDKInitialization)
+                if ((type = typeof(AndorSdkInitialization)
                         .Assembly
                         .ExportedTypes
                         .FirstOrDefault(tp => tp.FullName == typeStr)) != null &&
@@ -148,9 +148,9 @@ namespace ANDOR_CS.Classes
             }
             else if (reader.AttributeCount == 1)
             {
-                if (name == @"Settings" && reader.AttributeCount > 0)
+                if (name == @"Settings")
                     return new KeyValuePair<string, object>(@"CompatibleDevice",
-                        Enum.Parse(typeof(CameraType), reader.GetAttribute(0)));
+                        Enum.Parse(typeof(CameraType), reader.GetAttribute(0) ?? ""));
 
                 var match = TupleTypeParser.Match(typeStr);
                 if (match.Success && match.Groups.Count == 2)
@@ -174,8 +174,8 @@ namespace ANDOR_CS.Classes
 
                     if (ctor is null)
                         throw
-                            new XmlException($"Unable to parse XML file: " +
-                                             $"element {name} of ValueTuple type has too many parameters ({size}).");
+                            new XmlException(
+                                $"Unable to parse XML file: element {name} of ValueTuple type has too many parameters ({size}).");
                     var tupleVal = ctor
                         .MakeGenericMethod(results.Select(res => res.Value.GetType()).ToArray())
                         .Invoke(null, results.Select(res => res.Value).ToArray());
@@ -183,7 +183,7 @@ namespace ANDOR_CS.Classes
                     return new KeyValuePair<string, object>(name, tupleVal);
                 }
 
-                if ((type = typeof(AndorSDKInitialization)
+                if ((type = typeof(AndorSdkInitialization)
                         .Assembly
                         .ExportedTypes
                         .FirstOrDefault(tp => tp.FullName == typeStr)) == null || 
