@@ -32,6 +32,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
 using ANDOR_CS.Attributes;
+using System.Runtime.CompilerServices;
 
 namespace ANDOR_CS.Classes
 {
@@ -1019,6 +1020,24 @@ namespace ANDOR_CS.Classes
                     select new {regexName.Method, r.Key, r.Value})
                      
             {
+                var pars = item.Method.GetParameters();
+                if (item.Value is ITuple tuple &&
+                    pars.Length <= tuple.Length)
+                {
+                    object[] tupleVals = new object[pars.Length];
+
+                    for (int i = 0; i < pars.Length; i++)
+                        if ((tupleVals[i] = tuple[i]).GetType() != pars[i].ParameterType)
+                            throw new TargetParameterCountException(@"Setter method argumetn type does not match type of provided tuple item.");
+
+                    item.Method.Invoke(this, tupleVals);
+
+                }
+                else if (pars.Length == 1 && pars[0].ParameterType == item.Value.GetType())
+                    item.Method.Invoke(this, new[] { item.Value });
+                else
+                    throw new TargetParameterCountException(@"Setter method signature does not match provided parameters.");
+                
             }
                     
 
