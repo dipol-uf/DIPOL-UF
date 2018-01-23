@@ -127,7 +127,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\NotSerializePropertyAttribute.cs" />
+    <Compile Include="Attributes\DeserializationOrderAttribute.cs" />
+    <Compile Include="Attributes\NonSerializedAttribute.cs" />
     <Compile Include="Classes\AcquisitionSettings.cs" />
     <Compile Include="Classes\CameraBase.cs" />
     <Compile Include="Classes\DebugCamera.cs" />

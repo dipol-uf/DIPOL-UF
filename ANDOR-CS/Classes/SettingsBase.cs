@@ -21,6 +21,8 @@ using System.Linq;
 using System.Xml.Serialization;
 using System.Xml.Linq;
 using System.IO;
+using System.Xml;
+using System.Xml.Schema;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
@@ -29,23 +31,23 @@ using System.Globalization;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
-using System.Xml;
-using System.Xml.Schema;
+using ANDOR_CS.Attributes;
 
 namespace ANDOR_CS.Classes
 {
     public abstract class SettingsBase : IDisposable, IXmlSerializable
     {
-        
+        [ANDOR_CS.Attributes.NonSerialized]
         protected CameraBase camera = null;
 
-        [ANDOR_CS.Attributes.NotSerializeProperty]
+        [ANDOR_CS.Attributes.NonSerialized]
         public int CameraIndex
             => camera.CameraIndex;
 
         /// <summary>
         /// Stores the value of currently set vertical speed
         /// </summary>
+        [SerializationOrder(1)]
         public (int Index, float Speed)? VSSpeed
         {
             get;
@@ -55,6 +57,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores the value of currently set horizontal speed
         /// </summary>
+        [SerializationOrder(5)]
         public (int Index, float Speed)? HSSpeed
         {
             get;
@@ -64,6 +67,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores the index of currently set Analogue-Digital Converter and its bit depth.
         /// </summary>
+        [SerializationOrder(3)]
         public (int Index, int BitDepth)? ADConverter
         {
             get;
@@ -73,6 +77,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores the value of currently set vertical clock voltage amplitude
         /// </summary>
+        [SerializationOrder(2)]
         public VSAmplitude? VSAmplitude
         {
             get;
@@ -82,6 +87,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores type of currentlt set Amplifier
         /// </summary>
+        [SerializationOrder(4)]
         public (string Name, OutputAmplification Amplifier, int Index)? Amplifier
         {
             get;
@@ -91,6 +97,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores type of currently set PreAmp Gain
         /// </summary>
+        [SerializationOrder(6)]
         public (int Index, string Name)? PreAmpGain
         {
             get;
@@ -100,6 +107,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores currently set acquisition mode
         /// </summary>
+        [SerializationOrder(7)]
         public AcquisitionMode? AcquisitionMode
         {
             get;
@@ -109,6 +117,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores currently set read mode
         /// </summary>
+        [SerializationOrder(8)]
         public ReadMode? ReadMode
         {
             get;
@@ -118,6 +127,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores currently set trigger mode
         /// </summary>
+        [SerializationOrder(9)]
         public TriggerMode? TriggerMode
         {
             get;
@@ -127,6 +137,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stores exposure time
         /// </summary>
+        [SerializationOrder(0)]
         public float? ExposureTime
         {
             get;
@@ -136,24 +147,28 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Stoers seleced image area - part of the CCD from where data should be collected
         /// </summary>
+        [SerializationOrder(11)]
         public Rectangle? ImageArea
         {
             get;
             protected set;
         } = null;
 
+        [SerializationOrder(12)]
         public (int Frames, float Time)? AccumulateCycle
         {
             get;
             protected set;
         } = null;
 
+        [SerializationOrder(13)]
         public (int Frames, float Time)? KineticCycle
         {
             get;
             protected set;
         } = null;
 
+        [SerializationOrder(10)]
         public int? EMCCDGain
         {
             get;
@@ -659,7 +674,7 @@ namespace ANDOR_CS.Classes
                 }))
             {
                 var sourceCulture = System.Threading.Thread.CurrentThread.CurrentCulture;
-                System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+                System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
                 str.WriteStartDocument();
 
@@ -670,7 +685,7 @@ namespace ANDOR_CS.Classes
 
                 var elementsToWrite = from prop
                                       in this.GetType().GetProperties()
-                                      where !Attribute.IsDefined(prop, typeof(Attributes.NotSerializePropertyAttribute))
+                                      where !Attribute.IsDefined(prop, typeof(ANDOR_CS.Attributes.NonSerializedAttribute))
                                       where prop.GetMethod.IsPublic && prop.SetMethod.IsFamily
                                       select prop;
 

@@ -24,7 +24,6 @@ using System.IO;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
-using ANDOR_CS.Interfaces;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
 
@@ -36,14 +35,14 @@ namespace DIPOL_Remote.Classes
     {
         private IRemoteControl session;
 
-        [ANDOR_CS.Attributes.NotSerializeProperty]
+        [ANDOR_CS.Attributes.NonSerialized]
         public string SessionID
         {
             get;
             private set;
         }
 
-        [ANDOR_CS.Attributes.NotSerializeProperty]
+        [ANDOR_CS.Attributes.NonSerialized]
         internal string SettingsID
         {
             get;

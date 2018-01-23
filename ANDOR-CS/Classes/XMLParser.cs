@@ -41,7 +41,10 @@ namespace ANDOR_CS.Classes
         {
             var props = settings.GetType()
                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .Where(p => p.SetMethod != null && p.GetMethod != null);
+                .Where(p => 
+                    p.GetCustomAttribute<ANDOR_CS.Attributes.NonSerializedAttribute>(true) == null &&
+                    p.SetMethod != null &&
+                    p.GetMethod != null);
 
             writer.WriteStartDocument();
             writer.WriteStartElement("Settings");
