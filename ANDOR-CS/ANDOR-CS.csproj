@@ -167,7 +167,6 @@
     <Compile Include="Enums\TriggerModeEnum.cs" />
     <Compile Include="Enums\VSAmplitudeEnum.cs" />
     <Compile Include="Events\AcquisitionStatusEventArgs.cs" />
-    <Compile Include="Interfaces\ICameraControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Enums\TemperatureStatusEnum.cs" />
     <Compile Include="UnitTests\AcquistionSettings_Tests.cs" />
@@ -194,6 +193,9 @@
       <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
       <Name>ImageDisplay</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Interfaces\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

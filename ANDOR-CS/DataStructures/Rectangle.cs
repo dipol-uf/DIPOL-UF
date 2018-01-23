@@ -48,8 +48,8 @@ namespace ANDOR_CS.DataStructures
             if (start.X > end.X || start.Y > end.Y)
                 throw new ArgumentOutOfRangeException($"{nameof(start)} should point to lower left corner, {nameof(end)} - to upper right. (start: {start} and end: {end})");
 
-            this._start = start;
-            this._end = end;
+            _start = start;
+            _end = end;
         }
 
         public Rectangle(int x1, int y1, int x2, int y2)
@@ -71,19 +71,19 @@ namespace ANDOR_CS.DataStructures
             if (height < 0)
                 throw new ArgumentOutOfRangeException($"{nameof(height)} should be greater than or equal to {0} ({height} >= {0})");
 
-            this._start = start;
+            _start = start;
             _end = start + new Size(width, height);
         }
 
         public Rectangle(Point2D start, Size size)
         {
-            this._start = start;
+            _start = start;
             _end = start - new Point2D(1, 1) +  size;
         }
 
         public override string ToString()
         {
-            return String.Format("{0}, {1}, {2}, {3}", X1, Y1, X2, Y2);
+            return $"{X1}, {Y1}, {X2}, {Y2}";
         }
 
         public static Rectangle Parse(string source)

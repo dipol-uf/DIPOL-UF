@@ -32,14 +32,14 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Base abstract class to all ANDOR-device classes
     /// </summary>
-    public abstract class CameraBase : IDisposable, INotifyPropertyChanged//ANDOR_CS.Interfaces.ICameraControl
+    public abstract class CameraBase : IDisposable, INotifyPropertyChanged
     {
         protected const int AmpDescriptorMaxLength = 21;
         protected const int PreAmpGainDescriptorMaxLength = 30;
         protected const int StatusCheckTimeOutMs = 100;
         protected const int TempCheckTimeOutMs = 5000;
 
-        protected bool IsDisposed = false;
+        protected bool _IsDisposed = false;
 
         private bool _isActive = false;
         private bool _isInitialized = false;
@@ -64,7 +64,7 @@ namespace ANDOR_CS.Classes
         private volatile bool _isAcquiring = false;
         private volatile bool _isAsyncAcquisition = false;
 
-        protected ConcurrentQueue<Image> AcquiredImages = new ConcurrentQueue<Image>();
+        protected ConcurrentQueue<Image> acquiredImages = new ConcurrentQueue<Image>();
 
 
         public bool IsDisposed

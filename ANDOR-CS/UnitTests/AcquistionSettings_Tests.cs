@@ -13,20 +13,15 @@ using ANDOR_CS.Classes;
 namespace ANDOR_CS.UnitTests
 {
     [TestClass]
-    public class AcquistionSettingsTests
+    public class AcquistionSettings_Tests
     {
         private Camera _camera;
 
         public static void Main()
         {
 
-            var cam = new Camera();
-            var setts = cam.GetAcquisitionSettingsTemplate();
-            setts.SetImageArea(new DataStructures.Rectangle(new DataStructures.Point2D(1, 1), 128, 256));
-            setts.SetExposureTime(123.0f);
-            setts.SetVsSpeed(0);
-            setts.SetAcquisitionMode(Enums.AcquisitionMode.SingleScan);
-            var setts2 = cam.GetAcquisitionSettingsTemplate();
+            var setts = new AcquisitionSettings();
+        
             var sb = new StringBuilder();
 
             using (var xml = XmlWriter.Create(sb, new XmlWriterSettings() { Indent = true, NewLineOnAttributes = true }))
@@ -34,11 +29,9 @@ namespace ANDOR_CS.UnitTests
 
 
             using (var xml = XmlReader.Create(new System.IO.StringReader(sb.ToString()), new XmlReaderSettings()))
-                setts2.ReadXml(xml);
+                XmlParser.ReadXml(xml);
 
             setts.Dispose();
-            setts2.Dispose();
-            cam.Dispose();
             Console.WriteLine(sb.ToString());
             Console.ReadKey();
         }
