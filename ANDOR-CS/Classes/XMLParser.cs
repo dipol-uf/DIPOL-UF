@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Xml;
 using System.Runtime.Serialization;
 
+using ANDOR_CS.Attributes;
 
 namespace ANDOR_CS.Classes
 {
@@ -44,7 +45,8 @@ namespace ANDOR_CS.Classes
                 .Where(p => 
                     p.GetCustomAttribute<ANDOR_CS.Attributes.NonSerializedAttribute>(true) == null &&
                     p.SetMethod != null &&
-                    p.GetMethod != null);
+                    p.GetMethod != null)
+                .OrderBy(p => p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0);
 
             writer.WriteStartDocument();
             writer.WriteStartElement("Settings");

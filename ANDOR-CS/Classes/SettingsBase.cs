@@ -37,6 +37,24 @@ namespace ANDOR_CS.Classes
 {
     public abstract class SettingsBase : IDisposable, IXmlSerializable
     {
+        private static PropertyInfo[] SerializedProperties =
+            typeof(SettingsBase)
+            .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .Where(p =>
+                p.GetCustomAttribute<ANDOR_CS.Attributes.NonSerializedAttribute>(true) == null &&
+                p.SetMethod != null &&
+                p.GetMethod != null)
+            .OrderBy(p => p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0)
+            .ToArray();
+
+        private static MethodInfo[] DeserializationSetMethods =
+            typeof(SettingsBase)
+            .GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .Where(mi => mi.Name.Contains("Set") && mi.ReturnType == typeof(void))
+            .ToArray();
+
+        private static Regex SetFnctionNameParser = new Regex(@"Set(.+)$");
+
         [ANDOR_CS.Attributes.NonSerialized]
         protected CameraBase camera = null;
 
@@ -85,10 +103,10 @@ namespace ANDOR_CS.Classes
         } = null;
 
         /// <summary>
-        /// Stores type of currentlt set Amplifier
+        /// Stores type of currentlt set OutputAmplifier
         /// </summary>
         [SerializationOrder(4)]
-        public (string Name, OutputAmplification Amplifier, int Index)? Amplifier
+        public (OutputAmplification OutputAmplifier, string Name, int Index)? OutputAmplifier
         {
             get;
             protected set;
@@ -118,7 +136,7 @@ namespace ANDOR_CS.Classes
         /// Stores currently set read mode
         /// </summary>
         [SerializationOrder(8)]
-        public ReadMode? ReadMode
+        public ReadMode? ReadoutMode
         {
             get;
             protected set;
@@ -262,8 +280,8 @@ namespace ANDOR_CS.Classes
 
             // Queries available amplifiers, looking for the one, which type mathces input parameter
             var query = from amp
-                        in camera.Properties.Amplifiers
-                        where amp.Amplifier == amplifier
+                        in camera.Properties.OutputAmplifiers
+                        where amp.OutputAmplifier == amplifier
                         select amp;
 
             // If no mathces found, throws an exception
@@ -274,17 +292,17 @@ namespace ANDOR_CS.Classes
             // Otherwise, assigns name and type of the amplifier 
             var element = query.First();
 
-            Amplifier = (Name: element.Name, Amplifier: element.Amplifier, Index: camera.Properties.Amplifiers.IndexOf(element));
+            OutputAmplifier = (OutputAmplifier: element.OutputAmplifier, Name: element.Name,Index: camera.Properties.OutputAmplifiers.IndexOf(element));
             HSSpeed = null;
             PreAmpGain = null;
             EMCCDGain = null;
         }
 
         /// <summary>
-        /// Returns a collection of available Horizonal Readout Speeds for currently selected Amplifier and AD Converter.
+        /// Returns a collection of available Horizonal Readout Speeds for currently selected OutputAmplifier and AD Converter.
         /// Requires camera to be active.
-        /// Note: <see cref="AcquisitionSettings.ADConverter"/> and <see cref="AcquisitionSettings.Amplifier"/> should be set
-        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/> and <see cref="AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
+        /// Note: <see cref="AcquisitionSettings.ADConverter"/> and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
+        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/> and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>
         /// before calling this method.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
@@ -300,13 +318,13 @@ namespace ANDOR_CS.Classes
             // Checks if camera support horizontal speed controls
             if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
             {
-                // Checks if AD converter and Amplifier are already selected
-                if (ADConverter == null || Amplifier == null)
-                    throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
+                // Checks if AD converter and OutputAmplifier are already selected
+                if (ADConverter == null || OutputAmplifier == null)
+                    throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or OutputAmplifier ({nameof(OutputAmplifier)}) are not set.");
 
                 // Determines indexes of converter and amplifier
                 int channel = ADConverter.Value.Index;
-                int amp = Amplifier.Value.Index;
+                int amp = OutputAmplifier.Value.Index;
                 
                 return GetAvailableHSSpeeds(channel, amp);
             }
@@ -316,10 +334,10 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
-        /// Sets Horizontal Readout Speed for currently selected Amplifier and AD Converter.
+        /// Sets Horizontal Readout Speed for currently selected OutputAmplifier and AD Converter.
         /// Requires camera to be active.
-        /// Note: <see cref="AcquisitionSettings.ADConverter"/> and <see cref="AcquisitionSettings.Amplifier"/> should be set
-        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/> and <see cref="AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
+        /// Note: <see cref="AcquisitionSettings.ADConverter"/> and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
+        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/> and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>
         /// before calling this method.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
@@ -342,13 +360,13 @@ namespace ANDOR_CS.Classes
                 PreAmpGain = null;
             }
             //{
-            //    // Checks if both AD converter and Amplifier are already set
-            //    if (ADConverter == null || Amplifier == null)
-            //        throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
+            //    // Checks if both AD converter and OutputAmplifier are already set
+            //    if (ADConverter == null || OutputAmplifier == null)
+            //        throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or OutputAmplifier ({nameof(OutputAmplifier)}) are not set.");
 
             //    // Determines indexes of converter and amplifier
             //    int channel = ADConverter.Value.Index;
-            //    int amp = Amplifier.Value.Index;
+            //    int amp = OutputAmplifier.Value.Index;
             //    int nSpeeds = 0;
 
             //    // Gets the number of availab;e speeds
@@ -380,12 +398,12 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
-        /// Returns a collection of available PreAmp gains for currently selected HSSpeed, Amplifier, Converter.
+        /// Returns a collection of available PreAmp gains for currently selected HSSpeed, OutputAmplifier, Converter.
         /// Requires camera to be active.
         /// Note: <see cref="AcquisitionSettings.ADConverter"/>, <see cref="AcquisitionSettings.HSSpeed"/>
-        /// and <see cref="AcquisitionSettings.Amplifier"/> should be set
+        /// and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
         /// via <see cref="AcquisitionSettings.SetADConverter(int)"/>, <see cref="AcquisitionSettings.SetHSSpeed(int)"/>
-        /// and <see cref="AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
+        /// and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="NotSupportedException"/>
@@ -399,13 +417,13 @@ namespace ANDOR_CS.Classes
             if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
             {
                 // Check if all required settings are already set
-                if (HSSpeed == null || Amplifier == null || ADConverter == null)
+                if (HSSpeed == null || OutputAmplifier == null || ADConverter == null)
                     throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(ADConverter)})," +
-                        $"Amplifier ({nameof(Amplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
+                        $"OutputAmplifier ({nameof(OutputAmplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
 
 
 
-                return GetAvailablePreAmpGain(ADConverter.Value.Index, Amplifier.Value.Index, HSSpeed.Value.Index);
+                return GetAvailablePreAmpGain(ADConverter.Value.Index, OutputAmplifier.Value.Index, HSSpeed.Value.Index);
 
             }
             else
@@ -414,12 +432,12 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
-        /// Sets PreAmp gain for currently selected HSSpeed, Amplifier, Converter.
+        /// Sets PreAmp gain for currently selected HSSpeed, OutputAmplifier, Converter.
         /// Requires camera to be active.
         /// Note: <see cref="AcquisitionSettings.ADConverter"/>, <see cref="AcquisitionSettings.HSSpeed"/>
-        /// and <see cref="AcquisitionSettings.Amplifier"/> should be set
+        /// and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
         /// via <see cref="AcquisitionSettings.SetADConverter(int)"/>, <see cref="AcquisitionSettings.SetHSSpeed(int)"/>
-        /// and <see cref="AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
+        /// and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="ArgumentOutOfRangeException"/>
@@ -433,9 +451,9 @@ namespace ANDOR_CS.Classes
             if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
             {
                 // Check if all required settings are already set
-                if (HSSpeed == null || Amplifier == null || ADConverter == null)
+                if (HSSpeed == null || OutputAmplifier == null || ADConverter == null)
                     throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(ADConverter)})," +
-                        $"Amplifier ({nameof(Amplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
+                        $"OutputAmplifier ({nameof(OutputAmplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
 
                 // Total number of gain settings available
                 int gainNumber = camera.Properties.PreAmpGains.Length;
@@ -522,7 +540,7 @@ namespace ANDOR_CS.Classes
                 throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({Extensions.GetEnumNames(typeof(ReadMode), mode).FirstOrDefault()})");
 
 
-            ReadMode = mode;
+            ReadoutMode = mode;
         }
 
         /// <summary>
@@ -577,8 +595,8 @@ namespace ANDOR_CS.Classes
             if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain))
             {
 
-                if (!Amplifier.HasValue || !Amplifier.Value.Amplifier.HasFlag(OutputAmplification.ElectronMultiplication))
-                    throw new NullReferenceException($"Amplifier should be set to {OutputAmplification.Conventional} before accessing EMCCDGain.");
+                if (!OutputAmplifier.HasValue || !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.ElectronMultiplication))
+                    throw new NullReferenceException($"OutputAmplifier should be set to {OutputAmplification.Conventional} before accessing EMCCDGain.");
 
                 var range = camera.Properties.EMCCDGainRange;
 
@@ -627,10 +645,10 @@ namespace ANDOR_CS.Classes
             // Checks if camera supports horizontal readout speed control
             if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
             {
-                if (ADConverter == null || Amplifier == null)
+                if (ADConverter == null || OutputAmplifier == null)
                     return false;
 
-                return IsHSSpeedSupported(speedIndex, ADConverter.Value.Index, Amplifier.Value.Index, out speed);
+                return IsHSSpeedSupported(speedIndex, ADConverter.Value.Index, OutputAmplifier.Value.Index, out speed);
             }
             else
                 return false;
@@ -817,11 +835,11 @@ namespace ANDOR_CS.Classes
                 }
             }
 
-            if ((query = root.Elements().Where(e => e.Name == "Amplifier")).Count() == 1)
+            if ((query = root.Elements().Where(e => e.Name == "OutputAmplifier")).Count() == 1)
             {
                 element = query.First();
 
-                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Amplifier")
+                var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "OutputAmplifier")
                     .FirstOrDefault()
                     ?.Value
                     .Trim();
@@ -988,7 +1006,22 @@ namespace ANDOR_CS.Classes
 
         public void ReadXml(XmlReader reader)
         {
-            var result = XMLParser.ReadXml(reader);
+            //var result = SerializedProperties
+            //    .Join(XMLParser.ReadXml(reader), x => x.Name, y => y.Key, (x, y) => y);
+
+            foreach (var item in
+                    from r in SerializedProperties
+                        .Join(XMLParser.ReadXml(reader), x => x.Name, y => y.Key, (x, y) => y)
+                    from m in DeserializationSetMethods
+                    let regexName = new {Method = m, Regex = SetFnctionNameParser.Match(m.Name)}
+                    where regexName.Regex.Success && regexName.Regex.Groups.Count == 2
+                    where r.Key == regexName.Regex.Groups[1].Value
+                    select new {regexName.Method, r.Key, r.Value})
+                     
+            {
+            }
+                    
+
         }
 
         public void WriteXml(XmlWriter writer)

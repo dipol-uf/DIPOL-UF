@@ -115,16 +115,16 @@ namespace ANDOR_CS.Classes
                     output.Add(("AD Converter", result == SDK.DRV_SUCCESS, result));
                 }
 
-                if (Amplifier.HasValue)
+                if (OutputAmplifier.HasValue)
                 {
-                    result = Call(Handle, SDKInstance.SetOutputAmplifier, Amplifier.Value.Index);
+                    result = Call(Handle, SDKInstance.SetOutputAmplifier, OutputAmplifier.Value.Index);
 
-                    output.Add(("Amplifier", result == SDK.DRV_SUCCESS, result));
+                    output.Add(("OutputAmplifier", result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (HSSpeed.HasValue)
                 {
-                    result = Call(Handle, () => SDKInstance.SetHSSpeed( Amplifier?.Item3 ?? 0, HSSpeed.Value.Index));
+                    result = Call(Handle, () => SDKInstance.SetHSSpeed( OutputAmplifier?.Item3 ?? 0, HSSpeed.Value.Index));
 
                     output.Add(("HS Speed", result == SDK.DRV_SUCCESS, result));
                 }
@@ -167,9 +167,9 @@ namespace ANDOR_CS.Classes
                 else throw new ArgumentNullException("Acquisition mode should be set before applying settings.");
 
 
-                if (ReadMode.HasValue)
+                if (ReadoutMode.HasValue)
                 {
-                    result = Call(Handle, SDKInstance.SetReadMode, EnumConverter.ReadModeTable[ReadMode.Value]);
+                    result = Call(Handle, SDKInstance.SetReadMode, EnumConverter.ReadModeTable[ReadoutMode.Value]);
 
                     output.Add(("Read mode", result == SDK.DRV_SUCCESS, result));
 
@@ -239,8 +239,8 @@ namespace ANDOR_CS.Classes
 
                 if (EMCCDGain.HasValue)
                 {
-                    if (!Amplifier.HasValue || !Amplifier.Value.Amplifier.HasFlag(OutputAmplification.Conventional))
-                        throw new ArgumentNullException($"Amplifier should be set to {OutputAmplification.Conventional}");
+                    if (!OutputAmplifier.HasValue || !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.Conventional))
+                        throw new ArgumentNullException($"OutputAmplifier should be set to {OutputAmplification.Conventional}");
 
                     result = Call(Handle, SDKInstance.SetEMCCDGain, EMCCDGain.Value);
                     //ThrowIfError(result, nameof(SDKInstance.SetEMCCDGain));
@@ -357,15 +357,15 @@ namespace ANDOR_CS.Classes
         ///// </summary>
         ///// <exception cref="ArgumentOutOfRangeException"/>
         ///// <param name="amplifier"></param>
-        //public void SetOutputAmplifier(OutputAmplification amplifier)
+        //public void SetOutputOutputAmplifier(OutputAmplification amplifier)
         //{
         //    // Checks camera object
         //    CheckCamera();
 
         //    // Queries available amplifiers, looking for the one, which type mathces input parameter
         //    var query = from amp
-        //                in camera.Properties.Amplifiers
-        //                where amp.Amplifier == amplifier
+        //                in camera.Properties.OutputAmplifiers
+        //                where amp.OutputAmplifier == amplifier
         //                select amp;
 
         //    // If no mathces found, throws an exception
@@ -376,15 +376,15 @@ namespace ANDOR_CS.Classes
         //    // Otherwise, assigns name and type of the amplifier 
         //    var element = query.First();
 
-        //    Amplifier = (Name: element.Name, Amplifier: element.Amplifier, Index: camera.Properties.Amplifiers.IndexOf(element));
+        //    OutputAmplifier = (Name: element.Name, OutputAmplifier: element.OutputAmplifier, Index: camera.Properties.OutputAmplifiers.IndexOf(element));
 
         //}
 
         /// <summary>
-        /// Returns a collection of available Horizonal Readout Speeds for currently selected Amplifier and AD Converter.
+        /// Returns a collection of available Horizonal Readout Speeds for currently selected OutputAmplifier and AD Converter.
         /// Requires camera to be active.
-        /// Note: <see cref="AcquisitionSettings.ADConverter"/> and <see cref="AcquisitionSettings.Amplifier"/> should be set
-        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/> and <see cref="AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>
+        /// Note: <see cref="AcquisitionSettings.ADConverter"/> and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
+        /// via <see cref="AcquisitionSettings.SetADConverter(int)"/> and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>
         /// before calling this method.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
@@ -426,10 +426,10 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
-        /// Sets Horizontal Readout Speed for currently selected Amplifier and AD Converter.
+        /// Sets Horizontal Readout Speed for currently selected OutputAmplifier and AD Converter.
         /// Requires camera to be active.
-        /// Note: <see cref="SettingsBase.ADConverter"/> and <see cref="SettingsBase.Amplifier"/> should be set
-        /// via <see cref="SettingsBase.SetADConverter(int)"/> and <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)"/>
+        /// Note: <see cref="SettingsBase.ADConverter"/> and <see cref="SettingsBase.OutputAmplifier"/> should be set
+        /// via <see cref="SettingsBase.SetADConverter(int)"/> and <see cref="SettingsBase.SetOutputOutputAmplifier(OutputAmplification)"/>
         /// before calling this method.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
@@ -449,13 +449,13 @@ namespace ANDOR_CS.Classes
         //        && IsHSSpeedSupported(speedIndex, out float speed))
         //        HSSpeed = (Index: speedIndex, Speed: speed);
         //    //{
-        //    //    // Checks if both AD converter and Amplifier are already set
-        //    //    if (ADConverter == null || Amplifier == null)
-        //    //        throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or Amplifier ({nameof(Amplifier)}) are not set.");
+        //    //    // Checks if both AD converter and OutputAmplifier are already set
+        //    //    if (ADConverter == null || OutputAmplifier == null)
+        //    //        throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or OutputAmplifier ({nameof(OutputAmplifier)}) are not set.");
 
         //    //    // Determines indexes of converter and amplifier
         //    //    int channel = ADConverter.Value.Index;
-        //    //    int amp = Amplifier.Value.Index;
+        //    //    int amp = OutputAmplifier.Value.Index;
         //    //    int nSpeeds = 0;
 
         //    //    // Gets the number of availab;e speeds
@@ -486,12 +486,12 @@ namespace ANDOR_CS.Classes
         //}
 
         /// <summary>
-        /// Returns a collection of available PreAmp gains for currently selected HSSpeed, Amplifier, Converter.
+        /// Returns a collection of available PreAmp gains for currently selected HSSpeed, OutputAmplifier, Converter.
         /// Requires camera to be active.
         /// Note: <see cref="AcquisitionSettings.ADConverter"/>, <see cref="AcquisitionSettings.HSSpeed"/>
-        /// and <see cref="AcquisitionSettings.Amplifier"/> should be set
+        /// and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
         /// via <see cref="AcquisitionSettings.SetADConverter(int)"/>, <see cref="AcquisitionSettings.SetHSSpeed(int)"/>
-        /// and <see cref="AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
+        /// and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="NotSupportedException"/>
@@ -531,12 +531,12 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
-        /// Sets PreAmp gain for currently selected HSSpeed, Amplifier, Converter.
+        /// Sets PreAmp gain for currently selected HSSpeed, OutputAmplifier, Converter.
         /// Requires camera to be active.
         /// Note: <see cref="AcquisitionSettings.ADConverter"/>, <see cref="AcquisitionSettings.HSSpeed"/>
-        /// and <see cref="AcquisitionSettings.Amplifier"/> should be set
+        /// and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
         /// via <see cref="AcquisitionSettings.SetADConverter(int)"/>, <see cref="AcquisitionSettings.SetHSSpeed(int)"/>
-        /// and <see cref="AcquisitionSettings.SetOutputAmplifier(OutputAmplification)"/>.
+        /// and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="ArgumentOutOfRangeException"/>
@@ -554,14 +554,14 @@ namespace ANDOR_CS.Classes
         //        if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain))
         //        {
         //            // Check if all required settings are already set
-        //            if (HSSpeed == null || Amplifier == null || ADConverter == null)
+        //            if (HSSpeed == null || OutputAmplifier == null || ADConverter == null)
         //                throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(ADConverter)})," +
-        //                    $"Amplifier ({nameof(Amplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
+        //                    $"OutputAmplifier ({nameof(OutputAmplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
 
 
-        //            // Stores indexes of ADConverter, Amplifier and Horizontal Speed
+        //            // Stores indexes of ADConverter, OutputAmplifier and Horizontal Speed
         //            int channel = ADConverter.Value.Index;
-        //            int amp = Amplifier.Value.Index;
+        //            int amp = OutputAmplifier.Value.Index;
         //            int speed = HSSpeed.Value.Index;
 
         //            // Total number of gain settings available
@@ -643,21 +643,21 @@ namespace ANDOR_CS.Classes
         ///// <exception cref="NotSupportedException"/>
         ///// <exception cref="InvalidOperationException"/>
         ///// <param name="mode">Read mode</param>
-        //public void SetReadoutMode(ReadMode mode)
+        //public void SetReadoutMode(ReadoutMode mode)
         //{
         //    // Checks camera
         //    CheckCamera();
 
         //    // Checks if camera support read mode control
         //    if(!camera.Capabilities.ReadModes.HasFlag(mode))
-        //        throw new NotSupportedException($"Camera does not support specified regime ({Extensions.GetEnumNames(typeof(ReadMode), mode).FirstOrDefault()})");
+        //        throw new NotSupportedException($"Camera does not support specified regime ({Extensions.GetEnumNames(typeof(ReadoutMode), mode).FirstOrDefault()})");
 
         //    // If there are no matches in the pre-defiend table, then this mode cannot be set explicitly
         //    if (!EnumConverter.ReadModeTable.ContainsKey(mode))
-        //        throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({Extensions.GetEnumNames(typeof(ReadMode), mode).FirstOrDefault()})");
+        //        throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({Extensions.GetEnumNames(typeof(ReadoutMode), mode).FirstOrDefault()})");
 
 
-        //    ReadMode = mode;
+        //    ReadoutMode = mode;
         //}
 
         ///// <summary>
@@ -712,8 +712,8 @@ namespace ANDOR_CS.Classes
         //    if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain))
         //    {
 
-        //        if (!Amplifier.HasValue || !Amplifier.Value.Amplifier.HasFlag(OutputAmplification.ElectronMultiplication))
-        //            throw new NullReferenceException($"Amplifier should be set to {OutputAmplification.Conventional} before accessing EMCCDGain.");
+        //        if (!OutputAmplifier.HasValue || !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.ElectronMultiplication))
+        //            throw new NullReferenceException($"OutputAmplifier should be set to {OutputAmplification.Conventional} before accessing EMCCDGain.");
 
         //        var range = camera.Properties.EMCCDGainRange;
 
@@ -908,11 +908,11 @@ namespace ANDOR_CS.Classes
         //            }
         //        }
 
-        //        if ((query = root.Elements().Where(e => e.Name == "Amplifier")).Count() == 1)
+        //        if ((query = root.Elements().Where(e => e.Name == "OutputAmplifier")).Count() == 1)
         //        {
         //            element = query.First();
 
-        //            var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "Amplifier")
+        //            var value = element.Elements().Where(e => e.Attribute(XName.Get("FieldName")).Value == "OutputAmplifier")
         //                .FirstOrDefault()
         //                ?.Value
         //                .Trim();
@@ -920,7 +920,7 @@ namespace ANDOR_CS.Classes
         //            {
         //                var amp = (Enums.OutputAmplification)Enum.Parse(typeof(Enums.OutputAmplification), value);
 
-        //                SetOutputAmplifier(amp);
+        //                SetOutputOutputAmplifier(amp);
         //            }
         //        }
 
@@ -969,13 +969,13 @@ namespace ANDOR_CS.Classes
         //            }
         //        }
 
-        //        if ((query = root.Elements().Where(e => e.Name == "ReadMode")).Count() == 1)
+        //        if ((query = root.Elements().Where(e => e.Name == "ReadoutMode")).Count() == 1)
         //        {
         //            var value = query.First()?.Value;
 
         //            if (value != null)
         //            {
-        //                var mode = (Enums.ReadMode)Enum.Parse(typeof(Enums.ReadMode), value);
+        //                var mode = (Enums.ReadoutMode)Enum.Parse(typeof(Enums.ReadoutMode), value);
 
         //                SetReadoutMode(mode);
         //            }
@@ -1079,7 +1079,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <param name="speedIndex">Speed index to test.</param>
         /// <param name="ADConverter">AD Converter index.</param>
-        /// <param name="amplifier">Amplifier index.</param>
+        /// <param name="amplifier">OutputAmplifier index.</param>
         /// <param name="speed">If call is successfull, assigns float value of HS speed,
         /// otherwies, is initialized to 0.0f.</param>
         /// <exception cref="AndorSDKException"/>
@@ -1131,14 +1131,14 @@ namespace ANDOR_CS.Classes
 
                 this.AcquisitionMode = Enums.AcquisitionMode.SingleScan;
                 this.ADConverter = (0, 16);
-                this.Amplifier = ("Conventional", OutputAmplification.Conventional, 1);
+                this.OutputAmplifier = (OutputAmplification.Conventional, "Conventional", 1);
                 this.ExposureTime = 123;
                 this.HSSpeed = (0, 3);
                 this.ImageArea = new Rectangle(1, 1, 128, 256);
 
                 //this.KineticCycle = (12, 23);
                 this.PreAmpGain = (0, "Gain 1");
-                this.ReadMode = Enums.ReadMode.FullImage;
+                this.ReadoutMode = Enums.ReadMode.FullImage;
 
                 this.TriggerMode = Enums.TriggerMode.Bulb;
                 this.VSAmplitude = Enums.VSAmplitude.Plus2;
