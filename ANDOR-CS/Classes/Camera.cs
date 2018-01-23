@@ -450,7 +450,7 @@ namespace ANDOR_CS.Classes
         private void TemperatureMonitorCycler(object sender, ElapsedEventArgs e)
         {
             // Checks if temperature can be queried
-            if (!_IsDisposed && // camera is not disposed
+            if (!_isDisposed && // camera is not disposed
                 (   !IsAcquiring ||  // either it is not acquiring or it supports run-time queries
                     Capabilities.Features.HasFlag(SdkFeatures.ReadTemperatureDuringAcquisition)) &&
                 sender is Timer t && // sender is Timer
@@ -477,7 +477,7 @@ namespace ANDOR_CS.Classes
             ThrowIfError(Call(CameraHandle, () =>
                 SdkInstance.GetImages16(e.Last, e.Last, array, (UInt32)(array.Length), ref validImages.First, ref validImages.Last)), nameof(SdkInstance.GetImages16));
 
-            acquiredImages.Enqueue(new Image(array, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height));
+            _acquiredImages.Enqueue(new Image(array, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height));
 
         }
 
@@ -719,7 +719,7 @@ namespace ANDOR_CS.Classes
         {
             CheckIsDisposed();
 
-            acquiredImages = new ConcurrentQueue<Image>();
+            _acquiredImages = new ConcurrentQueue<Image>();
 
             // If acquisition is already in progress, throw exception
             ThrowIfAcquiring(this);
@@ -825,7 +825,7 @@ namespace ANDOR_CS.Classes
         protected override void Dispose(bool disposing)
         {
 
-            if (!_IsDisposed)
+            if (!_isDisposed)
             {
                 base.Dispose(disposing);
                 if (disposing)
@@ -990,7 +990,7 @@ namespace ANDOR_CS.Classes
                     status = GetStatus();
 
                     (int First, int Last) previousImages = (0, 0);
-                    (int First, int Last) acquiredImagesIndex = (0, 0);
+                    (int First, int Last) _acquiredImagesIndex = (0, 0);
                     // While status is acquiring
                     while ((status = GetStatus()) == CameraStatus.Acquiring)
                     {
@@ -1000,19 +1000,19 @@ namespace ANDOR_CS.Classes
                         // Checks if new image is already acuired and is available in camera memory
 
                         // Gets indexes of first and last available new images
-                        acquiredImagesIndex = (0, 0);
+                        _acquiredImagesIndex = (0, 0);
 
 
-                        ThrowIfError(Call(CameraHandle, () => SdkInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last)),
+                        ThrowIfError(Call(CameraHandle, () => SdkInstance.GetNumberNewImages(ref _acquiredImagesIndex.First, ref _acquiredImagesIndex.Last)),
                             nameof(SdkInstance.GetNumberNewImages));
 
                         // If there is new image, updates indexes of previous abailable images and fires an event.
-                        if (acquiredImagesIndex.Last != previousImages.Last
-                            || acquiredImagesIndex.First != previousImages.First)
+                        if (_acquiredImagesIndex.Last != previousImages.Last
+                            || _acquiredImagesIndex.First != previousImages.First)
                         {
-                            previousImages = acquiredImagesIndex;
+                            previousImages = _acquiredImagesIndex;
 
-                            OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
+                            OnNewImageReceived(new NewImageReceivedEventArgs(_acquiredImagesIndex.First, _acquiredImagesIndex.Last));
                         }
 
                         // If task is aborted
@@ -1034,15 +1034,15 @@ namespace ANDOR_CS.Classes
 
                     ThrowIfError(Call(CameraHandle, (ref (int, int) output) =>
                         SdkInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
-                        out acquiredImagesIndex), nameof(SdkInstance.GetNumberNewImages));
+                        out _acquiredImagesIndex), nameof(SdkInstance.GetNumberNewImages));
 
                     // If there is new image, updates indexes of previous abailable images and fires an event.
-                    if (acquiredImagesIndex.Last != previousImages.Last
-                        || acquiredImagesIndex.First != previousImages.First)
+                    if (_acquiredImagesIndex.Last != previousImages.Last
+                        || _acquiredImagesIndex.First != previousImages.First)
                     {
-                        previousImages = acquiredImagesIndex;
+                        previousImages = _acquiredImagesIndex;
 
-                        OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
+                        OnNewImageReceived(new NewImageReceivedEventArgs(_acquiredImagesIndex.First, _acquiredImagesIndex.Last));
                     }
 
                     // If after end of acquisition camera status is not idle, throws exception

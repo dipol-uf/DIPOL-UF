@@ -25,7 +25,7 @@ namespace ANDOR_CS.Enums
     /// Not all camera support this feature, not all amplitudes may be available.
     /// </summary>
     [DataContract]
-    public enum VsAmplitude : int
+    public enum VsAmplitude
     {
         /// <summary>
         /// 0, default

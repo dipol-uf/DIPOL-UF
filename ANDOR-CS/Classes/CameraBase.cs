@@ -39,7 +39,7 @@ namespace ANDOR_CS.Classes
         protected const int StatusCheckTimeOutMs = 100;
         protected const int TempCheckTimeOutMs = 5000;
 
-        protected bool _IsDisposed = false;
+        protected bool _isDisposed = false;
 
         private bool _isActive = false;
         private bool _isInitialized = false;
@@ -64,13 +64,13 @@ namespace ANDOR_CS.Classes
         private volatile bool _isAcquiring = false;
         private volatile bool _isAsyncAcquisition = false;
 
-        protected ConcurrentQueue<Image> acquiredImages = new ConcurrentQueue<Image>();
+        protected ConcurrentQueue<Image> _acquiredImages = new ConcurrentQueue<Image>();
 
 
         public bool IsDisposed
         {
-            get => _IsDisposed;
-            private set => _IsDisposed = value;
+            get => _isDisposed;
+            private set => _isDisposed = value;
         }
         public virtual DeviceCapabilities Capabilities
         {
@@ -258,7 +258,7 @@ namespace ANDOR_CS.Classes
                 }
             }
         }
-        public virtual ConcurrentQueue<Image> AcquiredImages => acquiredImages;
+        public virtual ConcurrentQueue<Image> AcquiredImages => _acquiredImages;
         public virtual SettingsBase CurrentSettings
         {
             get;
@@ -363,7 +363,7 @@ namespace ANDOR_CS.Classes
 
         public virtual void CheckIsDisposed()
         {
-            if (_IsDisposed)
+            if (_isDisposed)
                 throw new ObjectDisposedException("Camera instance is already disposed");
         }
 
@@ -372,7 +372,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         public virtual void Dispose()
         {
-            if (!_IsDisposed)
+            if (!_isDisposed)
             {
                 Dispose(true);
                 GC.SuppressFinalize(this);
@@ -380,7 +380,7 @@ namespace ANDOR_CS.Classes
         }
         protected virtual void Dispose(bool disposing)
         {
-            _IsDisposed = true;
+            _isDisposed = true;
         }
 
         /// <summary>
