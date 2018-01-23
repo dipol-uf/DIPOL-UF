@@ -1013,37 +1013,17 @@ namespace ANDOR_CS.Classes
             var elemType = element.GetType();
             writer.WriteStartElement(name);
             writer.WriteAttributeString("Type", elemType.ToString());
-
             if (!elemType.IsEnum &&
-                elemType.GetCustomAttributes(typeof(DataContractAttribute), true).Any())
+                elemType.GetCustomAttribute<DataContractAttribute>(true) != null)
             {
-               
-                var prvFields = elemType
-                        .GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
-                        .Where(f => f.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
 
-                var pubFields = elemType
-                        .GetFields(BindingFlags.Instance | BindingFlags.Public)
-                        .Where(f => f.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
+                var fields = GetFieldsWithAttribute<DataMemberAttribute>(elemType);
+                var props = GetPropertiesWithAttribute<DataMemberAttribute>(elemType);
 
-                var prvProps = elemType
-                        .GetProperties(BindingFlags.Instance | BindingFlags.NonPublic)
-                        .Where(p => p.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
-
-                var pubProps = elemType
-                        .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                        .Where(p => p.GetCustomAttributes(typeof(DataMemberAttribute), true).Any());
-
-                foreach (var f in prvFields)
+                foreach (var f in fields)
                     SerializeElement(f.GetValue(element), f.Name, writer);
 
-                foreach (var f in pubFields)
-                    SerializeElement(f.GetValue(element), f.Name, writer);
-
-                foreach (var p in prvProps)
-                    SerializeElement(p.GetValue(element), p.Name, writer);
-
-                foreach (var p in pubProps)
+                foreach (var p in props)
                     SerializeElement(p.GetValue(element), p.Name, writer);
 
             }
@@ -1061,9 +1041,11 @@ namespace ANDOR_CS.Classes
         private static KeyValuePair<string, object> DeserializeElement(XmlReader reader)
         {
             string name = reader.Name;
+            string typeStr = reader.GetAttribute("Type");
+            Type type = null;
+
             if (reader.AttributeCount == 2)
             {
-                string typeStr = reader.GetAttribute("Type");
                 string valStr = reader.GetAttribute("Value");
 
                 if (string.IsNullOrWhiteSpace(valStr))
@@ -1072,7 +1054,6 @@ namespace ANDOR_CS.Classes
                 if (typeStr == typeof(string).FullName)
                     return new KeyValuePair<string, object>(name, valStr);
 
-                Type type = null;
 
                 if ((type = AllowedTypes.Where(tp => tp.FullName == typeStr).FirstOrDefault()) != null)
                 {
@@ -1104,8 +1085,7 @@ namespace ANDOR_CS.Classes
             }
             else if (reader.AttributeCount == 1)
             {
-                string type = reader.GetAttribute("Type");
-                var match = TupleTypeParser.Match(type);
+                var match = TupleTypeParser.Match(typeStr);
                 if (match.Success && match.Groups.Count == 2)
                 {
                     int size = int.Parse(match.Groups[1].Value, NumberStyles.Any, NumberFormatInfo.InvariantInfo);
@@ -1113,15 +1093,10 @@ namespace ANDOR_CS.Classes
 
                     for (int i = 0; i < size; i++)
                     {
-                        while (reader.Read() && 
-                                (reader.NodeType == XmlNodeType.Whitespace ||
-                                reader.NodeType == XmlNodeType.DocumentType ||
-                                reader.NodeType == XmlNodeType.XmlDeclaration ||
-                                reader.NodeType == XmlNodeType.EndElement))
-                        { }
+                        ReadUntilData(reader);
 
                         results[i] = DeserializeElement(reader);
-                        
+
                     }
 
                     var ctor = typeof(ValueTuple)
@@ -1146,10 +1121,72 @@ namespace ANDOR_CS.Classes
                     }
 
                 }
+                else if ((type = typeof(AndorSDKInitialization)
+                        .Assembly
+                        .ExportedTypes
+                        .Where(tp => tp.FullName == typeStr)
+                        .FirstOrDefault()) != null &&
+                    !type.IsEnum &&
+                    !type.IsClass &&
+                    type.GetCustomAttribute<DataContractAttribute>(true) != null)
+                {
+                    var fields = GetFieldsWithAttribute<DataMemberAttribute>(type);
+                    var props = GetPropertiesWithAttribute<DataMemberAttribute>(type);
+
+                    KeyValuePair<string, object>[] results_fields = new KeyValuePair<string, object>[fields.Length];
+                    KeyValuePair<string, object>[] results_props = new KeyValuePair<string, object>[props.Length];
+
+
+                    for (int i = 0; i < fields.Length; i++)
+                    {
+                        ReadUntilData(reader);
+                        results_fields[i] = DeserializeElement(reader);
+                    }
+                    for (int i = 0; i < props.Length; i++)
+                    {
+                        ReadUntilData(reader);
+                        results_props[i] = DeserializeElement(reader);
+                    }
+
+                    var complexTypeVal = Activator.CreateInstance(type);
+
+
+                    for (int i = 0; i < fields.Length; i++)
+                        fields
+                            .FirstOrDefault(fi => fi.Name == results_fields[i].Key)
+                            ?.SetValue(complexTypeVal, results_fields[i].Value);
+
+                    for (int i = 0; i < props.Length; i++)
+                        props
+                            .FirstOrDefault(pi => pi.Name == results_props[i].Key)
+                            ?.SetValue(complexTypeVal, results_props[i].Value);
+
+                    return new KeyValuePair<string, object>(name, complexTypeVal);
+                }
             }
 
 
             return new KeyValuePair<string, object>(reader.Name, null);
         }
-    }
+
+        private static FieldInfo[] GetFieldsWithAttribute<T>(Type t) where T : Attribute
+            => t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .Where(fi => fi.GetCustomAttribute<T>(true) != null)
+            .ToArray();
+
+        private static PropertyInfo[] GetPropertiesWithAttribute<T>(Type t) where T: Attribute
+            => t.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .Where(pi => pi.GetCustomAttribute<T>() != null)
+            .ToArray();
+
+        private static void ReadUntilData(XmlReader reader)
+        {
+            while (reader.Read() &&
+                (reader.NodeType == XmlNodeType.Whitespace ||
+                reader.NodeType == XmlNodeType.DocumentType ||
+                reader.NodeType == XmlNodeType.XmlDeclaration ||
+                reader.NodeType == XmlNodeType.EndElement))
+            { }
+        }
+    }   
 }
