@@ -13,7 +13,7 @@ using ANDOR_CS.Classes;
 namespace ANDOR_CS.UnitTests
 {
     [TestClass]
-    public class AcquistionSettings_Tests
+    public class AcquistionSettingsTests
     {
         private Camera _camera;
 

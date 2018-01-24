@@ -41,7 +41,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Represents an instance of a Camera device
     /// </summary>
-    public class Camera : CameraBase
+    public sealed class Camera : CameraBase
     {
         private Timer _temperatureMonitorTimer;
         //private Task TemperatureMonitorWorker = null;
@@ -57,7 +57,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
-        public sealed override bool IsActive
+        public override bool IsActive
         {
             get
             {
@@ -165,8 +165,8 @@ namespace ANDOR_CS.Classes
             // To call SDK methods, current camera should be active (this.IsActive == true).
             // If it is not the case, then either it was not set active (wrong design of program) or an error happened 
             // while switching control to this camera (and thus behaviour is undefined)
-            if (!IsActive)
-                throw new AndorSdkException("Camera is not active. Cannnot perform this operation.", null);
+            //if (!IsActive)
+            //    throw new AndorSdkException("Camera is not active. Cannnot perform this operation.", null);
 
             // Stores return codes of ANDOR functions
             uint result;
@@ -272,7 +272,7 @@ namespace ANDOR_CS.Classes
 
                 // Manual synchronization
                 result = Call(CameraHandle, (ref string output) =>
-                    SDKInstance.GetAmpDesc(ampIndex, ref output, AmpDescriptorMaxLength), out string ampName);
+                    SDKInstance.GetAmpDesc(ampIndex, ref output, AmpDescriptorMaxLength), out var ampName);
 
                 ThrowIfError(result, nameof(SDKInstance.GetAmpDesc));
 
@@ -375,7 +375,6 @@ namespace ANDOR_CS.Classes
             ThrowIfAcquiring(this);
 
             // Stores return codes of SDK functions
-            uint result = 0;
 
             // Variables are passed to SDK function and store version information
             uint eprom = 0;
@@ -386,7 +385,7 @@ namespace ANDOR_CS.Classes
             uint dllRev = 0;
 
 
-            result = Call(CameraHandle, () => SDKInstance.GetSoftwareVersion(ref eprom, ref cof, ref driverRev, ref driverVer, ref dllRev, ref dllVer));
+            var result = Call(CameraHandle, () => SDKInstance.GetSoftwareVersion(ref eprom, ref cof, ref driverRev, ref driverVer, ref dllRev, ref dllVer));
 
             ThrowIfError(result, nameof(SDKInstance.GetSoftwareVersion));
 
@@ -481,10 +480,11 @@ namespace ANDOR_CS.Classes
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Gets current status of the camera
         /// </summary>
-        /// <exception cref="AndorSdkException"/>
+        /// <exception cref="T:ANDOR_CS.Exceptions.AndorSdkException" />
         /// <returns>Camera status</returns>
         public override CameraStatus GetStatus()
         {
@@ -847,7 +847,6 @@ namespace ANDOR_CS.Classes
         public Camera(int camIndex = 0)
         {
             // Stores return codes from SDK functions
-            uint result = 0;
             var n = GetNumberOfCameras();
             if (n == 0)
                 throw new AndorSdkException("No ANDOR-compatible cameras found.", null);
@@ -863,7 +862,7 @@ namespace ANDOR_CS.Classes
                 throw new ArgumentException($"Camera with index {camIndex} is already created.");
 
             // Stores the handle (SDK private pointer) to the camera. A unique identifier
-            result = CallWithoutHandle(SDKInstance.GetCameraHandle, camIndex, out int handle);
+            var result = CallWithoutHandle(SDKInstance.GetCameraHandle, camIndex, out int handle);
             ThrowIfError(result, nameof(SDKInstance.GetCameraHandle));
 
             // If succede, assigns handle to Camera property

@@ -93,7 +93,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>ANDOR_CS.UnitTests.AcquistionSettings_Tests</StartupObject>
+    <StartupObject>ANDOR_CS.UnitTests.AcquistionSettingsTests</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <TargetZone>LocalIntranet</TargetZone>
@@ -168,7 +168,8 @@
     <Compile Include="Events\AcquisitionStatusEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Enums\TemperatureStatusEnum.cs" />
-    <Compile Include="UnitTests\AcquistionSettings_Tests.cs" />
+    <Compile Include="UnitTests\AcquistionSettingsTests.cs" />
+    <Compile Include="UnitTests\CameraTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
