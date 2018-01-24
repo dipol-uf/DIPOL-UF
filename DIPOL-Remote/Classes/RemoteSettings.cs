@@ -85,7 +85,7 @@ namespace DIPOL_Remote.Classes
             
         }
 
-        public override IEnumerable<(int Index, float Speed)> GetAvailableHsSpeeds(int ADConverter, int amplifier)
+        public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int ADConverter, int amplifier)
             => session.GetAvailableHSSpeeds(
                 SettingsID,
                 ADConverter,
@@ -101,7 +101,7 @@ namespace DIPOL_Remote.Classes
                 amplifier,
                 HSSpeed);
 
-        public override bool IsHsSpeedSupported(
+        public override bool IsHSSpeedSupported(
             int speedIndex, 
             int ADConverter,
             int amplifier,

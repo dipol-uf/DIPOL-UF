@@ -67,6 +67,10 @@ namespace ANDOR_CS.Classes
         protected ConcurrentQueue<Image> _acquiredImages = new ConcurrentQueue<Image>();
 
 
+        public abstract bool IsTemperatureMonitored
+        {
+            get;
+        }
         public bool IsDisposed => _isDisposed;
 
         public virtual DeviceCapabilities Capabilities

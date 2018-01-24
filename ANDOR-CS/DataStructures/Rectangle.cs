@@ -33,10 +33,18 @@ namespace ANDOR_CS.DataStructures
         public int Y2 => End.Y;
 
         [DataMember(IsRequired = true)]
-        public Point2D Start { get; }
+        public Point2D Start
+        {
+            get;
+            private set;
+        }
 
         [DataMember(IsRequired = true)]
-        public Point2D End { get; }
+        public Point2D End
+        {
+            get;
+            private set;
+        }
 
         public Size Size => new Size(X2 - X1 + 1, Y2 - Y1 + 1);
         public int Width => X2 - X1 + 1;

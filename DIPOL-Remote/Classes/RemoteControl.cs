@@ -619,7 +619,7 @@ namespace DIPOL_Remote.Classes
             string settingsID,
             int ADConverterIndex,
             int amplifier)
-        => GetSettingsSafe(settingsID).GetAvailableHsSpeeds(ADConverterIndex, amplifier).ToArray();
+        => GetSettingsSafe(settingsID).GetAvailableHSSpeeds(ADConverterIndex, amplifier).ToArray();
 
         [OperationBehavior]
         public (int Index, string Name)[] GetAvailablePreAmpGain(
@@ -638,7 +638,7 @@ namespace DIPOL_Remote.Classes
             int speedIndex)
             => (
             IsSupported: GetSettingsSafe(settingsID)
-                .IsHsSpeedSupported(speedIndex, ADConverter, amplifier, out float speed),
+                .IsHSSpeedSupported(speedIndex, ADConverter, amplifier, out float speed),
             Speed: speed);
 
         /// <summary>

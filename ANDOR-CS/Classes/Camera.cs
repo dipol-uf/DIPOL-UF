@@ -54,6 +54,8 @@ namespace ANDOR_CS.Classes
         private readonly ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> _runningTasks = 
             new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
+        public override bool IsTemperatureMonitored =>
+            _temperatureMonitorTimer?.Enabled ?? false;
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
@@ -354,11 +356,11 @@ namespace ANDOR_CS.Classes
                 AllowedTemperatures = (Minimum: min, Maximum: max),
                 DetectorSize = new Size(h, v),
                 HasInternalMechanicalShutter = shutter,
-                AdConverters = aDsBitRange,
+                ADConverters = aDsBitRange,
                 OutputAmplifiers = amplifiers,
                 PreAmpGains = preAmpGainDesc,
-                VsSpeeds = speedArray,
-                EmccdGainRange = (low, high)
+                VSSpeeds = speedArray,
+                EMCCDGainRange = (low, high)
             };
 
         }
@@ -770,7 +772,7 @@ namespace ANDOR_CS.Classes
                 _temperatureMonitorTimer.Elapsed += TemperatureMonitorCycler;
 
                 _temperatureMonitorTimer.Start();
-
+                
             }
             else
                 _temperatureMonitorTimer?.Stop();

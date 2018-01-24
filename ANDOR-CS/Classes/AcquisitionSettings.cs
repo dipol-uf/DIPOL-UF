@@ -49,10 +49,10 @@ namespace ANDOR_CS.Classes
                 return;
 
             AcquisitionMode = Enums.AcquisitionMode.SingleScan;
-            AdConverter = (0, 16);
+            ADConverter = (0, 16);
             OutputAmplifier = (OutputAmplification.Conventional, "Conventional", 1);
             ExposureTime = 123;
-            HsSpeed = (0, 3);
+            HSSpeed = (0, 3);
             ImageArea = new Rectangle(1, 1, 128, 256);
 
             //this.KineticCycle = (12, 23);
@@ -61,7 +61,7 @@ namespace ANDOR_CS.Classes
 
             TriggerMode = Enums.TriggerMode.Bulb;
             VsAmplitude = Enums.VsAmplitude.Plus2;
-            VsSpeed = (0, 0.3f);
+            VSSpeed = (0, 0.3f);
         }
 
 #endif
@@ -93,9 +93,9 @@ namespace ANDOR_CS.Classes
 
             uint result;
 
-            if (VsSpeed.HasValue)
+            if (VSSpeed.HasValue)
                 {
-                    result = Call(handle, SDKInstance.SetVSSpeed, VsSpeed.Value.Index);
+                    result = Call(handle, SDKInstance.SetVSSpeed, VSSpeed.Value.Index);
 
                     output.Add(("VS Speed", result == SDK.DRV_SUCCESS, result));
                 }
@@ -107,9 +107,9 @@ namespace ANDOR_CS.Classes
                     output.Add(("VS Amplitude", result == SDK.DRV_SUCCESS, result));
                 }
 
-                if (AdConverter.HasValue)
+                if (ADConverter.HasValue)
                 {
-                    result = Call(handle, SDKInstance.SetADChannel, AdConverter.Value.Index);
+                    result = Call(handle, SDKInstance.SetADChannel, ADConverter.Value.Index);
 
                     output.Add(("AD Converter", result == SDK.DRV_SUCCESS, result));
                 }
@@ -121,10 +121,10 @@ namespace ANDOR_CS.Classes
                     output.Add(("OutputAmplifier", result == SDK.DRV_SUCCESS, result));
                 }
 
-                if (HsSpeed.HasValue)
+                if (HSSpeed.HasValue)
                 {
                     result = Call(handle,
-                        () => SDKInstance.SetHSSpeed(OutputAmplifier?.Item3 ?? 0, HsSpeed.Value.Index));
+                        () => SDKInstance.SetHSSpeed(OutputAmplifier?.Item3 ?? 0, HSSpeed.Value.Index));
 
                     output.Add(("HS Speed", result == SDK.DRV_SUCCESS, result));
                 }
@@ -255,14 +255,14 @@ namespace ANDOR_CS.Classes
                     output.Add(("Kinetic cycle time", result == SDK.DRV_SUCCESS, result));
                 }
 
-                if (EmccdGain.HasValue)
+                if (EMCCDGain.HasValue)
                 {
                     if (!OutputAmplifier.HasValue ||
                         !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.Conventional))
                         throw new NullReferenceException(
                             $"OutputAmplifier should be set to {OutputAmplification.Conventional}");
 
-                    result = Call(handle, SDKInstance.SetEMCCDGain, EmccdGain.Value);
+                    result = Call(handle, SDKInstance.SetEMCCDGain, EMCCDGain.Value);
                     //ThrowIfError(result, nameof(SDKInstance.SetEMCCDGain));
                     output.Add(("EMCCDGain", result == SDK.DRV_SUCCESS, result));
                 }
@@ -295,7 +295,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSdkException" />
         /// <exception cref="ArgumentOutOfRangeException" />
         /// <exception cref="NotSupportedException" />
-        public void SetVsSpeed()
+        public void SetVSSpeed()
         {
             // Checks if Camera is OK
             CheckCamera();
@@ -312,7 +312,7 @@ namespace ANDOR_CS.Classes
                 ThrowIfError(result, nameof(SDKInstance.GetFastestRecommendedVSSpeed));
 
                 // Available speeds max index
-                var length = Camera.Properties.VsSpeeds.Length;
+                var length = Camera.Properties.VSSpeeds.Length;
 
                 // If speed index is invalid
                 if (speedIndex < 0 || speedIndex >= length)
@@ -321,7 +321,7 @@ namespace ANDOR_CS.Classes
                         $"is out of range (should be in [{0},  {length - 1}]).");
 
                 // Calls overloaded version of current method with obtained speedIndex as argument
-                SetVsSpeed(speedIndex);
+                SetVSSpeed(speedIndex);
             }
             else
             {
@@ -333,9 +333,9 @@ namespace ANDOR_CS.Classes
         /// <summary>
         ///     Returns a collection of available Horizonal Readout Speeds for currently selected OutputAmplifier and AD Converter.
         ///     Requires Camera to be active.
-        ///     Note: <see cref="SettingsBase.AdConverter" /> and <see cref="SettingsBase.OutputAmplifier" /> should
+        ///     Note: <see cref="SettingsBase.ADConverter" /> and <see cref="SettingsBase.OutputAmplifier" /> should
         ///     be set
-        ///     via <see cref="SettingsBase.SetAdConverter" /> and
+        ///     via <see cref="SettingsBase.SetADConverter" /> and
         ///     <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)" />
         ///     before calling this method.
         /// </summary>
@@ -343,7 +343,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="ArgumentOutOfRangeException" />
         /// <exception cref="NotSupportedException" />
         /// <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
-        public override IEnumerable<(int Index, float Speed)> GetAvailableHsSpeeds(int adConverter, int amplifier)
+        public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int adConverter, int amplifier)
         {
             // Checks if Camera is OK and is active
             CheckCamera();
@@ -381,9 +381,9 @@ namespace ANDOR_CS.Classes
         /// <summary>
         ///     Returns a collection of available PreAmp gains for currently selected HSSpeed, OutputAmplifier, Converter.
         ///     Requires Camera to be active.
-        ///     Note: <see cref="SettingsBase.AdConverter" />, <see cref="SettingsBase.HsSpeed" />
+        ///     Note: <see cref="SettingsBase.ADConverter" />, <see cref="SettingsBase.HSSpeed" />
         ///     and <see cref="SettingsBase.OutputAmplifier" /> should be set
-        ///     via <see cref="SettingsBase.SetAdConverter" />, <see cref="SettingsBase.SetHsSpeed" />
+        ///     via <see cref="SettingsBase.SetADConverter" />, <see cref="SettingsBase.SetHSSpeed" />
         ///     and <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)" />.
         /// </summary>
         /// <exception cref="NullReferenceException" />
@@ -440,7 +440,7 @@ namespace ANDOR_CS.Classes
         ///     true if HS Speed is supported,
         ///     throws exception if SDK communication fails; false, otherwise.
         /// </returns>
-        public override bool IsHsSpeedSupported(
+        public override bool IsHSSpeedSupported(
             int speedIndex,
             int adConverter,
             int amplifier,

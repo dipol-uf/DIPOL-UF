@@ -40,7 +40,7 @@ namespace ANDOR_CS.Classes
             typeof(SettingsBase)
             .GetProperties(BindingFlags.Instance | BindingFlags.Public)
             .Where(p =>
-                p.GetCustomAttribute<ANDOR_CS.Attributes.NonSerializedAttribute>(true) == null &&
+                p.GetCustomAttribute<Attributes.NonSerializedAttribute>(true) == null &&
                 p.SetMethod != null &&
                 p.GetMethod != null)
             .OrderBy(p => p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0)
@@ -66,7 +66,7 @@ namespace ANDOR_CS.Classes
         /// Stores the value of currently set vertical speed
         /// </summary>
         [SerializationOrder(1)]
-        public (int Index, float Speed)? VsSpeed
+        public (int Index, float Speed)? VSSpeed
         {
             get;
             protected set;
@@ -76,7 +76,7 @@ namespace ANDOR_CS.Classes
         /// Stores the value of currently set horizontal speed
         /// </summary>
         [SerializationOrder(5)]
-        public (int Index, float Speed)? HsSpeed
+        public (int Index, float Speed)? HSSpeed
         {
             get;
             protected set;
@@ -86,7 +86,7 @@ namespace ANDOR_CS.Classes
         /// Stores the index of currently set Analogue-Digital Converter and its bit depth.
         /// </summary>
         [SerializationOrder(3)]
-        public (int Index, int BitDepth)? AdConverter
+        public (int Index, int BitDepth)? ADConverter
         {
             get;
             protected set;
@@ -187,7 +187,7 @@ namespace ANDOR_CS.Classes
         } 
 
         [SerializationOrder(10)]
-        public int? EmccdGain
+        public int? EMCCDGain
         {
             get;
             protected set;
@@ -204,7 +204,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <exception cref="NotSupportedException"/>
         /// <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="Camera.Properties"/>.VSSpeeds</param>
-        public virtual void SetVsSpeed(int speedIndex)
+        public virtual void SetVSSpeed(int speedIndex)
         {
             // Checks if Camera is OK
             CheckCamera();
@@ -214,7 +214,7 @@ namespace ANDOR_CS.Classes
                 throw new NotSupportedException("Camera does not support vertical readout speed control.");
             
             // Available speeds max index
-            var length = Camera.Properties.VsSpeeds.Length;
+            var length = Camera.Properties.VSSpeeds.Length;
 
             // If speed index is invalid
             if (speedIndex < 0 || speedIndex >= length)
@@ -223,7 +223,7 @@ namespace ANDOR_CS.Classes
 
 
             // If success, updates VSSpeed field and 
-            VsSpeed = (Index: speedIndex, Speed: Camera.Properties.VsSpeeds[speedIndex]);
+            VSSpeed = (Index: speedIndex, Speed: Camera.Properties.VSSpeeds[speedIndex]);
         }
 
         /// <summary>
@@ -248,17 +248,17 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <param name="converterIndex"></param>
-        public virtual void SetAdConverter(int converterIndex)
+        public virtual void SetADConverter(int converterIndex)
         {
             // Checks if Camera is OK
             CheckCamera();
 
-            if (converterIndex < 0 || converterIndex >= Camera.Properties.AdConverters.Length)
+            if (converterIndex < 0 || converterIndex >= Camera.Properties.ADConverters.Length)
                 throw new ArgumentOutOfRangeException($"AD converter index {converterIndex} if out of range " +
-                    $"(should be in [{0}, {Camera.Properties.AdConverters.Length - 1}]).");
+                    $"(should be in [{0}, {Camera.Properties.ADConverters.Length - 1}]).");
 
-            AdConverter = (Index: converterIndex, BitDepth: Camera.Properties.AdConverters[converterIndex]);
-            HsSpeed = null;
+            ADConverter = (Index: converterIndex, BitDepth: Camera.Properties.ADConverters[converterIndex]);
+            HSSpeed = null;
             PreAmpGain = null;
         }
 
@@ -289,23 +289,23 @@ namespace ANDOR_CS.Classes
             var element = query[0];
 
             OutputAmplifier = (OutputAmplifier: element.OutputAmplifier, Name: element.Name,Index: Camera.Properties.OutputAmplifiers.IndexOf(element));
-            HsSpeed = null;
+            HSSpeed = null;
             PreAmpGain = null;
-            EmccdGain = null;
+            EMCCDGain = null;
         }
 
         /// <summary>
         /// Returns a collection of available Horizonal Readout Speeds for currently selected OutputAmplifier and AD Converter.
         /// Requires Camera to be active.
-        /// Note: <see cref="AdConverter"/> and <see cref="SettingsBase.OutputAmplifier"/> should be set
-        /// via <see cref="SetAdConverter"/> and <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)"/>
+        /// Note: <see cref="ADConverter"/> and <see cref="SettingsBase.OutputAmplifier"/> should be set
+        /// via <see cref="SetADConverter"/> and <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)"/>
         /// before calling this method.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <exception cref="NotSupportedException"/>
         /// <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
-        public virtual IEnumerable<(int Index, float Speed)> GetAvailableHsSpeeds()
+        public virtual IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds()
         { 
             
             // Checks if Camera is OK and is active
@@ -316,39 +316,39 @@ namespace ANDOR_CS.Classes
                 throw new NotSupportedException("Camera does not support horizontal readout speed controls.");
 
             // Checks if AD converter and OutputAmplifier are already selected
-            if (AdConverter == null || OutputAmplifier == null)
-                throw new NullReferenceException($"Either AD converter ({nameof(AdConverter)}) or OutputAmplifier ({nameof(OutputAmplifier)}) are not set.");
+            if (ADConverter == null || OutputAmplifier == null)
+                throw new NullReferenceException($"Either AD converter ({nameof(ADConverter)}) or OutputAmplifier ({nameof(OutputAmplifier)}) are not set.");
 
             // Determines indexes of converter and amplifier
-            var channel = AdConverter.Value.Index;
+            var channel = ADConverter.Value.Index;
             var amp = OutputAmplifier.Value.Index;
                 
-            return GetAvailableHsSpeeds(channel, amp);
+            return GetAvailableHSSpeeds(channel, amp);
 
         }
 
         /// <summary>
         /// Sets Horizontal Readout Speed for currently selected OutputAmplifier and AD Converter.
         /// Requires Camera to be active.
-        /// Note: <see cref="AdConverter"/> and <see cref="SettingsBase.OutputAmplifier"/> should be set
-        /// via <see cref="SetAdConverter"/> and <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)"/>
+        /// Note: <see cref="ADConverter"/> and <see cref="SettingsBase.OutputAmplifier"/> should be set
+        /// via <see cref="SetADConverter"/> and <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)"/>
         /// before calling this method.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <exception cref="NotSupportedException"/>
         /// <param name="speedIndex">Index of horizontal speed</param>
-        public virtual void SetHsSpeed(int speedIndex)
+        public virtual void SetHSSpeed(int speedIndex)
         {
             CheckCamera();
 
 
             if (!Camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) ||
-                !IsHsSpeedSupported(speedIndex, out var speed))
+                !IsHSSpeedSupported(speedIndex, out var speed))
                 throw new NotSupportedException("Camera does not support horizontal readout speed controls");
             else
             {
-                HsSpeed = (Index: speedIndex, Speed: speed);
+                HSSpeed = (Index: speedIndex, Speed: speed);
                 PreAmpGain = null;
             }
         }
@@ -356,9 +356,9 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Returns a collection of available PreAmp gains for currently selected HSSpeed, OutputAmplifier, Converter.
         /// Requires Camera to be active.
-        /// Note: <see cref="AdConverter"/>, <see cref="HsSpeed"/>
+        /// Note: <see cref="ADConverter"/>, <see cref="HSSpeed"/>
         /// and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
-        /// via <see cref="SetAdConverter"/>, <see cref="SetHsSpeed"/>
+        /// via <see cref="SetADConverter"/>, <see cref="SetHSSpeed"/>
         /// and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
@@ -374,20 +374,20 @@ namespace ANDOR_CS.Classes
                 throw new NotSupportedException("Camera does not support Pre Amp Gain controls.");
 
             // Check if all required settings are already set
-            if (HsSpeed == null || OutputAmplifier == null || AdConverter == null)
-                throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(AdConverter)})," +
-                                                 $"OutputAmplifier ({nameof(OutputAmplifier)}), Vertical Speed ({nameof(VsSpeed)}).");
+            if (HSSpeed == null || OutputAmplifier == null || ADConverter == null)
+                throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(ADConverter)})," +
+                                                 $"OutputAmplifier ({nameof(OutputAmplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
 
-            return GetAvailablePreAmpGain(AdConverter.Value.Index, OutputAmplifier.Value.Index, HsSpeed.Value.Index);
+            return GetAvailablePreAmpGain(ADConverter.Value.Index, OutputAmplifier.Value.Index, HSSpeed.Value.Index);
 
         }
 
         /// <summary>
         /// Sets PreAmp gain for currently selected HSSpeed, OutputAmplifier, Converter.
         /// Requires Camera to be active.
-        /// Note: <see cref="AdConverter"/>, <see cref="HsSpeed"/>
+        /// Note: <see cref="ADConverter"/>, <see cref="HSSpeed"/>
         /// and <see cref="SettingsBase.OutputAmplifier"/> should be set
-        /// via <see cref="SetAdConverter"/>, <see cref="SetHsSpeed"/>
+        /// via <see cref="SetADConverter"/>, <see cref="SetHSSpeed"/>
         /// and <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)"/>.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
@@ -402,9 +402,9 @@ namespace ANDOR_CS.Classes
             if (!Camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain)) 
                 throw new AndorSdkException("Pre Amp Gain is not supported", null);
             // Check if all required settings are already set
-            if (HsSpeed == null || OutputAmplifier == null || AdConverter == null)
-                throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(AdConverter)})," +
-                                                 $"OutputAmplifier ({nameof(OutputAmplifier)}), Vertical Speed ({nameof(VsSpeed)}).");
+            if (HSSpeed == null || OutputAmplifier == null || ADConverter == null)
+                throw new NullReferenceException($"One of the following settings are not set: AD Converter ({nameof(ADConverter)})," +
+                                                 $"OutputAmplifier ({nameof(OutputAmplifier)}), Vertical Speed ({nameof(VSSpeed)}).");
 
             // Total number of gain settings available
             var gainNumber = Camera.Properties.PreAmpGains.Length;
@@ -539,20 +539,20 @@ namespace ANDOR_CS.Classes
             ImageArea = area;
         }
 
-        public virtual void SetEmccdGain(int gain)
+        public virtual void SetEMCCDGain(int gain)
         {
-            if (Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EmccdGain))
+            if (Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain))
             {
 
                 if (!OutputAmplifier.HasValue || !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.ElectronMultiplication))
                     throw new NullReferenceException($"OutputAmplifier should be set to {OutputAmplification.Conventional} before accessing EMCCDGain.");
 
-                var range = Camera.Properties.EmccdGainRange;
+                var range = Camera.Properties.EMCCDGainRange;
 
                 if (gain > range.High || gain < range.Low)
                     throw new ArgumentOutOfRangeException($"Gain is out of range. (Provided value {gain} should be in [{range.Low}, {range.High}].)");
 
-                EmccdGain = gain;
+                EMCCDGain = gain;
             }
             else
                 throw new NotSupportedException("EM CCD Gain feature is not supported.");
@@ -585,7 +585,7 @@ namespace ANDOR_CS.Classes
             KineticCycle = (Frames: number, Time: time);
         }
 
-        public virtual bool IsHsSpeedSupported(int speedIndex, out float speed)
+        public virtual bool IsHSSpeedSupported(int speedIndex, out float speed)
         {
             // Checks if Camera is OK and is active
             CheckCamera();
@@ -594,23 +594,23 @@ namespace ANDOR_CS.Classes
             // Checks if Camera supports horizontal readout speed control
             if (Camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
             {
-                if (AdConverter == null || OutputAmplifier == null)
+                if (ADConverter == null || OutputAmplifier == null)
                     return false;
 
-                return IsHsSpeedSupported(speedIndex, AdConverter.Value.Index, OutputAmplifier.Value.Index, out speed);
+                return IsHSSpeedSupported(speedIndex, ADConverter.Value.Index, OutputAmplifier.Value.Index, out speed);
             }
             else
                 return false;
         
         }
 
-        public abstract bool IsHsSpeedSupported(
+        public abstract bool IsHSSpeedSupported(
             int speedIndex, 
             int adConverter,
             int amplifier, 
             out float speed);
 
-        public abstract IEnumerable<(int Index, float Speed)> GetAvailableHsSpeeds(
+        public abstract IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(
             int adConverter, 
             int amplifier);
 
