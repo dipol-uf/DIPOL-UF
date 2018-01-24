@@ -44,12 +44,25 @@ namespace DIPOL_Remote.Classes
         private ConcurrentDictionary<string, bool> changedProperties
             = new ConcurrentDictionary<string, bool>();
 
+        private bool _isTemperatureMonitored;
         private IRemoteControl session;
-
 
         internal static IDictionary<(string SessionID, int CameraIndex), CameraBase> RemoteCameras
             => remoteCameras as IDictionary<(string SessionID, int CameraIndex), CameraBase>;
 
+        public override bool IsTemperatureMonitored
+        {
+            get
+            {
+                if (changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
+                {
+                    // TODO: Implement property forwarding
+
+                }
+
+                return false;
+            }
+        }
         public override string CameraModel
         {
             get

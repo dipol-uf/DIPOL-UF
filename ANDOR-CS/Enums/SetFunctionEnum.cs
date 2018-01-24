@@ -45,9 +45,9 @@ namespace ANDOR_CS.Enums
         [EnumMember]
         Temperature = SDK.AC_SETFUNCTION_TEMPERATURE,
         [EnumMember]
-        McpGain = SDK.AC_SETFUNCTION_MCPGAIN,
+        MCPGain = SDK.AC_SETFUNCTION_MCPGAIN,
         [EnumMember]
-        EmccdGain = SDK.AC_SETFUNCTION_EMCCDGAIN,
+        EMCCDGain = SDK.AC_SETFUNCTION_EMCCDGAIN,
         [EnumMember]
         BaselineClamp =  SDK.AC_SETFUNCTION_BASELINECLAMP,
 

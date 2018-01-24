@@ -20,20 +20,17 @@ namespace ANDOR_CS.UnitTests
         public static void Main()
         {
 
-            var setts = new AcquisitionSettings();
-        
-            var sb = new StringBuilder();
+            var app = new AcquistionSettingsTests();
 
-            using (var xml = XmlWriter.Create(sb, new XmlWriterSettings() { Indent = true, NewLineOnAttributes = true }))
-                setts.WriteXml(xml);
-
-
-            using (var xml = XmlReader.Create(new System.IO.StringReader(sb.ToString()), new XmlReaderSettings()))
-                XmlParser.ReadXml(xml);
-
-            setts.Dispose();
-            Console.WriteLine(sb.ToString());
-            Console.ReadKey();
+            try
+            {
+                app.Initiazlie();
+                app.AcquisitionSettings_Serialize_Deserialize();
+            }
+            finally
+            {
+                app.Cleanup();
+            }
         }
         [TestInitialize]
         public void Initiazlie()
@@ -48,11 +45,18 @@ namespace ANDOR_CS.UnitTests
         [TestMethod]
         public void AcquisitionSettings_Serialize_Deserialize()
         {
-            var settingsOutput = new AcquisitionSettings();
+            var settingsOutput = _camera.GetAcquisitionSettingsTemplate();
+
+            settingsOutput.SetExposureTime(213f);
+            settingsOutput.SetVSSpeed(0);
+            settingsOutput.SetAcquisitionMode(Enums.AcquisitionMode.SingleScan);
+            settingsOutput.SetImageArea(new DataStructures.Rectangle(1, 1, 256, 128));
+
+
             using (var str = new StreamWriter("UnitTests/AcquistionSettings_Serialize_Deserizalie.xml"))
                 settingsOutput.Serialize(str.BaseStream);
 
-            var settingsInput = new AcquisitionSettings(_camera);
+            var settingsInput = _camera.GetAcquisitionSettingsTemplate();
 
             var publicProps = typeof(AcquisitionSettings)
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)

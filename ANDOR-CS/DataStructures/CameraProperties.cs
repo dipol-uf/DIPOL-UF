@@ -61,7 +61,7 @@ namespace ANDOR_CS.DataStructures
         /// An array of bit-depths for each available AD converter
         /// </summary>
         [DataMember(IsRequired = true)]
-        public int[] AdConverters
+        public int[] ADConverters
         {
             get;
             internal set;
@@ -91,14 +91,14 @@ namespace ANDOR_CS.DataStructures
         /// An array of available Vertical Speeds (in us)
         /// </summary>
         [DataMember(IsRequired = true)]
-        public float[] VsSpeeds
+        public float[] VSSpeeds
         {
             get;
             internal set;
         }
 
         [DataMember(IsRequired = true)]
-        public (int Low, int High) EmccdGainRange
+        public (int Low, int High) EMCCDGainRange
         {
             get;
             internal set;

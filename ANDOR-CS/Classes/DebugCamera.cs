@@ -58,6 +58,7 @@ namespace ANDOR_CS.Classes
 
         }
 
+        public override bool IsTemperatureMonitored => false;
         public override CameraStatus GetStatus()
         {
             WriteMessage("Status checked.", Blue);
