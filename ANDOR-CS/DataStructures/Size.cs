@@ -27,13 +27,13 @@ namespace ANDOR_CS.DataStructures
         public int Horizontal
         {
             get;
-            internal set;
+            set;
         }
         [DataMember(IsRequired = true)]
         public int Vertical
         {
             get;
-            internal set;
+            set;
         }
 
         public Size(int width, int height)

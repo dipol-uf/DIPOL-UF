@@ -36,14 +36,14 @@ namespace ANDOR_CS.DataStructures
         public Point2D Start
         {
             get;
-            private set;
+            set;
         }
 
         [DataMember(IsRequired = true)]
         public Point2D End
         {
             get;
-            private set;
+            set;
         }
 
         public Size Size => new Size(X2 - X1 + 1, Y2 - Y1 + 1);
