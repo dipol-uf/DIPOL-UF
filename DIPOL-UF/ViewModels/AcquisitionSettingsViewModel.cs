@@ -61,7 +61,7 @@ namespace DIPOL_UF.ViewModels
                 if (value != allowedSettings)
                 {
                     allowedSettings = value;
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
             }
         }
@@ -98,9 +98,9 @@ namespace DIPOL_UF.ViewModels
                 OutputAmplifierIndex, HSSpeedIndex)
             .ToArray();
 
-        public int[] AvailableEMCCDGains =>
+        public List<int> AvailableEMCCDGains =>
             Enumerable.Range(Camera.Properties.EMCCDGainRange.Low, Camera.Properties.EMCCDGainRange.High)
-            .ToArray();
+            .ToList();
 
         /// <summary>
         /// Index of VS Speed.
@@ -114,7 +114,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     model.SetVSSpeed(value < 0 ? 0 : value);
                     ValidateProperty(null);
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
                 catch (Exception e)
                 {
@@ -135,7 +135,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     model.SetVSAmplitude(value ?? VSAmplitude.Normal);
                     ValidateProperty(null);
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
                 catch (Exception e)
                 {
@@ -155,7 +155,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     model.SetADConverter(value < 0 ? 0 : value);
                     ValidateProperty(null);
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
                 catch (Exception e)
                 {
@@ -175,7 +175,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     model.SetOutputAmplifier(camera.Properties.OutputAmplifiers[value < 0 ? 0 : value].OutputAmplifier);
                     ValidateProperty(null);
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
                 catch (Exception e)
                 {
@@ -196,7 +196,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     model.SetHSSpeed(value < 0 ? 0 : value);
                     ValidateProperty(null);
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
                 catch (Exception e)
                 {
@@ -217,7 +217,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     model.SetPreAmpGain(value < 0 ? 0 : value);
                     ValidateProperty(null);
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
 
                 }
                 catch (Exception e)
@@ -238,7 +238,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     model.SetAcquisitionMode(value ?? AcquisitionMode.SingleScan);
                     ValidateProperty(null);
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
                 catch (Exception e)
                 {
@@ -262,7 +262,7 @@ namespace DIPOL_UF.ViewModels
                         {
                             model.SetAcquisitionMode((model.AcquisitionMode | AcquisitionMode.FrameTransfer) ?? AcquisitionMode.FrameTransfer);
                             ValidateProperty(null);
-                            RaisePropertyChanged();
+                            //RaisePropertyChanged();
                         }
                     }
                     else
@@ -271,7 +271,7 @@ namespace DIPOL_UF.ViewModels
                         {
                             model.SetAcquisitionMode((model.AcquisitionMode ^ AcquisitionMode.FrameTransfer) ?? AcquisitionMode.SingleScan);
                             ValidateProperty(null);
-                            RaisePropertyChanged();
+                            //RaisePropertyChanged();
                         }
                     }
                 }
@@ -294,7 +294,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     model.SetReadoutMode(value ?? ReadMode.FullImage);
                     ValidateProperty(null);
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
                 catch (Exception e)
                 {
@@ -314,7 +314,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     model.SetTriggerMode(value ?? TriggerMode.Internal);
                     ValidateProperty(null);
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
                 catch (Exception e)
                 {
@@ -336,13 +336,13 @@ namespace DIPOL_UF.ViewModels
                     {
                         model.SetExposureTime(0f);
                         ValidateProperty(null);
-                        RaisePropertyChanged();
+                        //RaisePropertyChanged();
                     }
                     else if (float.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out float flVal))
                     {
                         model.SetExposureTime(flVal);
                         ValidateProperty(null);
-                        RaisePropertyChanged();
+                        //RaisePropertyChanged();
                     }
                     else
                         ValidateProperty(new ArgumentException("Provided value is not a number."));
@@ -369,13 +369,13 @@ namespace DIPOL_UF.ViewModels
                     {
                         model.SetEMCCDGain(Camera.Properties.EMCCDGainRange.Low);
                         ValidateProperty();
-                        RaisePropertyChanged();
+                        //RaisePropertyChanged();
                     }
                     else if (int.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out int intVal))
                     {
                         model.SetEMCCDGain(intVal);
                         ValidateProperty();
-                        RaisePropertyChanged();
+                        //RaisePropertyChanged();
                     }
                     else
                         ValidateProperty(new ArgumentException("Provided value is not a number."));
@@ -386,7 +386,7 @@ namespace DIPOL_UF.ViewModels
                 }
                 finally
                 {
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
             }
         }
