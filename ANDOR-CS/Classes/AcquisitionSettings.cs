@@ -97,28 +97,28 @@ namespace ANDOR_CS.Classes
                 {
                     result = Call(handle, SDKInstance.SetVSSpeed, VSSpeed.Value.Index);
 
-                    output.Add(("VS Speed", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(VSSpeed), result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (VSAmplitude.HasValue)
                 {
                     result = Call(handle, SDKInstance.SetVSAmplitude, (int) VSAmplitude.Value);
 
-                    output.Add(("VS Amplitude", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(VSAmplitude), result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (ADConverter.HasValue)
                 {
                     result = Call(handle, SDKInstance.SetADChannel, ADConverter.Value.Index);
 
-                    output.Add(("AD Converter", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(ADConverter), result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (OutputAmplifier.HasValue)
                 {
                     result = Call(handle, SDKInstance.SetOutputAmplifier, OutputAmplifier.Value.Index);
 
-                    output.Add(("OutputAmplifier", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(OutputAmplifier), result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (HSSpeed.HasValue)
@@ -126,14 +126,14 @@ namespace ANDOR_CS.Classes
                     result = Call(handle,
                         () => SDKInstance.SetHSSpeed(OutputAmplifier?.Item3 ?? 0, HSSpeed.Value.Index));
 
-                    output.Add(("HS Speed", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(HSSpeed), result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (PreAmpGain.HasValue)
                 {
                     result = Call(handle, SDKInstance.SetPreAmpGain, PreAmpGain.Value.Index);
 
-                    output.Add(("PreAmp Gain", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(PreAmpGain), result == SDK.DRV_SUCCESS, result));
                 }
 
 
@@ -144,7 +144,7 @@ namespace ANDOR_CS.Classes
                             ImageArea.Value.Y2));
 
 
-                    output.Add(("Image", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(ImageArea), result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (AcquisitionMode.HasValue)
@@ -157,7 +157,7 @@ namespace ANDOR_CS.Classes
                         ThrowIfError(result, nameof(SDKInstance.SetFrameTransferMode));
                         mode ^= Enums.AcquisitionMode.FrameTransfer;
 
-                        output.Add(("Frame transfer", result == SDK.DRV_SUCCESS, result));
+                        output.Add(("FrameTransfer", result == SDK.DRV_SUCCESS, result));
                     }
                     else
                     {
@@ -167,7 +167,7 @@ namespace ANDOR_CS.Classes
 
                     result = Call(handle, SDKInstance.SetAcquisitionMode, EnumConverter.AcquisitionModeTable[mode]);
 
-                    output.Add(("Acquisition mode", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(AcquisitionMode), result == SDK.DRV_SUCCESS, result));
                 }
                 else
                 {
@@ -179,7 +179,7 @@ namespace ANDOR_CS.Classes
                 {
                     result = Call(handle, SDKInstance.SetReadMode, EnumConverter.ReadModeTable[ReadoutMode.Value]);
 
-                    output.Add(("Read mode", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(ReadoutMode), result == SDK.DRV_SUCCESS, result));
                 }
                 else
                 {
@@ -192,7 +192,7 @@ namespace ANDOR_CS.Classes
                     result = Call(handle, SDKInstance.SetTriggerMode,
                         EnumConverter.TriggerModeTable[TriggerMode.Value]);
 
-                    output.Add(("Trigger mode", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(TriggerMode), result == SDK.DRV_SUCCESS, result));
                 }
                 else
                 {
@@ -203,7 +203,7 @@ namespace ANDOR_CS.Classes
                 {
                     result = Call(handle, SDKInstance.SetExposureTime, ExposureTime.Value);
 
-                    output.Add(("Exposure time", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(ExposureTime), result == SDK.DRV_SUCCESS, result));
                 }
                 else
                 {
@@ -217,13 +217,12 @@ namespace ANDOR_CS.Classes
                             $"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
 
                     result = Call(handle, SDKInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
-                    // ThrowIfError(result, nameof(SDKInstance.SetNumberAccumulations));
-                    output.Add(("Number of accumulations", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(AccumulateCycle)+"Number", result == SDK.DRV_SUCCESS, result));
 
 
                     result = Call(handle, SDKInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
                     //ThrowIfError(result, nameof(SDKInstance.SetAccumulationCycleTime));
-                    output.Add(("Accumulation cycle time", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(AccumulateCycle)+"Time", result == SDK.DRV_SUCCESS, result));
                 }
 
 
@@ -238,21 +237,21 @@ namespace ANDOR_CS.Classes
 
                     result = Call(handle, SDKInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
                     //ThrowIfError(result, nameof(SDKInstance.SetNumberAccumulations));
-                    output.Add(("Number of accumulations", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(AccumulateCycle) + "Number", result == SDK.DRV_SUCCESS, result));
 
 
                     result = Call(handle, SDKInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
                     //ThrowIfError(result, nameof(SDKInstance.SetAccumulationCycleTime));
-                    output.Add(("Accumulation cycle time", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(AccumulateCycle) + "Time", result == SDK.DRV_SUCCESS, result));
 
                     result = Call(handle, SDKInstance.SetNumberKinetics, KineticCycle.Value.Frames);
                     //ThrowIfError(result, nameof(SDKInstance.SetNumberKinetics));
-                    output.Add(("Number of kinetics", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(KineticCycle)+"Number", result == SDK.DRV_SUCCESS, result));
 
 
                     result = Call(handle, SDKInstance.SetKineticCycleTime, KineticCycle.Value.Time);
                     //ThrowIfError(result, nameof(SDKInstance.SetKineticCycleTime));
-                    output.Add(("Kinetic cycle time", result == SDK.DRV_SUCCESS, result));
+                    output.Add(((nameof(AccumulateCycle) + "Time", result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (EMCCDGain.HasValue)
@@ -264,7 +263,7 @@ namespace ANDOR_CS.Classes
 
                     result = Call(handle, SDKInstance.SetEMCCDGain, EMCCDGain.Value);
                     //ThrowIfError(result, nameof(SDKInstance.SetEMCCDGain));
-                    output.Add(("EMCCDGain", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(EMCCDGain), result == SDK.DRV_SUCCESS, result));
                 }
 
                 var expTime = 0f;
