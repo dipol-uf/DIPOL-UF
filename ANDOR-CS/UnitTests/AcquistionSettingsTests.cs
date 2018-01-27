@@ -17,21 +17,6 @@ namespace ANDOR_CS.UnitTests
     {
         private Camera _camera;
 
-        public static void Main()
-        {
-
-            var app = new AcquistionSettingsTests();
-
-            try
-            {
-                app.Initiazlie();
-                app.AcquisitionSettings_Serialize_Deserialize();
-            }
-            finally
-            {
-                app.Cleanup();
-            }
-        }
         [TestInitialize]
         public void Initiazlie()
         {

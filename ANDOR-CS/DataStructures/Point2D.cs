@@ -30,14 +30,14 @@ namespace ANDOR_CS.DataStructures
         public int X
         {
             get;
-            private set;
+            set;
         }
 
         [DataMember(IsRequired = true)]
         public int Y
         {
             get;
-            private set;
+            set;
         }
 
         public Point2D(int x, int y)

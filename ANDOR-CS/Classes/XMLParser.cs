@@ -216,12 +216,12 @@ namespace ANDOR_CS.Classes
 
                     for (var i = 0; i < fields.Length; i++)
                         fields
-                            .FirstOrDefault(fi => fi.Name == resultsFields[i].Key)
+                            .FirstOrDefault(fi => fi.Name == resultsFields[i].Key && fi.IsPublic)
                             ?.SetValue(complexTypeVal, resultsFields[i].Value);
 
                     for (var i = 0; i < props.Length; i++)
                         props
-                            .FirstOrDefault(pi => pi.Name == resultsProps[i].Key)
+                            .FirstOrDefault(pi => pi.Name == resultsProps[i].Key && pi.CanWrite)
                             ?.SetValue(complexTypeVal, resultsProps[i].Value);
 
                     return new KeyValuePair<string, object>(name, complexTypeVal);
