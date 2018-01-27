@@ -60,7 +60,7 @@ namespace ANDOR_CS.Classes
             ReadoutMode = ReadMode.FullImage;
 
             TriggerMode = Enums.TriggerMode.Bulb;
-            VsAmplitude = Enums.VsAmplitude.Plus2;
+            VSAmplitude = Enums.VSAmplitude.Plus2;
             VSSpeed = (0, 0.3f);
         }
 
@@ -100,9 +100,9 @@ namespace ANDOR_CS.Classes
                     output.Add(("VS Speed", result == SDK.DRV_SUCCESS, result));
                 }
 
-                if (VsAmplitude.HasValue)
+                if (VSAmplitude.HasValue)
                 {
-                    result = Call(handle, SDKInstance.SetVSAmplitude, (int) VsAmplitude.Value);
+                    result = Call(handle, SDKInstance.SetVSAmplitude, (int) VSAmplitude.Value);
 
                     output.Add(("VS Amplitude", result == SDK.DRV_SUCCESS, result));
                 }

@@ -195,17 +195,17 @@ namespace ANDOR_CS.Classes
                     var fields = GetFieldsWithAttribute<DataMemberAttribute>(type);
                     var props = GetPropertiesWithAttribute<DataMemberAttribute>(type);
 
-                    var resultsFields = new KeyValuePair<string, object>[fields.Length];
-                    var resultsProps = new KeyValuePair<string, object>[props.Length];
+                    var resultsFields = new KeyValuePair<string, object>[fields.Count];
+                    var resultsProps = new KeyValuePair<string, object>[props.Count];
 
 
-                    for (var i = 0; i < fields.Length; i++)
+                    for (var i = 0; i < fields.Count; i++)
                     {
                         ReadUntilData(reader);
                         resultsFields[i] = DeserializeElement(reader);
                     }
 
-                    for (var i = 0; i < props.Length; i++)
+                    for (var i = 0; i < props.Count; i++)
                     {
                         ReadUntilData(reader);
                         resultsProps[i] = DeserializeElement(reader);
@@ -214,12 +214,12 @@ namespace ANDOR_CS.Classes
                     var complexTypeVal = Activator.CreateInstance(type);
 
 
-                    for (var i = 0; i < fields.Length; i++)
+                    for (var i = 0; i < fields.Count; i++)
                         fields
                             .FirstOrDefault(fi => fi.Name == resultsFields[i].Key && fi.IsPublic)
                             ?.SetValue(complexTypeVal, resultsFields[i].Value);
 
-                    for (var i = 0; i < props.Length; i++)
+                    for (var i = 0; i < props.Count; i++)
                         props
                             .FirstOrDefault(pi => pi.Name == resultsProps[i].Key && pi.CanWrite)
                             ?.SetValue(complexTypeVal, resultsProps[i].Value);
@@ -232,15 +232,15 @@ namespace ANDOR_CS.Classes
             return new KeyValuePair<string, object>(reader.Name, null);
         }
 
-        private static FieldInfo[] GetFieldsWithAttribute<T>(Type t) where T : Attribute
+        private static List<FieldInfo> GetFieldsWithAttribute<T>(Type t) where T : Attribute
             => t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             .Where(fi => fi.GetCustomAttribute<T>(true) != null)
-            .ToArray();
+            .ToList();
 
-        private static PropertyInfo[] GetPropertiesWithAttribute<T>(Type t) where T : Attribute
+        private static List<PropertyInfo> GetPropertiesWithAttribute<T>(Type t) where T : Attribute
             => t.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             .Where(pi => pi.GetCustomAttribute<T>() != null)
-            .ToArray();
+            .ToList();
 
         private static void ReadUntilData(XmlReader reader)
         {
