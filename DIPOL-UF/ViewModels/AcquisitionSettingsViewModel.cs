@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.IO;
-
+using System.Text;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
@@ -27,10 +27,9 @@ namespace DIPOL_UF.ViewModels
             .Select(pi => (PropNameTrimmer.Replace(pi.Name, ""), pi))
             .ToList();
 
-        private CameraBase camera;
+        private readonly CameraBase camera;
 
-        private Dictionary<string, bool> supportedSettings = null;
-        private ObservableConcurrentDictionary<string, bool> allowedSettings = null;
+        private Dictionary<string, bool> _supportedSettings = null;
 
         private DelegateCommand saveCommand;
         private DelegateCommand loadCommand;
@@ -42,6 +41,13 @@ namespace DIPOL_UF.ViewModels
         public DelegateCommand SaveCommand => saveCommand;
         public DelegateCommand LoadCommand => loadCommand;
 
+        public (float ExposureTime, float AccumulationCycleTime, 
+            float KineticCycleTime, int BufferSize) EstimatedTiming
+        {
+            get;
+            private set;
+        }
+
         /// <summary>
         /// Reference to Camera instance.
         /// </summary>
@@ -49,54 +55,49 @@ namespace DIPOL_UF.ViewModels
         /// <summary>
         /// Collection of supported by a given Camera settings.
         /// </summary>
-        public Dictionary<string, bool> SupportedSettings => supportedSettings;
+        public Dictionary<string, bool> SupportedSettings => _supportedSettings;
+
         /// <summary>
         /// Collection of settings that can be set now.
         /// </summary>
         public ObservableConcurrentDictionary<string, bool> AllowedSettings
         {
-            get => allowedSettings;
-            set
-            {
-                if (value != allowedSettings)
-                {
-                    allowedSettings = value;
-                    //RaisePropertyChanged();
-                }
-            }
+            get;
+            set;
         }
+
         /// <summary>
         /// Supported acquisition modes.
         /// </summary>
         public AcquisitionMode[] AllowedAcquisitionModes =>
            Helper.EnumFlagsToArray(Camera.Capabilities.AcquisitionModes)
             .Where(item => item != AcquisitionMode.FrameTransfer)
-            .Where(item => ANDOR_CS.Classes.EnumConverter.IsAcquisitionModeSupported(item))
+            .Where(ANDOR_CS.Classes.EnumConverter.IsAcquisitionModeSupported)
             .ToArray();
 
         public ReadMode[] AllowedReadoutModes =>
             Helper.EnumFlagsToArray(Camera.Capabilities.ReadModes)
-            .Where(item => ANDOR_CS.Classes.EnumConverter.IsReadModeSupported(item))
+            .Where(ANDOR_CS.Classes.EnumConverter.IsReadModeSupported)
             .ToArray();
 
         public TriggerMode[] AllowedTriggerModes =>
             Helper.EnumFlagsToArray(Camera.Capabilities.TriggerModes)
-            .Where(item => ANDOR_CS.Classes.EnumConverter.IsTriggerModeSupported(item))
+            .Where(ANDOR_CS.Classes.EnumConverter.IsTriggerModeSupported)
             .ToArray();
 
-        public (int Index, float Speed)[] AvailableHSSpeeds =>
+        public List<(int Index, float Speed)> AvailableHSSpeeds =>
             (ADConverterIndex < 0 || OutputAmplifierIndex < 0)
             ? null
             : model
             .GetAvailableHSSpeeds(ADConverterIndex, OutputAmplifierIndex)
-            .ToArray();
-        public (int Index, string Name)[] AvailablePreAmpGains =>
+            .ToList();
+        public List<(int Index, string Name)> AvailablePreAmpGains =>
             (ADConverterIndex < 0 || OutputAmplifierIndex < 0 || HSSpeedIndex < 0)
             ? null
             : model
             .GetAvailablePreAmpGain(ADConverterIndex,
                 OutputAmplifierIndex, HSSpeedIndex)
-            .ToArray();
+            .ToList();
 
         public List<int> AvailableEMCCDGains =>
             Enumerable.Range(Camera.Properties.EMCCDGainRange.Low, Camera.Properties.EMCCDGainRange.High)
@@ -406,7 +407,7 @@ namespace DIPOL_UF.ViewModels
 
         private void CheckSupportedFeatures()
         {
-            supportedSettings = new Dictionary<string, bool>()
+            _supportedSettings = new Dictionary<string, bool>()
             {
                 { nameof(model.VSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed)},
                 { nameof(model.VSAmplitude), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
@@ -475,25 +476,32 @@ namespace DIPOL_UF.ViewModels
 
         private void SaveTo(object parameter)
         {
-            Microsoft.Win32.SaveFileDialog dialog = new Microsoft.Win32.SaveFileDialog();
-            dialog.AddExtension = true;
-            dialog.CheckPathExists = true;
-            dialog.DefaultExt = ".acq";
-            dialog.FileName = camera.ToString();
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                AddExtension = true,
+                CheckPathExists = true,
+                DefaultExt = ".acq",
+                FileName = camera.ToString(),
+                FilterIndex = 0,
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                Title = "Save current acquisition settings"
+            };
             dialog.Filter = $@"Acquisition settings (*{dialog.DefaultExt})|*{dialog.DefaultExt}|All files (*.*)|*.*";
-            dialog.FilterIndex = 0;
-            dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            dialog.Title = "Save current acquisition settings";
-
-
+            
 
             if (dialog.ShowDialog() == true)
-            {
-                using (var fl = File.Open(dialog.FileName, FileMode.Create, FileAccess.Write, FileShare.Read))
+                try
                 {
-                    model.Serialize(fl);
+                    using (var fl = File.Open(dialog.FileName, FileMode.Create, FileAccess.Write, FileShare.Read))
+                        model.Serialize(fl);
                 }
-            }
+                catch (Exception e)
+                {
+                    var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
+                    MessageBox.Show($"An error occured while saving acquisition settings to {dialog.FileName}.\n" +
+                                    $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]", 
+                        "Unable to save file", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                }
         }
 
         private void LoadFrom(object parameter)
@@ -512,16 +520,18 @@ namespace DIPOL_UF.ViewModels
             dialog.Filter = $@"Acquisition settings (*{dialog.DefaultExt})|*{dialog.DefaultExt}|All files (*.*)|*.*";
 
             if (dialog.ShowDialog() == true)
-            {
-                //List<string> changedProps;
-
-                using (var fl = File.Open(dialog.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    model.Deserialize(fl);
-
-                //foreach (var prop i)
-                    //RaisePropertyChanged(prop);
-                    
-            }
+                try
+                {
+                    using (var fl = File.Open(dialog.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        model.Deserialize(fl);
+                }
+                catch (Exception e)
+                {
+                    var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
+                    MessageBox.Show($"An error occured while reading acquisition settings from {dialog.FileName}.\n" +
+                                    $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
+                        "Unable to load file", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                }
 
         }
 
@@ -609,21 +619,50 @@ namespace DIPOL_UF.ViewModels
                 if (window != null && Helper.IsDialogWindow(window))
                 {
                     window.DialogResult = !isCanceled;
+                    if (!isCanceled)
+                    {
+                        try
+                        {
+                            var applicationResult = model.ApplySettings(out var timing);
+                            var failed = applicationResult.Where(item => !item.Success).ToList();
+                            if (failed.Count > 0)
+                            {
+                                var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
+                                var listSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 5);
+                                var sb = new StringBuilder(messSize * listSize);
+
+                                sb.AppendLine("Some of the settings were applied unsuccessfully:");
+                                foreach (var fl in failed.Take(listSize))
+                                    sb.AppendLine($"[{(fl.Option.Length < messSize ? fl.Option : fl.Option.Substring(0, messSize))}]");
+                                MessageBox.Show(sb.ToString(),
+                                    "Partially unsuccessfull application of settings", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+
+                                foreach (var prop in PropertyList.Join(failed, x => x.Item1, y => y.Option, (x, y) =>
+                                    new {
+                                        Name = x.Item1,
+                                        Error = y.ReturnCode
+                                    }))
+                                    ValidateProperty(new AndorSdkException(prop.Name, prop.Error), prop.Name);
+
+                                return;
+                            }
+                            EstimatedTiming = timing;
+                        }
+                        catch (Exception e)
+                        {
+                            var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
+                            MessageBox.Show("Failed to apply current settings to target camera.\n" +
+                                            $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
+                                "Incompatible settings", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                            return;
+                        }
+                    }
+
+
+                    window.Close();
                 }
 
-                //if (!isCanceled)
-                //{
-                //    var fields = this
-                //        .GetType()
-                //        .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
-                //        .Where(x => x.SetMethod != null && !x.PropertyType.IsArray)
-                //        .Select(x => x.Name)
-                //        .ToArray();
-
-                //    var result = model.ApplySettings(out (float, float, float, int) timig);
-                //}
-
-                window?.Close();
+             
             }
         }
 
@@ -639,12 +678,11 @@ namespace DIPOL_UF.ViewModels
             {
                 if (Nullable.GetUnderlyingType(p.PropertyType) != null)
                     return p.GetValue(this) != null;
-                else if (p.PropertyType == typeof(int))
+                if (p.PropertyType == typeof(int))
                     return (int)p.GetValue(this) != -1;
-                else if (p.PropertyType == typeof(string))
-                    return !String.IsNullOrWhiteSpace((string)p.GetValue(this));
-                else
-                    return false;
+                if (p.PropertyType == typeof(string))
+                    return !string.IsNullOrWhiteSpace((string)p.GetValue(this));
+                return false;
             }
 
             // Query that joins pulic Properties to Allowed settings with true value.
@@ -653,7 +691,7 @@ namespace DIPOL_UF.ViewModels
                 from prop in PropertyList
                 join allowedProp in AllowedSettings 
                 on prop.Item1 equals allowedProp.Key
-                where allowedProp.Value == true
+                where allowedProp.Value
                 select prop.Item2;
 
             // Runs check of values on all selected properties.

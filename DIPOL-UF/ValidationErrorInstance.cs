@@ -6,20 +6,17 @@ using System.Threading.Tasks;
 
 namespace DIPOL_UF
 {
-    class ValidationErrorInstance  : IEquatable<ValidationErrorInstance>
+    internal class ValidationErrorInstance  : IEquatable<ValidationErrorInstance>
     {
        
         public string Message
         {
             get;
-            private set;
-
         }
 
         public string ID
         {
             get;
-            private set;
         }
 
         public ValidationErrorInstance(string id, string message)
@@ -29,13 +26,13 @@ namespace DIPOL_UF
         }
 
         public bool Equals(ValidationErrorInstance other)
-            => this.ID == other.ID;
+            => ID == other?.ID;
 
         public override bool Equals(object obj)
-            => obj is ValidationErrorInstance inst ? inst.ID == this.ID : false;
+            => obj is ValidationErrorInstance inst && inst.ID == ID;
 
         public override int GetHashCode()
-            => this.ID.GetHashCode();
+            => ID.GetHashCode();
         public override string ToString()
             => ID;
     }
