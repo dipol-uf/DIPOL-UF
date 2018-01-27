@@ -19,7 +19,13 @@ namespace DIPOL_UF.ViewModels
 {
     class AcquisitionSettingsViewModel : ViewModel<SettingsBase>
     {
-        private static Regex PropNameTrimmer = new Regex("((Value)|(Index))+(Text)?");
+        private static readonly Regex PropNameTrimmer = new Regex("((Value)|(Index))+(Text)?");
+        private static readonly List<(string, PropertyInfo)> PropertyList =
+            typeof(AcquisitionSettingsViewModel)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(pi => pi.CanRead && pi.CanWrite)
+            .Select(pi => (PropNameTrimmer.Replace(pi.Name, ""), pi))
+            .ToList();
 
         private CameraBase camera;
 
@@ -68,7 +74,7 @@ namespace DIPOL_UF.ViewModels
             .Where(item => ANDOR_CS.Classes.EnumConverter.IsAcquisitionModeSupported(item))
             .ToArray();
 
-        public ReadMode[] AllowedReadModes =>
+        public ReadMode[] AllowedReadoutModes =>
             Helper.EnumFlagsToArray(Camera.Capabilities.ReadModes)
             .Where(item => ANDOR_CS.Classes.EnumConverter.IsReadModeSupported(item))
             .ToArray();
@@ -79,17 +85,17 @@ namespace DIPOL_UF.ViewModels
             .ToArray();
 
         public (int Index, float Speed)[] AvailableHSSpeeds =>
-            (ADConverterIndex < 0 || AmplifierIndex < 0)
+            (ADConverterIndex < 0 || OutputAmplifierIndex < 0)
             ? null
             : model
-            .GetAvailableHSSpeeds(ADConverterIndex, AmplifierIndex)
+            .GetAvailableHSSpeeds(ADConverterIndex, OutputAmplifierIndex)
             .ToArray();
         public (int Index, string Name)[] AvailablePreAmpGains =>
-            (ADConverterIndex < 0 || AmplifierIndex < 0 || HSSpeedIndex < 0)
+            (ADConverterIndex < 0 || OutputAmplifierIndex < 0 || HSSpeedIndex < 0)
             ? null
             : model
             .GetAvailablePreAmpGain(ADConverterIndex,
-                AmplifierIndex, HSSpeedIndex)
+                OutputAmplifierIndex, HSSpeedIndex)
             .ToArray();
 
         public int[] AvailableEMCCDGains =>
@@ -120,14 +126,14 @@ namespace DIPOL_UF.ViewModels
         /// <summary>
         /// VS Amplitude.
         /// </summary>
-        public VsAmplitude? VSAmplitudeValue
+        public VSAmplitude? VSAmplitudeValue
         {
-            get => model.VsAmplitude;
+            get => model.VSAmplitude;
             set
             {
                 try
                 {
-                    model.SetVsAmplitude(value ?? VsAmplitude.Normal);
+                    model.SetVSAmplitude(value ?? VSAmplitude.Normal);
                     ValidateProperty(null);
                     RaisePropertyChanged();
                 }
@@ -158,9 +164,9 @@ namespace DIPOL_UF.ViewModels
             }
         }
         /// <summary>
-        /// Output Amplifier index.
+        /// Output OutputAmplifier index.
         /// </summary>
-        public int AmplifierIndex
+        public int OutputAmplifierIndex
         {
             get => model.OutputAmplifier?.Index ?? -1;
             set
@@ -200,7 +206,7 @@ namespace DIPOL_UF.ViewModels
             }
         }
         /// <summary>
-        /// Index of Pre Amplifier Gain.
+        /// Index of Pre OutputAmplifier Gain.
         /// </summary>
         public int PreAmpGainIndex
         {
@@ -279,7 +285,7 @@ namespace DIPOL_UF.ViewModels
         /// <summary>
         /// Read mode value
         /// </summary>
-        public ReadMode? ReadModeValue
+        public ReadMode? ReadoutModeValue
         {
             get => model.ReadoutMode;
             set
@@ -403,7 +409,7 @@ namespace DIPOL_UF.ViewModels
             supportedSettings = new Dictionary<string, bool>()
             {
                 { nameof(model.VSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed)},
-                { nameof(model.VsAmplitude), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
+                { nameof(model.VSAmplitude), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
                 { nameof(model.ADConverter), true },
                 { nameof(model.OutputAmplifier), true },
                 { nameof(model.HSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) },
@@ -423,15 +429,15 @@ namespace DIPOL_UF.ViewModels
                 new KeyValuePair<string, bool>[]
                 {
                     new KeyValuePair<string, bool>(nameof(model.VSSpeed), true),
-                    new KeyValuePair<string, bool>(nameof(model.VsAmplitude), true),
+                    new KeyValuePair<string, bool>(nameof(model.VSAmplitude), true),
                     new KeyValuePair<string, bool>(nameof(model.ADConverter), true),
                     new KeyValuePair<string, bool>(nameof(model.OutputAmplifier), true),
                     new KeyValuePair<string, bool>(nameof(model.HSSpeed),
                         ADConverterIndex >= 0
-                        && AmplifierIndex >= 0),
+                        && OutputAmplifierIndex >= 0),
                     new KeyValuePair<string, bool>(nameof(model.PreAmpGain),
                         ADConverterIndex >= 0
-                        && AmplifierIndex >= 0
+                        && OutputAmplifierIndex >= 0
                         && HSSpeedIndex >= 0),
                     new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true),
                     new KeyValuePair<string, bool>(nameof(FrameTransferValue), false),
@@ -439,8 +445,8 @@ namespace DIPOL_UF.ViewModels
                     new KeyValuePair<string, bool>(nameof(model.TriggerMode), true),
                     new KeyValuePair<string, bool>(nameof(model.ExposureTime), true),
                     new KeyValuePair<string, bool>(nameof(model.EMCCDGain),
-                        (AmplifierIndex >= 0)
-                        && Camera.Properties.OutputAmplifiers[AmplifierIndex].OutputAmplifier == OutputAmplification.Conventional)
+                        (OutputAmplifierIndex >= 0)
+                        && Camera.Properties.OutputAmplifiers[OutputAmplifierIndex].OutputAmplifier == OutputAmplification.Conventional)
                 }
                 );
         }
@@ -507,19 +513,13 @@ namespace DIPOL_UF.ViewModels
 
             if (dialog.ShowDialog() == true)
             {
+                //List<string> changedProps;
+
                 using (var fl = File.Open(dialog.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     model.Deserialize(fl);
 
-                var propNames =
-                    from prop in typeof(AcquisitionSettings)
-                        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    join allowedProp in AllowedSettings
-                    on PropNameTrimmer.Replace(prop.Name, "") equals allowedProp.Key
-                    where allowedProp.Value == true
-                    select prop.Name;
-
-                foreach (var prop in propNames)
-                    RaisePropertyChanged(prop);
+                //foreach (var prop i)
+                    //RaisePropertyChanged(prop);
                     
             }
 
@@ -545,22 +545,22 @@ namespace DIPOL_UF.ViewModels
         {
             base.OnPropertyChanged(sender, e);
 
-            if ((e.PropertyName == nameof(AmplifierIndex) ||
+            if ((e.PropertyName == nameof(OutputAmplifierIndex) ||
                  e.PropertyName == nameof(ADConverterIndex)) &&
                 (AllowedSettings[nameof(model.HSSpeed)]
                     = ADConverterIndex >= 0 &&
-                      AmplifierIndex >= 0))
+                      OutputAmplifierIndex >= 0))
             {
                 RaisePropertyChanged(nameof(PreAmpGainIndex));
                 RaisePropertyChanged(nameof(HSSpeedIndex));
                 RaisePropertyChanged(nameof(AvailableHSSpeeds));
             }
 
-            if ((e.PropertyName == nameof(AmplifierIndex) ||
+            if ((e.PropertyName == nameof(OutputAmplifierIndex) ||
                  e.PropertyName == nameof(ADConverterIndex) ||
                  e.PropertyName == nameof(HSSpeedIndex)) &&
                 (AllowedSettings[nameof(model.PreAmpGain)]
-                    = AmplifierIndex >= 0 &&
+                    = OutputAmplifierIndex >= 0 &&
                       ADConverterIndex >= 0 &&
                       HSSpeedIndex >= 0))
             {
@@ -578,10 +578,10 @@ namespace DIPOL_UF.ViewModels
                     AcquisitionModeValue != AcquisitionMode.FastKinetics;
             }
 
-            if (e.PropertyName == nameof(AmplifierIndex))
+            if (e.PropertyName == nameof(OutputAmplifierIndex))
             {
-                AllowedSettings[nameof(model.EMCCDGain)] = (AmplifierIndex >= 0) &&
-                    (Camera.Properties.OutputAmplifiers[AmplifierIndex].OutputAmplifier 
+                AllowedSettings[nameof(model.EMCCDGain)] = (OutputAmplifierIndex >= 0) &&
+                    (Camera.Properties.OutputAmplifiers[OutputAmplifierIndex].OutputAmplifier 
                     == OutputAmplification.Conventional);
                 RaisePropertyChanged(nameof(EMCCDGainValueText));
             }
@@ -590,6 +590,16 @@ namespace DIPOL_UF.ViewModels
 
         }
 
+        protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            base.OnModelPropertyChanged(sender, e);
+            var prop = PropertyList
+                .FirstOrDefault(item => item.Item1 == e.PropertyName);
+
+            if (prop.Item2 != null)
+                RaisePropertyChanged(prop.Item2.Name);
+                
+        }
 
         private void CloseView(object parameter, bool isCanceled)
         {
@@ -640,11 +650,11 @@ namespace DIPOL_UF.ViewModels
             // Query that joins pulic Properties to Allowed settings with true value.
             // As a result, propsQuery stores all Proprties that should have values set.
             var propsQuery =
-                from prop in (typeof(AcquisitionSettingsViewModel)
-                    .GetProperties(BindingFlags.Public | BindingFlags.Instance))
-                join allowedProp in AllowedSettings on PropNameTrimmer.Replace(prop.Name, "") equals allowedProp.Key
+                from prop in PropertyList
+                join allowedProp in AllowedSettings 
+                on prop.Item1 equals allowedProp.Key
                 where allowedProp.Value == true
-                select prop;
+                select prop.Item2;
 
             // Runs check of values on all selected properties.
             return propsQuery.All(ValueIsSet);

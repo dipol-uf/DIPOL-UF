@@ -23,7 +23,7 @@
                         MethodName="GetValues"
                         ObjectType="{x:Type sys:Enum}">
         <ObjectDataProvider.MethodParameters>
-            <x:Type TypeName="enm:VsAmplitude"/>
+            <x:Type TypeName="enm:VSAmplitude"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
 </ResourceDictionary>

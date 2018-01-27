@@ -230,11 +230,11 @@
                         <!--Amplifer-->
                         <ComboBox Grid.Row="4" Grid.Column="1"
                                   ItemsSource="{Binding 
-                                    Camera.Properties.Amplifiers, 
+                                    Camera.Properties.OutputAmplifiers, 
                                     Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
                                     ConverterParameter=Item1}"
                                   SelectedIndex="{Binding 
-                                    AmplifierIndex, 
+                                    OutputAmplifierIndex, 
                                     Mode=TwoWay, 
                                     UpdateSourceTrigger=PropertyChanged, 
                                     ValidatesOnNotifyDataErrors=True}">
@@ -244,14 +244,14 @@
                                 <Style.Triggers>
                                     <DataTrigger 
                                             Binding="{Binding 
-                                                HasErrorsOfProperties[AmplifierIndex], 
+                                                HasErrorsOfProperties[OutputAmplifierIndex], 
                                                 Mode=OneWay,
                                                 UpdateSourceTrigger=PropertyChanged}"
                                             Value="True">
                                         <Setter 
                                                 Property="ToolTip" 
                                                 Value="{Binding 
-                                                    LatestErrors[AmplifierIndex], 
+                                                    LatestErrors[OutptuAmplifierIndex], 
                                                     Mode=OneWay,
                                                     UpdateSourceTrigger=PropertyChanged}"/>
                                     </DataTrigger>
@@ -260,8 +260,8 @@
                             </ComboBox.Style>
                             <ComboBox.IsEnabled>
                                 <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                    <Binding Path="SupportedSettings[Amplifier]" Mode="OneTime"/>
-                                    <Binding Path="AllowedSettings[Amplifier]" 
+                                    <Binding Path="SupportedSettings[OutputAmplifier]" Mode="OneTime"/>
+                                    <Binding Path="AllowedSettings[OutputAmplifier]" 
                                              Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
                                 </MultiBinding>
                             </ComboBox.IsEnabled>
@@ -423,14 +423,14 @@
                                 </MultiBinding>
                             </CheckBox.IsEnabled>
                         </CheckBox>
-                        <!--Read mode-->
+                        <!--Readout mode-->
                         <ComboBox Grid.Row="9" Grid.Column="1"
                                   ItemsSource="{Binding
-                                    Path=AllowedReadModes,
+                                    Path=AllowedReadoutModes,
                                     Mode=OneWay,
                                     Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
                                   SelectedItem="{Binding
-                                    Path=ReadModeValue,
+                                    Path=ReadoutModeValue,
                                     Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged,
                                     Converter={StaticResource ResourceKey=EnumToDescriptionConverter}, 
@@ -441,14 +441,14 @@
                                     <Style.Triggers>
                                         <DataTrigger 
                                             Binding="{Binding 
-                                                HasErrorsOfProperties[ReadModeValue], 
+                                                HasErrorsOfProperties[ReadoutModeValue], 
                                                 Mode=OneWay,
                                                 UpdateSourceTrigger=PropertyChanged}"
                                             Value="True">
                                             <Setter 
                                                 Property="ToolTip" 
                                                 Value="{Binding 
-                                                    LatestErrors[ReadModeValue], 
+                                                    LatestErrors[ReadoutModeValue], 
                                                     Mode=OneWay,
                                                     UpdateSourceTrigger=PropertyChanged}"/>
                                         </DataTrigger>
@@ -457,8 +457,8 @@
                             </ComboBox.Style>
                             <ComboBox.IsEnabled>
                                 <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                    <Binding Path="SupportedSettings[ReadMode]" Mode="OneTime"/>
-                                    <Binding Path="AllowedSettings[ReadMode]" 
+                                    <Binding Path="SupportedSettings[ReadoutMode]" Mode="OneTime"/>
+                                    <Binding Path="AllowedSettings[ReadoutMode]" 
                                              Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
                                 </MultiBinding>
                             </ComboBox.IsEnabled>

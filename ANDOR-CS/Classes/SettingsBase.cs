@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.ComponentModel;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
@@ -34,7 +35,7 @@ using ANDOR_CS.Attributes;
 
 namespace ANDOR_CS.Classes
 {
-    public abstract class SettingsBase : IDisposable, IXmlSerializable
+    public abstract class SettingsBase : IDisposable, IXmlSerializable, INotifyPropertyChanged
     {
         private static readonly PropertyInfo[] SerializedProperties =
             typeof(SettingsBase)
@@ -54,7 +55,23 @@ namespace ANDOR_CS.Classes
 
         private static readonly Regex SetFnctionNameParser = new Regex(@"Set(.+)$");
 
-       
+        private (int Index, float Speed)? _VSSpeed;
+        private (int Index, float Speed)? _HSSpeed;
+        private (int Index, int BitDepth)? _ADConverter;
+        public VSAmplitude? _VSAmplitude;
+        public (OutputAmplification OutputAmplifier, string Name, int Index)? _OutputAmplifier;
+        public (int Index, string Name)? _PreAmpGain;
+        public AcquisitionMode? _AcquisitionMode;
+        public ReadMode? _ReadoutMode;
+        public TriggerMode? _TriggerMode;
+        public float? _ExposureTime;
+        public Rectangle? _ImageArea;
+        public (int Frames, float Time)? _AccumulateCycle;
+        public (int Frames, float Time)? _KineticCycle;
+        public int? _EMCCDGain;
+
+        public  event PropertyChangedEventHandler PropertyChanged;
+
         [Attributes.NonSerialized]
         public CameraBase Camera
         {
@@ -68,8 +85,12 @@ namespace ANDOR_CS.Classes
         [SerializationOrder(1)]
         public (int Index, float Speed)? VSSpeed
         {
-            get;
-            protected set;
+            get => _VSSpeed;
+            protected set
+            {
+                _VSSpeed = value;
+                RaisePropertyChanged();
+            }
         } 
 
         /// <summary>
@@ -78,8 +99,12 @@ namespace ANDOR_CS.Classes
         [SerializationOrder(5)]
         public (int Index, float Speed)? HSSpeed
         {
-            get;
-            protected set;
+            get => _HSSpeed;
+            protected set
+            {
+                _HSSpeed = value;
+                RaisePropertyChanged();
+            }
         } 
 
         /// <summary>
@@ -88,18 +113,26 @@ namespace ANDOR_CS.Classes
         [SerializationOrder(3)]
         public (int Index, int BitDepth)? ADConverter
         {
-            get;
-            protected set;
+            get => _ADConverter;
+            protected set
+            {
+                _ADConverter = value;
+                RaisePropertyChanged();
+            }
         } 
 
         /// <summary>
         /// Stores the value of currently set vertical clock voltage amplitude
         /// </summary>
         [SerializationOrder(2)]
-        public VsAmplitude? VsAmplitude
+        public VSAmplitude? VSAmplitude
         {
-            get;
-            protected set;
+            get => _VSAmplitude;
+            protected set
+            {
+                _VSAmplitude = value;
+                RaisePropertyChanged();
+            }
         } 
 
         /// <summary>
@@ -108,8 +141,12 @@ namespace ANDOR_CS.Classes
         [SerializationOrder(4)]
         public (OutputAmplification OutputAmplifier, string Name, int Index)? OutputAmplifier
         {
-            get;
-            protected set;
+            get => _OutputAmplifier;
+            protected set
+            {
+                _OutputAmplifier = value;
+                RaisePropertyChanged();
+            }
         } 
 
         /// <summary>
@@ -118,8 +155,12 @@ namespace ANDOR_CS.Classes
         [SerializationOrder(6)]
         public (int Index, string Name)? PreAmpGain
         {
-            get;
-            protected set;
+            get => _PreAmpGain;
+            protected set
+            {
+                _PreAmpGain = value;
+                RaisePropertyChanged();
+            }
         } 
 
         /// <summary>
@@ -128,8 +169,12 @@ namespace ANDOR_CS.Classes
         [SerializationOrder(7)]
         public AcquisitionMode? AcquisitionMode
         {
-            get;
-            protected set;
+            get => _AcquisitionMode;
+            protected set
+            {
+                _AcquisitionMode = value;
+                RaisePropertyChanged();
+            }
         } 
 
         /// <summary>
@@ -138,8 +183,12 @@ namespace ANDOR_CS.Classes
         [SerializationOrder(8)]
         public ReadMode? ReadoutMode
         {
-            get;
-            protected set;
+            get => _ReadoutMode;
+            protected set
+            {
+                _ReadoutMode = value;
+                RaisePropertyChanged();
+            }
         }
 
         /// <summary>
@@ -148,8 +197,12 @@ namespace ANDOR_CS.Classes
         [SerializationOrder(9)]
         public TriggerMode? TriggerMode
         {
-            get;
-            protected set;
+            get => _TriggerMode;
+            protected set
+            {
+                _TriggerMode = value;
+                RaisePropertyChanged();
+            }
         }
 
         /// <summary>
@@ -158,8 +211,12 @@ namespace ANDOR_CS.Classes
         [SerializationOrder(0)]
         public float? ExposureTime
         {
-            get;
-            protected set;
+            get => _ExposureTime;
+            protected set
+            {
+                _ExposureTime = value;
+                RaisePropertyChanged();
+            }
         } 
 
         /// <summary>
@@ -168,30 +225,53 @@ namespace ANDOR_CS.Classes
         [SerializationOrder(11)]
         public Rectangle? ImageArea
         {
-            get;
-            protected set;
+            get => _ImageArea;
+            protected set
+            {
+                _ImageArea = value;
+                RaisePropertyChanged();
+            }
         } 
 
         [SerializationOrder(12)]
         public (int Frames, float Time)? AccumulateCycle
         {
-            get;
-            protected set;
+            get => _AccumulateCycle;
+            protected set
+            {
+                _AccumulateCycle = value;
+                RaisePropertyChanged();
+            }
         } 
 
         [SerializationOrder(13)]
         public (int Frames, float Time)? KineticCycle
         {
-            get;
-            protected set;
+            get => _KineticCycle;
+            protected set
+            {
+                _KineticCycle = value;
+                RaisePropertyChanged();
+            }
         } 
 
         [SerializationOrder(10)]
         public int? EMCCDGain
         {
-            get;
-            protected set;
+            get => _EMCCDGain;
+            protected set
+            {
+                _EMCCDGain = value;
+                RaisePropertyChanged();
+            }
         }
+
+        protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+            => PropertyChanged?.Invoke(sender, e);
+
+        protected virtual void RaisePropertyChanged(
+            [CallerMemberName] string name = "")
+            => OnPropertyChanged(this, new PropertyChangedEventArgs(name));
 
         public abstract List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
             out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing);
@@ -231,13 +311,13 @@ namespace ANDOR_CS.Classes
         /// Camera may be not active.
         /// </summary>
         /// <param name="amplitude">New amplitude </param>
-        public virtual void SetVsAmplitude(VsAmplitude amplitude)
+        public virtual void SetVSAmplitude(VSAmplitude amplitude)
         {
             // Checks if Camera is OK
             CheckCamera();
 
             // Checks if Camera supports vertical clock voltage amplitude changes
-            VsAmplitude = Camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage)
+            VSAmplitude = Camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage)
                 ? amplitude
                 : throw new NotSupportedException("Camera does not support vertical clock voltage amplitude control.");
         }
@@ -649,10 +729,10 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        public virtual void Deserialize(Stream stream)
+        public virtual List<string> Deserialize(Stream stream)
         {
             using (var str = XmlReader.Create(stream))
-                ReadXml(str);
+                return ReadXml(str);
         }
 
         public virtual void Dispose()
@@ -663,8 +743,10 @@ namespace ANDOR_CS.Classes
         public XmlSchema GetSchema()
             => null;
 
-        public void ReadXml(XmlReader reader)
+        public List<string> ReadXml(XmlReader reader)
         {
+            var output = new List<string>(SerializedProperties.Length);
+
             var result = XmlParser.ReadXml(reader);
 
             if (result.Any(x => 
@@ -683,30 +765,46 @@ namespace ANDOR_CS.Classes
                     select new {regexName.Method, r.Key, r.Value})
                      
             {
-                var pars = item.Method.GetParameters();
-                if (item.Value is ITuple tuple &&
-                    pars.Length <= tuple.Length)
+                try
                 {
-                    var tupleVals = new object[pars.Length];
+                    var pars = item.Method.GetParameters();
+                    if (item.Value is ITuple tuple &&
+                        pars.Length <= tuple.Length)
+                    {
+                        var tupleVals = new object[pars.Length];
 
-                    if (pars.Where((t, i) => (tupleVals[i] = tuple[i]).GetType() != t.ParameterType).Any())
-                        throw new TargetParameterCountException(@"Setter method argumetn type does not match type of provided tuple item.");
+                        if (pars.Where((t, i) => (tupleVals[i] = tuple[i]).GetType() != t.ParameterType).Any())
+                            throw new TargetParameterCountException(@"Setter method argumetn type does not match type of provided tuple item.");
 
-                    item.Method.Invoke(this, tupleVals);
+                        item.Method.Invoke(this, tupleVals);
 
+                    }
+                    else if (pars.Length == 1 && pars[0].ParameterType == item.Value.GetType())
+                        item.Method.Invoke(this, new[] { item.Value });
+                    else
+                        throw new TargetParameterCountException(@"Setter method signature does not match provided parameters.");
                 }
-                else if (pars.Length == 1 && pars[0].ParameterType == item.Value.GetType())
-                    item.Method.Invoke(this, new[] { item.Value });
-                else
-                    throw new TargetParameterCountException(@"Setter method signature does not match provided parameters.");
-                
+                catch (TargetInvocationException)
+                { 
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+
+                output.Add(item.Key);
             }
-                    
+
+            return output;
 
         }
 
         public void WriteXml(XmlWriter writer)
             => XmlParser.WriteXml(writer, this);
 
+        void IXmlSerializable.ReadXml(XmlReader reader)
+        {
+            ReadXml(reader);
+        }
     }   
 }
