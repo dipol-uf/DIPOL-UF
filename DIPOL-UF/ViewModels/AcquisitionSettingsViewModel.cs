@@ -526,19 +526,24 @@ namespace DIPOL_UF.ViewModels
             dialog.Filter = $@"Acquisition settings (*{dialog.DefaultExt})|*{dialog.DefaultExt}|All files (*.*)|*.*";
 
             if (dialog.ShowDialog() == true)
-                try
+                Task.Run(() =>
                 {
-                    using (var fl = File.Open(dialog.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                        model.Deserialize(fl);
-                }
-                catch (Exception e)
-                {
-                    var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
-                    MessageBox.Show($"An error occured while reading acquisition settings from {dialog.FileName}.\n" +
-                                    $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
-                        "Unable to load file", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-                }
-
+                    try
+                    {
+                        using (var fl = File.Open(dialog.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                            model.Deserialize(fl);
+                    }
+                    catch (Exception e)
+                    {
+                        var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            MessageBox.Show($"An error occured while reading acquisition settings from {dialog.FileName}.\n" +
+                                            $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
+                                "Unable to load file", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                        });
+                    }
+                });
         }
 
         private void ValidateProperty(Exception e = null,
@@ -615,10 +620,12 @@ namespace DIPOL_UF.ViewModels
                 .FirstOrDefault(item => item.Item1 == e.PropertyName);
 
             if (prop.Item2 != null)
-                RaisePropertyChanged(prop.Item2.Name);
+               Application.Current.Dispatcher
+                    .Invoke(() => RaisePropertyChanged(prop.Item2.Name));
 
             if (e.PropertyName == nameof(model.AcquisitionMode))
-                RaisePropertyChanged(nameof(FrameTransferValue));
+                Application.Current.Dispatcher
+                   .Invoke(() => RaisePropertyChanged(nameof(FrameTransferValue)));
         }
 
         private void CloseView(object parameter, bool isCanceled)
