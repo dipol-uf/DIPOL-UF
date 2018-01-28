@@ -85,23 +85,23 @@ namespace DIPOL_UF.ViewModels
             .Where(ANDOR_CS.Classes.EnumConverter.IsTriggerModeSupported)
             .ToArray();
 
-        public List<(int Index, float Speed)> AvailableHSSpeeds =>
+        public (int Index, float Speed)[] AvailableHSSpeeds =>
             (ADConverterIndex < 0 || OutputAmplifierIndex < 0)
             ? null
             : model
             .GetAvailableHSSpeeds(ADConverterIndex, OutputAmplifierIndex)
-            .ToList();
-        public List<(int Index, string Name)> AvailablePreAmpGains =>
+            .ToArray();
+        public (int Index, string Name)[] AvailablePreAmpGains =>
             (ADConverterIndex < 0 || OutputAmplifierIndex < 0 || HSSpeedIndex < 0)
             ? null
             : model
             .GetAvailablePreAmpGain(ADConverterIndex,
                 OutputAmplifierIndex, HSSpeedIndex)
-            .ToList();
+            .ToArray();
 
-        public List<int> AvailableEMCCDGains =>
+        public int[] AvailableEMCCDGains =>
             Enumerable.Range(Camera.Properties.EMCCDGainRange.Low, Camera.Properties.EMCCDGainRange.High)
-            .ToList();
+            .ToArray();
 
         /// <summary>
         /// Index of VS Speed.
@@ -232,7 +232,13 @@ namespace DIPOL_UF.ViewModels
         /// </summary>
         public AcquisitionMode? AcquisitionModeValue
         {
-            get => model.AcquisitionMode;
+            get
+            {
+                if (model.AcquisitionMode?.HasFlag(AcquisitionMode.FrameTransfer) ?? false)
+                    return model.AcquisitionMode ^ AcquisitionMode.FrameTransfer;
+                else
+                    return model.AcquisitionMode;
+            }
             set
             {
                 try
@@ -581,13 +587,15 @@ namespace DIPOL_UF.ViewModels
             if (e.PropertyName == nameof(AcquisitionModeValue) &&
                 AcquisitionModeValue.HasValue)
             {
-                FrameTransferValue = false;
-                RaisePropertyChanged(nameof(FrameTransferValue));
                 AllowedSettings[nameof(FrameTransferValue)] =
                     AcquisitionModeValue != AcquisitionMode.SingleScan &&
                     AcquisitionModeValue != AcquisitionMode.FastKinetics;
+                if (!AllowedSettings[nameof(FrameTransferValue)])
+                {
+                    FrameTransferValue = false;
+                    //RaisePropertyChanged(nameof(FrameTransferValue));
+                }
             }
-
             if (e.PropertyName == nameof(OutputAmplifierIndex))
             {
                 AllowedSettings[nameof(model.EMCCDGain)] = (OutputAmplifierIndex >= 0) &&
@@ -608,7 +616,9 @@ namespace DIPOL_UF.ViewModels
 
             if (prop.Item2 != null)
                 RaisePropertyChanged(prop.Item2.Name);
-                
+
+            if (e.PropertyName == nameof(model.AcquisitionMode))
+                RaisePropertyChanged(nameof(FrameTransferValue));
         }
 
         private void CloseView(object parameter, bool isCanceled)
@@ -618,7 +628,6 @@ namespace DIPOL_UF.ViewModels
                 var window = Helper.FindParentOfType<Window>(elem);
                 if (window != null && Helper.IsDialogWindow(window))
                 {
-                    window.DialogResult = !isCanceled;
                     if (!isCanceled)
                     {
                         try
@@ -659,6 +668,7 @@ namespace DIPOL_UF.ViewModels
                     }
 
 
+                    window.DialogResult = !isCanceled;
                     window.Close();
                 }
 
