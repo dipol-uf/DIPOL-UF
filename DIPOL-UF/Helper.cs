@@ -147,7 +147,7 @@ namespace DIPOL_UF
         {
             // Retrieves string representation of the enum value
             string fieldName = Enum.GetName(enumType, enumValue);
-
+            
             // Which corresponds to field name of Enum-derived class
             var descriptionAttr = enumType
                 .GetField(fieldName)

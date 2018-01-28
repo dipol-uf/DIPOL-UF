@@ -260,7 +260,6 @@
   <ItemGroup>
     <Folder Include="Bindings\" />
     <Folder Include="Interfaces\" />
-    <Folder Include="UnitTests\" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">

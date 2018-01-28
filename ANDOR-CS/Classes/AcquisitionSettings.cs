@@ -251,7 +251,7 @@ namespace ANDOR_CS.Classes
 
                     result = Call(handle, SDKInstance.SetKineticCycleTime, KineticCycle.Value.Time);
                     //ThrowIfError(result, nameof(SDKInstance.SetKineticCycleTime));
-                    output.Add(((nameof(AccumulateCycle) + "Time", result == SDK.DRV_SUCCESS, result));
+                    output.Add((nameof(AccumulateCycle) + "Time", result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (EMCCDGain.HasValue)
