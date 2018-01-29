@@ -725,7 +725,7 @@ namespace ANDOR_CS.Classes
 
             // If there is no acquisition, throws exception
             if (!IsAcquiring)
-                throw new AndorSdkException("Acquisition abort attemted while there is no acquisition in proress.", null);
+                throw new AndorSdkException("Acquisition abort atemted while there is no acquisition in proress.", null);
 
             //if (IsAsyncAcquisition)
             //    throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");

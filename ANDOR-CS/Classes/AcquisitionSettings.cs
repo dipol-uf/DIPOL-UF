@@ -280,9 +280,10 @@ namespace ANDOR_CS.Classes
                     (ExposureTime: expTime, AccumulationCycleTime: accTime, KineticCycleTime: kinTime, BufferSize: size
                     );
 
-                Camera.CurrentSettings = this;
+            //Camera.CurrentSettings = this;
+            base.ApplySettings(out _);
 
-                return output;
+            return output;
             
         }
 

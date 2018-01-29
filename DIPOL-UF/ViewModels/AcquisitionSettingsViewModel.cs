@@ -851,7 +851,7 @@ namespace DIPOL_UF.ViewModels
                 select prop.Item2;
 
             // Runs check of values on all selected properties.
-            return propsQuery.All(ValueIsSet);
+            return propsQuery.All(ValueIsSet) && propsQuery.Any();
         }
     }
 }

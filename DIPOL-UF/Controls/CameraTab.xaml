@@ -15,6 +15,8 @@
             <RowDefinition Height="250"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="3*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -264,7 +266,6 @@
                        Text="External"/>
             <ComboBox Grid.Column="1" Grid.Row="0"
                       FontSize="{StaticResource ResourceKey=SmallFontSize}"
-                      IsEnabled="{Binding Value.CanControlShutter}"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       ItemsSource="{Binding 
                         Source={StaticResource ResourceKey=ShutterModeEnumProvider},
@@ -273,7 +274,14 @@
                         Value.InternalShutterState, 
                         Mode=TwoWay, 
                         UpdateSourceTrigger=PropertyChanged,
-                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"/>
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}">
+                <ComboBox.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="Value.IsNotAcquiring" Mode="OneWay"/>
+                        <Binding Path="Value.CanControlShutter" Mode="OneWay"/>
+                    </MultiBinding>
+                </ComboBox.IsEnabled>
+            </ComboBox>
             <ComboBox Grid.Column="1" Grid.Row="1"
                       FontSize="{StaticResource ResourceKey=SmallFontSize}"
                       IsEnabled="{Binding Value.CanControlInternalExternalShutter}"
@@ -287,12 +295,37 @@
                         Source={StaticResource ResourceKey=ShutterModeEnumProvider},
                         Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"/>
         </Grid>
-        <Grid Grid.Column="2" Grid.Row="4" VerticalAlignment="Top">
-            <Button
-                Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                Content="Acq. Settings"
-                Command="{Binding Value.SetUpAcquisitionCommand}"
-                />
-        </Grid>
+        <Button  Grid.Column="2" Grid.Row="4" 
+                 VerticalAlignment="Center" HorizontalAlignment="Center"
+            Style="{StaticResource ResourceKey=BasicButtonStyle}"
+            Content="Acq. Settings"
+            Command="{Binding Value.SetUpAcquisitionCommand}"
+            />
+        <Button Grid.Column="2" Grid.Row="5"
+                VerticalAlignment="Center" HorizontalAlignment="Center"
+                Command="{Binding Value.ControlAcquisitionCommand}"
+                >
+            <Button.Style>
+                <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Value.IsAcquiring, Mode=OneWay}" Value="True">
+                            <Setter Property="Content" Value="Stop Imaging"/>
+                            <Setter Property="Button.Background" 
+                                            Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
+                            <Setter Property="Button.Foreground" 
+                                            Value="{StaticResource ResourceKey=NegativeEffectButtonForegroundColor}"/>
+                        </DataTrigger>
+                        <DataTrigger  Binding="{Binding Value.IsAcquiring, Mode=OneWay}" Value="False" >
+                            <Setter Property="Content" Value="Start Imaging"/>
+                            <Setter Property="Button.Background" 
+                                            Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>
+                            <Setter Property="Button.Foreground" 
+                                            Value="{StaticResource ResourceKey=PositiveEffectButtonForegroundColor}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+        <Grid Grid.Column="3" Grid.Row="4" Grid.RowSpan="2"></Grid>
     </Grid>
 </UserControl>
