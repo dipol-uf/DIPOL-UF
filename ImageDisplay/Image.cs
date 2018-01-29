@@ -16,8 +16,9 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Runtime.Serialization;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace ImageDisplayLib
@@ -25,8 +26,9 @@ namespace ImageDisplayLib
     [DataContract]
     public class Image
     {
-        private static readonly int MaxImageSingleThreadSize = 512 * 768;
-        private static readonly TypeCode[] allowedTypes =
+        private const int MaxImageSingleThreadSize = 512 * 768;
+
+        private static readonly TypeCode[] AllowedTypes =
          {
             TypeCode.Double,
             TypeCode.Single,
@@ -37,18 +39,18 @@ namespace ImageDisplayLib
         };
 
         [DataMember]
-        private volatile bool IsParallelEnabled = true;
+        private volatile bool _isParallelEnabled = true;
 
         [DataMember]
-        private Array baseArray;
+        private Array _baseArray;
 
         [DataMember]
-        private TypeCode typeCode;
+        private TypeCode _typeCode;
 
-        public static System.Collections.Generic.IReadOnlyCollection<TypeCode> AllowedTypes
-            => allowedTypes as System.Collections.Generic.IReadOnlyCollection<TypeCode>;
+        public static IReadOnlyCollection<TypeCode> AllowedPixelTypes
+            => Array.AsReadOnly(AllowedTypes);
 
-        public TypeCode UnderlyingType => typeCode;
+        public TypeCode UnderlyingType => _typeCode;
 
         [DataMember]
         public int Width
@@ -65,54 +67,58 @@ namespace ImageDisplayLib
 
         public object this[int i, int j]
         {
-            get => baseArray.GetValue(i * Width + j);
-            set => baseArray.SetValue(value, i * Width + j);
+            get => _baseArray.GetValue(i * Width + j);
+            set => _baseArray.SetValue(value, i * Width + j);
         }
 
         public T Get<T>(int i, int j)
-            => ((T[])baseArray)[i * Width + j];
+            => ((T[])_baseArray)[i * Width + j];
         public void Set<T>(T value, int i, int j)
-            => ((T[])baseArray)[i * Width + j] = value;
+            => ((T[])_baseArray)[i * Width + j] = value;
 
         public Image(Array initialArray, int width, int height)
         {
-            object val = initialArray.GetValue(0);
+            var val = initialArray.GetValue(0);
 
             if (!AllowedTypes.Contains(Type.GetTypeCode(val.GetType())))
                 throw new ArgumentException($"Provided array's base type {val.GetType()} is not allowed.");
 
-            switch (val)
-            {
-                case UInt32 x:
-                    baseArray = new UInt32[width * height];
-                    typeCode = TypeCode.UInt32;
-                    break;
-                case Int32 x:
-                    baseArray = new Int32[width * height];
-                    typeCode = TypeCode.Int32;
-                    break;
-                case UInt16 x:
-                    baseArray = new UInt16[width * height];
-                    typeCode = TypeCode.UInt16;
-                    break;
-                case Int16 x:
-                    baseArray = new Int16[width * height];
-                    typeCode = TypeCode.Int16;
-                    break;
-                case Single x:
-                    baseArray = new Single[width * height];
-                    typeCode = TypeCode.Single;
-                    break;
-                case Double x:
-                    baseArray = new Double[width * height];
-                    typeCode = TypeCode.Double;
-                    break;
-                default:
-                    throw new Exception();
-            }
+            //switch (val)
+            //{
+            //    case uint x:
+            //        _baseArray = new uint[width * height];
+            //        //_typeCode = TypeCode.UInt32;
+            //        break;
+            //    case int x:
+            //        _baseArray = new int[width * height];
+            //        //_typeCode = TypeCode.Int32;
+            //        break;
+            //    case ushort x:
+            //        _baseArray = new ushort[width * height];
+            //        //_typeCode = TypeCode.UInt16;
+            //        break;
+            //    case short x:
+            //        _baseArray = new short[width * height];
+            //        //_typeCode = TypeCode.Int16;
+            //        break;
+            //    case float x:
+            //        _baseArray = new float[width * height];
+            //        //_typeCode = TypeCode.Single;
+            //        break;
+            //    case double x:
+            //        _baseArray = new double[width * height];
+            //        //_typeCode = TypeCode.Double;
+            //        break;
+            //    default:
+            //        throw new NotSupportedException();
+            //}
 
-            Array.Copy(initialArray, baseArray, width * height);
+            _typeCode = Type.GetTypeCode(val.GetType());
+            if (!AllowedTypes.Contains(_typeCode))
+                throw new ArgumentException();
 
+            _baseArray = Array.CreateInstance(val.GetType(), width * height);
+            Array.Copy(initialArray, _baseArray, width * height);
             Width = width;
             Height = height;
         }
@@ -125,83 +131,62 @@ namespace ImageDisplayLib
             if (!AllowedTypes.Contains(type))
                 throw new ArgumentException($"Specified type {type} is not allowed.");
 
-            int size = 0;
-
-
-            if (type == TypeCode.UInt16)
+            int size;
+           
+            _typeCode = type;
+            var tp = Type.GetType("System." + _typeCode, true, true) ?? throw new ArgumentException();
+            _baseArray = Array.CreateInstance(tp, width * height);
+            switch (type)
             {
-                size = sizeof(UInt16);
-                baseArray = new UInt16[width * height];
-                Width = width;
-                Height = height;
-                this.typeCode = type;
+                case TypeCode.UInt16:
+                    size = sizeof(ushort);
 
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Set<UInt16>(BitConverter.ToUInt16(initialArray, (i * width + j) * size), i, j);
-            }
-            else if (type == TypeCode.Int16)
-            {
-                size = sizeof(Int16);
-                baseArray = new Int16[width * height];
-                Width = width;
-                Height = height;
-                this.typeCode = type;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Set(BitConverter.ToUInt16(initialArray, (i * width + j) * size), i, j);
+                    break;
+                case TypeCode.Int16:
+                    size = sizeof(short);
 
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Set<Int16>(BitConverter.ToInt16(initialArray, (i * width + j) * size), i, j);
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Set(BitConverter.ToInt16(initialArray, (i * width + j) * size), i, j);
+                    break;
+                case TypeCode.UInt32:
+                    size = sizeof(uint);
+                    
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Set(BitConverter.ToUInt32(initialArray, (i * width + j) * size), i, j);
+                    break;
+                case TypeCode.Int32:
+                    size = sizeof(int);
+                   
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Set(BitConverter.ToInt32(initialArray, (i * width + j) * size), i, j);
+                    break;
+                case TypeCode.Single:
+                    size = sizeof(float);
+                   
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Set(BitConverter.ToSingle(initialArray, (i * width + j) * size), i, j);
+                    break;
+                case TypeCode.Double:
+                    size = sizeof(double);
+                   
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Set(BitConverter.ToDouble(initialArray, (i * width + j) * size), i, j);
+                    break;
+                default:
+                    throw new NotSupportedException();
             }
-            else if (type == TypeCode.UInt32)
-            {
-                size = sizeof(UInt32);
-                baseArray = new UInt32[width * height];
-                Width = width;
-                Height = height;
-                this.typeCode = type;
 
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Set<UInt32>(BitConverter.ToUInt32(initialArray, (i * width + j) * size), i, j);
-            }
-            else if (type == TypeCode.Int32)
-            {
-                size = sizeof(Int32);
-                baseArray = new Int32[width * height];
-                Width = width;
-                Height = height;
-                this.typeCode = type;
+            Width = width;
+            Height = height;
 
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Set<Int32>(BitConverter.ToInt32(initialArray, (i * width + j) * size), i, j);
-            }
-            else if (type == TypeCode.Single)
-            {
-                size = sizeof(Single);
-                baseArray = new Single[width * height];
-                Width = width;
-                Height = height;
-                this.typeCode = type;
-
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Set<Single>(BitConverter.ToSingle(initialArray, (i * width + j) * size), i, j);
-            }
-            else if (type == TypeCode.Double)
-            {
-                size = sizeof(Double);
-                baseArray = new Double[width * height];
-                Width = width;
-                Height = height;
-                this.typeCode = type;
-
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Set<Double>(BitConverter.ToDouble(initialArray, (i * width + j) * size), i, j);
-            }
-            else
-                throw new Exception();
         }
 
         public byte[] GetBytes()
@@ -209,55 +194,65 @@ namespace ImageDisplayLib
             //var size = System.Runtime.InteropServices.Marshal.SizeOf(this[0, 0]);
 
             byte[] byteArray;
-            if (typeCode == TypeCode.UInt16)
+            switch (_typeCode)
             {
-                int size = sizeof(UInt16);
-                byteArray = new byte[Width * Height * size];
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<UInt16>(i, j)), 0, byteArray, (i * Width + j) * size, size);
+                case TypeCode.UInt16:
+                {
+                    const int size = sizeof(ushort);
+                    byteArray = new byte[Width * Height * size];
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Array.Copy(BitConverter.GetBytes(Get<ushort>(i, j)), 0, byteArray, (i * Width + j) * size, size);
+                    break;
+                }
+                case TypeCode.Int16:
+                {
+                    const int size = sizeof(short);
+                    byteArray = new byte[Width * Height * size];
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Array.Copy(BitConverter.GetBytes(Get<short>(i, j)), 0, byteArray, (i * Width + j) * size, size);
+                    break;
+                }
+                case TypeCode.UInt32:
+                {
+                    const int size = sizeof(uint);
+                    byteArray = new byte[Width * Height * size];
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Array.Copy(BitConverter.GetBytes(Get<uint>(i, j)), 0, byteArray, (i * Width + j) * size, size);
+                    break;
+                }
+                case TypeCode.Int32:
+                {
+                    const int size = sizeof(int);
+                    byteArray = new byte[Width * Height * size];
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Array.Copy(BitConverter.GetBytes(Get<int>(i, j)), 0, byteArray, (i * Width + j) * size, size);
+                    break;
+                }
+                case TypeCode.Single:
+                {
+                    const int size = sizeof(float);
+                    byteArray = new byte[Width * Height * size];
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Array.Copy(BitConverter.GetBytes(Get<float>(i, j)), 0, byteArray, (i * Width + j) * size, size);
+                    break;
+                }
+                case TypeCode.Double:
+                {
+                    const int size = sizeof(double);
+                    byteArray = new byte[Width * Height * size];
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        Array.Copy(BitConverter.GetBytes(Get<double>(i, j)), 0, byteArray, (i * Width + j) * size, size);
+                    break;
+                }
+                default:
+                    throw new NotSupportedException();
             }
-            else if (typeCode == TypeCode.Int16)
-            {
-                int size = sizeof(Int16);
-                byteArray = new byte[Width * Height * size];
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<Int16>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-            }
-            else if (typeCode == TypeCode.UInt32)
-            {
-                int size = sizeof(UInt32);
-                byteArray = new byte[Width * Height * size];
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<UInt32>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-            }
-            else if (typeCode == TypeCode.Int32)
-            {
-                int size = sizeof(Int32);
-                byteArray = new byte[Width * Height * size];
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<Int32>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-            }
-            else if (typeCode == TypeCode.Single)
-            {
-                int size = sizeof(Single);
-                byteArray = new byte[Width * Height * size];
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<Single>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-            }
-            else if (typeCode == TypeCode.Double)
-            {
-                int size = sizeof(Double);
-                byteArray = new byte[Width * Height * size];
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<Double>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-            }
-            else throw new Exception();
 
 
             return byteArray;
@@ -265,75 +260,85 @@ namespace ImageDisplayLib
 
         public object Max()
         {
-            object max = null;
+            object max;
 
-            if (typeCode == TypeCode.UInt16)
+            switch (_typeCode)
             {
-                UInt16 localMax = UInt16.MinValue;
-                UInt16 localVal = localMax;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<UInt16>(i, j)) > localMax)
+                case TypeCode.UInt16:
+                {
+                    var localMax = ushort.MinValue;
+                    ushort localVal;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if ((localVal = Get<ushort>(i, j)) > localMax)
                             localMax = localVal;
 
-                max = localMax;
-            }
-            else if (typeCode == TypeCode.Int16)
-            {
-                Int16 localMax = Int16.MinValue;
-                Int16 localVal = localMax;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<Int16>(i, j)) > localMax)
+                    max = localMax;
+                    break;
+                }
+                case TypeCode.Int16:
+                {
+                    var localMax = short.MinValue;
+                    short localVal;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if ((localVal = Get<short>(i, j)) > localMax)
                             localMax = localVal;
 
-                max = localMax;
-            }
-            else if (typeCode == TypeCode.UInt32)
-            {
-                UInt32 localMax = UInt32.MinValue;
-                UInt32 localVal = localMax;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<UInt32>(i, j)) > localMax)
+                    max = localMax;
+                    break;
+                }
+                case TypeCode.UInt32:
+                {
+                    var localMax = uint.MinValue;
+                    uint localVal;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if ((localVal = Get<uint>(i, j)) > localMax)
                             localMax = localVal;
 
-                max = localMax;
-            }
-            else if (typeCode == TypeCode.Int32)
-            {
-                Int32 localMax = Int32.MinValue;
-                Int32 localVal = localMax;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<Int32>(i, j)) > localMax)
+                    max = localMax;
+                    break;
+                }
+                case TypeCode.Int32:
+                {
+                    var localMax = int.MinValue;
+                    int localVal;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if ((localVal = Get<int>(i, j)) > localMax)
                             localMax = localVal;
 
-                max = localMax;
-            }
-            else if (typeCode == TypeCode.Single)
-            {
-                Single localMax = Single.MinValue;
-                Single localVal = localMax;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<Single>(i, j)) > localMax)
+                    max = localMax;
+                    break;
+                }
+                case TypeCode.Single:
+                {
+                    var localMax = float.MinValue;
+                    float localVal;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if ((localVal = Get<float>(i, j)) > localMax)
                             localMax = localVal;
 
-                max = localMax;
-            }
-            else if (typeCode == TypeCode.Double)
-            {
-                Double localMax = Double.MinValue;
-                Double localVal = localMax;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<Double>(i, j)) > localMax)
+                    max = localMax;
+                    break;
+                }
+                case TypeCode.Double:
+                {
+                    var localMax = double.MinValue;
+                    double localVal;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if ((localVal = Get<double>(i, j)) > localMax)
                             localMax = localVal;
 
-                max = localMax;
+                    max = localMax;
+                    break;
+                }
+                default:
+                    throw new NotSupportedException();
             }
-            else throw new Exception();
 
 
 
@@ -342,77 +347,85 @@ namespace ImageDisplayLib
 
         public object Min()
         {
-            var enm = baseArray.GetEnumerator();
+            object min;
 
-            object min = null;
-
-            if (typeCode == TypeCode.UInt16)
+            switch (_typeCode)
             {
-                UInt16 localMin = UInt16.MaxValue;
-                UInt16 localVal = localMin;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<UInt16>(i, j)) < localMin)
-                            localMin = localVal;
+                case TypeCode.UInt16:
+                    {
+                        var localMin = ushort.MinValue;
+                        ushort localVal;
+                        for (var i = 0; i < Height; i++)
+                            for (var j = 0; j < Width; j++)
+                                if ((localVal = Get<ushort>(i, j)) < localMin)
+                                    localMin = localVal;
 
-                min = localMin;
-            }
-            else if (typeCode == TypeCode.Int16)
-            {
-                Int16 localMin = Int16.MaxValue;
-                Int16 localVal = localMin;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<Int16>(i, j)) < localMin)
-                            localMin = localVal;
+                        min = localMin;
+                        break;
+                    }
+                case TypeCode.Int16:
+                    {
+                        var localMin = short.MinValue;
+                        short localVal;
+                        for (var i = 0; i < Height; i++)
+                            for (var j = 0; j < Width; j++)
+                                if ((localVal = Get<short>(i, j)) < localMin)
+                                    localMin = localVal;
 
-                min = localMin;
-            }
-            else if (typeCode == TypeCode.Int32)
-            {
-                Int32 localMin = Int32.MaxValue;
-                Int32 localVal = localMin;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<Int32>(i, j)) < localMin)
-                            localMin = localVal;
+                        min = localMin;
+                        break;
+                    }
+                case TypeCode.UInt32:
+                    {
+                        var localMin = uint.MinValue;
+                        uint localVal;
+                        for (var i = 0; i < Height; i++)
+                            for (var j = 0; j < Width; j++)
+                                if ((localVal = Get<uint>(i, j)) < localMin)
+                                    localMin = localVal;
 
-                min = localMin;
-            }
-            else if (typeCode == TypeCode.UInt32)
-            {
-                UInt32 localMin = UInt32.MaxValue;
-                UInt32 localVal = localMin;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<UInt32>(i, j)) < localMin)
-                            localMin = localVal;
+                        min = localMin;
+                        break;
+                    }
+                case TypeCode.Int32:
+                    {
+                        var localMin = int.MinValue;
+                        int localVal;
+                        for (var i = 0; i < Height; i++)
+                            for (var j = 0; j < Width; j++)
+                                if ((localVal = Get<int>(i, j)) < localMin)
+                                    localMin = localVal;
 
-                min = localMin;
-            }
-            else if (typeCode == TypeCode.Single)
-            {
-                Single localMin = Single.MaxValue;
-                Single localVal = localMin;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<Single>(i, j)) < localMin)
-                            localMin = localVal;
+                        min = localMin;
+                        break;
+                    }
+                case TypeCode.Single:
+                    {
+                        var localMin = float.MinValue;
+                        float localVal;
+                        for (var i = 0; i < Height; i++)
+                            for (var j = 0; j < Width; j++)
+                                if ((localVal = Get<float>(i, j)) < localMin)
+                                    localMin = localVal;
 
-                min = localMin;
-            }
-            else if (typeCode == TypeCode.Double)
-            {
-                Double localMin = Double.MaxValue;
-                Double localVal = localMin;
-                for (int i = 0; i < Height; i++)
-                    for (int j = 0; j < Width; j++)
-                        if ((localVal = Get<Double>(i, j)) < localMin)
-                            localMin = localVal;
+                        min = localMin;
+                        break;
+                    }
+                case TypeCode.Double:
+                    {
+                        var localMin = double.MinValue;
+                        double localVal;
+                        for (var i = 0; i < Height; i++)
+                            for (var j = 0; j < Width; j++)
+                                if ((localVal = Get<double>(i, j)) < localMin)
+                                    localMin = localVal;
 
-                min = localMin;
+                        min = localMin;
+                        break;
+                    }
+                default:
+                    throw new NotSupportedException();
             }
-            else throw new Exception();
 
 
 
@@ -420,216 +433,234 @@ namespace ImageDisplayLib
         }
 
         public Image Copy()
-            => new Image(baseArray, Width, Height);
+            => new Image(_baseArray, Width, Height);
 
         public void CopyTo(Image im)
         {
-            if (im.typeCode != typeCode || im.baseArray.Length != baseArray.Length)
-                im.baseArray = Array.CreateInstance(
-                    Type.GetType("System." + typeCode.ToString(), true, true),
-                    baseArray.Length);
+            if (im._typeCode != _typeCode || im._baseArray.Length != _baseArray.Length)
+                im._baseArray = Array.CreateInstance(
+                    Type.GetType("System." + _typeCode, true, true) ?? throw new ArgumentException(),
+                    _baseArray.Length);
 
-            Array.Copy(baseArray, im.baseArray, baseArray.Length);
+            Array.Copy(_baseArray, im._baseArray, _baseArray.Length);
 
             im.Width = Width;
             im.Height = Height;
-            im.typeCode = typeCode;
+            im._typeCode = _typeCode;
         }
 
         public void Clamp(double low, double high)
         {
-            if (typeCode == TypeCode.UInt16)
+            switch (_typeCode)
             {
-                UInt16 locLow = (UInt16)(Math.Floor(low));
-                UInt16 locHigh = (UInt16)(Math.Ceiling(high));
-                for (int i = 0; i < this.Height; i++)
-                    for (int j = 0; j < this.Width; j++)
-                        if (this.Get<UInt16>(i, j) < locLow)
-                            this.Set<UInt16>(locLow, i, j);
-                        else if (this.Get<UInt16>(i, j) > locHigh)
-                            this.Set<UInt16>(locHigh, i, j);
+                case TypeCode.UInt16:
+                {
+                    var locLow = (ushort)(Math.Floor(low));
+                    var locHigh = (ushort)(Math.Ceiling(high));
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if (Get<ushort>(i, j) < locLow)
+                            Set(locLow, i, j);
+                        else if (Get<ushort>(i, j) > locHigh)
+                            Set(locHigh, i, j);
+                    break;
+                }
+                case TypeCode.Int16:
+                {
+                    var locLow = (short)(Math.Floor(low));
+                    var locHigh = (short)(Math.Ceiling(high));
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if (Get<short>(i, j) < locLow)
+                            Set(locLow, i, j);
+                        else if (Get<short>(i, j) > locHigh)
+                            Set(locHigh, i, j);
+                    break;
+                }
+                case TypeCode.UInt32:
+                {
+                    var locLow = (uint)(Math.Floor(low));
+                    var locHigh = (uint)(Math.Ceiling(high));
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if (Get<uint>(i, j) < locLow)
+                            Set(locLow, i, j);
+                        else if (Get<uint>(i, j) > locHigh)
+                            Set(locHigh, i, j);
+                    break;
+                }
+                case TypeCode.Int32:
+                {
+                    var locLow = (int)(Math.Floor(low));
+                    var locHigh = (int)(Math.Ceiling(high));
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if (Get<int>(i, j) < locLow)
+                            Set(locLow, i, j);
+                        else if (Get<int>(i, j) > locHigh)
+                            Set(locHigh, i, j);
+                    break;
+                }
+                case TypeCode.Single:
+                {
+                    var locLow = (float)(low);
+                    var locHigh = (float)(high);
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if (Get<float>(i, j) < locLow)
+                            Set(locLow, i, j);
+                        else if (Get<float>(i, j) > locHigh)
+                            Set(locHigh, i, j);
+                    break;
+                }
+                case TypeCode.Double:
+                {
+                    var locLow = low;
+                    var locHigh = high;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        if (Get<double>(i, j) < locLow)
+                            Set(locLow, i, j);
+                        else if (Get<double>(i, j) > locHigh)
+                            Set(locHigh, i, j);
+                    break;
+                }
+                default:
+                    throw new NotSupportedException();
             }
-            else if (typeCode == TypeCode.Int16)
-            {
-                Int16 locLow = (Int16)(Math.Floor(low));
-                Int16 locHigh = (Int16)(Math.Ceiling(high));
-                for (int i = 0; i < this.Height; i++)
-                    for (int j = 0; j < this.Width; j++)
-                        if (this.Get<Int16>(i, j) < locLow)
-                            this.Set<Int16>(locLow, i, j);
-                        else if (this.Get<Int16>(i, j) > locHigh)
-                            this.Set<Int16>(locHigh, i, j);
-            }
-            else if (typeCode == TypeCode.UInt32)
-            {
-                UInt32 locLow = (UInt32)(Math.Floor(low));
-                UInt32 locHigh = (UInt32)(Math.Ceiling(high));
-                for (int i = 0; i < this.Height; i++)
-                    for (int j = 0; j < this.Width; j++)
-                        if (this.Get<UInt32>(i, j) < locLow)
-                            this.Set<UInt32>(locLow, i, j);
-                        else if (this.Get<UInt32>(i, j) > locHigh)
-                            this.Set<UInt32>(locHigh, i, j);
-            }
-            else if (typeCode == TypeCode.Int32)
-            {
-                Int32 locLow = (Int32)(Math.Floor(low));
-                Int32 locHigh = (Int32)(Math.Ceiling(high));
-                for (int i = 0; i < this.Height; i++)
-                    for (int j = 0; j < this.Width; j++)
-                        if (this.Get<Int32>(i, j) < locLow)
-                            this.Set<Int32>(locLow, i, j);
-                        else if (this.Get<Int32>(i, j) > locHigh)
-                            this.Set<Int32>(locHigh, i, j);
-            }
-            else if (typeCode == TypeCode.Single)
-            {
-                Single locLow = (Single)(low);
-                Single locHigh = (Single)(high);
-                for (int i = 0; i < this.Height; i++)
-                    for (int j = 0; j < this.Width; j++)
-                        if (this.Get<Single>(i, j) < locLow)
-                            this.Set<Single>(locLow, i, j);
-                        else if (this.Get<Single>(i, j) > locHigh)
-                            this.Set<Single>(locHigh, i, j);
-            }
-            else if (typeCode == TypeCode.Double)
-            {
-                Double locLow = (Double)(low);
-                Double locHigh = (Double)(high);
-                for (int i = 0; i < this.Height; i++)
-                    for (int j = 0; j < this.Width; j++)
-                        if (this.Get<Double>(i, j) < locLow)
-                            this.Set<Double>(locLow, i, j);
-                        else if (this.Get<Double>(i, j) > locHigh)
-                            this.Set<Double>(locHigh, i, j);
-            }
-            else throw new Exception();
         }
 
         public void Scale(double gMin, double gMax)
         {
 
-            var min = this.Min();
-            var max = this.Max();
+            var min = Min();
+            var max = Max();
 
-            if (typeCode == TypeCode.UInt16)
+            switch (_typeCode)
             {
-                UInt16 globMin = Convert.ToUInt16(gMin);
-                UInt16 globMax = Convert.ToUInt16(gMax);
-                UInt16 locMax = (UInt16)max;
-                UInt16 locMin = (UInt16)min;
+                case TypeCode.UInt16:
+                {
+                    var globMin = Convert.ToUInt16(gMin);
+                    var globMax = Convert.ToUInt16(gMax);
+                    var locMax = (ushort)max;
+                    var locMin = (ushort)min;
 
-                Action<int> worker = (k) =>
+                    void Worker(int k)
                     {
-                        for (int j = 0; j < Width; j++)
-                            Set<UInt16>((UInt16)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<UInt16>(k, j) - locMin)), k, j);
-                    };
+                        for (var j = 0; j < Width; j++) Set((ushort) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<ushort>(k, j) - locMin)), k, j);
+                    }
 
-                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    Parallel.For(0, Height, worker);
-                else
-                    for (int i = 0; i < Height; i++)
-                        worker(i);
+                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                        Parallel.For(0, Height, Worker);
+                    else
+                        for (var i = 0; i < Height; i++)
+                            Worker(i);
 
 
-            }
-            else if (typeCode == TypeCode.Int16)
-            {
-                Int16 globMin = Convert.ToInt16(gMin);
-                Int16 globMax = Convert.ToInt16(gMax);
-                Int16 locMax = (Int16)max;
-                Int16 locMin = (Int16)min;
-
-                Action<int> worker = (k) =>
+                    break;
+                }
+                case TypeCode.Int16:
                 {
-                    for (int j = 0; j < Width; j++)
-                        Set<Int16>((Int16)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<Int16>(k, j) - locMin)), k, j);
-                };
+                    var globMin = Convert.ToInt16(gMin);
+                    var globMax = Convert.ToInt16(gMax);
+                    var locMax = (short)max;
+                    var locMin = (short)min;
 
-                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    Parallel.For(0, Height, worker);
-                else
-                    for (int i = 0; i < Height; i++)
-                        worker(i);
-            }
-            else if (typeCode == TypeCode.UInt32)
-            {
-                UInt32 globMin = Convert.ToUInt32(gMin);
-                UInt32 globMax = Convert.ToUInt32(gMax);
-                UInt32 locMax = (UInt32)max;
-                UInt32 locMin = (UInt32)min;
+                    void Worker(int k)
+                    {
+                        for (var j = 0; j < Width; j++) Set((short) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<short>(k, j) - locMin)), k, j);
+                    }
 
-                Action<int> worker = (k) =>
+                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                        Parallel.For(0, Height, Worker);
+                    else
+                        for (var i = 0; i < Height; i++)
+                            Worker(i);
+                    break;
+                }
+                case TypeCode.UInt32:
                 {
-                    for (int j = 0; j < Width; j++)
-                        Set<UInt32>((UInt32)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<UInt32>(k, j) - locMin)), k, j);
-                };
+                    var globMin = Convert.ToUInt32(gMin);
+                    var globMax = Convert.ToUInt32(gMax);
+                    var locMax = (uint)max;
+                    var locMin = (uint)min;
 
-                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    Parallel.For(0, Height, worker);
-                else
-                    for (int i = 0; i < Height; i++)
-                        worker(i);
-            }
-            else if (typeCode == TypeCode.Int32)
-            {
-                Int32 globMin = Convert.ToInt32(gMin);
-                Int32 globMax = Convert.ToInt32(gMax);
-                Int32 locMax = (Int32)max;
-                Int32 locMin = (Int32)min;
+                        void Worker(int k)
+                        {
+                            for (var j = 0; j < Width; j++)
+                                Set((uint)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<uint>(k, j) - locMin)), k, j);
+                        }
 
-                Action<int> worker = (k) =>
+                        if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                        Parallel.For(0, Height, Worker);
+                    else
+                        for (var i = 0; i < Height; i++)
+                            Worker(i);
+                    break;
+                }
+                case TypeCode.Int32:
                 {
-                    for (int j = 0; j < Width; j++)
-                        Set<Int32>((Int32)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<Int32>(k, j) - locMin)), k, j);
-                };
+                    var globMin = Convert.ToInt32(gMin);
+                    var globMax = Convert.ToInt32(gMax);
+                    var locMax = (int)max;
+                    var locMin = (int)min;
 
-                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    Parallel.For(0, Height, worker);
-                else
-                    for (int i = 0; i < Height; i++)
-                        worker(i);
-            }
-            else if (typeCode == TypeCode.Single)
-            {
-                Single globMin = Convert.ToSingle(gMin);
-                Single globMax = Convert.ToSingle(gMax);
-                Single locMax = (Single)max;
-                Single locMin = (Single)min;
+                        void Worker(int k)
+                        {
+                            for (var j = 0; j < Width; j++)
+                                Set((int)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<int>(k, j) - locMin)), k, j);
+                        }
 
-                Action<int> worker = (k) =>
+                        if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                        Parallel.For(0, Height, Worker);
+                    else
+                        for (var i = 0; i < Height; i++)
+                            Worker(i);
+                    break;
+                }
+                case TypeCode.Single:
                 {
-                    for (int j = 0; j < Width; j++)
-                        Set<Single>((Single)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<Single>(k, j) - locMin)), k, j);
-                };
+                    var globMin = Convert.ToSingle(gMin);
+                    var globMax = Convert.ToSingle(gMax);
+                    var locMax = (float)max;
+                    var locMin = (float)min;
 
-                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    Parallel.For(0, Height, worker);
-                else
-                    for (int i = 0; i < Height; i++)
-                        worker(i);
-            }
-            else if (typeCode == TypeCode.Double)
-            {
-                Double globMin = Convert.ToDouble(gMin);
-                Double globMax = Convert.ToDouble(gMax);
-                Double locMax = (Double)max;
-                Double locMin = (Double)min;
+                        void Worker(int k)
+                        {
+                            for (var j = 0; j < Width; j++)
+                                Set((float)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<float>(k, j) - locMin)), k, j);
+                        }
 
-                Action<int> worker = (k) =>
+                        if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                        Parallel.For(0, Height, Worker);
+                    else
+                        for (var i = 0; i < Height; i++)
+                            Worker(i);
+                    break;
+                }
+                case TypeCode.Double:
                 {
-                    for (int j = 0; j < Width; j++)
-                        Set<Double>(Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<Double>(k, j) - locMin)), k, j);
-                };
+                    var globMin = Convert.ToDouble(gMin);
+                    var globMax = Convert.ToDouble(gMax);
+                    var locMax = (double)max;
+                    var locMin = (double)min;
 
-                if (IsParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    Parallel.For(0, Height, worker);
-                else
-                    for (int i = 0; i < Height; i++)
-                        worker(i);
+                        void Worker(int k)
+                        {
+                            for (var j = 0; j < Width; j++)
+                                Set(Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<double>(k, j) - locMin)), k, j);
+                        }
+
+                        if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                        Parallel.For(0, Height, Worker);
+                    else
+                        for (var i = 0; i < Height; i++)
+                            Worker(i);
+                    break;
+                }
+                default:
+                    throw new NotSupportedException();
             }
-            else throw new Exception();
         }
 
         public double Percentile(double lvl)
@@ -637,245 +668,314 @@ namespace ImageDisplayLib
             if (lvl < 0 | lvl > 1.0)
                 throw new ArgumentOutOfRangeException($"{nameof(lvl)} parameter is out of range ({lvl} should be in [0, 1]).");
 
-            if (typeCode == TypeCode.UInt16)
+            switch (_typeCode)
             {
-                if (Math.Abs(lvl) < Double.Epsilon)
-                    return (UInt16)Min();
-                else if (Math.Abs(lvl - 1) < Double.Epsilon)
-                    return (UInt16)Max();
-                else
+                case TypeCode.UInt16:
                 {
-                    var query = ((UInt16[])baseArray).OrderBy((x) => x);
+                    if (Math.Abs(lvl) < double.Epsilon)
+                        return (ushort)Min();
+                    if (Math.Abs(lvl - 1) < double.Epsilon)
+                        return (ushort)Max();
+                    var query = ((ushort[])_baseArray).OrderBy(x => x);
 
-                    int length = (int)Math.Ceiling(lvl * Width * Height);
+                    var length = (int)Math.Ceiling(lvl * Width * Height);
 
 
                     return query.Skip(length - 1).Take(1).First();
+
                 }
-
-            }
-            else if (typeCode == TypeCode.Int16)
-            {
-                if (Math.Abs(lvl) < Double.Epsilon)
-                    return (Int16)Min();
-                else if (Math.Abs(lvl - 1) < Double.Epsilon)
-                    return (Int16)Max();
-                else
+                case TypeCode.Int16:
                 {
-                    var query = ((Int16[])baseArray).OrderBy((x) => x);
+                    if (Math.Abs(lvl) < double.Epsilon)
+                        return (short)Min();
+                    if (Math.Abs(lvl - 1) < double.Epsilon)
+                        return (short)Max();
+                    var query = ((short[])_baseArray).OrderBy(x => x);
 
-                    int length = (int)Math.Ceiling(lvl * Width * Height);
+                    var length = (int)Math.Ceiling(lvl * Width * Height);
 
 
                     return query.Skip(length - 1).Take(1).First();
+
                 }
-
-            }
-            else if (typeCode == TypeCode.UInt32)
-            {
-                if (Math.Abs(lvl) < Double.Epsilon)
-                    return (UInt32)Min();
-                else if (Math.Abs(lvl - 1) < Double.Epsilon)
-                    return (UInt32)Max();
-                else
+                case TypeCode.UInt32:
                 {
-                    var query = ((UInt32[])baseArray).OrderBy((x) => x);
+                    if (Math.Abs(lvl) < double.Epsilon)
+                        return (uint)Min();
+                    if (Math.Abs(lvl - 1) < double.Epsilon)
+                        return (uint)Max();
+                    var query = ((uint[])_baseArray).OrderBy(x => x);
 
-                    int length = (int)Math.Ceiling(lvl * Width * Height);
+                    var length = (int)Math.Ceiling(lvl * Width * Height);
 
 
                     return query.Skip(length - 1).Take(1).First();
+
                 }
-
-            }
-            else if (typeCode == TypeCode.Int32)
-            {
-                if (Math.Abs(lvl) < Double.Epsilon)
-                    return (Int32)Min();
-                else if (Math.Abs(lvl - 1) < Double.Epsilon)
-                    return (Int32)Max();
-                else
+                case TypeCode.Int32:
                 {
-                    var query = ((Int32[])baseArray).OrderBy((x) => x);
+                    if (Math.Abs(lvl) < double.Epsilon)
+                        return (int)Min();
+                    if (Math.Abs(lvl - 1) < double.Epsilon)
+                        return (int)Max();
+                    var query = ((int[])_baseArray).OrderBy(x => x);
 
-                    int length = (int)Math.Ceiling(lvl * Width * Height);
+                    var length = (int)Math.Ceiling(lvl * Width * Height);
 
 
                     return query.Skip(length - 1).Take(1).First();
+
                 }
-
-            }
-            else if (typeCode == TypeCode.Single)
-            {
-                if (Math.Abs(lvl) < Double.Epsilon)
-                    return (Single)Min();
-                else if (Math.Abs(lvl - 1) < Double.Epsilon)
-                    return (Single)Max();
-                else
+                case TypeCode.Single:
                 {
-                    var query = ((Single[])baseArray).OrderBy((x) => x);
+                    if (Math.Abs(lvl) < double.Epsilon)
+                        return (float)Min();
+                    if (Math.Abs(lvl - 1) < double.Epsilon)
+                        return (float)Max();
+                    var query = ((float[])_baseArray).OrderBy(x => x);
 
-                    int length = (int)Math.Ceiling(lvl * Width * Height);
+                    var length = (int)Math.Ceiling(lvl * Width * Height);
 
 
                     return query.Skip(length - 1).Take(1).First();
+
                 }
-
-            }
-            else if (typeCode == TypeCode.Double)
-            {
-                if (Math.Abs(lvl) < Double.Epsilon)
-                    return (Double)Min();
-                else if (Math.Abs(lvl - 1) < Double.Epsilon)
-                    return (Double)Max();
-                else
+                case TypeCode.Double:
                 {
-                    var query = ((Double[])baseArray).OrderBy((x) => x);
+                    if (Math.Abs(lvl) < double.Epsilon)
+                        return (double)Min();
+                    if (Math.Abs(lvl - 1) < double.Epsilon)
+                        return (double)Max();
+                    var query = ((double[])_baseArray).OrderBy(x => x);
 
-                    int length = (int)Math.Ceiling(lvl * Width * Height);
+                    var length = (int)Math.Ceiling(lvl * Width * Height);
 
 
                     return query.Skip(length - 1).Take(1).First();
-                }
 
+                }
             }
-            else throw new Exception();
+
+            throw new NotSupportedException();
         }
 
         public void AddScalar(double value)
         {
-            if (UnderlyingType == TypeCode.UInt16)
+            switch (UnderlyingType)
             {
-                UInt16[] data = (UInt16[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToUInt16(data[i] + value);
+                case TypeCode.UInt16:
+                {
+                    var data = (ushort[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToUInt16(data[i] + value);
+                    break;
+                }
+                case TypeCode.Int16:
+                {
+                    var data = (short[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToInt16(data[i] + value);
+                    break;
+                }
+                case TypeCode.UInt32:
+                {
+                    var data = (uint[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToUInt32(data[i] + value);
+                    break;
+                }
+                case TypeCode.Int32:
+                {
+                    var data = (int[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToInt32(data[i] + value);
+                    break;
+                }
+                case TypeCode.Single:
+                {
+                    var data = (float[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToSingle(data[i] + value);
+                    break;
+                }
+                case TypeCode.Double:
+                {
+                    var data = (double[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToDouble(data[i] + value);
+                    break;
+                }
+                default:
+                    throw new NotSupportedException();
             }
-            else if (UnderlyingType == TypeCode.Int16)
-            {
-                Int16[] data = (Int16[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToInt16(data[i] + value);
-            }
-            else if (UnderlyingType == TypeCode.UInt32)
-            {
-                UInt32[] data = (UInt32[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToUInt32(data[i] + value);
-            }
-            else if (UnderlyingType == TypeCode.Int32)
-            {
-                Int32[] data = (Int32[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToInt32(data[i] + value);
-            }
-            else if (UnderlyingType == TypeCode.Single)
-            {
-                Single[] data = (Single[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToSingle(data[i] + value);
-            }
-            else if (UnderlyingType == TypeCode.Double)
-            {
-                Double[] data = (Double[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToDouble(data[i] + value);
-            }
-            else
-                throw new Exception();
-
-
         }
 
         public void MultiplyByScalar(double value)
         {
-            if(UnderlyingType == TypeCode.UInt16)
+            switch (UnderlyingType)
             {
-                UInt16[] data = (UInt16[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToUInt16(data[i] * value);
+                case TypeCode.UInt16:
+                {
+                    var data = (ushort[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToUInt16(data[i] * value);
+                    break;
+                }
+                case TypeCode.Int16:
+                {
+                    var data = (short[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToInt16(data[i] * value);
+                    break;
+                }
+                case TypeCode.UInt32:
+                {
+                    var data = (uint[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToUInt32(data[i] * value);
+                    break;
+                }
+                case TypeCode.Int32:
+                {
+                    var data = (int[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToInt32(data[i] * value);
+                    break;
+                }
+                case TypeCode.Single:
+                {
+                    var data = (float[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToSingle(data[i] * value);
+                    break;
+                }
+                case TypeCode.Double:
+                {
+                    var data = (double[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToDouble(data[i] * value);
+                    break;
+                }
+                default:
+                    throw new NotSupportedException();
             }
-            else if (UnderlyingType == TypeCode.Int16)
-            {
-                Int16[] data = (Int16[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToInt16(data[i] * value);
-            }
-            else if (UnderlyingType == TypeCode.UInt32)
-            {
-                UInt32[] data = (UInt32[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToUInt32(data[i] * value);
-            }
-            else if (UnderlyingType == TypeCode.Int32)
-            {
-                Int32[] data = (Int32[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToInt32(data[i] * value);
-            }
-            else if (UnderlyingType == TypeCode.Single)
-            {
-                Single[] data = (Single[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToSingle(data[i] * value);
-            }
-            else if (UnderlyingType == TypeCode.Double)
-            {
-                Double[] data = (Double[])baseArray;
-                for (int i = 0; i < data.Length; i++)
-                    data[i] = Convert.ToDouble(data[i] * value);
-            }
-            else
-                throw new Exception();
         }
 
         public Image ReduceToDisplay(double min, double max)
         {
 
-            Func<double, UInt16> convrtr = (x) => Convert.ToUInt16(1.0 * (x - min) * UInt16.MaxValue / (max - min));
+            ushort Convrtr(double x) => Convert.ToUInt16(1.0 * (x - min) * ushort.MaxValue / (max - min));
             switch (UnderlyingType)
             {
                 case TypeCode.Int16:
-                    return new Image(((Int16[])baseArray)
+                    return new Image(((short[])_baseArray)
                         .AsParallel()
-                        .Select((x) => convrtr(x))
+                        .Select(x => Convrtr(x))
                         .ToArray(), Width, Height);
                 case TypeCode.UInt16:
-                    return this.Copy();
+                    return Copy();
                 case TypeCode.Int32:
-                    return new Image(((Int32[])baseArray)
+                    return new Image(((int[])_baseArray)
                         .AsParallel()
-                        .Select((x) => convrtr(x))
+                        .Select(x => Convrtr(x))
                         .ToArray(), Width, Height);
                 case TypeCode.UInt32:
-                    return new Image(((UInt32[])baseArray)
+                    return new Image(((uint[])_baseArray)
                         .AsParallel()
-                        .Select((x) => convrtr(x))
+                        .Select(x => Convrtr(x))
                         .ToArray(), Width, Height);
                 case TypeCode.Single:
-                    return new Image(((Single[])baseArray)
+                    return new Image(((float[])_baseArray)
                         .AsParallel()
-                        .Select((x) => convrtr(x))
+                        .Select(x => Convrtr(x))
                         .ToArray(), Width, Height);
                 case TypeCode.Double:
-                    return new Image(((Double[])baseArray)
+                    return new Image(((double[])_baseArray)
                         .AsParallel()
-                        .Select((x) => convrtr(x))
+                        .Select(Convrtr)
                         .ToArray(), Width, Height);
                 default:
-                    throw new Exception();
+                    throw new NotSupportedException();
             }
 
 
         }
 
-        public Image CastTo<Ts, Td>(Func<Ts, Td> cast)
-           =>  (typeof(Ts) == Type.GetType("System." + UnderlyingType))                       
-            ? new Image(((Ts[])baseArray)
+        public Image CastTo<TS, TD>(Func<TS, TD> cast)
+           =>  (typeof(TS) == Type.GetType("System." + UnderlyingType))                       
+            ? new Image(((TS[])_baseArray)
                 .AsParallel()
-                .Select<Ts, Td>(cast)
+                .Select(cast)
                 .ToArray(),
                 Width, Height)
-            : throw new TypeAccessException($"Source type {typeof(Ts)} differs from underlying type with code {UnderlyingType}.");
-               
+            : throw new TypeAccessException($"Source type {typeof(TS)} differs from underlying type with code {UnderlyingType}.");
+
+        public Image Transpose()
+        {
+            var type = Type.GetType("System." + _typeCode, true, true)
+                       ?? throw new NotSupportedException();
+
+            var newArray = Array.CreateInstance(type, Width * Height);
+
+            switch (_typeCode)
+            {
+                case TypeCode.Int16:
+                {
+                    var castArray = (short[]) newArray;
+
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        castArray[j * Height + i] = Get<short>(i, j);
+                    break;
+                }
+
+                case TypeCode.UInt16:
+                {
+                    var castArray = (ushort[]) newArray;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        castArray[j * Height + i] = Get<ushort>(i, j);
+                    break;
+                }
+                case TypeCode.Int32:
+                {
+                    var castArray = (int[]) newArray;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        castArray[j * Height + i] = Get<int>(i, j);
+                    break;
+                }
+                case TypeCode.UInt32:
+                {
+                    var castArray = (uint[])newArray;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        castArray[j * Height + i] = Get<uint>(i, j);
+                    break;
+                }
+                case TypeCode.Single:
+                {
+                    var castArray = (float[])newArray;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        castArray[j * Height + i] = Get<float>(i, j);
+                    break;
+                }
+                case TypeCode.Double:
+                {
+                    var castArray = (double[])newArray;
+                    for (var i = 0; i < Height; i++)
+                    for (var j = 0; j < Width; j++)
+                        castArray[j * Height + i] = Get<double>(i, j);
+                    break;
+                }
+                default:
+                    throw new NotSupportedException();
+
+            }
+
+            // Notice the reversed order of Height Width
+            return new Image(newArray, Height, Width);
+        }
     }
 }

@@ -27,7 +27,7 @@ namespace ImageTest
         public TestWindow(ANDOR_CS.Classes.CameraBase cam)
         {
             InitializeComponent();
-            camera = cam;
+            //camera = cam;
             
         }
         public TestWindow(ImageDisplayLib.Image im)
@@ -36,60 +36,60 @@ namespace ImageTest
             Im = im;
 
         }
-        private void Cam_NewImageReceived(object sender, ANDOR_CS.Events.NewImageReceivedEventArgs e)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                if (camera.AcquiredImages.TryDequeue(out ImageDisplayLib.Image im))
-                    ImageHandle.LoadImage(im);
-            });
-        }
+        //private void Cam_NewImageReceived(object sender, ANDOR_CS.Events.NewImageReceivedEventArgs e)
+        //{
+        //    Dispatcher.Invoke(() =>
+        //    {
+        //        if (camera.AcquiredImages.TryDequeue(out ImageDisplayLib.Image im))
+        //            ImageHandle.LoadImage(im);
+        //    });
+        //}
 
         public TestWindow()
         {
             InitializeComponent();
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {if (camera != null)
-            {
-                camera.NewImageReceived += Cam_NewImageReceived;
-                camera.TemperatureStatusChecked += Cam_TemperatureStatusChecked;
-            }
-            if (Im != null)
-                ImageHandle.LoadImage(Im);
-            //if (camera == null)
-            //{
-            //    int N = 4096;
-            //    int M = 8192;
-            //    UInt16[] arr = new UInt16[N * M];
+        //private void Window_Loaded(object sender, RoutedEventArgs e)
+        //{if (camera != null)
+        //    {
+        //        camera.NewImageReceived += Cam_NewImageReceived;
+        //        camera.TemperatureStatusChecked += Cam_TemperatureStatusChecked;
+        //    }
+        //    if (Im != null)
+        //        ImageHandle.LoadImage(Im);
+        //    //if (camera == null)
+        //    //{
+        //    //    int N = 4096;
+        //    //    int M = 8192;
+        //    //    UInt16[] arr = new UInt16[N * M];
 
-            //    for (int i = 0; i < N; i++)
-            //        for (int j = 0; j < M; j++)
-            //            arr[M * i + j] = (UInt16)(60 * (i + j) + 1000);
+        //    //    for (int i = 0; i < N; i++)
+        //    //        for (int j = 0; j < M; j++)
+        //    //            arr[M * i + j] = (UInt16)(60 * (i + j) + 1000);
 
-            //    var im = new ImageDisplayLib.Image(arr, M, N);
+        //    //    var im = new ImageDisplayLib.Image(arr, M, N);
 
-            //    var max = im.Max();
+        //    //    var max = im.Max();
 
-            //    ImageHandle.LoadImage(im, ImageDisplayLib.ImageType.GrayScale16Int);
-            //}
+        //    //    ImageHandle.LoadImage(im, ImageDisplayLib.ImageType.GrayScale16Int);
+        //    //}
 
-        }
+        //}
 
-        private void Cam_TemperatureStatusChecked(object sender, ANDOR_CS.Events.TemperatureStatusEventArgs e)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                TemperatureBlock.Text = $"T = {e.Temperature.ToString("F2")} C";
-                StatusBlock.Text = e.Status.ToString();
-                if (e.Temperature > 10)
-                    TemperatureBlock.Foreground = Brushes.DarkRed;
-                else if (e.Temperature > -10)
-                    TemperatureBlock.Foreground = Brushes.ForestGreen;
-                else
-                    TemperatureBlock.Foreground = Brushes.DarkBlue;
-            });
-        }
+        //private void Cam_TemperatureStatusChecked(object sender, ANDOR_CS.Events.TemperatureStatusEventArgs e)
+        //{
+        //    Dispatcher.Invoke(() =>
+        //    {
+        //        TemperatureBlock.Text = $"T = {e.Temperature.ToString("F2")} C";
+        //        StatusBlock.Text = e.Status.ToString();
+        //        if (e.Temperature > 10)
+        //            TemperatureBlock.Foreground = Brushes.DarkRed;
+        //        else if (e.Temperature > -10)
+        //            TemperatureBlock.Foreground = Brushes.ForestGreen;
+        //        else
+        //            TemperatureBlock.Foreground = Brushes.DarkBlue;
+        //    });
+        //}
     }
 }

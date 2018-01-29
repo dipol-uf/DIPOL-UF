@@ -68,9 +68,18 @@
   <ItemGroup>
     <Compile Include="Converters\ImageDisplay_DoubleToStringConverter.cs" />
     <Compile Include="Converters\Slider2_CanvasWidthTrackWidthThumbConverter.cs" />
+    <Compile Include="DipolImage.cs" />
+    <Compile Include="DipolImageView.xaml.cs">
+      <DependentUpon>DipolImageView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DipolImageViewModel.cs" />
     <Compile Include="Slider2.xaml.cs">
       <DependentUpon>Slider2.xaml</DependentUpon>
     </Compile>
+    <Page Include="DipolImageView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ImageDisplay.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -108,6 +117,12 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DIPOL-UF\DIPOL-UF.csproj">
+      <Project>{edb4e90e-b8fa-4a97-b684-8ed430f2a1f7}</Project>
+      <Name>DIPOL-UF</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DIPOL_UF
 {
-    internal class ValidationErrorInstance  : IEquatable<ValidationErrorInstance>
+    public class ValidationErrorInstance  : IEquatable<ValidationErrorInstance>
     {
        
         public string Message
