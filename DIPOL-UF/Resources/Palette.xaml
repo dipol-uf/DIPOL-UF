@@ -79,5 +79,6 @@
                Bottom="{StaticResource PaddingValue}"/>
     
     <!--Fonts-->
-    <sys:Double x:Key="SmallFontSize">12</sys:Double>
+    <sys:Double x:Key="SmallFontSize">12.5</sys:Double>
+    <sys:Double x:Key="ContentFontSize">15</sys:Double>
 </ResourceDictionary>

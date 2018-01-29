@@ -78,6 +78,7 @@ namespace DIPOL_Remote.Classes
             // Calls remote method.
             var result = session.CallApplySettings(SettingsID, data);
 
+            base.ApplySettings(out _);
             // Assigns out values
             timing = result.Timing;
 

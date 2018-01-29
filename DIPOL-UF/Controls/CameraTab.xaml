@@ -139,7 +139,7 @@
                                                 Mode=OneWay,
                                                 UpdateSourceTrigger=PropertyChanged}" 
                                             Value="{x:Static enm:Switch.Enabled}">
-                                        <Setter Property="TextBlock.Text" Value="Cooling"/>
+                                        <Setter Property="TextBlock.Text" Value="Stop Cooling"/>
                                     </DataTrigger>
                                     <DataTrigger 
                                             Binding="{Binding
@@ -147,7 +147,7 @@
                                                 Mode=OneWay,
                                                 UpdateSourceTrigger=PropertyChanged}" 
                                             Value="{x:Static enm:Switch.Disabled}">
-                                        <Setter Property="TextBlock.Text" Value="Off"/>
+                                        <Setter Property="TextBlock.Text" Value="Start Cooling"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -166,7 +166,7 @@
                                                 Path = Value.Camera.CoolerMode,
                                                 Mode=OneWay,
                                                 UpdateSourceTrigger=PropertyChanged}" 
-                                            Value="{x:Static enm:Switch.Enabled}">
+                                            Value="{x:Static enm:Switch.Disabled}">
                                 <Setter Property="Button.Background" 
                                             Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>
                                 <Setter Property="Button.Foreground" 
@@ -177,7 +177,7 @@
                                                 Path = Value.Camera.CoolerMode,
                                                 Mode=OneWay,
                                                 UpdateSourceTrigger=PropertyChanged}" 
-                                            Value="{x:Static enm:Switch.Disabled}">
+                                            Value="{x:Static enm:Switch.Enabled}">
                                 <Setter Property="Button.Background" 
                                                     Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
                                 <Setter Property="Button.Foreground" 

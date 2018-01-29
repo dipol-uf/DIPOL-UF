@@ -19,10 +19,11 @@ namespace DIPOL_UF.Models
 {
     class ConnectedCamera : ObservableObject
     {
-        private CameraBase camera = null;
-        private float targetTemperature = 0.0f;
-        private string targetTemperatureText = "0";
-        private bool canControlTemperature = false;
+        private CameraBase _camera = null;
+        private float _targetTemperature = 0.0f;
+        private string __targetTemperatureText = "0";
+        private bool _canControlTemperature = false;
+        private (float, float, float, int) _timing;
         private ObservableConcurrentDictionary<string, bool> enabledControls =
             new ObservableConcurrentDictionary<string, bool>(
                 new KeyValuePair<string, bool>[]
@@ -37,13 +38,13 @@ namespace DIPOL_UF.Models
 
         public float TargetTemperature
         {
-            get => targetTemperature;
+            get => _targetTemperature;
             set
             {
-                if (Math.Abs(value - targetTemperature) > float.Epsilon)
+                if (Math.Abs(value - _targetTemperature) > float.Epsilon)
                 {
-                    targetTemperature = value;
-                    targetTemperatureText = value.ToString("F1");
+                    _targetTemperature = value;
+                    __targetTemperatureText = value.ToString("F1");
                     RaisePropertyChanged();
                     RaisePropertyChanged(nameof(TargetTemperatureText));
                 }
@@ -51,13 +52,13 @@ namespace DIPOL_UF.Models
         }
         public string TargetTemperatureText
         {
-            get => targetTemperatureText;
+            get => __targetTemperatureText;
             set
             {
-                if (value != targetTemperatureText)
+                if (value != __targetTemperatureText)
                 {
-                    targetTemperatureText = value;
-                    targetTemperature = float.Parse(value,
+                    __targetTemperatureText = value;
+                    _targetTemperature = float.Parse(value,
                         System.Globalization.NumberStyles.Any,
                         System.Globalization.NumberFormatInfo.InvariantInfo);
                     RaisePropertyChanged();
@@ -68,30 +69,30 @@ namespace DIPOL_UF.Models
         }
         public bool CanControlTemperature
         {
-            get => canControlTemperature;
+            get => _canControlTemperature;
             set
             {
-                if (camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature) &&
-                    value != canControlTemperature)
+                if (_camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature) &&
+                    value != _canControlTemperature)
                 {
-                    canControlTemperature = value;
+                    _canControlTemperature = value;
                     RaisePropertyChanged();
                 }
             }
         }
         public FanMode FanMode
         {
-            get => camera.FanMode;
+            get => _camera.FanMode;
             set
             {
-                if (camera.Capabilities.Features.HasFlag(SdkFeatures.FanControl) &&
+                if (_camera.Capabilities.Features.HasFlag(SdkFeatures.FanControl) &&
                     value != FanMode)
                 {
                     if (value == FanMode.LowSpeed &&
-                        !camera.Capabilities.Features.HasFlag(SdkFeatures.LowFanMode))
-                        camera.FanControl(FanMode.LowSpeed);
+                        !_camera.Capabilities.Features.HasFlag(SdkFeatures.LowFanMode))
+                        _camera.FanControl(FanMode.LowSpeed);
                     else
-                        camera.FanControl(value);
+                        _camera.FanControl(value);
 
                     RaisePropertyChanged();
                 }
@@ -99,17 +100,17 @@ namespace DIPOL_UF.Models
         }
         public ShutterMode InternalShutterState
         {
-            get => camera.Shutter.Internal;
+            get => _camera.Shutter.Internal;
             set
             {
-                if (camera.Capabilities.Features.HasFlag(SdkFeatures.Shutter) &&
-                    value != camera.Shutter.Internal)
+                if (_camera.Capabilities.Features.HasFlag(SdkFeatures.Shutter) &&
+                    value != _camera.Shutter.Internal)
                 {
-                    camera.ShutterControl(
+                    _camera.ShutterControl(
                        Settings.GetValueOrNullSafe("ShutterOpenTimeMS", 27),
                        Settings.GetValueOrNullSafe("ShutterCloseTimeMS", 27),
                        value,
-                       camera.Shutter.External ?? ShutterMode.PermanentlyOpen,
+                       _camera.Shutter.External ?? ShutterMode.PermanentlyOpen,
                        (TtlShutterSignal)Settings.GetValueOrNullSafe("TTLShutterSignal", 1));
                     RaisePropertyChanged();
                 }
@@ -117,16 +118,16 @@ namespace DIPOL_UF.Models
         }
         public ShutterMode? ExternalShutterState
         {
-            get => camera.Shutter.External;
+            get => _camera.Shutter.External;
             set
             {
-                if (camera.Capabilities.Features.HasFlag(SdkFeatures.ShutterEx) &&
-                    value != camera.Shutter.Internal)
+                if (_camera.Capabilities.Features.HasFlag(SdkFeatures.ShutterEx) &&
+                    value != _camera.Shutter.Internal)
                 {
-                    camera.ShutterControl(
+                    _camera.ShutterControl(
                         Settings.GetValueOrNullSafe("ShutterOpenTimeMS", 27),
                         Settings.GetValueOrNullSafe("ShutterCloseTimeMS", 27), 
-                        camera.Shutter.Internal, 
+                        _camera.Shutter.Internal, 
                         value ?? ShutterMode.PermanentlyOpen, 
                         (TtlShutterSignal)Settings.GetValueOrNullSafe("TTLShutterSignal", 1));
                     RaisePropertyChanged();
@@ -135,12 +136,12 @@ namespace DIPOL_UF.Models
         }
         public CameraBase Camera
         {
-            get => camera;
+            get => _camera;
             private set
             {
-                if (value != camera)
+                if (value != _camera)
                 {
-                    camera = value;
+                    _camera = value;
                     RaisePropertyChanged();
                 }
             }
@@ -195,7 +196,7 @@ namespace DIPOL_UF.Models
         {
             ControlCoolerCommand = new DelegateCommand(
                 ControlCoolerCommandExecute,
-                (par) => camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature)
+                (par) => _camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature)
                 );
 
             SetUpAcquisitionCommand = new DelegateCommand(
@@ -206,15 +207,15 @@ namespace DIPOL_UF.Models
 
         private void ControlCoolerCommandExecute(object parameter)
         {
-            if (camera.CoolerMode == Switch.Disabled)
+            if (_camera.CoolerMode == Switch.Disabled)
             {
                 CanControlTemperature = false;
-                camera.SetTemperature((int)targetTemperature);
-                camera.CoolerControl(Switch.Enabled);
+                _camera.SetTemperature((int)_targetTemperature);
+                _camera.CoolerControl(Switch.Enabled);
             }
             else
             {
-                camera.CoolerControl(Switch.Disabled);
+                _camera.CoolerControl(Switch.Disabled);
                 CanControlTemperature = true;
             }
         }
@@ -224,7 +225,10 @@ namespace DIPOL_UF.Models
             
             var viewModel = new ViewModels.AcquisitionSettingsViewModel(settings, Camera);
 
-            var result = new Views.AcquisitionSettingsView(viewModel).ShowDialog();
+            if (new Views.AcquisitionSettingsView(viewModel).ShowDialog() == true)
+            {
+                
+            }
 
             
         }

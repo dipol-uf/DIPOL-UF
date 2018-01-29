@@ -68,7 +68,7 @@ namespace DIPOL_UF.ViewModels
         protected virtual void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if(declaredProperties?.Contains(e.PropertyName) ?? true)
-                RaisePropertyChanged(e.PropertyName);
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(e.PropertyName));
         }
 
         protected virtual void OnErrorChanged(object sender, DataErrorsChangedEventArgs e)
