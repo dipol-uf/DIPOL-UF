@@ -121,4 +121,11 @@
     <Style x:Key="TextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource ResourceKey=ContentFont}">
         <Setter Property="Margin" Value="{StaticResource ResourceKey=DefaultMargin}"/>
     </Style>
+    
+    <!--ProgressBar style-->
+    <Style x:Key="ProgressBarStyle" TargetType="ProgressBar" BasedOn="{StaticResource ResourceKey=ContentFont}">
+        <Setter Property="Margin" Value="10, 3, 10, 3"/>
+        <Setter Property="Height" Value="15"/>
+        <Setter Property="Width" Value="auto"/>
+    </Style>
 </ResourceDictionary>

@@ -8,7 +8,10 @@
              xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters"
              xmlns:local="clr-namespace:DIPOL_UF.Controls"
              mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
-             d:DesignHeight="500" d:DesignWidth="500">
+             d:DesignHeight="550" d:DesignWidth="500">
+    <ScrollViewer
+        HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Disabled"
+        VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="0.5*"/>
@@ -60,14 +63,20 @@
                     HorizontalAlignment="Center"
                     Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
                     Orientation="Vertical" Name="TempSetSlider"
-                    IsEnabled="{Binding Value.CanControlTemperature, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                     Minimum="{Binding Value.MinimumAllowedTemperature, Mode=OneTime}"
                     Maximum="{Binding Value.MaximumAllowedTemperature, Mode=OneTime}"
                     Value="{Binding
                         Path=Value.TargetTemperature,
                         Mode=TwoWay,
                         UpdateSourceTrigger=PropertyChanged,
-                        Converter={StaticResource ResourceKey=TypeConverter}}"/>
+                        Converter={StaticResource ResourceKey=TypeConverter}}">
+                <Slider.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="Value.IsNotAcquiring" Mode="OneWay"/>
+                        <Binding Path="Value.CanControlTemperature" Mode="OneWay"/>
+                    </MultiBinding>
+                </Slider.IsEnabled>
+            </Slider>
 
             <ProgressBar Grid.Column="2" Grid.Row="1" Grid.RowSpan="3"
                          Width="13" HorizontalAlignment="Center"
@@ -106,8 +115,13 @@
             <TextBox 
                     Name="TempControlTextBox" 
                     HorizontalContentAlignment="Right"
-                    IsEnabled="{Binding Value.CanControlTemperature, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                     >
+                <TextBox.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="Value.IsNotAcquiring" Mode="OneWay"/>
+                        <Binding Path="Value.CanControlTemperature" Mode="OneWay"/>
+                    </MultiBinding>
+                </TextBox.IsEnabled>
                 <TextBox.Text>
                     <Binding Path="Value.TargetTemperatureText" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged"
                              NotifyOnValidationError="True"
@@ -191,20 +205,20 @@
             </Button>
         </StackPanel>
         <Grid Grid.Column="3" Grid.Row="1" Margin="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" 
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                       Text="Fan"/>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" 
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                    Text="Fan"/>
             <Slider Grid.Column="0" Grid.Row="1" Grid.RowSpan="3"
                         Orientation="Vertical" Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
                         TickFrequency="{Binding 
@@ -213,6 +227,12 @@
                         IsSnapToTickEnabled="True"
                         Minimum="0" Maximum="2"
                         Value="{Binding Value.FanMode, Mode=TwoWay, Converter={StaticResource ResourceKey=TypeConverter}, UpdateSourceTrigger=PropertyChanged}">
+                <Slider.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="Value.IsNotAcquiring" Mode="OneWay"/>
+                        <Binding Path="Value.CanControlFan" Mode="OneWay"/>
+                    </MultiBinding>
+                </Slider.IsEnabled>
             </Slider>
             <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1" 
                            HorizontalAlignment="Left" VerticalAlignment="Top"
@@ -284,7 +304,6 @@
             </ComboBox>
             <ComboBox Grid.Column="1" Grid.Row="1"
                       FontSize="{StaticResource ResourceKey=SmallFontSize}"
-                      IsEnabled="{Binding Value.CanControlInternalExternalShutter}"
                       Style="{StaticResource ResourceKey=ComboBoxStyle}"
                       SelectedValue="{Binding
                         Value.ExternalShutterState,
@@ -293,7 +312,14 @@
                         Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
                       ItemsSource="{Binding 
                         Source={StaticResource ResourceKey=ShutterModeEnumProvider},
-                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"/>
+                        Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}">
+                <ComboBox.IsEnabled>
+                    <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                        <Binding Path="Value.IsNotAcquiring" Mode="OneWay"/>
+                        <Binding Path="Value.CanControlInternalExternalShutter" Mode="OneWay"/>
+                    </MultiBinding>
+                </ComboBox.IsEnabled>
+            </ComboBox>
         </Grid>
         <Button  Grid.Column="2" Grid.Row="4" 
                  VerticalAlignment="Center" HorizontalAlignment="Center"
@@ -326,6 +352,69 @@
                 </Style>
             </Button.Style>
         </Button>
-        <Grid Grid.Column="3" Grid.Row="4" Grid.RowSpan="2"></Grid>
+        <Grid Grid.Column="3" Grid.Row="4" Grid.RowSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Grid.Column="0"
+                   Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Center"
+                   Text="Exp"/>
+        <TextBlock Grid.Row="1" Grid.Column="0"
+            Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Text="Acc"/>
+        <TextBlock Grid.Row="2" Grid.Column="0"
+            Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Text="Kin"/>
+        <TextBox Grid.Row="0" Grid.Column="1"
+               Focusable="False" IsReadOnly="True"
+               Style="{StaticResource ResourceKey=TextBoxStyle}"
+               FontSize="{StaticResource ResourceKey=SmallFontSize}"
+               Text="{Binding Value.Timing.Item1, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
+        <TextBox Grid.Row="1" Grid.Column="1"
+               Focusable="False" IsReadOnly="True"
+               Style="{StaticResource ResourceKey=TextBoxStyle}"
+               FontSize="{StaticResource ResourceKey=SmallFontSize}"
+               Text="{Binding Value.Timing.Item2, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
+        <TextBox Grid.Row="2" Grid.Column="1"
+               Focusable="False" IsReadOnly="True"
+               Style="{StaticResource ResourceKey=TextBoxStyle}"
+               FontSize="{StaticResource ResourceKey=SmallFontSize}"
+               Text="{Binding Value.Timing.Item3, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
+        </Grid>
+        <TextBlock Grid.Row="5" Grid.Column="0"
+                    Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Text="Acquisition:"/>
+            <Grid Grid.Row="6" Grid.ColumnSpan="4" VerticalAlignment="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width ="130"/>
+            </Grid.ColumnDefinitions>
+            <ProgressBar  Grid.Column="0" 
+                         Maximum="{Binding Value.Timing.Item1, Mode=OneWay}" Minimum="0"
+                         Value="{Binding Value.TimeRemaining, Mode=OneWay}"
+                         Style="{StaticResource ResourceKey=ProgressBarStyle}"
+                         />
+           
+            <TextBox   Grid.Column="1" VerticalAlignment="Center"
+                       Style="{StaticResource ResourceKey=TextBoxStyle}"
+                       FontSize="{StaticResource ResourceKey=SmallFontSize}"
+                       Text="{Binding Value.Remaining, Mode=OneWay}"
+                       />
+        </Grid>
     </Grid>
+    </ScrollViewer>
 </UserControl>

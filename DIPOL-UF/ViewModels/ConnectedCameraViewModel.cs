@@ -129,7 +129,32 @@ namespace DIPOL_UF.ViewModels
 
         }
 
-        public ObservableConcurrentDictionary<string, bool> EnabledControls => model.EnabledControls;
+        public Tuple<float, float, float, int> Timing => model.Timing;
+        public int CurrentImageIndex => model.CurrentImageIndex;
+        public double TimeRemaining
+        {
+            get
+            {
+
+                if (Timing == null ||
+                    !model.ProgBarTimer.IsEnabled ||
+                    IsNotAcquiring)
+                    return 0;
+
+                var start = (DateTime)(model.ProgBarTimer.Tag ?? DateTime.Now);
+                var elapsed = DateTime.Now - start;
+
+                return elapsed.TotalSeconds;
+            }
+        }
+        public string Remaining
+        {
+            get
+            {
+                // TODO: Properly count images remaining
+                return model.ProgBarTimer.IsEnabled ? $"{TimeRemaining:F2} s; {CurrentImageIndex}/{1} img" : "";
+            }
+        }
 
         /// <summary>
         /// Controls cooler.
@@ -150,9 +175,17 @@ namespace DIPOL_UF.ViewModels
                 {
                     Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsAcquiring)));
                     Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsNotAcquiring)));
-
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(TimeRemaining)));
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(Remaining)));
                 }
             };
+
+            model.ProgBarTimer.Tick += (sender, e) =>
+            {
+                RaisePropertyChanged(nameof(TimeRemaining));
+                RaisePropertyChanged(nameof(Remaining));
+            };
+
         }
 
        

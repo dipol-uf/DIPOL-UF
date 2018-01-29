@@ -16,6 +16,7 @@ using ANDOR_CS.Enums;
 using DIPOL_UF.Commands;
 
 using static DIPOL_UF.DIPOL_UF_App;
+using System.Windows.Threading;
 
 namespace DIPOL_UF.Models
 {
@@ -27,20 +28,33 @@ namespace DIPOL_UF.Models
         private float _targetTemperature = 0.0f;
         private string __targetTemperatureText = "0";
         private bool _canControlTemperature = false;
-        private (float, float, float, int) _timing;
-        private ObservableConcurrentDictionary<string, bool> enabledControls =
-            new ObservableConcurrentDictionary<string, bool>(
-                new KeyValuePair<string, bool>[]
-                {
-                    
-                }
-                );
-        
+        private Tuple<float, float, float, int> _timing;
         private DelegateCommand _controlCoolerCommand = null;
         //private DelegateCommand verifyTextInputCommand = null;
         private DelegateCommand _setUpAcquisitionCommand = null;
         private DelegateCommand _controlAcquisitionCommand = null;
+        private int _currentImageIndex = 0;
 
+        public DispatcherTimer ProgBarTimer
+        {
+            get;
+        } = new DispatcherTimer()
+        {
+            Interval = TimeSpan.FromMilliseconds(100),
+            IsEnabled = false
+        };
+        public int CurrentImageIndex
+        {
+            get => _currentImageIndex;
+            private set
+            {
+                if (value != _currentImageIndex)
+                {
+                    _currentImageIndex = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
         public float TargetTemperature
         {
             get => _targetTemperature;
@@ -151,7 +165,7 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public (float, float, float, int) Timing
+        public Tuple<float, float, float, int> Timing
         {
             get => _timing;
             set
@@ -203,32 +217,23 @@ namespace DIPOL_UF.Models
             }
 
         }
-        public ObservableConcurrentDictionary<string, bool> EnabledControls
-        {
-            get => enabledControls;
-            set
-            {
-                if (value != enabledControls)
-                {
-                    enabledControls = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
+      
 
         public ConnectedCamera(CameraBase camera)
         {
             Camera = camera;
             CanControlTemperature = camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature);
             InitializeCommands();
-            Camera.PropertyChanged += OnCameraPropertyCahnged;
+            Camera.PropertyChanged += Camera_PropertyCahnged;
+            Camera.NewImageReceived += Camera_NewImageReceived;
         }
 
         private void InitializeCommands()
         {
             ControlCoolerCommand = new DelegateCommand(
                 ControlCoolerCommandExecute,
-                (par) => Camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature)
+                (par) => Camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature) &&
+                    !Camera.IsAcquiring
                 );
 
             SetUpAcquisitionCommand = new DelegateCommand(
@@ -240,10 +245,20 @@ namespace DIPOL_UF.Models
                 ControlAcquisitionCommandExecute,
                 (par) => Camera.CurrentSettings != null);
         }
-        private void OnCameraPropertyCahnged(object sender, PropertyChangedEventArgs e)
+        private void Camera_PropertyCahnged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(Camera.IsAcquiring))
+            {
                 Helper.ExecuteOnUI(SetUpAcquisitionCommand.OnCanExecuteChanged);
+                Helper.ExecuteOnUI(ControlCoolerCommand.OnCanExecuteChanged);
+                if (Camera.IsAcquiring)
+                {
+                    ProgBarTimer.Tag = DateTime.Now;
+                    ProgBarTimer.Start();
+                }
+                else
+                    ProgBarTimer.Stop();
+            }
         }
         private void ControlCoolerCommandExecute(object parameter)
         {
@@ -268,7 +283,7 @@ namespace DIPOL_UF.Models
             if (new Views.AcquisitionSettingsView(viewModel).ShowDialog() == true && 
                 !viewModel.EstimatedTiming.Equals(default((float, float, float, int))))
             {
-                Timing = viewModel.EstimatedTiming;
+                Timing = viewModel.EstimatedTiming.ToTuple();
                 RaisePropertyChanged(nameof(AreSettingsApplied));
                 ControlAcquisitionCommand.OnCanExecuteChanged();
             }
@@ -285,15 +300,21 @@ namespace DIPOL_UF.Models
                     return;
                 }
 
+                CurrentImageIndex = 0;
                 _acqTaskCancel = new CancellationTokenSource();
                 _acqTask = Camera.StartAcquistionAsync(_acqTaskCancel,
                     Math.Max((int)(Camera.CurrentSettings.ExposureTime / 50), 50));
+               
             }
             else
             {
                 if (!_acqTask.IsCompleted)
                     _acqTaskCancel.Cancel();
             }
+        }
+        private void Camera_NewImageReceived(object sender, ANDOR_CS.Events.NewImageReceivedEventArgs e)
+        {
+            CurrentImageIndex = e.First;
         }
     }
 }

@@ -573,8 +573,10 @@ namespace DIPOL_UF.Models
             {
                 cam.PropertyChanged += Camera_PropertyChanged;
                 cam.TemperatureStatusChecked += Camera_TemperatureStatusChecked;
+                cam.NewImageReceived += Cam_NewImageReceived;
             }
         }
+
         /// <summary>
         /// Attaches event handlers to each cam to monitor status and progress.
         /// </summary>
@@ -609,13 +611,15 @@ namespace DIPOL_UF.Models
             {
                 string key = GetCameraKey(cam);
                 Helper.WriteLog($"[{key}]: {e.PropertyName}");
-
-                //if (e.PropertyName == nameof(CameraBase.FanMode))
-                //{
-                //    int count = (int)(2 - (uint)cam.FanMode);
-                //    CameraRealTimeStats[key]["FanStr"] = 
-                //        "|" + new String('X', count) + new string('*', 2 - count) + "|";
-                //}
+                             
+            }
+        }
+        private void Cam_NewImageReceived(object sender, NewImageReceivedEventArgs e)
+        {
+            if (sender is CameraBase cam)
+            {
+                string key = GetCameraKey(cam);
+                Helper.WriteLog($"[{key}]: {e.First} unclaimed images acquired.");
             }
         }
         /// <summary>
