@@ -25,7 +25,7 @@ using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
-using ImageDisplayLib;
+using DipolImage;
 
 namespace ANDOR_CS.Classes
 {

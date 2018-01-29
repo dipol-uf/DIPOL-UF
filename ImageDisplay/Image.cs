@@ -21,7 +21,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
-namespace ImageDisplayLib
+namespace DipolImage
 {
     [DataContract]
     public class Image
@@ -78,41 +78,17 @@ namespace ImageDisplayLib
 
         public Image(Array initialArray, int width, int height)
         {
+            if (initialArray == null)
+                throw new ArgumentNullException("Argument is null: " + nameof(initialArray));
+
+            if(width < 1 || height < 1)
+                throw new ArgumentOutOfRangeException($"Image size is incorrect [{width}, {height}].");
+
             var val = initialArray.GetValue(0);
 
             if (!AllowedTypes.Contains(Type.GetTypeCode(val.GetType())))
                 throw new ArgumentException($"Provided array's base type {val.GetType()} is not allowed.");
-
-            //switch (val)
-            //{
-            //    case uint x:
-            //        _baseArray = new uint[width * height];
-            //        //_typeCode = TypeCode.UInt32;
-            //        break;
-            //    case int x:
-            //        _baseArray = new int[width * height];
-            //        //_typeCode = TypeCode.Int32;
-            //        break;
-            //    case ushort x:
-            //        _baseArray = new ushort[width * height];
-            //        //_typeCode = TypeCode.UInt16;
-            //        break;
-            //    case short x:
-            //        _baseArray = new short[width * height];
-            //        //_typeCode = TypeCode.Int16;
-            //        break;
-            //    case float x:
-            //        _baseArray = new float[width * height];
-            //        //_typeCode = TypeCode.Single;
-            //        break;
-            //    case double x:
-            //        _baseArray = new double[width * height];
-            //        //_typeCode = TypeCode.Double;
-            //        break;
-            //    default:
-            //        throw new NotSupportedException();
-            //}
-
+            
             _typeCode = Type.GetTypeCode(val.GetType());
             if (!AllowedTypes.Contains(_typeCode))
                 throw new ArgumentException();
@@ -125,6 +101,12 @@ namespace ImageDisplayLib
 
         public Image(byte[] initialArray, int width, int height, TypeCode type)
         {
+            if (initialArray == null)
+                throw new ArgumentNullException("Argument is null: " + nameof(initialArray));
+
+            if (width < 1 || height < 1)
+                throw new ArgumentOutOfRangeException($"Image size is incorrect [{width}, {height}].");
+
             if (!Enum.IsDefined(typeof(TypeCode), type))
                 throw new ArgumentException($"Parameter type ({type}) is not defined in {typeof(TypeCode)}.");
 
@@ -132,7 +114,8 @@ namespace ImageDisplayLib
                 throw new ArgumentException($"Specified type {type} is not allowed.");
 
             int size;
-           
+            Width = width;
+            Height = height;
             _typeCode = type;
             var tp = Type.GetType("System." + _typeCode, true, true) ?? throw new ArgumentException();
             _baseArray = Array.CreateInstance(tp, width * height);
@@ -184,8 +167,7 @@ namespace ImageDisplayLib
                     throw new NotSupportedException();
             }
 
-            Width = width;
-            Height = height;
+            
 
         }
 
