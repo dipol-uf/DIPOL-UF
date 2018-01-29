@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Image = ImageDisplayLib.Image;
+using Image = DipolImage.Image;
 
 namespace FITS_CS
 {

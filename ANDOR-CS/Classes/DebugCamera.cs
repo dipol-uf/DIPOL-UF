@@ -23,7 +23,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
 
-using ImageDisplayLib;
+using DipolImage;
 using System.Collections.Concurrent;
 
 namespace ANDOR_CS.Classes

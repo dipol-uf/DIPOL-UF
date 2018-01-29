@@ -28,13 +28,15 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
-using ImageDisplayLib;
+using DipolImage;
 using SDK = ATMCD64CS.AndorSDK;
+
 using static ANDOR_CS.Exceptions.AndorSdkException;
 using static ANDOR_CS.Exceptions.AcquisitionInProgressException;
 
 using static ANDOR_CS.Classes.AndorSdkInitialization;
 using Timer = System.Timers.Timer;
+using Image= DipolImage.Image;
 
 namespace ANDOR_CS.Classes
 {
