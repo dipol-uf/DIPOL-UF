@@ -273,8 +273,13 @@ namespace ANDOR_CS.Classes
             [CallerMemberName] string name = "")
             => OnPropertyChanged(this, new PropertyChangedEventArgs(name));
 
-        public abstract List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
-            out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing);
+        public virtual List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
+            out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
+        {
+            Camera.CurrentSettings = this;
+            timing = default((float, float, float, int));
+            return null;
+        }
 
         /// <summary>
         /// Tries to set vertical speed. 
