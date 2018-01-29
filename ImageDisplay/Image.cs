@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 namespace DipolImage
 {
     [DataContract]
-    public class Image
+    public class Image : IEqualityComparer<Image>, IEquatable<Image>
     {
         private const int MaxImageSingleThreadSize = 512 * 768;
 
@@ -42,10 +42,10 @@ namespace DipolImage
         private volatile bool _isParallelEnabled = true;
 
         [DataMember]
-        private Array _baseArray;
+        private readonly Array _baseArray;
 
         [DataMember]
-        private TypeCode _typeCode;
+        private readonly TypeCode _typeCode;
 
         public static IReadOnlyCollection<TypeCode> AllowedPixelTypes
             => Array.AsReadOnly(AllowedTypes);
@@ -417,19 +417,19 @@ namespace DipolImage
         public Image Copy()
             => new Image(_baseArray, Width, Height);
 
-        public void CopyTo(Image im)
-        {
-            if (im._typeCode != _typeCode || im._baseArray.Length != _baseArray.Length)
-                im._baseArray = Array.CreateInstance(
-                    Type.GetType("System." + _typeCode, true, true) ?? throw new ArgumentException(),
-                    _baseArray.Length);
+        //public void CopyTo(Image im)
+        //{
+        //    if (im._typeCode != _typeCode || im._baseArray.Length != _baseArray.Length)
+        //        im._baseArray = Array.CreateInstance(
+        //            Type.GetType("System." + _typeCode, true, true) ?? throw new ArgumentException(),
+        //            _baseArray.Length);
 
-            Array.Copy(_baseArray, im._baseArray, _baseArray.Length);
+        //    Array.Copy(_baseArray, im._baseArray, _baseArray.Length);
 
-            im.Width = Width;
-            im.Height = Height;
-            im._typeCode = _typeCode;
-        }
+        //    im.Width = Width;
+        //    im.Height = Height;
+        //    im._typeCode = _typeCode;
+        //}
 
         public void Clamp(double low, double high)
         {
@@ -958,6 +958,106 @@ namespace DipolImage
 
             // Notice the reversed order of Height Width
             return new Image(newArray, Height, Width);
+        }
+
+        public bool Equals(Image x, Image y)
+            => x?.Equals(y) ?? false;
+
+        public int GetHashCode(Image obj)
+            =>  obj?.GetHashCode() ?? 0;
+
+        public bool Equals(Image other)
+        {
+            if (_typeCode != other?._typeCode ||
+                Width != other.Width ||
+                Height != other.Height)
+                return false;
+
+            switch (_typeCode)
+            {
+                case TypeCode.Int16:
+                {
+                    var thisArr = (short[]) _baseArray;
+                    var otherArr = (short[]) other._baseArray;
+                    for (var i = 0; i < Width * Height; i++)
+                        if (thisArr[i] != otherArr[i])
+                            return false;
+                    return true;
+                }
+                case TypeCode.UInt16:
+                {
+                    var thisArr = (ushort[])_baseArray;
+                    var otherArr = (ushort[])other._baseArray;
+                    for (var i = 0; i < Width * Height; i++)
+                        if (thisArr[i] != otherArr[i])
+                            return false;
+                    return true;
+                }
+                case TypeCode.Int32:
+                {
+                    var thisArr = (int[])_baseArray;
+                    var otherArr = (int[])other._baseArray;
+                    for (var i = 0; i < Width * Height; i++)
+                        if (thisArr[i] != otherArr[i])
+                            return false;
+                    return true;
+                }
+                case TypeCode.UInt32:
+                {
+                    var thisArr = (uint[])_baseArray;
+                    var otherArr = (uint[])other._baseArray;
+                    for (var i = 0; i < Width * Height; i++)
+                        if (thisArr[i] != otherArr[i])
+                            return false;
+                    return true;
+                }
+                case TypeCode.Single:
+                {
+                    var thisArr = (float[])_baseArray;
+                    var otherArr = (float[])other._baseArray;
+                    for (var i = 0; i < Width * Height; i++)
+                        if (Math.Abs(thisArr[i] - otherArr[i]) > float.Epsilon)
+                            return false;
+                    return true;
+                }
+                case TypeCode.Double:
+                {
+                    var thisArr = (double[])_baseArray;
+                    var otherArr = (double[])other._baseArray;
+                    for (var i = 0; i < Width * Height; i++)
+                        if (Math.Abs(thisArr[i] - otherArr[i]) > double.Epsilon)
+                            return false;
+                    return true;
+                }
+                default:
+                    return false;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Image im && im.Equals(this);
+        }
+
+        public override int GetHashCode()
+        {
+            switch (_typeCode)
+            {
+                case TypeCode.Int16:
+                    return ((short[]) _baseArray).Aggregate(0, (sum, pix) => sum ^ (7 * pix % int.MaxValue));
+                case TypeCode.UInt16:
+                    return ((ushort[])_baseArray).Aggregate(0, (sum, pix) => sum + (7 * pix % int.MaxValue));
+                case TypeCode.Int32:
+                    return ((int[])_baseArray).Aggregate(0, (sum, pix) => sum ^ (7 * pix % int.MaxValue));
+                case TypeCode.UInt32:
+                    return ((uint[])_baseArray).Aggregate(0, (sum, pix) => sum ^ (int)(7 * pix % int.MaxValue));
+                case TypeCode.Single:
+                    return ((float[]) _baseArray).Aggregate(0, (sum, pix) => sum ^ pix.GetHashCode());
+                case TypeCode.Double:
+                    return ((double[])_baseArray).Aggregate(0, (sum, pix) => sum ^ pix.GetHashCode());
+                default:
+                    return base.GetHashCode();
+            }
         }
     }
 }
