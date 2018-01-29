@@ -111,6 +111,10 @@ namespace DIPOL_UF.ViewModels
         /// </summary>
         public bool CanControlInternalExternalShutter => model.Camera.Capabilities.Features.HasFlag(SdkFeatures.ShutterEx);
 
+        public bool AreSettingsApplied => model.AreSettingsApplied;
+        public bool IsAcquiring => Camera.IsAcquiring;
+        public bool IsNotAcquiring => !IsAcquiring;
+
         public ShutterMode InternalShutterState
         {
             get => model.InternalShutterState;
@@ -131,7 +135,7 @@ namespace DIPOL_UF.ViewModels
         /// Controls cooler.
         /// </summary>
         public DelegateCommand ControlCoolerCommand => model.ControlCoolerCommand;
-
+        public DelegateCommand ControlAcquisitionCommand => model.ControlAcquisitionCommand;
         public DelegateCommand SetUpAcquisitionCommand => model.SetUpAcquisitionCommand;
 
         public ConnectedCameraViewModel(ConnectedCamera model) : base(model)
@@ -141,10 +145,17 @@ namespace DIPOL_UF.ViewModels
             model.Camera.PropertyChanged += (sender, e) =>
             {
                 if (e.PropertyName == nameof(model.Camera.CoolerMode))
-                    RaisePropertyChanged(nameof(IsCoolerEnabled));
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsCoolerEnabled)));
+                if (e.PropertyName == nameof(model.Camera.IsAcquiring))
+                {
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsAcquiring)));
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsNotAcquiring)));
+
+                }
             };
         }
 
+       
         protected override bool IsValid(object value, [CallerMemberName] string propertyName = "")
         {
             if (validators.ContainsKey(propertyName))

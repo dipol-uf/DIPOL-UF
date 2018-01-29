@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -20,6 +22,8 @@ namespace DIPOL_UF.Models
     class ConnectedCamera : ObservableObject
     {
         private CameraBase _camera = null;
+        private Task _acqTask = null;
+        private CancellationTokenSource _acqTaskCancel = null;
         private float _targetTemperature = 0.0f;
         private string __targetTemperatureText = "0";
         private bool _canControlTemperature = false;
@@ -32,9 +36,10 @@ namespace DIPOL_UF.Models
                 }
                 );
         
-        private DelegateCommand controlCoolerCommand = null;
+        private DelegateCommand _controlCoolerCommand = null;
         //private DelegateCommand verifyTextInputCommand = null;
-        private DelegateCommand setUpAcquisitionCommand = null;
+        private DelegateCommand _setUpAcquisitionCommand = null;
+        private DelegateCommand _controlAcquisitionCommand = null;
 
         public float TargetTemperature
         {
@@ -146,32 +151,58 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public DelegateCommand ControlCoolerCommand
+        public (float, float, float, int) Timing
         {
-            get => controlCoolerCommand;
+            get => _timing;
             set
             {
-                if (value != controlCoolerCommand)
+                if (!value.Equals(_timing))
                 {
-                    controlCoolerCommand = value;
+                    _timing = value;
+                    RaisePropertyChanged();
+                }
+
+            }
+        }
+        public bool AreSettingsApplied => Camera.CurrentSettings != null;
+        public DelegateCommand ControlCoolerCommand
+        {
+            get => _controlCoolerCommand;
+            set
+            {
+                if (value != _controlCoolerCommand)
+                {
+                    _controlCoolerCommand = value;
                     RaisePropertyChanged();
                 }
             }
         }
         public DelegateCommand SetUpAcquisitionCommand
         {
-            get => setUpAcquisitionCommand;
+            get => _setUpAcquisitionCommand;
             set
             {
-                if (value != setUpAcquisitionCommand)
+                if (value != _setUpAcquisitionCommand)
                 {
-                    setUpAcquisitionCommand = value;
+                    _setUpAcquisitionCommand = value;
                     RaisePropertyChanged();                    
                 }
             }
 
         }
+        public DelegateCommand ControlAcquisitionCommand
+        {
+            get => _controlAcquisitionCommand;
+            set
+            {
+                if (value != _controlAcquisitionCommand)
+                {
+                    _controlAcquisitionCommand = value;
+                    RaisePropertyChanged();
+                }
+            }
 
+        }
         public ObservableConcurrentDictionary<string, bool> EnabledControls
         {
             get => enabledControls;
@@ -190,21 +221,30 @@ namespace DIPOL_UF.Models
             Camera = camera;
             CanControlTemperature = camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature);
             InitializeCommands();
+            Camera.PropertyChanged += OnCameraPropertyCahnged;
         }
 
         private void InitializeCommands()
         {
             ControlCoolerCommand = new DelegateCommand(
                 ControlCoolerCommandExecute,
-                (par) => _camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature)
+                (par) => Camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature)
                 );
 
             SetUpAcquisitionCommand = new DelegateCommand(
                 SetUpAcquisitionCommandExecute,
-                DelegateCommand.CanExecuteAlways
+                (par) => !Camera.IsAcquiring
                 );
-        }
 
+            ControlAcquisitionCommand = new DelegateCommand(
+                ControlAcquisitionCommandExecute,
+                (par) => Camera.CurrentSettings != null);
+        }
+        private void OnCameraPropertyCahnged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Camera.IsAcquiring))
+                Helper.ExecuteOnUI(SetUpAcquisitionCommand.OnCanExecuteChanged);
+        }
         private void ControlCoolerCommandExecute(object parameter)
         {
             if (_camera.CoolerMode == Switch.Disabled)
@@ -225,12 +265,35 @@ namespace DIPOL_UF.Models
             
             var viewModel = new ViewModels.AcquisitionSettingsViewModel(settings, Camera);
 
-            if (new Views.AcquisitionSettingsView(viewModel).ShowDialog() == true)
+            if (new Views.AcquisitionSettingsView(viewModel).ShowDialog() == true && 
+                !viewModel.EstimatedTiming.Equals(default((float, float, float, int))))
             {
-                
+                Timing = viewModel.EstimatedTiming;
+                RaisePropertyChanged(nameof(AreSettingsApplied));
+                ControlAcquisitionCommand.OnCanExecuteChanged();
             }
+                        
+        }
+        private void ControlAcquisitionCommandExecute(object parameter)
+        {
+            if (!Camera.IsAcquiring)
+            {
+                if (Camera.CurrentSettings == null)
+                {
+                    MessageBox.Show("Please apply acquisition settings first.", "No settings applied",
+                          MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                    return;
+                }
 
-            
+                _acqTaskCancel = new CancellationTokenSource();
+                _acqTask = Camera.StartAcquistionAsync(_acqTaskCancel,
+                    Math.Max((int)(Camera.CurrentSettings.ExposureTime / 50), 50));
+            }
+            else
+            {
+                if (!_acqTask.IsCompleted)
+                    _acqTaskCancel.Cancel();
+            }
         }
     }
 }

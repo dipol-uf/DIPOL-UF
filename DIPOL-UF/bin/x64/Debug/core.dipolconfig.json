@@ -12,5 +12,5 @@
 	"RemoteEstablishPBTimeout" : "00:00:05",
 	"UICamStatusUpdateDelay" : 1500,
 	"RemoteLocations2" : ["dipol-2","dipol-3"],
-	"RemoteLocations" : ["dipol-2"]
+	"RemoteLocations3" : ["dipol-2"]
 }
