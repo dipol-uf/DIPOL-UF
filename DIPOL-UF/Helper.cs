@@ -11,7 +11,7 @@ using System.Windows.Threading;
 
 namespace DIPOL_UF
 {
-    static class Helper
+    public static class Helper
     {
         public static Size MeasureString(string strToMeasure, TextBlock presenter)
         {

@@ -8,7 +8,7 @@ using System.Windows.Threading;
 
 namespace DIPOL_UF
 {
-    class ObservableConcurrentDictionary<TKey, TValue> : ConcurrentDictionary<TKey, TValue>, INotifyPropertyChanged, INotifyCollectionChanged
+    public class ObservableConcurrentDictionary<TKey, TValue> : ConcurrentDictionary<TKey, TValue>, INotifyPropertyChanged, INotifyCollectionChanged
     {
         protected Dispatcher dispatcher = System.Windows.Application.Current?.Dispatcher;
 

@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace DIPOL_UF.ViewModels
 {
-    abstract class ViewModel<T> : ObservableObject, INotifyDataErrorInfo where T : class
+    public abstract class ViewModel<T> : ObservableObject, INotifyDataErrorInfo where T : class
     {
         protected enum ErrorPriority : byte
         {
