@@ -19,7 +19,7 @@ namespace DIPOL_UF.ViewModels
 {
     class AcquisitionSettingsViewModel : ViewModel<SettingsBase>
     {
-        private static readonly Regex PropNameTrimmer = new Regex("((Value)|(Index))+(Text)?");
+        private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
         private static readonly List<(string, PropertyInfo)> PropertyList =
             typeof(AcquisitionSettingsViewModel)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -334,7 +334,7 @@ namespace DIPOL_UF.ViewModels
         /// </summary>
         public string ExposureTimeValueText
         {
-            get => model?.ExposureTime?.ToString();
+            get => model.ExposureTime?.ToString();
             set
             {
                 try
@@ -367,7 +367,7 @@ namespace DIPOL_UF.ViewModels
         /// </summary>
         public string EMCCDGainValueText
         {
-            get => model.EMCCDGain.ToString();
+            get => model.EMCCDGain?.ToString();
             set
             {
                 try
@@ -395,6 +395,122 @@ namespace DIPOL_UF.ViewModels
                 {
                     //RaisePropertyChanged();
                 }
+            }
+        }
+
+        public string ImageArea_X1
+        {
+            get => model.ImageArea?.X1.ToString();
+            set {
+                try
+                {
+                    if (int.TryParse(value,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.NumberFormatInfo.InvariantInfo, out var intVal))
+                    {
+                        var rect = new Rectangle(
+                            intVal,
+                            model.ImageArea?.Y1 ?? 1,
+                            model.ImageArea?.X2 > intVal ? model.ImageArea.Value.X2 : intVal + 1,
+                            model.ImageArea?.Y2 ?? 2);
+                        model.SetImageArea(rect);
+                        ValidateProperty(null);
+                    }
+                    else
+                        ValidateProperty(new ArgumentException("Provided value is not a number"));
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
+
+            }
+        }
+        public string ImageArea_X2
+        {
+            get => model.ImageArea?.X2.ToString();
+            set
+            {
+                try
+                {
+                    if (int.TryParse(value,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.NumberFormatInfo.InvariantInfo, out var intVal))
+                    {
+                        var rect = new Rectangle(
+                            model.ImageArea?.X1 < intVal ? model.ImageArea.Value.X1 : intVal - 1,
+                            model.ImageArea?.Y1 ?? 1,
+                            intVal,
+                            model.ImageArea?.Y2 ?? 2);
+                        model.SetImageArea(rect);
+                        ValidateProperty(null);
+                    }
+                    else
+                        ValidateProperty(new ArgumentException("Provided value is not a number"));
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
+
+            }
+        }
+        public string ImageArea_Y1
+        {
+            get => model.ImageArea?.Y1.ToString();
+            set
+            {
+                try
+                {
+                    if (int.TryParse(value,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.NumberFormatInfo.InvariantInfo, out var intVal))
+                    {
+                        var rect = new Rectangle(
+                            model.ImageArea?.X1 ?? 1,
+                            intVal,
+                            model.ImageArea?.X2 ?? 2,
+                            model.ImageArea?.Y2 > intVal ? model.ImageArea.Value.Y2 : intVal + 1);
+                        model.SetImageArea(rect);
+                        ValidateProperty(null);
+                    }
+                    else
+                        ValidateProperty(new ArgumentException("Provided value is not a number"));
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
+
+            }
+        }
+        public string ImageArea_Y2
+        {
+            get => model.ImageArea?.Y2.ToString();
+            set
+            {
+                try
+                {
+                    if (int.TryParse(value,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.NumberFormatInfo.InvariantInfo, out var intVal))
+                    {
+                        var rect = new Rectangle(
+                            model.ImageArea?.X1 ?? 1,
+                            model.ImageArea?.Y1 < intVal ? model.ImageArea.Value.Y1 : intVal - 1,
+                            model.ImageArea?.X2 ?? 2,
+                            intVal);
+                        model.SetImageArea(rect);
+                        ValidateProperty(null);
+                    }
+                    else
+                        ValidateProperty(new ArgumentException("Provided value is not a number"));
+                }
+                catch (Exception e)
+                {
+                    ValidateProperty(e);
+                }
+
             }
         }
 
@@ -426,7 +542,8 @@ namespace DIPOL_UF.ViewModels
                 { nameof(model.ReadoutMode), true },
                 { nameof(model.TriggerMode), true },
                 { nameof(model.ExposureTime), true },
-                { nameof(model.EMCCDGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) }
+                { nameof(model.EMCCDGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) },
+                { nameof(model.ImageArea), true }
             };
         }
 
@@ -453,7 +570,8 @@ namespace DIPOL_UF.ViewModels
                     new KeyValuePair<string, bool>(nameof(model.ExposureTime), true),
                     new KeyValuePair<string, bool>(nameof(model.EMCCDGain),
                         (OutputAmplifierIndex >= 0)
-                        && Camera.Properties.OutputAmplifiers[OutputAmplifierIndex].OutputAmplifier == OutputAmplification.Conventional)
+                        && Camera.Properties.OutputAmplifiers[OutputAmplifierIndex].OutputAmplifier == OutputAmplification.Conventional),
+                    new KeyValuePair<string, bool>(nameof(model.ImageArea), true)   
                 }
                 );
         }
@@ -525,11 +643,18 @@ namespace DIPOL_UF.ViewModels
             };
             dialog.Filter = $@"Acquisition settings (*{dialog.DefaultExt})|*{dialog.DefaultExt}|All files (*.*)|*.*";
 
+            var temp = AllowedSettings;
+            AllowedSettings =
+                new ObservableConcurrentDictionary<string, bool>(temp.Select(item => new KeyValuePair<string, bool>(item.Key, false)));
+            RaisePropertyChanged(nameof(AllowedSettings));
+            AllowedSettings = temp;
             if (dialog.ShowDialog() == true)
+            {
                 Task.Run(() =>
                 {
                     try
                     {
+                        Task.Delay(2000).Wait();
                         using (var fl = File.Open(dialog.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                             model.Deserialize(fl);
                     }
@@ -543,7 +668,12 @@ namespace DIPOL_UF.ViewModels
                                 "Unable to load file", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                         });
                     }
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AllowedSettings)));
                 });
+
+            }
+            else
+                RaisePropertyChanged(nameof(AllowedSettings));
         }
 
         private void ValidateProperty(Exception e = null,
@@ -615,17 +745,26 @@ namespace DIPOL_UF.ViewModels
 
         protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            // Model can raise PropertyChange from non-UI thread,
+            // therefore ModelView should dispatch respective events on UI thread
+
             base.OnModelPropertyChanged(sender, e);
             var prop = PropertyList
                 .FirstOrDefault(item => item.Item1 == e.PropertyName);
 
             if (prop.Item2 != null)
-               Application.Current.Dispatcher
-                    .Invoke(() => RaisePropertyChanged(prop.Item2.Name));
+               Helper.ExecuteOnUI(() => RaisePropertyChanged(prop.Item2.Name));
 
             if (e.PropertyName == nameof(model.AcquisitionMode))
-                Application.Current.Dispatcher
-                   .Invoke(() => RaisePropertyChanged(nameof(FrameTransferValue)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(FrameTransferValue)));
+
+            if (e.PropertyName == nameof(model.ImageArea))
+            {
+                Helper.ExecuteOnUI(() => RaiseErrorChanged(nameof(ImageArea_X1)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(ImageArea_Y1)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(ImageArea_X2)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(ImageArea_Y2)));
+            }
         }
 
         private void CloseView(object parameter, bool isCanceled)

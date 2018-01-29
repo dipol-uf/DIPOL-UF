@@ -3,14 +3,10 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
 namespace DIPOL_UF
@@ -92,6 +88,14 @@ namespace DIPOL_UF
         /// <returns>True if Dispatcher.Invoke can still be called.</returns>
         public static bool IsAvailable(this Dispatcher d)
             => !d.HasShutdownStarted && !d.HasShutdownFinished;
+
+        public static void ExecuteOnUI(Action action)
+        {
+            if (Thread.CurrentThread == Application.Current.Dispatcher.Thread)
+                action();
+            else
+                Application.Current.Dispatcher.Invoke(action);
+        }
 
         /// <summary>
         /// Retrieves an item from a dictionary if specified key is present; otherwise, returns null.
