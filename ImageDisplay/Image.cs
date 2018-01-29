@@ -417,20 +417,6 @@ namespace DipolImage
         public Image Copy()
             => new Image(_baseArray, Width, Height);
 
-        //public void CopyTo(Image im)
-        //{
-        //    if (im._typeCode != _typeCode || im._baseArray.Length != _baseArray.Length)
-        //        im._baseArray = Array.CreateInstance(
-        //            Type.GetType("System." + _typeCode, true, true) ?? throw new ArgumentException(),
-        //            _baseArray.Length);
-
-        //    Array.Copy(_baseArray, im._baseArray, _baseArray.Length);
-
-        //    im.Width = Width;
-        //    im.Height = Height;
-        //    im._typeCode = _typeCode;
-        //}
-
         public void Clamp(double low, double high)
         {
             switch (_typeCode)
