@@ -90,7 +90,7 @@
                                  Text="{Binding 
                                     ExposureTimeValueText,
                                     Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged,
+                                    UpdateSourceTrigger=LostFocus,
                                     ValidatesOnNotifyDataErrors=True}">
                             <TextBox.IsEnabled>
                                 <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
@@ -508,7 +508,8 @@
                                  Text="{Binding 
                                     EMCCDGainValueText,
                                     Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged}">
+                                    UpdateSourceTrigger=LostFocus,
+                                    ValidatesOnNotifyDataErrors=True}">
                             <TextBox.Style>
                                 <Style BasedOn="{StaticResource ResourceKey=TextBoxStyle}" 
                                        TargetType="TextBox">
@@ -541,7 +542,187 @@
                     </Grid>
                 </ScrollViewer>
             </TabItem>
-            <TabItem Header="Image size"/>
+            <TabItem Header="Image size">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="4*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+                     <!--Image area-->
+                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                               Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Text="Image Area"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center">
+                        X<Run BaselineAlignment="Subscript" 
+                              FontSize="{StaticResource ResourceKey=SmallFontSize}" >1</Run>
+                    </TextBlock>
+                    <TextBlock Grid.Row="2" Grid.Column="0"
+                                   Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center">
+                        Y<Run BaselineAlignment="Subscript" 
+                              FontSize="{StaticResource ResourceKey=SmallFontSize}" >1</Run>
+                    </TextBlock>
+                    <TextBlock Grid.Row="3" Grid.Column="0"
+                                   Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center">
+                        X<Run BaselineAlignment="Subscript" 
+                              FontSize="{StaticResource ResourceKey=SmallFontSize}" >2</Run>
+                    </TextBlock>
+                    <TextBlock Grid.Row="4" Grid.Column="0"
+                                   Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center">
+                        Y<Run BaselineAlignment="Subscript" 
+                              FontSize="{StaticResource ResourceKey=SmallFontSize}" >2</Run>
+                    </TextBlock>
+                    <!--Image Area controls-->
+                    <TextBox Grid.Row="1" Grid.Column="1"
+                                 Text="{Binding 
+                                    'ImageArea_X1',
+                                    Mode=TwoWay,
+                                    UpdateSourceTrigger=LostFocus,
+                                    ValidatesOnNotifyDataErrors=True}">
+                            <TextBox.Style>
+                                <Style BasedOn="{StaticResource ResourceKey=TextBoxStyle}" 
+                                       TargetType="TextBox">
+                                    <Style.Triggers>
+                                            <DataTrigger 
+                                                Binding="{Binding
+                                                    HasErrorsOfProperties[ImageArea_X1],
+                                                    Mode=OneWay,
+                                                    UpdateSourceTrigger=PropertyChanged}"
+                                                Value="true">
+                                                <Setter 
+                                                    Property="ToolTip"
+                                                    Value="{Binding 
+                                                        LatestErrors[ImageArea_X1], 
+                                                        Mode=OneWay,
+                                                        UpdateSourceTrigger=PropertyChanged}"/>
+                                            </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                            <TextBox.IsEnabled>
+                                <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                                    <Binding Path="SupportedSettings[ImageArea]" Mode="OneTime"/>
+                                    <Binding Path="AllowedSettings[ImageArea]" 
+                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                                </MultiBinding>
+                            </TextBox.IsEnabled>
+                        </TextBox>
+                    <TextBox Grid.Row="2" Grid.Column="1"
+                                 Text="{Binding 
+                                    'ImageArea_Y1',
+                                    Mode=TwoWay,
+                                    UpdateSourceTrigger=LostFocus,
+                                    ValidatesOnNotifyDataErrors=True}">
+                        <TextBox.Style>
+                            <Style BasedOn="{StaticResource ResourceKey=TextBoxStyle}" 
+                                       TargetType="TextBox">
+                                <Style.Triggers>
+                                    <DataTrigger 
+                                                Binding="{Binding
+                                                    HasErrorsOfProperties[ImageArea_Y1],
+                                                    Mode=OneWay,
+                                                    UpdateSourceTrigger=PropertyChanged}"
+                                                Value="true">
+                                        <Setter 
+                                                    Property="ToolTip"
+                                                    Value="{Binding 
+                                                        LatestErrors[ImageArea_Y1], 
+                                                        Mode=OneWay,
+                                                        UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                        <TextBox.IsEnabled>
+                            <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                                <Binding Path="SupportedSettings[ImageArea]" Mode="OneTime"/>
+                                <Binding Path="AllowedSettings[ImageArea]" 
+                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                            </MultiBinding>
+                        </TextBox.IsEnabled>
+                    </TextBox>
+                   <TextBox Grid.Row="3" Grid.Column="1"
+                                 Text="{Binding 
+                                    'ImageArea_X2',
+                                    Mode=TwoWay,
+                                    UpdateSourceTrigger=LostFocus,
+                                    ValidatesOnNotifyDataErrors=True}">
+                        <TextBox.Style>
+                            <Style BasedOn="{StaticResource ResourceKey=TextBoxStyle}" 
+                                       TargetType="TextBox">
+                                <Style.Triggers>
+                                    <DataTrigger 
+                                                Binding="{Binding
+                                                    HasErrorsOfProperties[ImageArea_X2],
+                                                    Mode=OneWay,
+                                                    UpdateSourceTrigger=PropertyChanged}"
+                                                Value="true">
+                                        <Setter 
+                                                    Property="ToolTip"
+                                                    Value="{Binding 
+                                                        LatestErrors[ImageArea_X2], 
+                                                        Mode=OneWay,
+                                                        UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                        <TextBox.IsEnabled>
+                            <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                                <Binding Path="SupportedSettings[ImageArea]" Mode="OneTime"/>
+                                <Binding Path="AllowedSettings[ImageArea]" 
+                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                            </MultiBinding>
+                        </TextBox.IsEnabled>
+                    </TextBox>
+                   <TextBox Grid.Row="4" Grid.Column="1"
+                                 Text="{Binding 
+                                    'ImageArea_Y2',
+                                    Mode=TwoWay,
+                                    UpdateSourceTrigger=LostFocus,
+                                    ValidatesOnNotifyDataErrors=True}">
+                        <TextBox.Style>
+                            <Style BasedOn="{StaticResource ResourceKey=TextBoxStyle}" 
+                                       TargetType="TextBox">
+                                <Style.Triggers>
+                                    <DataTrigger 
+                                                Binding="{Binding
+                                                    HasErrorsOfProperties[ImageArea_Y2],
+                                                    Mode=OneWay,
+                                                    UpdateSourceTrigger=PropertyChanged}"
+                                                Value="true">
+                                        <Setter 
+                                                    Property="ToolTip"
+                                                    Value="{Binding 
+                                                        LatestErrors[ImageArea_Y2], 
+                                                        Mode=OneWay,
+                                                        UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                        <TextBox.IsEnabled>
+                            <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                                <Binding Path="SupportedSettings[ImageArea]" Mode="OneTime"/>
+                                <Binding Path="AllowedSettings[ImageArea]" 
+                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                            </MultiBinding>
+                        </TextBox.IsEnabled>
+                    </TextBox>
+                </Grid>
+            </TabItem>
             <TabItem Header="Cycles">
                 
             </TabItem>
