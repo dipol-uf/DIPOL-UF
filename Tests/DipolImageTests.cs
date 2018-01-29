@@ -56,5 +56,28 @@ namespace Tests
             Assert.AreEqual(initArray[1], reconstructed);
 
         }
+
+        [TestMethod]
+        public void Test_Equals()
+        {
+            var array = new byte[1024];
+            R.NextBytes(array);
+
+            var img1 = new Image(array, 16, 16, TypeCode.Single);
+            var img2 = new Image(array, 16, 16, TypeCode.Single);
+
+            Assert.IsTrue(img1.Equals(img2));
+        }
+
+        [TestMethod]
+        public void Test_Copy()
+        {
+            var array = new byte[1024];
+            R.NextBytes(array);
+
+            var img = new Image(array, 32, 16, TypeCode.Int16);
+
+            Assert.IsTrue(img.Equals(img.Copy()));
+        }
     }
 }
