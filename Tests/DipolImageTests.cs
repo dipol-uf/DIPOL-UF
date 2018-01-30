@@ -270,5 +270,71 @@ namespace Tests
                 Assert.IsTrue(Enumerable.Range(0, image.Width * image.Height).All( i => image[i % 2, i / 2].Equals(imageT[i / 2, i % 2])));
             }
         }
+
+        [TestMethod]
+        public void Test_Type()
+        {
+            foreach (var code in Image.AllowedPixelTypes)
+                Assert.AreEqual(Type.GetType("System." + code), new Image(TestByteArray, 2, 2, code).Type);
+        }
+
+        [TestMethod]
+        public void Test_CastTo()
+        {
+            var image = new Image(TestArray,4, TestArray.Length/4);
+            Assert.IsTrue(image.Equals(image.CastTo<int, int>(x => x)));
+            Assert.ThrowsException<ArgumentException>(() => image.CastTo<int, string>(x => x.ToString()));
+            //Assert.ThrowsException<TypeAccessException>(() => image.CastTo<double, int> ( x => (int)x));
+            var otherArray = TestArray.Select(x => (double) x).ToArray();
+
+            var otherImage = new Image(otherArray, 4, otherArray.Length/4);
+            Assert.IsTrue(otherImage.Equals(image.CastTo<int, double>(x => 1.0 * x)));
+        }
+
+        [TestMethod]
+        public void Test_Clamp()
+        {
+            foreach (var code in Image.AllowedPixelTypes)
+            {
+                var image = new Image(TestByteArray, 4, 4, code);
+                image.Clamp(0, 1);
+
+                var min = image.Min() as IComparable;
+                var max = image.Max() as IComparable;
+
+                Assert.IsTrue(min?.CompareTo(Convert.ChangeType(0, code)) >= 0);
+                Assert.IsTrue(max?.CompareTo(Convert.ChangeType(1, code)) <= 0);
+
+            }
+        }
+
+        [TestMethod]
+        public void Test_Scale()
+        {
+            foreach (var code in Image.AllowedPixelTypes)
+            {
+                var f_mx = (Type.GetType("System." + code) ?? typeof(byte))
+                    .GetFields(BindingFlags.Public | BindingFlags.Static)
+                    .First(fi => fi.Name == "MaxValue");
+
+                var f_mn = (Type.GetType("System." + code) ?? typeof(byte))
+                    .GetFields(BindingFlags.Public | BindingFlags.Static)
+                    .First(fi => fi.Name == "MinValue");
+
+                dynamic mx = f_mx.GetValue(null);
+                dynamic mn = f_mn.GetValue(null);
+
+                var image = new Image(TestByteArray, TestByteArray.Length/4/System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                image.Clamp(mn / 100, mx / 100);
+
+                image.Scale(1, 10);
+
+                var min = image.Min() as IComparable;
+                var max = image.Max() as IComparable;
+
+                Assert.IsTrue(min?.CompareTo(Convert.ChangeType(1, code)) == 0);
+                Assert.IsTrue(max?.CompareTo(Convert.ChangeType(10, code)) == 0);
+            }
+        }
     }
 }

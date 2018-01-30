@@ -65,6 +65,8 @@ namespace DipolImage
             private set;
         }
 
+        public Type Type => Type.GetType("System." + _typeCode);
+
         public object this[int i, int j]
         {
             get => _baseArray.GetValue(i * Width + j);
@@ -472,7 +474,7 @@ namespace DipolImage
                             Set(locHigh, i, j);
                     break;
                 }
-                case TypeCode.Double:
+                default:
                 {
                     var locLow = low;
                     var locHigh = high;
@@ -484,8 +486,7 @@ namespace DipolImage
                             Set(locHigh, i, j);
                     break;
                 }
-                default:
-                    throw new NotSupportedException();
+               
             }
         }
 
@@ -597,7 +598,7 @@ namespace DipolImage
                             Worker(i);
                     break;
                 }
-                case TypeCode.Double:
+                default:
                 {
                     var globMin = Convert.ToDouble(gMin);
                     var globMax = Convert.ToDouble(gMax);
@@ -617,8 +618,6 @@ namespace DipolImage
                             Worker(i);
                     break;
                 }
-                default:
-                    throw new NotSupportedException();
             }
         }
 
@@ -699,7 +698,7 @@ namespace DipolImage
                     return query.Skip(length - 1).Take(1).First();
 
                 }
-                case TypeCode.Double:
+                default:
                 {
                     if (Math.Abs(lvl) < double.Epsilon)
                         return (double)Min();
@@ -715,7 +714,6 @@ namespace DipolImage
                 }
             }
 
-            throw new NotSupportedException();
         }
 
         public void AddScalar(double value)
@@ -861,7 +859,7 @@ namespace DipolImage
         }
 
         public Image CastTo<TS, TD>(Func<TS, TD> cast)
-           =>  (typeof(TS) == Type.GetType("System." + UnderlyingType))                       
+           =>  (typeof(TS) == Type)                       
             ? new Image(((TS[])_baseArray)
                 .AsParallel()
                 .Select(cast)
@@ -919,7 +917,7 @@ namespace DipolImage
                         castArray[j * Height + i] = Get<float>(i, j);
                     break;
                 }
-                case TypeCode.Double:
+                default:
                 {
                     var castArray = (double[])newArray;
                     for (var i = 0; i < Height; i++)
@@ -927,9 +925,7 @@ namespace DipolImage
                         castArray[j * Height + i] = Get<double>(i, j);
                     break;
                 }
-                default:
-                    throw new NotSupportedException();
-
+                
             }
 
             // Notice the reversed order of Height Width
