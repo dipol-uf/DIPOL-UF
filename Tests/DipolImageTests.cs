@@ -19,13 +19,12 @@ namespace Tests
         {
             R = new Random();
             TestArray = new int[32];
-            const int stride = sizeof(int);
-            TestByteArray= new byte[TestArray.Length * stride];
             for (var i = 0; i < TestArray.Length; i++)
             {
                 TestArray[i] = R.Next();
-
             }
+            TestByteArray= new byte[512];
+            R.NextBytes(TestByteArray);
         }
 
         [TestMethod]
@@ -107,8 +106,8 @@ namespace Tests
                                 m.GetParameters().First().ParameterType == type);
                 var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
                 var reconstructed = new byte[2 * size];
-                Array.Copy((byte[])mi.Invoke(null, new object[]{ initArray.GetValue(0)}), 0, reconstructed, 0, size);
-                Array.Copy((byte[])mi.Invoke(null, new object[] { initArray.GetValue(1) }), 0, reconstructed, size, size);
+                Array.Copy((byte[])mi.Invoke(null, new[]{ initArray.GetValue(0)}), 0, reconstructed, 0, size);
+                Array.Copy((byte[])mi.Invoke(null, new[] { initArray.GetValue(1) }), 0, reconstructed, size, size);
 
                 CollectionAssert.AreEqual(reconstructed, bytes);
             }
@@ -204,20 +203,26 @@ namespace Tests
             {
                 var type = Type.GetType("System." + code) ?? typeof(byte);
                 var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
-                var buffer = new byte[size];
 
-                var val = Activator.CreateInstance(type);
+                var max = type
+                    .GetFields(BindingFlags.Public | BindingFlags.Static)
+                    .First(fi => fi.Name == "MinValue")
+                    .GetValue(null);
 
                 var image = new Image(TestByteArray, TestByteArray.Length / size, 1, code);
+                for (var i = 0; i < image.Width; i++)
+                {
+                    var val = image[0, i] as IComparable;
+                    if (val?.CompareTo(max) > 0)
+                        max = Convert.ChangeType(val, code);
+                }
 
-                for(var i = 0; i < image.Width; i++)
-                    if ((image[0, i] is IComparable comp) && comp.CompareTo(val) > 0)
-                        val = comp;
 
-                val = Convert.ChangeType(val, code);
+                max = Convert.ChangeType(max, code);
 
-                Assert.AreEqual(val, image.Max());
+                Assert.AreEqual(max, image.Max());
             }
+        
         }
 
         [TestMethod]
@@ -227,19 +232,42 @@ namespace Tests
             {
                 var type = Type.GetType("System." + code) ?? typeof(byte);
                 var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
-                var buffer = new byte[size];
 
-                var val = Activator.CreateInstance(type);
+                var min = type
+                    .GetFields(BindingFlags.Public | BindingFlags.Static)
+                    .First(fi => fi.Name == "MaxValue")
+                    .GetValue(null);
 
                 var image = new Image(TestByteArray, TestByteArray.Length / size, 1, code);
-
                 for (var i = 0; i < image.Width; i++)
-                    if ((image[0, i] is IComparable comp) && comp.CompareTo(val) < 0)
-                        val = comp;
+                {
+                    var val = image[0, i] as IComparable;
+                    if (val?.CompareTo(min) < 0)
+                        min = Convert.ChangeType(val, code);
+                }
 
-                val = Convert.ChangeType(val, code);
 
-                Assert.AreEqual(val, image.Min());
+                min = Convert.ChangeType(min, code);
+
+                Assert.AreEqual(min, image.Min());
+            }
+        }
+
+        [TestMethod]
+        public void Test_Transpose()
+        {
+            foreach (var code in Image.AllowedPixelTypes)
+            {
+                var type = Type.GetType("System." + code) ?? typeof(byte);
+                var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
+
+                var image = new Image(TestByteArray, TestByteArray.Length / 2 / size, 2, code);
+                var imageT = image.Transpose();
+
+                Assert.AreEqual(image.Width, imageT.Height);
+                Assert.AreEqual(image.Height, imageT.Width);
+
+                Assert.IsTrue(Enumerable.Range(0, image.Width * image.Height).All( i => image[i % 2, i / 2].Equals(imageT[i / 2, i % 2])));
             }
         }
     }
