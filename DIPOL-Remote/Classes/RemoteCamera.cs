@@ -31,7 +31,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
 using ANDOR_CS.Classes;
-using ImageDisplayLib;
+using DipolImage;
 
 namespace DIPOL_Remote.Classes
 {

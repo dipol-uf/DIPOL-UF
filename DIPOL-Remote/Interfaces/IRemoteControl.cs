@@ -56,7 +56,7 @@ namespace DIPOL_Remote.Interfaces
     [ServiceKnownType(typeof(AcquisitionStatusEventArgs))]
     [ServiceKnownType(typeof(TemperatureStatusEventArgs))]
     [ServiceKnownType(typeof(NewImageReceivedEventArgs))]
-    [ServiceKnownType(typeof(ImageDisplayLib.Image))]
+    [ServiceKnownType(typeof(DipolImage.Image))]
     [ServiceKnownType(typeof(TypeCode))]
     internal interface IRemoteControl
     {

@@ -90,9 +90,7 @@ namespace DipolImage
                 throw new ArgumentException($"Provided array's base type {val.GetType()} is not allowed.");
             
             _typeCode = Type.GetTypeCode(val.GetType());
-            if (!AllowedTypes.Contains(_typeCode))
-                throw new ArgumentException();
-
+          
             _baseArray = Array.CreateInstance(val.GetType(), width * height);
             Array.Copy(initialArray, _baseArray, width * height);
             Width = width;
@@ -163,8 +161,7 @@ namespace DipolImage
                     for (var j = 0; j < Width; j++)
                         Set(BitConverter.ToDouble(initialArray, (i * width + j) * size), i, j);
                     break;
-                default:
-                    throw new NotSupportedException();
+                
             }
 
             
@@ -223,7 +220,7 @@ namespace DipolImage
                         Array.Copy(BitConverter.GetBytes(Get<float>(i, j)), 0, byteArray, (i * Width + j) * size, size);
                     break;
                 }
-                case TypeCode.Double:
+                default:
                 {
                     const int size = sizeof(double);
                     byteArray = new byte[Width * Height * size];
@@ -232,8 +229,7 @@ namespace DipolImage
                         Array.Copy(BitConverter.GetBytes(Get<double>(i, j)), 0, byteArray, (i * Width + j) * size, size);
                     break;
                 }
-                default:
-                    throw new NotSupportedException();
+                
             }
 
 
@@ -306,7 +302,7 @@ namespace DipolImage
                     max = localMax;
                     break;
                 }
-                case TypeCode.Double:
+                default:
                 {
                     var localMax = double.MinValue;
                     double localVal;
@@ -318,11 +314,8 @@ namespace DipolImage
                     max = localMax;
                     break;
                 }
-                default:
-                    throw new NotSupportedException();
+              
             }
-
-
 
             return max;
         }
@@ -335,7 +328,7 @@ namespace DipolImage
             {
                 case TypeCode.UInt16:
                     {
-                        var localMin = ushort.MinValue;
+                        var localMin = ushort.MaxValue;
                         ushort localVal;
                         for (var i = 0; i < Height; i++)
                             for (var j = 0; j < Width; j++)
@@ -347,7 +340,7 @@ namespace DipolImage
                     }
                 case TypeCode.Int16:
                     {
-                        var localMin = short.MinValue;
+                        var localMin = short.MaxValue;
                         short localVal;
                         for (var i = 0; i < Height; i++)
                             for (var j = 0; j < Width; j++)
@@ -359,7 +352,7 @@ namespace DipolImage
                     }
                 case TypeCode.UInt32:
                     {
-                        var localMin = uint.MinValue;
+                        var localMin = uint.MaxValue;
                         uint localVal;
                         for (var i = 0; i < Height; i++)
                             for (var j = 0; j < Width; j++)
@@ -371,7 +364,7 @@ namespace DipolImage
                     }
                 case TypeCode.Int32:
                     {
-                        var localMin = int.MinValue;
+                        var localMin = int.MaxValue;
                         int localVal;
                         for (var i = 0; i < Height; i++)
                             for (var j = 0; j < Width; j++)
@@ -383,7 +376,7 @@ namespace DipolImage
                     }
                 case TypeCode.Single:
                     {
-                        var localMin = float.MinValue;
+                        var localMin = float.MaxValue;
                         float localVal;
                         for (var i = 0; i < Height; i++)
                             for (var j = 0; j < Width; j++)
@@ -393,9 +386,9 @@ namespace DipolImage
                         min = localMin;
                         break;
                     }
-                case TypeCode.Double:
+                default:
                     {
-                        var localMin = double.MinValue;
+                        var localMin = double.MaxValue;
                         double localVal;
                         for (var i = 0; i < Height; i++)
                             for (var j = 0; j < Width; j++)
@@ -405,8 +398,6 @@ namespace DipolImage
                         min = localMin;
                         break;
                     }
-                default:
-                    throw new NotSupportedException();
             }
 
 
@@ -880,8 +871,7 @@ namespace DipolImage
 
         public Image Transpose()
         {
-            var type = Type.GetType("System." + _typeCode, true, true)
-                       ?? throw new NotSupportedException();
+            var type = Type.GetType("System." + _typeCode, true, true) ?? typeof(byte);
 
             var newArray = Array.CreateInstance(type, Width * Height);
 
@@ -950,7 +940,7 @@ namespace DipolImage
             => x?.Equals(y) ?? false;
 
         public int GetHashCode(Image obj)
-            =>  obj?.GetHashCode() ?? 0;
+            =>  obj.GetHashCode();
 
         public bool Equals(Image other)
         {
@@ -1006,7 +996,7 @@ namespace DipolImage
                             return false;
                     return true;
                 }
-                case TypeCode.Double:
+                default:
                 {
                     var thisArr = (double[])_baseArray;
                     var otherArr = (double[])other._baseArray;
@@ -1015,8 +1005,7 @@ namespace DipolImage
                             return false;
                     return true;
                 }
-                default:
-                    return false;
+              
             }
         }
 
@@ -1039,10 +1028,9 @@ namespace DipolImage
                     return ((uint[])_baseArray).Aggregate(0, (sum, pix) => sum ^ (int)(7 * pix % int.MaxValue));
                 case TypeCode.Single:
                     return ((float[]) _baseArray).Aggregate(0, (sum, pix) => sum ^ pix.GetHashCode());
-                case TypeCode.Double:
-                    return ((double[])_baseArray).Aggregate(0, (sum, pix) => sum ^ pix.GetHashCode());
                 default:
-                    return base.GetHashCode();
+                    return ((double[])_baseArray).Aggregate(0, (sum, pix) => sum ^ pix.GetHashCode());
+                
             }
         }
     }
