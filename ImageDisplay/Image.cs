@@ -592,7 +592,7 @@ namespace DipolImage
                         void Worker(int k)
                         {
                             for (var j = 0; j < Width; j++)
-                                Set((float)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<float>(k, j) - locMin)), k, j);
+                                Set((float)(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<float>(k, j) - locMin)), k, j);
                         }
 
                         if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
@@ -612,7 +612,7 @@ namespace DipolImage
                         void Worker(int k)
                         {
                             for (var j = 0; j < Width; j++)
-                                Set(Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<double>(k, j) - locMin)), k, j);
+                                Set((globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<double>(k, j) - locMin)), k, j);
                         }
 
                         if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
