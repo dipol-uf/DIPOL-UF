@@ -441,5 +441,40 @@ namespace Tests
                     }
             }
         }
+
+        [TestMethod]
+        public void Test_Percentile()
+        {
+            foreach (var code in Image.AllowedPixelTypes)
+            {
+                var type = Type.GetType("System." + code) ?? typeof(byte);
+
+             
+                const int N = 1024;
+                var array = Array.CreateInstance(type, N);
+                var d_array = new double[N];
+
+                for (var i = 0; i < N / 4; i++)
+                    for (var j = 0; j < 4; j++)
+                    {
+                        array.SetValue(Convert.ChangeType(i + j, code), i * 4 + j);
+                        d_array[i * 4 + j] = i + j;
+                    }
+
+
+
+                var image = new Image(array, 4, N / 4);
+
+                dynamic mn = image.Min();
+                dynamic mx = image.Max();
+
+                Assert.ThrowsException<ArgumentOutOfRangeException>(() => image.Percentile(-1));
+                Assert.ThrowsException<ArgumentOutOfRangeException>(() => image.Percentile(2));
+                Assert.AreEqual(1.0 * mn, image.Percentile(0));
+                Assert.AreEqual(1.0 * mx, image.Percentile(1));
+                var prcnt = image.Percentile(0.5);
+                var factor = d_array.OrderBy(x => x).Count(x => x < prcnt) - 0.5 * array.Length;
+            }
+        }
     }
 }
