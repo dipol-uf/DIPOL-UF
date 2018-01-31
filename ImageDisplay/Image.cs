@@ -20,14 +20,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace DipolImage
 {
+    [DebuggerDisplay(@"\{Image ({Height} x {Width}) of type {UnderlyingType}\}")]
     [DataContract]
     public class Image : IEqualityComparer<Image>, IEquatable<Image>
     {
         private const int MaxImageSingleThreadSize = 512 * 768;
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly TypeCode[] AllowedTypes =
          {
             TypeCode.Double,
@@ -44,6 +47,7 @@ namespace DipolImage
         [DataMember]
         private readonly Array _baseArray;
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         [DataMember]
         private readonly TypeCode _typeCode;
 
@@ -805,15 +809,14 @@ namespace DipolImage
                         data[i] = Convert.ToSingle(data[i] * value);
                     break;
                 }
-                case TypeCode.Double:
+                default:
                 {
                     var data = (double[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
                         data[i] = Convert.ToDouble(data[i] * value);
                     break;
                 }
-                default:
-                    throw new NotSupportedException();
+                
             }
         }
 
