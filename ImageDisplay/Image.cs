@@ -820,46 +820,6 @@ namespace DipolImage
             }
         }
 
-        public Image ReduceToDisplay(double min, double max)
-        {
-
-            ushort Convrtr(double x) => Convert.ToUInt16(1.0 * (x - min) * ushort.MaxValue / (max - min));
-            switch (UnderlyingType)
-            {
-                case TypeCode.Int16:
-                    return new Image(((short[])_baseArray)
-                        .AsParallel()
-                        .Select(x => Convrtr(x))
-                        .ToArray(), Width, Height);
-                case TypeCode.UInt16:
-                    return Copy();
-                case TypeCode.Int32:
-                    return new Image(((int[])_baseArray)
-                        .AsParallel()
-                        .Select(x => Convrtr(x))
-                        .ToArray(), Width, Height);
-                case TypeCode.UInt32:
-                    return new Image(((uint[])_baseArray)
-                        .AsParallel()
-                        .Select(x => Convrtr(x))
-                        .ToArray(), Width, Height);
-                case TypeCode.Single:
-                    return new Image(((float[])_baseArray)
-                        .AsParallel()
-                        .Select(x => Convrtr(x))
-                        .ToArray(), Width, Height);
-                case TypeCode.Double:
-                    return new Image(((double[])_baseArray)
-                        .AsParallel()
-                        .Select(Convrtr)
-                        .ToArray(), Width, Height);
-                default:
-                    throw new NotSupportedException();
-            }
-
-
-        }
-
         public Image CastTo<TS, TD>(Func<TS, TD> cast)
            =>  (typeof(TS) == Type)                       
             ? new Image(((TS[])_baseArray)
