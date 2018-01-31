@@ -14,6 +14,8 @@ namespace Tests
         public Random R;
         public int[] TestArray;
         public byte[] TestByteArray;
+        public byte[] VeryLargeByteArray;
+
         [TestInitialize]
         public void Test_Initialize()
         {
@@ -25,6 +27,10 @@ namespace Tests
             }
             TestByteArray= new byte[512];
             R.NextBytes(TestByteArray);
+
+            VeryLargeByteArray = new byte[1024 * 1024 * 8];
+            R.NextBytes(VeryLargeByteArray);
+
         }
 
         [TestMethod]
@@ -296,14 +302,24 @@ namespace Tests
         {
             foreach (var code in Image.AllowedPixelTypes)
             {
-                var image = new Image(TestByteArray, 4, 4, code);
-                image.Clamp(0, 1);
+                var type = Type.GetType("System." + code) ?? typeof(byte);
+                var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
+                var image = new Image(TestByteArray, TestByteArray.Length/4/ size, 4, code);
+                var f_mx = (Type.GetType("System." + code) ?? typeof(byte))
+                    .GetFields(BindingFlags.Public | BindingFlags.Static)
+                    .First(fi => fi.Name == "MaxValue");
+
+                dynamic m_max = f_mx.GetValue(null);
+
+                var mx = code.ToString().Contains("U") ? m_max / 2 : 5000;
+                var mn = code.ToString().Contains("U") ? m_max/ 4 : -5000;
+                image.Clamp(mn, mx);
 
                 var min = image.Min() as IComparable;
                 var max = image.Max() as IComparable;
 
-                Assert.IsTrue(min?.CompareTo(Convert.ChangeType(0, code)) >= 0);
-                Assert.IsTrue(max?.CompareTo(Convert.ChangeType(1, code)) <= 0);
+                Assert.IsTrue(min?.CompareTo(Convert.ChangeType(mn, code)) >= 0);
+                Assert.IsTrue(max?.CompareTo(Convert.ChangeType(mx, code)) <= 0);
 
             }
         }
@@ -324,16 +340,29 @@ namespace Tests
                 dynamic mx = f_mx.GetValue(null);
                 dynamic mn = f_mn.GetValue(null);
 
-                var image = new Image(TestByteArray, TestByteArray.Length/4/System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                var image = new Image(TestByteArray, 
+                    TestByteArray.Length/4/System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                var imageLarge = new Image(VeryLargeByteArray, 
+                    VeryLargeByteArray.Length / 4 / System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+
                 image.Clamp(mn / 100, mx / 100);
+                imageLarge.Clamp(mn / 100, mx / 100);
 
                 image.Scale(1, 10);
+                imageLarge.Scale(1, 10);
 
                 var min = image.Min() as IComparable;
                 var max = image.Max() as IComparable;
 
+                var minL = imageLarge.Min() as IComparable;
+                var maxL = imageLarge.Max() as IComparable;
+
+
                 Assert.IsTrue(min?.CompareTo(Convert.ChangeType(1, code)) == 0);
                 Assert.IsTrue(max?.CompareTo(Convert.ChangeType(10, code)) == 0);
+
+                Assert.IsTrue(minL?.CompareTo(Convert.ChangeType(1, code)) == 0);
+                Assert.IsTrue(maxL?.CompareTo(Convert.ChangeType(10, code)) == 0);
             }
         }
     }
