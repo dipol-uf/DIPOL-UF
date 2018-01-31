@@ -755,15 +755,14 @@ namespace DipolImage
                         data[i] = Convert.ToSingle(data[i] + value);
                     break;
                 }
-                case TypeCode.Double:
+                default:
                 {
                     var data = (double[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
                         data[i] = Convert.ToDouble(data[i] + value);
                     break;
                 }
-                default:
-                    throw new NotSupportedException();
+               
             }
         }
 
