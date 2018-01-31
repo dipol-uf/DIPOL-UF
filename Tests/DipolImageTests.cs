@@ -403,5 +403,43 @@ namespace Tests
                     }
             }
         }
+
+        [TestMethod]
+        public void Test_MultiplyByScalar()
+        {
+            foreach (var code in Image.AllowedPixelTypes)
+            {
+                var type = Type.GetType("System." + code) ?? typeof(byte);
+                var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
+                const int N = 1024;
+                var array = Array.CreateInstance(type, N);
+                for (var i = 0; i < N / 4; i++)
+                    for (var j = 0; j < 4; j++)
+                        array.SetValue(Convert.ChangeType(i + j, code), i * 4 + j);
+
+                var image = new Image(array, 4, N / 4);
+
+                const double scalar = 2.0;
+
+                var copyImage = image.Copy();
+
+                image.MultiplyByScalar(scalar);
+
+
+                for (var i = 0; i < image.Height; i++)
+                    for (var j = 0; j < image.Width; j++)
+                    {
+                        dynamic val1 = image[i, j];
+                        var dVal1 = 1.0 * val1;
+                        dynamic val2 = copyImage[i, j];
+                        var dVal2 = 1.0 * val2;
+
+                        var diff = dVal2 - dVal1/scalar;
+
+
+                        Assert.IsTrue(Math.Abs(diff) < double.Epsilon);
+                    }
+            }
+        }
     }
 }
