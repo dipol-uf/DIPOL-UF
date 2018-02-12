@@ -218,7 +218,7 @@ namespace DIPOL_UF.Models
 
         }
 
-        public DipolImagePresenter ImagePresenterModel { get; }
+        public DipolImagePresenter ImagePresenterModel { get; } = new DipolImagePresenter();
 
         public ConnectedCamera(CameraBase camera)
         {

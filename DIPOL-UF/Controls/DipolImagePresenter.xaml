@@ -34,7 +34,8 @@
                     HorizontalAlignment="Stretch" MaxWidth="300"
                     Minimum="{Binding ImgScaleMin}"
                     Maximum="{Binding ImgScaleMax}"
-                    Value="{Binding ThumbRight, UpdateSourceTrigger=PropertyChanged}"/>
+                    Value="{Binding ThumbRight, UpdateSourceTrigger=PropertyChanged}"
+                    ValueChanged="{cmnds:EventToCommand ThumbValueChangedCommand}"/>
 
         </Grid>
     </Grid>

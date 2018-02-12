@@ -96,6 +96,13 @@ namespace DIPOL_UF
             else
                 Application.Current.Dispatcher.Invoke(action);
         }
+        public static T ExecuteOnUI<T>(Func<T> action)
+        {
+            if (Thread.CurrentThread == Application.Current.Dispatcher.Thread)
+                return action();
+            else
+                return Application.Current.Dispatcher.Invoke(action);
+        }
 
         /// <summary>
         /// Retrieves an item from a dictionary if specified key is present; otherwise, returns null.

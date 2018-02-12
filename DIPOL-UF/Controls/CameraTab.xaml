@@ -8,32 +8,32 @@
              xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters"
              xmlns:local="clr-namespace:DIPOL_UF.Controls"
              mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
-             d:DesignHeight="550" d:DesignWidth="500">
+             d:DesignHeight="550" d:DesignWidth="800">
     <ScrollViewer
         HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Disabled"
         VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="0.5*"/>
+            <RowDefinition Height="50"/>
             <RowDefinition Height="250"/>
-            <RowDefinition Height="auto"/>
+            <RowDefinition Height="100"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="3*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="4*"/>
-            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="auto" MinWidth="400"/>
+            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="135"/>
             <ColumnDefinition Width="90"/>
         </Grid.ColumnDefinitions>
         <!--PLACEHOLDER FOR IMAGE CONTROL-->
-        <local:DipolImagePresenter Grid.Row="0" Grid.Column="0"
-                                   Grid.RowSpan="3"
-                                   VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
+        <local:DipolImagePresenter Grid.Row="1" Grid.Column="0" Grid.RowSpan="3"
+                                   MinWidth="150" MinHeight="400"
+                                   VerticalAlignment="Top" HorizontalAlignment="Stretch" 
                                    Background="Beige"
-                                   DataContext="{Binding ImagePresenterViewModel}"/>
+                                   DataContext="{Binding Value.ImagePresenterViewModel}"/>
         <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding}"/>
         <Label Grid.Row="1" Grid.Column="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
         <Grid Grid.Column="2" Grid.Row="1" Margin="2">
@@ -43,7 +43,7 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
+                <RowDefinition Height="0.4*"/>
                 <RowDefinition/>
                 <RowDefinition/>
                 <RowDefinition/>
@@ -399,12 +399,13 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Bottom"
                     Text="Acquisition:"/>
-            <Grid Grid.Row="6" Grid.ColumnSpan="4" VerticalAlignment="Top">
+         <Grid Grid.Row="6" Grid.ColumnSpan="2" VerticalAlignment="Top"  Grid.Column="0"
+               HorizontalAlignment="Stretch" MinWidth="300" MaxWidth="800">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition Width ="130"/>
             </Grid.ColumnDefinitions>
-            <ProgressBar  Grid.Column="0" 
+            <ProgressBar  Grid.Column="0" HorizontalAlignment="Stretch"
                          Maximum="{Binding Value.Timing.Item1, Mode=OneWay}" Minimum="0"
                          Value="{Binding Value.TimeRemaining, Mode=OneWay}"
                          Style="{StaticResource ResourceKey=ProgressBarStyle}"

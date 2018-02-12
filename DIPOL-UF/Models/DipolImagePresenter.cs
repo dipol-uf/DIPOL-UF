@@ -179,7 +179,7 @@ namespace DIPOL_UF.Models
                     throw new Exception();
             }
 
-            _displayedImage.Scale(LeftScale, RightScale);
+            _displayedImage.Scale(0, 1);
         }
 
         private void UpdateBitmap()
@@ -188,22 +188,20 @@ namespace DIPOL_UF.Models
                 return;
 
             if (_bitmapSource == null ||
-                _bitmapSource.PixelWidth != _sourceImage.Width ||
-                _bitmapSource.PixelHeight != _sourceImage.Height)
+                Helper.ExecuteOnUI(() => _bitmapSource.PixelWidth != _sourceImage.Width) ||
+                Helper.ExecuteOnUI(() =>_bitmapSource.PixelHeight != _sourceImage.Height))
             {
-                if (System.Threading.Thread.CurrentThread == Application.Current.Dispatcher.Thread)
-                    _bitmapSource = new WriteableBitmap(_sourceImage.Width, _sourceImage.Height,
-                        96, 96, PixelFormats.Gray32Float, null);
-                else
-                    _bitmapSource = Application.Current.Dispatcher.Invoke(() => new WriteableBitmap(_sourceImage.Width,
-                        _sourceImage.Height,
-                        96, 96, PixelFormats.Gray32Float, null));
+
+                _bitmapSource = Helper.ExecuteOnUI(() => new WriteableBitmap(_sourceImage.Width,
+                    _sourceImage.Height,
+                    96, 96, PixelFormats.Gray32Float, null));
 
             }
 
             var temp = _displayedImage.Copy();
             temp.Clamp(LeftScale, RightScale);
-                
+            temp.Scale(0, 1);
+
             var bytes = temp.GetBytes();
 
             try
