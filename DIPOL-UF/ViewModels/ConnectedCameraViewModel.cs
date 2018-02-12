@@ -25,6 +25,8 @@ namespace DIPOL_UF.ViewModels
             { "OutOfRange", @"The value is expected to be in [{0}, {1}] range." }
         };
 
+        public DipolImagePresnterViewModel ImagePresenterViewModel { get; }
+
         public CameraBase Camera => model.Camera;
         /// <summary>
         /// Minimum allowed cooling temperature
@@ -166,6 +168,8 @@ namespace DIPOL_UF.ViewModels
         public ConnectedCameraViewModel(ConnectedCamera model) : base(model)
         {
             InitializeValidators();
+
+            ImagePresenterViewModel = new DipolImagePresnterViewModel(model.ImagePresenterModel);
 
             model.Camera.PropertyChanged += (sender, e) =>
             {

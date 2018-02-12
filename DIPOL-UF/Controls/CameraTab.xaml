@@ -29,10 +29,11 @@
             <ColumnDefinition Width="90"/>
         </Grid.ColumnDefinitions>
         <!--PLACEHOLDER FOR IMAGE CONTROL-->
-        <Canvas Grid.Row="0" Grid.Column="0"
-                Grid.RowSpan="3"
-                VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
-                Background="Aquamarine"></Canvas>
+        <local:DipolImagePresenter Grid.Row="0" Grid.Column="0"
+                                   Grid.RowSpan="3"
+                                   VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
+                                   Background="Beige"
+                                   DataContext="{Binding ImagePresenterViewModel}"/>
         <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding}"/>
         <Label Grid.Row="1" Grid.Column="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
         <Grid Grid.Column="2" Grid.Row="1" Margin="2">

@@ -25,7 +25,7 @@ namespace DIPOL_UF.Models
         private double _thumbLeft = 0;
         private double _thumbRight = 1000;
         private DelegateCommand _thumbValueChangedCommand;
-        private DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
+        private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
         {
             Interval = TimeSpan.FromMilliseconds(250),
             IsEnabled = false
@@ -184,6 +184,9 @@ namespace DIPOL_UF.Models
 
         private void UpdateBitmap()
         {
+            if (_displayedImage == null)
+                return;
+
             if (_bitmapSource == null ||
                 _bitmapSource.PixelWidth != _sourceImage.Width ||
                 _bitmapSource.PixelHeight != _sourceImage.Height)
@@ -198,7 +201,6 @@ namespace DIPOL_UF.Models
 
             }
 
-            
             var temp = _displayedImage.Copy();
             temp.Clamp(LeftScale, RightScale);
                 

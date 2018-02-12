@@ -217,7 +217,8 @@ namespace DIPOL_UF.Models
             }
 
         }
-      
+
+        public DipolImagePresenter ImagePresenterModel { get; }
 
         public ConnectedCamera(CameraBase camera)
         {
@@ -315,6 +316,8 @@ namespace DIPOL_UF.Models
         private void Camera_NewImageReceived(object sender, ANDOR_CS.Events.NewImageReceivedEventArgs e)
         {
             CurrentImageIndex = e.First;
+            if(Camera.AcquiredImages.TryDequeue(out var im))
+                ImagePresenterModel.LoadImage(im);
         }
     }
 }
