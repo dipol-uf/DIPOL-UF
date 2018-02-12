@@ -13,7 +13,7 @@ using System.Windows.Shapes;
 
 namespace DIPOL_UF.Commands
 {
-    class DelegateCommand : ICommand
+    public class DelegateCommand : ICommand
     {
         private static readonly Func<object, bool> canExecuteAlways = (param) => true;
         private static readonly Func<object, bool> canExecuteNever = (param) => false;

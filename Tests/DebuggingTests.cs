@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using DipolImage;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
@@ -14,7 +15,7 @@ namespace Tests
         [STAThread]
         public static int Main()
         {
-           //new Debugger().DisplayImage();
+            new Debugger().DisplayImage();
             return 0;
         }
 
@@ -40,14 +41,22 @@ namespace Tests
                 {
                     TestPresenter = {DataContext = viewModel}
                 };
-
+                var buffer = new byte[1024  * 512 * sizeof(ushort)];
                 var app = new Application();
-
-                Task.Run(() =>
+                var r = new Random();
+                var t = new DispatcherTimer()
                 {
-                    Task.Delay(500).Wait();
-                   model.LoadImage(TestImageUInt16);
-                });
+                    Interval = TimeSpan.FromMilliseconds(100),
+                    IsEnabled = false
+                };
+
+
+                t.Tick += (sender, e) =>
+                {
+                    r.NextBytes(buffer);
+                    model.LoadImage(new Image(buffer, 1024, 512, TypeCode.UInt16));
+                };
+                t.Start();
                 app.Run(wind);
               
 

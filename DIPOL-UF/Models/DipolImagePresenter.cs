@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using DipolImage;
+using DIPOL_UF.Commands;
 
 namespace DIPOL_UF.Models
 {
@@ -16,6 +20,114 @@ namespace DIPOL_UF.Models
         private Image _sourceImage;
         private Image _displayedImage;
         private WriteableBitmap _bitmapSource;
+        private double _imgScaleMax = 1000;
+        private double _imgScaleMin = 0;
+        private double _thumbLeft = 0;
+        private double _thumbRight = 1000;
+        private DelegateCommand _thumbValueChangedCommand;
+        private DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
+        {
+            Interval = TimeSpan.FromMilliseconds(250),
+            IsEnabled = false
+        };
+
+        private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
+        private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
+
+        public double ImgScaleMax
+        {
+            get => _imgScaleMax;
+            set
+            {
+                if (Math.Abs(value - _imgScaleMax) > double.Epsilon)
+                {
+                    _imgScaleMax = value;
+                    RaisePropertyChanged();
+                }
+
+            }
+
+        }
+        public double ImgScaleMin
+        {
+            get => _imgScaleMin;
+            set
+            {
+                if (Math.Abs(value - _imgScaleMin) > double.Epsilon)
+                {
+                    _imgScaleMin = value;
+                    RaisePropertyChanged();
+                }
+            }
+
+        }
+
+        public double ThumbLeft
+        {
+            get => _thumbLeft;
+            set
+            {
+                if (Math.Abs(value - _thumbLeft) > double.Epsilon)
+                {
+                    if (value < _imgScaleMin)
+                        _thumbLeft = _imgScaleMin;
+                    else if (_imgScaleMax - value < 1)
+                        _thumbLeft = _imgScaleMax - 1;
+                    else
+                        _thumbLeft = value;
+                    
+                    RaisePropertyChanged();
+
+                    if (_thumbRight <= _thumbLeft)
+                    {
+                        _thumbRight = _thumbLeft + 1;
+                        RaisePropertyChanged(nameof(ThumbRight));
+                    }
+
+                }
+
+            }
+
+        }
+        public double ThumbRight
+        {
+            get => _thumbRight;
+            set
+            {
+                if (Math.Abs(value - _thumbRight) > double.Epsilon)
+                {
+                    if (value > _imgScaleMax)
+                        _thumbRight = _imgScaleMax;
+                    else if (value - _imgScaleMin < 1)
+                        _thumbRight = _imgScaleMin + 1;
+                    else
+                        _thumbRight = value;
+                    RaisePropertyChanged();
+
+                    if (_thumbLeft >= _thumbRight)
+                    {
+                        _thumbLeft = _thumbRight - 1;
+                        RaisePropertyChanged(nameof(ThumbLeft));
+                    }
+                }
+
+            }
+
+        }
+
+        public DelegateCommand ThumbValueChangedCommand
+        {
+            get => _thumbValueChangedCommand;
+            set
+            {
+                if (value != _thumbValueChangedCommand)
+                {
+                    _thumbValueChangedCommand = value;
+                    RaisePropertyChanged();
+                }
+
+            }
+        }
 
         public WriteableBitmap BitmapSource
         {
@@ -28,29 +140,49 @@ namespace DIPOL_UF.Models
 
         }
 
-        public async Task LoadImage(Image image)
+        public void LoadImage(Image image)
         {
 
-            await CopyImage(image);
-            await UpdateBitmap();
+            CopyImage(image);
+            UpdateBitmap();
         }
 
-        private async Task CopyImage(Image image)
+        public DipolImagePresenter()
+        {
+            InitializeCommands();
+
+            var props = typeof(DipolImagePresenter)
+                        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                        .Where(pi => pi.CanRead)
+                        .ToList();
+            PropertyChanged += (sender, e) =>
+            {
+                var val = props
+                          .FirstOrDefault(pi => pi.Name == e.PropertyName)
+                          ?.GetValue(this);
+                Console.WriteLine($@"{e.PropertyName}: " +
+                                  $@"{val}");
+            };
+
+            _thumbValueChangedTimer.Tick += OnThumbValueChangedTimer_Tick;
+        }
+
+        private void CopyImage(Image image)
         {
             switch (image.UnderlyingType)
             {
                 case TypeCode.UInt16:
-                    _sourceImage = await Task.Run(() => image.CastTo<ushort, float>(x => x));
+                    _sourceImage = image.CastTo<ushort, float>(x => x);
                     _displayedImage = _sourceImage.Copy();
                     break;
                 default:
-                    throw  new Exception();
+                    throw new Exception();
             }
 
-            _displayedImage.Scale(0, 1);
+            _displayedImage.Scale(LeftScale, RightScale);
         }
 
-        private async Task UpdateBitmap()
+        private void UpdateBitmap()
         {
             if (_bitmapSource == null ||
                 _bitmapSource.PixelWidth != _sourceImage.Width ||
@@ -66,7 +198,11 @@ namespace DIPOL_UF.Models
 
             }
 
-            var bytes = await Task.Run((Func<byte[]>)_displayedImage.GetBytes);
+            
+            var temp = _displayedImage.Copy();
+            temp.Clamp(LeftScale, RightScale);
+                
+            var bytes = temp.GetBytes();
 
             try
             {
@@ -85,5 +221,29 @@ namespace DIPOL_UF.Models
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(BitmapSource)));
             }
         }
+
+        private void InitializeCommands()
+        {
+            ThumbValueChangedCommand = new DelegateCommand(
+                ThumbValueChangedCommandExecute,
+                DelegateCommand.CanExecuteAlways
+            );
+        }
+
+        private void OnThumbValueChangedTimer_Tick(object sender, object e)
+        {
+           _thumbValueChangedTimer.Stop();
+            UpdateBitmap();
+        }
+
+        private void ThumbValueChangedCommandExecute(object parameter)
+        {
+            if (parameter is
+                CommandEventArgs<RoutedPropertyChangedEventArgs<double>> evnt)
+            {
+                _thumbValueChangedTimer.Start();
+            }
+        }
+
     }
 }

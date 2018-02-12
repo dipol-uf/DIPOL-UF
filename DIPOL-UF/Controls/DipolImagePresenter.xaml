@@ -1,12 +1,41 @@
 ﻿<UserControl x:Class="DIPOL_UF.Controls.DipolImagePresenter"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:DIPOL_UF.Controls"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300" Background="Beige">
     <Grid>
-        <Image HorizontalAlignment="Center" VerticalAlignment="Center" Source="{Binding BitmapSource, Mode=OneWay}" Margin="10"/>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Image Grid.Row="0"
+               HorizontalAlignment="Center" VerticalAlignment="Center" 
+               Source="{Binding BitmapSource, Mode=OneWay}" Margin="10"/>
+        <Grid Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Slider Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
+                    HorizontalAlignment="Stretch" MaxWidth="300"
+                    Minimum="{Binding ImgScaleMin}"
+                    Maximum="{Binding ImgScaleMax}"
+                    Value="{Binding ThumbLeft, UpdateSourceTrigger=PropertyChanged}"
+                    ValueChanged="{cmnds:EventToCommand ThumbValueChangedCommand}"
+                    />
+            <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                    HorizontalAlignment="Stretch" MaxWidth="300"
+                    Minimum="{Binding ImgScaleMin}"
+                    Maximum="{Binding ImgScaleMax}"
+                    Value="{Binding ThumbRight, UpdateSourceTrigger=PropertyChanged}"/>
+
+        </Grid>
     </Grid>
 </UserControl>
