@@ -176,7 +176,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ImageDisplay\DipolImage.csproj">
+    <ProjectReference Include="..\DipolImage\DipolImage.csproj">
       <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
       <Name>DipolImage</Name>
     </ProjectReference>

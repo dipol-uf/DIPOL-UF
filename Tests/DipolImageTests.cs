@@ -249,8 +249,17 @@ namespace Tests
                 {
                     var val = image[0, i] as IComparable;
                     if (val?.CompareTo(min) < 0)
-                        min = Convert.ChangeType(val, code);
+                    {
+                        if(type == typeof(float) && !float.IsNaN((float)val))
+                            min = Convert.ChangeType(val, code);
+                        else if (type == typeof(double) && !double.IsNaN((double)val))
+                            min = Convert.ChangeType(val, code);
+                        else if(type != typeof(double) && type != typeof(float))
+                            min = Convert.ChangeType(val, code);
+
+                    }
                 }
+            
 
 
                 min = Convert.ChangeType(min, code);

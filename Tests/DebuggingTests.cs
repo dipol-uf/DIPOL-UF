@@ -4,6 +4,8 @@ using System.Windows;
 using DipolImage;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 
 namespace Tests
 {
@@ -12,7 +14,7 @@ namespace Tests
         [STAThread]
         public static int Main()
         {
-            new Debugger().DisplayImage();
+           //new Debugger().DisplayImage();
             return 0;
         }
 
