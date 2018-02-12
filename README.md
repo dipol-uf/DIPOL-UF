@@ -15,9 +15,8 @@ Software is being developed as part of a scientific project done at the [**@Tuor
 
 - [**StepMotor**](./StepMotor) provides tools for interaction with Step Motor - device responsible for plate rotation durin polarimetric observations.
 
-- [**Image**](./Image) contains Image class that handles all image transport in a project.
+- [**DipolImage**](./Image) contains Image class that handles all image transport in a project.
 
-- [**ImageDisplay**](./ImageDisplay) is a WPF control that can display [Image](./Image).
+- [**Client**](./Client), [**Host**](./Host), are test projects used at debug phase.
 
-
-- [**Client**](./Client), [**Host**](./Host), [**ImageTest**](./ImageTest) are test projects used at debug phase.
+- [**Tests**](./Tests) contains several tests and other debug phase instruments
