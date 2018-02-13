@@ -27,6 +27,7 @@ namespace DIPOL_UF.ViewModels
 
         public DipolImagePresnterViewModel ImagePresenterViewModel { get; }
 
+        public string Key => model.Key;
         public CameraBase Camera => model.Camera;
         /// <summary>
         /// Minimum allowed cooling temperature

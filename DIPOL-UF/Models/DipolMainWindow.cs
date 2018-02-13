@@ -505,7 +505,7 @@ namespace DIPOL_UF.Models
                 var inst = providedCameras.ToList();
                 foreach (var x in inst)
                     if (ConnectedCameras.TryAdd(x.Key,
-                        new ConnectedCameraViewModel(new ConnectedCamera(x.Value))))
+                        new ConnectedCameraViewModel(new ConnectedCamera(x.Value, x.Key))))
                         HookCamera(x.Key, x.Value);
 
                 foreach (var x in inst)

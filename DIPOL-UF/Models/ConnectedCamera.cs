@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
-using System.Windows.Controls;
-
-
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 
@@ -20,21 +13,25 @@ using System.Windows.Threading;
 
 namespace DIPOL_UF.Models
 {
-    class ConnectedCamera : ObservableObject
+    internal class ConnectedCamera : ObservableObject
     {
-        private CameraBase _camera = null;
-        private Task _acqTask = null;
-        private CancellationTokenSource _acqTaskCancel = null;
-        private float _targetTemperature = 0.0f;
-        private string __targetTemperatureText = "0";
-        private bool _canControlTemperature = false;
+        private CameraBase _camera;
+        private Task _acqTask;
+        private CancellationTokenSource _acqTaskCancel;
+        private float _targetTemperature;
+        private string _targetTemperatureText = "0";
+        private bool _canControlTemperature;
         private Tuple<float, float, float, int> _timing;
-        private DelegateCommand _controlCoolerCommand = null;
+        private DelegateCommand _controlCoolerCommand;
         //private DelegateCommand verifyTextInputCommand = null;
-        private DelegateCommand _setUpAcquisitionCommand = null;
-        private DelegateCommand _controlAcquisitionCommand = null;
-        private int _currentImageIndex = 0;
+        private DelegateCommand _setUpAcquisitionCommand;
+        private DelegateCommand _controlAcquisitionCommand;
+        private int _currentImageIndex;
 
+        public string Key
+        {
+            get;
+        }
         public DispatcherTimer ProgBarTimer
         {
             get;
@@ -63,7 +60,7 @@ namespace DIPOL_UF.Models
                 if (Math.Abs(value - _targetTemperature) > float.Epsilon)
                 {
                     _targetTemperature = value;
-                    __targetTemperatureText = value.ToString("F1");
+                    _targetTemperatureText = value.ToString("F1");
                     RaisePropertyChanged();
                     RaisePropertyChanged(nameof(TargetTemperatureText));
                 }
@@ -71,12 +68,12 @@ namespace DIPOL_UF.Models
         }
         public string TargetTemperatureText
         {
-            get => __targetTemperatureText;
+            get => _targetTemperatureText;
             set
             {
-                if (value != __targetTemperatureText)
+                if (value != _targetTemperatureText)
                 {
-                    __targetTemperatureText = value;
+                    _targetTemperatureText = value;
                     _targetTemperature = float.Parse(value,
                         System.Globalization.NumberStyles.Any,
                         System.Globalization.NumberFormatInfo.InvariantInfo);
@@ -158,7 +155,7 @@ namespace DIPOL_UF.Models
             get => _camera;
             private set
             {
-                if (value != _camera)
+                if (!Equals(value, _camera))
                 {
                     _camera = value;
                     RaisePropertyChanged();
@@ -220,9 +217,10 @@ namespace DIPOL_UF.Models
 
         public DipolImagePresenter ImagePresenterModel { get; } = new DipolImagePresenter();
 
-        public ConnectedCamera(CameraBase camera)
+        public ConnectedCamera(CameraBase camera, string key)
         {
             Camera = camera;
+            Key = key;
             CanControlTemperature = camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature);
             InitializeCommands();
             Camera.PropertyChanged += Camera_PropertyCahnged;
@@ -282,7 +280,7 @@ namespace DIPOL_UF.Models
             var viewModel = new ViewModels.AcquisitionSettingsViewModel(settings, Camera);
 
             if (new Views.AcquisitionSettingsView(viewModel).ShowDialog() == true && 
-                !viewModel.EstimatedTiming.Equals(default((float, float, float, int))))
+                !viewModel.EstimatedTiming.Equals(default))
             {
                 Timing = viewModel.EstimatedTiming.ToTuple();
                 RaisePropertyChanged(nameof(AreSettingsApplied));
@@ -304,7 +302,7 @@ namespace DIPOL_UF.Models
                 CurrentImageIndex = 0;
                 _acqTaskCancel = new CancellationTokenSource();
                 _acqTask = Camera.StartAcquistionAsync(_acqTaskCancel,
-                    Math.Max((int)(Camera.CurrentSettings.ExposureTime / 50), 50));
+                    Math.Max(Convert.ToInt32(Camera.CurrentSettings.ExposureTime / 50), 50));
                
             }
             else
