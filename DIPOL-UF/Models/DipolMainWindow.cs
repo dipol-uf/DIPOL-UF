@@ -259,24 +259,6 @@ namespace DIPOL_UF.Models
                 Application.Current.Dispatcher
             );
 
-            _TestTimer = new DispatcherTimer()
-            {
-                Interval = new TimeSpan(0, 3, 30),
-                IsEnabled = false
-            };
-
-            _TestTimer.Tick += (sender, e) =>
-            {
-                foreach (var cam in ConnectedCameras)
-                {
-                    cam.Value.Model.Camera.SetTemperature(20);
-                    cam.Value.Model.Camera.CoolerControl(Switch.Disabled);
-                }
-
-                _TestTimer.Stop();
-            };
-
-            _TestTimer.Start();
         }
                                                         
 
