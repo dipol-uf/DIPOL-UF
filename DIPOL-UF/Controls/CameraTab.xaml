@@ -11,24 +11,23 @@
             d:DesignHeight="900" d:DesignWidth="1200"
             d:DataContext="{d:DesignInstance Type=dvms:ConnectedCameraViewModel}">
     <ScrollViewer
-        HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Disabled"
+        HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Auto"
         VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="50"/>
-                <RowDefinition Height="400"/>
-                <RowDefinition Height="auto"/>
+                <RowDefinition Height="500"/>
+                <RowDefinition Height="*"/>
                 <RowDefinition Height="50"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" MinWidth="400"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto" MinWidth="200"/>
+                <ColumnDefinition Width="*" MinWidth="300"/>
             </Grid.ColumnDefinitions>
             <!--Custom Image Presenter-->
             <local:DipolImagePresenter Grid.Row="1" Grid.Column="0" Grid.RowSpan="2"
-                                       MinWidth="150" MinHeight="400"
-                                       MaxWidth="800" MaxHeight="600"
+                                       Width="500" Height="700"
                                        VerticalAlignment="Top" HorizontalAlignment="Stretch" 
                                        Background="Beige"
                                        DataContext="{Binding ImagePresenterViewModel}"/>
@@ -37,10 +36,10 @@
             <!--Placeholder for detailed status-->
             <Label Grid.Row="1" Grid.Column="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
             <!--RHS Controls grid-->
-            <Grid Column ="2" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Grid Column ="2" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" MinHeight="400">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="135"/>
-                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="120"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="4*"/>
@@ -216,11 +215,11 @@
                         </Button.Style>
                     </Button>
                 </StackPanel>
-                <!--Cooler slider-->
+                <!--Fan slider-->
                 <Grid Grid.Column="1" Grid.Row="0" Margin="2">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition MinWidth="15"/>
-                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition MinWidth="15" Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto"/>
@@ -247,7 +246,7 @@
                             </MultiBinding>
                         </Slider.IsEnabled>
                     </Slider>
-                    <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" 
+                    <TextBlock Grid.Column="1"  Grid.Row="1" 
                                HorizontalAlignment="Left" VerticalAlignment="Top"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                Margin="0,-5, 0, 0"
@@ -256,7 +255,7 @@
                                    Path='[0]',
                                    Converter={StaticResource ResourceKey=EnumToDescriptionConverter},
                                    StringFormat='- {0}'}"/>
-                    <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" 
+                    <TextBlock Grid.Column="1" Grid.Row="2" 
                                HorizontalAlignment="Left" VerticalAlignment="Center"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                Margin="0, -5, 0, 0"
@@ -265,7 +264,7 @@
                                    Path='[1]',
                                    Converter={StaticResource ResourceKey=EnumToDescriptionConverter},
                                    StringFormat='- {0}'}"/>
-                    <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3" 
+                    <TextBlock Grid.Column="1" Grid.Row="3" 
                                HorizontalAlignment="Left" VerticalAlignment="Bottom"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                Margin="0, -5, 0, 0"

@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DIPOL_UF"
         xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
         mc:Ignorable="d"
-        Title="Dipol-UF" Height="788" Width="1024" HorizontalContentAlignment="Stretch" MinWidth="768" MinHeight="576"
+        Title="Dipol-UF" Height="960" Width="1280" HorizontalContentAlignment="Stretch" MinWidth="768" MinHeight="576"
         Style="{StaticResource ResourceKey=ContentFont}"
         x:Name="DipolWindow">
 
