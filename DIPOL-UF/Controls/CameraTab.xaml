@@ -5,12 +5,10 @@
             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
             xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS"
-            xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
-            xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters"
-            xmlns:local="clr-namespace:DIPOL_UF.Controls"
+             xmlns:local="clr-namespace:DIPOL_UF.Controls"
             xmlns:dvms="clr-namespace:DIPOL_UF.ViewModels"
             mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
-            d:DesignHeight="750" d:DesignWidth="850"
+            d:DesignHeight="750" d:DesignWidth="1050"
             d:DataContext="{d:DesignInstance Type=dvms:ConnectedCameraViewModel, IsDesignTimeCreatable=True}">
     <ScrollViewer
         HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Disabled"
@@ -35,7 +33,7 @@
                                        MinWidth="150" MinHeight="400"
                                        VerticalAlignment="Top" HorizontalAlignment="Stretch" 
                                        Background="Beige"
-                                       DataContext="{Binding Value.ImagePresenterViewModel}"/>
+                                       DataContext="{Binding ImagePresenterViewModel}"/>
             <!--Placeholder for Camera Name-->
             <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding}"/>
             <!--Placeholder for detailed status-->
@@ -73,26 +71,26 @@
                     <TextBlock Grid.Column="0" Grid.Row="1"
                                VerticalAlignment="Top" HorizontalAlignment="Right"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                               Text="{Binding Value.MaximumAllowedTemperature, StringFormat='\{0:F0} C'}"/>
+                               Text="{Binding MaximumAllowedTemperature, StringFormat='\{0:F0} C'}"/>
                     <TextBlock Grid.Column="0" Grid.Row="3" 
                                VerticalAlignment="Bottom" HorizontalAlignment="Right"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                               Text="{Binding Value.MinimumAllowedTemperature, StringFormat='\{0:F0} C'}"/>
+                               Text="{Binding MinimumAllowedTemperature, StringFormat='\{0:F0} C'}"/>
                     <Slider Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" 
                             HorizontalAlignment="Center"
                             Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
                             Orientation="Vertical" Name="TempSetSlider"
-                            Minimum="{Binding Value.MinimumAllowedTemperature, Mode=OneTime}"
-                            Maximum="{Binding Value.MaximumAllowedTemperature, Mode=OneTime}"
+                            Minimum="{Binding MinimumAllowedTemperature, Mode=OneTime}"
+                            Maximum="{Binding MaximumAllowedTemperature, Mode=OneTime}"
                             Value="{Binding
-                                Path=Value.TargetTemperature,
+                                Path=TargetTemperature,
                                 Mode=TwoWay,
                                 UpdateSourceTrigger=PropertyChanged,
                                 Converter={StaticResource ResourceKey=TypeConverter}}">
                         <Slider.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                <Binding Path="Value.IsNotAcquiring" Mode="OneWay"/>
-                                <Binding Path="Value.CanControlTemperature" Mode="OneWay"/>
+                                <Binding Path="IsNotAcquiring" Mode="OneWay"/>
+                                <Binding Path="CanControlTemperature" Mode="OneWay"/>
                             </MultiBinding>
                         </Slider.IsEnabled>
                     </Slider>
@@ -101,10 +99,10 @@
                                  Width="13" HorizontalAlignment="Center"
                                  Margin="{StaticResource ResourceKey=VerticalPBMargin}"
                                  Orientation="Vertical" IsIndeterminate="False"
-                                 Minimum="{Binding Value.MinimumAllowedTemperature, Mode=OneTime}"
-                                 Maximum="{Binding Value.MaximumAllowedTemperature, Mode=OneTime}">
+                                 Minimum="{Binding MinimumAllowedTemperature, Mode=OneTime}"
+                                 Maximum="{Binding MaximumAllowedTemperature, Mode=OneTime}">
                         <ProgressBar.IsEnabled>
-                            <Binding Path="Value.CanQueryTemperature" Mode="OneTime"/>
+                            <Binding Path="CanQueryTemperature" Mode="OneTime"/>
                         </ProgressBar.IsEnabled>
                         <ProgressBar.Value>
                             <MultiBinding Mode="OneWay"
@@ -135,29 +133,29 @@
                             HorizontalContentAlignment="Right">
                         <TextBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                <Binding Path="Value.IsNotAcquiring" Mode="OneWay"/>
-                                <Binding Path="Value.CanControlTemperature" Mode="OneWay"/>
+                                <Binding Path="IsNotAcquiring" Mode="OneWay"/>
+                                <Binding Path="CanControlTemperature" Mode="OneWay"/>
                             </MultiBinding>
                         </TextBox.IsEnabled>
                         <TextBox.Text>
-                            <Binding Path="Value.TargetTemperatureText" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged"
+                            <Binding Path="TargetTemperatureText" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged"
                                      NotifyOnValidationError="True">
                             </Binding>
                         </TextBox.Text>
                         <TextBox.Style>
                             <Style TargetType="TextBox" BasedOn="{StaticResource ResourceKey=TextBoxStyle}">
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Value.HasErrorsOfProperties[TargetTemperatureText], Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="true">
+                                    <DataTrigger Binding="{Binding HasErrorsOfProperties[TargetTemperatureText], Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="true">
                                         <Setter Property="ToolTip" 
                                                 Value="{Binding 
-                                                    Value.LatestErrors[TargetTemperatureText],
+                                                    LatestErrors[TargetTemperatureText],
                                                     UpdateSourceTrigger=PropertyChanged}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </TextBox.Style>
                     </TextBox>
-                    <Button Command="{Binding Value.ControlCoolerCommand}">
+                    <Button Command="{Binding ControlCoolerCommand}">
                         <Button.Content>
                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock.Style>
@@ -167,7 +165,7 @@
                                         <Style.Triggers>
                                             <DataTrigger 
                                                         Binding="{Binding
-                                                            Path = Value.Camera.CoolerMode,
+                                                            Path = Camera.CoolerMode,
                                                             Mode=OneWay,
                                                             UpdateSourceTrigger=PropertyChanged}" 
                                                         Value="{x:Static enm:Switch.Enabled}">
@@ -175,7 +173,7 @@
                                                             </DataTrigger>
                                                             <DataTrigger 
                                                         Binding="{Binding
-                                                            Path = Value.Camera.CoolerMode,
+                                                            Path = Camera.CoolerMode,
                                                             Mode=OneWay,
                                                             UpdateSourceTrigger=PropertyChanged}" 
                                                         Value="{x:Static enm:Switch.Disabled}">
@@ -195,7 +193,7 @@
                                 <Style.Triggers>
                                     <DataTrigger 
                                                 Binding="{Binding
-                                                    Path = Value.Camera.CoolerMode,
+                                                    Path = .Camera.CoolerMode,
                                                     Mode=OneWay,
                                                     UpdateSourceTrigger=PropertyChanged}" 
                                                 Value="{x:Static enm:Switch.Disabled}">
@@ -206,7 +204,7 @@
                                     </DataTrigger>
                                     <DataTrigger 
                                                 Binding="{Binding
-                                                    Path = Value.Camera.CoolerMode,
+                                                    Path = Camera.CoolerMode,
                                                     Mode=OneWay,
                                                     UpdateSourceTrigger=PropertyChanged}" 
                                                 Value="{x:Static enm:Switch.Enabled}">
@@ -239,19 +237,19 @@
                     <Slider Grid.Column="0" Grid.Row="1" Grid.RowSpan="3"
                             Orientation="Vertical" Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
                             TickFrequency="{Binding 
-                                Path=Value.LowFanModeTickStep, 
+                                Path=LowFanModeTickStep, 
                                 Converter={StaticResource ResourceKey=TypeConverter}}" 
                             IsSnapToTickEnabled="True"
                             Minimum="0" Maximum="2"
-                            Value="{Binding Value.FanMode, Mode=TwoWay, Converter={StaticResource ResourceKey=TypeConverter}, UpdateSourceTrigger=PropertyChanged}">
+                            Value="{Binding FanMode, Mode=TwoWay, Converter={StaticResource ResourceKey=TypeConverter}, UpdateSourceTrigger=PropertyChanged}">
                         <Slider.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                <Binding Path="Value.IsNotAcquiring" Mode="OneWay"/>
-                                <Binding Path="Value.CanControlFan" Mode="OneWay"/>
+                                <Binding Path="IsNotAcquiring" Mode="OneWay"/>
+                                <Binding Path="CanControlFan" Mode="OneWay"/>
                             </MultiBinding>
                         </Slider.IsEnabled>
                     </Slider>
-                    <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1" 
+                    <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" 
                                HorizontalAlignment="Left" VerticalAlignment="Top"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                Margin="0,-5, 0, 0"
@@ -260,7 +258,7 @@
                                    Path='[0]',
                                    Converter={StaticResource ResourceKey=EnumToDescriptionConverter},
                                    StringFormat='- {0}'}"/>
-                    <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2" 
+                    <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" 
                                HorizontalAlignment="Left" VerticalAlignment="Center"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                Margin="0, -5, 0, 0"
@@ -269,7 +267,7 @@
                                    Path='[1]',
                                    Converter={StaticResource ResourceKey=EnumToDescriptionConverter},
                                    StringFormat='- {0}'}"/>
-                    <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="3" 
+                    <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3" 
                                HorizontalAlignment="Left" VerticalAlignment="Bottom"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                Margin="0, -5, 0, 0"
@@ -308,21 +306,21 @@
                                   Source={StaticResource ResourceKey=ShutterModeEnumProvider},
                                   Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
                               SelectedValue="{Binding 
-                                  Value.InternalShutterState, 
+                                  InternalShutterState, 
                                   Mode=TwoWay, 
                                   UpdateSourceTrigger=PropertyChanged,
                                   Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}">
                         <ComboBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                <Binding Path="Value.IsNotAcquiring" Mode="OneWay"/>
-                                <Binding Path="Value.CanControlShutter" Mode="OneWay"/>
+                                <Binding Path="IsNotAcquiring" Mode="OneWay"/>
+                                <Binding Path="CanControlShutter" Mode="OneWay"/>
                             </MultiBinding>
                         </ComboBox.IsEnabled>
                     </ComboBox>
                     <ComboBox Grid.Column="1" Grid.Row="1"
                               Style="{StaticResource ResourceKey=ComboBoxStyle}"
                               SelectedValue="{Binding
-                                  Value.ExternalShutterState,
+                                  ExternalShutterState,
                                   Mode=TwoWay,
                                   UpdateSourceTrigger=PropertyChanged,
                                   Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
@@ -331,8 +329,8 @@
                                   Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}">
                         <ComboBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                <Binding Path="Value.IsNotAcquiring" Mode="OneWay"/>
-                                <Binding Path="Value.CanControlInternalExternalShutter" Mode="OneWay"/>
+                                <Binding Path="IsNotAcquiring" Mode="OneWay"/>
+                                <Binding Path="CanControlInternalExternalShutter" Mode="OneWay"/>
                             </MultiBinding>
                         </ComboBox.IsEnabled>
                     </ComboBox>
@@ -343,23 +341,23 @@
                          VerticalAlignment="Center" HorizontalAlignment="Center"
                          Style="{StaticResource ResourceKey=BasicButtonStyle}"
                          Content="Acq. Settings"
-                         Command="{Binding Value.SetUpAcquisitionCommand}"/>
+                         Command="{Binding SetUpAcquisitionCommand}"/>
 
                 <!-- Acquire images button -->
                 <Button Grid.Column="0" Grid.Row="4"
                         VerticalAlignment="Center" HorizontalAlignment="Center"
-                        Command="{Binding Value.ControlAcquisitionCommand}">
+                        Command="{Binding ControlAcquisitionCommand}">
                     <Button.Style>
                         <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding Value.IsAcquiring, Mode=OneWay}" Value="True">
+                                <DataTrigger Binding="{Binding IsAcquiring, Mode=OneWay}" Value="True">
                                     <Setter Property="Content" Value="Stop Imaging"/>
                                     <Setter Property="Button.Background" 
                                         Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
                                     <Setter Property="Button.Foreground" 
                                         Value="{StaticResource ResourceKey=NegativeEffectButtonForegroundColor}"/>
                                 </DataTrigger>
-                                <DataTrigger  Binding="{Binding Value.IsAcquiring, Mode=OneWay}" Value="False" >
+                                <DataTrigger  Binding="{Binding IsAcquiring, Mode=OneWay}" Value="False" >
                                     <Setter Property="Content" Value="Start Imaging"/>
                                     <Setter Property="Button.Background" 
                                         Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>
@@ -400,17 +398,17 @@
                               Focusable="False" IsReadOnly="True"
                               Style="{StaticResource ResourceKey=TextBoxStyle}"
                               FontSize="{StaticResource ResourceKey=SmallFontSize}"
-                              Text="{Binding Value.Timing.Item1, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
+                              Text="{Binding Timing.Item1, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
                     <TextBox Grid.Row="1" Grid.Column="1"
                               Focusable="False" IsReadOnly="True"
                               Style="{StaticResource ResourceKey=TextBoxStyle}"
                               FontSize="{StaticResource ResourceKey=SmallFontSize}"
-                              Text="{Binding Value.Timing.Item2, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
+                              Text="{Binding Timing.Item2, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
                     <TextBox Grid.Row="2" Grid.Column="1"
                               Focusable="False" IsReadOnly="True"
                               Style="{StaticResource ResourceKey=TextBoxStyle}"
                               FontSize="{StaticResource ResourceKey=SmallFontSize}"
-                              Text="{Binding Value.Timing.Item3, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
+                              Text="{Binding Timing.Item3, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
                 </Grid>
             </Grid>
 
@@ -428,15 +426,15 @@
                 <ColumnDefinition Width ="130"/>
             </Grid.ColumnDefinitions>
             <ProgressBar  Grid.Column="0" HorizontalAlignment="Stretch"
-                         Maximum="{Binding Value.Timing.Item1, Mode=OneWay}" Minimum="0"
-                         Value="{Binding Value.TimeRemaining, Mode=OneWay}"
+                         Maximum="{Binding Timing.Item1, Mode=OneWay}" Minimum="0"
+                         Value="{Binding TimeRemaining, Mode=OneWay}"
                          Style="{StaticResource ResourceKey=ProgressBarStyle}"
                          />
            
             <TextBox   Grid.Column="1" VerticalAlignment="Center"
                        Style="{StaticResource ResourceKey=TextBoxStyle}"
                        FontSize="{StaticResource ResourceKey=SmallFontSize}"
-                       Text="{Binding Value.Remaining, Mode=OneWay}"
+                       Text="{Binding Remaining, Mode=OneWay}"
                        />
         </Grid>
     </Grid>
