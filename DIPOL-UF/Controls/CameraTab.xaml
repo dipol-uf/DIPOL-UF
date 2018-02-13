@@ -22,8 +22,8 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" MinWidth="400"/>
-                <ColumnDefinition Width="auto" MinWidth="200"/>
-                <ColumnDefinition Width="*" MinWidth="300"/>
+                <ColumnDefinition Width="*" MinWidth="200"/>
+                <ColumnDefinition Width="auto" MinWidth="300"/>
             </Grid.ColumnDefinitions>
             <!--Custom Image Presenter-->
             <local:DipolImagePresenter Grid.Row="1" Grid.Column="0" Grid.RowSpan="2"
