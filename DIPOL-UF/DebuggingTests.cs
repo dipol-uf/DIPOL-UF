@@ -3,9 +3,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using DipolImage;
+using DIPOL_UF;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+//using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 
 namespace Tests
@@ -35,6 +36,8 @@ namespace Tests
 
             public void DisplayImage()
             {
+                var app = new App();
+                app.InitializeComponent();
                 var model = new DipolImagePresenter();
                 var viewModel = new DipolImagePresnterViewModel(model);
                 var wind = new DebugWindow()
@@ -42,12 +45,11 @@ namespace Tests
                     TestPresenter = {DataContext = viewModel}
                 };
                 var buffer = new byte[1024  * 512 * sizeof(ushort)];
-                var app = new Application();
                 
                 var r = new Random();
                 var t = new DispatcherTimer()
                 {
-                    Interval = TimeSpan.FromMilliseconds(100),
+                    Interval = TimeSpan.FromMilliseconds(5000),
                     IsEnabled = false
                 };
 

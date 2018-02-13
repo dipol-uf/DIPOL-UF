@@ -52,7 +52,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>DIPOL_UF.DIPOL_UF_App</StartupObject>
+    <StartupObject>Tests.DebuggingTests</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -109,6 +109,7 @@
     </Compile>
     <Compile Include="Converters\BoolToBoolMultiValueConverter.cs" />
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
+    <Compile Include="Converters\GeometryRulesToStreamGeometryValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToDictionaryValueMultiValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToStringValueConverter.cs" />
     <Compile Include="Converters\CameraStatsToStringMultiValueConverter.cs" />
@@ -120,6 +121,10 @@
     <Compile Include="Converters\TemperatureToBrushMultiValueConverter.cs" />
     <Compile Include="Converters\ValueTupleToValueValueConverter.cs" />
     <Compile Include="Converters\TypeValueConverter.cs" />
+    <Compile Include="DebuggingTests.cs" />
+    <Compile Include="DebugWindow.xaml.cs">
+      <DependentUpon>DebugWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Helper.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
     <Compile Include="Models\ConnectedCamera.cs" />
@@ -168,6 +173,10 @@
     <Page Include="Controls\DipolImagePresenter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DebugWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Resources\DataProviders.xaml">
       <SubType>Designer</SubType>

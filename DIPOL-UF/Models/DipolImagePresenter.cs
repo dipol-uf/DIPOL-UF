@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -25,11 +27,14 @@ namespace DIPOL_UF.Models
         private double _thumbLeft = 0;
         private double _thumbRight = 1000;
         private DelegateCommand _thumbValueChangedCommand;
+        private DelegateCommand _mouseHoverCommand;
         private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
         {
             Interval = TimeSpan.FromMilliseconds(250),
             IsEnabled = false
         };
+        private List<Tuple<Point, Action<StreamGeometryContext, Point>>> _samplerGeometryRules 
+            = new List<Tuple<Point, Action<StreamGeometryContext, Point>>>(4);
 
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
         private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
@@ -115,18 +120,38 @@ namespace DIPOL_UF.Models
 
         }
 
+        public Point MousePos { get; private set; }
+
+        public List<Tuple<Point, Action<StreamGeometryContext, Point>>> SamplerGeometryRules
+        {
+            get => _samplerGeometryRules;
+            set
+            {
+                _samplerGeometryRules = value;
+                RaisePropertyChanged();
+            }
+
+        }
+
         public DelegateCommand ThumbValueChangedCommand
         {
             get => _thumbValueChangedCommand;
             set
             {
-                if (value != _thumbValueChangedCommand)
-                {
-                    _thumbValueChangedCommand = value;
-                    RaisePropertyChanged();
-                }
-
+                _thumbValueChangedCommand = value;
+                RaisePropertyChanged();
             }
+        }
+
+        public DelegateCommand MouseHoverCommand
+        {
+            get => _mouseHoverCommand;
+            set
+            {
+                _mouseHoverCommand = value;
+                RaisePropertyChanged();
+            }
+
         }
 
         public WriteableBitmap BitmapSource
@@ -150,6 +175,7 @@ namespace DIPOL_UF.Models
         public DipolImagePresenter()
         {
             InitializeCommands();
+            SetSamplerGeometry();
 
             var props = typeof(DipolImagePresenter)
                         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -226,14 +252,53 @@ namespace DIPOL_UF.Models
         {
             ThumbValueChangedCommand = new DelegateCommand(
                 ThumbValueChangedCommandExecute,
-                DelegateCommand.CanExecuteAlways
-            );
+                DelegateCommand.CanExecuteAlways);
+
+            MouseHoverCommand = new DelegateCommand(
+                MouseHoverCommandExecute,
+                DelegateCommand.CanExecuteAlways);
         }
+
+        private void SetSamplerGeometry()
+        {
+            _samplerGeometryRules.Clear();
+            _samplerGeometryRules.Add(Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                new Point(0, 0),
+                (cont, pt) => cont.LineTo(pt, true, false)
+            ));
+            _samplerGeometryRules.Add(Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                new Point(100, 0),
+                (cont, pt) => cont.LineTo(pt, true, false)
+            ));
+            _samplerGeometryRules.Add(Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                new Point(100, 100),
+                (cont, pt) => cont.LineTo(pt, true, false)
+            ));
+            _samplerGeometryRules.Add(Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                new Point(0, 100),
+                (cont, pt) => cont.LineTo(pt, true, false)
+            ));
+
+            RaisePropertyChanged(nameof(SamplerGeometryRules));
+        }
+
 
         private void OnThumbValueChangedTimer_Tick(object sender, object e)
         {
            _thumbValueChangedTimer.Stop();
             UpdateBitmap();
+        }
+
+        private void MouseHoverCommandExecute(object parameter)
+        {
+            if (parameter is CommandEventArgs<MouseEventArgs> e &&
+                e.Sender is FrameworkElement)
+            {
+                var pos = e.EventArgs.GetPosition((FrameworkElement) e.Sender);
+                Console.WriteLine(pos);
+                MousePos = pos;
+                RaisePropertyChanged(nameof(MousePos));
+            }
         }
 
         private void ThumbValueChangedCommandExecute(object parameter)
@@ -244,6 +309,7 @@ namespace DIPOL_UF.Models
                 _thumbValueChangedTimer.Start();
             }
         }
+
 
     }
 }
