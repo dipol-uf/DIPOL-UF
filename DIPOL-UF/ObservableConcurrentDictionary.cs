@@ -307,15 +307,25 @@ namespace DIPOL_UF
                         oldItems.AddRange(from object item in e.OldItems select ((KeyValuePair<TKey, TValue>)item).Value);
                     }
 
-                    if (newItems != null && oldItems != null)
+                    NotifyCollectionChangedEventArgs args;
+                    switch (e.Action)
                     {
-                        var args = new NotifyCollectionChangedEventArgs(e.Action, newItems, oldItems);
+                        case NotifyCollectionChangedAction.Add:
+                            args = new NotifyCollectionChangedEventArgs(e.Action, newItems[0]);
+                            break;
+                        case NotifyCollectionChangedAction.Replace:
+                            args = new NotifyCollectionChangedEventArgs(e.Action, newItems[0], oldItems[0]);
+                            break;
+                        case NotifyCollectionChangedAction.Reset:
+                            args = new NotifyCollectionChangedEventArgs(e.Action);
+                            break;
+                        default:
+                            args = null;
+                            break;
+                    }
+                    if (args != null)
                         CollectionChanged?.Invoke(this, args);
-                    }
-                    else
-                    {
-                        CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(e.Action));
-                    }
+
 
                     
                 };

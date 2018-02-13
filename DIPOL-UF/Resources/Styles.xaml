@@ -106,7 +106,7 @@
 
     <!--TabItem style-->
     <Style x:Key="TabItemStyle" TargetType="{x:Type TabItem}">
-        <Setter Property="Header" Value="{Binding Value.Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}"/>
+        <Setter Property="Header" Value="{Binding Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}"/>
     </Style>
 
     <!--ComboBox style-->

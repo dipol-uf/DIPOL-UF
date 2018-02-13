@@ -8,8 +8,10 @@
             xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
             xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters"
             xmlns:local="clr-namespace:DIPOL_UF.Controls"
+            xmlns:dvms="clr-namespace:DIPOL_UF.ViewModels"
             mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
-            d:DesignHeight="750" d:DesignWidth="850" >
+            d:DesignHeight="750" d:DesignWidth="850"
+            d:DataContext="{d:DesignInstance Type=dvms:ConnectedCameraViewModel, IsDesignTimeCreatable=True}">
     <ScrollViewer
         HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Disabled"
         VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto">
