@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.ServiceModel.Channels;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using DipolImage;
@@ -19,23 +17,39 @@ namespace DIPOL_UF.Models
 {
     public class DipolImagePresenter : ObservableObject
     {
+        private static List<Func<double, double, GeometryDescriptor>> AvailableGeometries 
+            = new List<Func<double, double, GeometryDescriptor>>(3);
+
         private Image _sourceImage;
         private Image _displayedImage;
         private WriteableBitmap _bitmapSource;
         private double _imgScaleMax = 1000;
-        private double _imgScaleMin = 0;
-        private double _thumbLeft = 0;
+        private double _imgScaleMin;
+        private double _thumbLeft;
         private double _thumbRight = 1000;
         private DelegateCommand _thumbValueChangedCommand;
         private DelegateCommand _mouseHoverCommand;
+        private bool _isMouseOverImage;
+        private Size _lastKnownImageControlSize;
+        private double _imageSamplerSize;
+        private double _imageSamplerThickness;
+
         private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
         {
             Interval = TimeSpan.FromMilliseconds(250),
             IsEnabled = false
         };
-        private List<Tuple<Point, Action<StreamGeometryContext, Point>>> _samplerGeometryRules 
-            = new List<Tuple<Point, Action<StreamGeometryContext, Point>>>(4);
 
+        private readonly DispatcherTimer _imageSamplerTimer = new DispatcherTimer()
+        {
+            Interval = TimeSpan.FromMilliseconds(100),
+            IsEnabled = false
+        };
+
+        private GeometryDescriptor _samplerGeometry;
+
+        private List<double> _imageStats = new List<double>(3)
+            {0, 0, 0};
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
         private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
 
@@ -80,7 +94,7 @@ namespace DIPOL_UF.Models
                         _thumbLeft = _imgScaleMax - 1;
                     else
                         _thumbLeft = value;
-                    
+
                     RaisePropertyChanged();
 
                     if (_thumbRight <= _thumbLeft)
@@ -120,15 +134,28 @@ namespace DIPOL_UF.Models
 
         }
 
-        public Point MousePos { get; private set; }
-
-        public List<Tuple<Point, Action<StreamGeometryContext, Point>>> SamplerGeometryRules
+        public Point SamplerCenterPos { get; private set; }
+        public GeometryDescriptor SamplerGeometry
         {
-            get => _samplerGeometryRules;
+            get => _samplerGeometry;
             set
             {
-                _samplerGeometryRules = value;
+                _samplerGeometry = value;
                 RaisePropertyChanged();
+            }
+        }
+
+        public bool IsMouseOverImage
+        {
+            get => _isMouseOverImage;
+
+            set
+            {
+                if (value != _isMouseOverImage)
+                {
+                    _isMouseOverImage = value;
+                    RaisePropertyChanged();
+                }
             }
 
         }
@@ -142,7 +169,6 @@ namespace DIPOL_UF.Models
                 RaisePropertyChanged();
             }
         }
-
         public DelegateCommand MouseHoverCommand
         {
             get => _mouseHoverCommand;
@@ -165,11 +191,39 @@ namespace DIPOL_UF.Models
 
         }
 
-        public void LoadImage(Image image)
+        static DipolImagePresenter()
         {
+            Func<double, double, GeometryDescriptor> commonRectangle =
+                (size, thickness) =>
+                {
+                    var path = new List<Tuple<Point, Action<StreamGeometryContext, Point>>>(4)
+                    {
+                        Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                            new Point(0, 0),
+                            (cont, pt) => cont.LineTo(pt, true, false)
+                        ),
+                        Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                            new Point(size, 0),
+                            (cont, pt) => cont.LineTo(pt, true, false)
+                        ),
+                        Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                            new Point(size, size),
+                            (cont, pt) => cont.LineTo(pt, true, false)
+                        ),
+                        Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                            new Point(0, size),
+                            (cont, pt) => cont.LineTo(pt, true, false)
+                        )
+                    };
 
-            CopyImage(image);
-            UpdateBitmap();
+                    return new GeometryDescriptor(
+                        new Point(size / 2, size / 2), new Size(size, size),
+                        path, thickness,
+                        (i, j, p) => true);
+
+                };
+
+            AvailableGeometries.Add(commonRectangle);
         }
 
         public DipolImagePresenter()
@@ -191,6 +245,28 @@ namespace DIPOL_UF.Models
             };
 
             _thumbValueChangedTimer.Tick += OnThumbValueChangedTimer_Tick;
+            _imageSamplerTimer.Tick += OnImageSamplerTimer_Tick;
+        }
+
+        public void LoadImage(Image image)
+        {
+
+            CopyImage(image);
+            UpdateBitmap();
+        }
+
+        public List<double> ImageStats
+        {
+            get => _imageStats;
+            set
+            {
+                if (!value.Equals(_imageStats))
+                {
+                    _imageStats = value;
+                    RaisePropertyChanged();
+                }
+            }
+
         }
 
         private void CopyImage(Image image)
@@ -215,7 +291,7 @@ namespace DIPOL_UF.Models
 
             if (_bitmapSource == null ||
                 Helper.ExecuteOnUI(() => _bitmapSource.PixelWidth != _sourceImage.Width) ||
-                Helper.ExecuteOnUI(() =>_bitmapSource.PixelHeight != _sourceImage.Height))
+                Helper.ExecuteOnUI(() => _bitmapSource.PixelHeight != _sourceImage.Height))
             {
 
                 _bitmapSource = Helper.ExecuteOnUI(() => new WriteableBitmap(_sourceImage.Width,
@@ -232,17 +308,14 @@ namespace DIPOL_UF.Models
 
             try
             {
-              Helper.ExecuteOnUI(_bitmapSource.Lock);
+                Helper.ExecuteOnUI(_bitmapSource.Lock);
                 Helper.ExecuteOnUI(() => System.Runtime.InteropServices.Marshal.Copy(
                     bytes, 0, _bitmapSource.BackBuffer, bytes.Length));
             }
-            catch (Exception e)
-            {
-
-            }
             finally
             {
-                Helper.ExecuteOnUI(() => _bitmapSource.AddDirtyRect(new Int32Rect(0, 0, _sourceImage.Width, _sourceImage.Height)));
+                Helper.ExecuteOnUI(() =>
+                    _bitmapSource.AddDirtyRect(new Int32Rect(0, 0, _sourceImage.Width, _sourceImage.Height)));
                 Helper.ExecuteOnUI(_bitmapSource.Unlock);
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(BitmapSource)));
             }
@@ -261,55 +334,99 @@ namespace DIPOL_UF.Models
 
         private void SetSamplerGeometry()
         {
-            _samplerGeometryRules.Clear();
-            _samplerGeometryRules.Add(Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
-                new Point(0, 0),
-                (cont, pt) => cont.LineTo(pt, true, false)
-            ));
-            _samplerGeometryRules.Add(Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
-                new Point(100, 0),
-                (cont, pt) => cont.LineTo(pt, true, false)
-            ));
-            _samplerGeometryRules.Add(Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
-                new Point(100, 100),
-                (cont, pt) => cont.LineTo(pt, true, false)
-            ));
-            _samplerGeometryRules.Add(Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
-                new Point(0, 100),
-                (cont, pt) => cont.LineTo(pt, true, false)
-            ));
-
-            RaisePropertyChanged(nameof(SamplerGeometryRules));
+            SamplerGeometry = AvailableGeometries[0](100, 3);
         }
 
+        private void CalculateStatistics()
+        {
+            if (!IsMouseOverImage)
+                return;
+            Task.Run(() =>
+            {
+                
+                    var pixels = SamplerGeometry.PixelsInsideGeometry(SamplerCenterPos,
+                        _displayedImage.Width - 1, _displayedImage.Height - 1,
+                        _lastKnownImageControlSize.Width, _lastKnownImageControlSize.Height);
+
+                    var data = pixels.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X)).ToList();
+
+                    double avg = data.Average();
+                    double min = data.Min();
+                    double max = data.Max();
+
+                    Helper.ExecuteOnUI(() =>
+                    {
+                        _imageStats[0] = avg;
+                        _imageStats[1] = min;
+                        _imageStats[2] = max;
+                    });
+
+                    RaisePropertyChanged(nameof(ImageStats));
+               
+            });
+
+        }
 
         private void OnThumbValueChangedTimer_Tick(object sender, object e)
         {
-           _thumbValueChangedTimer.Stop();
+            _thumbValueChangedTimer.Stop();
             UpdateBitmap();
         }
+
+        private void OnImageSamplerTimer_Tick(object sender, object e)
+        {
+            _imageSamplerTimer.Stop();
+            CalculateStatistics();
+        }
+
 
         private void MouseHoverCommandExecute(object parameter)
         {
             if (parameter is CommandEventArgs<MouseEventArgs> e &&
-                e.Sender is FrameworkElement)
+                e.Sender is FrameworkElement elem)
             {
-                var pos = e.EventArgs.GetPosition((FrameworkElement) e.Sender);
-                Console.WriteLine(pos);
-                MousePos = pos;
-                RaisePropertyChanged(nameof(MousePos));
+
+                if (e.EventArgs.RoutedEvent.Name == @"MouseEnter")
+                    IsMouseOverImage = true;
+                if (e.EventArgs.RoutedEvent.Name == @"MouseLeave")
+                {
+                    IsMouseOverImage = false;
+                    return;
+                }
+
+                if (e.EventArgs.RoutedEvent.Name == @"MouseMove" && !IsMouseOverImage)
+                    IsMouseOverImage = true;
+
+                var pos = e.EventArgs.GetPosition(elem);
+                var posX = pos.X.Clamp(
+                    SamplerGeometry.HalfSize.Width,
+                    elem.ActualWidth - SamplerGeometry.HalfSize.Width);
+                var posY = pos.Y.Clamp(
+                    SamplerGeometry.HalfSize.Height,
+                    elem.ActualHeight- SamplerGeometry.HalfSize.Height);
+                SamplerCenterPos = new Point(posX, posY);
+                _lastKnownImageControlSize = new Size(elem.ActualWidth, elem.ActualHeight);
+                RaisePropertyChanged(nameof(SamplerCenterPos));
+                if(!_imageSamplerTimer.IsEnabled)
+                    _imageSamplerTimer.Start();
             }
         }
 
         private void ThumbValueChangedCommandExecute(object parameter)
         {
             if (parameter is
-                CommandEventArgs<RoutedPropertyChangedEventArgs<double>> evnt)
+                CommandEventArgs<RoutedPropertyChangedEventArgs<double>>)
             {
                 _thumbValueChangedTimer.Start();
             }
         }
 
+        protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(sender, e);
 
+            if (e.PropertyName == nameof(BitmapSource))
+                IsMouseOverImage = false;
+        }
     }
 }

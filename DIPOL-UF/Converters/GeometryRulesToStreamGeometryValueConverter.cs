@@ -18,6 +18,7 @@ namespace DIPOL_UF.Converters
                 using (var cont = geom.Open())
                 {
                     cont.BeginFigure(list[0].Item1, true, true);
+                    
                     for (var i = 1; i < list.Count; i++)
                         list[i].Item2(cont, list[i].Item1);
                 }

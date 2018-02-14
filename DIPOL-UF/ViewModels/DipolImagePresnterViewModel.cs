@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -29,13 +30,16 @@ namespace DIPOL_UF.ViewModels
             set => model.ThumbRight = value;
         }
 
-        public double SelectionX => model.MousePos.X -50;
-        public double SelectionY => model.MousePos.Y- 50;
+        public double SelectionX => model.SamplerCenterPos.X - SamplerGeometry.Center.X;
+        public double SelectionY => model.SamplerCenterPos.Y - SamplerGeometry.Center.Y;
 
         public ICommand ThumbValueChangedCommand => model.ThumbValueChangedCommand;
         public ICommand MouseHoverCommand => model.MouseHoverCommand;
 
-        public object SamplerPath => model.SamplerGeometryRules;
+        public GeometryDescriptor SamplerGeometry => model.SamplerGeometry;
+        public bool IsMouseOverImage => model.IsMouseOverImage;
+
+        public List<double> ImageStats => model.ImageStats;
 
         public DipolImagePresnterViewModel(DipolImagePresenter model) : base(model)
         {
@@ -65,9 +69,8 @@ namespace DIPOL_UF.ViewModels
         protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnModelPropertyChanged(sender, e);
-            if (e.PropertyName == nameof(model.SamplerGeometryRules)) 
-                RaisePropertyChanged(nameof(SamplerPath));
-            if (e.PropertyName == nameof(model.MousePos))
+         
+            if (e.PropertyName == nameof(model.SamplerCenterPos))
             {
                 RaisePropertyChanged(nameof(SelectionX));
                 RaisePropertyChanged(nameof(SelectionY));

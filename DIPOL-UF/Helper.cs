@@ -222,5 +222,12 @@ namespace DIPOL_UF
                 .Where(item => castEnm.HasFlag(item as Enum))
                 .ToArray();
         }
+
+        public static double Clamp(this double val, double min, double max)
+        {
+            var result = val >= min ? val : min;
+            result = result <= max ? result : max;
+            return result;
+        }
     }
 }
