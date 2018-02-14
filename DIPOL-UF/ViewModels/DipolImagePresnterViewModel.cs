@@ -33,8 +33,17 @@ namespace DIPOL_UF.ViewModels
         public double SelectionX => model.SamplerCenterPos.X - SamplerGeometry.Center.X;
         public double SelectionY => model.SamplerCenterPos.Y - SamplerGeometry.Center.Y;
 
+        public int SelectedGeometryIndex
+        {
+            get => model.SelectedGeometryIndex;
+            set => model.SelectedGeometryIndex = value;
+        }
+
         public ICommand ThumbValueChangedCommand => model.ThumbValueChangedCommand;
         public ICommand MouseHoverCommand => model.MouseHoverCommand;
+        public ICommand SizeChangedCommand => model.SizeChangedCommand;
+
+        public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
         public GeometryDescriptor SamplerGeometry => model.SamplerGeometry;
         public bool IsMouseOverImage => model.IsMouseOverImage;

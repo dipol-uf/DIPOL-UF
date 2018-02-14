@@ -17,7 +17,7 @@ namespace DIPOL_UF.Converters
                 var geom = new StreamGeometry();
                 using (var cont = geom.Open())
                 {
-                    cont.BeginFigure(list[0].Item1, true, true);
+                    cont.BeginFigure(list[0].Item1, true, false);
                     
                     for (var i = 1; i < list.Count; i++)
                         list[i].Item2(cont, list[i].Item1);

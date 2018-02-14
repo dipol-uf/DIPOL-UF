@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.TextFormatting;
-
 using static System.Math;
 
 namespace DIPOL_UF
@@ -16,12 +13,12 @@ namespace DIPOL_UF
         public Size Size { get; }
         public Size HalfSize { get; }
         public double Thickness { get; }
-        private Func<double, double, List<Tuple<Point, Action<StreamGeometryContext, Point>>>, bool> _isInRegionChecker;
+        private readonly Func<double, double, GeometryDescriptor, bool> _isInRegionChecker;
 
         public GeometryDescriptor(Point center, Size size,
             List<Tuple<Point, Action<StreamGeometryContext, Point>>> path,
             double thickness,
-            Func<double, double, List<Tuple<Point, Action<StreamGeometryContext, Point>>>, bool> pixelChecker)
+            Func<double, double, GeometryDescriptor, bool> pixelChecker)
         {
             Center = new Point(center.X, center.Y);
             Size = new Size(size.Width + thickness, size.Height + thickness);
@@ -48,7 +45,10 @@ namespace DIPOL_UF
 
             for (var pixIndX = pixelXLims.Min; pixIndX <=  pixelXLims.Max; pixIndX++)
                 for (var pixIndY = pixelYLims.Min; pixIndY <= pixelYLims.Max; pixIndY++)
-                    if(_isInRegionChecker(1.0 * pixIndX / pixelWidth * actualRegionWidth, 1.0 * pixIndY / pixelHeight * actualRegionHeight, PathDescription))
+                    if(_isInRegionChecker(
+                        1.0 * pixIndX / pixelWidth * actualRegionWidth - currentPos.X, 
+                        1.0 * pixIndY / pixelHeight * actualRegionHeight - currentPos.Y, 
+                        this))
                         pixels.Add((pixIndX, pixIndY));
 
             return pixels;

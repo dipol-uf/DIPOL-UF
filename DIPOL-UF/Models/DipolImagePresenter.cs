@@ -17,8 +17,8 @@ namespace DIPOL_UF.Models
 {
     public class DipolImagePresenter : ObservableObject
     {
-        private static List<Func<double, double, GeometryDescriptor>> AvailableGeometries 
-            = new List<Func<double, double, GeometryDescriptor>>(3);
+        private static List<Func<double, double, GeometryDescriptor>>  AvailableGeometries { get; }
+        public static List<string> GeometriesAliases { get; }
 
         private Image _sourceImage;
         private Image _displayedImage;
@@ -29,10 +29,13 @@ namespace DIPOL_UF.Models
         private double _thumbRight = 1000;
         private DelegateCommand _thumbValueChangedCommand;
         private DelegateCommand _mouseHoverCommand;
+        private DelegateCommand _sizeChangedCommand;
         private bool _isMouseOverImage;
         private Size _lastKnownImageControlSize;
-        private double _imageSamplerSize;
-        private double _imageSamplerThickness;
+        private int _selectedGeometryIndex = 1;
+        private double _imageSamplerScaleFactor = 1.0;
+        private double _imageSamplerSize = 100;
+        private double _imageSamplerThickness = 3.0;
 
         private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
         {
@@ -179,6 +182,15 @@ namespace DIPOL_UF.Models
             }
 
         }
+        public DelegateCommand SizeChangedCommand
+        {
+            get => _sizeChangedCommand;
+            set
+            {
+                _sizeChangedCommand = value;
+                RaisePropertyChanged();
+            }
+        }
 
         public WriteableBitmap BitmapSource
         {
@@ -191,39 +203,30 @@ namespace DIPOL_UF.Models
 
         }
 
-        static DipolImagePresenter()
+        public double ImageSamplerScaleFactor
         {
-            Func<double, double, GeometryDescriptor> commonRectangle =
-                (size, thickness) =>
+            get => _imageSamplerScaleFactor;
+            set
+            {
+                if (Math.Abs(value - _imageSamplerScaleFactor) > double.Epsilon)
                 {
-                    var path = new List<Tuple<Point, Action<StreamGeometryContext, Point>>>(4)
-                    {
-                        Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
-                            new Point(0, 0),
-                            (cont, pt) => cont.LineTo(pt, true, false)
-                        ),
-                        Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
-                            new Point(size, 0),
-                            (cont, pt) => cont.LineTo(pt, true, false)
-                        ),
-                        Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
-                            new Point(size, size),
-                            (cont, pt) => cont.LineTo(pt, true, false)
-                        ),
-                        Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
-                            new Point(0, size),
-                            (cont, pt) => cont.LineTo(pt, true, false)
-                        )
-                    };
+                    _imageSamplerScaleFactor = value;
+                    RaisePropertyChanged();
+                }
 
-                    return new GeometryDescriptor(
-                        new Point(size / 2, size / 2), new Size(size, size),
-                        path, thickness,
-                        (i, j, p) => true);
-
-                };
-
-            AvailableGeometries.Add(commonRectangle);
+            }
+        }
+        public int SelectedGeometryIndex
+        {
+            get => _selectedGeometryIndex;
+            set
+            {
+                if (value != _selectedGeometryIndex)
+                {
+                    _selectedGeometryIndex = value;
+                    RaisePropertyChanged();
+                }
+            }
         }
 
         public DipolImagePresenter()
@@ -246,6 +249,11 @@ namespace DIPOL_UF.Models
 
             _thumbValueChangedTimer.Tick += OnThumbValueChangedTimer_Tick;
             _imageSamplerTimer.Tick += OnImageSamplerTimer_Tick;
+        }
+
+        static DipolImagePresenter()
+        {
+            (AvailableGeometries, GeometriesAliases) = InitializeAvailableGeometries();
         }
 
         public void LoadImage(Image image)
@@ -330,11 +338,16 @@ namespace DIPOL_UF.Models
             MouseHoverCommand = new DelegateCommand(
                 MouseHoverCommandExecute,
                 DelegateCommand.CanExecuteAlways);
+
+            SizeChangedCommand = new DelegateCommand(
+                SizeChangedCommandExecute,
+                DelegateCommand.CanExecuteAlways);
+            
         }
 
         private void SetSamplerGeometry()
         {
-            SamplerGeometry = AvailableGeometries[0](100, 3);
+            SamplerGeometry = AvailableGeometries[1](100, 3);
         }
 
         private void CalculateStatistics()
@@ -382,7 +395,8 @@ namespace DIPOL_UF.Models
 
         private void MouseHoverCommandExecute(object parameter)
         {
-            if (parameter is CommandEventArgs<MouseEventArgs> e &&
+            if (_displayedImage != null && 
+                parameter is CommandEventArgs<MouseEventArgs> e &&
                 e.Sender is FrameworkElement elem)
             {
 
@@ -411,13 +425,19 @@ namespace DIPOL_UF.Models
                     _imageSamplerTimer.Start();
             }
         }
-
         private void ThumbValueChangedCommandExecute(object parameter)
         {
             if (parameter is
                 CommandEventArgs<RoutedPropertyChangedEventArgs<double>>)
             {
                 _thumbValueChangedTimer.Start();
+            }
+        }
+        private void SizeChangedCommandExecute(object parameter)
+        {
+            if (parameter is CommandEventArgs<SizeChangedEventArgs> args)
+            {
+                ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width, args.EventArgs.NewSize.Height) / 1000.0;
             }
         }
 
@@ -427,6 +447,77 @@ namespace DIPOL_UF.Models
 
             if (e.PropertyName == nameof(BitmapSource))
                 IsMouseOverImage = false;
+
+            if (e.PropertyName == nameof(ImageSamplerScaleFactor))
+                SamplerGeometry = AvailableGeometries[SelectedGeometryIndex](
+                    ImageSamplerScaleFactor * _imageSamplerSize, _imageSamplerThickness * ImageSamplerScaleFactor);
+
+            if(e.PropertyName == nameof(SelectedGeometryIndex))
+                SamplerGeometry = AvailableGeometries[SelectedGeometryIndex](
+                    ImageSamplerScaleFactor * _imageSamplerSize, _imageSamplerThickness * ImageSamplerScaleFactor);
+        }
+
+        private static (List<Func<double, double, GeometryDescriptor>>, List<string>) InitializeAvailableGeometries()
+        {
+            GeometryDescriptor CommonRectangle(double size, double thickness)
+            {
+                var path = new List<Tuple<Point, Action<StreamGeometryContext, Point>>>(4)
+                {
+                    Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                        new Point(0, 0), null),
+                    Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                        new Point(size, 0), (cont, pt) => cont.LineTo(pt, true, false)),
+                    Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                        new Point(size, size), (cont, pt) => cont.LineTo(pt, true, false)),
+                    Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                        new Point(0, size), (cont, pt) => cont.LineTo(pt, true, false)),
+                    Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                        new Point(0, 0), (cont, pt) => cont.LineTo(pt, true, false))
+                };
+
+                return new GeometryDescriptor(
+                    new Point(size / 2, size / 2), 
+                    new Size(size, size), path, thickness, 
+                    (i, j, p) => true);
+            }
+
+            GeometryDescriptor CommonCircle(double size, double thickness)
+            {
+                var path = new List<Tuple<Point, Action<StreamGeometryContext, Point>>>(4)
+                {
+                    Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                        new Point(size/2, 0), null),
+                    Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                       new Point(size, size/2), (cont, pt) 
+                           => cont.ArcTo(pt, new Size(size/2, size/2), 
+                               90, false, SweepDirection.Clockwise, true, false)),
+                    Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                        new Point(size/2, size), (cont, pt) 
+                            => cont.ArcTo(pt, new Size(size/2, size/2), 
+                                90, false, SweepDirection.Clockwise, true, false)),
+                    Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                        new Point(0, size/2), (cont, pt) 
+                            => cont.ArcTo(pt, new Size(size/2, size/2), 
+                                90, false, SweepDirection.Clockwise, true, false)),
+                    Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
+                        new Point(size/2, 0), (cont, pt) 
+                            => cont.ArcTo(pt, new Size(size/2, size/2),
+                                90, false, SweepDirection.Clockwise, true, false))
+                };
+
+                bool PixSelector(double px, double py, GeometryDescriptor desc)
+                    => (px * px + py * py) <= 
+                           Math.Pow(0.5 * (desc.HalfSize.Width + desc.HalfSize.Height), 2);
+
+                return new GeometryDescriptor(
+                    new Point(size / 2, size / 2), 
+                    new Size(size, size), path, thickness, 
+                    PixSelector);
+            }
+
+            return (new List<Func<double, double, GeometryDescriptor>>(3) {CommonRectangle, CommonCircle}, 
+                new List<string>() {@"Rectangle", @"Circle"});
+
         }
     }
 }
