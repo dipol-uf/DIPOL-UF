@@ -30,13 +30,14 @@ namespace DIPOL_UF.Models
         private DelegateCommand _thumbValueChangedCommand;
         private DelegateCommand _mouseHoverCommand;
         private DelegateCommand _sizeChangedCommand;
+        private Point _samplerCenterPos;
         private bool _isMouseOverImage;
         private Size _lastKnownImageControlSize;
         private int _selectedGeometryIndex = 1;
         private double _imageSamplerScaleFactor = 1.0;
         private double _imageSamplerSize = 200;
         private double _imageSamplerThickness = 4.0;
-        private Point _lastProcessedSamplerPos = default;
+        private Brush _samplerColor;
 
         private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
         {
@@ -56,6 +57,8 @@ namespace DIPOL_UF.Models
             {0, 0, 0};
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
         private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
+
+
 
         public double ImgScaleMax
         {
@@ -138,13 +141,84 @@ namespace DIPOL_UF.Models
 
         }
 
-        public Point SamplerCenterPos { get; private set; }
+        public Point SamplerCenterPos
+        {
+            get => _samplerCenterPos;
+            set
+            {
+                if (!value.Equals(_samplerCenterPos))
+                {
+                    _samplerCenterPos = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
         public GeometryDescriptor SamplerGeometry
         {
             get => _samplerGeometry;
             set
             {
                 _samplerGeometry = value;
+                RaisePropertyChanged();
+            }
+        }
+        public double ImageSamplerScaleFactor
+        {
+            get => _imageSamplerScaleFactor;
+            set
+            {
+                if (Math.Abs(value - _imageSamplerScaleFactor) > double.Epsilon)
+                {
+                    _imageSamplerScaleFactor = value;
+                    RaisePropertyChanged();
+                }
+
+            }
+        }
+        public int SelectedGeometryIndex
+        {
+            get => _selectedGeometryIndex;
+            set
+            {
+                if (value != _selectedGeometryIndex)
+                {
+                    _selectedGeometryIndex = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        public double ImageSamplerThickness
+        {
+            get => _imageSamplerThickness;
+            set
+            {
+                if (Math.Abs(value - _imageSamplerThickness) > double.Epsilon)
+                {
+                    _imageSamplerThickness = value;
+                    RaisePropertyChanged();
+                }
+
+            }
+        }
+        public double ImageSamplerSize
+        {
+            get => _imageSamplerSize;
+            set
+            {
+                if (Math.Abs(value - _imageSamplerSize) > double.Epsilon)
+                {
+                    _imageSamplerSize = value;
+                    RaisePropertyChanged();
+                } 
+            }
+
+        }
+        public Brush SamplerColor
+        {
+            get => _samplerColor;
+            set
+            {
+                _samplerColor = value;
                 RaisePropertyChanged();
             }
         }
@@ -204,31 +278,6 @@ namespace DIPOL_UF.Models
 
         }
 
-        public double ImageSamplerScaleFactor
-        {
-            get => _imageSamplerScaleFactor;
-            set
-            {
-                if (Math.Abs(value - _imageSamplerScaleFactor) > double.Epsilon)
-                {
-                    _imageSamplerScaleFactor = value;
-                    RaisePropertyChanged();
-                }
-
-            }
-        }
-        public int SelectedGeometryIndex
-        {
-            get => _selectedGeometryIndex;
-            set
-            {
-                if (value != _selectedGeometryIndex)
-                {
-                    _selectedGeometryIndex = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
 
         public DipolImagePresenter()
         {
@@ -353,6 +402,7 @@ namespace DIPOL_UF.Models
         private void SetSamplerGeometry()
         {
             SamplerGeometry = AvailableGeometries[1](100, 3);
+            SamplerCenterPos = SamplerGeometry.Center;
         }
 
         private void CalculateStatistics()
@@ -390,9 +440,23 @@ namespace DIPOL_UF.Models
                 });
 
                 RaisePropertyChanged(nameof(ImageStats));
-                RaisePropertyChanged(nameof(BitmapSource));
             });
 
+        }
+
+        private void UpdateGeometry()
+        {
+            SamplerGeometry = AvailableGeometries[SelectedGeometryIndex](
+                ImageSamplerScaleFactor * ImageSamplerSize, ImageSamplerThickness * ImageSamplerScaleFactor);
+
+            SamplerCenterPos = new Point(
+                SamplerCenterPos.X.Clamp(
+                    SamplerGeometry.HalfSize.Width, 
+                    _lastKnownImageControlSize.Width - SamplerGeometry.HalfSize.Width),
+                SamplerCenterPos.Y.Clamp(
+                    SamplerGeometry.HalfSize.Height, 
+                    _lastKnownImageControlSize.Height - SamplerGeometry.HalfSize.Height)
+                );
         }
 
         private void OnThumbValueChangedTimer_Tick(object sender, object e)
@@ -400,16 +464,11 @@ namespace DIPOL_UF.Models
             _thumbValueChangedTimer.Stop();
             UpdateBitmap();
         }
-
         private void OnImageSamplerTimer_Tick(object sender, object e)
         {
             CalculateStatistics();
-            //if(_lastProcessedSamplerPos.Equals(SamplerCenterPos))
-                _imageSamplerTimer.Stop();
-            _lastProcessedSamplerPos = SamplerCenterPos;
-            //RaisePropertyChanged(nameof(BitmapSource));
+            _imageSamplerTimer.Stop();
         }
-
 
         private void MouseHoverCommandExecute(object parameter)
         {
@@ -438,7 +497,7 @@ namespace DIPOL_UF.Models
                     elem.ActualHeight- SamplerGeometry.HalfSize.Height);
                 SamplerCenterPos = new Point(posX, posY);
                 _lastKnownImageControlSize = new Size(elem.ActualWidth, elem.ActualHeight);
-                RaisePropertyChanged(nameof(SamplerCenterPos));
+                //RaisePropertyChanged(nameof(SamplerCenterPos));
                 if(!_imageSamplerTimer.IsEnabled)
                     _imageSamplerTimer.Start();
             }
@@ -464,15 +523,25 @@ namespace DIPOL_UF.Models
             base.OnPropertyChanged(sender, e);
 
             if (e.PropertyName == nameof(BitmapSource))
+            {
                 IsMouseOverImage = false;
+                _imageStats[0] = 0;
+                _imageStats[0] = 0;
+                _imageStats[0] = 0;
+                RaisePropertyChanged(nameof(ImageStats));
+            }
 
-            if (e.PropertyName == nameof(ImageSamplerScaleFactor))
-                SamplerGeometry = AvailableGeometries[SelectedGeometryIndex](
-                    ImageSamplerScaleFactor * _imageSamplerSize, _imageSamplerThickness * ImageSamplerScaleFactor);
 
-            if(e.PropertyName == nameof(SelectedGeometryIndex))
-                SamplerGeometry = AvailableGeometries[SelectedGeometryIndex](
-                    ImageSamplerScaleFactor * _imageSamplerSize, _imageSamplerThickness * ImageSamplerScaleFactor);
+            if (e.PropertyName == nameof(ImageSamplerScaleFactor) ||
+                e.PropertyName == nameof(SelectedGeometryIndex) ||
+                e.PropertyName == nameof(ImageSamplerThickness) ||
+                e.PropertyName == nameof(ImageSamplerSize))
+                UpdateGeometry();
+                
+
+            //if(e.PropertyName == nameof(SelectedGeometryIndex))
+            //    SamplerGeometry = AvailableGeometries[SelectedGeometryIndex](
+            //        ImageSamplerScaleFactor * _imageSamplerSize, _imageSamplerThickness * ImageSamplerScaleFactor);
         }
 
         private static (List<Func<double, double, GeometryDescriptor>>, List<string>) InitializeAvailableGeometries()

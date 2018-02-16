@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using DIPOL_UF.Models;
 
@@ -28,11 +29,20 @@ namespace DIPOL_UF.ViewModels
             new Point(
                 model.SamplerCenterPos.X - SamplerGeometry.Center.X,
                 model.SamplerCenterPos.Y - SamplerGeometry.Center.Y);
-
         public int SelectedGeometryIndex
         {
             get => model.SelectedGeometryIndex;
             set => model.SelectedGeometryIndex = value;
+        }
+        public double ImageSamplerThickness
+        {
+            get => model.ImageSamplerThickness;
+            set => model.ImageSamplerThickness = value;
+        }
+        public double ImageSamplerSize
+        {
+            get => model.ImageSamplerSize;
+            set => model.ImageSamplerSize = value;
         }
 
         public ICommand ThumbValueChangedCommand => model.ThumbValueChangedCommand;
@@ -46,40 +56,19 @@ namespace DIPOL_UF.ViewModels
 
         public List<double> ImageStats => model.ImageStats;
 
+        public Brush SamplerColor
+        {
+            get => model.SamplerColor;
+            set => model.SamplerColor = value;
+        }
+
+
         public DipolImagePresnterViewModel(DipolImagePresenter model) : base(model)
         {
 
-            //Task.Run(() =>
-            //{
-            //    Task.Delay(1000).Wait();
-
-            //    Helper.ExecuteOnUI(() =>
-            //    {
-                  
-            //        var path = new StreamGeometry();
-            //        using (var context = path.Open())
-            //        {
-            //            context.BeginFigure(new Point(0, 0), true, false);
-            //            context.LineTo(new Point(100, 100), true, false);
-            //        }
-                   
-            //        path.Freeze();
-
-            //        //SelectionCurve = path.GetFlattenedPathGeometry();
-            //        //RaisePropertyChanged(nameof(SelectionCurve));
-            //    });
-            //});
+            
         }
 
-        //protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        //{
-        //    base.OnModelPropertyChanged(sender, e);
-         
-        //    //if (e.PropertyName == nameof(model.SamplerCenterPos))
-        //    //{
-        //    //    RaisePropertyChanged(nameof(SelectionX));
-        //    //    RaisePropertyChanged(nameof(SelectionY));
-        //    //}
-        //}
+     
     }
 }

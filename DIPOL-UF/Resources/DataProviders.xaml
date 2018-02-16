@@ -25,4 +25,5 @@
             <x:Type TypeName="enm:VSAmplitude"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
+    
 </ResourceDictionary>

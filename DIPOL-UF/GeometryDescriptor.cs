@@ -35,11 +35,11 @@ namespace DIPOL_UF
             var relativePos = new Point((currentPos.X)/ actualRegionWidth, (currentPos.Y) / actualRegionHeight);
             var relativeHalfSize = new Size((HalfSize.Width - Thickness) / actualRegionWidth, (HalfSize.Height - Thickness) / actualRegionHeight);
 
-            var pixelXLims = (Min: Convert.ToInt32(Round(Max(relativePos.X - relativeHalfSize.Width, 0) * pixelWidth)),
-                              Max: Convert.ToInt32(Round(Min(relativePos.X + relativeHalfSize.Width, 1) * pixelWidth)));
+            var pixelXLims = (Min: Convert.ToInt32((Max(relativePos.X - relativeHalfSize.Width, 0) * pixelWidth)),
+                              Max: Convert.ToInt32((Min(relativePos.X + relativeHalfSize.Width, 1) * pixelWidth)));
 
-            var pixelYLims = (Min: Convert.ToInt32(Round(Max(relativePos.Y - relativeHalfSize.Height, 0) * pixelHeight)),
-                              Max: Convert.ToInt32(Round(Min(relativePos.Y + relativeHalfSize.Height, 1) * pixelHeight)));
+            var pixelYLims = (Min: Convert.ToInt32((Max(relativePos.Y - relativeHalfSize.Height, 0) * pixelHeight)),
+                              Max: Convert.ToInt32((Min(relativePos.Y + relativeHalfSize.Height, 1) * pixelHeight)));
 
             var pixels = new List<(int X, int Y)>((pixelXLims.Max - pixelXLims.Min) * (pixelYLims.Max - pixelYLims.Min)/ 2);
 

@@ -46,7 +46,21 @@
         <SolidColorBrush Color="Orange"/>
         <SolidColorBrush Color="Crimson"/>
     </x:Array>
-    
+
+    <x:Array x:Key="ColorPickerColors" Type="SolidColorBrush">
+        <SolidColorBrush Color="GhostWhite"/>
+        <SolidColorBrush Color="Black"/>
+        <SolidColorBrush Color="Aqua"/>
+        <SolidColorBrush Color="DarkCyan"/>
+        <SolidColorBrush Color="Blue"/>
+        <SolidColorBrush Color="SeaGreen"/>
+        <SolidColorBrush Color="YellowGreen"/>
+        <SolidColorBrush Color="Yellow"/>
+        <SolidColorBrush Color="Tomato"/>
+        <SolidColorBrush Color="Red"/>
+        <SolidColorBrush Color="MediumVioletRed"/>
+    </x:Array>
+
     <!--Enum text representations-->
     <x:Array x:Key="SwitchEnumTextRepresentation" Type="{x:Type sys:String}">
         <sys:String>Cooling</sys:String>
