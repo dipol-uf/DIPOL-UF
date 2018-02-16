@@ -56,8 +56,9 @@ namespace Tests
 
                 t.Tick += (sender, e) =>
                 {
-                    r.NextBytes(buffer);
+                    //r.NextBytes(buffer);
                     model.LoadImage(new Image(buffer, 1024, 512, TypeCode.UInt16));
+                    t.Stop();
                 };
                 t.Start();
                 app.Run(wind);

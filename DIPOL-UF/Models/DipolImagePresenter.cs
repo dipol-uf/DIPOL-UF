@@ -34,8 +34,9 @@ namespace DIPOL_UF.Models
         private Size _lastKnownImageControlSize;
         private int _selectedGeometryIndex = 1;
         private double _imageSamplerScaleFactor = 1.0;
-        private double _imageSamplerSize = 100;
-        private double _imageSamplerThickness = 3.0;
+        private double _imageSamplerSize = 200;
+        private double _imageSamplerThickness = 4.0;
+        private Point _lastProcessedSamplerPos = default;
 
         private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
         {
@@ -238,14 +239,14 @@ namespace DIPOL_UF.Models
                         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                         .Where(pi => pi.CanRead)
                         .ToList();
-            PropertyChanged += (sender, e) =>
+            PropertyChanged += (sender, e) => Helper.ExecuteOnUI(() =>
             {
                 var val = props
                           .FirstOrDefault(pi => pi.Name == e.PropertyName)
                           ?.GetValue(this);
                 Console.WriteLine($@"{e.PropertyName}: " +
                                   $@"{val}");
-            };
+            });
 
             _thumbValueChangedTimer.Tick += OnThumbValueChangedTimer_Tick;
             _imageSamplerTimer.Tick += OnImageSamplerTimer_Tick;
@@ -283,6 +284,10 @@ namespace DIPOL_UF.Models
             {
                 case TypeCode.UInt16:
                     _sourceImage = image.CastTo<ushort, float>(x => x);
+                    _displayedImage = _sourceImage.Copy();
+                    break;
+                case TypeCode.Single:
+                    _sourceImage = image.Copy();
                     _displayedImage = _sourceImage.Copy();
                     break;
                 default:
@@ -352,30 +357,40 @@ namespace DIPOL_UF.Models
 
         private void CalculateStatistics()
         {
-            if (!IsMouseOverImage)
-                return;
+            //if (!IsMouseOverImage)
+            //    return;
             Task.Run(() =>
             {
-                
-                    var pixels = SamplerGeometry.PixelsInsideGeometry(SamplerCenterPos,
-                        _displayedImage.Width - 1, _displayedImage.Height - 1,
-                        _lastKnownImageControlSize.Width, _lastKnownImageControlSize.Height);
 
-                    var data = pixels.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X)).ToList();
+                var pixels = SamplerGeometry.PixelsInsideGeometry(SamplerCenterPos,
+                    _displayedImage.Width-1, _displayedImage.Height-1,
+                    _lastKnownImageControlSize.Width, _lastKnownImageControlSize.Height);
 
-                    double avg = data.Average();
-                    double min = data.Min();
-                    double max = data.Max();
+                // DEBUG!
+                var newImg = new Image(new ushort[_sourceImage.Width * _sourceImage.Height],
+                    _sourceImage.Width, _sourceImage.Height);
+                foreach (var p in pixels)
+                    newImg.Set<ushort>(100, p.Y, p.X);
+                LoadImage(newImg);
+                // END DEBUG!
 
-                    Helper.ExecuteOnUI(() =>
-                    {
-                        _imageStats[0] = avg;
-                        _imageStats[1] = min;
-                        _imageStats[2] = max;
-                    });
+                var data = pixels.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X)).ToList();
 
-                    RaisePropertyChanged(nameof(ImageStats));
-               
+                double avg = data.Average();
+                double min = data.Min();
+                double max = data.Max();
+
+
+                Helper.ExecuteOnUI(() =>
+                {
+                    _imageStats[0] = avg;
+                    _imageStats[1] = min;
+                    _imageStats[2] = max;
+
+                });
+
+                RaisePropertyChanged(nameof(ImageStats));
+                RaisePropertyChanged(nameof(BitmapSource));
             });
 
         }
@@ -388,8 +403,11 @@ namespace DIPOL_UF.Models
 
         private void OnImageSamplerTimer_Tick(object sender, object e)
         {
-            _imageSamplerTimer.Stop();
             CalculateStatistics();
+            //if(_lastProcessedSamplerPos.Equals(SamplerCenterPos))
+                _imageSamplerTimer.Stop();
+            _lastProcessedSamplerPos = SamplerCenterPos;
+            //RaisePropertyChanged(nameof(BitmapSource));
         }
 
 
@@ -506,8 +524,8 @@ namespace DIPOL_UF.Models
                 };
 
                 bool PixSelector(double px, double py, GeometryDescriptor desc)
-                    => (px * px + py * py) <= 
-                           Math.Pow(0.5 * (desc.HalfSize.Width + desc.HalfSize.Height), 2);
+                    => (Math.Pow(px - desc.Thickness, 2) + Math.Pow(py - desc.Thickness, 2)) <= 
+                           Math.Pow(0.5 * (desc.HalfSize.Width + desc.HalfSize.Height) - desc.Thickness, 2);
 
                 return new GeometryDescriptor(
                     new Point(size / 2, size / 2), 

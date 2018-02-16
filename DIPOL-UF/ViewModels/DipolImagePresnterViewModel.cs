@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using DIPOL_UF.Models;
 
@@ -30,8 +24,10 @@ namespace DIPOL_UF.ViewModels
             set => model.ThumbRight = value;
         }
 
-        public double SelectionX => model.SamplerCenterPos.X - SamplerGeometry.Center.X;
-        public double SelectionY => model.SamplerCenterPos.Y - SamplerGeometry.Center.Y;
+        public Point SamplerCenterPos => 
+            new Point(
+                model.SamplerCenterPos.X - SamplerGeometry.Center.X,
+                model.SamplerCenterPos.Y - SamplerGeometry.Center.Y);
 
         public int SelectedGeometryIndex
         {
@@ -75,15 +71,15 @@ namespace DIPOL_UF.ViewModels
             //});
         }
 
-        protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            base.OnModelPropertyChanged(sender, e);
+        //protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        //{
+        //    base.OnModelPropertyChanged(sender, e);
          
-            if (e.PropertyName == nameof(model.SamplerCenterPos))
-            {
-                RaisePropertyChanged(nameof(SelectionX));
-                RaisePropertyChanged(nameof(SelectionY));
-            }
-        }
+        //    //if (e.PropertyName == nameof(model.SamplerCenterPos))
+        //    //{
+        //    //    RaisePropertyChanged(nameof(SelectionX));
+        //    //    RaisePropertyChanged(nameof(SelectionY));
+        //    //}
+        //}
     }
 }
