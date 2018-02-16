@@ -7,7 +7,10 @@
              xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
              Background="Beige" Style="{StaticResource ResourceKey=ContentFont}"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance Type=vms:DipolImagePresnterViewModel}">
+             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance Type=vms:DipolImagePresnterViewModel}"
+             MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
+             MouseLeave="{cmnds:EventToCommand MouseHoverCommand}">
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>
@@ -28,8 +31,8 @@
                     MinWidth="200" MinHeight="200" BorderThickness="0" BorderBrush="Aqua">
                 <Path 
                     Data="{Binding SamplerGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
-                    StrokeThickness="{Binding SamplerGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" >
-                    <!--Visibility="{Binding IsMouseOverImage, Converter={StaticResource ResourceKey=BoolToVisibilityConverter}}">-->
+                    StrokeThickness="{Binding SamplerGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
+                    Visibility="{Binding IsReadyForInput, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path.RenderTransform>
                         <TranslateTransform X="{Binding SamplerCenterPos.X}" Y ="{Binding SamplerCenterPos.Y}"/>
                     </Path.RenderTransform>
@@ -37,7 +40,7 @@
             </Border>
         </Grid>
         <!-- Contrast sliders -->
-        <Grid Row="1">
+        <Grid Row="1" IsEnabled="{Binding IsImageLoaded, Mode=OneWay}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
@@ -62,7 +65,8 @@
 
         </Grid>
         <!-- Image sampler info & controls -->
-        <Grid Row="2" HorizontalAlignment="Center">
+        <Grid Row="2" HorizontalAlignment="Center" 
+              IsEnabled="{Binding IsReadyForInput, Mode=OneWay}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="110"/>
@@ -129,7 +133,7 @@
                       SelectedIndex="0"
                       Style="{StaticResource ComboBoxStyle}"
                       ItemsSource="{StaticResource ColorPickerColors}"
-                      SelectedItem="{Binding SamplerColor, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}">
+                      SelectedItem="{Binding SamplerColor, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" >
                 <ComboBox.ItemTemplate>
                     <DataTemplate>                        
                         <Border Width="100" Height="20" Background="{Binding}" BorderBrush="Black" BorderThickness="1"/>

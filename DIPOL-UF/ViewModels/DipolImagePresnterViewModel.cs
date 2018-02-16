@@ -52,16 +52,17 @@ namespace DIPOL_UF.ViewModels
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
         public GeometryDescriptor SamplerGeometry => model.SamplerGeometry;
-        public bool IsMouseOverImage => model.IsMouseOverImage;
 
         public List<double> ImageStats => model.ImageStats;
-
         public Brush SamplerColor
         {
             get => model.SamplerColor;
             set => model.SamplerColor = value;
         }
-
+        public bool IsReadyForInput => 
+            model.BitmapSource != null &&
+            model.IsMouseOverUIControl;
+        public bool IsImageLoaded => model.BitmapSource != null;
 
         public DipolImagePresnterViewModel(DipolImagePresenter model) : base(model)
         {
@@ -69,6 +70,16 @@ namespace DIPOL_UF.ViewModels
             
         }
 
-     
+        protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            base.OnModelPropertyChanged(sender, e);
+
+            if(e.PropertyName == nameof(BitmapSource) ||
+               e.PropertyName == nameof(model.IsMouseOverUIControl))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsReadyForInput)));
+
+            if(e.PropertyName == nameof(BitmapSource))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsImageLoaded)));
+        }
     }
 }

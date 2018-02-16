@@ -6,12 +6,13 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using DipolImage;
 using DIPOL_UF.Commands;
+using Image = DipolImage.Image;
 
 namespace DIPOL_UF.Models
 {
@@ -32,11 +33,12 @@ namespace DIPOL_UF.Models
         private DelegateCommand _sizeChangedCommand;
         private Point _samplerCenterPos;
         private bool _isMouseOverImage;
+        private bool _isMouseOverUIControl;
         private Size _lastKnownImageControlSize;
         private int _selectedGeometryIndex = 1;
         private double _imageSamplerScaleFactor = 1.0;
-        private double _imageSamplerSize = 200;
-        private double _imageSamplerThickness = 4.0;
+        private double _imageSamplerSize = 25;
+        private double _imageSamplerThickness = 1.0;
         private Brush _samplerColor;
 
         private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
@@ -58,8 +60,7 @@ namespace DIPOL_UF.Models
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
         private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
 
-
-
+        
         public double ImgScaleMax
         {
             get => _imgScaleMax;
@@ -237,6 +238,18 @@ namespace DIPOL_UF.Models
             }
 
         }
+        public bool IsMouseOverUIControl
+        {
+            get => _isMouseOverUIControl;
+            set
+            {
+                if (value != _isMouseOverUIControl)
+                {
+                    _isMouseOverUIControl = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
 
         public DelegateCommand ThumbValueChangedCommand
         {
@@ -282,7 +295,7 @@ namespace DIPOL_UF.Models
         public DipolImagePresenter()
         {
             InitializeCommands();
-            SetSamplerGeometry();
+            InitializeSamplerGeometry();
 
             var props = typeof(DipolImagePresenter)
                         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -399,10 +412,11 @@ namespace DIPOL_UF.Models
             
         }
 
-        private void SetSamplerGeometry()
+        private void InitializeSamplerGeometry()
         {
-            SamplerGeometry = AvailableGeometries[1](100, 3);
-            SamplerCenterPos = SamplerGeometry.Center;
+            SamplerGeometry = AvailableGeometries[0](1,1);
+            SamplerCenterPos = new Point(2, 2);
+            _lastKnownImageControlSize = new Size(4, 4);
         }
 
         private void CalculateStatistics()
@@ -472,7 +486,15 @@ namespace DIPOL_UF.Models
 
         private void MouseHoverCommandExecute(object parameter)
         {
-            if (_displayedImage != null && 
+            if (parameter is CommandEventArgs<MouseEventArgs> eUI &&
+                eUI.Sender is UserControl)
+            {
+                if (eUI.EventArgs.RoutedEvent.Name == nameof(UserControl.MouseEnter))
+                    IsMouseOverUIControl = true;
+                else if (eUI.EventArgs.RoutedEvent.Name == nameof(UserControl.MouseLeave))
+                    IsMouseOverUIControl = false;
+            }
+            else if (_displayedImage != null && 
                 parameter is CommandEventArgs<MouseEventArgs> e &&
                 e.Sender is FrameworkElement elem)
             {
@@ -529,6 +551,7 @@ namespace DIPOL_UF.Models
                 _imageStats[0] = 0;
                 _imageStats[0] = 0;
                 RaisePropertyChanged(nameof(ImageStats));
+                UpdateGeometry();
             }
 
 
@@ -538,10 +561,6 @@ namespace DIPOL_UF.Models
                 e.PropertyName == nameof(ImageSamplerSize))
                 UpdateGeometry();
                 
-
-            //if(e.PropertyName == nameof(SelectedGeometryIndex))
-            //    SamplerGeometry = AvailableGeometries[SelectedGeometryIndex](
-            //        ImageSamplerScaleFactor * _imageSamplerSize, _imageSamplerThickness * ImageSamplerScaleFactor);
         }
 
         private static (List<Func<double, double, GeometryDescriptor>>, List<string>) InitializeAvailableGeometries()
