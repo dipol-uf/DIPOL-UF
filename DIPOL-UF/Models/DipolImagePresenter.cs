@@ -37,7 +37,7 @@ namespace DIPOL_UF.Models
         private Size _lastKnownImageControlSize;
         private int _selectedGeometryIndex = 1;
         private double _imageSamplerScaleFactor = 1.0;
-        private double _imageSamplerSize = 25;
+        private double _imageSamplerSize = 75;
         private double _imageSamplerThickness = 1.0;
         private Brush _samplerColor;
 
@@ -414,15 +414,15 @@ namespace DIPOL_UF.Models
 
         private void InitializeSamplerGeometry()
         {
-            SamplerGeometry = AvailableGeometries[0](1,1);
-            SamplerCenterPos = new Point(2, 2);
-            _lastKnownImageControlSize = new Size(4, 4);
+            SamplerGeometry = AvailableGeometries[0](50,1);
+            SamplerCenterPos = new Point(30, 30);
+            _lastKnownImageControlSize = new Size(60, 60);
         }
 
         private void CalculateStatistics()
         {
-            //if (!IsMouseOverImage)
-            //    return;
+            if (!IsMouseOverImage)
+                return;
             Task.Run(() =>
             {
 
@@ -430,13 +430,13 @@ namespace DIPOL_UF.Models
                     _displayedImage.Width-1, _displayedImage.Height-1,
                     _lastKnownImageControlSize.Width, _lastKnownImageControlSize.Height);
 
-                // DEBUG!
-                var newImg = new Image(new ushort[_sourceImage.Width * _sourceImage.Height],
-                    _sourceImage.Width, _sourceImage.Height);
-                foreach (var p in pixels)
-                    newImg.Set<ushort>(100, p.Y, p.X);
-                LoadImage(newImg);
-                // END DEBUG!
+                //// DEBUG!
+                //var newImg = new Image(new ushort[_sourceImage.Width * _sourceImage.Height],
+                //    _sourceImage.Width, _sourceImage.Height);
+                //foreach (var p in pixels)
+                //    newImg.Set<ushort>(100, p.Y, p.X);
+                //LoadImage(newImg);
+                //// END DEBUG!
 
                 var data = pixels.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X)).ToList();
 
@@ -499,15 +499,16 @@ namespace DIPOL_UF.Models
                 e.Sender is FrameworkElement elem)
             {
 
-                if (e.EventArgs.RoutedEvent.Name == @"MouseEnter")
+                if (e.EventArgs.RoutedEvent.Name == nameof(FrameworkElement.MouseEnter))
                     IsMouseOverImage = true;
-                if (e.EventArgs.RoutedEvent.Name == @"MouseLeave")
+                if (e.EventArgs.RoutedEvent.Name == nameof(FrameworkElement.MouseLeave))
                 {
                     IsMouseOverImage = false;
                     return;
                 }
 
-                if (e.EventArgs.RoutedEvent.Name == @"MouseMove" && !IsMouseOverImage)
+                if (e.EventArgs.RoutedEvent.Name == nameof(FrameworkElement.MouseMove) && 
+                    !IsMouseOverImage)
                     IsMouseOverImage = true;
 
                 var pos = e.EventArgs.GetPosition(elem);
