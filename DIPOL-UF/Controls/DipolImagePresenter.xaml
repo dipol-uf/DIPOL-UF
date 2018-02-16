@@ -17,7 +17,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto" MinHeight="50"/>
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+        <Grid Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"
               Background="Transparent" Margin="10"
               MouseMove="{cmnds:EventToCommand MouseHoverCommand}"
               MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
