@@ -416,6 +416,9 @@ namespace DipolImage
 
         public void Clamp(double low, double high)
         {
+            if(high <= low)
+                throw new ArgumentException(@"[high] should be greater than [low]");
+
             switch (_typeCode)
             {
                 case TypeCode.UInt16:
@@ -496,6 +499,8 @@ namespace DipolImage
 
         public void Scale(double gMin, double gMax)
         {
+            if (gMax <= gMin)
+                throw new ArgumentException(@"[high] should be greater than [low]");
 
             var min = Min();
             var max = Max();
@@ -506,20 +511,39 @@ namespace DipolImage
                 {
                     var globMin = Convert.ToUInt16(gMin);
                     var globMax = Convert.ToUInt16(gMax);
-                    var locMax = (ushort)max;
-                    var locMin = (ushort)min;
+                    var locMax = (ushort) max;
+                    var locMin = (ushort) min;
 
                     void Worker(int k)
                     {
-                        for (var j = 0; j < Width; j++) Set((ushort) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<ushort>(k, j) - locMin)), k, j);
+                        for (var j = 0; j < Width; j++)
+                            Set((ushort) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
+                                                    (Get<ushort>(k, j) - locMin)), k, j);
+                    }
+
+                    void FlatWorker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set(globMin, k, j);
                     }
 
                     if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                        Parallel.For(0, Height, Worker);
-                    else
-                        for (var i = 0; i < Height; i++)
-                            Worker(i);
+                    {
+                        if (locMin == locMax)
+                            Parallel.For(0, Height, FlatWorker);
+                        else
+                            Parallel.For(0, Height, Worker);
+                    }
 
+                    else
+                    {
+                        if (locMin == locMax)
+                            for (var i = 0; i < Height; i++)
+                                FlatWorker(i);
+                        else
+                            for (var i = 0; i < Height; i++)
+                                Worker(i);
+                    }
 
                     break;
                 }
@@ -527,19 +551,40 @@ namespace DipolImage
                 {
                     var globMin = Convert.ToInt16(gMin);
                     var globMax = Convert.ToInt16(gMax);
-                    var locMax = (short)max;
-                    var locMin = (short)min;
+                    var locMax = (short) max;
+                    var locMin = (short) min;
 
                     void Worker(int k)
                     {
-                        for (var j = 0; j < Width; j++) Set((short) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<short>(k, j) - locMin)), k, j);
+                        for (var j = 0; j < Width; j++)
+                            Set((short) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
+                                                   (Get<short>(k, j) - locMin)), k, j);
+                    }
+
+                    void FlatWorker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set(globMin, k, j);
                     }
 
                     if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                        Parallel.For(0, Height, Worker);
+                    {
+                        if (locMin == locMax)
+                            Parallel.For(0, Height, FlatWorker);
+                        else
+                            Parallel.For(0, Height, Worker);
+                    }
+
                     else
-                        for (var i = 0; i < Height; i++)
-                            Worker(i);
+                    {
+                        if (locMin == locMax)
+                            for (var i = 0; i < Height; i++)
+                                FlatWorker(i);
+                        else
+                            for (var i = 0; i < Height; i++)
+                                Worker(i);
+                    }
+
                     break;
                 }
                 case TypeCode.UInt32:
@@ -549,77 +594,157 @@ namespace DipolImage
                     var locMax = (uint)max;
                     var locMin = (uint)min;
 
-                        void Worker(int k)
-                        {
-                            for (var j = 0; j < Width; j++)
-                                Set((uint)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<uint>(k, j) - locMin)), k, j);
-                        }
+                    void Worker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set((uint) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
+                                                  (Get<uint>(k, j) - locMin)), k, j);
+                    }
 
-                        if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                        Parallel.For(0, Height, Worker);
+                    void FlatWorker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set(globMin, k, j);
+                    }
+
+                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                    {
+                        if(locMin == locMax)
+                            Parallel.For(0, Height, FlatWorker);
+                            else
+                            Parallel.For(0, Height, Worker);
+                    }
                     else
-                        for (var i = 0; i < Height; i++)
-                            Worker(i);
+                    {
+                        if (locMin == locMax)
+                            for (var i = 0; i < Height; i++)
+                                FlatWorker(i);
+                        else
+                            for (var i = 0; i < Height; i++)
+                                Worker(i);
+                    }
+
                     break;
                 }
                 case TypeCode.Int32:
                 {
                     var globMin = Convert.ToInt32(gMin);
                     var globMax = Convert.ToInt32(gMax);
-                    var locMax = (int)max;
-                    var locMin = (int)min;
+                    var locMax = (int) max;
+                    var locMin = (int) min;
 
-                        void Worker(int k)
-                        {
-                            for (var j = 0; j < Width; j++)
-                                Set((int)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<int>(k, j) - locMin)), k, j);
-                        }
+                    void Worker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set((int) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
+                                                 (Get<int>(k, j) - locMin)), k, j);
+                    }
 
-                        if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                        Parallel.For(0, Height, Worker);
+                    void FlatWorker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set(globMin, k, j);
+                    }
+
+                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                    {
+                        if (locMin == locMax)
+                            Parallel.For(0, Height, FlatWorker);
+
+                        else
+                            Parallel.For(0, Height, Worker);
+                    }
                     else
-                        for (var i = 0; i < Height; i++)
-                            Worker(i);
+                    {
+                        if (locMin == locMax)
+                            for (var i = 0; i < Height; i++)
+                                FlatWorker(i);
+                        else
+                            for (var i = 0; i < Height; i++)
+                                Worker(i);
+                    }
+
                     break;
                 }
                 case TypeCode.Single:
                 {
                     var globMin = Convert.ToSingle(gMin);
                     var globMax = Convert.ToSingle(gMax);
-                    var locMax = (float)max;
-                    var locMin = (float)min;
+                    var locMax = (float) max;
+                    var locMin = (float) min;
 
-                        void Worker(int k)
-                        {
-                            for (var j = 0; j < Width; j++)
-                                Set((float)(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<float>(k, j) - locMin)), k, j);
-                        }
+                    void Worker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set((float) (globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
+                                         (Get<float>(k, j) - locMin)), k, j);
+                    }
 
-                        if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                        Parallel.For(0, Height, Worker);
+                    void FlatWorker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set(globMin, k, j);
+                    }
+
+                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                    {
+                        if (Math.Abs(locMin - locMax) < float.Epsilon)
+                            Parallel.For(0, Height, FlatWorker);
+                        else
+                            Parallel.For(0, Height, Worker);
+                    }
                     else
-                        for (var i = 0; i < Height; i++)
-                            Worker(i);
+                    {
+                        if (Math.Abs(locMin - locMax) < float.Epsilon)
+
+                            for (var i = 0; i < Height; i++)
+                                FlatWorker(i);
+                        else
+                            for (var i = 0; i < Height; i++)
+                                Worker(i);
+                    }
+
                     break;
                 }
                 default:
                 {
                     var globMin = Convert.ToDouble(gMin);
                     var globMax = Convert.ToDouble(gMax);
-                    var locMax = (double)max;
-                    var locMin = (double)min;
+                    var locMax = (double) max;
+                    var locMin = (double) min;
 
-                        void Worker(int k)
-                        {
-                            for (var j = 0; j < Width; j++)
-                                Set((globMin + 1.0 * (globMax - globMin) / (locMax - locMin) * (Get<double>(k, j) - locMin)), k, j);
-                        }
+                    void Worker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set((globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
+                                 (Get<double>(k, j) - locMin)), k, j);
+                    }
 
-                        if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                        Parallel.For(0, Height, Worker);
+                    void FlatWorker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set(globMin, k, j);
+                    }
+
+
+
+                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                    {
+                        if (Math.Abs(locMin - locMax) < double.Epsilon)
+                            Parallel.For(0, Height, FlatWorker);
+                        else
+                            Parallel.For(0, Height, Worker);
+                    }
                     else
-                        for (var i = 0; i < Height; i++)
-                            Worker(i);
+                    {
+                        if (Math.Abs(locMin - locMax) < double.Epsilon)
+                            for (var i = 0; i < Height; i++)
+                                FlatWorker(i);
+                        else
+                            for (var i = 0; i < Height; i++)
+                                Worker(i);
+                    }
+
                     break;
                 }
             }

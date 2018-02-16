@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Input;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using DipolImage;
@@ -299,7 +300,6 @@ namespace Tests
             var image = new Image(TestArray,4, TestArray.Length/4);
             Assert.IsTrue(image.Equals(image.CastTo<int, int>(x => x)));
             Assert.ThrowsException<ArgumentException>(() => image.CastTo<int, string>(x => x.ToString()));
-            //Assert.ThrowsException<TypeAccessException>(() => image.CastTo<double, int> ( x => (int)x));
             var otherArray = TestArray.Select(x => (double) x).ToArray();
 
             var otherImage = new Image(otherArray, 4, otherArray.Length/4);
@@ -322,6 +322,9 @@ namespace Tests
 
                 var mx = code.ToString().Contains("U") ? m_max / 2 : 5000;
                 var mn = code.ToString().Contains("U") ? m_max/ 4 : -5000;
+
+                Assert.ThrowsException<ArgumentException>(() => image.Clamp(100, 10));
+
                 image.Clamp(mn, mx);
 
                 var min = image.Min() as IComparable;
@@ -357,6 +360,8 @@ namespace Tests
                 image.Clamp(mn / 100, mx / 100);
                 imageLarge.Clamp(mn / 100, mx / 100);
 
+                Assert.ThrowsException<ArgumentException>(() => image.Scale(100, 10));
+
                 image.Scale(1, 10);
                 imageLarge.Scale(1, 10);
 
@@ -372,6 +377,44 @@ namespace Tests
 
                 Assert.IsTrue(minL?.CompareTo(Convert.ChangeType(1, code)) == 0);
                 Assert.IsTrue(maxL?.CompareTo(Convert.ChangeType(10, code)) == 0);
+            }
+        }
+
+        [TestMethod]
+        public void Test_Scale_FlatImage()
+        {
+            foreach (var code in Image.AllowedPixelTypes)
+            {
+                var type = Type.GetType("System." + code) ?? typeof(byte);
+
+                var f_mx = (type)
+                           .GetFields(BindingFlags.Public | BindingFlags.Static)
+                           .First(fi => fi.Name == "MaxValue");
+
+                var f_mn = (type)
+                           .GetFields(BindingFlags.Public | BindingFlags.Static)
+                           .First(fi => fi.Name == "MinValue");
+
+                var image = new Image(new byte[TestByteArray.Length],
+                    TestByteArray.Length / 4 / System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                var imageLarge = new Image(new byte[VeryLargeByteArray.Length], 
+                    VeryLargeByteArray.Length / 4 / System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+
+                image.Scale(1, 10);
+                imageLarge.Scale(1, 10);
+
+                var min = image.Min() as IComparable;
+                var max = image.Max() as IComparable;
+
+                var minL = imageLarge.Min() as IComparable;
+                var maxL = imageLarge.Max() as IComparable;
+
+
+                Assert.IsTrue(min?.CompareTo(Convert.ChangeType(1, code)) == 0);
+                Assert.IsTrue(max?.CompareTo(Convert.ChangeType(1, code)) == 0);
+
+                Assert.IsTrue(minL?.CompareTo(Convert.ChangeType(1, code)) == 0);
+                Assert.IsTrue(maxL?.CompareTo(Convert.ChangeType(1, code)) == 0);
             }
         }
 
