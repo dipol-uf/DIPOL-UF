@@ -319,9 +319,9 @@ namespace DIPOL_UF.Models
             (AvailableGeometries, GeometriesAliases) = InitializeAvailableGeometries();
         }
 
+
         public void LoadImage(Image image)
         {
-
             CopyImage(image);
             UpdateBitmap();
         }
@@ -358,7 +358,6 @@ namespace DIPOL_UF.Models
 
             _displayedImage.Scale(0, 1);
         }
-
         private void UpdateBitmap()
         {
             if (_displayedImage == null)
@@ -395,7 +394,6 @@ namespace DIPOL_UF.Models
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(BitmapSource)));
             }
         }
-
         private void InitializeCommands()
         {
             ThumbValueChangedCommand = new DelegateCommand(
@@ -411,14 +409,12 @@ namespace DIPOL_UF.Models
                 DelegateCommand.CanExecuteAlways);
             
         }
-
         private void InitializeSamplerGeometry()
         {
             SamplerGeometry = AvailableGeometries[0](50,1);
             SamplerCenterPos = new Point(30, 30);
             _lastKnownImageControlSize = new Size(60, 60);
         }
-
         private void CalculateStatistics()
         {
             if (!IsMouseOverImage)
@@ -457,7 +453,6 @@ namespace DIPOL_UF.Models
             });
 
         }
-
         private void UpdateGeometry()
         {
             SamplerGeometry = AvailableGeometries[SelectedGeometryIndex](
