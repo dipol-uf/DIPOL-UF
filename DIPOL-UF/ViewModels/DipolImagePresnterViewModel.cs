@@ -30,7 +30,7 @@ namespace DIPOL_UF.ViewModels
                 model.SamplerCenterPos.X - SamplerGeometry.Center.X,
                 model.SamplerCenterPos.Y - SamplerGeometry.Center.Y);
 
-        public Point MousePos => model.DisplayedImage == null
+        public Point SamplerCenterInPix => model.DisplayedImage == null
             ? model.SamplerCenterPos
             : new Point(
                 model.SamplerCenterPos.X /
@@ -93,7 +93,7 @@ namespace DIPOL_UF.ViewModels
 
             if (e.PropertyName == nameof(model.SamplerCenterPos))
             {
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(MousePos)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
             }
 
@@ -101,10 +101,10 @@ namespace DIPOL_UF.ViewModels
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
 
             if (e.PropertyName == nameof(model.DisplayedImage))
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(MousePos)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
 
             if (e.PropertyName == nameof(model.LastKnownImageControlSize))
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(MousePos)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
         }
     }
 }

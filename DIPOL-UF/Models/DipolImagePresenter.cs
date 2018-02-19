@@ -40,26 +40,24 @@ namespace DIPOL_UF.Models
         private double _imageSamplerSize = 75;
         private double _imageSamplerThickness = 5.0;
         private Brush _samplerColor;
-
         private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
         {
             Interval = TimeSpan.FromMilliseconds(250),
             IsEnabled = false
         };
-
         private readonly DispatcherTimer _imageSamplerTimer = new DispatcherTimer()
         {
             Interval = TimeSpan.FromMilliseconds(100),
             IsEnabled = false
         };
-
         private GeometryDescriptor _samplerGeometry;
-
         private List<double> _imageStats = new List<double>(3)
             {0, 0, 0};
+
+
+
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
         private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
-
         public Image DisplayedImage
         {
             get => _displayedImage;
@@ -331,8 +329,8 @@ namespace DIPOL_UF.Models
                                   $@"{val}");
             });
 
-            _thumbValueChangedTimer.Tick += OnThumbValueChangedTimer_Tick;
-            _imageSamplerTimer.Tick += OnImageSamplerTimer_Tick;
+            _thumbValueChangedTimer.Tick += OnThumbValueChangedTimer_TickAsync;
+            _imageSamplerTimer.Tick += OnImageSamplerTimer_TickAsync;
         }
 
         static DipolImagePresenter()
@@ -340,11 +338,15 @@ namespace DIPOL_UF.Models
             (AvailableGeometries, GeometriesAliases) = InitializeAvailableGeometries();
         }
 
-
         public void LoadImage(Image image)
         {
-            CopyImage(image);
-            UpdateBitmap();
+            CopyImage(image).ContinueWith((t) => UpdateBitmapAsync());
+        }
+
+        public async Task LoadImageAsync(Image image)
+        {
+            await CopyImage(image);
+            await UpdateBitmapAsync();
         }
 
         public List<double> ImageStats
@@ -361,17 +363,23 @@ namespace DIPOL_UF.Models
 
         }
 
-        private void CopyImage(Image image)
+        private async Task CopyImage(Image image)
         {
             switch (image.UnderlyingType)
             {
                 case TypeCode.UInt16:
-                    _sourceImage = image.CastTo<ushort, float>(x => x);
-                    DisplayedImage = _sourceImage.Copy();
+                    await Task.Run(() =>
+                    {
+                         _sourceImage = image.CastTo<ushort, float>(x => x);
+                        DisplayedImage = _sourceImage.Copy();
+                    });
                     break;
                 case TypeCode.Single:
-                    _sourceImage = image.Copy();
-                    DisplayedImage = _sourceImage.Copy();
+                    await Task.Run(() =>
+                    {
+                        _sourceImage = image.Copy();
+                        DisplayedImage = _sourceImage.Copy();
+                    });
                     break;
                 default:
                     throw new Exception();
@@ -379,7 +387,7 @@ namespace DIPOL_UF.Models
 
             DisplayedImage.Scale(0, 1);
         }
-        private void UpdateBitmap()
+        private async Task UpdateBitmapAsync()
         {
             if (DisplayedImage == null)
                 return;
@@ -395,11 +403,20 @@ namespace DIPOL_UF.Models
 
             }
 
-            var temp = DisplayedImage.Copy();
-            temp.Clamp(LeftScale, RightScale);
-            temp.Scale(0, 1);
+            //var temp = DisplayedImage.Copy();
+            //temp.Clamp(LeftScale, RightScale);
+            //temp.Scale(0, 1);
 
-            var bytes = temp.GetBytes();
+            //var bytes = temp.GetBytes();
+
+            var bytes = await Task.Run(() =>
+            {
+                var temp = DisplayedImage.Copy();
+                temp.Clamp(LeftScale, RightScale);
+                temp.Scale(0, 1);
+
+                return temp.GetBytes();
+            });
 
             try
             {
@@ -436,11 +453,15 @@ namespace DIPOL_UF.Models
             SamplerCenterPos = new Point(30, 30);
             LastKnownImageControlSize = new Size(60, 60);
         }
-        private void CalculateStatistics()
+        private async Task CalculateStatisticsAsync()
         {
             if (!IsMouseOverImage)
                 return;
-            Task.Run(() =>
+
+            double avg = 0;
+            double min = 0;
+            double max = 0;
+            await Task.Run(() =>
             {
 
                 var pixels = SamplerGeometry.PixelsInsideGeometry(SamplerCenterPos,
@@ -457,21 +478,19 @@ namespace DIPOL_UF.Models
 
                 var data = pixels.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X)).ToList();
 
-                double avg = data.Average();
-                double min = data.Min();
-                double max = data.Max();
+                avg = data.Average();
+                min = data.Min();
+                max = data.Max();
 
 
-                Helper.ExecuteOnUI(() =>
-                {
-                    _imageStats[0] = avg;
-                    _imageStats[1] = min;
-                    _imageStats[2] = max;
-
-                });
-
-                RaisePropertyChanged(nameof(ImageStats));
+               
             });
+
+            _imageStats[0] = avg;
+            _imageStats[1] = min;
+            _imageStats[2] = max;
+
+            RaisePropertyChanged(nameof(ImageStats));
 
         }
         private void UpdateGeometry()
@@ -489,14 +508,14 @@ namespace DIPOL_UF.Models
                 );
         }
 
-        private void OnThumbValueChangedTimer_Tick(object sender, object e)
+        private async void OnThumbValueChangedTimer_TickAsync(object sender, object e)
         {
             _thumbValueChangedTimer.Stop();
-            UpdateBitmap();
+            await UpdateBitmapAsync();
         }
-        private void OnImageSamplerTimer_Tick(object sender, object e)
+        private async void OnImageSamplerTimer_TickAsync(object sender, object e)
         {
-            CalculateStatistics();
+            await CalculateStatisticsAsync();
             _imageSamplerTimer.Stop();
         }
 
