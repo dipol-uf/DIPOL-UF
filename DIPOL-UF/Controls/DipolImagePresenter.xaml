@@ -97,6 +97,9 @@
                 <RowDefinition/>
                 <RowDefinition/>
                 <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -109,7 +112,14 @@
                        Text="Max"/>
             <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="Pixel pos"/>
+                       Text="Median"/>
+            <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="StDev"/>
+            
+            <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="Center"/>
 
             <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
                      IsReadOnly="True" Text="{Binding ImageStats[0], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
@@ -118,6 +128,14 @@
             <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
                      IsReadOnly="True" Text="{Binding ImageStats[2], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
             <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
+                     IsReadOnly="True" Text="{Binding ImageStats[3], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+            <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
+                     IsReadOnly="True" Text="{Binding ImageStats[4], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+
+            <TextBox Grid.Row="5" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
+                     IsReadOnly="True" Text="{Binding PixValue, Mode=OneWay, StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+
+            <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
                      IsReadOnly="True" TextAlignment="Center">
                 <TextBox.Text>
                     <MultiBinding StringFormat="{}{0,6:####0}:{1,-6:####0}" Mode="OneWay">
@@ -141,7 +159,7 @@
                     IsSnapToTickEnabled="True"
                     TickFrequency="1" 
             />
-            <ComboBox Grid.Column="2" Grid.Row="3"
+            <ComboBox Grid.Column="2" Grid.Row="2"
                       SelectedIndex="0"
                       Style="{StaticResource ComboBoxStyle}"
                       ItemsSource="{StaticResource ColorPickerColors}"
@@ -155,11 +173,11 @@
             <!-- Aperture controls -->
             <Slider Grid.Row="0" Grid.Column="3" VerticalAlignment="Center"
                     HorizontalAlignment="Center" Width="100"
-                    Minimum="25"
-                    Maximum="500"
+                    Minimum="5"
+                    Maximum="250"
                     Value="{Binding ImageApertureSize, UpdateSourceTrigger=PropertyChanged}"
                     IsSnapToTickEnabled="True"
-                    TickFrequency="25" 
+                    TickFrequency="5" 
             />
             <Slider Grid.Row="1" Grid.Column="3" VerticalAlignment="Center"
                     HorizontalAlignment="Center" Width="100"

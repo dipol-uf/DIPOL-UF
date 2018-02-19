@@ -44,7 +44,7 @@ namespace Tests
                 {
                     TestPresenter = {DataContext = viewModel}
                 };
-                var buffer = new byte[512  * 512 * sizeof(ushort)];
+                var buffer = new byte[1024  * 512 * sizeof(ushort)];
                 
                 var r = new Random();
                 var t = new DispatcherTimer()
@@ -57,7 +57,7 @@ namespace Tests
                 t.Tick += (sender, e) =>
                 {
                     r.NextBytes(buffer);
-                    model.LoadImage(new Image(buffer, 512, 512, TypeCode.UInt16));
+                    model.LoadImage(new Image(buffer, 1024, 512, TypeCode.UInt16));
                     t.Stop();
                 };
                 t.Start();

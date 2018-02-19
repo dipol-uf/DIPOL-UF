@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Security.Policy;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -55,9 +56,9 @@ namespace DIPOL_UF.Models
         private GeometryDescriptor _samplerGeometry;
         private GeometryDescriptor _apertureGeometry;
         private GeometryDescriptor _gapGeometry;
-        private List<double> _imageStats = new List<double>(3)
-            {0, 0, 0};
-        
+        private List<double> _imageStats = new List<double>()
+            {0, 0, 0, 0, 0, 0};
+        private double _pixValue = 0;
 
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
         private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
@@ -195,7 +196,6 @@ namespace DIPOL_UF.Models
                 RaisePropertyChanged();
             }
         }
-
         public GeometryDescriptor GapGeometry
         {
             get => _gapGeometry;
@@ -261,7 +261,6 @@ namespace DIPOL_UF.Models
         }
         public double ImageGapSize => _imageApertureSize + _imageGap;
         public double ImageSamplerSize => _imageApertureSize + _imageGap + _imageAnnulus;
-
         public double ImageGap
         {
             get => _imageGap;
@@ -276,7 +275,6 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-
         public double ImageAnnulus
         {
             get => _imageAnnulus;
@@ -290,6 +288,19 @@ namespace DIPOL_UF.Models
                 }
             }
 
+        }
+
+        public double PixValue
+        {
+            get => _pixValue;
+            set
+            {
+                if (Math.Abs(value - _pixValue) > double.Epsilon)
+                {
+                    _pixValue = value;
+                    RaisePropertyChanged();
+                }
+            }
         }
 
         public Brush SamplerColor
@@ -521,12 +532,26 @@ namespace DIPOL_UF.Models
             double avg = 0;
             double min = 0;
             double max = 0;
+            double med = 0;
+            double sd = 0;
             await Task.Run(() =>
             {
 
-                var pixels = SamplerGeometry.PixelsInsideGeometry(SamplerCenterPos,
+                var pixels = ApertureGeometry.PixelsInsideGeometry(SamplerCenterPos,
                     DisplayedImage.Width - 1, DisplayedImage.Height - 1,
                     LastKnownImageControlSize.Width, LastKnownImageControlSize.Height);
+
+                var backGroundPixels = SamplerGeometry.PixelsInsideGeometry(SamplerCenterPos,
+                    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
+                    LastKnownImageControlSize.Width, LastKnownImageControlSize.Height);
+
+                var gapPixels = GapGeometry.PixelsInsideGeometry(SamplerCenterPos,
+                    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
+                    LastKnownImageControlSize.Width, LastKnownImageControlSize.Height)
+                                           .ToList();
+
+                var fieldPix = backGroundPixels.Where(x => !gapPixels.Contains(x))
+                                               .ToList();
 
                 //// DEBUG!
                 //var newImg = new Image(new ushort[_sourceImage.Width * _sourceImage.Height],
@@ -536,13 +561,16 @@ namespace DIPOL_UF.Models
                 //LoadImage(newImg);
                 //// END DEBUG!
 
-                var data = pixels.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X)).ToList();
+                var data = pixels.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X))
+                                 .OrderBy(x => x)
+                                 .ToList();
                 if (data.Count > 0)
                 {
                     avg = data.Average();
-                    min = data.Min();
-                    max = data.Max();
-
+                    min = data.First();
+                    max = data.Last();
+                    med = data[data.Count / 2];
+                    sd = Math.Sqrt(data.Select(x => Math.Pow(x - avg, 2)).Sum()/(data.Count - 1));
                 }
 
             });
@@ -550,6 +578,9 @@ namespace DIPOL_UF.Models
             _imageStats[0] = avg;
             _imageStats[1] = min;
             _imageStats[2] = max;
+            _imageStats[3] = med;
+            _imageStats[4] = sd;
+
 
             RaisePropertyChanged(nameof(ImageStats));
 
@@ -618,9 +649,10 @@ namespace DIPOL_UF.Models
                     !IsMouseOverImage)
                 {
                     IsMouseOverImage = true;
-                    if (!IsMouseOverUIControl)
-                        IsMouseOverUIControl = true;
                 }
+
+                if (!IsMouseOverUIControl)
+                    IsMouseOverUIControl = true;
 
                 var pos = e.EventArgs.GetPosition(elem);
                 var posX = pos.X.Clamp(
@@ -631,8 +663,11 @@ namespace DIPOL_UF.Models
                     elem.ActualHeight- SamplerGeometry.HalfSize.Height);
                 SamplerCenterPos = new Point(posX, posY);
                 LastKnownImageControlSize = new Size(elem.ActualWidth, elem.ActualHeight);
-                //RaisePropertyChanged(nameof(SamplerCenterPos));
-                if(!_imageSamplerTimer.IsEnabled)
+                PixValue = _sourceImage.Get<float>(
+                    Convert.ToInt32(posY / elem.ActualHeight * DisplayedImage.Height),
+                    Convert.ToInt32(posX / elem.ActualWidth * DisplayedImage.Width));
+
+                if (!_imageSamplerTimer.IsEnabled)
                     _imageSamplerTimer.Start();
             }
         }
@@ -678,7 +713,8 @@ namespace DIPOL_UF.Models
 
         private static (List<Func<double, double, GeometryDescriptor>>, List<string>) InitializeAvailableGeometries()
         {
-            GeometryDescriptor CommonRectangle(double size, double thickness)
+            GeometryDescriptor CommonRectangle(double size, double thickness, 
+                Func<double, double, GeometryDescriptor, ApplicationTrustEnumerator> cond = null)
             {
                 var path = new List<Tuple<Point, Action<StreamGeometryContext, Point>>>(4)
                 {
@@ -697,7 +733,7 @@ namespace DIPOL_UF.Models
                 return new GeometryDescriptor(
                     new Point(size / 2, size / 2), 
                     new Size(size, size), path, thickness, 
-                    (i, j, p) => true);
+                    cond ?? ((i, j, p) => true));
             }
 
             GeometryDescriptor CommonCircle(double size, double thickness)

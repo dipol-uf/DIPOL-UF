@@ -74,6 +74,7 @@ namespace DIPOL_UF.ViewModels
             get => model.ImageAnnulus;
             set => model.ImageAnnulus = value;
         }
+        public double PixValue => model.PixValue;
 
         public ICommand ThumbValueChangedCommand => model.ThumbValueChangedCommand;
         public ICommand MouseHoverCommand => model.MouseHoverCommand;
