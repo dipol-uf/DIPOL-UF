@@ -25,10 +25,20 @@ namespace DIPOL_UF.ViewModels
             set => model.ThumbRight = value;
         }
 
-        public Point SamplerCenterPos => 
+        public Point SamplerPos => 
             new Point(
                 model.SamplerCenterPos.X - SamplerGeometry.Center.X,
                 model.SamplerCenterPos.Y - SamplerGeometry.Center.Y);
+
+        public Point MousePos => model.DisplayedImage == null
+            ? model.SamplerCenterPos
+            : new Point(
+                model.SamplerCenterPos.X /
+                model.LastKnownImageControlSize.Width * model.DisplayedImage.Width,
+                model.SamplerCenterPos.Y /
+                model.LastKnownImageControlSize.Height * model.DisplayedImage.Height
+            );
+
         public int SelectedGeometryIndex
         {
             get => model.SelectedGeometryIndex;
@@ -59,9 +69,9 @@ namespace DIPOL_UF.ViewModels
             get => model.SamplerColor;
             set => model.SamplerColor = value;
         }
-        public bool IsReadyForInput => 
-            model.BitmapSource != null &&
-            model.IsMouseOverUIControl;
+        //public bool IsReadyForInput => 
+        //    model.BitmapSource != null &&
+        //    model.IsMouseOverUIControl;
         public bool IsImageLoaded => model.BitmapSource != null;
 
         public DipolImagePresnterViewModel(DipolImagePresenter model) : base(model)
@@ -74,12 +84,27 @@ namespace DIPOL_UF.ViewModels
         {
             base.OnModelPropertyChanged(sender, e);
 
-            if(e.PropertyName == nameof(BitmapSource) ||
-               e.PropertyName == nameof(model.IsMouseOverUIControl))
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsReadyForInput)));
+            //if(e.PropertyName == nameof(model.BitmapSource) ||
+            //   e.PropertyName == nameof(model.IsMouseOverUIControl))
+            //    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsReadyForInput)));
 
-            if(e.PropertyName == nameof(BitmapSource))
+            if(e.PropertyName == nameof(model.BitmapSource))
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsImageLoaded)));
+
+            if (e.PropertyName == nameof(model.SamplerCenterPos))
+            {
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(MousePos)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
+            }
+
+            if (e.PropertyName == nameof(model.SamplerGeometry))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
+
+            if (e.PropertyName == nameof(model.DisplayedImage))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(MousePos)));
+
+            if (e.PropertyName == nameof(model.LastKnownImageControlSize))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(MousePos)));
         }
     }
 }

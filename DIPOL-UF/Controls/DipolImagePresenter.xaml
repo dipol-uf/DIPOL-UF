@@ -26,9 +26,10 @@
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                 Source="{Binding BitmapSource, Mode=OneWay}"
                 SizeChanged="{cmnds:EventToCommand SizeChangedCommand}"
+                Cursor="Cross"
                />
-            <Border Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
-                    MinWidth="200" MinHeight="200" BorderThickness="0" BorderBrush="Aqua"
+            <Canvas Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" 
+                    MinWidth="200" MinHeight="200" 
                     Width="{Binding ElementName=Im, Path=ActualWidth}"
                     Height="{Binding ElementName=Im, Path=ActualHeight}"
                     >
@@ -37,10 +38,10 @@
                     StrokeThickness="{Binding SamplerGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
                     Visibility="{Binding IsReadyForInput, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path.RenderTransform>
-                        <TranslateTransform X="{Binding SamplerCenterPos.X}" Y ="{Binding SamplerCenterPos.Y}"/>
+                        <TranslateTransform X="{Binding SamplerPos.X}" Y ="{Binding SamplerPos.Y}"/>
                     </Path.RenderTransform>
                 </Path>
-            </Border>
+            </Canvas>
         </Grid>
         <!-- Contrast sliders -->
         <Grid Row="1" IsEnabled="{Binding IsImageLoaded, Mode=OneWay}">
@@ -69,7 +70,7 @@
         </Grid>
         <!-- Image sampler info & controls -->
         <Grid Row="2" HorizontalAlignment="Center" 
-              IsEnabled="{Binding IsReadyForInput, Mode=OneWay}">
+              IsEnabled="{Binding IsImageLoaded, Mode=OneWay}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="110"/>
@@ -104,8 +105,8 @@
                      IsReadOnly="True" TextAlignment="Center">
                 <TextBox.Text>
                     <MultiBinding StringFormat="{}{0,6:####0}:{1,-6:####0}" Mode="OneWay">
-                        <Binding Path="SamplerCenterPos.X" Mode="OneWay"/>
-                        <Binding Path="SamplerCenterPos.Y" Mode="OneWay"/>
+                        <Binding Path="SamplerCenterInPix.X" Mode="OneWay"/>
+                        <Binding Path="SamplerCenterInPix.Y" Mode="OneWay"/>
                     </MultiBinding>
                 </TextBox.Text>
             </TextBox>
