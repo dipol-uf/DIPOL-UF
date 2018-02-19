@@ -25,6 +25,14 @@ namespace DIPOL_UF.ViewModels
             set => model.ThumbRight = value;
         }
 
+        public Point AperturePos =>
+            new Point(
+                model.SamplerCenterPos.X - ApertureGeometry.Center.X,
+                model.SamplerCenterPos.Y - ApertureGeometry.Center.Y);
+        public Point GapPos =>
+            new Point(
+                model.SamplerCenterPos.X - GapGeometry.Center.X,
+                model.SamplerCenterPos.Y - GapGeometry.Center.Y);
         public Point SamplerPos => 
             new Point(
                 model.SamplerCenterPos.X - SamplerGeometry.Center.X,
@@ -49,10 +57,22 @@ namespace DIPOL_UF.ViewModels
             get => model.ImageSamplerThickness;
             set => model.ImageSamplerThickness = value;
         }
-        public double ImageSamplerSize
+        public double ImageApertureSize
         {
-            get => model.ImageSamplerSize;
-            set => model.ImageSamplerSize = value;
+            get => model.ImageApertureSize;
+            set => model.ImageApertureSize = value;
+        }
+        public double ImageGapSize => model.ImageGapSize;
+        public double ImageSamplerSize => model.ImageSamplerSize;
+        public double ImageGap
+        {
+            get => model.ImageGap;
+            set => model.ImageGap = value;
+        }
+        public double ImageAnnulus
+        {
+            get => model.ImageAnnulus;
+            set => model.ImageAnnulus = value;
         }
 
         public ICommand ThumbValueChangedCommand => model.ThumbValueChangedCommand;
@@ -61,8 +81,9 @@ namespace DIPOL_UF.ViewModels
 
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
+        public GeometryDescriptor ApertureGeometry => model.ApertureGeometry;
+        public GeometryDescriptor GapGeometry => model.GapGeometry;
         public GeometryDescriptor SamplerGeometry => model.SamplerGeometry;
-
         public List<double> ImageStats => model.ImageStats;
         public Brush SamplerColor
         {
@@ -73,7 +94,7 @@ namespace DIPOL_UF.ViewModels
         //    model.BitmapSource != null &&
         //    model.IsMouseOverUIControl;
         public bool IsImageLoaded => model.BitmapSource != null;
-
+        public bool IsMouseOverUIControl => model.IsMouseOverUIControl;
         public DipolImagePresnterViewModel(DipolImagePresenter model) : base(model)
         {
 
@@ -94,11 +115,21 @@ namespace DIPOL_UF.ViewModels
             if (e.PropertyName == nameof(model.SamplerCenterPos))
             {
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
+
             }
+
+            if(e.PropertyName == nameof(model.ApertureGeometry))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
+
+            if (e.PropertyName == nameof(model.GapGeometry))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
 
             if (e.PropertyName == nameof(model.SamplerGeometry))
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
+
 
             if (e.PropertyName == nameof(model.DisplayedImage))
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));

@@ -7,7 +7,7 @@
              xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
              Background="Beige" Style="{StaticResource ResourceKey=ContentFont}"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignInstance Type=vms:DipolImagePresnterViewModel}"
+             d:DesignHeight="300" d:DesignWidth="500" d:DataContext="{d:DesignInstance Type=vms:DipolImagePresnterViewModel}"
              MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
              MouseLeave="{cmnds:EventToCommand MouseHoverCommand}">
 
@@ -29,14 +29,29 @@
                 Cursor="Cross"
                />
             <Canvas Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" 
-                    MinWidth="200" MinHeight="200" 
                     Width="{Binding ElementName=Im, Path=ActualWidth}"
                     Height="{Binding ElementName=Im, Path=ActualHeight}"
                     >
                 <Path 
+                    Data="{Binding ApertureGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
+                    StrokeThickness="{Binding ApertureGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
+                    Visibility="{Binding IsMouseOverUIControl, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Path.RenderTransform>
+                        <TranslateTransform X="{Binding AperturePos.X}" Y ="{Binding AperturePos.Y}"/>
+                    </Path.RenderTransform>
+                </Path>
+                <Path 
+                    Data="{Binding GapGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
+                    StrokeThickness="{Binding GapGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
+                    Visibility="{Binding IsMouseOverUIControl, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Path.RenderTransform>
+                        <TranslateTransform X="{Binding GapPos.X}" Y ="{Binding GapPos.Y}"/>
+                    </Path.RenderTransform>
+                </Path>
+                <Path 
                     Data="{Binding SamplerGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
                     StrokeThickness="{Binding SamplerGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
-                    Visibility="{Binding IsReadyForInput, Converter={StaticResource BoolToVisibilityConverter}}">
+                    Visibility="{Binding IsMouseOverUIControl, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path.RenderTransform>
                         <TranslateTransform X="{Binding SamplerPos.X}" Y ="{Binding SamplerPos.Y}"/>
                     </Path.RenderTransform>
@@ -75,7 +90,8 @@
                 <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="110"/>
                 <ColumnDefinition Width="120"/>
-            </Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120"/>
+                </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition/>
                 <RowDefinition/>
@@ -125,25 +141,42 @@
                     IsSnapToTickEnabled="True"
                     TickFrequency="1" 
             />
-            <Slider Grid.Row="2" Grid.Column="2" VerticalAlignment="Center"
-                    HorizontalAlignment="Center" Width="100"
-                    Minimum="25"
-                    Maximum="500"
-                    Value="{Binding ImageSamplerSize, UpdateSourceTrigger=PropertyChanged}"
-                    IsSnapToTickEnabled="True"
-                    TickFrequency="25" 
-            />
             <ComboBox Grid.Column="2" Grid.Row="3"
                       SelectedIndex="0"
                       Style="{StaticResource ComboBoxStyle}"
                       ItemsSource="{StaticResource ColorPickerColors}"
                       SelectedItem="{Binding SamplerColor, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" >
                 <ComboBox.ItemTemplate>
-                    <DataTemplate>                        
+                    <DataTemplate>
                         <Border Width="100" Height="20" Background="{Binding}" BorderBrush="Black" BorderThickness="1"/>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
+            <!-- Aperture controls -->
+            <Slider Grid.Row="0" Grid.Column="3" VerticalAlignment="Center"
+                    HorizontalAlignment="Center" Width="100"
+                    Minimum="25"
+                    Maximum="500"
+                    Value="{Binding ImageApertureSize, UpdateSourceTrigger=PropertyChanged}"
+                    IsSnapToTickEnabled="True"
+                    TickFrequency="25" 
+            />
+            <Slider Grid.Row="1" Grid.Column="3" VerticalAlignment="Center"
+                    HorizontalAlignment="Center" Width="100"
+                    Minimum="5"
+                    Maximum="100"
+                    Value="{Binding ImageGap, UpdateSourceTrigger=PropertyChanged}"
+                    IsSnapToTickEnabled="True"
+                    TickFrequency="5" 
+            />
+            <Slider Grid.Row="2" Grid.Column="3" VerticalAlignment="Center"
+                    HorizontalAlignment="Center" Width="100"
+                    Minimum="5"
+                    Maximum="200"
+                    Value="{Binding ImageAnnulus, UpdateSourceTrigger=PropertyChanged}"
+                    IsSnapToTickEnabled="True"
+                    TickFrequency="5" 
+            />
         </Grid>
     </Grid>
 </UserControl>

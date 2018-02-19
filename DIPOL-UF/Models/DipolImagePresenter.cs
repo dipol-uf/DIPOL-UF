@@ -37,7 +37,9 @@ namespace DIPOL_UF.Models
         private Size _lastKnownImageControlSize;
         private int _selectedGeometryIndex = 1;
         private double _imageSamplerScaleFactor = 1.0;
-        private double _imageSamplerSize = 75;
+        private double _imageAnnulus = 25;
+        private double _imageApertureSize = 30;
+        private double _imageGap = 15;
         private double _imageSamplerThickness = 5.0;
         private Brush _samplerColor;
         private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
@@ -51,13 +53,15 @@ namespace DIPOL_UF.Models
             IsEnabled = false
         };
         private GeometryDescriptor _samplerGeometry;
+        private GeometryDescriptor _apertureGeometry;
+        private GeometryDescriptor _gapGeometry;
         private List<double> _imageStats = new List<double>(3)
             {0, 0, 0};
-
-
+        
 
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
         private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
+      
         public Image DisplayedImage
         {
             get => _displayedImage;
@@ -182,6 +186,27 @@ namespace DIPOL_UF.Models
                 RaisePropertyChanged();
             }
         }
+        public GeometryDescriptor ApertureGeometry
+        {
+            get => _apertureGeometry;
+            set
+            {
+                _apertureGeometry = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public GeometryDescriptor GapGeometry
+        {
+            get => _gapGeometry;
+            set
+            {
+                _gapGeometry = value;
+                RaisePropertyChanged();
+            }
+
+        }
+
         public double ImageSamplerScaleFactor
         {
             get => _imageSamplerScaleFactor;
@@ -220,19 +245,53 @@ namespace DIPOL_UF.Models
 
             }
         }
-        public double ImageSamplerSize
+        public double ImageApertureSize
         {
-            get => _imageSamplerSize;
+            get => _imageApertureSize;
             set
             {
-                if (Math.Abs(value - _imageSamplerSize) > double.Epsilon)
+                if (Math.Abs(value - _imageApertureSize) > double.Epsilon)
                 {
-                    _imageSamplerSize = value;
+                    _imageApertureSize = value;
                     RaisePropertyChanged();
-                } 
+                    RaisePropertyChanged(nameof(ImageGapSize));
+                    RaisePropertyChanged(nameof(ImageSamplerSize));
+                }
+            }
+        }
+        public double ImageGapSize => _imageApertureSize + _imageGap;
+        public double ImageSamplerSize => _imageApertureSize + _imageGap + _imageAnnulus;
+
+        public double ImageGap
+        {
+            get => _imageGap;
+            set
+            {
+                if (Math.Abs(value - _imageGap) > double.Epsilon)
+                {
+                    _imageGap = value;
+                    RaisePropertyChanged();
+                    RaisePropertyChanged(nameof(ImageGapSize));
+                    RaisePropertyChanged(nameof(ImageSamplerSize));
+                }
+            }
+        }
+
+        public double ImageAnnulus
+        {
+            get => _imageAnnulus;
+            set
+            {
+                if (Math.Abs(value - _imageAnnulus) > double.Epsilon)
+                {
+                    _imageAnnulus = value;
+                    RaisePropertyChanged();
+                    RaisePropertyChanged(nameof(ImageSamplerSize));
+                }
             }
 
         }
+
         public Brush SamplerColor
         {
             get => _samplerColor;
@@ -309,8 +368,7 @@ namespace DIPOL_UF.Models
             }
 
         }
-
-
+        
         public DipolImagePresenter()
         {
             InitializeCommands();
@@ -340,12 +398,12 @@ namespace DIPOL_UF.Models
 
         public void LoadImage(Image image)
         {
-            CopyImage(image).ContinueWith((t) => UpdateBitmapAsync());
+            CopyImageAsync(image).ContinueWith((t) => UpdateBitmapAsync());
         }
 
         public async Task LoadImageAsync(Image image)
         {
-            await CopyImage(image);
+            await CopyImageAsync(image);
             await UpdateBitmapAsync();
         }
 
@@ -363,7 +421,7 @@ namespace DIPOL_UF.Models
 
         }
 
-        private async Task CopyImage(Image image)
+        private async Task CopyImageAsync(Image image)
         {
             switch (image.UnderlyingType)
             {
@@ -449,9 +507,11 @@ namespace DIPOL_UF.Models
         }
         private void InitializeSamplerGeometry()
         {
+            ApertureGeometry = AvailableGeometries[0](50, 1);
+            GapGeometry = AvailableGeometries[0](50, 1);
             SamplerGeometry = AvailableGeometries[0](50,1);
             SamplerCenterPos = new Point(30, 30);
-            LastKnownImageControlSize = new Size(60, 60);
+            LastKnownImageControlSize = Size.Empty;
         }
         private async Task CalculateStatisticsAsync()
         {
@@ -465,7 +525,7 @@ namespace DIPOL_UF.Models
             {
 
                 var pixels = SamplerGeometry.PixelsInsideGeometry(SamplerCenterPos,
-                    DisplayedImage.Width-1, DisplayedImage.Height-1,
+                    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
                     LastKnownImageControlSize.Width, LastKnownImageControlSize.Height);
 
                 //// DEBUG!
@@ -477,13 +537,14 @@ namespace DIPOL_UF.Models
                 //// END DEBUG!
 
                 var data = pixels.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X)).ToList();
+                if (data.Count > 0)
+                {
+                    avg = data.Average();
+                    min = data.Min();
+                    max = data.Max();
 
-                avg = data.Average();
-                min = data.Min();
-                max = data.Max();
+                }
 
-
-               
             });
 
             _imageStats[0] = avg;
@@ -495,8 +556,17 @@ namespace DIPOL_UF.Models
         }
         private void UpdateGeometry()
         {
+            ApertureGeometry = AvailableGeometries[SelectedGeometryIndex](
+                ImageSamplerScaleFactor * ImageApertureSize,
+                ImageSamplerThickness * ImageSamplerScaleFactor);
+
+            GapGeometry = AvailableGeometries[SelectedGeometryIndex](
+                ImageSamplerScaleFactor * ImageGapSize,
+                ImageSamplerThickness * ImageSamplerScaleFactor);
+
             SamplerGeometry = AvailableGeometries[SelectedGeometryIndex](
-                ImageSamplerScaleFactor * ImageSamplerSize, ImageSamplerThickness * ImageSamplerScaleFactor);
+                ImageSamplerScaleFactor * ImageSamplerSize,
+                ImageSamplerThickness * ImageSamplerScaleFactor);
 
             SamplerCenterPos = new Point(
                 SamplerCenterPos.X.Clamp(
@@ -506,6 +576,7 @@ namespace DIPOL_UF.Models
                     SamplerGeometry.HalfSize.Height, 
                     LastKnownImageControlSize.Height - SamplerGeometry.HalfSize.Height)
                 );
+
         }
 
         private async void OnThumbValueChangedTimer_TickAsync(object sender, object e)
@@ -521,7 +592,8 @@ namespace DIPOL_UF.Models
 
         private void MouseHoverCommandExecute(object parameter)
         {
-            if (parameter is CommandEventArgs<MouseEventArgs> eUI &&
+            if (DisplayedImage != null &&
+                parameter is CommandEventArgs<MouseEventArgs> eUI &&
                 eUI.Sender is UserControl)
             {
                 if (eUI.EventArgs.RoutedEvent.Name == nameof(UserControl.MouseEnter))
@@ -542,9 +614,13 @@ namespace DIPOL_UF.Models
                     return;
                 }
 
-                if (e.EventArgs.RoutedEvent.Name == nameof(FrameworkElement.MouseMove) && 
+                if (e.EventArgs.RoutedEvent.Name == nameof(FrameworkElement.MouseMove) &&
                     !IsMouseOverImage)
+                {
                     IsMouseOverImage = true;
+                    if (!IsMouseOverUIControl)
+                        IsMouseOverUIControl = true;
+                }
 
                 var pos = e.EventArgs.GetPosition(elem);
                 var posX = pos.X.Clamp(
@@ -572,7 +648,8 @@ namespace DIPOL_UF.Models
         {
             if (parameter is CommandEventArgs<SizeChangedEventArgs> args)
             {
-                ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width, args.EventArgs.NewSize.Height) / 1000.0;
+                ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width/DisplayedImage.Width, 
+                                              args.EventArgs.NewSize.Height/DisplayedImage.Height);
             }
         }
 
