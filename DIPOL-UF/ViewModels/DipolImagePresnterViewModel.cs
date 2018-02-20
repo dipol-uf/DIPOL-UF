@@ -39,15 +39,7 @@ namespace DIPOL_UF.ViewModels
                 model.SamplerCenterPos.Y - SamplerGeometry.Center.Y);
 
         public Point SamplerCenterPosInPix => model.SamplerCenterPosInPix;
-            //model.DisplayedImage == null
-        //    ? model.SamplerCenterPos
-        //    : new Point(
-        //        model.SamplerCenterPos.X /
-        //        model.LastKnownImageControlSize.Width * model.DisplayedImage.Width,
-        //        model.SamplerCenterPos.Y /
-        //        model.LastKnownImageControlSize.Height * model.DisplayedImage.Height
-        //    );
-
+        
         public int SelectedGeometryIndex
         {
             get => model.SelectedGeometryIndex;
@@ -107,37 +99,26 @@ namespace DIPOL_UF.ViewModels
         {
             base.OnModelPropertyChanged(sender, e);
 
-            //if(e.PropertyName == nameof(model.BitmapSource) ||
-            //   e.PropertyName == nameof(model.IsMouseOverUIControl))
-            //    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsReadyForInput)));
-
-            if(e.PropertyName == nameof(model.BitmapSource))
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsImageLoaded)));
-
-            if (e.PropertyName == nameof(model.SamplerCenterPos))
+            switch (e.PropertyName)
             {
-                //Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
-
+                case nameof(model.BitmapSource):
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsImageLoaded)));
+                    break;
+                case nameof(model.SamplerCenterPos):
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
+                    break;
+                case nameof(model.ApertureGeometry):
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
+                    break;
+                case nameof(model.GapGeometry):
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
+                    break;
+                case nameof(model.SamplerGeometry):
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
+                    break;
             }
-
-            if(e.PropertyName == nameof(model.ApertureGeometry))
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
-
-            if (e.PropertyName == nameof(model.GapGeometry))
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
-
-            if (e.PropertyName == nameof(model.SamplerGeometry))
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
-
-
-            //if (e.PropertyName == nameof(model.DisplayedImage))
-            //    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
-
-            //if (e.PropertyName == nameof(model.LastKnownImageControlSize))
-            //    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
         }
     }
 }
