@@ -18,6 +18,14 @@
 using System;
 using System.Runtime.ConstrainedExecution;
 
+#if X86
+using AndorSDK = ATMCD32CS.AndorSDK;
+#endif
+#if X64
+using AndorSDK = ATMCD64CS.AndorSDK;
+#endif
+
+
 namespace ANDOR_CS.Classes
 {
     /// <inheritdoc />
@@ -65,14 +73,14 @@ namespace ANDOR_CS.Classes
             return AndorSdkInitialization.CallWithoutHandle(() =>
             {
                 var result = AndorSdkInitialization.SDKInstance.GetCurrentCamera(ref cameraHandle);
-                if (result != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+                if (result != AndorSDK.DRV_SUCCESS)
                     return result;
 
                 // Frees camera handles
                 result = AndorSdkInitialization.SDKInstance.ShutDown();
 
                 return result;
-            }) == ATMCD64CS.AndorSDK.DRV_SUCCESS;
+            }) == AndorSDK.DRV_SUCCESS;
            
         }
 

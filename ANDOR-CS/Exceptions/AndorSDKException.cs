@@ -17,6 +17,14 @@
 
 using System;
 
+#if X86
+using AndorSDK = ATMCD32CS.AndorSDK;
+#endif
+#if X64
+using AndorSDK = ATMCD64CS.AndorSDK;
+#endif
+
+
 namespace ANDOR_CS.Exceptions
 {
    
@@ -45,8 +53,8 @@ namespace ANDOR_CS.Exceptions
 
         public static void ThrowIfError(uint returnCode, string name)
         {
-            if (returnCode != ATMCD64CS.AndorSDK.DRV_SUCCESS 
-                & returnCode != ATMCD64CS.AndorSDK.DRV_NO_NEW_DATA)
+            if (returnCode != AndorSDK.DRV_SUCCESS 
+                & returnCode != AndorSDK.DRV_NO_NEW_DATA)
                 throw new AndorSdkException($"{name} returned error code.",
                     returnCode);
         }

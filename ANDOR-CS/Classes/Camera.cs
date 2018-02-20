@@ -29,7 +29,12 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
 using DipolImage;
+#if X86
+using SDK = ATMCD32CS.AndorSDK;
+#endif
+#if X64
 using SDK = ATMCD64CS.AndorSDK;
+#endif
 
 using static ANDOR_CS.Exceptions.AndorSdkException;
 using static ANDOR_CS.Exceptions.AcquisitionInProgressException;

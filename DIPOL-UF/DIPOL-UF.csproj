@@ -140,6 +140,7 @@
     <Compile Include="ObservableConcurrentDictionary.cs" />
     <Compile Include="ObservableObject.cs" />
     <Compile Include="SettingsManager.cs" />
+    <Compile Include="TextExtension.cs" />
     <Compile Include="ValidationErrorInstance.cs" />
     <Compile Include="ViewModels\AcquisitionSettingsViewModel.cs" />
     <Compile Include="ViewModels\AvailableCamerasViewModel.cs" />

@@ -3,17 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:Tests"
-             xmlns:oxy="clr-namespace:OxyPlot.Wpf;assembly=OxyPlot.Wpf"
-             xmlns:controls="clr-namespace:DIPOL_UF.Controls;assembly=DIPOL-UF"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300" Background="Aquamarine">
     <Grid Margin="20">
-        <oxy:Plot>
-            <oxy:Plot.Series>
-                <oxy:LineSeries ItemsSource="{Binding}"
-                                />
-            </oxy:Plot.Series>
-        </oxy:Plot>
     </Grid>
 </Window>

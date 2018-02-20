@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using DipolImage;
-using DIPOL_UF.Models;
-using DIPOL_UF.ViewModels;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OxyPlot;
 using OxyPlot.Series;

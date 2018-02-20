@@ -17,10 +17,13 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+#if X86
+using AndorSDK = ATMCD32CS.AndorSDK;
+#endif
+#if X64
+using AndorSDK = ATMCD64CS.AndorSDK;
+#endif
 
 namespace ANDOR_CS.Classes
 {
@@ -40,10 +43,10 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Gets an singleton instance of a basic AndorSDK class
         /// </summary>
-        public static ATMCD64CS.AndorSDK SDKInstance
+        public static AndorSDK SDKInstance
         {
             get;
-        } = new ATMCD64CS.AndorSDK();
+        } = new AndorSDK();
 
 
         public delegate uint AndorSdk<T1>(ref T1 p1);
@@ -254,12 +257,12 @@ namespace ANDOR_CS.Classes
             if (handle == null) return;
 
             var currHandle = 0;
-            if (SDKInstance.GetCurrentCamera(ref currHandle) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+            if (SDKInstance.GetCurrentCamera(ref currHandle) != AndorSDK.DRV_SUCCESS)
                 throw new Exception();
 
             if (currHandle == handle.SdkPtr) return;
 
-            if (SDKInstance.SetCurrentCamera(handle.SdkPtr) != ATMCD64CS.AndorSDK.DRV_SUCCESS)
+            if (SDKInstance.SetCurrentCamera(handle.SdkPtr) != AndorSDK.DRV_SUCCESS)
                 throw new Exception();
         }
         

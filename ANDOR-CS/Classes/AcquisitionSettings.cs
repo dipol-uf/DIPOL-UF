@@ -23,7 +23,13 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
 using static ANDOR_CS.Classes.AndorSdkInitialization;
 using static ANDOR_CS.Exceptions.AndorSdkException;
+
+#if X86
+using SDK = ATMCD32CS.AndorSDK;
+#endif
+#if X64
 using SDK = ATMCD64CS.AndorSDK;
+#endif
 
 namespace ANDOR_CS.Classes
 {

@@ -19,7 +19,12 @@ using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
+#if X86
+using SDK = ATMCD32CS.AndorSDK;
+#endif
+#if X64
 using SDK = ATMCD64CS.AndorSDK;
+#endif
 
 namespace ANDOR_CS.Enums
 {
