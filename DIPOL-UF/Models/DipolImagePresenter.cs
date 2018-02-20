@@ -182,9 +182,11 @@ namespace DIPOL_UF.Models
                 {
                     _samplerCenterPos = value;
                     RaisePropertyChanged();
+                    RaisePropertyChanged(nameof(SamplerCenterPosInPix));
                 }
             }
         }
+        public Point SamplerCenterPosInPix => GetPixelScale(SamplerCenterPos);
         public GeometryDescriptor SamplerGeometry
         {
             get => _samplerGeometry;
@@ -296,7 +298,6 @@ namespace DIPOL_UF.Models
             }
 
         }
-
         public double PixValue
         {
             get => _pixValue;
@@ -408,7 +409,6 @@ namespace DIPOL_UF.Models
             _thumbValueChangedTimer.Tick += OnThumbValueChangedTimer_TickAsync;
             _imageSamplerTimer.Tick += OnImageSamplerTimer_TickAsync;
         }
-
         static DipolImagePresenter()
         {
             (AvailableGeometries, GeometriesAliases) = InitializeAvailableGeometries();
@@ -418,7 +418,6 @@ namespace DIPOL_UF.Models
         {
             CopyImageAsync(image).ContinueWith((t) => UpdateBitmapAsync());
         }
-
         public async Task LoadImageAsync(Image image)
         {
             await CopyImageAsync(image);
@@ -608,6 +607,7 @@ namespace DIPOL_UF.Models
             RaisePropertyChanged(nameof(ImageStats));
 
         }
+
         private void UpdateGeometry()
         {
             ApertureGeometry = AvailableGeometries[SelectedGeometryIndex](
@@ -622,31 +622,32 @@ namespace DIPOL_UF.Models
                 ImageSamplerScaleFactor * ImageSamplerSize,
                 ImageSamplerThickness * ImageSamplerScaleFactor);
 
-            SamplerCenterPos = new Point(
-                SamplerCenterPos.X.Clamp(
-                    SamplerGeometry.HalfSize.Width, 
-                    LastKnownImageControlSize.Width - SamplerGeometry.HalfSize.Width),
-                SamplerCenterPos.Y.Clamp(
-                    SamplerGeometry.HalfSize.Height, 
-                    LastKnownImageControlSize.Height - SamplerGeometry.HalfSize.Height)
+            if (!LastKnownImageControlSize.IsEmpty)
+                SamplerCenterPos = new Point(
+                    SamplerCenterPos.X.Clamp(
+                        SamplerGeometry.HalfSize.Width,
+                        LastKnownImageControlSize.Width - SamplerGeometry.HalfSize.Width),
+                    SamplerCenterPos.Y.Clamp(
+                        SamplerGeometry.HalfSize.Height,
+                        LastKnownImageControlSize.Height - SamplerGeometry.HalfSize.Height)
                 );
-
+            else
+                SamplerCenterPos = new Point(0, 0);
         }
 
+        // Presenter to pixel transformations
         private double GetPixelScale(double x, bool horizontal = false)
-            => x * (DisplayedImage != null
+            => x * (DisplayedImage != null && !LastKnownImageControlSize.IsEmpty
                    ? (horizontal
                        ? (DisplayedImage.Width / LastKnownImageControlSize.Width)
                        : (DisplayedImage.Height / LastKnownImageControlSize.Height))
                    : 1.0);
-
         private Point GetPixelScale(Point p)
             => DisplayedImage != null
                 ? new Point(
                     GetPixelScale(p.X, true),
                     GetPixelScale(p.Y))
                 : p;
-
         private Size GetPixelScale(Size s)
             => DisplayedImage != null
                 ? new Size(

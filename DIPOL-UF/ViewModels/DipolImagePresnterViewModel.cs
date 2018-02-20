@@ -38,14 +38,15 @@ namespace DIPOL_UF.ViewModels
                 model.SamplerCenterPos.X - SamplerGeometry.Center.X,
                 model.SamplerCenterPos.Y - SamplerGeometry.Center.Y);
 
-        public Point SamplerCenterInPix => model.DisplayedImage == null
-            ? model.SamplerCenterPos
-            : new Point(
-                model.SamplerCenterPos.X /
-                model.LastKnownImageControlSize.Width * model.DisplayedImage.Width,
-                model.SamplerCenterPos.Y /
-                model.LastKnownImageControlSize.Height * model.DisplayedImage.Height
-            );
+        public Point SamplerCenterPosInPix => model.SamplerCenterPosInPix;
+            //model.DisplayedImage == null
+        //    ? model.SamplerCenterPos
+        //    : new Point(
+        //        model.SamplerCenterPos.X /
+        //        model.LastKnownImageControlSize.Width * model.DisplayedImage.Width,
+        //        model.SamplerCenterPos.Y /
+        //        model.LastKnownImageControlSize.Height * model.DisplayedImage.Height
+        //    );
 
         public int SelectedGeometryIndex
         {
@@ -115,7 +116,7 @@ namespace DIPOL_UF.ViewModels
 
             if (e.PropertyName == nameof(model.SamplerCenterPos))
             {
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
+                //Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
@@ -132,11 +133,11 @@ namespace DIPOL_UF.ViewModels
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
 
 
-            if (e.PropertyName == nameof(model.DisplayedImage))
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
+            //if (e.PropertyName == nameof(model.DisplayedImage))
+            //    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
 
-            if (e.PropertyName == nameof(model.LastKnownImageControlSize))
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
+            //if (e.PropertyName == nameof(model.LastKnownImageControlSize))
+            //    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerCenterInPix)));
         }
     }
 }

@@ -143,8 +143,8 @@
                      IsReadOnly="True" TextAlignment="Center">
                 <TextBox.Text>
                     <MultiBinding StringFormat="{}{0,6:####0}:{1,-6:####0}" Mode="OneWay">
-                        <Binding Path="SamplerCenterInPix.X" Mode="OneWay"/>
-                        <Binding Path="SamplerCenterInPix.Y" Mode="OneWay"/>
+                        <Binding Path="SamplerCenterPosInPix.X" Mode="OneWay"/>
+                        <Binding Path="SamplerCenterPosInPix.Y" Mode="OneWay"/>
                     </MultiBinding>
                 </TextBox.Text>
             </TextBox>
