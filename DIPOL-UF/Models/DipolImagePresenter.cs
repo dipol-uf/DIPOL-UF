@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using System.Xml.Schema;
 using DIPOL_UF.Commands;
 using Image = DipolImage.Image;
 
@@ -19,6 +20,13 @@ namespace DIPOL_UF.Models
 {
     public class DipolImagePresenter : ObservableObject
     {
+        private enum GeometryLayer
+        {
+            Aperture,
+            Gap,
+            Annulus
+        }
+
         private static List<Func<double, double, GeometryDescriptor>>  AvailableGeometries { get; }
         public static List<string> GeometriesAliases { get; }
 
@@ -534,32 +542,39 @@ namespace DIPOL_UF.Models
             double max = 0;
             double med = 0;
             double sd = 0;
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
 
-                var pixels = ApertureGeometry.PixelsInsideGeometry(SamplerCenterPos,
-                    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
-                    LastKnownImageControlSize.Width, LastKnownImageControlSize.Height);
+                //GetPixelsInArea();
 
-                var backGroundPixels = SamplerGeometry.PixelsInsideGeometry(SamplerCenterPos,
-                    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
-                    LastKnownImageControlSize.Width, LastKnownImageControlSize.Height);
+                //var pixels = ApertureGeometry.PixelsInsideGeometry(SamplerCenterPos,
+                //    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
+                //    LastKnownImageControlSize.Width, LastKnownImageControlSize.Height);
+                var pixels = GetPixelsInArea(GeometryLayer.Aperture);
 
-                var gapPixels = GapGeometry.PixelsInsideGeometry(SamplerCenterPos,
-                    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
-                    LastKnownImageControlSize.Width, LastKnownImageControlSize.Height)
-                                           .ToList();
+                var annulus = GetPixelsInArea(GeometryLayer.Annulus);
 
-                var fieldPix = backGroundPixels.Where(x => !gapPixels.Contains(x))
-                                               .ToList();
+                //var backGroundPixels = SamplerGeometry.PixelsInsideGeometry(SamplerCenterPos,
+                //    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
+                //    LastKnownImageControlSize.Width, LastKnownImageControlSize.Height);
 
-                //// DEBUG!
-                //var newImg = new Image(new ushort[_sourceImage.Width * _sourceImage.Height],
-                //    _sourceImage.Width, _sourceImage.Height);
-                //foreach (var p in pixels)
-                //    newImg.Set<ushort>(100, p.Y, p.X);
-                //LoadImage(newImg);
-                //// END DEBUG!
+                //var gapPixels = GapGeometry.PixelsInsideGeometry(SamplerCenterPos,
+                //    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
+                //    LastKnownImageControlSize.Width, LastKnownImageControlSize.Height)
+                //                           .ToList();
+
+                //var fieldPix = backGroundPixels.Where(x => !gapPixels.Contains(x))
+                //                               .ToList();
+
+                // DEBUG!
+                var newImg = new Image(new ushort[_sourceImage.Width * _sourceImage.Height],
+                    _sourceImage.Width, _sourceImage.Height);
+                foreach (var p in pixels)
+                    newImg.Set<ushort>(100, p.Y, p.X);
+                foreach (var p in annulus)
+                    newImg.Set<ushort>(10, p.Y, p.X);
+                await LoadImageAsync(newImg);
+                // END DEBUG!
 
                 var data = pixels.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X))
                                  .OrderBy(x => x)
@@ -608,6 +623,117 @@ namespace DIPOL_UF.Models
                     LastKnownImageControlSize.Height - SamplerGeometry.HalfSize.Height)
                 );
 
+        }
+
+        private double GetPixelScale(double x, bool horizontal = false)
+            => x * (DisplayedImage != null
+                   ? (horizontal
+                       ? (DisplayedImage.Width / LastKnownImageControlSize.Width)
+                       : (DisplayedImage.Height / LastKnownImageControlSize.Height))
+                   : 1.0);
+
+        private Point GetPixelScale(Point p)
+            => DisplayedImage != null
+                ? new Point(
+                    p.X * DisplayedImage.Width / LastKnownImageControlSize.Width,
+                    p.Y * DisplayedImage.Height / LastKnownImageControlSize.Height)
+                : p;
+
+        private Size GetPixelScale(Size s)
+            => DisplayedImage != null
+                ? new Size(
+                    s.Width * DisplayedImage.Width / LastKnownImageControlSize.Width,
+                    s.Height * DisplayedImage.Height / LastKnownImageControlSize.Height)
+                : s;
+
+        private List<(int X, int Y)> GetPixelsInArea(GeometryLayer layer = GeometryLayer.Annulus)
+        {
+            if (!LastKnownImageControlSize.IsEmpty && DisplayedImage != null)
+            {
+               
+                var centerPix = GetPixelScale(SamplerCenterPos);
+                var halfSizePix = GetPixelScale(SamplerGeometry.HalfSize);
+                var gapHalfSizePix = GetPixelScale(GapGeometry.HalfSize);
+                var apertureHalfSizePix = GetPixelScale(ApertureGeometry.HalfSize);
+                var thcknssPix = 0.5 *( GetPixelScale(SamplerGeometry.Thickness) + GetPixelScale(SamplerGeometry.Thickness, true));
+
+                var pixelXLims = (Min: Convert.ToInt32(Math.Max(centerPix.X - halfSizePix.Width, 0)),
+                                  Max: Convert.ToInt32(Math.Min(centerPix.X + halfSizePix.Width, DisplayedImage.Width - 1)));
+
+                var pixelYLims = (Min: Convert.ToInt32(Math.Max(centerPix.Y - halfSizePix.Height, 0)),
+                                  Max: Convert.ToInt32(Math.Min(centerPix.Y + halfSizePix.Height, DisplayedImage.Height - 1)));
+
+                var aperturePixelXLims = (Min: Convert.ToInt32(Math.Max(centerPix.X - apertureHalfSizePix.Width, 0)),
+                                          Max: Convert.ToInt32(Math.Min(centerPix.X + apertureHalfSizePix.Width, 
+                                              DisplayedImage.Width - 1)));
+                var aperturePixelYLims = (Min: Convert.ToInt32(Math.Max(centerPix.Y - apertureHalfSizePix.Height, 0)),
+                                          Max: Convert.ToInt32(Math.Min(centerPix.Y + apertureHalfSizePix.Height,
+                                              DisplayedImage.Width - 1)));
+
+                var gapPixelXLims = (Min: Convert.ToInt32(Math.Max(centerPix.X - gapHalfSizePix.Width, 0)),
+                                    Max: Convert.ToInt32(Math.Min(centerPix.X + gapHalfSizePix.Width,
+                                        DisplayedImage.Width - 1)));
+                var gapPixelYLims = (Min: Convert.ToInt32(Math.Max(centerPix.Y - gapHalfSizePix.Height, 0)),
+                                     Max: Convert.ToInt32(Math.Min(centerPix.Y + gapHalfSizePix.Height,
+                                        DisplayedImage.Width - 1)));
+
+                switch (layer)
+                {
+                    case GeometryLayer.Annulus:
+                        var annulusPixels =
+                            new List<(int X, int Y)>(
+                                (pixelXLims.Max - pixelXLims.Max) *
+                                (pixelYLims.Max - pixelYLims.Min) / 8);
+
+                        for (var xPix = pixelXLims.Min; xPix <= pixelXLims.Max; xPix++)
+                            for (var yPix = pixelYLims.Min; yPix <= pixelYLims.Max; yPix++)
+                            {
+                                if ((SamplerGeometry?.IsInsideChecker(xPix, yPix, centerPix, halfSizePix,
+                                        thcknssPix) ?? false) &&
+                                    !(GapGeometry?.IsInsideChecker(xPix, yPix, centerPix, gapHalfSizePix,
+                                        thcknssPix) ?? true))
+                                    annulusPixels.Add((X: xPix, Y: yPix));
+                            }
+
+                        return annulusPixels;
+
+                    case GeometryLayer.Gap:
+                        var gapPixels =
+                            new List<(int X, int Y)>(
+                                (pixelXLims.Max - pixelXLims.Max) *
+                                (pixelYLims.Max - pixelYLims.Min) / 8);
+
+                        for (var xPix = pixelXLims.Min; xPix <= pixelXLims.Max; xPix++)
+                            for (var yPix = pixelYLims.Min; yPix <= pixelYLims.Max; yPix++)
+                            {
+                                if ((GapGeometry?.IsInsideChecker(xPix, yPix, centerPix, halfSizePix,
+                                         thcknssPix) ?? false) &&
+                                    !(ApertureGeometry?.IsInsideChecker(xPix, yPix, centerPix, gapHalfSizePix,
+                                          thcknssPix) ?? true))
+                                    gapPixels.Add((X: xPix, Y: yPix));
+                            }
+
+                        return gapPixels;
+
+                    case GeometryLayer.Aperture:
+                        var aperturePixels =
+                            new List<(int X, int Y)>(
+                                (pixelXLims.Max - pixelXLims.Max) *
+                                (pixelYLims.Max - pixelYLims.Min) / 8);
+
+                        for (var xPix = aperturePixelXLims.Min; xPix <= aperturePixelXLims.Max; xPix++)
+                            for (var yPix = aperturePixelYLims.Min; yPix <= aperturePixelYLims.Max; yPix++)
+                            {
+                                if (ApertureGeometry?.IsInsideChecker(xPix, yPix, centerPix, 
+                                        apertureHalfSizePix, thcknssPix) ?? false)
+                                    aperturePixels.Add((X: xPix, Y: yPix));
+                            }
+
+                        return aperturePixels;
+                }
+            }
+
+            return new List<(int X, int Y)> {(0, 0)};
         }
 
         private async void OnThumbValueChangedTimer_TickAsync(object sender, object e)
@@ -713,8 +839,7 @@ namespace DIPOL_UF.Models
 
         private static (List<Func<double, double, GeometryDescriptor>>, List<string>) InitializeAvailableGeometries()
         {
-            GeometryDescriptor CommonRectangle(double size, double thickness, 
-                Func<double, double, GeometryDescriptor, ApplicationTrustEnumerator> cond = null)
+            GeometryDescriptor CommonRectangle(double size, double thickness)
             {
                 var path = new List<Tuple<Point, Action<StreamGeometryContext, Point>>>(4)
                 {
@@ -730,10 +855,14 @@ namespace DIPOL_UF.Models
                         new Point(0, 0), (cont, pt) => cont.LineTo(pt, true, false))
                 };
 
+                bool PixSelector(int x, int y, Point center, Size halfSize, double thcknss)
+                    => Math.Abs(x - center.X) <= (halfSize.Width - thcknss) &&
+                       Math.Abs(y - center.Y) <= (halfSize.Height - thcknss);
+
                 return new GeometryDescriptor(
                     new Point(size / 2, size / 2), 
-                    new Size(size, size), path, thickness, 
-                    cond ?? ((i, j, p) => true));
+                    new Size(size, size), path, thickness,
+                    PixSelector);
             }
 
             GeometryDescriptor CommonCircle(double size, double thickness)
@@ -760,9 +889,11 @@ namespace DIPOL_UF.Models
                                 90, false, SweepDirection.Clockwise, true, false))
                 };
 
-                bool PixSelector(double px, double py, GeometryDescriptor desc)
-                    => (Math.Pow(px - desc.Thickness, 2) + Math.Pow(py - desc.Thickness, 2)) <= 
-                           Math.Pow(0.5 * (desc.HalfSize.Width + desc.HalfSize.Height) - desc.Thickness, 2);
+
+                bool PixSelector(int x, int y, Point center, Size halfSize, double thcknss)
+                    => Math.Pow(x - center.X, 2) + Math.Pow(y - center.Y, 2) <=
+                       Math.Pow(0.5 * (halfSize.Width + halfSize.Height) - thcknss, 2);
+                
 
                 return new GeometryDescriptor(
                     new Point(size / 2, size / 2), 
@@ -770,9 +901,11 @@ namespace DIPOL_UF.Models
                     PixSelector);
             }
 
-            return (new List<Func<double, double, GeometryDescriptor>>(3) {CommonRectangle, CommonCircle}, 
-                new List<string>() {@"Rectangle", @"Circle"});
+            return (new List<Func<double, double, GeometryDescriptor>> {CommonRectangle, CommonCircle}, 
+                new List<string> {@"Rectangle", @"Circle"});
 
         }
+
+        
     }
 }

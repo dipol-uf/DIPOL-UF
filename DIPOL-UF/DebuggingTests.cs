@@ -49,7 +49,7 @@ namespace Tests
                 var r = new Random();
                 var t = new DispatcherTimer()
                 {
-                    Interval = TimeSpan.FromMilliseconds(5000),
+                    Interval = TimeSpan.FromMilliseconds(1000),
                     IsEnabled = false
                 };
 
