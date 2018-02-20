@@ -64,8 +64,20 @@ namespace DIPOL_UF.Models
         private GeometryDescriptor _samplerGeometry;
         private GeometryDescriptor _apertureGeometry;
         private GeometryDescriptor _gapGeometry;
-        private List<double> _imageStats = Enumerable.Repeat(0.0, 10).ToList();
         private double _pixValue = 0;
+
+        private readonly Dictionary<string, double> _imageStats = new Dictionary<string, double>
+        {
+            {"Median", 0},
+            {"Minimum", 0},
+            {"Maximum", 0},
+            {"ApertureAvg", 0},
+            {"ApertureSd", 0},
+            {"AnnulusAvg", 0},
+            {"AnnulusSd", 0},
+            {"SNR", 0},
+            {"Intensity", 0}
+        };
 
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
         private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
@@ -424,19 +436,7 @@ namespace DIPOL_UF.Models
             await UpdateBitmapAsync();
         }
 
-        public List<double> ImageStats
-        {
-            get => _imageStats;
-            set
-            {
-                if (!value.Equals(_imageStats))
-                {
-                    _imageStats = value;
-                    RaisePropertyChanged();
-                }
-            }
-
-        }
+        public Dictionary<string, double> ImageStats => _imageStats;
 
         private async Task CopyImageAsync(Image image)
         {
@@ -594,15 +594,15 @@ namespace DIPOL_UF.Models
                 
             });
 
-            _imageStats[0] = apAvg;
-            _imageStats[1] = min;
-            _imageStats[2] = max;
-            _imageStats[3] = med;
-            _imageStats[4] = intens;
-            _imageStats[5] = apSd;
-            _imageStats[6] = snr;
-            _imageStats[7] = annAvg;
-            _imageStats[8] = annSd;
+            _imageStats["ApertureAvg"] = apAvg;
+            _imageStats["Minimum"] = min;
+            _imageStats["Maximum"] = max;
+            _imageStats["Median"] = med;
+            _imageStats["Intensity"] = intens;
+            _imageStats["ApertureSd"] = apSd;
+            _imageStats["SNR"] = snr;
+            _imageStats["AnnulusAvg"] = annAvg;
+            _imageStats["AnnulusSd"] = annSd;
 
             RaisePropertyChanged(nameof(ImageStats));
 
@@ -830,9 +830,10 @@ namespace DIPOL_UF.Models
             if (e.PropertyName == nameof(BitmapSource))
             {
                 IsMouseOverImage = false;
-                _imageStats[0] = 0;
-                _imageStats[0] = 0;
-                _imageStats[0] = 0;
+                var keys = _imageStats.Keys.ToList();
+                foreach (var key in keys)
+                    _imageStats[key] = 0.0;
+
                 RaisePropertyChanged(nameof(ImageStats));
                 UpdateGeometry();
             }

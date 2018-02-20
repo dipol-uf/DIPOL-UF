@@ -78,15 +78,13 @@ namespace DIPOL_UF.ViewModels
         public GeometryDescriptor ApertureGeometry => model.ApertureGeometry;
         public GeometryDescriptor GapGeometry => model.GapGeometry;
         public GeometryDescriptor SamplerGeometry => model.SamplerGeometry;
-        public List<double> ImageStats => model.ImageStats;
+        public IDictionary<string, double> ImageStats => model.ImageStats;
         public Brush SamplerColor
         {
             get => model.SamplerColor;
             set => model.SamplerColor = value;
         }
-        //public bool IsReadyForInput => 
-        //    model.BitmapSource != null &&
-        //    model.IsMouseOverUIControl;
+        
         public bool IsImageLoaded => model.BitmapSource != null;
         public bool IsMouseOverUIControl => model.IsMouseOverUIControl;
         public DipolImagePresnterViewModel(DipolImagePresenter model) : base(model)

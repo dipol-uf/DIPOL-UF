@@ -15,6 +15,11 @@
         <Setter Property="FontWeight" Value="Normal"/>
     </Style>
 
+    <Style x:Key="SmallFont"  TargetType="{x:Type Control}">
+        <Setter Property="FontSize" Value="{StaticResource ResourceKey=SmallFontSize}"/>
+        <Setter Property="FontStyle" Value="Normal"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+    </Style>
 
     <!--Menu bar styles-->
 
