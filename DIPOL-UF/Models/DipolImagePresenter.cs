@@ -64,8 +64,7 @@ namespace DIPOL_UF.Models
         private GeometryDescriptor _samplerGeometry;
         private GeometryDescriptor _apertureGeometry;
         private GeometryDescriptor _gapGeometry;
-        private List<double> _imageStats = new List<double>()
-            {0, 0, 0, 0, 0, 0};
+        private List<double> _imageStats = Enumerable.Repeat(0.0, 10).ToList();
         private double _pixValue = 0;
 
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
@@ -537,65 +536,74 @@ namespace DIPOL_UF.Models
             if (!IsMouseOverImage)
                 return;
 
-            double avg = 0;
-            double min = 0;
-            double max = 0;
-            double med = 0;
-            double sd = 0;
+            var annAvg = 0.0;
+            var apAvg = 0.0;
+            var min = 0.0;
+            var max = 0.0;
+            var med = 0.0;
+            var annSd = 0.0;
+            var apSd = 0.0;
+            var snr = 1.0;
+            var intens = 0.0;
+            var n = 1;
+
             await Task.Run(async () =>
             {
 
-                //GetPixelsInArea();
-
-                //var pixels = ApertureGeometry.PixelsInsideGeometry(SamplerCenterPos,
-                //    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
-                //    LastKnownImageControlSize.Width, LastKnownImageControlSize.Height);
-                var pixels = GetPixelsInArea(GeometryLayer.Aperture);
+                
+                var aperture = GetPixelsInArea(GeometryLayer.Aperture);
 
                 var annulus = GetPixelsInArea(GeometryLayer.Annulus);
 
-                //var backGroundPixels = SamplerGeometry.PixelsInsideGeometry(SamplerCenterPos,
-                //    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
-                //    LastKnownImageControlSize.Width, LastKnownImageControlSize.Height);
-
-                //var gapPixels = GapGeometry.PixelsInsideGeometry(SamplerCenterPos,
-                //    DisplayedImage.Width - 1, DisplayedImage.Height - 1,
-                //    LastKnownImageControlSize.Width, LastKnownImageControlSize.Height)
-                //                           .ToList();
-
-                //var fieldPix = backGroundPixels.Where(x => !gapPixels.Contains(x))
-                //                               .ToList();
-
+             
                 // DEBUG!
-                var newImg = new Image(new ushort[_sourceImage.Width * _sourceImage.Height],
-                    _sourceImage.Width, _sourceImage.Height);
-                foreach (var p in pixels)
-                    newImg.Set<ushort>(100, p.Y, p.X);
-                foreach (var p in annulus)
-                    newImg.Set<ushort>(10, p.Y, p.X);
-                await LoadImageAsync(newImg);
+                //var newImg = new Image(new ushort[_sourceImage.Width * _sourceImage.Height],
+                //    _sourceImage.Width, _sourceImage.Height);
+                //foreach (var p in aperture)
+                //    newImg.Set<ushort>(100, p.Y, p.X);
+                //foreach (var p in annulus)
+                //    newImg.Set<ushort>(10, p.Y, p.X);
+                //await LoadImageAsync(newImg);
                 // END DEBUG!
 
-                var data = pixels.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X))
+                var apData = aperture.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X))
                                  .OrderBy(x => x)
                                  .ToList();
-                if (data.Count > 0)
+
+                var annData = annulus.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X))
+                                     .ToList();
+
+                if (annData.Count > 0)
                 {
-                    avg = data.Average();
-                    min = data.First();
-                    max = data.Last();
-                    med = data[data.Count / 2];
-                    sd = Math.Sqrt(data.Select(x => Math.Pow(x - avg, 2)).Sum()/(data.Count - 1));
+                    annAvg = annData.Average();
+                    annSd = Math.Sqrt(annData.Select(x => Math.Pow(x - annAvg, 2)).Sum() / annData.Count);
+                }
+                if (apData.Count > 0)
+                {
+                    apAvg = apData.Average();
+                    min = apData.First();
+                    max = apData.Last();
+                    med = apData[apData.Count / 2];
+                    var posPixels = apData.Where(x => x > annAvg).ToList();
+                    n = posPixels.Count;
+                    intens = posPixels.Sum() - n * annAvg;
+                    apSd = Math.Sqrt(apData.Select(x => Math.Pow(x - apAvg, 2)).Sum() / annData.Count);
                 }
 
+                if (intens > 0 && n > 0 && annSd > 0)
+                    snr = intens / annSd / n;
+                
             });
 
-            _imageStats[0] = avg;
+            _imageStats[0] = apAvg;
             _imageStats[1] = min;
             _imageStats[2] = max;
             _imageStats[3] = med;
-            _imageStats[4] = sd;
-
+            _imageStats[4] = intens;
+            _imageStats[5] = apSd;
+            _imageStats[6] = snr;
+            _imageStats[7] = annAvg;
+            _imageStats[8] = annSd;
 
             RaisePropertyChanged(nameof(ImageStats));
 
@@ -635,18 +643,18 @@ namespace DIPOL_UF.Models
         private Point GetPixelScale(Point p)
             => DisplayedImage != null
                 ? new Point(
-                    p.X * DisplayedImage.Width / LastKnownImageControlSize.Width,
-                    p.Y * DisplayedImage.Height / LastKnownImageControlSize.Height)
+                    GetPixelScale(p.X, true),
+                    GetPixelScale(p.Y))
                 : p;
 
         private Size GetPixelScale(Size s)
             => DisplayedImage != null
                 ? new Size(
-                    s.Width * DisplayedImage.Width / LastKnownImageControlSize.Width,
-                    s.Height * DisplayedImage.Height / LastKnownImageControlSize.Height)
+                    GetPixelScale(s.Width, true),
+                    GetPixelScale(s.Height))
                 : s;
 
-        private List<(int X, int Y)> GetPixelsInArea(GeometryLayer layer = GeometryLayer.Annulus)
+        private List<(int X, int Y)> GetPixelsInArea(GeometryLayer layer)
         {
             if (!LastKnownImageControlSize.IsEmpty && DisplayedImage != null)
             {

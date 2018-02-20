@@ -132,6 +132,10 @@
             <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
                      IsReadOnly="True" Text="{Binding ImageStats[4], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
 
+            <TextBox Grid.Row="3" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
+                     IsReadOnly="True" Text="{Binding ImageStats[5], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+            <TextBox Grid.Row="4" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
+                     IsReadOnly="True" Text="{Binding ImageStats[6], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
             <TextBox Grid.Row="5" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
                      IsReadOnly="True" Text="{Binding PixValue, Mode=OneWay, StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
 
