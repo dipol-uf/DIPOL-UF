@@ -586,7 +586,7 @@ namespace DIPOL_UF.Models
                     var posPixels = apData.Where(x => x > annAvg).ToList();
                     n = posPixels.Count;
                     intens = posPixels.Sum() - n * annAvg;
-                    apSd = Math.Sqrt(apData.Select(x => Math.Pow(x - apAvg, 2)).Sum() / annData.Count);
+                    apSd = Math.Sqrt(apData.Select(x => Math.Pow(x - apAvg, 2)).Sum() / apData.Count);
                 }
 
                 if (intens > 0 && n > 0 && annSd > 0)
