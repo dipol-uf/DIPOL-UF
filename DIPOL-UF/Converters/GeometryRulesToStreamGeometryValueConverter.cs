@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows;
 using System.Globalization;
@@ -7,7 +8,7 @@ using System.Windows.Media;
 
 namespace DIPOL_UF.Converters
 {
-    //[ValueConversion(typeof(object), typeof(StreamGeometry))]
+    [ValueConversion(typeof(object), typeof(StreamGeometry))]
     public class GeometryRulesToStreamGeometryValueConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -26,7 +27,8 @@ namespace DIPOL_UF.Converters
                 return geom.GetFlattenedPathGeometry();
             }
 
-            return null;
+            // Default & displayed in designer
+            return new StreamGeometry().GetFlattenedPathGeometry();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
