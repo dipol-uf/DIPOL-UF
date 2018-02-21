@@ -35,6 +35,12 @@ namespace DIPOL_UF
             set;
         }
 
+        public string Format
+        {
+            get;
+            set;
+        } = @"{0}";
+
         public TextExtension()
         {
             LocalizationChanged += Localization_Changed;
@@ -86,7 +92,7 @@ namespace DIPOL_UF
         }
 
         protected virtual string GetValue() 
-            => Properties.Localization.ResourceManager.GetString(Key);
+            => string.Format(Format, Properties.Localization.ResourceManager.GetString(Key) ?? Key);
 
     }
 }
