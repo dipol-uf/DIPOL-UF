@@ -153,4 +153,7 @@
   <data name="DipolImagePresenter_Statistics_StandardDev" xml:space="preserve">
     <value>SD</value>
   </data>
+  <data name="StringFormat_Float_DipolImagePresenter_Statistics" xml:space="preserve">
+    <value>{0:g7}</value>
+  </data>
 </root>
