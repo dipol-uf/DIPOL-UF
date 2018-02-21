@@ -167,5 +167,14 @@ namespace DIPOL_UF.Properties {
                 return ResourceManager.GetString("DipolImagePresenter_Statistics_StandardDev", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:g7}.
+        /// </summary>
+        public static string StringFormat_Float_DipolImagePresenter_Statistics {
+            get {
+                return ResourceManager.GetString("StringFormat_Float_DipolImagePresenter_Statistics", resourceCulture);
+            }
+        }
     }
 }

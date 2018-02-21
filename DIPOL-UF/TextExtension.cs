@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net;
+using System.Reflection;
 using System.Runtime.Remoting.Channels;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,12 +16,10 @@ using System.Windows.Threading;
 namespace DIPOL_UF
 {
     
-    [MarkupExtensionReturnType(typeof(string))]
+    //[MarkupExtensionReturnType(typeof(string))]
     public class TextExtension : MarkupExtension
     {
-        private DependencyObject _targetObject;
-        private DependencyProperty _targetProperty;
-
+        private Tuple<DependencyObject, DependencyProperty> _dependencyObjectInfo;
         /// <summary>
         /// Raised when application localization is changed through <see cref="UpdateUICullture"/>.
         /// </summary>
@@ -28,14 +28,12 @@ namespace DIPOL_UF
         /// <summary>
         /// Resource key used to lookup localized strings
         /// </summary>
-        [ConstructorArgument("key")]
         public string Key
         {
             get;
             set;
         }
-
-        public string Format
+        public object Format
         {
             get;
             set;
@@ -45,12 +43,7 @@ namespace DIPOL_UF
         {
             LocalizationChanged += Localization_Changed;
         }
-        public TextExtension(object key)
-        {
-            if (key is string s)
-                Key = s;
-            else throw new ArgumentException("[Key] is required.");
-        }
+       
 
         /// <summary>
         /// Updates UI culture and forces update of all localized strings.
@@ -70,16 +63,17 @@ namespace DIPOL_UF
 
         public override object ProvideValue(IServiceProvider serviceProvider)
         {
-            if (_targetObject == null || _targetProperty == null)
+          
+            if (_dependencyObjectInfo == null)
             {
                 var ipvt = (IProvideValueTarget) serviceProvider.GetService(typeof(IProvideValueTarget));
-
                 if (ipvt?.TargetObject is DependencyObject depObj &&
                     ipvt.TargetProperty is DependencyProperty depProp)
                 {
-                    _targetObject = depObj;
-                    _targetProperty = depProp;
+                    _dependencyObjectInfo = new Tuple<DependencyObject, DependencyProperty>(
+                        depObj, depProp); 
                 }
+                
             }
 
             return GetValue();
@@ -87,12 +81,30 @@ namespace DIPOL_UF
 
         protected virtual void Localization_Changed(object sender, Tuple<CultureInfo, CultureInfo> e)
         {
-            if(_targetProperty != null)
-                _targetObject?.SetValue(_targetProperty, GetValue());
+                _dependencyObjectInfo?.Item1?.SetValue(_dependencyObjectInfo.Item2, GetValue());
         }
 
-        protected virtual string GetValue() 
-            => string.Format(Format, Properties.Localization.ResourceManager.GetString(Key) ?? Key);
+        protected virtual string GetFormat()
+        {
+            if (Format is string strFormat)
+                return strFormat;
+            if  (Format is TextExtension ext)
+                return ext.GetValue();
+            throw new ArgumentException();
+        }
+
+        protected virtual string GetValue()
+        {
+            
+            if (Key != null)
+            {
+                var value = Properties.Localization.ResourceManager.GetString(Key) ?? Key;
+
+                return string.Format(GetFormat(), value);
+            }
+
+            return null;
+        }
 
     }
 }

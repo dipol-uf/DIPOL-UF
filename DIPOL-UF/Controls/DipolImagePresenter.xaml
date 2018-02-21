@@ -93,7 +93,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto"/>
                 <ColumnDefinition Width="110"/>
-                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="110"/>
                 <ColumnDefinition Width="auto"/>
                 <ColumnDefinition Width="120"/>
                 </Grid.ColumnDefinitions>
@@ -164,17 +164,41 @@
 
             <!-- Left data -->
             <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[Median], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[Median], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[Minimum], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[Minimum], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[Maximum], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[Maximum], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[ApertureAvg], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[ApertureAvg], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[Intensity], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[Intensity], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[ApertureSd], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[ApertureSd], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
 
             <!-- Right data -->
             <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
@@ -187,13 +211,30 @@
                 </TextBox.Text>
             </TextBox>
             <TextBox Grid.Row="2" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding PixValue, Mode=OneWay, StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        PixValue, 
+                        Mode=OneWay, 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="4" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[AnnulusAvg], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[AnnulusAvg], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="5" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[SNR], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[SNR], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="6" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[AnnulusSd], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[AnnulusSd], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
 
             <!-- Aperture controls -->
             <Slider Grid.Column="4" Grid.Row="0" VerticalAlignment="Center"

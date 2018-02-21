@@ -155,5 +155,6 @@
   </data>
   <data name="StringFormat_Float_DipolImagePresenter_Statistics" xml:space="preserve">
     <value>{0:g7}</value>
+    <comment>Nonlocalized general resource</comment>
   </data>
 </root>

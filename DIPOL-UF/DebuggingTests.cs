@@ -62,7 +62,7 @@ namespace Tests
                 {
                     r.NextBytes(buffer);
                     model.LoadImage(new Image(buffer, 1024, 512, TypeCode.UInt16));
-                    //TextExtension.UpdateUICullture(new CultureInfo("en-US"));
+                    TextExtension.UpdateUICullture(new CultureInfo("ru-RU"));
                     t.Stop();
                 };
                 t.Start();

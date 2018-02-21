@@ -120,4 +120,7 @@
   <data name="DipolImagePresenter_Statistics_Median" xml:space="preserve">
     <value>Медиана</value>
   </data>
+  <data name="StringFormat_Float_DipolImagePresenter_Statistics" xml:space="preserve">
+    <value>{0:f2}</value>
+  </data>
 </root>
