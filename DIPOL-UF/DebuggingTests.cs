@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -16,6 +17,9 @@ namespace Tests
         [STAThread]
         public static int Main()
         {
+            System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            System.Threading.Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+
             new Debugger().DisplayImage();
             return 0;
         }
@@ -49,7 +53,7 @@ namespace Tests
                 var r = new Random();
                 var t = new DispatcherTimer()
                 {
-                    Interval = TimeSpan.FromMilliseconds(1000),
+                    Interval = TimeSpan.FromMilliseconds(3000),
                     IsEnabled = false
                 };
 
@@ -58,6 +62,7 @@ namespace Tests
                 {
                     r.NextBytes(buffer);
                     model.LoadImage(new Image(buffer, 1024, 512, TypeCode.UInt16));
+                    //TextExtension.UpdateUICullture(new CultureInfo("en-US"));
                     t.Stop();
                 };
                 t.Start();

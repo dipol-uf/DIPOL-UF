@@ -6,6 +6,7 @@
              xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
              xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
              xmlns:locl="clr-namespace:DIPOL_UF"
+             xmlns:p="clr-namespace:DIPOL_UF.Properties"
              Background="Beige" Style="{StaticResource ResourceKey=SmallFont}"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="500" 
@@ -109,11 +110,11 @@
             <!-- Left labels -->
             <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                      
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Median}"
                        />
             <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="2" x:Name="TST"/>
+                       Text="2"/>
             <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Right" VerticalAlignment="Center"
                        Text="3"/>

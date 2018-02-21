@@ -13,7 +13,8 @@ namespace DIPOL_UF.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is List<Tuple<Point, Action<StreamGeometryContext, Point>>> list)
+            if (value is List<Tuple<Point, Action<StreamGeometryContext, Point>>> list && 
+                !DesignerProperties.GetIsInDesignMode(new DependencyObject()))
             {
                 var geom = new StreamGeometry();
                 using (var cont = geom.Open())
