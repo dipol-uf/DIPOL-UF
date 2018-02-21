@@ -108,60 +108,77 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <!-- Left labels -->
-            <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
-                       HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Median}"
-                       />
+            <!-- Header -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                       Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Aperture, Format='{}{0}:'}"/>
+            <!-- Labels -->
             <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="2"/>
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Median}"/>
             <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="3"/>
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Minimum}"/>
             <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="Center"/>
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Maximum}"/>
             <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="Average"/>
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Average}"/>
             <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="SD"/>
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Intensity}"/>
+            <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
 
             <!-- Right labels -->
-            <TextBlock Grid.Row="0" Grid.Column="3" Style="{StaticResource ContentFont_TextBlock}"
-                       HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="Intensity"/>
+            <!-- Header -->
+            <TextBlock Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2"
+                       Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterPixel, Format='{}{0}:'}"/>
+            <!-- Labels -->
             <TextBlock Grid.Row="1" Grid.Column="3" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="SNR"/>
-            <TextBlock Grid.Row="3" Grid.Column="3" Style="{StaticResource ContentFont_TextBlock}"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterPosition}"/>
+            <TextBlock Grid.Row="2" Grid.Column="3" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="Pix Value"/>
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterValue}"/>
+            <!-- Header -->
+            <TextBlock Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2"
+                       Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Annulus, Format='{}{0}:'}"/>
+            <!-- Labels -->
             <TextBlock Grid.Row="4" Grid.Column="3" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="Average"/>
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Average}"/>
             <TextBlock Grid.Row="5" Grid.Column="3" Style="{StaticResource ContentFont_TextBlock}"
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="SD"/>
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_SignalToNoise}"/>
+            <TextBlock Grid.Row="6" Grid.Column="3" Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
 
             <!-- Left data -->
-            <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[Median], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
             <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[Minimum], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" Text="{Binding ImageStats[Median], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
             <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[Maximum], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" Text="{Binding ImageStats[Minimum], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
             <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[ApertureAvg], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" Text="{Binding ImageStats[Maximum], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
             <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[ApertureSd], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+                     IsReadOnly="True" Text="{Binding ImageStats[ApertureAvg], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
             <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
                      IsReadOnly="True" Text="{Binding ImageStats[Intensity], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
-           
-            
-            <TextBox Grid.Row="7" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" TextAlignment="Center">
+            <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
+                     IsReadOnly="True" Text="{Binding ImageStats[ApertureSd], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+
+            <!-- Right data -->
+            <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
+                     IsReadOnly="True" TextAlignment="Center" HorizontalContentAlignment="Center">
                 <TextBox.Text>
                     <MultiBinding StringFormat="{}{0,6:####0}:{1,-6:####0}" Mode="OneWay">
                         <Binding Path="SamplerCenterPosInPix.X" Mode="OneWay"/>
@@ -169,19 +186,14 @@
                     </MultiBinding>
                 </TextBox.Text>
             </TextBox>
-
-            <!-- Right data -->
-            <TextBox Grid.Row="0" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[Intensity], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
-            <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[SNR], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
-            <TextBox Grid.Row="3" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[AnnulusAvg], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
-            <TextBox Grid.Row="4" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
-                     IsReadOnly="True" Text="{Binding ImageStats[AnnulusSd], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
-            <TextBox Grid.Row="5" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
+            <TextBox Grid.Row="2" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
                      IsReadOnly="True" Text="{Binding PixValue, Mode=OneWay, StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
-           
+            <TextBox Grid.Row="4" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
+                     IsReadOnly="True" Text="{Binding ImageStats[AnnulusAvg], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+            <TextBox Grid.Row="5" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
+                     IsReadOnly="True" Text="{Binding ImageStats[SNR], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
+            <TextBox Grid.Row="6" Grid.Column="2" Style="{StaticResource TextBoxStyle}" 
+                     IsReadOnly="True" Text="{Binding ImageStats[AnnulusSd], StringFormat='\{0:g8\}'}" TextAlignment="Right"/>
 
             <!-- Aperture controls -->
             <Slider Grid.Column="4" Grid.Row="0" VerticalAlignment="Center"

@@ -61,11 +61,110 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annulus.
+        /// </summary>
+        public static string DipolImagePresenter_Statistics_Annulus {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Statistics_Annulus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Aperture.
+        /// </summary>
+        public static string DipolImagePresenter_Statistics_Aperture {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Statistics_Aperture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Average.
+        /// </summary>
+        public static string DipolImagePresenter_Statistics_Average {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Statistics_Average", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Center pixel.
+        /// </summary>
+        public static string DipolImagePresenter_Statistics_CenterPixel {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Statistics_CenterPixel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Position.
+        /// </summary>
+        public static string DipolImagePresenter_Statistics_CenterPosition {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Statistics_CenterPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value.
+        /// </summary>
+        public static string DipolImagePresenter_Statistics_CenterValue {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Statistics_CenterValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Intensity.
+        /// </summary>
+        public static string DipolImagePresenter_Statistics_Intensity {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Statistics_Intensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum.
+        /// </summary>
+        public static string DipolImagePresenter_Statistics_Maximum {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Statistics_Maximum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Median.
         /// </summary>
         public static string DipolImagePresenter_Statistics_Median {
             get {
                 return ResourceManager.GetString("DipolImagePresenter_Statistics_Median", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum.
+        /// </summary>
+        public static string DipolImagePresenter_Statistics_Minimum {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Statistics_Minimum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SNR.
+        /// </summary>
+        public static string DipolImagePresenter_Statistics_SignalToNoise {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Statistics_SignalToNoise", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SD.
+        /// </summary>
+        public static string DipolImagePresenter_Statistics_StandardDev {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Statistics_StandardDev", resourceCulture);
             }
         }
     }

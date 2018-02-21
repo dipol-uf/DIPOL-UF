@@ -117,7 +117,40 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="DipolImagePresenter_Statistics_Annulus" xml:space="preserve">
+    <value>Annulus</value>
+  </data>
+  <data name="DipolImagePresenter_Statistics_Aperture" xml:space="preserve">
+    <value>Aperture</value>
+  </data>
+  <data name="DipolImagePresenter_Statistics_Average" xml:space="preserve">
+    <value>Average</value>
+  </data>
+  <data name="DipolImagePresenter_Statistics_CenterPixel" xml:space="preserve">
+    <value>Center pixel</value>
+  </data>
+  <data name="DipolImagePresenter_Statistics_CenterPosition" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="DipolImagePresenter_Statistics_CenterValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="DipolImagePresenter_Statistics_Intensity" xml:space="preserve">
+    <value>Intensity</value>
+  </data>
+  <data name="DipolImagePresenter_Statistics_Maximum" xml:space="preserve">
+    <value>Maximum</value>
+  </data>
   <data name="DipolImagePresenter_Statistics_Median" xml:space="preserve">
     <value>Median</value>
+  </data>
+  <data name="DipolImagePresenter_Statistics_Minimum" xml:space="preserve">
+    <value>Minimum</value>
+  </data>
+  <data name="DipolImagePresenter_Statistics_SignalToNoise" xml:space="preserve">
+    <value>SNR</value>
+  </data>
+  <data name="DipolImagePresenter_Statistics_StandardDev" xml:space="preserve">
+    <value>SD</value>
   </data>
 </root>
