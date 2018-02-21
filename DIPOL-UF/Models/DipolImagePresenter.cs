@@ -51,6 +51,13 @@ namespace DIPOL_UF.Models
         private double _imageGap = 15;
         private double _imageSamplerThickness = 5.0;
         private Brush _samplerColor;
+        private GeometryDescriptor _samplerGeometry;
+        private GeometryDescriptor _apertureGeometry;
+        private GeometryDescriptor _gapGeometry;
+        private double _pixValue = 0;
+        private double _maxApertureWidth = 100;
+        private double _maxGapWidth = 100;
+        private double _maxAnnulusWidth = 100;
         private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
         {
             Interval = TimeSpan.FromMilliseconds(250),
@@ -60,23 +67,6 @@ namespace DIPOL_UF.Models
         {
             Interval = TimeSpan.FromMilliseconds(100),
             IsEnabled = false
-        };
-        private GeometryDescriptor _samplerGeometry;
-        private GeometryDescriptor _apertureGeometry;
-        private GeometryDescriptor _gapGeometry;
-        private double _pixValue = 0;
-
-        private readonly Dictionary<string, double> _imageStats = new Dictionary<string, double>
-        {
-            {"Median", 0},
-            {"Minimum", 0},
-            {"Maximum", 0},
-            {"ApertureAvg", 0},
-            {"ApertureSd", 0},
-            {"AnnulusAvg", 0},
-            {"AnnulusSd", 0},
-            {"SNR", 0},
-            {"Intensity", 0}
         };
 
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
@@ -322,6 +312,46 @@ namespace DIPOL_UF.Models
                 }
             }
         }
+        public double MinGeometryWidth => 5;
+        public double MaxApertureWidth
+        {
+            get => _maxApertureWidth;
+            set
+            {
+                if (Math.Abs(value - _maxApertureWidth) > double.Epsilon)
+                {
+                    _maxApertureWidth = value;
+                    RaisePropertyChanged();
+                }
+
+            }
+        }
+        public double MaxGapWidth
+        {
+            get => _maxGapWidth;
+            set
+            {
+                if (Math.Abs(value - _maxGapWidth) > double.Epsilon)
+                {
+                    _maxGapWidth = value;
+                    RaisePropertyChanged();
+                }
+
+            }
+        }
+        public double MaxAnnulusWidth
+        {
+            get => _maxAnnulusWidth;
+            set
+            {
+                if (Math.Abs(value - _maxAnnulusWidth) > double.Epsilon)
+                {
+                    _maxAnnulusWidth = value;
+                    RaisePropertyChanged();
+                }
+
+            }
+        }
 
         public Brush SamplerColor
         {
@@ -428,15 +458,33 @@ namespace DIPOL_UF.Models
 
         public void LoadImage(Image image)
         {
-            CopyImageAsync(image).ContinueWith((t) => UpdateBitmapAsync());
+            CopyImageAsync(image)
+                .ContinueWith((t) => UpdateBitmapAsync())
+                .ContinueWith((t) => UpdateGeometrySizeRanges());
+
         }
         public async Task LoadImageAsync(Image image)
         {
             await CopyImageAsync(image);
             await UpdateBitmapAsync();
+            UpdateGeometrySizeRanges();
         }
 
-        public Dictionary<string, double> ImageStats => _imageStats;
+        public Dictionary<string, double> ImageStats
+        {
+            get;
+        } = new Dictionary<string, double>
+        {
+            {"Median", 0},
+            {"Minimum", 0},
+            {"Maximum", 0},
+            {"ApertureAvg", 0},
+            {"ApertureSd", 0},
+            {"AnnulusAvg", 0},
+            {"AnnulusSd", 0},
+            {"SNR", 0},
+            {"Intensity", 0}
+        };
 
         private async Task CopyImageAsync(Image image)
         {
@@ -594,15 +642,15 @@ namespace DIPOL_UF.Models
                 
             });
 
-            _imageStats["ApertureAvg"] = apAvg;
-            _imageStats["Minimum"] = min;
-            _imageStats["Maximum"] = max;
-            _imageStats["Median"] = med;
-            _imageStats["Intensity"] = intens;
-            _imageStats["ApertureSd"] = apSd;
-            _imageStats["SNR"] = snr;
-            _imageStats["AnnulusAvg"] = annAvg;
-            _imageStats["AnnulusSd"] = annSd;
+            ImageStats["ApertureAvg"] = apAvg;
+            ImageStats["Minimum"] = min;
+            ImageStats["Maximum"] = max;
+            ImageStats["Median"] = med;
+            ImageStats["Intensity"] = intens;
+            ImageStats["ApertureSd"] = apSd;
+            ImageStats["SNR"] = snr;
+            ImageStats["AnnulusAvg"] = annAvg;
+            ImageStats["AnnulusSd"] = annSd;
 
             RaisePropertyChanged(nameof(ImageStats));
 
@@ -635,7 +683,22 @@ namespace DIPOL_UF.Models
                 SamplerCenterPos = new Point(0, 0);
         }
 
-        // Presenter to pixel transformations
+        private void UpdateGeometrySizeRanges()
+        {
+            if(_displayedImage == null)
+                return;
+
+            var thck = GetPixelScale(SamplerGeometry?.Thickness ?? 0.0);
+            var size = Math.Min(_displayedImage.Width, _displayedImage.Height) - 3 * thck;
+            var sizeFr = size / 5.0;
+
+            MaxApertureWidth = Math.Floor( 2 * sizeFr);
+            MaxGapWidth = Math.Floor(sizeFr);
+            MaxAnnulusWidth = Math.Floor(2 * sizeFr);
+
+        }
+
+        // Presenter to pixel scale transformations
         private double GetPixelScale(double x, bool horizontal = false)
             => x * (DisplayedImage != null && !LastKnownImageControlSize.IsEmpty
                    ? (horizontal
@@ -830,9 +893,9 @@ namespace DIPOL_UF.Models
             if (e.PropertyName == nameof(BitmapSource))
             {
                 IsMouseOverImage = false;
-                var keys = _imageStats.Keys.ToList();
+                var keys = ImageStats.Keys.ToList();
                 foreach (var key in keys)
-                    _imageStats[key] = 0.0;
+                    ImageStats[key] = 0.0;
 
                 RaisePropertyChanged(nameof(ImageStats));
                 UpdateGeometry();

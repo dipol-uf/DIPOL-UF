@@ -84,7 +84,11 @@ namespace DIPOL_UF.ViewModels
             get => model.SamplerColor;
             set => model.SamplerColor = value;
         }
-        
+        public double MaxApertureWidth => model.MaxApertureWidth;
+        public double MaxGapWidth => model.MaxGapWidth;
+        public double MaxAnnulusWidth => model.MaxAnnulusWidth;
+        public double MinGeometryWidth => model.MinGeometryWidth;
+
         public bool IsImageLoaded => model.BitmapSource != null;
         public bool IsMouseOverUIControl => model.IsMouseOverUIControl;
         public DipolImagePresnterViewModel(DipolImagePresenter model) : base(model)
