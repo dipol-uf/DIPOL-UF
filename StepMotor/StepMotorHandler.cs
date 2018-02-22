@@ -310,6 +310,8 @@ namespace StepMotor
             {
 
                 Reply r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Start, address, motorOrBank);
+                if (r.Status != ReturnStatus.Success)
+                    throw new Exception();
                 r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Status, address, motorOrBank);
                 // While status is Success and returned value if 0 (false), continue checks
                 while (r.Status == ReturnStatus.Success && r.ReturnValue != 0)
