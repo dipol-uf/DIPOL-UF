@@ -61,6 +61,42 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Aperture settings.
+        /// </summary>
+        public static string DipolImagePresenter_ApertureControlGroup {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_ApertureControlGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gap.
+        /// </summary>
+        public static string DipolImagePresenter_Geometry_Gap {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Geometry_Gap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line thickness.
+        /// </summary>
+        public static string DipolImagePresenter_Geometry_Thickness {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Geometry_Thickness", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type.
+        /// </summary>
+        public static string DipolImagePresenter_Geometry_Type {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_Geometry_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Annulus.
         /// </summary>
         public static string DipolImagePresenter_Statistics_Annulus {
@@ -165,6 +201,15 @@ namespace DIPOL_UF.Properties {
         public static string DipolImagePresenter_Statistics_StandardDev {
             get {
                 return ResourceManager.GetString("DipolImagePresenter_Statistics_StandardDev", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Color.
+        /// </summary>
+        public static string General_Color {
+            get {
+                return ResourceManager.GetString("General_Color", resourceCulture);
             }
         }
         

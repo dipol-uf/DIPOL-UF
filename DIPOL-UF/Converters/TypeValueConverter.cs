@@ -30,15 +30,17 @@ namespace DIPOL_UF.Converters
         /// <param name="culture">Culture information.</param>
         /// <returns></returns>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // If val is nor null
-            if (value != null)
-                return System.Convert.ChangeType(value, targetType);
-            // If it is null and it is a value type, create a default(targetType)
-            else if (targetType.IsValueType)
-                return Activator.CreateInstance(targetType);
-            // Otherwise it is a ref type and simply return null
-            else return null; 
-        }
+            => Convert(value, targetType, parameter, culture);
+
+        //{
+        //// If val is nor null
+        //if (value != null)
+        //    return System.Convert.ChangeType(value, targetType);
+        //// If it is null and it is a value type, create a default(targetType)
+        //else if (targetType.IsValueType)
+        //    return Activator.CreateInstance(targetType);
+        //// Otherwise it is a ref type and simply return null
+        //else return null; 
+        //}
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting;
 using System.Security.Policy;
 using System.Threading.Tasks;
 using System.Windows;
@@ -659,7 +660,6 @@ namespace DIPOL_UF.Models
             RaisePropertyChanged(nameof(ImageStats));
 
         }
-
         private void UpdateGeometry()
         {
             ApertureGeometry = AvailableGeometries[SelectedGeometryIndex](
@@ -689,17 +689,15 @@ namespace DIPOL_UF.Models
 
         private void UpdateGeometrySizeRanges()
         {
-            if(_displayedImage == null)
+            if (_displayedImage == null)
                 return;
 
-            var thck = GetPixelScale(SamplerGeometry?.Thickness ?? 0.0);
-            var size = Math.Min(_displayedImage.Width, _displayedImage.Height) - 3 * thck;
-            var sizeFr = size / 5.0;
+            var size = Math.Min(_displayedImage.Width, _displayedImage.Height) - 3 * MaxGeometryThickness;
+            var sizeFr = Math.Floor(size / 5.0);
 
-            MaxApertureWidth = Math.Floor( 2 * sizeFr);
-            MaxGapWidth = Math.Floor(sizeFr);
-            MaxAnnulusWidth = Math.Floor(2 * sizeFr);
-
+            MaxApertureWidth = 2 * sizeFr;
+            MaxGapWidth = sizeFr;
+            MaxAnnulusWidth = 2 * sizeFr;
         }
 
         // Presenter to pixel scale transformations
@@ -758,7 +756,7 @@ namespace DIPOL_UF.Models
                     case GeometryLayer.Annulus:
                         var annulusPixels =
                             new List<(int X, int Y)>(
-                                (pixelXLims.Max - pixelXLims.Max) *
+                                (pixelXLims.Max - pixelXLims.Min) *
                                 (pixelYLims.Max - pixelYLims.Min) / 8);
 
                         for (var xPix = pixelXLims.Min; xPix <= pixelXLims.Max; xPix++)
@@ -776,11 +774,11 @@ namespace DIPOL_UF.Models
                     case GeometryLayer.Gap:
                         var gapPixels =
                             new List<(int X, int Y)>(
-                                (pixelXLims.Max - pixelXLims.Max) *
-                                (pixelYLims.Max - pixelYLims.Min) / 8);
+                                (gapPixelXLims.Max - gapPixelXLims.Min) *
+                                (gapPixelYLims.Max - gapPixelYLims.Min) / 8);
 
-                        for (var xPix = pixelXLims.Min; xPix <= pixelXLims.Max; xPix++)
-                            for (var yPix = pixelYLims.Min; yPix <= pixelYLims.Max; yPix++)
+                        for (var xPix = gapPixelXLims.Min; xPix <= gapPixelXLims.Max; xPix++)
+                            for (var yPix = gapPixelYLims.Min; yPix <= gapPixelYLims.Max; yPix++)
                             {
                                 if ((GapGeometry?.IsInsideChecker(xPix, yPix, centerPix, halfSizePix,
                                          thcknssPix) ?? false) &&
@@ -794,8 +792,8 @@ namespace DIPOL_UF.Models
                     case GeometryLayer.Aperture:
                         var aperturePixels =
                             new List<(int X, int Y)>(
-                                (pixelXLims.Max - pixelXLims.Max) *
-                                (pixelYLims.Max - pixelYLims.Min) / 8);
+                                (aperturePixelXLims.Max - aperturePixelXLims.Min) *
+                                (aperturePixelYLims.Max - aperturePixelYLims.Min) / 8);
 
                         for (var xPix = aperturePixelXLims.Min; xPix <= aperturePixelXLims.Max; xPix++)
                             for (var yPix = aperturePixelYLims.Min; yPix <= aperturePixelYLims.Max; yPix++)
@@ -825,8 +823,9 @@ namespace DIPOL_UF.Models
 
         private void MouseHoverCommandExecute(object parameter)
         {
-            if (DisplayedImage != null &&
-                parameter is CommandEventArgs<MouseEventArgs> eUI &&
+            if (DisplayedImage == null)
+                return;
+            if (parameter is CommandEventArgs<MouseEventArgs> eUI &&
                 eUI.Sender is UserControl)
             {
                 if (eUI.EventArgs.RoutedEvent.Name == nameof(UserControl.MouseEnter))
@@ -834,9 +833,8 @@ namespace DIPOL_UF.Models
                 else if (eUI.EventArgs.RoutedEvent.Name == nameof(UserControl.MouseLeave))
                     IsMouseOverUIControl = false;
             }
-            else if (DisplayedImage != null && 
-                parameter is CommandEventArgs<MouseEventArgs> e &&
-                e.Sender is FrameworkElement elem)
+            else if (parameter is CommandEventArgs<MouseEventArgs> e &&
+                     e.Sender is FrameworkElement elem)
             {
 
                 if (e.EventArgs.RoutedEvent.Name == nameof(FrameworkElement.MouseEnter))
