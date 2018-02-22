@@ -352,6 +352,10 @@ namespace DIPOL_UF.Models
 
             }
         }
+        public double GeometrySliderTickFrequency => 5;
+        public double GeometryThicknessSliderTickFrequency => 1;
+        public double MinGeometryThickness => 1;
+        public double MaxGeometryThickness => 10;
 
         public Brush SamplerColor
         {

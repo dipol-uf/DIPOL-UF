@@ -88,6 +88,10 @@ namespace DIPOL_UF.ViewModels
         public double MaxGapWidth => model.MaxGapWidth;
         public double MaxAnnulusWidth => model.MaxAnnulusWidth;
         public double MinGeometryWidth => model.MinGeometryWidth;
+        public double GeometrySliderTickFrequency => model.GeometrySliderTickFrequency;
+        public double GeometryThicknessSliderTickFrequency => model.GeometryThicknessSliderTickFrequency;
+        public double MinGeometryThickness => model.MinGeometryThickness;
+        public double MaxGeometryThickness => model.MaxGeometryThickness;
 
         public bool IsImageLoaded => model.BitmapSource != null;
         public bool IsMouseOverUIControl => model.IsMouseOverUIControl;

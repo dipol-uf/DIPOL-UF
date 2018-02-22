@@ -9,11 +9,11 @@
              xmlns:p="clr-namespace:DIPOL_UF.Properties"
              Background="Beige" Style="{StaticResource ResourceKey=SmallFont}"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="500" 
+             d:DesignHeight="500" d:DesignWidth="700" 
              d:DataContext="{d:DesignInstance Type=vms:DipolImagePresnterViewModel}"
              MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
              MouseLeave="{cmnds:EventToCommand MouseHoverCommand}">
-
+            
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>
@@ -88,14 +88,14 @@
         </Grid>
         <!-- Image sampler info & controls -->
         <Grid Row="2" HorizontalAlignment="Center" 
-              IsEnabled="{Binding IsImageLoaded, Mode=OneWay}" 
-              >
+              IsEnabled="{Binding IsImageLoaded, Mode=OneWay}" >
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto"/>
-                <ColumnDefinition Width="110"/>
-                <ColumnDefinition Width="110"/>
-                <ColumnDefinition Width="auto"/>
-                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" MinWidth="110"/>
+                <ColumnDefinition Width="*" MinWidth="110"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="1.5*"/>
                 </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition/>
@@ -236,55 +236,66 @@
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
 
+           
             <!-- Aperture controls -->
-            <Slider Grid.Column="4" Grid.Row="0" VerticalAlignment="Center"
-                    HorizontalAlignment="Center" Width="100"
+            <Slider Grid.Column="5" Grid.Row="1" VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch" Width="Auto"
                     Minimum="{Binding MinGeometryWidth}"
                     Maximum="{Binding MaxApertureWidth}"
                     Value="{Binding ImageApertureSize, UpdateSourceTrigger=PropertyChanged}"
                     IsSnapToTickEnabled="True"
-                    TickFrequency="5" 
+                    TickFrequency="{Binding GeometrySliderTickFrequency}" 
+                    Margin="{StaticResource HorizontalPBMargin}"
             />
-            <Slider Grid.Column="4" Grid.Row="1" VerticalAlignment="Center"
-                    HorizontalAlignment="Center" Width="100"
+            <Slider Grid.Column="5" Grid.Row="2" VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch" Width="Auto"
                     Minimum="{Binding MinGeometryWidth}"
                     Maximum="{Binding MaxGapWidth}"
                     Value="{Binding ImageGap, UpdateSourceTrigger=PropertyChanged}"
                     IsSnapToTickEnabled="True"
-                    TickFrequency="5" 
+                    TickFrequency="{Binding GeometrySliderTickFrequency}" 
+                    Margin="{StaticResource HorizontalPBMargin}"
             />
-            <Slider Grid.Column="4" Grid.Row="2"  VerticalAlignment="Center"
-                    HorizontalAlignment="Center" Width="100"
+            <Slider Grid.Column="5" Grid.Row="3"  VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch" Width="Auto"
                     Minimum="{Binding MinGeometryWidth}"
                     Maximum="{Binding MaxAnnulusWidth}"
                     Value="{Binding ImageAnnulus, UpdateSourceTrigger=PropertyChanged}"
                     IsSnapToTickEnabled="True"
-                    TickFrequency="5" 
+                    TickFrequency="{Binding GeometrySliderTickFrequency}" 
+                    Margin="{StaticResource HorizontalPBMargin}"
             />
-            <ComboBox Grid.Column="4" Grid.Row="3"
+            <ComboBox Grid.Column="5" Grid.Row="4"
                       SelectedIndex="0"
                       Style="{StaticResource ComboBoxStyle}"
                       ItemsSource="{StaticResource ColorPickerColors}"
-                      SelectedItem="{Binding SamplerColor, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" >
+                      SelectedItem="{Binding 
+                        SamplerColor, 
+                        Mode=OneWayToSource, 
+                        UpdateSourceTrigger=PropertyChanged}" 
+                      Margin="{StaticResource HorizontalPBMargin}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <Border Width="100" Height="20" Background="{Binding}" BorderBrush="Black" BorderThickness="1"/>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <ComboBox Grid.Column="4" Grid.Row="4"
+            <ComboBox Grid.Column="5" Grid.Row="5"
                       Style="{StaticResource ComboBoxStyle}"
                       ItemsSource="{Binding GeometryAliasCollection, Mode=OneTime}"
-                      SelectedIndex="{Binding SelectedGeometryIndex, UpdateSourceTrigger=PropertyChanged}">
+                      SelectedIndex="{Binding SelectedGeometryIndex, UpdateSourceTrigger=PropertyChanged}"
+                      Margin="{StaticResource HorizontalPBMargin}"
+                      >
 
             </ComboBox>
-            <Slider Grid.Column="4" Grid.Row="5"  VerticalAlignment="Center"
-                    HorizontalAlignment="Center" Width="100"
-                    Minimum="1"
-                    Maximum="20"
+            <Slider Grid.Column="5" Grid.Row="6"  VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch" Width="Auto"
+                    Minimum="{Binding MinGeometryThickness}"
+                    Maximum="{Binding MaxGeometryThickness}"
                     Value="{Binding ImageSamplerThickness, UpdateSourceTrigger=PropertyChanged}"
                     IsSnapToTickEnabled="True"
-                    TickFrequency="1" 
+                    TickFrequency="{Binding GeometryThicknessSliderTickFrequency}" 
+                    Margin="{StaticResource HorizontalPBMargin}"
             />
         </Grid>
     </Grid>

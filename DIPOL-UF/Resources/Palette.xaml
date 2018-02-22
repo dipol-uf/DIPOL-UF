@@ -67,7 +67,7 @@
     </x:Array>
     
     <!--Margins-->
-    <sys:Double x:Key="MarginValue">3.5</sys:Double>
+    <sys:Double x:Key="MarginValue">4</sys:Double>
 
     <Thickness x:Key="DefaultMargin"
                Left="{StaticResource MarginValue}" 
@@ -80,8 +80,9 @@
 
     <!--PB margin-->
     <Thickness x:Key="VerticalPBMargin" Left="0" Top="8" Right="0" Bottom="9"/>
-    
-    <!--Paddings-->
+    <Thickness x:Key="HorizontalPBMargin" Left="8" Top="2" Right="8" Bottom="2"/>
+
+<!--Paddings-->
 
     <sys:Double x:Key="PaddingValue">2</sys:Double>
     
