@@ -280,7 +280,19 @@
                     IsSnapToTickEnabled="True"
                     TickFrequency="{Binding GeometrySliderTickFrequency}" 
                     Margin="{StaticResource HorizontalPBMargin}"
-            />
+                    MouseEnter="{cmnds:EventToCommand SliderMoveToolTipHandlerCommand}"
+                    MouseLeave="{cmnds:EventToCommand SliderMoveToolTipHandlerCommand}"
+                    Background="Transparent" 
+                    ToolTipService.ShowDuration="30000" 
+                    ToolTipService.InitialShowDelay="0"
+                    ToolTipService.BetweenShowDelay="10"
+                    >
+                <Slider.ToolTip>
+                    <ToolTip Content="{Binding ImageApertureSize}" 
+                             Visibility="Hidden"/>
+                </Slider.ToolTip>
+            </Slider>
+
             <Slider Grid.Column="5" Grid.Row="2" VerticalAlignment="Center"
                     HorizontalAlignment="Stretch" Width="Auto"
                     Minimum="{Binding MinGeometryWidth}"

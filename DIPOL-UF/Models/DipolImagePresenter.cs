@@ -31,6 +31,16 @@ namespace DIPOL_UF.Models
         private static List<Func<double, double, GeometryDescriptor>>  AvailableGeometries { get; }
         public static List<string> GeometriesAliases { get; }
 
+        private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
+        {
+            Interval = TimeSpan.FromMilliseconds(250),
+            IsEnabled = false
+        };
+        private readonly DispatcherTimer _imageSamplerTimer = new DispatcherTimer()
+        {
+            Interval = TimeSpan.FromMilliseconds(100),
+            IsEnabled = false
+        };
         private Image _sourceImage;
         private Image _displayedImage;
         private WriteableBitmap _bitmapSource;
@@ -41,6 +51,7 @@ namespace DIPOL_UF.Models
         private DelegateCommand _thumbValueChangedCommand;
         private DelegateCommand _mouseHoverCommand;
         private DelegateCommand _sizeChangedCommand;
+        private DelegateCommand _sliderMoveToolTipHandlerCommand;
         private Point _samplerCenterPos;
         private bool _isMouseOverImage;
         private bool _isMouseOverUIControl;
@@ -59,16 +70,7 @@ namespace DIPOL_UF.Models
         private double _maxApertureWidth = 100;
         private double _maxGapWidth = 100;
         private double _maxAnnulusWidth = 100;
-        private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
-        {
-            Interval = TimeSpan.FromMilliseconds(250),
-            IsEnabled = false
-        };
-        private readonly DispatcherTimer _imageSamplerTimer = new DispatcherTimer()
-        {
-            Interval = TimeSpan.FromMilliseconds(100),
-            IsEnabled = false
-        };
+        private bool _isApertureSliderToolTipShown = false;
 
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
         private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
@@ -423,6 +425,15 @@ namespace DIPOL_UF.Models
                 RaisePropertyChanged();
             }
         }
+        public DelegateCommand SliderMoveToolTipHandlerCommand
+        {
+            get => _sliderMoveToolTipHandlerCommand;
+            set
+            {
+                _sliderMoveToolTipHandlerCommand = value;
+                RaisePropertyChanged();
+            }
+        }
 
         public WriteableBitmap BitmapSource
         {
@@ -434,7 +445,20 @@ namespace DIPOL_UF.Models
             }
 
         }
-        
+
+        public bool IsApertureSliderToolTipShown
+        {
+            get => _isApertureSliderToolTipShown;
+            set
+            {
+                if (value != _isApertureSliderToolTipShown)
+                {
+                    _isApertureSliderToolTipShown = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
         public DipolImagePresenter()
         {
             InitializeCommands();
@@ -514,6 +538,7 @@ namespace DIPOL_UF.Models
             }
 
             DisplayedImage.Scale(0, 1);
+            SamplerCenterPos = new Point(DisplayedImage.Width/2.0, DisplayedImage.Height/2.0);
         }
         private async Task UpdateBitmapAsync()
         {
@@ -531,12 +556,7 @@ namespace DIPOL_UF.Models
 
             }
 
-            //var temp = DisplayedImage.Copy();
-            //temp.Clamp(LeftScale, RightScale);
-            //temp.Scale(0, 1);
-
-            //var bytes = temp.GetBytes();
-
+          
             var bytes = await Task.Run(() =>
             {
                 var temp = DisplayedImage.Copy();
@@ -559,6 +579,7 @@ namespace DIPOL_UF.Models
                 Helper.ExecuteOnUI(_bitmapSource.Unlock);
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(BitmapSource)));
             }
+
         }
         private void InitializeCommands()
         {
@@ -572,6 +593,10 @@ namespace DIPOL_UF.Models
 
             SizeChangedCommand = new DelegateCommand(
                 SizeChangedCommandExecute,
+                DelegateCommand.CanExecuteAlways);
+
+            SliderMoveToolTipHandlerCommand = new DelegateCommand(
+                SliderMoveToolTipHandlerCommandExecute,
                 DelegateCommand.CanExecuteAlways);
             
         }
@@ -684,7 +709,9 @@ namespace DIPOL_UF.Models
                         LastKnownImageControlSize.Height - SamplerGeometry.HalfSize.Height)
                 );
             else
-                SamplerCenterPos = new Point(0, 0);
+                SamplerCenterPos = DisplayedImage != null
+                    ? new Point(DisplayedImage.Width / 2.0, DisplayedImage.Height / 2.0)
+                    : new Point(0, 0);
         }
 
         private void UpdateGeometrySizeRanges()
@@ -885,6 +912,14 @@ namespace DIPOL_UF.Models
             {
                 ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width/DisplayedImage.Width, 
                                               args.EventArgs.NewSize.Height/DisplayedImage.Height);
+            }
+        }
+        private void SliderMoveToolTipHandlerCommandExecute(object parameter)
+        {
+            if (parameter is CommandEventArgs<MouseEventArgs> e)
+            {
+                IsApertureSliderToolTipShown = (e.EventArgs.RoutedEvent.Name == nameof(UserControl.MouseEnter));
+                //IsApertureSliderToolTipShown = !IsApertureSliderToolTipShown;
             }
         }
 

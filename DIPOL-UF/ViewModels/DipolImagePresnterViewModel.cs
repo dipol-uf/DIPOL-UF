@@ -72,6 +72,7 @@ namespace DIPOL_UF.ViewModels
         public ICommand ThumbValueChangedCommand => model.ThumbValueChangedCommand;
         public ICommand MouseHoverCommand => model.MouseHoverCommand;
         public ICommand SizeChangedCommand => model.SizeChangedCommand;
+        public ICommand SliderMoveToolTipHandlerCommand => model.SliderMoveToolTipHandlerCommand;
 
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
@@ -95,6 +96,10 @@ namespace DIPOL_UF.ViewModels
 
         public bool IsImageLoaded => model.BitmapSource != null;
         public bool IsMouseOverUIControl => model.IsMouseOverUIControl;
+
+        public bool IsApertureSliderToolTipShown => model.IsApertureSliderToolTipShown;
+
+
         public DipolImagePresnterViewModel(DipolImagePresenter model) : base(model)
         {
 
