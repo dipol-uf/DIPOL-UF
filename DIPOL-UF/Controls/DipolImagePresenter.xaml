@@ -8,6 +8,7 @@
              xmlns:locl="clr-namespace:DIPOL_UF"
              xmlns:p="clr-namespace:DIPOL_UF.Properties"
              Background="Beige" Style="{StaticResource ResourceKey=SmallFont}"
+             MinWidth="400"
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="700" 
              d:DataContext="{d:DesignInstance Type=vms:DipolImagePresnterViewModel}"
@@ -87,7 +88,8 @@
 
         </Grid>
         <!-- Image sampler info & controls -->
-        <Grid Row="2" HorizontalAlignment="Center" 
+        <Grid Row="2" HorizontalAlignment="Stretch" 
+              MinWidth="400" MaxWidth="800"
               IsEnabled="{Binding IsImageLoaded, Mode=OneWay}" >
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -95,7 +97,7 @@
                 <ColumnDefinition Width="*" MinWidth="110"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="1.5*"/>
+                <ColumnDefinition Width="1.5*" MinWidth="110"/>
                 </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition/>
@@ -162,6 +164,38 @@
                        HorizontalAlignment="Left" VerticalAlignment="Center"
                        Text="{locl:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
 
+            <!-- Aperture control labels -->
+            <!-- Header -->
+            <TextBlock Grid.Row="0" Grid.Column="4" Grid.ColumnSpan="2"
+                       Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                       Text="{locl:Text 
+                            Key=DipolImagePresenter_ApertureControlGroup, 
+                            Format='{}{0}:'}"/>
+            <TextBlock Grid.Row="1" Grid.Column="4" 
+                       Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Aperture}"/>
+            <TextBlock Grid.Row="2" Grid.Column="4" 
+                       Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Gap}"/>
+            <TextBlock Grid.Row="3" Grid.Column="4" 
+                       Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Annulus}"/>
+            <TextBlock Grid.Row="4" Grid.Column="4" 
+                       Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=General_Color}"/>
+            <TextBlock Grid.Row="5" Grid.Column="4" 
+                       Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Type}"/>
+            <TextBlock Grid.Row="6" Grid.Column="4" 
+                       Style="{StaticResource ContentFont_TextBlock}"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Thickness}"/>
             <!-- Left data -->
             <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxStyle}" 
                      IsReadOnly="True" TextAlignment="Right"
@@ -266,6 +300,8 @@
                     Margin="{StaticResource HorizontalPBMargin}"
             />
             <ComboBox Grid.Column="5" Grid.Row="4"
+                      HorizontalAlignment="Stretch"
+                      MaxWidth="165"
                       SelectedIndex="0"
                       Style="{StaticResource ComboBoxStyle}"
                       ItemsSource="{StaticResource ColorPickerColors}"
@@ -273,14 +309,18 @@
                         SamplerColor, 
                         Mode=OneWayToSource, 
                         UpdateSourceTrigger=PropertyChanged}" 
-                      Margin="{StaticResource HorizontalPBMargin}">
+                      Margin="{StaticResource HorizontalPBMargin}"
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
-                        <Border Width="100" Height="20" Background="{Binding}" BorderBrush="Black" BorderThickness="1"/>
+                        <Border Background="{Binding}" MinWidth="20"  BorderBrush="Black" BorderThickness="1"/>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
             <ComboBox Grid.Column="5" Grid.Row="5"
+                      HorizontalAlignment="Stretch"
+                      MaxWidth="165"
                       Style="{StaticResource ComboBoxStyle}"
                       ItemsSource="{Binding GeometryAliasCollection, Mode=OneTime}"
                       SelectedIndex="{Binding SelectedGeometryIndex, UpdateSourceTrigger=PropertyChanged}"
