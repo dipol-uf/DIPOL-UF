@@ -26,16 +26,15 @@
               MouseMove="{cmnds:EventToCommand MouseHoverCommand}"
               MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
               MouseLeave="{cmnds:EventToCommand MouseHoverCommand}">
-            <Image x:Name="Im"
+            <Image x:Name="Im" MinWidth="200" MinHeight="100"
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                 Source="{Binding BitmapSource, Mode=OneWay}"
                 SizeChanged="{cmnds:EventToCommand SizeChangedCommand}"
                 Cursor="Cross"
                />
-            <Canvas Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" 
+            <Canvas Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top"
                     Width="{Binding ElementName=Im, Path=ActualWidth}"
-                    Height="{Binding ElementName=Im, Path=ActualHeight}"
-                    >
+                    Height="{Binding ElementName=Im, Path=ActualHeight}">
                 <Path 
                     Data="{Binding ApertureGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
                     StrokeThickness="{Binding ApertureGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
@@ -280,11 +279,6 @@
                     IsSnapToTickEnabled="True"
                     TickFrequency="{Binding GeometrySliderTickFrequency}" 
                     Margin="{StaticResource HorizontalPBMargin}"
-                    MouseEnter="{cmnds:EventToCommand SliderMoveToolTipHandlerCommand}"
-                    MouseLeave="{cmnds:EventToCommand SliderMoveToolTipHandlerCommand}"
-                    ToolTipService.ShowDuration="30000" 
-                    ToolTipService.InitialShowDelay="0"
-                    ToolTipService.BetweenShowDelay="10"
                     Style="{StaticResource SliderWithValueToolTip}"
                     />
 

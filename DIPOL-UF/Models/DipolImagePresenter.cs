@@ -51,7 +51,6 @@ namespace DIPOL_UF.Models
         private DelegateCommand _thumbValueChangedCommand;
         private DelegateCommand _mouseHoverCommand;
         private DelegateCommand _sizeChangedCommand;
-        private DelegateCommand _sliderMoveToolTipHandlerCommand;
         private Point _samplerCenterPos;
         private bool _isMouseOverImage;
         private bool _isMouseOverUIControl;
@@ -70,7 +69,6 @@ namespace DIPOL_UF.Models
         private double _maxApertureWidth = 100;
         private double _maxGapWidth = 100;
         private double _maxAnnulusWidth = 100;
-        private bool _isApertureSliderToolTipShown = false;
 
         private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
         private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
@@ -425,15 +423,6 @@ namespace DIPOL_UF.Models
                 RaisePropertyChanged();
             }
         }
-        public DelegateCommand SliderMoveToolTipHandlerCommand
-        {
-            get => _sliderMoveToolTipHandlerCommand;
-            set
-            {
-                _sliderMoveToolTipHandlerCommand = value;
-                RaisePropertyChanged();
-            }
-        }
 
         public WriteableBitmap BitmapSource
         {
@@ -445,20 +434,7 @@ namespace DIPOL_UF.Models
             }
 
         }
-
-        public bool IsApertureSliderToolTipShown
-        {
-            get => _isApertureSliderToolTipShown;
-            set
-            {
-                if (value != _isApertureSliderToolTipShown)
-                {
-                    _isApertureSliderToolTipShown = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
+        
         public DipolImagePresenter()
         {
             InitializeCommands();
@@ -595,10 +571,6 @@ namespace DIPOL_UF.Models
                 SizeChangedCommandExecute,
                 DelegateCommand.CanExecuteAlways);
 
-            SliderMoveToolTipHandlerCommand = new DelegateCommand(
-                SliderMoveToolTipHandlerCommandExecute,
-                DelegateCommand.CanExecuteAlways);
-            
         }
         private void InitializeSamplerGeometry()
         {
@@ -908,18 +880,17 @@ namespace DIPOL_UF.Models
         }
         private void SizeChangedCommandExecute(object parameter)
         {
-            if (parameter is CommandEventArgs<SizeChangedEventArgs> args)
+            if (parameter is CommandEventArgs<SizeChangedEventArgs> args )
             {
+                var oldPixPos = SamplerCenterPosInPix;
+                LastKnownImageControlSize = args.EventArgs.NewSize;
+                SamplerCenterPos = new Point(
+                    oldPixPos.X * 
+                        args.EventArgs.NewSize.Width / DisplayedImage.Width,
+                    oldPixPos.Y * 
+                        args.EventArgs.NewSize.Height / DisplayedImage.Height);
                 ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width/DisplayedImage.Width, 
                                               args.EventArgs.NewSize.Height/DisplayedImage.Height);
-            }
-        }
-        private void SliderMoveToolTipHandlerCommandExecute(object parameter)
-        {
-            if (parameter is CommandEventArgs<MouseEventArgs> e)
-            {
-                IsApertureSliderToolTipShown = (e.EventArgs.RoutedEvent.Name == nameof(UserControl.MouseEnter));
-                //IsApertureSliderToolTipShown = !IsApertureSliderToolTipShown;
             }
         }
 
