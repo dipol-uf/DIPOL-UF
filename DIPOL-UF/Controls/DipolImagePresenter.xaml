@@ -282,16 +282,11 @@
                     Margin="{StaticResource HorizontalPBMargin}"
                     MouseEnter="{cmnds:EventToCommand SliderMoveToolTipHandlerCommand}"
                     MouseLeave="{cmnds:EventToCommand SliderMoveToolTipHandlerCommand}"
-                    Background="Transparent" 
                     ToolTipService.ShowDuration="30000" 
                     ToolTipService.InitialShowDelay="0"
                     ToolTipService.BetweenShowDelay="10"
-                    >
-                <Slider.ToolTip>
-                    <ToolTip Content="{Binding ImageApertureSize}" 
-                             Visibility="Hidden"/>
-                </Slider.ToolTip>
-            </Slider>
+                    Style="{StaticResource SliderWithValueToolTip}"
+                    />
 
             <Slider Grid.Column="5" Grid.Row="2" VerticalAlignment="Center"
                     HorizontalAlignment="Stretch" Width="Auto"
@@ -301,6 +296,7 @@
                     IsSnapToTickEnabled="True"
                     TickFrequency="{Binding GeometrySliderTickFrequency}" 
                     Margin="{StaticResource HorizontalPBMargin}"
+                    Style="{StaticResource SliderWithValueToolTip}"
             />
             <Slider Grid.Column="5" Grid.Row="3"  VerticalAlignment="Center"
                     HorizontalAlignment="Stretch" Width="Auto"
@@ -310,6 +306,7 @@
                     IsSnapToTickEnabled="True"
                     TickFrequency="{Binding GeometrySliderTickFrequency}" 
                     Margin="{StaticResource HorizontalPBMargin}"
+                    Style="{StaticResource SliderWithValueToolTip}"
             />
             <ComboBox Grid.Column="5" Grid.Row="4"
                       HorizontalAlignment="Stretch"
@@ -326,7 +323,7 @@
                       VerticalContentAlignment="Stretch">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="{Binding}" MinWidth="20"  BorderBrush="Black" BorderThickness="1"/>
+                        <Border Background="{Binding}" MinHeight="20"  BorderBrush="Black" BorderThickness="1"/>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>

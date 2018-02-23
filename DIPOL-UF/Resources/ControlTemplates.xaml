@@ -4,6 +4,12 @@
     <Style x:Key="ThumbWithValueToolTip" TargetType="Thumb">
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Foreground" >
+            <Setter.Value>
+                <RadialGradientBrush  SpreadMethod="Pad" 
+                                      GradientStops="{StaticResource SliderThumbRadialGradientCollection}"/>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Template" >
             <Setter.Value>
                 <ControlTemplate  TargetType="Thumb">
@@ -31,33 +37,40 @@
                                     </Binding>
                                 </Border.Margin>
                                 <TextBlock TextAlignment="Center" 
-                                               HorizontalAlignment="Stretch"
-                                               Margin="2" Padding="2">
+                                           HorizontalAlignment="Stretch"
+                                           Margin="2" Padding="2"
+                                           Foreground="{x:Static SystemColors.InfoTextBrush}">
                                     <TextBlock.Text>
                                         <Binding Path="Value"
                                                      RelativeSource="{RelativeSource FindAncestor,
                                                         AncestorType=Slider}"
                                                      StringFormat="{loc:Text Key=Slider_PixelToolTipFormat}"/>
                                     </TextBlock.Text>
-                                    <TextBlock.Visibility>
-                                        <Binding Path="IsMouseOver"
-                                                     RelativeSource="{RelativeSource FindAncestor,
-                                                        AncestorType=Slider}"
-                                                     Converter="{StaticResource BoolToVisibilityConverter}"
-                                                     ConverterParameter="{x:Static Visibility.Visible}"/>
-                                    </TextBlock.Visibility>
-
                                 </TextBlock>
-
                             </Border>
+                            <ContentControl.Visibility>
+                                <Binding Path="IsMouseOver"
+                                         RelativeSource="{RelativeSource FindAncestor,
+                                            AncestorType=Slider}"
+                                         Converter="{StaticResource BoolToVisibilityConverter}"
+                                         ConverterParameter="{x:Static Visibility.Collapsed}"/>
+                            </ContentControl.Visibility>
                         </ContentControl>
-                        <Ellipse Grid.Row="1"  Height="20" Width="20"
-                                     Margin="0, 0, 0, 0">
-                            <Ellipse.Fill>
-                                <SolidColorBrush Color="Coral"/>
-                            </Ellipse.Fill>
-                        </Ellipse>
+                        <Ellipse x:Name="PART_ThumbGeometry"
+                                 Grid.Row="1"  Height="20" Width="20"
+                                 Margin="0" StrokeThickness="1"
+                                 Stroke="{x:Static SystemColors.ActiveBorderBrush}"
+                                 Fill="{TemplateBinding Foreground}"
+                                 />
                     </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Fill" TargetName="PART_ThumbGeometry" 
+                                    Value="{StaticResource ColorDisabled}"/>
+                            <Setter Property="Stroke" TargetName="PART_ThumbGeometry" 
+                                    Value="{StaticResource BorderColorDisabled}"/>
+                       </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -84,8 +97,7 @@
                                 RelativeSource={RelativeSource
                                     Mode=FindAncestor,
                                     AncestorType=RepeatButton},
-                                Path=BorderBrush}"
-                            />
+                                Path=BorderBrush}"/>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -94,6 +106,14 @@
     <Style x:Key="SliderWithValueToolTip" TargetType="Slider">
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush 
+                    GradientStops="{StaticResource SliderTrackGradientCollection}"
+                    StartPoint="0, 0"
+                    EndPoint="0,1"/>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Template" >
             <Setter.Value>
                 <ControlTemplate TargetType="Slider">
@@ -103,9 +123,10 @@
                         </Grid.RowDefinitions>
                         <Border Grid.Row="0" Name="PART_Border"
                                 VerticalAlignment="Center" HorizontalAlignment="Stretch"
-                                Height="7" 
+                                Height="8" 
                                 BorderThickness="1"
-                                BorderBrush="Black"
+                                BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrush}}"
+                                Margin="3, 0, 3, 0"
                                 Background="{TemplateBinding Background}"/>
                         <Track Grid.Row="0" x:Name="PART_Track"
                                VerticalAlignment="Center"
@@ -128,6 +149,14 @@
                             </Track.IncreaseRepeatButton>
                         </Track>
                     </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="PART_Border" Property="Background" 
+                                    Value="{StaticResource ColorDisabled}"/>
+                            <Setter TargetName="PART_Border" Property="BorderBrush" 
+                                    Value="{StaticResource BorderColorDisabled}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
