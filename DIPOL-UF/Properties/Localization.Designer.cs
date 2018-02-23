@@ -214,6 +214,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0:f0} pix.
+        /// </summary>
+        public static string Slider_PixelToolTipFormat {
+            get {
+                return ResourceManager.GetString("Slider_PixelToolTipFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0:g7}.
         /// </summary>
         public static string StringFormat_Float_DipolImagePresenter_Statistics {

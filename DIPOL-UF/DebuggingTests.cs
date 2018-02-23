@@ -46,7 +46,7 @@ namespace Tests
                 var viewModel = new DipolImagePresnterViewModel(model);
                 var wind = new DebugWindow()
                 {
-                    TestPresenter = {DataContext = viewModel}
+                    //TestPresenter = {DataContext = viewModel}
                 };
                 var buffer = new byte[1024  * 512 * sizeof(ushort)];
                 

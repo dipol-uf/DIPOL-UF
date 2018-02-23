@@ -117,6 +117,7 @@
     <Compile Include="Converters\CameraStatsToValueMultiValueConverter.cs" />
     <Compile Include="Converters\CameraToStringAliasValueConverter.cs" />
     <Compile Include="Converters\EnumToDescriptionValueConverter.cs" />
+    <Compile Include="Converters\MarginModifierValueConverter.cs" />
     <Compile Include="Converters\SingleDoubleToStringValueConverter.cs" />
     <Compile Include="Converters\TemperatureStatusToBrushMultiValueConverter.cs" />
     <Compile Include="Converters\TemperatureToBrushMultiValueConverter.cs" />
@@ -190,6 +191,10 @@
     <Page Include="DebugWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\ControlTemplates.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Resources\DataProviders.xaml">
       <SubType>Designer</SubType>

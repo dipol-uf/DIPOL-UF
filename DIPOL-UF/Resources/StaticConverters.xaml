@@ -17,4 +17,5 @@
     <cnvrt:BoolToBoolMultiValueConverter x:Key="BoolToBoolMultiConverter"/>
     <cnvrt:ValueTupleToValueValueConverter x:Key="ValueTupleToValueConverter"/>
     <cnvrt:GeometryRulesToStreamGeometryValueConverter x:Key="GeometryRulesToStreamGeometryConverter"/>
+    <cnvrt:MarginModifierValueConverter x:Key="MarginModifierConverter"/>
 </ResourceDictionary>

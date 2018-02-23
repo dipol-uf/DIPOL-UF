@@ -168,6 +168,10 @@
   <data name="General_Color" xml:space="preserve">
     <value>Color</value>
   </data>
+  <data name="Slider_PixelToolTipFormat" xml:space="preserve">
+    <value>{0:f0} pix</value>
+    <comment>\</comment>
+  </data>
   <data name="StringFormat_Float_DipolImagePresenter_Statistics" xml:space="preserve">
     <value>{0:g7}</value>
     <comment>Nonlocalized general resource</comment>
