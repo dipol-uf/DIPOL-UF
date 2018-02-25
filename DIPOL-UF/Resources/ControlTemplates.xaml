@@ -125,7 +125,7 @@
                                 VerticalAlignment="Center" HorizontalAlignment="Stretch"
                                 Height="8" 
                                 BorderThickness="1"
-                                BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrush}}"
+                                BorderBrush="{x:Static SystemColors.ActiveBorderBrush}"
                                 Margin="3, 0, 3, 0"
                                 Background="{TemplateBinding Background}"/>
                         <Track Grid.Row="0" x:Name="PART_Track"
