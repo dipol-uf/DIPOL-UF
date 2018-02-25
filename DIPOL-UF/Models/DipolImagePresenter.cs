@@ -640,7 +640,7 @@ namespace DIPOL_UF.Models
                 }
 
                 if (intens > 0 && n > 0 && annSd > 0)
-                    snr = intens / annSd / n;
+                    snr = intens / annSd / Math.Sqrt(n);
                 
             });
 
