@@ -51,9 +51,11 @@ namespace DIPOL_UF.Models
         private DelegateCommand _thumbValueChangedCommand;
         private DelegateCommand _mouseHoverCommand;
         private DelegateCommand _sizeChangedCommand;
+        private DelegateCommand _imageDoubleClickCommand;
         private Point _samplerCenterPos;
         private bool _isMouseOverImage;
         private bool _isMouseOverUIControl;
+        private bool _isSamplerFixed;
         private Size _lastKnownImageControlSize;
         private int _selectedGeometryIndex = 1;
         private double _imageSamplerScaleFactor = 1.0;
@@ -394,6 +396,18 @@ namespace DIPOL_UF.Models
                 }
             }
         }
+        public bool IsSamplerFixed
+        {
+            get => _isSamplerFixed;
+            set
+            {
+                if (value != _isSamplerFixed)
+                {
+                    _isSamplerFixed = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
 
         public DelegateCommand ThumbValueChangedCommand
         {
@@ -420,6 +434,15 @@ namespace DIPOL_UF.Models
             set
             {
                 _sizeChangedCommand = value;
+                RaisePropertyChanged();
+            }
+        }
+        public DelegateCommand ImageDoubleClickCommand
+        {
+            get => _imageDoubleClickCommand;
+            set
+            {
+                _imageDoubleClickCommand = value;
                 RaisePropertyChanged();
             }
         }
@@ -571,6 +594,9 @@ namespace DIPOL_UF.Models
                 SizeChangedCommandExecute,
                 DelegateCommand.CanExecuteAlways);
 
+            ImageDoubleClickCommand = new DelegateCommand(
+                ImageDoubleClickCommandExecute,
+                DelegateCommand.CanExecuteAlways);
         }
         private void InitializeSamplerGeometry()
         {
@@ -657,7 +683,7 @@ namespace DIPOL_UF.Models
             RaisePropertyChanged(nameof(ImageStats));
 
         }
-        private void UpdateGeometry()
+        private async Task UpdateGeometryAsync()
         {
             ApertureGeometry = AvailableGeometries[SelectedGeometryIndex](
                 ImageSamplerScaleFactor * ImageApertureSize,
@@ -684,6 +710,8 @@ namespace DIPOL_UF.Models
                 SamplerCenterPos = DisplayedImage != null
                     ? new Point(DisplayedImage.Width / 2.0, DisplayedImage.Height / 2.0)
                     : new Point(0, 0);
+
+            await CalculateStatisticsAsync();
         }
 
         private void UpdateGeometrySizeRanges()
@@ -822,7 +850,8 @@ namespace DIPOL_UF.Models
 
         private void MouseHoverCommandExecute(object parameter)
         {
-            if (DisplayedImage == null)
+            if (DisplayedImage == null ||
+                IsSamplerFixed)
                 return;
             if (parameter is CommandEventArgs<MouseEventArgs> eUI &&
                 eUI.Sender is UserControl)
@@ -893,8 +922,15 @@ namespace DIPOL_UF.Models
                                               args.EventArgs.NewSize.Height/DisplayedImage.Height);
             }
         }
+        private void ImageDoubleClickCommandExecute(object parameter)
+        {
+            if (parameter is CommandEventArgs<MouseButtonEventArgs> args &&
+                args.EventArgs.LeftButton == MouseButtonState.Pressed &&
+                args.EventArgs.ClickCount == 2)
+                IsSamplerFixed = !IsSamplerFixed;
+        }
 
-        protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        protected override async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnPropertyChanged(sender, e);
 
@@ -906,7 +942,7 @@ namespace DIPOL_UF.Models
                     ImageStats[key] = 0.0;
 
                 RaisePropertyChanged(nameof(ImageStats));
-                UpdateGeometry();
+                await UpdateGeometryAsync();
             }
 
 
@@ -914,7 +950,7 @@ namespace DIPOL_UF.Models
                 e.PropertyName == nameof(SelectedGeometryIndex) ||
                 e.PropertyName == nameof(ImageSamplerThickness) ||
                 e.PropertyName == nameof(ImageSamplerSize))
-                UpdateGeometry();
+                await UpdateGeometryAsync();
                 
         }
 

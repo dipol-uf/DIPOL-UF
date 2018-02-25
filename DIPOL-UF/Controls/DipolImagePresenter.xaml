@@ -25,7 +25,8 @@
               Background="Transparent" Margin="10"
               MouseMove="{cmnds:EventToCommand MouseHoverCommand}"
               MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
-              MouseLeave="{cmnds:EventToCommand MouseHoverCommand}">
+              MouseLeave="{cmnds:EventToCommand MouseHoverCommand}"
+              MouseLeftButtonDown="{cmnds:EventToCommand ImageDoubleClickCommand}">
             <Image x:Name="Im" MinWidth="200" MinHeight="100"
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                 Source="{Binding BitmapSource, Mode=OneWay}"
@@ -38,7 +39,7 @@
                 <Path 
                     Data="{Binding ApertureGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
                     StrokeThickness="{Binding ApertureGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
-                    Visibility="{Binding IsMouseOverUIControl, Converter={StaticResource BoolToVisibilityConverter}}">
+                    Visibility="{Binding IsGeometryDisplayed, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path.RenderTransform>
                         <TranslateTransform X="{Binding AperturePos.X}" Y ="{Binding AperturePos.Y}"/>
                     </Path.RenderTransform>
@@ -46,7 +47,7 @@
                 <Path 
                     Data="{Binding GapGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
                     StrokeThickness="{Binding GapGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
-                    Visibility="{Binding IsMouseOverUIControl, Converter={StaticResource BoolToVisibilityConverter}}">
+                    Visibility="{Binding IsGeometryDisplayed, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path.RenderTransform>
                         <TranslateTransform X="{Binding GapPos.X}" Y ="{Binding GapPos.Y}"/>
                     </Path.RenderTransform>
@@ -54,7 +55,7 @@
                 <Path 
                     Data="{Binding SamplerGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
                     StrokeThickness="{Binding SamplerGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
-                    Visibility="{Binding IsMouseOverUIControl, Converter={StaticResource BoolToVisibilityConverter}}">
+                    Visibility="{Binding IsGeometryDisplayed, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path.RenderTransform>
                         <TranslateTransform X="{Binding SamplerPos.X}" Y ="{Binding SamplerPos.Y}"/>
                     </Path.RenderTransform>

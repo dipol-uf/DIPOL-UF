@@ -72,6 +72,7 @@ namespace DIPOL_UF.ViewModels
         public ICommand ThumbValueChangedCommand => model.ThumbValueChangedCommand;
         public ICommand MouseHoverCommand => model.MouseHoverCommand;
         public ICommand SizeChangedCommand => model.SizeChangedCommand;
+        public ICommand ImageDoubleClickCommand => model.ImageDoubleClickCommand;
 
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
@@ -95,6 +96,8 @@ namespace DIPOL_UF.ViewModels
 
         public bool IsImageLoaded => model.BitmapSource != null;
         public bool IsMouseOverUIControl => model.IsMouseOverUIControl;
+        public bool IsSamplerFixed => model.IsSamplerFixed;
+        public bool IsGeometryDisplayed => IsMouseOverUIControl || IsSamplerFixed;
 
         public DipolImagePresnterViewModel(DipolImagePresenter model) : base(model)
         { 
@@ -122,6 +125,12 @@ namespace DIPOL_UF.ViewModels
                     break;
                 case nameof(model.SamplerGeometry):
                     Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
+                    break;
+                case nameof(IsMouseOverUIControl):
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsGeometryDisplayed)));
+                    break;
+                case nameof(IsSamplerFixed):
+                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsGeometryDisplayed)));
                     break;
             }
         }
