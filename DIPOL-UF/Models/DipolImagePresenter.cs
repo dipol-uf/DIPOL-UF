@@ -956,8 +956,10 @@ namespace DIPOL_UF.Models
 
         protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            // Base property change
             base.OnPropertyChanged(sender, e);
 
+            // Occurs when geometric propertoes of the sampler are changed
             if (e.PropertyName == nameof(ImageSamplerScaleFactor) ||
                 e.PropertyName == nameof(SelectedGeometryIndex) ||
                 e.PropertyName == nameof(ImageSamplerThickness) ||
@@ -969,6 +971,8 @@ namespace DIPOL_UF.Models
                 ResetStatisticsTimer();
             }
 
+            // Occurs when Sampler is no longer fixed and is moved to the place of 
+            // double-click; updates image stats
             if (e.PropertyName == nameof(IsSamplerFixed) &&
                 !IsSamplerFixed)
             {
@@ -976,6 +980,9 @@ namespace DIPOL_UF.Models
                 ResetStatisticsTimer();
             }
 
+            // Happens when Pixel position is changed. 
+            // Calculates value in pixel and resets timer to 
+            // recalculate stats
             if (e.PropertyName == nameof(SamplerCenterPosInPix) &&
                 _sourceImage != null &&
                 !LastKnownImageControlSize.IsEmpty)
@@ -986,6 +993,7 @@ namespace DIPOL_UF.Models
                 ResetStatisticsTimer();
             }
 
+            // Recalculates maximum allowed sampler sizes after image is changed
             if(e.PropertyName == nameof(DisplayedImage))
                 UpdateGeometrySizeRanges();
 
