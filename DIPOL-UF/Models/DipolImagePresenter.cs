@@ -52,7 +52,7 @@ namespace DIPOL_UF.Models
         private DelegateCommand _mouseHoverCommand;
         private DelegateCommand _sizeChangedCommand;
         private DelegateCommand _imageDoubleClickCommand;
-        private Point _samplerCenterPos;
+        private Point _samplerCenterPosInPix;
         private bool _isMouseOverImage;
         private bool _isMouseOverUIControl;
         private bool _isSamplerFixed;
@@ -178,20 +178,19 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public Point SamplerCenterPos
+        public Point SamplerCenterPosInPix
         {
-            get => _samplerCenterPos;
+            get => _samplerCenterPosInPix;
             set
             {
-                if (!value.Equals(_samplerCenterPos))
+                if (value != _samplerCenterPosInPix)
                 {
-                    _samplerCenterPos = value;
+                    _samplerCenterPosInPix = value;
                     RaisePropertyChanged();
-                    RaisePropertyChanged(nameof(SamplerCenterPosInPix));
                 }
             }
         }
-        public Point SamplerCenterPosInPix => GetPixelScale(SamplerCenterPos);
+        public Point SamplerCenterPos => GetImageScale(SamplerCenterPosInPix);
         public GeometryDescriptor SamplerGeometry
         {
             get => _samplerGeometry;
@@ -537,7 +536,9 @@ namespace DIPOL_UF.Models
             }
 
             DisplayedImage.Scale(0, 1);
-            SamplerCenterPos = new Point(DisplayedImage.Width/2.0, DisplayedImage.Height/2.0);
+            SamplerCenterPosInPix = new Point(
+               DisplayedImage.Width / 2, 
+               DisplayedImage.Height / 2);
         }
         private async Task UpdateBitmapAsync()
         {
@@ -600,10 +601,10 @@ namespace DIPOL_UF.Models
         }
         private void InitializeSamplerGeometry()
         {
-            ApertureGeometry = AvailableGeometries[0](50, 1);
-            GapGeometry = AvailableGeometries[0](50, 1);
-            SamplerGeometry = AvailableGeometries[0](50,1);
-            SamplerCenterPos = new Point(30, 30);
+            ApertureGeometry = AvailableGeometries[0](1, 1);
+            GapGeometry = AvailableGeometries[0](1, 1);
+            SamplerGeometry = AvailableGeometries[0](1, 1);
+            SamplerCenterPosInPix = new Point(0, 0);
             LastKnownImageControlSize = Size.Empty;
         }
         private async Task CalculateStatisticsAsync()
@@ -698,17 +699,23 @@ namespace DIPOL_UF.Models
                 ImageSamplerThickness * ImageSamplerScaleFactor);
 
             if (!LastKnownImageControlSize.IsEmpty)
-                SamplerCenterPos = new Point(
-                    SamplerCenterPos.X.Clamp(
-                        SamplerGeometry.HalfSize.Width,
-                        LastKnownImageControlSize.Width - SamplerGeometry.HalfSize.Width),
-                    SamplerCenterPos.Y.Clamp(
-                        SamplerGeometry.HalfSize.Height,
-                        LastKnownImageControlSize.Height - SamplerGeometry.HalfSize.Height)
+                SamplerCenterPosInPix =  new Point(
+                    Math.Round(
+                        GetPixelScale(
+                            SamplerCenterPos.X.Clamp(
+                                SamplerGeometry.HalfSize.Width,
+                                LastKnownImageControlSize.Width - SamplerGeometry.HalfSize.Width))),
+                    Math.Round(
+                        GetPixelScale(
+                            SamplerCenterPos.Y.Clamp(
+                                SamplerGeometry.HalfSize.Height,
+                                LastKnownImageControlSize.Height - SamplerGeometry.HalfSize.Height)))
                 );
             else
-                SamplerCenterPos = DisplayedImage != null
-                    ? new Point(DisplayedImage.Width / 2.0, DisplayedImage.Height / 2.0)
+                SamplerCenterPosInPix = DisplayedImage != null
+                    ? new Point(
+                        DisplayedImage.Width / 2, 
+                        DisplayedImage.Height / 2)
                     : new Point(0, 0);
 
             await CalculateStatisticsAsync();
@@ -736,8 +743,8 @@ namespace DIPOL_UF.Models
             var posY = pos.Y.Clamp(
                 SamplerGeometry.HalfSize.Height,
                 elemSize.Height - SamplerGeometry.HalfSize.Height);
-            SamplerCenterPos = new Point(posX, posY);
             LastKnownImageControlSize = new Size(elemSize.Width, elemSize.Height);
+            SamplerCenterPosInPix = GetPixelScale(new Point(posX, posY));
         }
         private void ResetStatisticsTimer()
         {
@@ -763,6 +770,18 @@ namespace DIPOL_UF.Models
                     GetPixelScale(s.Width, true),
                     GetPixelScale(s.Height))
                 : s;
+        private double GetImageScale(double x, bool horizontal = false)
+            =>  x * (DisplayedImage != null && !LastKnownImageControlSize.IsEmpty
+                    ? (horizontal
+                        ? (LastKnownImageControlSize.Width / DisplayedImage.Width)
+                        : (LastKnownImageControlSize.Height / DisplayedImage.Height))
+                    : 1.0);
+        private Point GetImageScale(Point p)
+            => DisplayedImage != null
+                ? new Point(
+                    GetImageScale(p.X, true),
+                    GetImageScale(p.Y))
+                : p;
 
         private List<(int X, int Y)> GetPixelsInArea(GeometryLayer layer)
         {
@@ -897,16 +916,6 @@ namespace DIPOL_UF.Models
                 if (!IsMouseOverUIControl)
                     IsMouseOverUIControl = true;
 
-                //var pos = e.EventArgs.GetPosition(elem);
-                //var posX = pos.X.Clamp(
-                //    SamplerGeometry.HalfSize.Width,
-                //    elem.ActualWidth - SamplerGeometry.HalfSize.Width);
-                //var posY = pos.Y.Clamp(
-                //    SamplerGeometry.HalfSize.Height,
-                //    elem.ActualHeight- SamplerGeometry.HalfSize.Height);
-                //SamplerCenterPos = new Point(posX, posY);
-                //LastKnownImageControlSize = new Size(elem.ActualWidth, elem.ActualHeight);
-                
                 UpdateSamplerPosition(
                     new Size(elem.ActualWidth, elem.ActualHeight), 
                     e.EventArgs.GetPosition(elem));
@@ -926,15 +935,9 @@ namespace DIPOL_UF.Models
         {
             if (parameter is CommandEventArgs<SizeChangedEventArgs> args )
             {
-                var oldPixPos = SamplerCenterPosInPix;
                 LastKnownImageControlSize = args.EventArgs.NewSize;
-                SamplerCenterPos = new Point(
-                    oldPixPos.X * 
-                        args.EventArgs.NewSize.Width / DisplayedImage.Width,
-                    oldPixPos.Y * 
-                        args.EventArgs.NewSize.Height / DisplayedImage.Height);
-                ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width/DisplayedImage.Width, 
-                                              args.EventArgs.NewSize.Height/DisplayedImage.Height);
+                ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width/DisplayedImage.Width,
+                                              args.EventArgs.NewSize.Height / DisplayedImage.Height);
             }
         }
 
@@ -960,20 +963,6 @@ namespace DIPOL_UF.Models
         {
             base.OnPropertyChanged(sender, e);
 
-            //if (e.PropertyName == nameof(SourceI))
-            //{
-            //    IsMouseOverImage = false;
-            //    var keys = ImageStats.Keys.ToList();
-            //    foreach (var key in keys)
-            //        ImageStats[key] = 0.0;
-
-            //    RaisePropertyChanged(nameof(ImageStats));
-            //    await UpdateGeometryAsync();
-            //    UpdateSamplerPosition(LastKnownImageControlSize, SamplerCenterPos);
-            //    ResetStatisticsTimer();
-            //}
-
-
             if (e.PropertyName == nameof(ImageSamplerScaleFactor) ||
                 e.PropertyName == nameof(SelectedGeometryIndex) ||
                 e.PropertyName == nameof(ImageSamplerThickness) ||
@@ -984,12 +973,14 @@ namespace DIPOL_UF.Models
                 ResetStatisticsTimer();
             }
 
-            if (e.PropertyName == nameof(SamplerCenterPos) &&
+            if (e.PropertyName == nameof(SamplerCenterPosInPix) &&
                _sourceImage != null &&
                 !LastKnownImageControlSize.IsEmpty)
+            {
+                RaisePropertyChanged(nameof(SamplerCenterPos));
                 PixValue = _sourceImage.Get<float>(
                     Convert.ToInt32(SamplerCenterPosInPix.Y),
-                    Convert.ToInt32(SamplerCenterPosInPix.X));
+                    Convert.ToInt32(SamplerCenterPosInPix.X));}
 
         }
 
