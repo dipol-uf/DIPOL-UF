@@ -713,7 +713,6 @@ namespace DIPOL_UF.Models
 
             await CalculateStatisticsAsync();
         }
-
         private void UpdateGeometrySizeRanges()
         {
             if (_displayedImage == null)
@@ -726,7 +725,25 @@ namespace DIPOL_UF.Models
             MaxGapWidth = sizeFr;
             MaxAnnulusWidth = 2 * sizeFr;
         }
+        private void UpdateSamplerPosition(Size elemSize, Point pos)
+        {
+            if (elemSize.IsEmpty)
+                return;
 
+            var posX = pos.X.Clamp(
+                SamplerGeometry.HalfSize.Width,
+                elemSize.Width - SamplerGeometry.HalfSize.Width);
+            var posY = pos.Y.Clamp(
+                SamplerGeometry.HalfSize.Height,
+                elemSize.Height - SamplerGeometry.HalfSize.Height);
+            SamplerCenterPos = new Point(posX, posY);
+            LastKnownImageControlSize = new Size(elemSize.Width, elemSize.Height);
+        }
+        private void ResetStatisticsTimer()
+        {
+            if (!_imageSamplerTimer.IsEnabled)
+                _imageSamplerTimer.Start();
+        }
         // Presenter to pixel scale transformations
         private double GetPixelScale(double x, bool horizontal = false)
             => x * (DisplayedImage != null && !LastKnownImageControlSize.IsEmpty
@@ -875,28 +892,26 @@ namespace DIPOL_UF.Models
 
                 if (e.EventArgs.RoutedEvent.Name == nameof(FrameworkElement.MouseMove) &&
                     !IsMouseOverImage)
-                {
                     IsMouseOverImage = true;
-                }
 
                 if (!IsMouseOverUIControl)
                     IsMouseOverUIControl = true;
 
-                var pos = e.EventArgs.GetPosition(elem);
-                var posX = pos.X.Clamp(
-                    SamplerGeometry.HalfSize.Width,
-                    elem.ActualWidth - SamplerGeometry.HalfSize.Width);
-                var posY = pos.Y.Clamp(
-                    SamplerGeometry.HalfSize.Height,
-                    elem.ActualHeight- SamplerGeometry.HalfSize.Height);
-                SamplerCenterPos = new Point(posX, posY);
-                LastKnownImageControlSize = new Size(elem.ActualWidth, elem.ActualHeight);
-                PixValue = _sourceImage.Get<float>(
-                    Convert.ToInt32(posY / elem.ActualHeight * DisplayedImage.Height),
-                    Convert.ToInt32(posX / elem.ActualWidth * DisplayedImage.Width));
+                //var pos = e.EventArgs.GetPosition(elem);
+                //var posX = pos.X.Clamp(
+                //    SamplerGeometry.HalfSize.Width,
+                //    elem.ActualWidth - SamplerGeometry.HalfSize.Width);
+                //var posY = pos.Y.Clamp(
+                //    SamplerGeometry.HalfSize.Height,
+                //    elem.ActualHeight- SamplerGeometry.HalfSize.Height);
+                //SamplerCenterPos = new Point(posX, posY);
+                //LastKnownImageControlSize = new Size(elem.ActualWidth, elem.ActualHeight);
+                
+                UpdateSamplerPosition(
+                    new Size(elem.ActualWidth, elem.ActualHeight), 
+                    e.EventArgs.GetPosition(elem));
 
-                if (!_imageSamplerTimer.IsEnabled)
-                    _imageSamplerTimer.Start();
+                ResetStatisticsTimer();
             }
         }
         private void ThumbValueChangedCommandExecute(object parameter)
@@ -928,30 +943,45 @@ namespace DIPOL_UF.Models
                 args.EventArgs.LeftButton == MouseButtonState.Pressed &&
                 args.EventArgs.ClickCount == 2)
                 IsSamplerFixed = !IsSamplerFixed;
+
+            //MouseHoverCommandExecute(parameter);
         }
 
         protected override async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnPropertyChanged(sender, e);
 
-            if (e.PropertyName == nameof(BitmapSource))
-            {
-                IsMouseOverImage = false;
-                var keys = ImageStats.Keys.ToList();
-                foreach (var key in keys)
-                    ImageStats[key] = 0.0;
+            //if (e.PropertyName == nameof(SourceI))
+            //{
+            //    IsMouseOverImage = false;
+            //    var keys = ImageStats.Keys.ToList();
+            //    foreach (var key in keys)
+            //        ImageStats[key] = 0.0;
 
-                RaisePropertyChanged(nameof(ImageStats));
-                await UpdateGeometryAsync();
-            }
+            //    RaisePropertyChanged(nameof(ImageStats));
+            //    await UpdateGeometryAsync();
+            //    UpdateSamplerPosition(LastKnownImageControlSize, SamplerCenterPos);
+            //    ResetStatisticsTimer();
+            //}
 
 
             if (e.PropertyName == nameof(ImageSamplerScaleFactor) ||
                 e.PropertyName == nameof(SelectedGeometryIndex) ||
                 e.PropertyName == nameof(ImageSamplerThickness) ||
                 e.PropertyName == nameof(ImageSamplerSize))
+            {
                 await UpdateGeometryAsync();
-                
+                UpdateSamplerPosition(LastKnownImageControlSize, SamplerCenterPos);
+                ResetStatisticsTimer();
+            }
+
+            if (e.PropertyName == nameof(SamplerCenterPos) &&
+               _sourceImage != null &&
+                !LastKnownImageControlSize.IsEmpty)
+                PixValue = _sourceImage.Get<float>(
+                    Convert.ToInt32(SamplerCenterPosInPix.Y),
+                    Convert.ToInt32(SamplerCenterPosInPix.X));
+
         }
 
         private static (List<Func<double, double, GeometryDescriptor>>, List<string>) InitializeAvailableGeometries()
