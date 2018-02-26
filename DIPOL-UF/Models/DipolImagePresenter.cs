@@ -595,7 +595,7 @@ namespace DIPOL_UF.Models
                 DelegateCommand.CanExecuteAlways);
 
             ImageDoubleClickCommand = new DelegateCommand(
-                ImageDoubleClickCommandExecute,
+                ImageDoubleClickCommandExecuteAsync,
                 DelegateCommand.CanExecuteAlways);
         }
         private void InitializeSamplerGeometry()
@@ -937,14 +937,23 @@ namespace DIPOL_UF.Models
                                               args.EventArgs.NewSize.Height/DisplayedImage.Height);
             }
         }
-        private void ImageDoubleClickCommandExecute(object parameter)
+
+        private async void ImageDoubleClickCommandExecuteAsync(object parameter)
         {
             if (parameter is CommandEventArgs<MouseButtonEventArgs> args &&
                 args.EventArgs.LeftButton == MouseButtonState.Pressed &&
                 args.EventArgs.ClickCount == 2)
+            {
                 IsSamplerFixed = !IsSamplerFixed;
 
-            //MouseHoverCommandExecute(parameter);
+                if (!IsSamplerFixed)
+                {
+                    await UpdateGeometryAsync();
+                    UpdateSamplerPosition(LastKnownImageControlSize, 
+                        args.EventArgs.GetPosition(args.Sender as FrameworkElement));
+                    ResetStatisticsTimer();
+                }
+            }
         }
 
         protected override async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
