@@ -44,7 +44,6 @@ namespace DIPOL_UF.Models
         };
         private Image _sourceImage;
         private Image _displayedImage;
-        private WriteableBitmap _bitmapSource;
         private double _imgScaleMax = 1000;
         private double _imgScaleMin;
         private double _thumbLeft;
@@ -73,8 +72,8 @@ namespace DIPOL_UF.Models
         private double _maxGapWidth = 100;
         private double _maxAnnulusWidth = 100;
 
-        private double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
-        private double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
+        public double LeftScale => (_thumbLeft - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
+        public double RightScale => (_thumbRight - _imgScaleMin) / (_imgScaleMax - _imgScaleMin);
       
         public Image DisplayedImage
         {
@@ -448,17 +447,6 @@ namespace DIPOL_UF.Models
             }
         }
 
-        public WriteableBitmap BitmapSource
-        {
-            get => _bitmapSource;
-            set
-            {
-                _bitmapSource = value;
-                RaisePropertyChanged();
-            }
-
-        }
-        
         public DipolImagePresenter()
         {
             InitializeCommands();
@@ -487,14 +475,12 @@ namespace DIPOL_UF.Models
 
         public void LoadImage(Image image)
         {
-            CopyImageAsync(image)
-                .ContinueWith((t) => UpdateBitmapAsync());
-
+            Task.Run(async () => await CopyImageAsync(image));
         }
         public async Task LoadImageAsync(Image image)
         {
             await CopyImageAsync(image);
-            await UpdateBitmapAsync();
+            //await UpdateBitmapAsync();
         }
 
         public Dictionary<string, double> ImageStats
@@ -521,65 +507,25 @@ namespace DIPOL_UF.Models
                     await Task.Run(() =>
                     {
                          _sourceImage = image.CastTo<ushort, float>(x => x);
-                        DisplayedImage = _sourceImage.Copy();
+                        _displayedImage = _sourceImage.Copy();
                     });
                     break;
                 case TypeCode.Single:
                     await Task.Run(() =>
                     {
                         _sourceImage = image.Copy();
-                        DisplayedImage = _sourceImage.Copy();
+                        _displayedImage = _sourceImage.Copy();
                     });
                     break;
                 default:
                     throw new Exception();
             }
 
-            DisplayedImage.Scale(0, 1);
+            _displayedImage.Scale(0, 1);
+            RaisePropertyChanged(nameof(DisplayedImage));
             SamplerCenterPosInPix = new Point(
                DisplayedImage.Width / 2, 
                DisplayedImage.Height / 2);
-        }
-        private async Task UpdateBitmapAsync()
-        {
-            if (DisplayedImage == null)
-                return;
-
-            if (_bitmapSource == null ||
-                Helper.ExecuteOnUI(() => _bitmapSource.PixelWidth != _sourceImage.Width) ||
-                Helper.ExecuteOnUI(() => _bitmapSource.PixelHeight != _sourceImage.Height))
-            {
-
-                _bitmapSource = Helper.ExecuteOnUI(() => new WriteableBitmap(_sourceImage.Width,
-                    _sourceImage.Height,
-                    96, 96, PixelFormats.Gray32Float, null));
-
-            }
-
-          
-            var bytes = await Task.Run(() =>
-            {
-                var temp = DisplayedImage.Copy();
-                temp.Clamp(LeftScale, RightScale);
-                temp.Scale(0, 1);
-
-                return temp.GetBytes();
-            });
-
-            try
-            {
-                Helper.ExecuteOnUI(_bitmapSource.Lock);
-                Helper.ExecuteOnUI(() => System.Runtime.InteropServices.Marshal.Copy(
-                    bytes, 0, _bitmapSource.BackBuffer, bytes.Length));
-            }
-            finally
-            {
-                Helper.ExecuteOnUI(() =>
-                    _bitmapSource.AddDirtyRect(new Int32Rect(0, 0, _sourceImage.Width, _sourceImage.Height)));
-                Helper.ExecuteOnUI(_bitmapSource.Unlock);
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(BitmapSource)));
-            }
-
         }
         private void InitializeCommands()
         {
@@ -873,10 +819,11 @@ namespace DIPOL_UF.Models
             return new List<(int X, int Y)> {(0, 0)};
         }
 
-        private async void OnThumbValueChangedTimer_TickAsync(object sender, object e)
+        private void OnThumbValueChangedTimer_TickAsync(object sender, object e)
         {
             _thumbValueChangedTimer.Stop();
-            await UpdateBitmapAsync();
+            RaisePropertyChanged(nameof(LeftScale));
+            RaisePropertyChanged(nameof(RightScale));
         }
         private async void OnImageSamplerTimer_TickAsync(object sender, object e)
         {

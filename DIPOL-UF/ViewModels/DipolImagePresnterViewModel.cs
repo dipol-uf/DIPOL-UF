@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -10,7 +11,9 @@ namespace DIPOL_UF.ViewModels
 { 
     public class DipolImagePresnterViewModel :ViewModel<DipolImagePresenter>
     {
-        public WriteableBitmap BitmapSource => model.BitmapSource;
+        private WriteableBitmap _bitmapSource;
+
+        public WriteableBitmap BitmapSource => _bitmapSource;
         public double ImgScaleMin => model.ImgScaleMin;
         public double ImgScaleMax => model.ImgScaleMax;
 
@@ -94,7 +97,7 @@ namespace DIPOL_UF.ViewModels
         public double MinGeometryThickness => model.MinGeometryThickness;
         public double MaxGeometryThickness => model.MaxGeometryThickness;
 
-        public bool IsImageLoaded => model.BitmapSource != null;
+        public bool IsImageLoaded => model.DisplayedImage != null;
         public bool IsMouseOverUIControl => model.IsMouseOverUIControl;
         public bool IsSamplerFixed => model.IsSamplerFixed;
         public bool IsGeometryDisplayed => IsMouseOverUIControl || IsSamplerFixed;
@@ -103,36 +106,78 @@ namespace DIPOL_UF.ViewModels
         { 
         }
 
-        protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        protected override async void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnModelPropertyChanged(sender, e);
 
-            switch (e.PropertyName)
+            if (e.PropertyName == nameof(model.DisplayedImage))
             {
-                case nameof(model.BitmapSource):
-                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsImageLoaded)));
-                    break;
-                case nameof(model.SamplerCenterPos):
-                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
-                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
-                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
-                    break;
-                case nameof(model.ApertureGeometry):
-                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
-                    break;
-                case nameof(model.GapGeometry):
-                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
-                    break;
-                case nameof(model.SamplerGeometry):
-                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
-                    break;
-                case nameof(IsMouseOverUIControl):
-                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsGeometryDisplayed)));
-                    break;
-                case nameof(IsSamplerFixed):
-                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsGeometryDisplayed)));
-                    break;
+                await Helper.ExecuteOnUI(async () => await UpdateBitmapAsync());
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsImageLoaded)));
             }
+
+            if (e.PropertyName == nameof(model.LeftScale) ||
+                e.PropertyName == nameof(model.RightScale))
+                await Helper.ExecuteOnUI(async () => await UpdateBitmapAsync());
+
+            if (e.PropertyName == nameof(model.SamplerCenterPos))
+            {
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
+            }
+            if (e.PropertyName == nameof(model.ApertureGeometry))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
+            if (e.PropertyName == nameof(model.GapGeometry))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
+            if (e.PropertyName == nameof(model.SamplerGeometry))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
+            if (e.PropertyName == nameof(IsMouseOverUIControl))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsGeometryDisplayed)));
+            if (e.PropertyName == nameof(IsSamplerFixed))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsGeometryDisplayed)));
+        }
+
+        private async Task UpdateBitmapAsync()
+        {
+            if (model.DisplayedImage == null)
+                return;
+
+            if (_bitmapSource == null ||
+                 _bitmapSource.PixelWidth != model.DisplayedImage.Width ||
+                 _bitmapSource.PixelHeight != model.DisplayedImage.Height)
+            {
+
+                _bitmapSource =new WriteableBitmap(model.DisplayedImage.Width,
+                    model.DisplayedImage.Height,
+                    96, 96, PixelFormats.Gray32Float, null);
+
+            }
+
+
+            var bytes = await Task.Run(() =>
+            {
+                var temp = model.DisplayedImage.Copy();
+                temp.Clamp(model.LeftScale, model.RightScale);
+                temp.Scale(0, 1);
+
+                return temp.GetBytes();
+            });
+
+            try
+            {
+                _bitmapSource.Lock();
+                System.Runtime.InteropServices.Marshal.Copy(
+                    bytes, 0, _bitmapSource.BackBuffer, bytes.Length);
+            }
+            finally
+            {
+                _bitmapSource.AddDirtyRect(
+                    new Int32Rect(0, 0, model.DisplayedImage.Width, model.DisplayedImage.Height));
+                _bitmapSource.Unlock();
+                RaisePropertyChanged(nameof(BitmapSource));
+            }
+
         }
     }
 }
