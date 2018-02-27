@@ -76,6 +76,15 @@
         <Setter Property="MinHeight" Value="15"/>
     </Style>
 
+    <Style x:Key="TextBlock_SmallFont" TargetType="{x:Type TextBlock}">
+        <Setter Property="FontSize" Value="{StaticResource ResourceKey=SmallFontSize}"/>
+        <Setter Property="FontStyle" Value="Normal"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Padding" Value="{StaticResource ResourceKey=DefaultPadding}"/>
+        <Setter Property="Margin" Value="{StaticResource ResourceKey=DefaultMargin}"/>
+        <Setter Property="MinHeight" Value="15"/>
+    </Style>
+
     <!--Border style-->
     <Style x:Key="BorderStyle" TargetType="{x:Type Border}">
         <Setter Property="BorderBrush" Value="{StaticResource ResourceKey=BorderColor}"/>
@@ -124,7 +133,10 @@
     <Style x:Key="TextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource ResourceKey=ContentFont}">
         <Setter Property="Margin" Value="{StaticResource ResourceKey=DefaultMargin}"/>
     </Style>
-    
+    <Style x:Key="TextBoxStyle_SmallFont" TargetType="TextBox" BasedOn="{StaticResource ResourceKey=SmallFont}">
+        <Setter Property="Margin" Value="{StaticResource ResourceKey=DefaultMargin}"/>
+    </Style>
+
     <!--ProgressBar style-->
     <Style x:Key="ProgressBarStyle" TargetType="ProgressBar" BasedOn="{StaticResource ResourceKey=ContentFont}">
         <Setter Property="Margin" Value="10, 3, 10, 3"/>
