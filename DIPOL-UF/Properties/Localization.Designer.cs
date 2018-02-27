@@ -61,6 +61,105 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Acquisition.
+        /// </summary>
+        public static string CameraTab_Acquisition {
+            get {
+                return ResourceManager.GetString("CameraTab_Acquisition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acq. Settings.
+        /// </summary>
+        public static string CameraTab_AcquisitionSettings {
+            get {
+                return ResourceManager.GetString("CameraTab_AcquisitionSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cooler.
+        /// </summary>
+        public static string CameraTab_Cooler {
+            get {
+                return ResourceManager.GetString("CameraTab_Cooler", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fan.
+        /// </summary>
+        public static string CameraTab_Fan {
+            get {
+                return ResourceManager.GetString("CameraTab_Fan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start Imaging.
+        /// </summary>
+        public static string CameraTab_Imaging_Start {
+            get {
+                return ResourceManager.GetString("CameraTab_Imaging_Start", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop Imaging.
+        /// </summary>
+        public static string CameraTab_Imaging_Stop {
+            get {
+                return ResourceManager.GetString("CameraTab_Imaging_Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to External.
+        /// </summary>
+        public static string CameraTab_Shutter_External {
+            get {
+                return ResourceManager.GetString("CameraTab_Shutter_External", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Internal.
+        /// </summary>
+        public static string CameraTab_Shutter_Internal {
+            get {
+                return ResourceManager.GetString("CameraTab_Shutter_Internal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acc.
+        /// </summary>
+        public static string CameraTab_Timing_AccumulationCycle {
+            get {
+                return ResourceManager.GetString("CameraTab_Timing_AccumulationCycle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exp.
+        /// </summary>
+        public static string CameraTab_Timing_Exposure {
+            get {
+                return ResourceManager.GetString("CameraTab_Timing_Exposure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Kin.
+        /// </summary>
+        public static string CameraTab_Timing_KineticCycle {
+            get {
+                return ResourceManager.GetString("CameraTab_Timing_KineticCycle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Aperture settings.
         /// </summary>
         public static string DipolImagePresenter_ApertureControlGroup {
@@ -210,6 +309,33 @@ namespace DIPOL_UF.Properties {
         public static string General_Color {
             get {
                 return ResourceManager.GetString("General_Color", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Full.
+        /// </summary>
+        public static string General_FanMode_Full {
+            get {
+                return ResourceManager.GetString("General_FanMode_Full", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Low.
+        /// </summary>
+        public static string General_FanMode_Low {
+            get {
+                return ResourceManager.GetString("General_FanMode_Low", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Off.
+        /// </summary>
+        public static string General_FanMode_Off {
+            get {
+                return ResourceManager.GetString("General_FanMode_Off", resourceCulture);
             }
         }
         

@@ -117,6 +117,39 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CameraTab_Acquisition" xml:space="preserve">
+    <value>Acquisition</value>
+  </data>
+  <data name="CameraTab_AcquisitionSettings" xml:space="preserve">
+    <value>Acq. Settings</value>
+  </data>
+  <data name="CameraTab_Cooler" xml:space="preserve">
+    <value>Cooler</value>
+  </data>
+  <data name="CameraTab_Fan" xml:space="preserve">
+    <value>Fan</value>
+  </data>
+  <data name="CameraTab_Imaging_Start" xml:space="preserve">
+    <value>Start Imaging</value>
+  </data>
+  <data name="CameraTab_Imaging_Stop" xml:space="preserve">
+    <value>Stop Imaging</value>
+  </data>
+  <data name="CameraTab_Shutter_External" xml:space="preserve">
+    <value>External</value>
+  </data>
+  <data name="CameraTab_Shutter_Internal" xml:space="preserve">
+    <value>Internal</value>
+  </data>
+  <data name="CameraTab_Timing_AccumulationCycle" xml:space="preserve">
+    <value>Acc</value>
+  </data>
+  <data name="CameraTab_Timing_Exposure" xml:space="preserve">
+    <value>Exp</value>
+  </data>
+  <data name="CameraTab_Timing_KineticCycle" xml:space="preserve">
+    <value>Kin</value>
+  </data>
   <data name="DipolImagePresenter_ApertureControlGroup" xml:space="preserve">
     <value>Aperture settings</value>
   </data>
@@ -168,9 +201,18 @@
   <data name="General_Color" xml:space="preserve">
     <value>Color</value>
   </data>
+  <data name="General_FanMode_Full" xml:space="preserve">
+    <value>Full</value>
+  </data>
+  <data name="General_FanMode_Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="General_FanMode_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
   <data name="Slider_PixelToolTipFormat" xml:space="preserve">
     <value>{0:f0} pix</value>
-    <comment>\</comment>
+    <comment>Nonlocalized general resource</comment>
   </data>
   <data name="StringFormat_Float_DipolImagePresenter_Statistics" xml:space="preserve">
     <value>{0:g7}</value>

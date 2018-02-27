@@ -1,15 +1,16 @@
 ﻿<!-- DATACONTEXT = ViewModels.ConnectedCameraViewModel-->
 <UserControl x:Class="DIPOL_UF.Controls.CameraTab"
-            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-            xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-            xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS"
-             xmlns:local="clr-namespace:DIPOL_UF.Controls"
-            xmlns:dvms="clr-namespace:DIPOL_UF.ViewModels"
-            mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
-            d:DesignHeight="900" d:DesignWidth="1200"
-            d:DataContext="{d:DesignInstance Type=dvms:ConnectedCameraViewModel}">
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS"
+             xmlns:cntr="clr-namespace:DIPOL_UF.Controls"
+             xmlns:dvms="clr-namespace:DIPOL_UF.ViewModels"
+             xmlns:loc="clr-namespace:DIPOL_UF"
+             mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
+             d:DesignHeight="900" d:DesignWidth="1200"
+             d:DataContext="{d:DesignInstance Type=dvms:ConnectedCameraViewModel}">
     <ScrollViewer
         HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Auto"
         VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto">
@@ -26,10 +27,9 @@
                 <ColumnDefinition Width="auto" MinWidth="230"/>
             </Grid.ColumnDefinitions>
             <!--Custom Image Presenter-->
-            <local:DipolImagePresenter Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
-                                       Width="500" Height="700"
+            <cntr:DipolImagePresenter Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
+                                       Height="700"
                                        VerticalAlignment="Top" HorizontalAlignment="Stretch" 
-                                       Background="Beige"
                                        DataContext="{Binding ImagePresenterViewModel}"/>
             <!--Placeholder for Camera Name-->
             <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding}"/>
@@ -65,7 +65,7 @@
                     <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="0" 
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                               Text="Cooler"/>
+                               Text="{loc:Text Key=CameraTab_Cooler}"/>
                     <TextBlock Grid.Column="0" Grid.Row="1"
                                VerticalAlignment="Top" HorizontalAlignment="Right"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
@@ -231,7 +231,7 @@
                     <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" 
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                               Text="Fan"/>
+                               Text="{loc:Text Key=CameraTab_Fan}"/>
                     <Slider Grid.Column="0" Grid.Row="1" Grid.RowSpan="3"
                             Orientation="Vertical" Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
                             TickFrequency="{Binding 
@@ -251,29 +251,23 @@
                                HorizontalAlignment="Left" VerticalAlignment="Top"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                Margin="0,-5, 0, 0"
-                               Text="{Binding 
-                                   Source={StaticResource ResourceKey=FanModeEnumProvider},
-                                   Path='[0]',
-                                   Converter={StaticResource ResourceKey=EnumToDescriptionConverter},
-                                   StringFormat='- {0}'}"/>
+                               Text="{loc:Text
+                                    Key=General_FanMode_Full,
+                                    Format='- {0}'}"/>
                     <TextBlock Grid.Column="1" Grid.Row="2" 
                                HorizontalAlignment="Left" VerticalAlignment="Center"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                Margin="0, -5, 0, 0"
-                               Text="{Binding 
-                                   Source={StaticResource ResourceKey=FanModeEnumProvider},
-                                   Path='[1]',
-                                   Converter={StaticResource ResourceKey=EnumToDescriptionConverter},
-                                   StringFormat='- {0}'}"/>
+                               Text="{loc:Text
+                                    Key=General_FanMode_Low,
+                                    Format='- {0}'}"/>
                     <TextBlock Grid.Column="1" Grid.Row="3" 
                                HorizontalAlignment="Left" VerticalAlignment="Bottom"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                Margin="0, -5, 0, 0"
-                               Text="{Binding 
-                                   Source={StaticResource ResourceKey=FanModeEnumProvider},
-                                   Path='[2]',
-                                   Converter={StaticResource ResourceKey=EnumToDescriptionConverter},
-                                   StringFormat='- {0}'}"/>
+                               Text="{loc:Text
+                                    Key=General_FanMode_Off,
+                                    Format='- {0}'}"/>
                 </Grid>
                 <!--Shutters-->
                 <Grid Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2"
@@ -291,13 +285,13 @@
                                Margin="4, 2, 4, 2"
                                HorizontalAlignment="Left"
                                VerticalAlignment="Center"
-                               Text="Internal"/>
+                               Text="{loc:Text Key=CameraTab_Shutter_Internal}"/>
                     <TextBlock Grid.Column="0" Grid.Row="1"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                Margin="4, 2, 4, 2"
                                HorizontalAlignment="Left"
                                VerticalAlignment="Center"
-                               Text="External"/>
+                               Text="{loc:Text Key=CameraTab_Shutter_External}"/>
                     <ComboBox Grid.Column="1" Grid.Row="0"
                               Style="{StaticResource ResourceKey=ComboBoxStyle}"
                               ItemsSource="{Binding 
@@ -338,7 +332,7 @@
                 <Button  Grid.Column="0" Grid.Row="3" 
                          VerticalAlignment="Center" HorizontalAlignment="Center"
                          Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                         Content="Acq. Settings"
+                         Content="{loc:Text Key=CameraTab_AcquisitionSettings}"
                          Command="{Binding SetUpAcquisitionCommand}"/>
 
                 <!-- Acquire images button -->
@@ -349,14 +343,14 @@
                         <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsAcquiring, Mode=OneWay}" Value="True">
-                                    <Setter Property="Content" Value="Stop Imaging"/>
+                                    <Setter Property="Content" Value="{loc:Text Key=CameraTab_Imaging_Stop}"/>
                                     <Setter Property="Button.Background" 
                                         Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
                                     <Setter Property="Button.Foreground" 
                                         Value="{StaticResource ResourceKey=NegativeEffectButtonForegroundColor}"/>
                                 </DataTrigger>
                                 <DataTrigger  Binding="{Binding IsAcquiring, Mode=OneWay}" Value="False" >
-                                    <Setter Property="Content" Value="Start Imaging"/>
+                                    <Setter Property="Content" Value="{loc:Text Key=CameraTab_Imaging_Start}"/>
                                     <Setter Property="Button.Background" 
                                         Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>
                                     <Setter Property="Button.Foreground" 
@@ -381,17 +375,17 @@
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                HorizontalAlignment="Left"
                                VerticalAlignment="Center"
-                               Text="Exp"/>
+                               Text="{loc:Text Key=CameraTab_Timing_Exposure}"/>
                     <TextBlock Grid.Row="1" Grid.Column="0"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                HorizontalAlignment="Left"
                                VerticalAlignment="Center"
-                               Text="Acc"/>
+                               Text="{loc:Text Key=CameraTab_Timing_AccumulationCycle}"/>
                     <TextBlock Grid.Row="2" Grid.Column="0"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                HorizontalAlignment="Left"
                                VerticalAlignment="Center"
-                               Text="Kin"/>
+                               Text="{loc:Text Key=CameraTab_Timing_KineticCycle}"/>
                     <TextBox Grid.Row="0" Grid.Column="1"
                               Focusable="False" IsReadOnly="True"
                               Style="{StaticResource ResourceKey=TextBoxStyle}"
@@ -415,7 +409,7 @@
                     Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Bottom"
-                    Text="Acquisition:"/>
+                    Text="{loc:Text Key=CameraTab_Acquisition, Format='\{0\}:'}"/>
             <!--Acquisition progress bar-->
             <Grid Grid.Row="3" Grid.ColumnSpan="2" VerticalAlignment="Top"  Grid.Column="0"
                HorizontalAlignment="Stretch" MinWidth="300" MaxWidth="800">
