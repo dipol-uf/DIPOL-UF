@@ -15,25 +15,23 @@ namespace DIPOL_UF.Commands
 {
     public class DelegateCommand : ICommand
     {
-        private static readonly Func<object, bool> canExecuteAlways = (param) => true;
-        private static readonly Func<object, bool> canExecuteNever = (param) => false;
+        public static Func<object, bool> CanExecuteAlways { get; } =
+            (param) => true;
+        public static Func<object, bool> CanExecuteNever { get; } = 
+            (param) => false;
 
-        private Action<object> worker;
-        private Func<object, bool> canExecute;
-        private bool oldCanExecuteState;
-
-        public static Func<object, bool> CanExecuteAlways => canExecuteAlways;
-        public static Func<object, bool> CanExecuteNever => canExecuteNever;
-
-
+        private readonly Action<object> _worker;
+        private readonly Func<object, bool> _canExecute;
+        private bool _oldCanExecuteState;
+        
         public event EventHandler CanExecuteChanged;
 
         public bool CanExecute(object parameter)
         {
-            bool canExecute = this.canExecute(parameter);
-            if (canExecute != oldCanExecuteState)
+            var canExecute = _canExecute(parameter);
+            if (canExecute != _oldCanExecuteState)
             {
-                oldCanExecuteState = canExecute;
+                _oldCanExecuteState = canExecute;
                 OnCanExecuteChanged(this, new EventArgs());
             }
 
@@ -41,12 +39,12 @@ namespace DIPOL_UF.Commands
         }
                 
         public void Execute(object parameter)
-            => worker(parameter);
+            => _worker(parameter);
 
         public DelegateCommand(Action<object> worker, Func<object, bool> canExecute)
         {
-            this.worker = worker ?? throw new ArgumentNullException();
-            this.canExecute = canExecute ?? throw new ArgumentNullException();
+            _worker = worker ?? throw new ArgumentNullException();
+            _canExecute = canExecute ?? throw new ArgumentNullException();
             OnCanExecuteChanged();
         }
 
@@ -54,6 +52,6 @@ namespace DIPOL_UF.Commands
             => OnCanExecuteChanged(this, new EventArgs());
 
         protected virtual void OnCanExecuteChanged(object sender, EventArgs e)
-            => CanExecuteChanged?.Invoke(sender, e);
+            => Helper.ExecuteOnUI(() => CanExecuteChanged?.Invoke(sender, e));
     }
 }
