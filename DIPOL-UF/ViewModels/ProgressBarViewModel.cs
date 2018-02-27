@@ -58,22 +58,18 @@ namespace DIPOL_UF.ViewModels
 
                 if (DisplayPercents)
                     return $"{100.0 * Value / (Maximum - Minimum):F0}%";
+                var decDigits = Math.Ceiling(Math.Log10(Maximum % 10 == 0 ? Maximum + 1 : Maximum));
+
+                if (Minimum == 0)
+                {
+                    var format = $"{{0, {decDigits:F0} }}/{{1, {decDigits:F0} }}";
+                    return string.Format(format, Value, Maximum);
+                }
                 else
                 {
-                    var decDigits = Math.Ceiling(Math.Log10(Maximum % 10 == 0 ? Maximum + 1 : Maximum));
+                    var format = $"{{0, {decDigits:F0} }} in ({{1, {decDigits:F0} }}, {{2, {decDigits:F0} }})";
 
-                    if (Minimum == 0)
-                    {
-                        var format = $"{{0, {decDigits:F0} }}/{{1, {decDigits:F0} }}";
-                        return string.Format(format, Value, Maximum);
-                    }
-                    else
-                    {
-                        var format = $"{{0, {decDigits:F0} }} in ({{1, {decDigits:F0} }}, {{2, {decDigits:F0} }})";
-
-                        return string.Format(format, Value, Minimum, Maximum);
-                    }
-
+                    return string.Format(format, Value, Minimum, Maximum);
                 }
 
             }
