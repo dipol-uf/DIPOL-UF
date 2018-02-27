@@ -853,7 +853,7 @@ namespace ANDOR_CS.Classes
                         if (item.Value is string enumStr)
                         {
                             var enumResult = Enum.Parse(pars[0].ParameterType, enumStr);
-                            item.Method.Invoke(this, new[] {enumResult});
+                            item.Method.Invoke(this, new[] { enumResult });
                         }
                     }
                     else if (pars.Length == 1 && item.Value.GetType().IsValueType)
@@ -862,6 +862,24 @@ namespace ANDOR_CS.Classes
                         {
                             Convert.ChangeType(item.Value, pars[0].ParameterType)
                         });
+                    }
+                    else if (item.Key == nameof(ImageArea) &&
+                             item.Value is Dictionary<string, object> dict &&
+                             dict.Count == 2)
+                    {
+                        var startColl = dict["Start"] as Dictionary<string, object>;
+                        var endColl = dict["End"] as Dictionary<string, object>;
+                        var area = new Rectangle(
+                            new Point2D(
+                                (int)startColl["X"],
+                                (int)startColl["Y"]
+                                ), 
+                            new Point2D(
+                                (int)endColl["X"],
+                                (int)endColl["Y"])
+                            );
+
+                        item.Method.Invoke(this, new object[] {area});
                     }
                     else
                         throw  new ArgumentException("Deserialized value cannot be parsed.");
