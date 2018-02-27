@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Windows.Input;
-using System.Windows;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -59,24 +54,24 @@ namespace DIPOL_UF.ViewModels
             get
             {
                 if (IsIndeterminate)
-                    return String.Empty;
+                    return string.Empty;
 
                 if (DisplayPercents)
-                    return String.Format("{0:F0}%", 100.0 * Value / (Maximum - Minimum));
+                    return $"{100.0 * Value / (Maximum - Minimum):F0}%";
                 else
                 {
-                    double decDigits = Math.Ceiling(Math.Log10(Maximum % 10 == 0 ? Maximum + 1 : Maximum));
+                    var decDigits = Math.Ceiling(Math.Log10(Maximum % 10 == 0 ? Maximum + 1 : Maximum));
 
                     if (Minimum == 0)
                     {
-                        var format = String.Format("{{0, {0:F0} }}/{{1, {0:F0} }}", decDigits);
-                        return String.Format(format, Value, Maximum);
+                        var format = $"{{0, {decDigits:F0} }}/{{1, {decDigits:F0} }}";
+                        return string.Format(format, Value, Maximum);
                     }
                     else
                     {
-                        var format = String.Format("{{0, {0:F0} }} in ({{1, {0:F0} }}, {{2, {0:F0} }})", decDigits);
+                        var format = $"{{0, {decDigits:F0} }} in ({{1, {decDigits:F0} }}, {{2, {decDigits:F0} }})";
 
-                        return String.Format(format, Value, Minimum, Maximum);
+                        return string.Format(format, Value, Minimum, Maximum);
                     }
 
                 }

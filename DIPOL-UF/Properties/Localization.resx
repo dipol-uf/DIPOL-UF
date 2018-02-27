@@ -198,6 +198,9 @@
   <data name="DipolImagePresenter_Statistics_StandardDev" xml:space="preserve">
     <value>SD</value>
   </data>
+  <data name="General_Abort" xml:space="preserve">
+    <value>Abort</value>
+  </data>
   <data name="General_Color" xml:space="preserve">
     <value>Color</value>
   </data>

@@ -4,12 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:cmds="clr-namespace:DIPOL_UF.Commands"
-        xmlns:local="clr-namespace:System;assembly=mscorlib"
-        mc:Ignorable="d"
+        xmlns:loc="clr-namespace:DIPOL_UF"
+        xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
         x:Name="ProgressWindowInstance"
         Title="ProgressWindow" Height="150" Width="500" WindowStyle="None" ResizeMode="NoResize"
         Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" 
-        BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" IsTabStop="False" ShowInTaskbar="False">
+        BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" 
+        IsTabStop="False" ShowInTaskbar="False"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vms:ProgressBarViewModel}">
     <Grid Margin="5" Background="Transparent"  MouseDown="{cmds:EventToCommand 'MouseDragEventHandler | MouseEventHandler'}">
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"/>
@@ -43,7 +46,7 @@
         <Button Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" Margin="10, 5, 10, 5"
                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}"
                 IsCancel="True" Visibility="{Binding CanAbort, Converter={StaticResource BoolToVisibilityConverter}}"
-                Content="Abort"
+                Content="{loc:Text Key=General_Abort}"
                 Command="{Binding CancelCommand}" CommandParameter="{Binding ElementName=ProgressWindowInstance}"/>
 
     </Grid>
