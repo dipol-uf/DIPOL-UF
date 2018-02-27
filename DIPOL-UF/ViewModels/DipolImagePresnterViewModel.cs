@@ -76,6 +76,7 @@ namespace DIPOL_UF.ViewModels
         public ICommand MouseHoverCommand => model.MouseHoverCommand;
         public ICommand SizeChangedCommand => model.SizeChangedCommand;
         public ICommand ImageDoubleClickCommand => model.ImageDoubleClickCommand;
+        public ICommand UnloadImageCommand => model.UnloadImageCommand;
 
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
@@ -100,7 +101,9 @@ namespace DIPOL_UF.ViewModels
         public bool IsImageLoaded => model.DisplayedImage != null;
         public bool IsMouseOverUIControl => model.IsMouseOverUIControl;
         public bool IsSamplerFixed => model.IsSamplerFixed;
-        public bool IsGeometryDisplayed => IsMouseOverUIControl || IsSamplerFixed;
+        public bool IsGeometryDisplayed => 
+            IsImageLoaded && 
+            (IsMouseOverUIControl || IsSamplerFixed);
 
         public DipolImagePresnterViewModel(DipolImagePresenter model) : base(model)
         { 
@@ -132,16 +135,20 @@ namespace DIPOL_UF.ViewModels
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
             if (e.PropertyName == nameof(model.SamplerGeometry))
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
-            if (e.PropertyName == nameof(IsMouseOverUIControl))
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsGeometryDisplayed)));
-            if (e.PropertyName == nameof(IsSamplerFixed))
+            if (e.PropertyName == nameof(IsMouseOverUIControl) ||
+                e.PropertyName == nameof(IsSamplerFixed) ||
+                e.PropertyName == nameof(IsImageLoaded))
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsGeometryDisplayed)));
         }
 
         private async Task UpdateBitmapAsync()
         {
             if (model.DisplayedImage == null)
+            {
+                _bitmapSource = null;
+                RaisePropertyChanged(nameof(BitmapSource));
                 return;
+            }
 
             if (_bitmapSource == null ||
                  _bitmapSource.PixelWidth != model.DisplayedImage.Width ||

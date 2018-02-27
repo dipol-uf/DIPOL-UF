@@ -52,6 +52,7 @@ namespace DIPOL_UF.Models
         private DelegateCommand _mouseHoverCommand;
         private DelegateCommand _sizeChangedCommand;
         private DelegateCommand _imageDoubleClickCommand;
+        private DelegateCommand _unloadImageCommand;
         private Point _samplerCenterPosInPix;
         private bool _isMouseOverImage;
         private bool _isMouseOverUIControl;
@@ -446,6 +447,15 @@ namespace DIPOL_UF.Models
                 RaisePropertyChanged();
             }
         }
+        public DelegateCommand UnloadImageCommand
+        {
+            get => _unloadImageCommand;
+            set
+            {
+                _unloadImageCommand = value;
+                RaisePropertyChanged();
+            }
+        }
 
         public DipolImagePresenter()
         {
@@ -542,8 +552,12 @@ namespace DIPOL_UF.Models
                 DelegateCommand.CanExecuteAlways);
 
             ImageDoubleClickCommand = new DelegateCommand(
-                ImageDoubleClickCommandExecuteAsync,
+                ImageDoubleClickCommandExecute,
                 DelegateCommand.CanExecuteAlways);
+
+            UnloadImageCommand = new DelegateCommand(
+                UnloadImageCommandExecute,
+                (param) => DisplayedImage != null);
         }
         private void InitializeSamplerGeometry()
         {
@@ -879,14 +893,15 @@ namespace DIPOL_UF.Models
         }
         private void SizeChangedCommandExecute(object parameter)
         {
-            if (parameter is CommandEventArgs<SizeChangedEventArgs> args )
+            if (DisplayedImage != null &&
+                parameter is CommandEventArgs<SizeChangedEventArgs> args )
             {
                 LastKnownImageControlSize = args.EventArgs.NewSize;
                 ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width/DisplayedImage.Width,
                                               args.EventArgs.NewSize.Height / DisplayedImage.Height);
             }
         }
-        private void ImageDoubleClickCommandExecuteAsync(object parameter)
+        private void ImageDoubleClickCommandExecute(object parameter)
         {
             if (parameter is CommandEventArgs<MouseButtonEventArgs> args &&
                 args.EventArgs.LeftButton == MouseButtonState.Pressed &&
@@ -900,6 +915,12 @@ namespace DIPOL_UF.Models
                 }
             }
         }
+        private void UnloadImageCommandExecute(object parameter)
+        {
+            _sourceImage = null;
+            DisplayedImage = null;
+        }
+
 
         protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -941,8 +962,11 @@ namespace DIPOL_UF.Models
             }
 
             // Recalculates maximum allowed sampler sizes after image is changed
-            if(e.PropertyName == nameof(DisplayedImage))
+            if (e.PropertyName == nameof(DisplayedImage))
+            {
                 UpdateGeometrySizeRanges();
+                UnloadImageCommand.OnCanExecuteChanged();
+            }
 
         }
 

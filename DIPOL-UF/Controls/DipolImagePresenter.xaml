@@ -7,8 +7,8 @@
              xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
              xmlns:locl="clr-namespace:DIPOL_UF"
              xmlns:p="clr-namespace:DIPOL_UF.Properties"
-             Background="Beige" Style="{StaticResource ResourceKey=SmallFont}"
-             MinWidth="400"
+             Style="{StaticResource ResourceKey=SmallFont}"
+             MinWidth="400" Background="Transparent"
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="700" 
              d:DataContext="{d:DesignInstance Type=vms:DipolImagePresnterViewModel}"
@@ -64,28 +64,26 @@
         </Grid>
         <!-- Contrast sliders -->
         <Grid Row="1" IsEnabled="{Binding IsImageLoaded, Mode=OneWay}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <Slider Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
+            <Slider Grid.Row="0" Grid.Column="0" 
                     HorizontalAlignment="Stretch" MaxWidth="400"
                     Minimum="{Binding ImgScaleMin}"
                     Maximum="{Binding ImgScaleMax}"
                     Value="{Binding ThumbLeft, UpdateSourceTrigger=PropertyChanged}"
                     ValueChanged="{cmnds:EventToCommand ThumbValueChangedCommand}"
+                    Margin="20, 3, 20, 3"
                     />
-            <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+            <Slider Grid.Row="1" Grid.Column="0" 
                     HorizontalAlignment="Stretch" MaxWidth="400"
                     Minimum="{Binding ImgScaleMin}"
                     Maximum="{Binding ImgScaleMax}"
                     Value="{Binding ThumbRight, UpdateSourceTrigger=PropertyChanged}"
-                    ValueChanged="{cmnds:EventToCommand ThumbValueChangedCommand}"/>
-
+                    ValueChanged="{cmnds:EventToCommand ThumbValueChangedCommand}"
+                    Margin="20, 3, 20, 3"
+                    />
         </Grid>
         <!-- Image sampler info & controls -->
         <Grid Row="2" HorizontalAlignment="Stretch" 
@@ -109,7 +107,8 @@
                 <RowDefinition/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <!-- Left labels -->
+            
+           <!-- Left labels -->
             <!-- Header -->
             <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
                        Style="{StaticResource ContentFont_TextBlock}"
