@@ -16,20 +16,22 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 
 namespace ANDOR_CS.DataStructures
 {
     [DataContract]
     public struct Rectangle
     {
-
+        [ScriptIgnore]
         public int X1 => Start.X;
+        [ScriptIgnore]
         public int X2 => End.X;
+        [ScriptIgnore]
         public int Y1 => Start.Y;
+        [ScriptIgnore]
         public int Y2 => End.Y;
 
         [DataMember(IsRequired = true)]
@@ -46,8 +48,11 @@ namespace ANDOR_CS.DataStructures
             set;
         }
 
+        [ScriptIgnore]
         public Size Size => new Size(X2 - X1 + 1, Y2 - Y1 + 1);
+        [ScriptIgnore]
         public int Width => X2 - X1 + 1;
+        [ScriptIgnore]
         public int Height => Y2 - Y1 + 1;
 
         public Rectangle(Point2D start, Point2D end)

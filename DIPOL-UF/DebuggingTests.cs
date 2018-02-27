@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Globalization;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using ANDOR_CS.Classes;
 using DipolImage;
 using DIPOL_UF;
 using DIPOL_UF.Models;
@@ -20,7 +22,8 @@ namespace Tests
             System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             System.Threading.Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
 
-            new Debugger().DisplayImage();
+            new Debugger().TestAcqSettings();
+            Console.ReadKey();
             return 0;
         }
 
@@ -69,6 +72,24 @@ namespace Tests
                 app.Run(wind);
               
 
+            }
+
+            public void TestAcqSettings()
+            {
+                using (var setts = new AcquisitionSettings())
+                    using (var memStr = new MemoryStream())
+                    {
+                        var writer = new StreamWriter(memStr);
+                        setts.WriteJson(writer);
+
+                        var reader = new StreamReader(memStr);
+                        reader.BaseStream.Position = 0;
+                        while (!reader.EndOfStream)
+                            Console.WriteLine(reader.ReadLine());
+                        reader.BaseStream.Position = 0;
+
+                        setts.ReadJson(reader);
+                }
             }
         }
     }

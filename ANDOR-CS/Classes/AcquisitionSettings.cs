@@ -49,7 +49,7 @@ namespace ANDOR_CS.Classes
         ///     SERIALIZATION TEST CONSTRUCTOR; DO NOT USE
         /// </summary>
 #if DEBUG
-        internal AcquisitionSettings(bool empty = false)
+        public AcquisitionSettings(bool empty = false)
         {
             if (empty) 
                 return;
@@ -61,7 +61,7 @@ namespace ANDOR_CS.Classes
             HSSpeed = (0, 3);
             ImageArea = new Rectangle(1, 1, 128, 256);
 
-            //this.KineticCycle = (12, 23);
+            KineticCycle = (12, 0.23f);
             PreAmpGain = (0, "Gain 1");
             ReadoutMode = ReadMode.FullImage;
 
@@ -89,7 +89,7 @@ namespace ANDOR_CS.Classes
         {
             var output = new List<(string Option, bool Success, uint ReturnCode)>();
 
-            SafeSdkCameraHandle handle = null;
+            SafeSdkCameraHandle handle;
             if (Camera is Camera locCam)
                 handle = locCam.CameraHandle;
             else

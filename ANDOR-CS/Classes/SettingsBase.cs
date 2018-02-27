@@ -27,6 +27,7 @@ using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.ComponentModel;
+using System.Web.Script.Serialization;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
@@ -58,17 +59,17 @@ namespace ANDOR_CS.Classes
         private (int Index, float Speed)? _VSSpeed;
         private (int Index, float Speed)? _HSSpeed;
         private (int Index, int BitDepth)? _ADConverter;
-        public VSAmplitude? _VSAmplitude;
-        public (OutputAmplification OutputAmplifier, string Name, int Index)? _OutputAmplifier;
-        public (int Index, string Name)? _PreAmpGain;
-        public AcquisitionMode? _AcquisitionMode;
-        public ReadMode? _ReadoutMode;
-        public TriggerMode? _TriggerMode;
-        public float? _ExposureTime;
-        public Rectangle? _ImageArea;
-        public (int Frames, float Time)? _AccumulateCycle;
-        public (int Frames, float Time)? _KineticCycle;
-        public int? _EMCCDGain;
+        private VSAmplitude? _VSAmplitude;
+        private (OutputAmplification OutputAmplifier, string Name, int Index)? _OutputAmplifier;
+        private (int Index, string Name)? _PreAmpGain;
+        private AcquisitionMode? _AcquisitionMode;
+        private ReadMode? _ReadoutMode;
+        private TriggerMode? _TriggerMode;
+        private float? _ExposureTime;
+        private Rectangle? _ImageArea;
+        private (int Frames, float Time)? _AccumulateCycle;
+        private (int Frames, float Time)? _KineticCycle;
+        private int? _EMCCDGain;
 
         public  event PropertyChangedEventHandler PropertyChanged;
 
@@ -233,7 +234,7 @@ namespace ANDOR_CS.Classes
             }
         } 
 
-        [SerializationOrder(12)]
+        [SerializationOrder(12, true)]
         public (int Frames, float Time)? AccumulateCycle
         {
             get => _AccumulateCycle;
@@ -244,7 +245,7 @@ namespace ANDOR_CS.Classes
             }
         } 
 
-        [SerializationOrder(13)]
+        [SerializationOrder(13, true)]
         public (int Frames, float Time)? KineticCycle
         {
             get => _KineticCycle;
@@ -717,27 +718,32 @@ namespace ANDOR_CS.Classes
 
         public virtual void Serialize(Stream stream)
         {
-            using (var str = System.Xml.XmlWriter.Create(
-                stream,
-                new System.Xml.XmlWriterSettings()
-                {
-                    Indent = true,
-                    IndentChars = "\t"
-                }))
-            {
-                var sourceCulture = System.Threading.Thread.CurrentThread.CurrentCulture;
-                System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            //using (var str = System.Xml.XmlWriter.Create(
+            //    stream,
+            //    new System.Xml.XmlWriterSettings()
+            //    {
+            //        Indent = true,
+            //        IndentChars = "\t"
+            //    }))
+            //{
+            //    var sourceCulture = System.Threading.Thread.CurrentThread.CurrentCulture;
+            //    System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
-                WriteXml(str);
+            //    WriteXml(str);
 
-                System.Threading.Thread.CurrentThread.CurrentCulture = sourceCulture;
-            }
+            //    System.Threading.Thread.CurrentThread.CurrentCulture = sourceCulture;
+            //}
+
+            var str = new StreamWriter(stream);
+            WriteJson(str);
         }
 
         public virtual List<string> Deserialize(Stream stream)
         {
-            using (var str = XmlReader.Create(stream))
-                return ReadXml(str);
+            //using (var str = XmlReader.Create(stream))
+            //    return ReadXml(str);
+
+            return ReadJson(new StreamReader(stream));
         }
 
         public virtual void Dispose()
@@ -779,7 +785,7 @@ namespace ANDOR_CS.Classes
                         var tupleVals = new object[pars.Length];
 
                         if (pars.Where((t, i) => (tupleVals[i] = tuple[i]).GetType() != t.ParameterType).Any())
-                            throw new TargetParameterCountException(@"Setter method argumetn type does not match type of provided tuple item.");
+                            throw new TargetParameterCountException(@"Setter method argumetn type does not match type of provided item.");
 
                         item.Method.Invoke(this, tupleVals);
 
@@ -792,10 +798,6 @@ namespace ANDOR_CS.Classes
                 catch (TargetInvocationException)
                 { 
                 }
-                catch (Exception)
-                {
-                    throw;
-                }
 
                 output.Add(item.Key);
             }
@@ -806,6 +808,73 @@ namespace ANDOR_CS.Classes
 
         public void WriteXml(XmlWriter writer)
             => XmlParser.WriteXml(writer, this);
+
+        public void WriteJson(StreamWriter writer)
+            => JsonParser.WriteJson(writer, this);
+
+        public List<string> ReadJson(StreamReader str)
+        {
+            var result = JsonParser.ReadJson(str);
+            var props = new List<string>();
+            //if (data.Any(x =>
+            //    x.Key == @"CompatibleDevice" &&
+            //    (x.Value == null ||
+            //        (CameraType)x.Value != Camera.Capabilities.CameraType)))
+            //    throw new AndorSdkException("Failed to deserialize acquisition settings: " +
+            //                                "device type mismatch. Check attribute \"CompatibleDevice\" of Settings node", null);
+
+            foreach (var item in
+                from r in SerializedProperties
+                    .Join(result, x => x.Name, y => y.Key, (x, y) => y)
+                from m in DeserializationSetMethods
+                let regexName = new {Method = m, Regex = SetFnctionNameParser.Match(m.Name)}
+                where regexName.Regex.Success && regexName.Regex.Groups.Count == 2
+                where r.Key == regexName.Regex.Groups[1].Value
+                select new {regexName.Method, r.Key, r.Value})
+            {
+                var pars = item.Method.GetParameters();
+                try
+                {
+                    if (item.Value is object[] coll)
+                    {
+                        if (pars.Length == coll.Length)
+                        {
+                            for (var i = 0; i < pars.Length; i++)
+                                coll[i] = Convert.ChangeType(coll[i], pars[i].ParameterType);
+
+                            item.Method.Invoke(this, coll);
+                        }
+                        else
+                            throw new TargetParameterCountException(
+                                @"Setter method signature does not match types of provided items.");
+                    }
+                    else if (pars.Length == 1 && pars[0].ParameterType.IsEnum)
+                    {
+                        if (item.Value is string enumStr)
+                        {
+                            var enumResult = Enum.Parse(pars[0].ParameterType, enumStr);
+                            item.Method.Invoke(this, new[] {enumResult});
+                        }
+                    }
+                    else if (pars.Length == 1 && item.Value.GetType().IsValueType)
+                    {
+                        item.Method.Invoke(this, new[]
+                        {
+                            Convert.ChangeType(item.Value, pars[0].ParameterType)
+                        });
+                    }
+                    else
+                        throw  new ArgumentException("Deserialized value cannot be parsed.");
+                }
+                catch (TargetInvocationException)
+                {
+                }
+
+                props.Add(item.Key);
+            }
+
+            return props;
+        }
 
         void IXmlSerializable.ReadXml(XmlReader reader)
         {
