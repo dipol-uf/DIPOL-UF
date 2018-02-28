@@ -586,7 +586,7 @@ namespace DIPOL_UF.Models
             var intens = 0.0;
             var n = 1;
 
-            await Task.Run(async () =>
+            await Task.Run(() =>
             {
 
                 

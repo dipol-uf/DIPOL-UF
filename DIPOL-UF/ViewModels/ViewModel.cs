@@ -28,9 +28,17 @@ namespace DIPOL_UF.ViewModels
         public T Model => model;
         public bool HasErrors => errorCollection.Any(item => item.Value.Any());
         public IEnumerable GetErrors(string propertyName)
-           => errorCollection.ContainsKey(propertyName)
-           ? errorCollection[propertyName]
-           : null;
+        {
+            if (String.IsNullOrEmpty(propertyName))
+                return errorCollection
+                    .Select(item => item.Value)
+                    .Aggregate(new List<ValidationErrorInstance>(10),
+                        (old, item) => { old.AddRange(item); return old; });
+
+            return errorCollection.ContainsKey(propertyName)
+                ? errorCollection[propertyName]
+                : null;
+        }
         public Dictionary<string, string> LatestErrors => errorCollection
             .Select(item => new KeyValuePair<string, string>(item.Key, item.Value.FirstOrDefault()?.Message))
             .ToDictionary(item => item.Key, item => item.Value);

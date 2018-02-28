@@ -32,7 +32,7 @@
                                        VerticalAlignment="Top" HorizontalAlignment="Stretch" 
                                        DataContext="{Binding ImagePresenterViewModel}"/>
             <!--Placeholder for Camera Name-->
-            <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding}"/>
+            <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Model}"/>
             <!--Placeholder for detailed status-->
             <Label Grid.Row="1" Grid.Column="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
             <!--RHS Controls grid-->
@@ -143,7 +143,8 @@
                         <TextBox.Style>
                             <Style TargetType="TextBox" BasedOn="{StaticResource ResourceKey=TextBoxStyle}">
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasErrorsOfProperties[TargetTemperatureText], Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="true">
+                                    <DataTrigger Binding="{Binding HasErrorsOfProperties[TargetTemperatureText], Mode=OneWay}" 
+                                                 Value="true">
                                         <Setter Property="ToolTip" 
                                                 Value="{Binding 
                                                     LatestErrors[TargetTemperatureText],

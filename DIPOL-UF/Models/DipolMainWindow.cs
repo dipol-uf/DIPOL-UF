@@ -272,6 +272,7 @@ namespace DIPOL_UF.Models
         {
             if (diposing)
             {
+               
                 _UIStatusUpdateTimer.Stop();
                 Task[] pool = new Task[_connectedCams.Count];
                 int taskInd = 0;
@@ -279,18 +280,8 @@ namespace DIPOL_UF.Models
                 foreach (var cam in _connectedCams)
                     pool[taskInd++] = DisposeCamera(cam.Key);
 
-                try
-                {
-                    Task.WaitAll(pool);
-                }
-                catch
-                {
-                    //TODO: Investigate faults
-                    Console.ForegroundColor = ConsoleColor.Magenta;
-                    Console.WriteLine("Disposement failed");
-                    Console.ResetColor();
-                }
-
+                Task.WaitAll(pool);
+               
                 Parallel.ForEach(_remoteClients, (client) =>
                 {
                     client?.Disconnect();

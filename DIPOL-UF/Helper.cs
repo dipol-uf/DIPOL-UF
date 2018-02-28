@@ -91,13 +91,17 @@ namespace DIPOL_UF
 
         public static void ExecuteOnUI(Action action)
         {
-            if (Thread.CurrentThread == Application.Current.Dispatcher.Thread)
+            if (!Application.Current?.Dispatcher?.IsAvailable() ?? true ||
+                Thread.CurrentThread == Application.Current?.Dispatcher?.Thread)
                 action();
             else
                 Application.Current.Dispatcher.Invoke(action);
         }
         public static T ExecuteOnUI<T>(Func<T> action)
         {
+            if (!Application.Current?.Dispatcher?.IsAvailable() ?? true)
+                throw new InvalidOperationException("Application and/or Dispatcher are unavailable. Cannot execute code on UI thread");
+
             if (Thread.CurrentThread == Application.Current.Dispatcher.Thread)
                 return action();
             else
