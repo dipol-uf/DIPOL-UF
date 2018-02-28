@@ -305,13 +305,12 @@
             <ComboBox Grid.Column="5" Grid.Row="4"
                       HorizontalAlignment="Stretch"
                       MaxWidth="165"
-                      SelectedIndex="0"
                       Style="{StaticResource ComboBoxStyle}"
-                      ItemsSource="{StaticResource ColorPickerColors}"
-                      SelectedItem="{Binding 
-                        SamplerColor, 
-                        Mode=OneWayToSource, 
+                      SelectedIndex="{Binding 
+                        SamplerColorBrushIndex, 
+                        Mode=TwoWay, 
                         UpdateSourceTrigger=PropertyChanged}" 
+                      ItemsSource="{x:Static vms:DipolImagePresnterViewModel.ColorPickerColor}"
                       Margin="{StaticResource HorizontalPBMargin}"
                       HorizontalContentAlignment="Stretch"
                       VerticalContentAlignment="Stretch">

@@ -13,6 +13,8 @@ namespace DIPOL_UF.ViewModels
     {
         private WriteableBitmap _bitmapSource;
 
+        public static Brush[] ColorPickerColor { get; } = Application.Current.Resources["ColorPickerColors"] as Brush[];
+
         public WriteableBitmap BitmapSource => _bitmapSource;
         public double ImgScaleMin => model.ImgScaleMin;
         public double ImgScaleMax => model.ImgScaleMax;
@@ -84,11 +86,12 @@ namespace DIPOL_UF.ViewModels
         public GeometryDescriptor GapGeometry => model.GapGeometry;
         public GeometryDescriptor SamplerGeometry => model.SamplerGeometry;
         public IDictionary<string, double> ImageStats => model.ImageStats;
-        public Brush SamplerColor
+        public int SamplerColorBrushIndex
         {
-            get => model.SamplerColor;
-            set => model.SamplerColor = value;
+            get => model.SamplerColorBrushIndex;
+            set => model.SamplerColorBrushIndex = value;
         }
+        public Brush SamplerColor => ColorPickerColor[SamplerColorBrushIndex];
         public double MaxApertureWidth => model.MaxApertureWidth;
         public double MaxGapWidth => model.MaxGapWidth;
         public double MaxAnnulusWidth => model.MaxAnnulusWidth;
@@ -129,16 +132,23 @@ namespace DIPOL_UF.ViewModels
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
             }
+
             if (e.PropertyName == nameof(model.ApertureGeometry))
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
+
             if (e.PropertyName == nameof(model.GapGeometry))
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
+
             if (e.PropertyName == nameof(model.SamplerGeometry))
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
-            if (e.PropertyName == nameof(IsMouseOverUIControl) ||
-                e.PropertyName == nameof(IsSamplerFixed) ||
-                e.PropertyName == nameof(IsImageLoaded))
+
+            if (e.PropertyName == nameof(model.IsMouseOverUIControl) ||
+                e.PropertyName == nameof(model.IsSamplerFixed) ||
+                e.PropertyName == nameof(model.DisplayedImage))
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsGeometryDisplayed)));
+
+            if (e.PropertyName == nameof(model.SamplerColorBrushIndex))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerColor)));
         }
 
         private async Task UpdateBitmapAsync()

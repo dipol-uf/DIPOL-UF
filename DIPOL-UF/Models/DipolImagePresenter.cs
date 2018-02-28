@@ -64,7 +64,7 @@ namespace DIPOL_UF.Models
         private double _imageApertureSize = 30;
         private double _imageGap = 15;
         private double _imageSamplerThickness = 5.0;
-        private Brush _samplerColor;
+        private int _samplerColorBrushIndex = 0;
         private GeometryDescriptor _samplerGeometry;
         private GeometryDescriptor _apertureGeometry;
         private GeometryDescriptor _gapGeometry;
@@ -361,12 +361,12 @@ namespace DIPOL_UF.Models
         public double MinGeometryThickness => 1;
         public double MaxGeometryThickness => 10;
 
-        public Brush SamplerColor
+        public int SamplerColorBrushIndex
         {
-            get => _samplerColor;
+            get => _samplerColorBrushIndex;
             set
             {
-                _samplerColor = value;
+                _samplerColorBrushIndex = value;
                 RaisePropertyChanged();
             }
         }
