@@ -22,7 +22,7 @@
                 <RowDefinition Height="50"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*" MinWidth="430"/>
+                <ColumnDefinition Width="2.5*" MinWidth="430"/>
                 <ColumnDefinition Width="1*" MinWidth="200"/>
                 <ColumnDefinition Width="auto" MinWidth="230"/>
             </Grid.ColumnDefinitions>
@@ -191,7 +191,7 @@
                                 <Style.Triggers>
                                     <DataTrigger 
                                                 Binding="{Binding
-                                                    Path = .Camera.CoolerMode,
+                                                    Path = Camera.CoolerMode,
                                                     Mode=OneWay,
                                                     UpdateSourceTrigger=PropertyChanged}" 
                                                 Value="{x:Static enm:Switch.Disabled}">
@@ -411,7 +411,7 @@
                     VerticalAlignment="Bottom"
                     Text="{loc:Text Key=CameraTab_Acquisition, Format='\{0\}:'}"/>
             <!--Acquisition progress bar-->
-            <Grid Grid.Row="3" Grid.ColumnSpan="2" VerticalAlignment="Top"  Grid.Column="0"
+            <Grid Grid.Row="3" Grid.ColumnSpan="3" VerticalAlignment="Top"  Grid.Column="0"
                HorizontalAlignment="Stretch" MinWidth="300" MaxWidth="800">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>

@@ -969,6 +969,8 @@ namespace DIPOL_UF.Models
             {
                 UpdateGeometrySizeRanges();
                 UnloadImageCommand.OnCanExecuteChanged();
+                if (IsSamplerFixed)
+                    RaisePropertyChanged(nameof(ImageSamplerSize));
             }
 
         }
