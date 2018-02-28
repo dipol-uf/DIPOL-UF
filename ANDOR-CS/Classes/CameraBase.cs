@@ -56,7 +56,7 @@ namespace ANDOR_CS.Classes
            TtlShutterSignal Type,
            int OpenTime,
            int CloseTime) _shutter
-            = (ShutterMode.FullyAuto, null, TtlShutterSignal.Low, 0, 0);
+            = (ShutterMode.FullyAuto, null, TtlShutterSignal.Low, 27, 27);
         private (Version EPROM, Version COFFile, Version Driver, Version Dll) _software
             = default((Version EPROM, Version COFFile, Version Driver, Version Dll));
         private (Version PCB, Version Decode, Version CameraFirmware) _hardware

@@ -817,12 +817,49 @@ namespace ANDOR_CS.Classes
                     // If camera has valid SDK pointer and is initialized
                     if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
                     {
-                        if (CoolerMode == Switch.Enabled)
-                            CoolerControl(Switch.Disabled);
-                        //if (TemperatureMonitorWorker?.Status == TaskStatus.Running)
-                        //    TemperatureMonitor(Switch.Disabled);
+                        if (Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
+                        {
+                            Call(CameraHandle, SDKInstance.CoolerOFF);
+                            CoolerMode = Switch.Disabled;
+                        }
 
-                        if (_temperatureMonitorTimer != null)
+                        if (Capabilities.Features.HasFlag(SdkFeatures.Shutter))
+                        {
+                            if (Capabilities.Features.HasFlag(SdkFeatures.ShutterEx))
+                            {
+
+                                Call(CameraHandle, () => SDKInstance.SetShutterEx(
+                                    (int)Shutter.Type, 
+                                    (int)ShutterMode.PermanentlyClosed, 
+                                    Shutter.CloseTime, Shutter.OpenTime, 
+                                    (int)ShutterMode.PermanentlyClosed));
+
+                                Shutter = (
+                                    Internal: ShutterMode.PermanentlyClosed, 
+                                    External: ShutterMode.PermanentlyClosed, 
+                                    Shutter.Type, 
+                                    Shutter.OpenTime, 
+                                    Shutter.CloseTime);
+                            }
+                            else
+                            {
+
+                                Call(CameraHandle, () => SDKInstance.SetShutter(
+                                    (int)Shutter.Type, 
+                                    (int)ShutterMode.PermanentlyClosed, 
+                                    Shutter.CloseTime, 
+                                    Shutter.OpenTime));
+
+                                Shutter = (
+                                    Internal: ShutterMode.PermanentlyClosed,
+                                    External: null,
+                                    Shutter.Type,
+                                    Shutter.OpenTime,
+                                    Shutter.CloseTime);
+                            }
+                        }
+
+                            if (_temperatureMonitorTimer != null)
                         {
                             if (_temperatureMonitorTimer.Enabled)
                                 _temperatureMonitorTimer.Stop();
@@ -835,6 +872,8 @@ namespace ANDOR_CS.Classes
                             _runningTasks.TryRemove(key, out var item);
                             item.Source.Cancel();
                         }
+
+
                     }
 
                     // If succeeded, removes camera instance from the list of cameras
