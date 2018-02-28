@@ -511,6 +511,8 @@ namespace DIPOL_UF.Models
 
         private async Task CopyImageAsync(Image image)
         {
+            bool isFirstLoad = DisplayedImage == null;
+
             switch (image.UnderlyingType)
             {
                 case TypeCode.UInt16:
@@ -533,9 +535,10 @@ namespace DIPOL_UF.Models
 
             _displayedImage.Scale(0, 1);
             RaisePropertyChanged(nameof(DisplayedImage));
-            SamplerCenterPosInPix = new Point(
-               DisplayedImage.Width / 2, 
-               DisplayedImage.Height / 2);
+            SamplerCenterPosInPix = isFirstLoad
+                ? new Point(DisplayedImage.Width / 2, DisplayedImage.Height / 2)
+                : SamplerCenterPosInPix;
+                
         }
         private void InitializeCommands()
         {
@@ -897,8 +900,8 @@ namespace DIPOL_UF.Models
                 parameter is CommandEventArgs<SizeChangedEventArgs> args )
             {
                 LastKnownImageControlSize = args.EventArgs.NewSize;
-                ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width/DisplayedImage.Width,
-                                              args.EventArgs.NewSize.Height / DisplayedImage.Height);
+                ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width/DisplayedImage.Width, 
+                                              args.EventArgs.NewSize.Height / DisplayedImage.Height); 
             }
         }
         private void ImageDoubleClickCommandExecute(object parameter)
