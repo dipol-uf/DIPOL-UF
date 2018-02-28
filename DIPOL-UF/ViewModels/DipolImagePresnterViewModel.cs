@@ -143,36 +143,45 @@ namespace DIPOL_UF.ViewModels
 
         private async Task UpdateBitmapAsync()
         {
+            byte[] bytes;
+
             if (model.DisplayedImage == null)
             {
-                _bitmapSource = null;
-                RaisePropertyChanged(nameof(BitmapSource));
-                return;
+                if (_bitmapSource == null)
+                {
+                    RaisePropertyChanged(nameof(BitmapSource));
+                    return;
+                }
+
+                bytes = new byte[_bitmapSource.PixelWidth * _bitmapSource.PixelHeight * 4];
+            }
+            else
+            {
+                bytes = await Task.Run(() =>
+                {
+                    var temp = model.DisplayedImage.Copy();
+                    temp.Clamp(model.LeftScale, model.RightScale);
+                    temp.Scale(0, 1);
+
+                    return temp.GetBytes();
+                });
+
+
+                if (_bitmapSource == null ||
+                    _bitmapSource.PixelWidth != model.DisplayedImage.Width ||
+                    _bitmapSource.PixelHeight != model.DisplayedImage.Height)
+                {
+
+                    _bitmapSource = new WriteableBitmap(model.DisplayedImage.Width,
+                        model.DisplayedImage.Height,
+                        96, 96, PixelFormats.Gray32Float, null);
+
+                }
             }
 
-            if (_bitmapSource == null ||
-                 _bitmapSource.PixelWidth != model.DisplayedImage.Width ||
-                 _bitmapSource.PixelHeight != model.DisplayedImage.Height)
-            {
-
-                _bitmapSource =new WriteableBitmap(model.DisplayedImage.Width,
-                    model.DisplayedImage.Height,
-                    96, 96, PixelFormats.Gray32Float, null);
-
-            }
-
-
-            var bytes = await Task.Run(() =>
-            {
-                var temp = model.DisplayedImage.Copy();
-                temp.Clamp(model.LeftScale, model.RightScale);
-                temp.Scale(0, 1);
-
-                return temp.GetBytes();
-            });
 
             try
-            {
+            { 
                 _bitmapSource.Lock();
                 System.Runtime.InteropServices.Marshal.Copy(
                     bytes, 0, _bitmapSource.BackBuffer, bytes.Length);
@@ -180,7 +189,9 @@ namespace DIPOL_UF.ViewModels
             finally
             {
                 _bitmapSource.AddDirtyRect(
-                    new Int32Rect(0, 0, model.DisplayedImage.Width, model.DisplayedImage.Height));
+                    new Int32Rect(0, 0,
+                        _bitmapSource.PixelWidth,
+                        _bitmapSource.PixelHeight));
                 _bitmapSource.Unlock();
                 RaisePropertyChanged(nameof(BitmapSource));
             }

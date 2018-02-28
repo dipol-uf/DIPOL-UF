@@ -22,8 +22,7 @@ namespace Tests
             System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             System.Threading.Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
 
-            new Debugger().TestAcqSettings();
-            Console.ReadKey();
+            new Debugger().DisplayImage();
             return 0;
         }
 
@@ -89,7 +88,9 @@ namespace Tests
                         reader.BaseStream.Position = 0;
 
                         setts.ReadJson(reader);
-                }
+                    }
+
+                Console.ReadKey();
             }
         }
     }
