@@ -119,13 +119,51 @@
 
     <!--TabItem style-->
     <Style x:Key="TabItemStyle" TargetType="{x:Type TabItem}">
-        <!--<Setter Property="Header" 
-                Value="{Binding Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}"/>
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding State}" Value="{x:Static enum:ControlState.Individual}">
-                <Setter Property="Foreground" Value="Red"/>
-            </DataTrigger>
-        </Style.Triggers>-->
+        <Setter Property="Header" Value="{Binding 
+            Camera, 
+            Mode=OneWay,
+            Converter={StaticResource CameraToStringAliasConverter}}"/>
+        <Setter Property="Border.CornerRadius" Value="{DynamicResource TabItemTopCornerRadius}"/>
+        <Setter Property="Margin" Value="{DynamicResource TabItemMargin}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TabItemForegroundBrush}"/>
+        <Setter Property="HeaderTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Border CornerRadius="0" Margin="-6.5 -1.5, -6.5, -1.5"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <DataTrigger
+                                        Binding="{Binding 
+                                            RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
+                                        Path=DataContext.State}"
+                                        Value="{x:Static enum:ControlState.Individual}">
+                                        <Setter Property="Background" Value="{StaticResource Background_1}"/>
+                                    </DataTrigger>
+                                    <DataTrigger
+                                        Binding="{Binding 
+                                            RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
+                                        Path=DataContext.State}"
+                                        Value="{x:Static enum:ControlState.Master}">
+                                        <Setter Property="Background" Value="{StaticResource Background_2}"/>
+                                    </DataTrigger>
+                                    <DataTrigger
+                                        Binding="{Binding 
+                                            RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
+                                        Path=DataContext.State}"
+                                        Value="{x:Static enum:ControlState.Slave}">
+                                        <Setter Property="Background" Value="{StaticResource Background_3}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <ContentPresenter Content="{Binding}" Margin="{StaticResource DefaultMargin}"/>
+                    </Border>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!--ComboBox style-->
