@@ -8,8 +8,8 @@ namespace DIPOL_UF.Enums
 {
     public enum ControlState
     {
-        Master,
-        Slave,
-        Individual
+        Slave = 1,
+        Individual = 2,
+        Master = 3
     }
 }

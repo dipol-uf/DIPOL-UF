@@ -32,7 +32,23 @@
                                        VerticalAlignment="Top" HorizontalAlignment="Stretch" 
                                        DataContext="{Binding ImagePresenterViewModel}"/>
             <!--Placeholder for Camera Name-->
-            <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Model}"/>
+            <Grid Grid.Row="0" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" 
+                           Text="{Binding Model}" 
+                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                           TextAlignment="Left"/>
+                <Slider Grid.Row="1" VerticalAlignment="Center"
+                        Minimum="1"
+                        Maximum="3"
+                        Style="{StaticResource SlaveMasterSlider}"
+                        TickFrequency="1"
+                        IsSnapToTickEnabled="True"
+                        Value="{Binding State, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"/>
+            </Grid>
             <!--Placeholder for detailed status-->
             <Label Grid.Row="1" Grid.Column="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
             <!--RHS Controls grid-->

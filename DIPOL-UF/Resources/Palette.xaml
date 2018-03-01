@@ -75,6 +75,12 @@
         <GradientStop Color="#93A5CF" Offset="1"/>
     </GradientStopCollection>
     
+    <GradientStopCollection x:Key="SelectorSliderThumbGradientCollection">
+        <GradientStop Color="#321575" Offset="0"/>
+        <GradientStop Color="#8D0B93" Offset="0.6"/>
+        <GradientStop Color="#FF057C" Offset="1.0"/>
+    </GradientStopCollection>
+    
     <SolidColorBrush x:Key="ColorDisabled" Color="{x:Static SystemColors.ControlLightColor}"/>
     <SolidColorBrush x:Key="BorderColorDisabled" Color="{x:Static SystemColors.InactiveBorderColor}"/>
 

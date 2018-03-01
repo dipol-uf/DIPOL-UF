@@ -76,6 +76,36 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <Style x:Key="SelectorThumb" TargetType="Thumb">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Foreground" >
+            <Setter.Value>
+                <RadialGradientBrush  SpreadMethod="Pad" 
+                                      GradientStops="{StaticResource SelectorSliderThumbGradientCollection}"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template" >
+            <Setter.Value>
+                <ControlTemplate  TargetType="Thumb">
+                    <Ellipse x:Name="PART_ThumbGeometry"
+                                 Height="20" Width="20"
+                                 Margin="0" StrokeThickness="1"
+                                 Stroke="{x:Static SystemColors.ActiveBorderBrush}"
+                                 Fill="{TemplateBinding Foreground}"
+                                 />
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Fill" TargetName="PART_ThumbGeometry" 
+                                    Value="{StaticResource ColorDisabled}"/>
+                            <Setter Property="Stroke" TargetName="PART_ThumbGeometry" 
+                                    Value="{StaticResource BorderColorDisabled}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     <Style x:Key="RepeatButtonForSlider" TargetType="RepeatButton">
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
@@ -162,7 +192,87 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
+    <Style x:Key="SlaveMasterSlider" TargetType="Slider">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Height" Value="20"/>
+        <Setter Property="Width" Value="80"/>
+        <Setter Property="Template" >
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition MinHeight="{TemplateBinding MinHeight}"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Name="PART_Border"
+                                VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                                BorderThickness="1" 
+                                CornerRadius="10"
+                                BorderBrush="{x:Static SystemColors.ActiveBorderBrush}"
+                                Margin="0, 0, 0, 0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger
+                                            Binding="{Binding 
+                                                RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
+                                                Path=DataContext.State}"
+                                            Value="{x:Static enum:ControlState.Individual}">
+                                            <Setter Property="Background" Value="{StaticResource Background_1}"/>
+                                        </DataTrigger>
+                                        <DataTrigger
+                                            Binding="{Binding 
+                                                RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
+                                                Path=DataContext.State}"
+                                            Value="{x:Static enum:ControlState.Master}">
+                                            <Setter Property="Background" Value="{StaticResource Background_2}"/>
+                                        </DataTrigger>
+                                        <DataTrigger
+                                            Binding="{Binding 
+                                                RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
+                                                Path=DataContext.State}"
+                                            Value="{x:Static enum:ControlState.Slave}">
+                                            <Setter Property="Background" Value="{StaticResource Background_3}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                        <Track Grid.Row="0" x:Name="PART_Track"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Stretch"
+                               Margin="3, 0, 3, 0">
+                            <Track.Thumb>
+                                <Thumb Name="PART_Thumb" 
+                                    Style="{StaticResource SelectorThumb}"/>
+                            </Track.Thumb>
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton 
+                                    Margin="0, 0, 12.5, 0"
+                                    Command="Slider.DecreaseLarge"
+                                    Style="{StaticResource RepeatButtonForSlider}"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton
+                                    Margin="-2.5, 0, 0, 0"
+                                    Command="Slider.IncreaseLarge"
+                                    Style="{StaticResource RepeatButtonForSlider}"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="PART_Border" Property="Background" 
+                                    Value="{StaticResource ColorDisabled}"/>
+                            <Setter TargetName="PART_Border" Property="BorderBrush" 
+                                    Value="{StaticResource BorderColorDisabled}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
 
 </ResourceDictionary>
