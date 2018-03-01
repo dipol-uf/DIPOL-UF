@@ -252,14 +252,14 @@
   <data name="General_FanMode_Off" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="General_Load" xml:space="preserve">
+    <value>Load</value>
+  </data>
   <data name="General_Save" xml:space="preserve">
     <value>Save</value>
   </data>
   <data name="General_Submit" xml:space="preserve">
     <value>Submit</value>
-  </data>
-  <data name="Genreal_Load" xml:space="preserve">
-    <value>Load</value>
   </data>
   <data name="MainWindow_CameraManager" xml:space="preserve">
     <value>Camera Manager</value>

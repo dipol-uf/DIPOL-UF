@@ -466,6 +466,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Load.
+        /// </summary>
+        public static string General_Load {
+            get {
+                return ResourceManager.GetString("General_Load", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save.
         /// </summary>
         public static string General_Save {
@@ -480,15 +489,6 @@ namespace DIPOL_UF.Properties {
         public static string General_Submit {
             get {
                 return ResourceManager.GetString("General_Submit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Load.
-        /// </summary>
-        public static string Genreal_Load {
-            get {
-                return ResourceManager.GetString("Genreal_Load", resourceCulture);
             }
         }
         
