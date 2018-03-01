@@ -1,5 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:enum="clr-namespace:DIPOL_UF.Enums">
 
     <!--Basic font styles-->
     <Style x:Key="TitleFont"  TargetType="{x:Type Control}">
@@ -118,7 +119,13 @@
 
     <!--TabItem style-->
     <Style x:Key="TabItemStyle" TargetType="{x:Type TabItem}">
-        <Setter Property="Header" Value="{Binding Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}"/>
+        <!--<Setter Property="Header" 
+                Value="{Binding Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding State}" Value="{x:Static enum:ControlState.Individual}">
+                <Setter Property="Foreground" Value="Red"/>
+            </DataTrigger>
+        </Style.Triggers>-->
     </Style>
 
     <!--ComboBox style-->

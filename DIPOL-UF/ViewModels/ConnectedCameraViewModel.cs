@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using DIPOL_UF.Models;
-using DIPOL_UF.Commands;
-
-using ANDOR_CS.Classes;
-using ANDOR_CS.Enums;
 using System.ComponentModel;
 using System.Collections;
 using System.Runtime.CompilerServices;
+
+using ANDOR_CS.Classes;
+using ANDOR_CS.Enums;
+
+using DIPOL_UF.Models;
+using DIPOL_UF.Commands;
+using DIPOL_UF.Enums;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -158,6 +160,8 @@ namespace DIPOL_UF.ViewModels
                 return model.ProgBarTimer.IsEnabled ? $"{TimeRemaining:F2} s; {CurrentImageIndex}/{1} img" : "";
             }
         }
+
+        public ControlState State => model.State;
 
         /// <summary>
         /// Controls cooler.

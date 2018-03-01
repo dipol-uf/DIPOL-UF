@@ -78,6 +78,11 @@
     <SolidColorBrush x:Key="ColorDisabled" Color="{x:Static SystemColors.ControlLightColor}"/>
     <SolidColorBrush x:Key="BorderColorDisabled" Color="{x:Static SystemColors.InactiveBorderColor}"/>
 
+    <!-- Backgrounds -->
+    <SolidColorBrush x:Key="Background_1" Color="AliceBlue"/>
+    <SolidColorBrush x:Key="Background_2" Color="Aqua"/>
+    <SolidColorBrush x:Key="Background_3" Color="Bisque"/>
+
     <!--Enum text representations-->
     <x:Array x:Key="SwitchEnumTextRepresentation" Type="{x:Type sys:String}">
         <sys:String>Cooling</sys:String>

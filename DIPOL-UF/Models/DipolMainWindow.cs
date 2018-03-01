@@ -258,7 +258,6 @@ namespace DIPOL_UF.Models
             );
 
         }
-                                                        
 
         public void Dispose()
         {
@@ -492,10 +491,9 @@ namespace DIPOL_UF.Models
                 foreach (var x in inst)
                     CameraPanelSelectedItems.TryAdd(x.Key, false);
 
-                var categories = inst
-                                      .Select(item => Helper.GetCameraHostName(item.Key))
-                                      .Distinct()
-                                      .ToArray();
+                var categories = inst.Select(item => Helper.GetCameraHostName(item.Key))
+                                     .Distinct()
+                                     .ToArray();
 
                 foreach (var cat in categories)
                 {

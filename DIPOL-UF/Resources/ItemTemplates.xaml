@@ -147,7 +147,17 @@
     
     
     <!--Camera tab view template-->
-    <DataTemplate x:Key="TabControlItemTemplate" DataType="{x:Type vm:ConnectedCameraViewModel}">
+    <DataTemplate 
+        x:Key="TabControlItemTemplate" 
+        DataType="{x:Type vm:ConnectedCameraViewModel}">
         <cntrl:CameraTab/>
+    </DataTemplate>
+
+    <DataTemplate 
+        x:Key="TabControlItemHeaderTemplate"
+        DataType="{x:Type vm:ConnectedCameraViewModel}">
+        <TextBlock
+            Text="{Binding Camera, Mode=OneWay, Converter={StaticResource CameraToStringAliasConverter}}">
+        </TextBlock>
     </DataTemplate>
 </ResourceDictionary>

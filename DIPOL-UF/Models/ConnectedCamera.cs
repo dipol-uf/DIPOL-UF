@@ -3,18 +3,22 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
+
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 
 using DIPOL_UF.Commands;
+using DIPOL_UF.Enums;
 
 using static DIPOL_UF.DIPOL_UF_App;
-using System.Windows.Threading;
 
 namespace DIPOL_UF.Models
 {
     internal class ConnectedCamera : ObservableObject
     {
+        
+
         private CameraBase _camera;
         private Task _acqTask;
         private CancellationTokenSource _acqTaskCancel;
@@ -27,6 +31,7 @@ namespace DIPOL_UF.Models
         private DelegateCommand _setUpAcquisitionCommand;
         private DelegateCommand _controlAcquisitionCommand;
         private int _currentImageIndex;
+        private ControlState _state = ControlState.Individual;
 
         public string Key
         {
@@ -176,6 +181,18 @@ namespace DIPOL_UF.Models
             }
         }
         public bool AreSettingsApplied => Camera.CurrentSettings != null;
+        public ControlState State
+        {
+            get => _state;
+            set
+            {
+                if (value != _state)
+                {
+                    _state = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
         public DelegateCommand ControlCoolerCommand
         {
             get => _controlCoolerCommand;
@@ -215,7 +232,9 @@ namespace DIPOL_UF.Models
 
         }
 
+
         public DipolImagePresenter ImagePresenterModel { get; } = new DipolImagePresenter();
+
 
         public ConnectedCamera(CameraBase camera, string key)
         {
@@ -317,5 +336,8 @@ namespace DIPOL_UF.Models
             if(Camera.AcquiredImages.TryDequeue(out var im))
                 ImagePresenterModel.LoadImage(im);
         }
+
+        private void ChangeState(ControlState state)
+        { }
     }
 }
