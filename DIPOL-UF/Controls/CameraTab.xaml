@@ -47,7 +47,7 @@
                         Style="{StaticResource SlaveMasterSlider}"
                         TickFrequency="1"
                         IsSnapToTickEnabled="True"
-                        Value="{Binding State, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}"/>
+                        Value="{Binding StateIntVal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             </Grid>
             <!--Placeholder for detailed status-->
             <Label Grid.Row="1" Grid.Column="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>

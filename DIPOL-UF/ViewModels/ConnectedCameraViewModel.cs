@@ -162,6 +162,11 @@ namespace DIPOL_UF.ViewModels
         }
 
         public ControlState State => model.State;
+        public int StateIntVal
+        {
+            get => (int)State;
+            set => model.State = (ControlState)value;
+        }
 
         /// <summary>
         /// Controls cooler.
@@ -212,6 +217,13 @@ namespace DIPOL_UF.ViewModels
                 
         }
 
+        protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            base.OnModelPropertyChanged(sender, e);
+
+            if (e.PropertyName == nameof(model.State))
+                Helper.ExecuteOnUI(() => RaiseErrorChanged(nameof(StateIntVal)));
+        }
         private bool IsTemperatureTextInRange(object value)
         {
             if (value is string s)
