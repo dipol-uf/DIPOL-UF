@@ -17,7 +17,6 @@ namespace DIPOL_UF
         public static Dictionary<string, object> Settings
         {
             get;
-            private set;
         }
 
        

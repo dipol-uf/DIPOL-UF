@@ -563,6 +563,9 @@ namespace DIPOL_UF.Models
                 cam.PropertyChanged += Camera_PropertyChanged;
                 cam.TemperatureStatusChecked += Camera_TemperatureStatusChecked;
                 cam.NewImageReceived += Cam_NewImageReceived;
+#if DEBUG
+                DebugTracer.AddTarget(cam, cam.ToString());
+#endif
             }
         }
 
@@ -599,7 +602,7 @@ namespace DIPOL_UF.Models
             if (sender is CameraBase cam)
             {
                 var key = GetCameraKey(cam);
-                Helper.WriteLog($"[{key}]: {e.PropertyName}");
+                //Helper.WriteLog($"[{key}]: {e.PropertyName}");
                              
             }
         }

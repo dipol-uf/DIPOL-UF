@@ -462,18 +462,18 @@ namespace DIPOL_UF.Models
             InitializeCommands();
             InitializeSamplerGeometry();
 
-            var props = typeof(DipolImagePresenter)
-                        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                        .Where(pi => pi.CanRead)
-                        .ToList();
-            PropertyChanged += (sender, e) => Helper.ExecuteOnUI(() =>
-            {
-                var val = props
-                          .FirstOrDefault(pi => pi.Name == e.PropertyName)
-                          ?.GetValue(this);
-                Console.WriteLine($@"{e.PropertyName}: " +
-                                  $@"{val}");
-            });
+            //var props = typeof(DipolImagePresenter)
+            //            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            //            .Where(pi => pi.CanRead)
+            //            .ToList();
+            //PropertyChanged += (sender, e) => Helper.ExecuteOnUI(() =>
+            //{
+            //    var val = props
+            //              .FirstOrDefault(pi => pi.Name == e.PropertyName)
+            //              ?.GetValue(this);
+            //    Console.WriteLine($@"{e.PropertyName}: " +
+            //                      $@"{val}");
+            //});
 
             _thumbValueChangedTimer.Tick += OnThumbValueChangedTimer_TickAsync;
             _imageSamplerTimer.Tick += OnImageSamplerTimer_TickAsync;
