@@ -15,7 +15,6 @@ namespace DIPOL_UF
         
         public static void AddTarget(INotifyPropertyChanged target, string id)
         {
-            //_targets.Add(target);
             var props = target.GetType()
                               .GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
                               .Where(pi => pi.CanRead)
@@ -38,7 +37,7 @@ namespace DIPOL_UF
 
             var notification = $"{timeStamp} -> {info?.Item1} raised {e.PropertyName}\r\n\tValue: {val}";
 
-            Helper.WriteLog(notification);
+            Console.WriteLine(notification);
         }
     }
 }

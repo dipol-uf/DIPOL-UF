@@ -214,27 +214,89 @@
                                 Margin="0, 0, 0, 0">
                             <Border.Style>
                                 <Style TargetType="Border">
+                                    <Setter Property="Background" Value="Transparent"/>
                                     <Style.Triggers>
                                         <DataTrigger
                                             Binding="{Binding 
                                                 RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type cntr:CameraTab}},
                                                 Path=DataContext.State}"
                                             Value="{x:Static enum:ControlState.Individual}">
-                                            <Setter Property="Background" Value="{StaticResource Background_1}"/>
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="ToIndividual">
+                                                    <Storyboard>
+                                                        <ColorAnimation 
+                                                            To="{StaticResource BackgroundColor_1}" 
+                                                                Duration="0:0:0.1"
+                                                                Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                FillBehavior="HoldEnd"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <BeginStoryboard >
+                                                    <Storyboard>
+                                                        <ColorAnimation 
+                                                                To="Transparent" 
+                                                                    Duration="0:0:0.1"
+                                                                    Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                    FillBehavior="HoldEnd"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.ExitActions>
                                         </DataTrigger>
                                         <DataTrigger
                                             Binding="{Binding 
                                                 RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type cntr:CameraTab}},
                                                 Path=DataContext.State}"
                                             Value="{x:Static enum:ControlState.Master}">
-                                            <Setter Property="Background" Value="{StaticResource Background_2}"/>
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="ToMaster">
+                                                    <Storyboard>
+                                                        <ColorAnimation To="{StaticResource BackgroundColor_2}" 
+                                                                        Duration="0:0:0.1"
+                                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                        FillBehavior="HoldEnd"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <BeginStoryboard >
+                                                    <Storyboard>
+                                                        <ColorAnimation 
+                                                                To="Transparent" 
+                                                                    Duration="0:0:0.1"
+                                                                    Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                    FillBehavior="HoldEnd"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.ExitActions>
                                         </DataTrigger>
                                         <DataTrigger
                                             Binding="{Binding 
                                                 RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type cntr:CameraTab}},
                                                 Path=DataContext.State}"
                                             Value="{x:Static enum:ControlState.Slave}">
-                                            <Setter Property="Background" Value="{StaticResource Background_3}"/>
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="ToSlave">
+                                                    <Storyboard>
+                                                        <ColorAnimation To="{StaticResource BackgroundColor_3}" 
+                                                                        Duration="0:0:0.1"
+                                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                        FillBehavior="HoldEnd"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <BeginStoryboard >
+                                                    <Storyboard>
+                                                        <ColorAnimation 
+                                                                To="Transparent" 
+                                                                    Duration="0:0:0.1"
+                                                                    Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                    FillBehavior="HoldEnd"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.ExitActions>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
