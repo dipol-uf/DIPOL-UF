@@ -23,8 +23,6 @@ namespace DIPOL_UF
         [STAThread]
         static int Main(string[] args)
         {
-
-
             System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
             System.Diagnostics.Debug.AutoFlush = true;
             System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");

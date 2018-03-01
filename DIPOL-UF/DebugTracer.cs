@@ -34,7 +34,7 @@ namespace DIPOL_UF
             var val = "Unavailable";
 
             if (prop != null && sender != null)
-                val = prop.GetValue(sender).ToString();
+                val = prop.GetValue(sender)?.ToString();
 
             var notification = $"{timeStamp} -> {info?.Item1} raised {e.PropertyName}\r\n\tValue: {val}";
 

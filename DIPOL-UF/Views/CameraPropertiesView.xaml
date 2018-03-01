@@ -3,8 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DIPOL_UF.Views"
-        mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
+        xmlns:loc="clr-namespace:DIPOL_UF"
+        xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
+        mc:Ignorable="d" 
+        
+        Style="{StaticResource ResourceKey=ContentFont}"
         Title="{Binding Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}" Height="600" Width="800"  ResizeMode="CanResizeWithGrip" 
         MinWidth="600" MinHeight="200">
     <DataGrid ItemsSource="{Binding AllProperties, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
@@ -14,8 +17,10 @@
               IsReadOnly="True" HeadersVisibility="Column"
               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Property" Binding="{Binding Item1, Mode=OneWay}" Width="*" />
-            <DataGridTextColumn Header="Value" Binding="{Binding Item2, Mode=OneWay}" Width="3*">
+                <DataGridTextColumn Header="{loc:Text Key=CameraProperties_Property}" 
+                                    Binding="{Binding Item1, Mode=OneWay}" Width="*" />
+            <DataGridTextColumn Header="{loc:Text Key=CameraProperties_Value}" 
+                                Binding="{Binding Item2, Mode=OneWay}" Width="3*">
                 <DataGridTextColumn.ElementStyle>
                     <Style>
                         <Setter Property="TextBlock.TextWrapping" Value="WrapWithOverflow"/>

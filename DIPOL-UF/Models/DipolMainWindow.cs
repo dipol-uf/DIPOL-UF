@@ -25,8 +25,6 @@ namespace DIPOL_UF.Models
     {
         private readonly DispatcherTimer _UIStatusUpdateTimer;
 
-        private readonly DispatcherTimer _TestTimer;
-
         private bool? _camPanelAreAllSelected = false;
         private bool _canConnect;
         private bool _isDisposed;

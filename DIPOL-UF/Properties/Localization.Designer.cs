@@ -61,6 +61,87 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cycles.
+        /// </summary>
+        public static string AcquisitionSettings_Cycles {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_Cycles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Image size.
+        /// </summary>
+        public static string AcquisitionSettings_ImageSize {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_ImageSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings.
+        /// </summary>
+        public static string AcquisitionSettings_Settings {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set up acquisition process.
+        /// </summary>
+        public static string AcquisitionSettings_WindowName {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_WindowName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dipol-UF.
+        /// </summary>
+        public static string ApplicationName {
+            get {
+                return ResourceManager.GetString("ApplicationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Available Cameras.
+        /// </summary>
+        public static string AvailableCameras {
+            get {
+                return ResourceManager.GetString("AvailableCameras", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found.
+        /// </summary>
+        public static string AvailableCameras_Found {
+            get {
+                return ResourceManager.GetString("AvailableCameras_Found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Property.
+        /// </summary>
+        public static string CameraProperties_Property {
+            get {
+                return ResourceManager.GetString("CameraProperties_Property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value.
+        /// </summary>
+        public static string CameraProperties_Value {
+            get {
+                return ResourceManager.GetString("CameraProperties_Value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Acquisition.
         /// </summary>
         public static string CameraTab_Acquisition {
@@ -313,11 +394,47 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string General_Cancel {
+            get {
+                return ResourceManager.GetString("General_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Color.
         /// </summary>
         public static string General_Color {
             get {
                 return ResourceManager.GetString("General_Color", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connect.
+        /// </summary>
+        public static string General_Connect {
+            get {
+                return ResourceManager.GetString("General_Connect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connect All.
+        /// </summary>
+        public static string General_ConnectAll {
+            get {
+                return ResourceManager.GetString("General_ConnectAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Disconnect.
+        /// </summary>
+        public static string General_Disconnect {
+            get {
+                return ResourceManager.GetString("General_Disconnect", resourceCulture);
             }
         }
         
@@ -345,6 +462,42 @@ namespace DIPOL_UF.Properties {
         public static string General_FanMode_Off {
             get {
                 return ResourceManager.GetString("General_FanMode_Off", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save.
+        /// </summary>
+        public static string General_Save {
+            get {
+                return ResourceManager.GetString("General_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Submit.
+        /// </summary>
+        public static string General_Submit {
+            get {
+                return ResourceManager.GetString("General_Submit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Load.
+        /// </summary>
+        public static string Genreal_Load {
+            get {
+                return ResourceManager.GetString("Genreal_Load", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Camera Manager.
+        /// </summary>
+        public static string MainWindow_CameraManager {
+            get {
+                return ResourceManager.GetString("MainWindow_CameraManager", resourceCulture);
             }
         }
         
