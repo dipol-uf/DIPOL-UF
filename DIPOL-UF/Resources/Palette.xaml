@@ -79,9 +79,9 @@
     <SolidColorBrush x:Key="BorderColorDisabled" Color="{x:Static SystemColors.InactiveBorderColor}"/>
 
     <!-- Backgrounds -->
-    <SolidColorBrush x:Key="Background_1" Color="AliceBlue"/>
-    <SolidColorBrush x:Key="Background_2" Color="Aqua"/>
-    <SolidColorBrush x:Key="Background_3" Color="Bisque"/>
+    <SolidColorBrush x:Key="Background_1" Color="#41B3A3"/>
+    <SolidColorBrush x:Key="Background_2" Color="#E27D60"/>
+    <SolidColorBrush x:Key="Background_3" Color="#659DBD"/>
 
     <!--Enum text representations-->
     <x:Array x:Key="SwitchEnumTextRepresentation" Type="{x:Type sys:String}">
