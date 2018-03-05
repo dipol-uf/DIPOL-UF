@@ -48,7 +48,7 @@ namespace Tests
                 var viewModel = new DipolImagePresnterViewModel(model);
                 var wind = new DebugWindow()
                 {
-                    TestPresenter = { DataContext = viewModel }
+                    //TestPresenter = { DataContext = viewModel }
                 };
                 var buffer = new byte[1024  * 512 * sizeof(ushort)];
                 
@@ -60,14 +60,14 @@ namespace Tests
                 };
 
 
-                t.Tick += (sender, e) =>
-                {
-                    r.NextBytes(buffer);
-                    model.LoadImage(new Image(buffer, 1024, 512, TypeCode.UInt16));
-                    TextExtension.UpdateUICullture(new CultureInfo("ru-RU"));
-                    t.Stop();
-                };
-                t.Start();
+                //t.Tick += (sender, e) =>
+                //{
+                //    r.NextBytes(buffer);
+                //    model.LoadImage(new Image(buffer, 1024, 512, TypeCode.UInt16));
+                //    TextExtension.UpdateUICullture(new CultureInfo("ru-RU"));
+                //    t.Stop();
+                //};
+                //t.Start();
                 app.Run(wind);
               
 

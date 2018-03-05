@@ -199,6 +199,10 @@
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="Height" Value="20"/>
         <Setter Property="Width" Value="80"/>
+        <Setter Property="Minimum" Value="1"/>
+        <Setter Property="Maximum" Value="3"/>
+        <Setter Property="IsSnapToTickEnabled" Value="True"/>
+        <Setter Property="TickFrequency" Value="1"/>
         <Setter Property="Template" >
             <Setter.Value>
                 <ControlTemplate TargetType="Slider">
@@ -211,96 +215,12 @@
                                 BorderThickness="1" 
                                 CornerRadius="10"
                                 BorderBrush="{x:Static SystemColors.ActiveBorderBrush}"
-                                Margin="0, 0, 0, 0">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Style.Triggers>
-                                        <DataTrigger
-                                            Binding="{Binding 
-                                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type cntr:CameraTab}},
-                                                Path=DataContext.State}"
-                                            Value="{x:Static enum:ControlState.Individual}">
-                                            <DataTrigger.EnterActions>
-                                                <BeginStoryboard Name="ToIndividual">
-                                                    <Storyboard>
-                                                        <ColorAnimation 
-                                                            To="{StaticResource BackgroundColor_1}" 
-                                                                Duration="0:0:0.1"
-                                                                Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
-                                                                FillBehavior="HoldEnd"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </DataTrigger.EnterActions>
-                                            <DataTrigger.ExitActions>
-                                                <BeginStoryboard >
-                                                    <Storyboard>
-                                                        <ColorAnimation 
-                                                                To="Transparent" 
-                                                                    Duration="0:0:0.1"
-                                                                    Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
-                                                                    FillBehavior="HoldEnd"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </DataTrigger.ExitActions>
-                                        </DataTrigger>
-                                        <DataTrigger
-                                            Binding="{Binding 
-                                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type cntr:CameraTab}},
-                                                Path=DataContext.State}"
-                                            Value="{x:Static enum:ControlState.Master}">
-                                            <DataTrigger.EnterActions>
-                                                <BeginStoryboard Name="ToMaster">
-                                                    <Storyboard>
-                                                        <ColorAnimation To="{StaticResource BackgroundColor_2}" 
-                                                                        Duration="0:0:0.1"
-                                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
-                                                                        FillBehavior="HoldEnd"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </DataTrigger.EnterActions>
-                                            <DataTrigger.ExitActions>
-                                                <BeginStoryboard >
-                                                    <Storyboard>
-                                                        <ColorAnimation 
-                                                                To="Transparent" 
-                                                                    Duration="0:0:0.1"
-                                                                    Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
-                                                                    FillBehavior="HoldEnd"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </DataTrigger.ExitActions>
-                                        </DataTrigger>
-                                        <DataTrigger
-                                            Binding="{Binding 
-                                                RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type cntr:CameraTab}},
-                                                Path=DataContext.State}"
-                                            Value="{x:Static enum:ControlState.Slave}">
-                                            <DataTrigger.EnterActions>
-                                                <BeginStoryboard Name="ToSlave">
-                                                    <Storyboard>
-                                                        <ColorAnimation To="{StaticResource BackgroundColor_3}" 
-                                                                        Duration="0:0:0.1"
-                                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
-                                                                        FillBehavior="HoldEnd"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </DataTrigger.EnterActions>
-                                            <DataTrigger.ExitActions>
-                                                <BeginStoryboard >
-                                                    <Storyboard>
-                                                        <ColorAnimation 
-                                                                To="Transparent" 
-                                                                    Duration="0:0:0.1"
-                                                                    Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
-                                                                    FillBehavior="HoldEnd"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </DataTrigger.ExitActions>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
+                                Margin="0, 0, 0, 0"
+                               >
+                            <Border.Background>
+                                <SolidColorBrush x:Name="PART_BorderBrush" 
+                                                 Color="{StaticResource BackgroundColor_0}"/>
+                            </Border.Background>
                         </Border>
                         <Track Grid.Row="0" x:Name="PART_Track"
                                VerticalAlignment="Center"
@@ -330,6 +250,61 @@
                                     Value="{StaticResource ColorDisabled}"/>
                             <Setter TargetName="PART_Border" Property="BorderBrush" 
                                     Value="{StaticResource BorderColorDisabled}"/>
+                        </Trigger>
+                        <EventTrigger RoutedEvent="ValueChanged">
+                        </EventTrigger>
+                        <Trigger Property="Value" Value="1">
+                            <Trigger.EnterActions>
+                                <RemoveStoryboard BeginStoryboardName="Animation_From_1"/>
+                                <BeginStoryboard x:Name="Animation_To_1">
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color"
+                                                Duration="{StaticResource ColorChangeDuration}">
+                                        <ColorAnimation 
+                                            From="{StaticResource BackgroundColor_2}"
+                                            To="{StaticResource BackgroundColor_1}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <RemoveStoryboard BeginStoryboardName="Animation_To_1"/>
+                                <BeginStoryboard x:Name="Animation_From_1">
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color"
+                                                Duration="{StaticResource ColorChangeDuration}">
+                                        <ColorAnimation 
+                                            From="{StaticResource BackgroundColor_1}"
+                                            To="{StaticResource BackgroundColor_2}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="Value" Value="2">
+                            <Trigger.ExitActions>
+                                <RemoveStoryboard BeginStoryboardName="Animation_From_1"/>
+                                <RemoveStoryboard BeginStoryboardName="Animation_From_3"/>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="Value" Value="3">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard x:Name="Animation_To_3">
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color"
+                                                Duration="{StaticResource ColorChangeDuration}">
+                                        <ColorAnimation 
+                                            From="{StaticResource BackgroundColor_2}"
+                                            To="{StaticResource BackgroundColor_3}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <RemoveStoryboard BeginStoryboardName="Animation_To_3"/>
+                                <BeginStoryboard x:Name="Animation_From_3">
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color"
+                                                Duration="{StaticResource ColorChangeDuration}">
+                                        <ColorAnimation 
+                                            From="{StaticResource BackgroundColor_3}"
+                                            To="{StaticResource BackgroundColor_2}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
