@@ -5,7 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:controls="clr-namespace:DIPOL_UF.Controls"
         mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="700" Background="Aquamarine">
+             d:DesignHeight="600" d:DesignWidth="700">
     <Grid Margin="20">
         <!--<controls:DipolImagePresenter x:Name="TestPresenter" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>-->
         <Slider Style="{StaticResource SlaveMasterSlider}" 

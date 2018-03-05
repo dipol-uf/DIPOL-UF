@@ -219,7 +219,8 @@
                                >
                             <Border.Background>
                                 <SolidColorBrush x:Name="PART_BorderBrush" 
-                                                 Color="{StaticResource BackgroundColor_0}"/>
+                                                 Color="{StaticResource BackgroundColor_2}"
+                                                 />
                             </Border.Background>
                         </Border>
                         <Track Grid.Row="0" x:Name="PART_Track"
@@ -253,55 +254,56 @@
                         </Trigger>
                         <EventTrigger RoutedEvent="ValueChanged">
                         </EventTrigger>
+                        <Trigger Property="Value" Value="2">
+                            <Trigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="Animation_From_3"/>
+                                <StopStoryboard BeginStoryboardName="Animation_From_1"/>
+                            </Trigger.ExitActions>
+                        </Trigger>
                         <Trigger Property="Value" Value="1">
                             <Trigger.EnterActions>
-                                <RemoveStoryboard BeginStoryboardName="Animation_From_1"/>
                                 <BeginStoryboard x:Name="Animation_To_1">
-                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color"
-                                                Duration="{StaticResource ColorChangeDuration}">
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color">
                                         <ColorAnimation 
                                             From="{StaticResource BackgroundColor_2}"
-                                            To="{StaticResource BackgroundColor_1}"/>
+                                            To="{StaticResource BackgroundColor_1}"
+                                            AutoReverse="False"
+                                            Duration="{StaticResource ColorChangeDuration}"
+                                            />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
                                 <RemoveStoryboard BeginStoryboardName="Animation_To_1"/>
                                 <BeginStoryboard x:Name="Animation_From_1">
-                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color"
-                                                Duration="{StaticResource ColorChangeDuration}">
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color">
                                         <ColorAnimation 
                                             From="{StaticResource BackgroundColor_1}"
-                                            To="{StaticResource BackgroundColor_2}"/>
+                                            To="{StaticResource BackgroundColor_2}"
+                                            Duration="{StaticResource ColorChangeDuration}"/>
                                     </Storyboard>
                                 </BeginStoryboard>
-                            </Trigger.ExitActions>
-                        </Trigger>
-                        <Trigger Property="Value" Value="2">
-                            <Trigger.ExitActions>
-                                <RemoveStoryboard BeginStoryboardName="Animation_From_1"/>
-                                <RemoveStoryboard BeginStoryboardName="Animation_From_3"/>
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="Value" Value="3">
                             <Trigger.EnterActions>
                                 <BeginStoryboard x:Name="Animation_To_3">
-                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color"
-                                                Duration="{StaticResource ColorChangeDuration}">
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color">
                                         <ColorAnimation 
                                             From="{StaticResource BackgroundColor_2}"
-                                            To="{StaticResource BackgroundColor_3}"/>
+                                            To="{StaticResource BackgroundColor_3}"
+                                            Duration="{StaticResource ColorChangeDuration}"/>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
                                 <RemoveStoryboard BeginStoryboardName="Animation_To_3"/>
                                 <BeginStoryboard x:Name="Animation_From_3">
-                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color"
-                                                Duration="{StaticResource ColorChangeDuration}">
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color">
                                         <ColorAnimation 
                                             From="{StaticResource BackgroundColor_3}"
-                                            To="{StaticResource BackgroundColor_2}"/>
+                                            To="{StaticResource BackgroundColor_2}"
+                                            Duration="{StaticResource ColorChangeDuration}"/>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>

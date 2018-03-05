@@ -85,10 +85,9 @@
     <SolidColorBrush x:Key="BorderColorDisabled" Color="{x:Static SystemColors.InactiveBorderColor}"/>
 
     <!-- Backgrounds -->
-    <Color x:Key="BackgroundColor_0">#F1F3F3</Color>
-    <Color x:Key="BackgroundColor_1">#41B3A3</Color>
-    <Color x:Key="BackgroundColor_2">#E27D60</Color>
-    <Color x:Key="BackgroundColor_3">#659DBD</Color>
+    <Color x:Key="BackgroundColor_1">#E27D60</Color>
+    <Color x:Key="BackgroundColor_2">#659DBD</Color>
+    <Color x:Key="BackgroundColor_3">#41B3A3</Color>
 
     <SolidColorBrush x:Key="Background_1" Color="{StaticResource BackgroundColor_1}"/>
     <SolidColorBrush x:Key="Background_2" Color="{StaticResource BackgroundColor_2}"/>
@@ -132,5 +131,5 @@
     <sys:Double x:Key="ContentFontSize">15</sys:Double>
     
     <!-- Aniamtion Timing -->
-    <Duration x:Key="ColorChangeDuration">0:00:00.7</Duration>
+    <Duration x:Key="ColorChangeDuration">0:00:00.5</Duration>
 </ResourceDictionary>
