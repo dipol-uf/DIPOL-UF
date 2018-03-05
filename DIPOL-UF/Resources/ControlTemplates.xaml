@@ -252,14 +252,6 @@
                             <Setter TargetName="PART_Border" Property="BorderBrush" 
                                     Value="{StaticResource BorderColorDisabled}"/>
                         </Trigger>
-                        <EventTrigger RoutedEvent="ValueChanged">
-                        </EventTrigger>
-                        <Trigger Property="Value" Value="2">
-                            <Trigger.ExitActions>
-                                <StopStoryboard BeginStoryboardName="Animation_From_3"/>
-                                <StopStoryboard BeginStoryboardName="Animation_From_1"/>
-                            </Trigger.ExitActions>
-                        </Trigger>
                         <Trigger Property="Value" Value="1">
                             <Trigger.EnterActions>
                                 <BeginStoryboard x:Name="Animation_To_1">
