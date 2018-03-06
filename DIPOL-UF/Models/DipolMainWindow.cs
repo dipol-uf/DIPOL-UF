@@ -506,20 +506,22 @@ namespace DIPOL_UF.Models
                                 .Select(item => new KeyValuePair<string, ConnectedCameraTreeItemViewModel>(
                                     item.Key,
                                     new ConnectedCameraTreeItemViewModel(
-                                        new ConnectedCameraTreeItemModel(item.Value)
-                                        {
-                                            ContextMenu = new MenuCollection()
-                                            {
-                                                new MenuItemViewModel(
-                                                    new MenuItemModel()
-                                                    {
-                                                        Header = "Properties",
-                                                        Command = new DelegateCommand(
-                                                            (param) => ContextMenuCommandExecute("Properties", param),
-                                                            DelegateCommand.CanExecuteAlways)
-                                                    })
-                                            }
-                                        }))))
+                                        ConnectedCameras[item.Key].Model
+                                        //new ConnectedCameraTreeItemModel(item.Value)
+                                        //{
+                                        //    ContextMenu = new MenuCollection()
+                                        //    {
+                                        //        new MenuItemViewModel(
+                                        //            new MenuItemModel()
+                                        //            {
+                                        //                Header = "Properties",
+                                        //                Command = new DelegateCommand(
+                                        //                    (param) => ContextMenuCommandExecute("Properties", param),
+                                        //                    DelegateCommand.CanExecuteAlways)
+                                        //            })
+                                        //    }
+                                        //}
+                    ))))
                     }));
                 }
             }
