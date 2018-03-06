@@ -546,25 +546,6 @@ namespace DIPOL_UF.Models
 
         }
 
-        private static void ContextMenuCommandExecute(string command, object param)
-        {
-            if(command == "Properties")
-                if (param is DependencyObject obj)
-                {
-                    var parentObj = Helper.FindParentOfType<System.Windows.Controls.StackPanel>(obj);
-                    if (parentObj is System.Windows.Controls.StackPanel parent)
-                        if (parent.DataContext is KeyValuePair<string,ConnectedCameraTreeItemViewModel> viewmodel)
-                        {
-                            var vm = new CameraPropertiesViewModel(viewmodel.Value.Camera);
-                            var window = new Views.CameraPropertiesView(vm)
-                            {
-                                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                                Owner = Helper.FindParentOfType<Window>(parent)
-                            };
-                            window.Show();
-                        }
-                }
-        }
         /// <summary>
         /// Hooks events of the connected camera instance.
         /// </summary>

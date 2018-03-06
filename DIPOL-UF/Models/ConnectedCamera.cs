@@ -265,16 +265,15 @@ namespace DIPOL_UF.Models
 
         public void ContextMenuCommandExecute(object parameter)
         {
-            if (parameter is FrameworkElement elem
-                && elem.DataContext is ViewModels.MenuItemViewModel vm)
+            if (parameter is string menu)
             {
-                switch (vm.Header)
+                switch (menu)
                 {
                     case "Properties":
                         var propVM = new ViewModels.CameraPropertiesViewModel(Camera);
                         var window = new Views.CameraPropertiesView(propVM)
                         {
-                            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                            WindowStartupLocation = WindowStartupLocation.CenterScreen,
                             Topmost = true
                         };
                         window.Show();

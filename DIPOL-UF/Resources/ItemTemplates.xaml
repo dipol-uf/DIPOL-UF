@@ -39,7 +39,7 @@
                                     <ContextMenu.ItemContainerStyle>
                                         <Style TargetType="{x:Type MenuItem}">
                                             <Setter Property="Command" Value="{Binding Command}"/>
-                                            <Setter Property="CommandParameter" Value="{Binding RelativeSource={RelativeSource Self}}"/>
+                                            <Setter Property="CommandParameter" Value="{Binding Header}"/>
                                         </Style>
                                     </ContextMenu.ItemContainerStyle>
                                 </ContextMenu>
@@ -55,16 +55,13 @@
                                     <CheckBox.IsChecked>
                                         <MultiBinding Converter="{StaticResource ResourceKey=CameraKeyToValueMultiConverter}" 
                                                       UpdateSourceTrigger="PropertyChanged" Mode="OneWay">
-                                            <Binding Path="Key" Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding Path="Key" Mode="OneWay" />
                                             <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" 
                                                      Path="DataContext.CameraPanelSelectedItems" Mode="OneWay"
-                                                     UpdateSourceTrigger="PropertyChanged"/>
+                                                     />
                                         </MultiBinding>
                                     </CheckBox.IsChecked>
                                 </CheckBox>
-                                      <!--Checked="{cmnds:EventToCommand CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
-                                      Unchecked="{cmnds:EventToCommand CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"-->
-                                <!--CameraBase.ToString() to get camera name-->
                                 <Label Content="{Binding Value.Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}" VerticalAlignment="Center" Width="155"/>
                             </StackPanel>
                             <!--Second horizontal panel contains temperature information-->
