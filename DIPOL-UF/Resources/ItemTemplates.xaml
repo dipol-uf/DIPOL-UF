@@ -78,8 +78,7 @@
                                         ConverterParameter="Temp"
                                         UpdateSourceTrigger="PropertyChanged"
                                         StringFormat="\{0,6:#0.00\}">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                                 UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
                                             <Binding Path="Key"/>
                                         </MultiBinding>
                                     </Label.Content>
@@ -90,8 +89,7 @@
                                             Converter="{StaticResource ResourceKey=TemperatureToBrushMultiConverter}"
                                             ConverterParameter="{StaticResource TemperatureColorBrushCollection}"
                                             UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                                 UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
                                             <Binding Path="Key"/>
                                         </MultiBinding>
                                     </Label.Foreground>
@@ -104,8 +102,7 @@
                                             Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
                                             ConverterParameter="TempStatus"
                                             UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                                 UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
                                             <Binding Path="Key"/>
                                         </MultiBinding>
                                     </Label.Content>
@@ -115,8 +112,7 @@
                                             Converter="{StaticResource ResourceKey=TemperatureStatusToBrushMultiConverter}"
                                             ConverterParameter="{StaticResource TemperatureStatusColorBrushCollection}"
                                             UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                                 UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
                                             <Binding Path="Key"/>                                            
                                         </MultiBinding>
                                     </Label.Foreground>
