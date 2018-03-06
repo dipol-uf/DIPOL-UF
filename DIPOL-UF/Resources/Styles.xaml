@@ -132,6 +132,9 @@
                     <Border CornerRadius="0" Margin="-6.5 -1.5, -6.5, -1.5"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch">
+                        <Border.Background>
+                            <SolidColorBrush Color="{StaticResource BackgroundColor_2}"/>
+                        </Border.Background>
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Style.Triggers>
@@ -143,7 +146,7 @@
                                         <!--<Setter Property="Background" Value="{StaticResource Background_1}"/>-->
                                         <DataTrigger.EnterActions>
                                             <BeginStoryboard x:Name="Animation_To_3">
-                                                <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color">
+                                                <Storyboard TargetProperty="(Border.Background).(SolidColorBrush.Color)">
                                                     <ColorAnimation 
                                                         From="{StaticResource BackgroundColor_2}"
                                                         To="{StaticResource BackgroundColor_3}"
@@ -155,7 +158,7 @@
                                         </DataTrigger.EnterActions>
                                         <DataTrigger.ExitActions>
                                             <BeginStoryboard x:Name="Animation_From_3">
-                                                <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color">
+                                                <Storyboard TargetProperty="(Border.Background).(SolidColorBrush.Color)">
                                                     <ColorAnimation 
                                                         From="{StaticResource BackgroundColor_3}"
                                                         To="{StaticResource BackgroundColor_2}"
@@ -172,6 +175,30 @@
                                         Path=DataContext.State}"
                                         Value="{x:Static enum:ControlState.Master}">
                                         <!--<Setter Property="Background" Value="{StaticResource Background_3}"/>-->
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="Animation_To_1">
+                                                <Storyboard TargetProperty="(Border.Background).(SolidColorBrush.Color)">
+                                                    <ColorAnimation 
+                                                        From="{StaticResource BackgroundColor_2}"
+                                                        To="{StaticResource BackgroundColor_1}"
+                                                        Duration="{StaticResource ColorChangeDuration}"
+                                                        FillBehavior="HoldEnd"
+                                                    />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard x:Name="Animation_From_1">
+                                                <Storyboard TargetProperty="(Border.Background).(SolidColorBrush.Color)">
+                                                    <ColorAnimation 
+                                                        From="{StaticResource BackgroundColor_1}"
+                                                        To="{StaticResource BackgroundColor_2}"
+                                                        Duration="{StaticResource ColorChangeDuration}"
+                                                        FillBehavior="Stop"
+                                                    />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
                                     </DataTrigger>
                                     
                                 </Style.Triggers>
