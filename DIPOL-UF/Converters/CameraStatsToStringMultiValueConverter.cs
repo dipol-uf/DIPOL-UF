@@ -25,9 +25,6 @@ namespace DIPOL_UF.Converters
             else return value?.ToString() ?? "";
         }
 
-       
-
-
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();

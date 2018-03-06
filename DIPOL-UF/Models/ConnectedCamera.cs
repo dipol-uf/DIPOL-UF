@@ -18,6 +18,7 @@ namespace DIPOL_UF.Models
 {
     internal class ConnectedCamera : ObservableObject
     {
+
         // Used by TreeItemViewModel
         private ObservableCollection<ViewModels.MenuItemViewModel> _contextMenu
             = new ObservableCollection<ViewModels.MenuItemViewModel>();
