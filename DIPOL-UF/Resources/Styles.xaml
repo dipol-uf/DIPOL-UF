@@ -139,23 +139,41 @@
                                         Binding="{Binding 
                                             RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
                                         Path=DataContext.State}"
-                                        Value="{x:Static enum:ControlState.Individual}">
-                                        <Setter Property="Background" Value="{StaticResource Background_1}"/>
+                                        Value="{x:Static enum:ControlState.Slave}">
+                                        <!--<Setter Property="Background" Value="{StaticResource Background_1}"/>-->
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="Animation_To_3">
+                                                <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color">
+                                                    <ColorAnimation 
+                                                        From="{StaticResource BackgroundColor_2}"
+                                                        To="{StaticResource BackgroundColor_3}"
+                                                        Duration="{StaticResource ColorChangeDuration}"
+                                                        FillBehavior="HoldEnd"
+                                                    />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard x:Name="Animation_From_3">
+                                                <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color">
+                                                    <ColorAnimation 
+                                                        From="{StaticResource BackgroundColor_3}"
+                                                        To="{StaticResource BackgroundColor_2}"
+                                                        Duration="{StaticResource ColorChangeDuration}"
+                                                        FillBehavior="Stop"
+                                                    />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
                                     </DataTrigger>
                                     <DataTrigger
                                         Binding="{Binding 
                                             RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
                                         Path=DataContext.State}"
                                         Value="{x:Static enum:ControlState.Master}">
-                                        <Setter Property="Background" Value="{StaticResource Background_2}"/>
+                                        <!--<Setter Property="Background" Value="{StaticResource Background_3}"/>-->
                                     </DataTrigger>
-                                    <DataTrigger
-                                        Binding="{Binding 
-                                            RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
-                                        Path=DataContext.State}"
-                                        Value="{x:Static enum:ControlState.Slave}">
-                                        <Setter Property="Background" Value="{StaticResource Background_3}"/>
-                                    </DataTrigger>
+                                    
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
