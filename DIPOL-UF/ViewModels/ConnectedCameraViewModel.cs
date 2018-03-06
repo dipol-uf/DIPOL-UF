@@ -227,8 +227,11 @@ namespace DIPOL_UF.ViewModels
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(StateIntVal)));
 
             if (e.PropertyName == nameof(model.ConnectedCameras))
+            {
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(CanChangeMode)));
+            }
         }
+
         private bool IsTemperatureTextInRange(object value)
         {
             if (value is string s)

@@ -111,6 +111,8 @@
     </Compile>
     <Compile Include="Converters\BoolToBoolMultiValueConverter.cs" />
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
+    <Compile Include="Converters\DebugConverter.cs" />
+    <Compile Include="Converters\DefaultValueConverter.cs" />
     <Compile Include="Converters\GeometryRulesToStreamGeometryValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToDictionaryValueMultiValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToStringValueConverter.cs" />

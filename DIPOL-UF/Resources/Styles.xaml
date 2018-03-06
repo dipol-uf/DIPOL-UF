@@ -143,7 +143,6 @@
                                             RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
                                         Path=DataContext.State}"
                                         Value="{x:Static enum:ControlState.Slave}">
-                                        <!--<Setter Property="Background" Value="{StaticResource Background_1}"/>-->
                                         <DataTrigger.EnterActions>
                                             <BeginStoryboard x:Name="Animation_To_3">
                                                 <Storyboard TargetProperty="(Border.Background).(SolidColorBrush.Color)">
@@ -174,7 +173,6 @@
                                             RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
                                         Path=DataContext.State}"
                                         Value="{x:Static enum:ControlState.Master}">
-                                        <!--<Setter Property="Background" Value="{StaticResource Background_3}"/>-->
                                         <DataTrigger.EnterActions>
                                             <BeginStoryboard x:Name="Animation_To_1">
                                                 <Storyboard TargetProperty="(Border.Background).(SolidColorBrush.Color)">
@@ -200,7 +198,6 @@
                                             </BeginStoryboard>
                                         </DataTrigger.ExitActions>
                                     </DataTrigger>
-                                    
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>

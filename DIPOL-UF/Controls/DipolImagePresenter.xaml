@@ -310,13 +310,21 @@
                         SamplerColorBrushIndex, 
                         Mode=TwoWay, 
                         UpdateSourceTrigger=PropertyChanged}" 
-                      ItemsSource="{x:Static vms:DipolImagePresnterViewModel.ColorPickerColor}"
+                      ItemsSource="{StaticResource ColorPickerColors}"
                       Margin="{StaticResource HorizontalPBMargin}"
                       HorizontalContentAlignment="Stretch"
                       VerticalContentAlignment="Stretch">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="{Binding}" MinHeight="20"  BorderBrush="Black" BorderThickness="1"/>
+                        <Border MinHeight="20"  BorderBrush="Black" BorderThickness="1">
+                            <Border.Background>
+                                <Binding Converter="{StaticResource DefaultConverter}">
+                                    <Binding.ConverterParameter>
+                                        <SolidColorBrush Color="Transparent"/>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </Border.Background>
+                        </Border>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>

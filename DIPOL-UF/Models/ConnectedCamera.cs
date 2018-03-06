@@ -403,7 +403,7 @@ namespace DIPOL_UF.Models
             if (newState == ControlState.Master)
             {
                 foreach(var item in ConnectedCameras.Values)
-                    item.ChangeState(ControlState.Slave);
+                    item.State = ControlState.Slave;
                 NotifyCollectionChanged();
             }
             
