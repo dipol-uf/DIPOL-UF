@@ -13,7 +13,12 @@ namespace DIPOL_UF.Converters
             var value = new CameraStatsToValueMultiValueConverter().ConvertWorker(values, targetType, parameter, culture);
 
             if (value is Enum en)
-                return Helper.GetEnumDescription(en, en.GetType());
+            {
+                var tp = en.GetType();
+                var resourceName = $"General_{en.GetType().Name}_{en}";
+                var localizedText = Properties.Localization.ResourceManager.GetString(resourceName);
+                return localizedText ?? Helper.GetEnumDescription(en, en.GetType());
+            }
 
             if (value is float)
                 return ((float)value).ToString("#0.00");
