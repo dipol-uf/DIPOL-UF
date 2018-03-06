@@ -647,6 +647,7 @@ namespace DIPOL_UF.Models
                         camInstance.Model.Camera.CoolerControl(Switch.Disabled);
                         camInstance.Model.Camera.TemperatureMonitor(Switch.Disabled);
                         camInstance.Model.Camera.Dispose();
+                        camInstance.Model.Dispose();
                     }
                 });
            

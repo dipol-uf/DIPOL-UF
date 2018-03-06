@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Threading;
 
 using ANDOR_CS.Classes;
@@ -16,8 +19,11 @@ using static DIPOL_UF.DIPOL_UF_App;
 
 namespace DIPOL_UF.Models
 {
-    internal class ConnectedCamera : ObservableObject
+    internal class ConnectedCamera : ObservableObject, IDisposable
     {
+
+        private static readonly ConcurrentDictionary<string, ConnectedCamera> connectedCameras 
+            = new ConcurrentDictionary<string, ConnectedCamera>();
 
         // Used by TreeItemViewModel
         private ObservableCollection<ViewModels.MenuItemViewModel> _contextMenu
@@ -37,7 +43,6 @@ namespace DIPOL_UF.Models
         private int _currentImageIndex;
         private ControlState _state = ControlState.Individual;
 
-
         // Used by TreeItemViewModel
         public ObservableCollection<ViewModels.MenuItemViewModel> ContextMenu
         {
@@ -52,6 +57,8 @@ namespace DIPOL_UF.Models
             }
         }
 
+        public IReadOnlyDictionary<string, ConnectedCamera> ConnectedCameras
+            => connectedCameras;
 
         public string Key
         {
@@ -208,7 +215,7 @@ namespace DIPOL_UF.Models
             {
                 if (value != _state)
                 {
-                    _state = value;
+                    ChangeState(value);
                     RaisePropertyChanged();
                 }
             }
@@ -262,8 +269,9 @@ namespace DIPOL_UF.Models
             InitializeCommands();
             Camera.PropertyChanged += Camera_PropertyCahnged;
             Camera.NewImageReceived += Camera_NewImageReceived;
+            connectedCameras.TryAdd(Camera.ToString(), this);
+            NotifyCollectionChanged();
         }
-
         public void ContextMenuCommandExecute(object parameter)
         {
             if (parameter is string menu)
@@ -282,6 +290,21 @@ namespace DIPOL_UF.Models
                 }
 
             }
+        }
+
+        public void Dispose()
+        {
+            if (Camera != null)
+            {
+                connectedCameras.TryRemove(Camera.ToString(), out _);
+                NotifyCollectionChanged();
+            }
+        }
+
+        private static void NotifyCollectionChanged()
+        {
+            foreach(var item in connectedCameras.Values)
+                item.RaisePropertyChanged(nameof(ConnectedCameras));
         }
 
         private void InitializeCommands()
@@ -375,7 +398,16 @@ namespace DIPOL_UF.Models
                 ImagePresenterModel.LoadImage(im);
         }
 
-        private void ChangeState(ControlState state)
-        { }
+        private void ChangeState(ControlState newState)
+        {
+            if (newState == ControlState.Master)
+            {
+                foreach(var item in ConnectedCameras.Values)
+                    item.ChangeState(ControlState.Slave);
+                NotifyCollectionChanged();
+            }
+            
+            _state = newState;
+        }
     }
 }

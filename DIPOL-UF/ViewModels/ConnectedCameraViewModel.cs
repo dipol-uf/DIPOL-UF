@@ -120,6 +120,8 @@ namespace DIPOL_UF.ViewModels
         public bool IsAcquiring => Camera.IsAcquiring;
         public bool IsNotAcquiring => !IsAcquiring;
 
+        public bool CanChangeMode => model.ConnectedCameras.Count > 1;
+
         public ShutterMode InternalShutterState
         {
             get => model.InternalShutterState;
@@ -222,7 +224,10 @@ namespace DIPOL_UF.ViewModels
             base.OnModelPropertyChanged(sender, e);
 
             if (e.PropertyName == nameof(model.State))
-                Helper.ExecuteOnUI(() => RaiseErrorChanged(nameof(StateIntVal)));
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(StateIntVal)));
+
+            if (e.PropertyName == nameof(model.ConnectedCameras))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(CanChangeMode)));
         }
         private bool IsTemperatureTextInRange(object value)
         {
