@@ -498,8 +498,10 @@ namespace DIPOL_UF.Models
                             }));
                     camModel.ContextMenu = new MenuCollection(ctxMenu);
 
-                    if (ConnectedCameras.TryAdd(x.Key,  new ConnectedCameraViewModel(camModel)))
+                    if (_connectedCams.TryAdd(x.Key,  new ConnectedCameraViewModel(camModel)))
                         HookCamera(x.Key, x.Value);
+                    lock(_connectedCams)
+                    ConnectedCameras = new ObservableConcurrentDictionary<string, ConnectedCameraViewModel>(_connectedCams.OrderBy(item => item.Value.Camera.ToString()));
                 }
 
                 foreach (var x in inst)
@@ -507,15 +509,19 @@ namespace DIPOL_UF.Models
 
                 var categories = inst.Select(item => Helper.GetCameraHostName(item.Key))
                                      .Distinct()
+                                     //.Take(1) //Debug
                                      .ToArray();
+
 
 
                 foreach (var cat in categories)
                 {
+                
                     List<KeyValuePair<string, ConnectedCameraTreeItemViewModel>> vms =
                         new List<KeyValuePair<string, ConnectedCameraTreeItemViewModel>>(ConnectedCameras.Count);
 
-                    foreach (var camKey in inst.Where(item => Helper.GetCameraHostName(item.Key) == cat)
+                    foreach (var camKey in inst
+                        .Where(item => Helper.GetCameraHostName(item.Key) == cat)
                         .Select(item => item.Key))
                     {
                         try
@@ -531,13 +537,21 @@ namespace DIPOL_UF.Models
                         { }
 
                     }
-
-                    CameraPanel.Add(new ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
+                    ConnectedCamerasTreeViewModel conCamTVM;
+                    if ((conCamTVM = CameraPanel.FirstOrDefault(pnl => pnl.Name == cat)) != null)
                     {
-                        Name = cat,
-                        CameraList = 
-                            new ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel>(vms)
-                    }));
+                        foreach (var item in vms)
+                            conCamTVM.Model.CameraList.TryAdd(item.Key, item.Value);
+                    }
+                    else
+                    {
+                        CameraPanel.Add(new ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
+                        {
+                            Name = cat,
+                            CameraList =
+                                new ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel>(vms)
+                        }));
+                    }
                 }
             }
 
