@@ -480,13 +480,27 @@ namespace DIPOL_UF.Models
         private void CameraSelectionsMade(object e)
         {
            
+            var menus = new[] { "Properties" };
             if (e is IEnumerable<KeyValuePair<string, CameraBase>> providedCameras)
             {
                 var inst = providedCameras.ToList();
                 foreach (var x in inst)
-                    if (ConnectedCameras.TryAdd(x.Key,
-                        new ConnectedCameraViewModel(new ConnectedCamera(x.Value, x.Key))))
+                {
+                    var camModel = new ConnectedCamera(x.Value, x.Key);
+                    var ctxMenu = menus.Select(menu =>
+                        new MenuItemViewModel(
+                            new MenuItemModel()
+                            {
+                                Header = menu,
+                                Command = new DelegateCommand(
+                                    camModel.ContextMenuCommandExecute,
+                                    DelegateCommand.CanExecuteAlways)
+                            }));
+                    camModel.ContextMenu = new MenuCollection(ctxMenu);
+
+                    if (ConnectedCameras.TryAdd(x.Key,  new ConnectedCameraViewModel(camModel)))
                         HookCamera(x.Key, x.Value);
+                }
 
                 foreach (var x in inst)
                     CameraPanelSelectedItems.TryAdd(x.Key, false);
@@ -495,33 +509,34 @@ namespace DIPOL_UF.Models
                                      .Distinct()
                                      .ToArray();
 
+
                 foreach (var cat in categories)
                 {
+                    List<KeyValuePair<string, ConnectedCameraTreeItemViewModel>> vms =
+                        new List<KeyValuePair<string, ConnectedCameraTreeItemViewModel>>(ConnectedCameras.Count);
+
+                    foreach (var camKey in inst.Where(item => Helper.GetCameraHostName(item.Key) == cat)
+                        .Select(item => item.Key))
+                    {
+                        try
+                        {
+                            var camModel = ConnectedCameras[camKey].Model;
+                          
+                            vms.Add(
+                                new KeyValuePair<string, ConnectedCameraTreeItemViewModel>(
+                                    camKey,
+                                    new ConnectedCameraTreeItemViewModel(camModel)));
+                        }
+                        catch
+                        { }
+
+                    }
+
                     CameraPanel.Add(new ConnectedCamerasTreeViewModel(new ConnectedCamerasTreeModel()
                     {
                         Name = cat,
-                        CameraList = new ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel>(
-                            inst
-                                .Where(item => Helper.GetCameraHostName(item.Key) == cat)
-                                .Select(item => new KeyValuePair<string, ConnectedCameraTreeItemViewModel>(
-                                    item.Key,
-                                    new ConnectedCameraTreeItemViewModel(
-                                        ConnectedCameras[item.Key].Model
-                                        //new ConnectedCameraTreeItemModel(item.Value)
-                                        //{
-                                        //    ContextMenu = new MenuCollection()
-                                        //    {
-                                        //        new MenuItemViewModel(
-                                        //            new MenuItemModel()
-                                        //            {
-                                        //                Header = "Properties",
-                                        //                Command = new DelegateCommand(
-                                        //                    (param) => ContextMenuCommandExecute("Properties", param),
-                                        //                    DelegateCommand.CanExecuteAlways)
-                                        //            })
-                                        //    }
-                                        //}
-                    ))))
+                        CameraList = 
+                            new ObservableConcurrentDictionary<string, ConnectedCameraTreeItemViewModel>(vms)
                     }));
                 }
             }

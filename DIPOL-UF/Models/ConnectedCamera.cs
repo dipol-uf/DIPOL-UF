@@ -19,8 +19,8 @@ namespace DIPOL_UF.Models
     internal class ConnectedCamera : ObservableObject
     {
         // Used by TreeItemViewModel
-        private ObservableCollection<ViewModels.MenuItemViewModel> _contextMenu 
-            = new ObservableCollection<ViewModels.MenuItemViewModel>(;)
+        private ObservableCollection<ViewModels.MenuItemViewModel> _contextMenu
+            = new ObservableCollection<ViewModels.MenuItemViewModel>();
 
         private CameraBase _camera;
         private Task _acqTask;
@@ -261,6 +261,27 @@ namespace DIPOL_UF.Models
             InitializeCommands();
             Camera.PropertyChanged += Camera_PropertyCahnged;
             Camera.NewImageReceived += Camera_NewImageReceived;
+        }
+
+        public void ContextMenuCommandExecute(object parameter)
+        {
+            if (parameter is FrameworkElement elem
+                && elem.DataContext is ViewModels.MenuItemViewModel vm)
+            {
+                switch (vm.Header)
+                {
+                    case "Properties":
+                        var propVM = new ViewModels.CameraPropertiesViewModel(Camera);
+                        var window = new Views.CameraPropertiesView(propVM)
+                        {
+                            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                            Topmost = true
+                        };
+                        window.Show();
+                        return;
+                }
+
+            }
         }
 
         private void InitializeCommands()
