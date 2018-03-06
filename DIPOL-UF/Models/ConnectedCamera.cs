@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +18,9 @@ namespace DIPOL_UF.Models
 {
     internal class ConnectedCamera : ObservableObject
     {
-        
+        // Used by TreeItemViewModel
+        private ObservableCollection<ViewModels.MenuItemViewModel> _contextMenu 
+            = new ObservableCollection<ViewModels.MenuItemViewModel>(;)
 
         private CameraBase _camera;
         private Task _acqTask;
@@ -32,6 +35,22 @@ namespace DIPOL_UF.Models
         private DelegateCommand _controlAcquisitionCommand;
         private int _currentImageIndex;
         private ControlState _state = ControlState.Individual;
+
+
+        // Used by TreeItemViewModel
+        public ObservableCollection<ViewModels.MenuItemViewModel> ContextMenu
+        {
+            get => _contextMenu;
+            set
+            {
+                if (value != _contextMenu)
+                {
+                    _contextMenu = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
 
         public string Key
         {
@@ -232,10 +251,8 @@ namespace DIPOL_UF.Models
 
         }
 
-
         public DipolImagePresenter ImagePresenterModel { get; } = new DipolImagePresenter();
-
-
+        
         public ConnectedCamera(CameraBase camera, string key)
         {
             Camera = camera;

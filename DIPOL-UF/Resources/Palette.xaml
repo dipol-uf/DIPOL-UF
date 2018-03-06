@@ -76,23 +76,26 @@
     </GradientStopCollection>
     
     <GradientStopCollection x:Key="SelectorSliderThumbGradientCollection">
-        <GradientStop Color="#321575" Offset="0"/>
-        <GradientStop Color="#8D0B93" Offset="0.6"/>
-        <GradientStop Color="#FF057C" Offset="1.0"/>
+        <GradientStop Color="#304352" Offset="0"/>
+        <GradientStop Color="#D7D2CC" Offset="1.0"/>
     </GradientStopCollection>
-    
-    <SolidColorBrush x:Key="ColorDisabled" Color="{x:Static SystemColors.ControlLightColor}"/>
-    <SolidColorBrush x:Key="BorderColorDisabled" Color="{x:Static SystemColors.InactiveBorderColor}"/>
 
+    <!-- Solid brushes -->
+    
+    <SolidColorBrush x:Key="ColorDisabledBrush" Color="{x:Static SystemColors.ControlLightColor}"/>
+    <SolidColorBrush x:Key="BorderColorDisabledBrush" Color="{x:Static SystemColors.InactiveBorderColor}"/>
+    <SolidColorBrush x:Key="OutlineColorBrush" Color="{StaticResource OutlineColor}"/>  
     <!-- Backgrounds -->
-    <Color x:Key="BackgroundColor_1">#E27D60</Color>
-    <Color x:Key="BackgroundColor_2">#659DBD</Color>
-    <Color x:Key="BackgroundColor_3">#41B3A3</Color>
 
     <SolidColorBrush x:Key="Background_1" Color="{StaticResource BackgroundColor_1}"/>
     <SolidColorBrush x:Key="Background_2" Color="{StaticResource BackgroundColor_2}"/>
     <SolidColorBrush x:Key="Background_3" Color="{StaticResource BackgroundColor_3}"/>
 
+    <!-- Colors -->
+    <Color x:Key="OutlineColor" R="0" G="0" B="0"/>
+    <Color x:Key="BackgroundColor_1">#E27D60</Color>
+    <Color x:Key="BackgroundColor_2">#659DBD</Color>
+    <Color x:Key="BackgroundColor_3">#41B3A3</Color>
 
     <!--Enum text representations-->
     <x:Array x:Key="SwitchEnumTextRepresentation" Type="{x:Type sys:String}">

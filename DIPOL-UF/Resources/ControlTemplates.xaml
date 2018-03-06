@@ -68,9 +68,9 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Fill" TargetName="PART_ThumbGeometry" 
-                                    Value="{StaticResource ColorDisabled}"/>
+                                    Value="{StaticResource ColorDisabledBrush}"/>
                             <Setter Property="Stroke" TargetName="PART_ThumbGeometry" 
-                                    Value="{StaticResource BorderColorDisabled}"/>
+                                    Value="{StaticResource BorderColorDisabledBrush}"/>
                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -92,16 +92,16 @@
                 <ControlTemplate  TargetType="Thumb">
                     <Ellipse x:Name="PART_ThumbGeometry"
                                  Height="20" Width="20"
-                                 Margin="0" StrokeThickness="1"
-                                 Stroke="{x:Static SystemColors.ActiveBorderBrush}"
+                                 Margin="0" StrokeThickness="0.5"
+                                 Stroke="Black"
                                  Fill="{TemplateBinding Foreground}"
                                  />
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Fill" TargetName="PART_ThumbGeometry" 
-                                    Value="{StaticResource ColorDisabled}"/>
+                                    Value="{StaticResource ColorDisabledBrush}"/>
                             <Setter Property="Stroke" TargetName="PART_ThumbGeometry" 
-                                    Value="{StaticResource BorderColorDisabled}"/>
+                                    Value="{StaticResource BorderColorDisabledBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -186,9 +186,9 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="PART_Border" Property="Background" 
-                                    Value="{StaticResource ColorDisabled}"/>
+                                    Value="{StaticResource ColorDisabledBrush}"/>
                             <Setter TargetName="PART_Border" Property="BorderBrush" 
-                                    Value="{StaticResource BorderColorDisabled}"/>
+                                    Value="{StaticResource BorderColorDisabledBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -250,9 +250,9 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="PART_Border" Property="Background" 
-                                    Value="{StaticResource ColorDisabled}"/>
+                                    Value="{StaticResource ColorDisabledBrush}"/>
                             <Setter TargetName="PART_Border" Property="BorderBrush" 
-                                    Value="{StaticResource BorderColorDisabled}"/>
+                                    Value="{StaticResource BorderColorDisabledBrush}"/>
                         </Trigger>
                         <Trigger Property="Value" Value="3">
                             <Trigger.EnterActions>
