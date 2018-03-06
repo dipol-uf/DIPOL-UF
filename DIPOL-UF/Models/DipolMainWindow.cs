@@ -501,7 +501,7 @@ namespace DIPOL_UF.Models
                     if (_connectedCams.TryAdd(x.Key,  new ConnectedCameraViewModel(camModel)))
                         HookCamera(x.Key, x.Value);
                     lock(_connectedCams)
-                    ConnectedCameras = new ObservableConcurrentDictionary<string, ConnectedCameraViewModel>(_connectedCams.OrderBy(item => item.Value.Camera.ToString()));
+                    ConnectedCameras = new ObservableConcurrentDictionary<string, ConnectedCameraViewModel>(_connectedCams.OrderByDescending(item => item.Value.Camera.ToString()));
                 }
 
                 foreach (var x in inst)
@@ -510,7 +510,7 @@ namespace DIPOL_UF.Models
                 var categories = inst.Select(item => Helper.GetCameraHostName(item.Key))
                                      .Distinct()
                                      //.Take(1) //Debug
-                                     .ToArray();
+                                     .ToArray(); 
 
 
 
