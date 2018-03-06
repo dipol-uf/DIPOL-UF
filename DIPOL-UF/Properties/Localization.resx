@@ -261,6 +261,21 @@
   <data name="General_Submit" xml:space="preserve">
     <value>Submit</value>
   </data>
+  <data name="General_TemperatureStatus_Drift" xml:space="preserve">
+    <value>Drifting</value>
+  </data>
+  <data name="General_TemperatureStatus_NotReached" xml:space="preserve">
+    <value>Not reached</value>
+  </data>
+  <data name="General_TemperatureStatus_NotStabilized" xml:space="preserve">
+    <value>Not stabilized</value>
+  </data>
+  <data name="General_TemperatureStatus_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="General_TemperatureStatus_Stabilized" xml:space="preserve">
+    <value>Stabilized</value>
+  </data>
   <data name="MainWindow_CameraManager" xml:space="preserve">
     <value>Camera Manager</value>
   </data>

@@ -493,6 +493,51 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Drifting.
+        /// </summary>
+        public static string General_TemperatureStatus_Drift {
+            get {
+                return ResourceManager.GetString("General_TemperatureStatus_Drift", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not reached.
+        /// </summary>
+        public static string General_TemperatureStatus_NotReached {
+            get {
+                return ResourceManager.GetString("General_TemperatureStatus_NotReached", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not stabilized.
+        /// </summary>
+        public static string General_TemperatureStatus_NotStabilized {
+            get {
+                return ResourceManager.GetString("General_TemperatureStatus_NotStabilized", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Off.
+        /// </summary>
+        public static string General_TemperatureStatus_Off {
+            get {
+                return ResourceManager.GetString("General_TemperatureStatus_Off", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stabilized.
+        /// </summary>
+        public static string General_TemperatureStatus_Stabilized {
+            get {
+                return ResourceManager.GetString("General_TemperatureStatus_Stabilized", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Camera Manager.
         /// </summary>
         public static string MainWindow_CameraManager {
