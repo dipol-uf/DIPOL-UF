@@ -131,5 +131,5 @@
     <sys:Double x:Key="ContentFontSize">15</sys:Double>
     
     <!-- Aniamtion Timing -->
-    <Duration x:Key="ColorChangeDuration">0:00:00.5</Duration>
+    <Duration x:Key="ColorChangeDuration">0:00:00.25</Duration>
 </ResourceDictionary>
