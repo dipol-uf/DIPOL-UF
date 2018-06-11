@@ -509,7 +509,7 @@ namespace DIPOL_UF.Models
 
                 var categories = inst.Select(item => Helper.GetCameraHostName(item.Key))
                                      .Distinct()
-                                     //.Take(1) //Debug
+                                     .Take(1) //Debug
                                      .ToArray(); 
 
 
