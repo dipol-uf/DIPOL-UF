@@ -555,6 +555,9 @@ namespace DIPOL_Remote.Classes
            int CloseTime) GetShutter(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Shutter;
         [OperationBehavior]
+        public bool GetIsTemperatureMonitored(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).IsTemperatureMonitored;
+        [OperationBehavior]
         public (Version EPROM, Version COFFile, Version Driver, Version Dll) GetSoftware(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Software;
         [OperationBehavior]
