@@ -139,7 +139,7 @@ namespace DIPOL_Remote.Interfaces
            int OpenTime,
            int CloseTime) GetShutter(int camIndex);
         [OperationContract(IsOneWay = false)]
-        bool GetIsTemperaturMonitored(int camIndex);
+        bool GetIsTemperatureMonitored(int camIndex);
         [OperationContract(IsOneWay = false)]
         (Version EPROM, Version COFFile, Version Driver, Version Dll) GetSoftware(int camIndex);
         [OperationContract(IsOneWay = false)]
