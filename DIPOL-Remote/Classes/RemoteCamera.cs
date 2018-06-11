@@ -56,8 +56,8 @@ namespace DIPOL_Remote.Classes
             {
                 if (changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    // TODO: Implement property forwarding
-
+                    IsTemperatureMonitored = session.GetIsTemperatureMonitored(CameraIndex);
+                    changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
                 return false;
