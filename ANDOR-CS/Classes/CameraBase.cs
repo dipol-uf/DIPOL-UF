@@ -61,15 +61,25 @@ namespace ANDOR_CS.Classes
             = default((Version EPROM, Version COFFile, Version Driver, Version Dll));
         private (Version PCB, Version Decode, Version CameraFirmware) _hardware
             = default((Version PCB, Version Decode, Version CameraFirmware));
+        private bool _isTemperatureMonitored;
         private volatile bool _isAcquiring;
         private volatile bool _isAsyncAcquisition;
 
         protected ConcurrentQueue<Image> _acquiredImages = new ConcurrentQueue<Image>();
 
 
-        public abstract bool IsTemperatureMonitored
+        public virtual bool IsTemperatureMonitored
         {
-            get;
+            get => _isTemperatureMonitored;
+            set
+            {
+                if (value != _isTemperatureMonitored)
+                {
+                    _isTemperatureMonitored = value;
+                    OnPropertyChanged();
+                }
+            }
+
         }
         public bool IsDisposed => _isDisposed;
 
