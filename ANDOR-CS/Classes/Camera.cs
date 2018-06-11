@@ -61,8 +61,6 @@ namespace ANDOR_CS.Classes
         private readonly ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> _runningTasks = 
             new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
-        public override bool IsTemperatureMonitored =>
-            _temperatureMonitorTimer?.Enabled ?? false;
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
@@ -779,10 +777,15 @@ namespace ANDOR_CS.Classes
                 _temperatureMonitorTimer.Elapsed += TemperatureMonitorCycler;
 
                 _temperatureMonitorTimer.Start();
-                
+
+                IsTemperatureMonitored = true;
+
             }
             else
+            {
                 _temperatureMonitorTimer?.Stop();
+                IsTemperatureMonitored = false;
+            }
 
         }
 
