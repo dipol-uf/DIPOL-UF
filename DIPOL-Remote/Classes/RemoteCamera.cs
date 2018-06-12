@@ -347,10 +347,10 @@ namespace DIPOL_Remote.Classes
             [System.Runtime.CompilerServices.CallerMemberName] string property = "",
             bool suppressBaseEvent = false)
         {
-            CheckIsDisposed();
-            if (!suppressBaseEvent)
+            //CheckIsDisposed();
+            if (!IsDisposed && !suppressBaseEvent)
                 base.OnPropertyChanged(property);
-                    }
+        }
 
         internal static void NotifyRemotePropertyChanged(int camIndex, string sessionID, string property)
         {
