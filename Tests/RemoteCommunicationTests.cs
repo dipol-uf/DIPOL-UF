@@ -20,10 +20,11 @@ namespace Tests
 #endif
         public void Test_CameraCreationRequest()
         {
-            using (var client = new DipolClient(@"dipol-2"))
+            using(var client = new DipolClient(@"dipol-2"))
             {
                 client.Connect();
                 client.Remote.RequestCreateCamera(0);
+                Console.WriteLine();
                 client.Disconnect();
             }
         }
