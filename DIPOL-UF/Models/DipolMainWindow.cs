@@ -346,7 +346,7 @@ namespace DIPOL_UF.Models
                 try
                 {
                     var client = new DipolClient(_remoteLocations[i], 
-                        TimeSpan.Parse(Settings.GetValueOrNullSafe("RemoteOpenTimeout", "00:00:30")), 
+                        TimeSpan.Parse(Settings.GetValueOrNullSafe("RemoteOpenTimeout", "00:00:40")), 
                         TimeSpan.Parse(Settings.GetValueOrNullSafe("RemoteSendTimeout", "00:05:00")), 
                         TimeSpan.Parse(Settings.GetValueOrNullSafe("RemoteOperationTimeout", "00:00:45")), 
                         TimeSpan.Parse(Settings.GetValueOrNullSafe("RemoteCloseTimeout", "00:00:45")));
@@ -509,7 +509,7 @@ namespace DIPOL_UF.Models
 
                 var categories = inst.Select(item => Helper.GetCameraHostName(item.Key))
                                      .Distinct()
-                                     .Take(1) //Debug
+                                     //.Take(1) //Debug
                                      .ToArray(); 
 
 
