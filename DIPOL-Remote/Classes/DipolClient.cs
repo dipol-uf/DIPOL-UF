@@ -29,18 +29,17 @@ namespace DIPOL_Remote.Classes
 {
     public class DipolClient : IDisposable
     {
-        private static readonly string endpointTemplate = @"net.tcp://{0}:400/DipolRemote";//new Uri(@"net.tcp://localhost:400/DipolRemote");
+        private const string EndpointTemplate = @"net.tcp://{0}:400/DipolRemote"; //new Uri(@"net.tcp://localhost:400/DipolRemote");
 
-        private IRemoteControl remote = null;
-        private InstanceContext context = new InstanceContext(new RemoteCallbackHandler());
+        private readonly IRemoteControl _remote;
+        private readonly InstanceContext _context = new InstanceContext(new RemoteCallbackHandler());
 
         private IRemoteControl Remote
-            => remote ?? throw CommunicationException;
+            => _remote ?? throw CommunicationException;
 
         public string HostAddress
         {
             get;
-            private set;
         }
 
         public string SessionID
@@ -49,12 +48,14 @@ namespace DIPOL_Remote.Classes
         public DipolClient(string host)
         {
             HostAddress = host;
-            var bnd = new NetTcpBinding(SecurityMode.None);
+            var bnd = new NetTcpBinding(SecurityMode.None)
+            {
+                MaxReceivedMessageSize = 512 * 512 * 8 * 2
+            };
             // IMPORTANT! Limits the size of SOAP message. For larger images requires another implementation
-            bnd.MaxReceivedMessageSize = 512 * 512 * 8 * 2;
-            var endpoint = new Uri(string.Format(endpointTemplate, host));
-            remote = new DuplexChannelFactory<IRemoteControl>(
-                context, 
+            var endpoint = new Uri(string.Format(EndpointTemplate, host));
+            _remote = new DuplexChannelFactory<IRemoteControl>(
+                _context, 
                 bnd, 
                 new EndpointAddress(endpoint)).CreateChannel();
 
@@ -64,21 +65,23 @@ namespace DIPOL_Remote.Classes
         public DipolClient(string host, TimeSpan openTimeout, TimeSpan sendTimeout, TimeSpan operationTimeout, TimeSpan closeTimeout)
         {
             HostAddress = host;
-            var bnd = new NetTcpBinding(SecurityMode.None);
+            var bnd = new NetTcpBinding(SecurityMode.None)
+            {
+                MaxReceivedMessageSize = 512 * 512 * 8 * 2,
+                OpenTimeout = openTimeout,
+                SendTimeout = sendTimeout,
+                CloseTimeout = closeTimeout
+            };
             // IMPORTANT! Limits the size of SOAP message. For larger images requires another implementation
-            bnd.MaxReceivedMessageSize = 512 * 512 * 8 * 2;
 
-            bnd.OpenTimeout = openTimeout;
-            bnd.SendTimeout = sendTimeout;
-            bnd.CloseTimeout = closeTimeout;
 
-            var endpoint = new Uri(string.Format(endpointTemplate, host));
-            remote = new DuplexChannelFactory<IRemoteControl>(
-                context,
+            var endpoint = new Uri(string.Format(EndpointTemplate, host));
+            _remote = new DuplexChannelFactory<IRemoteControl>(
+                _context,
                 bnd,
                 new EndpointAddress(endpoint)).CreateChannel();
 
-            ((IDuplexContextChannel)remote).OperationTimeout = operationTimeout;
+            ((IDuplexContextChannel)_remote).OperationTimeout = operationTimeout;
         }
 
 
@@ -105,7 +108,7 @@ namespace DIPOL_Remote.Classes
 
         public void Dispose()
         {
-            (remote as ICommunicationObject)?.Close();
+            (_remote as ICommunicationObject)?.Close();
         }
 
         private static CommunicationException CommunicationException
