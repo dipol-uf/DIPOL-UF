@@ -97,11 +97,16 @@
     <Compile Include="DipolImageTests.cs" />
     <Compile Include="GlobalCameraTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RemoteCommunicationTestscs.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ANDOR-CS\ANDOR-CS.csproj">
       <Project>{d1e8b17d-4c59-42dd-87bd-f111df8e631d}</Project>
       <Name>ANDOR-CS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DIPOL-Remote\DIPOL-Remote.csproj">
+      <Project>{355d3461-6989-4022-9fde-b2bea3581590}</Project>
+      <Name>DIPOL-Remote</Name>
     </ProjectReference>
     <ProjectReference Include="..\DipolImage\DipolImage.csproj">
       <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>

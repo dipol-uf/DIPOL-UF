@@ -58,7 +58,7 @@ namespace DIPOL_Remote.Interfaces
     [ServiceKnownType(typeof(NewImageReceivedEventArgs))]
     [ServiceKnownType(typeof(DipolImage.Image))]
     [ServiceKnownType(typeof(TypeCode))]
-    internal interface IRemoteControl
+    public interface IRemoteControl
     {
         /// <summary>
         /// Unique ID of the session 
