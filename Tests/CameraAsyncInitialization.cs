@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Tests
 {
     [TestClass]
-    public class CameraAsyncFactoryTests
+    public class CameraAsyncInitialization
     {
         [TestInitialize]
         public void Initialize()
@@ -25,9 +25,12 @@ namespace Tests
 #if X64
         [DeploymentItem("atmcd64d.dll")]
 #endif
-        public void Test_CameraAsyncFactory()
+        public void Test_CameraAsyncCreation()
         {
-
+            var cam = CameraBase.CreateCameraAsync<Camera>().Result;
+            Assert.IsNotNull(cam);
+            cam?.Dispose();
+            Assert.IsTrue(cam?.IsDisposed ?? false);
         }
 
        

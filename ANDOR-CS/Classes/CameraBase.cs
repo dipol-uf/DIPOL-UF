@@ -16,9 +16,13 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
+using System.CodeDom;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -461,6 +465,24 @@ namespace ANDOR_CS.Classes
         {
             if (!IsDisposed)
                 NewImageReceived?.Invoke(this, e);
+        }
+
+        public static async Task<T> CreateCameraAsync<T>(int camIndex = 0, params object[] additionalParamters) where T : CameraBase
+        {
+            var type = typeof(T);
+            
+            var paramCollection = new List<object>(1 + additionalParamters.Length)
+            {
+                camIndex
+            };
+            paramCollection.AddRange(additionalParamters);
+
+            var constr = type.GetConstructor(paramCollection.Select(x => x.GetType()).ToArray()) 
+                         ?? throw new NotSupportedException("No suitable constructor for given paramters was found.");
+
+            var result = (T) await Task.Run(() => constr.Invoke(paramCollection.ToArray()));
+           
+            return result;
         }
 
         ~CameraBase()

@@ -24,7 +24,7 @@
     <DefineConstants>TRACE;DEBUG;X86</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.2</LangVersion>
+    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -92,7 +92,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CameraAsyncFactoryTests.cs" />
+    <Compile Include="CameraAsyncInitialization.cs" />
     <Compile Include="DebuggingTests.cs" />
     <Compile Include="DipolImageTests.cs" />
     <Compile Include="GlobalCameraTests.cs" />
