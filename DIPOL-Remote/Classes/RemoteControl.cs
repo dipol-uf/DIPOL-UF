@@ -70,21 +70,21 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Thread-safe collection of all active instances of AcquisitionSettings.
         /// </summary>
-        private ConcurrentDictionary<string,  SettingsBase> settings
+        private readonly ConcurrentDictionary<string,  SettingsBase> settings
             = new ConcurrentDictionary<string,  SettingsBase>();
 
-        private ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> activeTasks
+        private readonly ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> activeTasks
             = new ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>();
 
         /// <summary>
         /// Thread-safe collection of all active <see cref="RemoteControl"/> service instances.
         /// </summary>
-        private static ConcurrentDictionary<string, RemoteControl> serviceInstances 
+        private static readonly ConcurrentDictionary<string, RemoteControl> serviceInstances 
             = new ConcurrentDictionary<string, RemoteControl>();
         /// <summary>
         /// Thread-safe collection of active remote cameras.
         /// </summary>
-        private static ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
+        private static readonly ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
             = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
 
 
