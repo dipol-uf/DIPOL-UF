@@ -733,5 +733,10 @@ namespace DIPOL_Remote.Classes
                 return null;
 
         }
+
+        public void RequestCreateCamera(int camIndex)
+        {
+            Task.Run(() => CreateCamera(camIndex)).ContinueWith((tsk) => {Console.WriteLine("CREAETD");});
+        }
     }
 }
