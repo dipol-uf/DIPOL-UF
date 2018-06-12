@@ -39,5 +39,8 @@ namespace DIPOL_Remote.Interfaces
         [OperationContract(IsOneWay = true)]
         void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string session, NewImageReceivedEventArgs e);
 
+        [OperationContract(IsOneWay = true)]
+        void NotifyCameraCreatedAsynchronously();]
+
     }
 }
