@@ -17,42 +17,42 @@ namespace Host
             Console.WindowWidth = 180;
             Console.WindowHeight = 60;
 
-            Debug();
+            //Debug();
 
-            //using (var host = new DIPOL_Remote.Classes.DipolHost())
-            //{
-            //    host.Host();
-            //    host.EventReceived += (sender, message)
-            //        =>
-            //    {
-            //        if (!(sender is ANDOR_CS.Classes.DebugCamera))
-            //        {
-            //            string senderString = "";
-            //            if (sender is ANDOR_CS.Classes.CameraBase cam)
-            //                senderString = $"{cam.CameraModel}/{cam.SerialNumber}";
-            //            else
-            //                senderString = sender.ToString();
+            using (var host = new DIPOL_Remote.Classes.DipolHost())
+            {
+                host.Host();
+                host.EventReceived += (sender, message)
+                    =>
+                {
+                    if (!(sender is ANDOR_CS.Classes.DebugCamera))
+                    {
+                        string senderString = "";
+                        if (sender is ANDOR_CS.Classes.CameraBase cam)
+                            senderString = $"{cam.CameraModel}/{cam.SerialNumber}";
+                        else
+                            senderString = sender.ToString();
 
-            //            lock (locker)
-            //            {
-            //                Console.ForegroundColor = ConsoleColor.Yellow;
-            //                Console.Write($"[{{0,23:yyyy/MM/dd HH-mm-ss.fff}}] @", DateTime.Now);
-            //                Console.ForegroundColor = ConsoleColor.Cyan;
-            //                Console.Write(" {0, 16}", senderString);
-            //                Console.ForegroundColor = ConsoleColor.White;
-            //                Console.WriteLine($": { message}");
-            //            }
-            //        }
+                        lock (locker)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.Write($"[{{0,23:yyyy/MM/dd HH-mm-ss.fff}}] @", DateTime.Now);
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            Console.Write(" {0, 16}", senderString);
+                            Console.ForegroundColor = ConsoleColor.White;
+                            Console.WriteLine($": { message}");
+                        }
+                    }
 
-            //    };
+                };
 
-            //    //Console.WriteLine($"Service instances: {DIPOL_Remote.Classes.RemoteControl.ActiveConnections.Count}");
+                //Console.WriteLine($"Service instances: {DIPOL_Remote.Classes.RemoteControl.ActiveConnections.Count}");
 
-            //    ConsoleKeyInfo key = default(ConsoleKeyInfo);
+                ConsoleKeyInfo key = default(ConsoleKeyInfo);
 
-            //    while (!((key = Console.ReadKey()).Key == ConsoleKey.Escape && key.Modifiers == ConsoleModifiers.Shift))
-            //    { }
-            //}
+                while (!((key = Console.ReadKey()).Key == ConsoleKey.Escape && key.Modifiers == ConsoleModifiers.Shift))
+                { }
+            }
         }
 
         private static void Debug()
