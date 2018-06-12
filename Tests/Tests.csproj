@@ -95,6 +95,7 @@
     <Compile Include="AsyncCameraAcquisitionTests.cs" />
     <Compile Include="DebuggingTests.cs" />
     <Compile Include="DipolImageTests.cs" />
+    <Compile Include="GlobalCameraTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -8,16 +8,16 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests
 {
-    [TestClass]
+    //[TestClass]
     public class AsyncCameraAcquisitionTests
     {
-        [TestInitialize]
+        //[TestInitialize]
         public void Initialize()
         {
 
         }
 
-        [TestMethod]
+        //[TestMethod]
 #if X86
         [DeploymentItem("atmcd32d.dll")]
 #endif
