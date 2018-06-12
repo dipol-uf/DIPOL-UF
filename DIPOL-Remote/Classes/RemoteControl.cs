@@ -741,7 +741,7 @@ namespace DIPOL_Remote.Classes
                 .ContinueWith((tsk) =>
                 {
                     Console.WriteLine("CREAETD");
-                    GetContext()?.GetCallbackChannel<IRemoteCallback>().NotifyCameraCreatedAsynchronously();
+                    Console.WriteLine(GetContext()?.GetCallbackChannel<IRemoteCallback>().NotifyCameraCreatedAsynchronously() ?? null);
                 })
                 .ContinueWith((tsk) => RemoveCamera(camIndex));
         }
