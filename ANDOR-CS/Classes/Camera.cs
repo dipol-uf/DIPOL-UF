@@ -50,6 +50,7 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public sealed class Camera : CameraBase
     {
+
         private Timer _temperatureMonitorTimer;
         //private Task TemperatureMonitorWorker = null;
         //private CancellationTokenSource TemperatureMonitorCancellationSource

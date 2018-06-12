@@ -92,7 +92,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsyncCameraAcquisitionTests.cs" />
+    <Compile Include="CameraAsyncFactoryTests.cs" />
     <Compile Include="DebuggingTests.cs" />
     <Compile Include="DipolImageTests.cs" />
     <Compile Include="GlobalCameraTests.cs" />
