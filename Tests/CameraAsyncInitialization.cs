@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -27,13 +28,11 @@ namespace Tests
 #endif
         public void Test_CameraAsyncCreation()
         {
+            Assert.IsTrue(Camera.GetNumberOfCameras() > 0);
             var cam = CameraBase.CreateCameraAsync<Camera>().Result;
             Assert.IsNotNull(cam);
-            cam?.Dispose();
-            Assert.IsTrue(cam?.IsDisposed ?? false);
+            cam.Dispose();
+            Assert.IsTrue(cam.IsDisposed);
         }
-
-       
-
     }
 }
