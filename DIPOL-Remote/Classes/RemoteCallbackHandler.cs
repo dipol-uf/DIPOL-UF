@@ -48,9 +48,9 @@ namespace DIPOL_Remote.Classes
         public void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string session, NewImageReceivedEventArgs e)
             => RemoteCamera.NotifyRemoteNewImageReceivedEventHappened(camIndex, session, e);
 
-        public void NotifyCameraCreatedAsynchronously()
+        public bool NotifyCameraCreatedAsynchronously()
         {
-           
+            return true;
         }
     }
 }
