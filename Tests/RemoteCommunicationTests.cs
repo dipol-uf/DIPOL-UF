@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Tests
 {
     [TestClass]
-    public class RemoteCommunicationTestscs
+    public class RemoteCommunicationTests
     {
         [TestMethod]
 #if X86
