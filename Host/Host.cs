@@ -50,7 +50,7 @@ namespace Host
 
                 ConsoleKeyInfo key = default(ConsoleKeyInfo);
 
-                while (!((key = Console.ReadKey()).Key == ConsoleKey.Escape && key.Modifiers == ConsoleModifiers.Shift))
+                while (!((key = Console.ReadKey()).Key == ConsoleKey.Escape))
                 { }
             }
         }
