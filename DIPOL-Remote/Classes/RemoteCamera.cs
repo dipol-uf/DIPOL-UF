@@ -32,6 +32,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
 using ANDOR_CS.Classes;
+using ANDOR_CS.Exceptions;
 using DipolImage;
 
 namespace DIPOL_Remote.Classes
@@ -450,10 +451,12 @@ namespace DIPOL_Remote.Classes
 
             DipolClient.CameraCreatedEvents.TryRemove((commObj.SessionID, camIndex), out _);
 
-            if (isCreated && result.Success)
-                return new RemoteCamera(commObj.Remote, camIndex);
-            else
-                throw new CommunicationException("Remote response was never received.");
+            if(!result.Success)
+                throw new AndorSdkException("Remote instance failed to create a camera.", null);
+            if(!isCreated)
+                throw new CommunicationException("Response from remote instance was never received.");
+
+            return new RemoteCamera(commObj.Remote, camIndex);
             
         }
     }
