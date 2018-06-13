@@ -37,11 +37,11 @@ namespace DIPOL_Remote.Classes
 {
     public sealed class RemoteCamera : CameraBase
     {
-        private static ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase> remoteCameras
+        private static readonly ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase> remoteCameras
             = new ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase>();
 
 
-        private ConcurrentDictionary<string, bool> changedProperties
+        private readonly ConcurrentDictionary<string, bool> changedProperties
             = new ConcurrentDictionary<string, bool>();
 
         private bool _isTemperatureMonitored;
