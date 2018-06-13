@@ -37,5 +37,18 @@ namespace Tests
             cam.Dispose();
             Assert.IsTrue(cam.IsDisposed, $"Failed to dispose [{nameof(cam.IsDisposed)}].");
         }
+
+        [TestMethod]
+#if X86
+        [DeploymentItem("atmcd32d.dll")]
+#endif
+#if X64
+        [DeploymentItem("atmcd64d.dll")]
+#endif
+        public void Test_CameraBaseCreate_AlwaysThrows()
+        {
+            Assert.ThrowsException<NotSupportedException>(() => CameraBase.Create());
+        }
+
     }
 }

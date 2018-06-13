@@ -485,6 +485,9 @@ namespace ANDOR_CS.Classes
             return result;
         }
 
+        public static CameraBase Create(int camIndex = 0, object otherParams = null)
+            => throw new NotSupportedException($"Cannot create instance of abstract class {nameof(CameraBase)}.");
+
         ~CameraBase()
         {
             Dispose(false);

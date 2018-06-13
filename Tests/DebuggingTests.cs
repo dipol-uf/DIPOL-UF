@@ -15,17 +15,21 @@ namespace Tests
     {
         private class A
         {
-            public Type Get() => GetType();
+            public static string Get() => "AA";
         }
 
         private class B : A
         {
+            public new static string Get() => "BB";
         }
 
         [TestMethod]
         public void Test()
         {
-          
+            var a = A.Get();
+            var b = B.Get();
+
+            Assert.AreNotEqual(a, b);
         }
     }
 }
