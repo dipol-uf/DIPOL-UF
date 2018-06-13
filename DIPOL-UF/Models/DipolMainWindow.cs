@@ -23,7 +23,7 @@ namespace DIPOL_UF.Models
 {
     class DipolMainWindow : ObservableObject, IDisposable
     {
-        private readonly DispatcherTimer _UIStatusUpdateTimer;
+        private readonly DispatcherTimer _uiStatusUpdateTimer;
 
         private bool? _camPanelAreAllSelected = false;
         private bool _canConnect;
@@ -250,7 +250,7 @@ namespace DIPOL_UF.Models
             InitializeCommands();
             InitializeRemoteSessions();
 
-            _UIStatusUpdateTimer = new DispatcherTimer(
+            _uiStatusUpdateTimer = new DispatcherTimer(
                 TimeSpan.FromMilliseconds(Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 1000)),
                 DispatcherPriority.DataBind,
                 DispatcherTimerTickHandler,
@@ -270,7 +270,7 @@ namespace DIPOL_UF.Models
             if (diposing)
             {
                
-                _UIStatusUpdateTimer.Stop();
+                _uiStatusUpdateTimer.Stop();
                 Task[] pool = new Task[_connectedCams.Count];
                 int taskInd = 0;
 
@@ -524,24 +524,20 @@ namespace DIPOL_UF.Models
                         .Where(item => Helper.GetCameraHostName(item.Key) == cat)
                         .Select(item => item.Key))
                     {
-                        try
-                        {
-                            var camModel = ConnectedCameras[camKey].Model;
-                          
-                            vms.Add(
-                                new KeyValuePair<string, ConnectedCameraTreeItemViewModel>(
-                                    camKey,
-                                    new ConnectedCameraTreeItemViewModel(camModel)));
-                        }
-                        catch
-                        { }
 
+                        var camModel = ConnectedCameras[camKey].Model;
+
+                        vms.Add(
+                            new KeyValuePair<string, ConnectedCameraTreeItemViewModel>(
+                                camKey,
+                                new ConnectedCameraTreeItemViewModel(camModel)));
                     }
-                    ConnectedCamerasTreeViewModel conCamTVM;
-                    if ((conCamTVM = CameraPanel.FirstOrDefault(pnl => pnl.Name == cat)) != null)
+
+                    ConnectedCamerasTreeViewModel conCamTvm;
+                    if ((conCamTvm = CameraPanel.FirstOrDefault(pnl => pnl.Name == cat)) != null)
                     {
                         foreach (var item in vms)
-                            conCamTVM.Model.CameraList.TryAdd(item.Key, item.Value);
+                            conCamTvm.Model.CameraList.TryAdd(item.Key, item.Value);
                     }
                     else
                     {
@@ -607,12 +603,12 @@ namespace DIPOL_UF.Models
         /// <param name="e">Event arguments.</param>
         private void Camera_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (sender is CameraBase cam)
-            {
-                var key = GetCameraKey(cam);
-                //Helper.WriteLog($"[{key}]: {e.PropertyName}");
+            //if (sender is CameraBase cam)
+            //{
+            //    var key = GetCameraKey(cam);
+            //    //Helper.WriteLog($"[{key}]: {e.PropertyName}");
                              
-            }
+            //}
         }
         private void Cam_NewImageReceived(object sender, NewImageReceivedEventArgs e)
         {
@@ -646,13 +642,13 @@ namespace DIPOL_UF.Models
             =>   RaisePropertyChanged(nameof(CameraRealTimeStats));
 
 
-        private async Task DisposeCamera(string camID, bool removeSelection = true)
+        private async Task DisposeCamera(string camId, bool removeSelection = true)
         {
 
-            _connectedCams.TryRemove(camID, out var camInstance);
+            _connectedCams.TryRemove(camId, out var camInstance);
             if (removeSelection)
-                _camPanelSelectedItems.TryRemove(camID, out _);
-            CameraRealTimeStats.TryRemove(camID, out _);
+                _camPanelSelectedItems.TryRemove(camId, out _);
+            CameraRealTimeStats.TryRemove(camId, out _);
 
             await Task.Run(() =>
                 {
