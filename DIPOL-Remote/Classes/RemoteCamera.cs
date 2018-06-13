@@ -424,5 +424,23 @@ namespace DIPOL_Remote.Classes
 
             return commObj.CreateRemoteCamera(camIndex);
         }
+
+        public static async Task<CameraBase> CreateAsync(int camIndex = 0, object otherParams = null)
+        {
+            var commObj = (otherParams
+                           ?? throw new ArgumentNullException(
+                               nameof(otherParams),
+                               $"{nameof(Create)} requires additional non-null parameter."))
+                          as DipolClient
+                          ?? throw new ArgumentException(
+                              $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.",
+                              nameof(otherParams));
+
+            await Task.Delay(10);
+
+            commObj.RequestCreateRemoteCamera(camIndex);
+
+            return null;
+        }
     }
 }

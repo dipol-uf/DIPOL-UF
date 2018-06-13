@@ -106,6 +106,13 @@ namespace DIPOL_Remote.Classes
             return new RemoteCamera(Remote, camIndex);
         }
 
+        public void RequestCreateRemoteCamera(int camIndex = 0)
+        {
+            if (Remote.GetCamerasInUse().Contains(camIndex))
+                throw new ArgumentException($"Camera with index {camIndex} is already in use.");
+            Remote.RequestCreateCamera(camIndex);
+        }
+
         public void Dispose()
         {
             (_remote as ICommunicationObject)?.Close();

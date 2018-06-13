@@ -21,17 +21,17 @@ namespace Tests
 #endif
         public void Test_CameraCreationRequest()
         {
-            using(var client = new DipolClient(@"dipol-2"))
+            using (var client = new DipolClient(@"dipol-2"))
             {
                 client.Connect();
 
                 int nCam = client.GetNumberOfCameras();
                 if (nCam == 0)
                 {
-                  
-                       Assert.ThrowsException<System.ServiceModel.FaultException<AndorSDKServiceException>>(() =>
-                            RemoteCamera.Create(0, client));
-                   
+
+                    Assert.ThrowsException<System.ServiceModel.FaultException<AndorSDKServiceException>>(() =>
+                        RemoteCamera.Create(0, client));
+
                 }
                 else
                 {
@@ -43,6 +43,25 @@ namespace Tests
 
                 client.Disconnect();
 
+            }
+        }
+
+        [TestMethod]
+#if X86
+        [DeploymentItem("atmcd32d.dll")]
+#endif
+#if X64
+        [DeploymentItem("atmcd64d.dll")]
+#endif
+        public void Debug()
+        {
+            using (var client = new DipolClient(@"dipol-2"))
+            {
+                client.Connect();
+
+                
+
+                client.Dispose();
             }
         }
     }
