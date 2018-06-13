@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -42,6 +43,28 @@ namespace Tests
             var b = B.Get2();
 
             Assert.AreNotEqual(a, b);
+        }
+
+        [TestMethod]
+        public void Test_Async()
+        {
+            async Task Run(int i)
+            {
+                await Task.Delay(1500);
+                Debug.WriteLine(i);
+            }
+
+            async Task Run2(int n)
+            {
+                var tasks = new Task[n];
+                for (var j = 0; j < n; j++)
+                    tasks[j] = Run(j);
+
+                await Task.WhenAll(tasks);
+            }
+
+            Run2(100).Wait();
+
         }
     }
 }
