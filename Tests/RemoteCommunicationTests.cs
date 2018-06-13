@@ -60,6 +60,8 @@ namespace Tests
                 client.Connect();
 
                 RemoteCamera.CreateAsync(0, client).Wait();
+                //System.Threading.Thread.Sleep(TimeSpan.FromSeconds(25));
+                //System.Threading.Thread.Sleep(TimeSpan.FromSeconds(10));
 
                 client.Disconnect();
             }

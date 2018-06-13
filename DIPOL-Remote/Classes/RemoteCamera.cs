@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -436,11 +437,18 @@ namespace DIPOL_Remote.Classes
                               $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.",
                               nameof(otherParams));
 
-            await Task.Delay(10);
-
             commObj.RequestCreateRemoteCamera(camIndex);
+            var resetEvent = new ManualResetEvent(false);
+            if(!DipolClient.CameraCreatedEvents.TryAdd((commObj.SessionID, camIndex), resetEvent))
+                throw new InvalidOperationException($"Cannot add {nameof(ManualResetEvent)} to the listening collection.");
 
-            return null;
+            var isCreated = await Task.Run(() => resetEvent.WaitOne());
+
+            if(isCreated)
+                return new RemoteCamera(commObj.Remote, camIndex);
+            else
+                throw new CommunicationException("Remote response was never received.");
+            
         }
     }
 }

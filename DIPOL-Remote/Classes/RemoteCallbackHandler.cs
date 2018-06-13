@@ -56,6 +56,9 @@ namespace DIPOL_Remote.Classes
                 .Value;
             resetEvent?.Set();
 
+            if (resetEvent != null)
+                DipolClient.CameraCreatedEvents.TryRemove((session, camIndex), out _);
+
             return resetEvent != null;
         }
     }
