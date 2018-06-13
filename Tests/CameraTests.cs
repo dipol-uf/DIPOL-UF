@@ -125,7 +125,7 @@ namespace Tests
             {
                 client.Connect();
 
-                int nCam = client.GetNumberOfCameras();
+                var nCam = client.GetNumberOfCameras();
                 if (nCam == 0)
                 {
 
@@ -159,7 +159,7 @@ namespace Tests
             {
                 client.Connect();
 
-                int nCam = client.GetNumberOfCameras();
+                var nCam = client.GetNumberOfCameras();
                 if (nCam == 0)
                 {
                     var exept = Assert.ThrowsException<AggregateException>(() => RemoteCamera.CreateAsync(otherParams: client).Wait());
