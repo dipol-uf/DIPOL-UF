@@ -16,13 +16,15 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
 using System.ServiceModel;
-
+using System.Threading;
 using DIPOL_Remote.Interfaces;
 
 namespace DIPOL_Remote.Classes
@@ -33,6 +35,11 @@ namespace DIPOL_Remote.Classes
 
         private readonly InstanceContext _context = new InstanceContext(new RemoteCallbackHandler());
         private readonly IRemoteControl _remote;
+
+        internal static ConcurrentDictionary<(string sessionID, int camIndex), ManualResetEvent> CameraCreatedEvents
+        {
+            get;
+        } = new ConcurrentDictionary<(string sessionID, int camIndex), ManualResetEvent>();
 
         public IRemoteControl Remote
             => _remote ?? throw CommunicationException;

@@ -16,6 +16,7 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
+using System.Linq;
 using System.ServiceModel;
 
 using ANDOR_CS.Events;
@@ -48,9 +49,14 @@ namespace DIPOL_Remote.Classes
         public void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string session, NewImageReceivedEventArgs e)
             => RemoteCamera.NotifyRemoteNewImageReceivedEventHappened(camIndex, session, e);
 
-        public bool NotifyCameraCreatedAsynchronously()
+        public bool NotifyCameraCreatedAsynchronously(int camIndex, string session)
         {
-            return true;
+            var resetEvent = DipolClient.CameraCreatedEvents
+                .FirstOrDefault(x => x.Key.Equals((session, camIndex)))
+                .Value;
+            resetEvent?.Set();
+
+            return resetEvent != null;
         }
     }
 }

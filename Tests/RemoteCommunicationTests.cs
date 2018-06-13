@@ -59,9 +59,9 @@ namespace Tests
             {
                 client.Connect();
 
-                
+                RemoteCamera.CreateAsync(0, client).Wait();
 
-                client.Dispose();
+                client.Disconnect();
             }
         }
     }

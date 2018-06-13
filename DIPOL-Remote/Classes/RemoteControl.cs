@@ -87,8 +87,6 @@ namespace DIPOL_Remote.Classes
         private static readonly ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
             = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
 
-
-       
         /// <summary>
         /// Unique ID of current session
         /// </summary>
@@ -739,9 +737,13 @@ namespace DIPOL_Remote.Classes
             Task.Run(() =>
             {
                 CreateCamera(camIndex);
-                Console.WriteLine("CREATED");
-                RemoveCamera(camIndex);
-                Console.WriteLine("REMOVED");
+                var isAccepted = GetContext()
+                    ?.GetCallbackChannel<IRemoteCallback>()
+                    ?.NotifyCameraCreatedAsynchronously(camIndex, sessionID);
+
+                Console.WriteLine(isAccepted);
+                if (!isAccepted ?? true)
+                    RemoveCamera(camIndex);
             });
 
         }
