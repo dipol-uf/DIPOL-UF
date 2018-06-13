@@ -50,6 +50,7 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public sealed class Camera : CameraBase
     {
+
         private Timer _temperatureMonitorTimer;
         //private Task TemperatureMonitorWorker = null;
         //private CancellationTokenSource TemperatureMonitorCancellationSource
@@ -61,8 +62,6 @@ namespace ANDOR_CS.Classes
         private readonly ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> _runningTasks = 
             new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
-        public override bool IsTemperatureMonitored =>
-            _temperatureMonitorTimer?.Enabled ?? false;
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
@@ -779,10 +778,15 @@ namespace ANDOR_CS.Classes
                 _temperatureMonitorTimer.Elapsed += TemperatureMonitorCycler;
 
                 _temperatureMonitorTimer.Start();
-                
+
+                IsTemperatureMonitored = true;
+
             }
             else
+            {
                 _temperatureMonitorTimer?.Stop();
+                IsTemperatureMonitored = false;
+            }
 
         }
 
@@ -1105,6 +1109,12 @@ namespace ANDOR_CS.Classes
 
             return cameraCount;
         }
+
+        public new static CameraBase Create(int camIndex = 0, object otherParams = null)
+            => new Camera(camIndex);
+
+        public new static async Task<CameraBase> CreateAsync(int camIndex = 0, object otherParams = null)
+            => await Task.Run(() => Create(camIndex, otherParams));
 
 #if DEBUG
         public static CameraBase GetDebugInterface(int camIndex = 0)

@@ -58,7 +58,7 @@ namespace DIPOL_Remote.Interfaces
     [ServiceKnownType(typeof(NewImageReceivedEventArgs))]
     [ServiceKnownType(typeof(DipolImage.Image))]
     [ServiceKnownType(typeof(TypeCode))]
-    internal interface IRemoteControl
+    public interface IRemoteControl
     {
         /// <summary>
         /// Unique ID of the session 
@@ -95,6 +95,11 @@ namespace DIPOL_Remote.Interfaces
         [FaultContract(typeof(AndorSDKServiceException))]
         [FaultContract(typeof(ServiceException))]
         void CreateCamera(int camIndex = 0);
+
+        [OperationContract(IsOneWay = false)]
+        [FaultContract(typeof(AndorSDKServiceException))]
+        [FaultContract(typeof(ServiceException))]
+        void RequestCreateCamera(int camIndex);
 
         [OperationContract(IsOneWay = false)]
         [FaultContract(typeof(ServiceException))]
@@ -138,6 +143,8 @@ namespace DIPOL_Remote.Interfaces
            TtlShutterSignal Type,
            int OpenTime,
            int CloseTime) GetShutter(int camIndex);
+        [OperationContract(IsOneWay = false)]
+        bool GetIsTemperatureMonitored(int camIndex);
         [OperationContract(IsOneWay = false)]
         (Version EPROM, Version COFFile, Version Driver, Version Dll) GetSoftware(int camIndex);
         [OperationContract(IsOneWay = false)]

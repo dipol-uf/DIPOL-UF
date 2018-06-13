@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 
 namespace Host
@@ -15,6 +16,8 @@ namespace Host
         {
             Console.WindowWidth = 180;
             Console.WindowHeight = 60;
+
+            //Debug();
 
             using (var host = new DIPOL_Remote.Classes.DipolHost())
             {
@@ -47,8 +50,19 @@ namespace Host
 
                 ConsoleKeyInfo key = default(ConsoleKeyInfo);
 
-                while (!((key = Console.ReadKey()).Key == ConsoleKey.Escape && key.Modifiers == ConsoleModifiers.Shift))
+                while (!((key = Console.ReadKey()).Key == ConsoleKey.Escape))
                 { }
+            }
+        }
+
+        private static void Debug()
+        {
+            var t = System.Diagnostics.Stopwatch.StartNew();
+            using(var cam = new ANDOR_CS.Classes.Camera())
+            {
+                t.Stop();
+                Console.WriteLine(cam.CameraModel + $"\t{t.ElapsedMilliseconds / 1000.0}");
+                Console.ReadKey();
             }
         }
     }

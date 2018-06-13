@@ -20,9 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
-
+using System.Xml.XPath;
 using CameraBase = ANDOR_CS.Classes.CameraBase;
 using IRemoteControl = DIPOL_Remote.Interfaces.IRemoteControl;
 using AcquisitionEventType = DIPOL_Remote.Enums.AcquisitionEventType;
@@ -31,17 +32,18 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
 using ANDOR_CS.Classes;
+using ANDOR_CS.Exceptions;
 using DipolImage;
 
 namespace DIPOL_Remote.Classes
 {
-    public class RemoteCamera : CameraBase
+    public sealed class RemoteCamera : CameraBase
     {
-        private static ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase> remoteCameras
+        private static readonly ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase> remoteCameras
             = new ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase>();
 
 
-        private ConcurrentDictionary<string, bool> changedProperties
+        private readonly ConcurrentDictionary<string, bool> changedProperties
             = new ConcurrentDictionary<string, bool>();
 
         private bool _isTemperatureMonitored;
@@ -56,8 +58,8 @@ namespace DIPOL_Remote.Classes
             {
                 if (changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    // TODO: Implement property forwarding
-
+                    IsTemperatureMonitored = session.GetIsTemperatureMonitored(CameraIndex);
+                    changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
                 return false;
@@ -245,7 +247,7 @@ namespace DIPOL_Remote.Classes
 
         internal RemoteCamera(IRemoteControl sessionInstance, int camIndex)
         {
-            session = sessionInstance ?? throw new ArgumentNullException("Session cannot be null.");
+            session = sessionInstance ?? throw new ArgumentNullException(nameof(sessionInstance));
             CameraIndex = camIndex;
 
             remoteCameras.TryAdd((session.SessionID, camIndex), this);
@@ -296,7 +298,7 @@ namespace DIPOL_Remote.Classes
         public override SettingsBase GetAcquisitionSettingsTemplate()
             => new RemoteSettings(session.SessionID, CameraIndex, session.CreateSettings(CameraIndex), session);
 
-        public async override Task StartAcquistionAsync(CancellationTokenSource token, int timeout)
+        public override async Task StartAcquistionAsync(CancellationTokenSource token, int timeout)
         {
             _acquiredImages = new ConcurrentQueue<Image>();
 
@@ -340,17 +342,17 @@ namespace DIPOL_Remote.Classes
             }
         }
 
-        protected sealed override void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
+        protected override void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
             => OnPropertyChangedRemotely(property, true);
 
-        protected virtual void OnPropertyChangedRemotely(
+        protected void OnPropertyChangedRemotely(
             [System.Runtime.CompilerServices.CallerMemberName] string property = "",
             bool suppressBaseEvent = false)
         {
-            CheckIsDisposed();
-            if (!suppressBaseEvent)
+            //CheckIsDisposed();
+            if (!IsDisposed && !suppressBaseEvent)
                 base.OnPropertyChanged(property);
-                    }
+        }
 
         internal static void NotifyRemotePropertyChanged(int camIndex, string sessionID, string property)
         {
@@ -410,6 +412,54 @@ namespace DIPOL_Remote.Classes
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
-               
+
+        public static CameraBase Create(int camIndex = 0, object otherParams = null)
+        {
+            var commObj = (otherParams
+                 ?? throw new ArgumentNullException(
+                               nameof(otherParams), 
+                               $"{nameof(Create)} requires additional non-null parameter."))
+                as DipolClient
+                ?? throw new ArgumentException(
+                              $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.", 
+                              nameof(otherParams));
+
+            return commObj.CreateRemoteCamera(camIndex);
+        }
+
+        public static async Task<CameraBase> CreateAsync(int camIndex = 0, object otherParams = null)
+        {
+            var commObj = (otherParams
+                           ?? throw new ArgumentNullException(
+                               nameof(otherParams),
+                               $"{nameof(Create)} requires additional non-null parameter."))
+                          as DipolClient
+                          ?? throw new ArgumentException(
+                              $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.",
+                              nameof(otherParams));
+
+            commObj.RequestCreateRemoteCamera(camIndex);
+            var resetEvent = new ManualResetEvent(false);
+            if(!DipolClient.CameraCreatedEvents.TryAdd((commObj.SessionID, camIndex), (resetEvent, false)))
+                throw new InvalidOperationException($"Cannot add {nameof(ManualResetEvent)} to the listening collection.");
+
+            // TODO: The timeout for remote camera creation should come as parameter or
+            // TODO: from settings file.
+            var isCreated = await Task.Run(() => resetEvent.WaitOne(TimeSpan.FromMinutes(2)));
+
+
+            if (!DipolClient.CameraCreatedEvents.TryGetValue((commObj.SessionID, camIndex), out var result))
+                result.Success = false;
+
+            DipolClient.CameraCreatedEvents.TryRemove((commObj.SessionID, camIndex), out _);
+
+            if(!result.Success)
+                throw new AndorSdkException("Remote instance failed to create a camera.", null);
+            if(!isCreated)
+                throw new CommunicationException("Response from remote instance was never received.");
+
+            return new RemoteCamera(commObj.Remote, camIndex);
+            
+        }
     }
 }

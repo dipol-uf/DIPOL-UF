@@ -47,7 +47,7 @@ namespace DIPOL_Remote.Classes
         InstanceContextMode = InstanceContextMode.PerSession,
         UseSynchronizationContext = true,
         IncludeExceptionDetailInFaults = true)]
-    public sealed class RemoteControl : IRemoteControl, IDisposable
+    internal sealed class RemoteControl : IRemoteControl, IDisposable
     {
         /// <summary>
         /// Defines max number of attempts to create unique identifier.
@@ -70,25 +70,23 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Thread-safe collection of all active instances of AcquisitionSettings.
         /// </summary>
-        private ConcurrentDictionary<string,  SettingsBase> settings
+        private readonly ConcurrentDictionary<string,  SettingsBase> settings
             = new ConcurrentDictionary<string,  SettingsBase>();
 
-        private ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> activeTasks
+        private readonly ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> activeTasks
             = new ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>();
 
         /// <summary>
         /// Thread-safe collection of all active <see cref="RemoteControl"/> service instances.
         /// </summary>
-        private static ConcurrentDictionary<string, RemoteControl> serviceInstances 
+        private static readonly ConcurrentDictionary<string, RemoteControl> serviceInstances 
             = new ConcurrentDictionary<string, RemoteControl>();
         /// <summary>
         /// Thread-safe collection of active remote cameras.
         /// </summary>
-        private static ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
+        private static readonly ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
             = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
 
-
-       
         /// <summary>
         /// Unique ID of current session
         /// </summary>
@@ -555,6 +553,9 @@ namespace DIPOL_Remote.Classes
            int CloseTime) GetShutter(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Shutter;
         [OperationBehavior]
+        public bool GetIsTemperatureMonitored(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).IsTemperatureMonitored;
+        [OperationBehavior]
         public (Version EPROM, Version COFFile, Version Driver, Version Dll) GetSoftware(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Software;
         [OperationBehavior]
@@ -728,6 +729,31 @@ namespace DIPOL_Remote.Classes
                 return context;
             else
                 return null;
+
+        }
+
+        public void RequestCreateCamera(int camIndex)
+        {
+            Task.Run(() =>
+            {
+                var result = true;
+                try
+                {
+                    CreateCamera(camIndex);
+                }
+                catch
+                {
+                    result = false;
+                }
+
+
+                var isAccepted = GetContext()
+                    ?.GetCallbackChannel<IRemoteCallback>()
+                    ?.NotifyCameraCreatedAsynchronously(camIndex, sessionID, result);
+
+                if (!isAccepted ?? true)
+                    RemoveCamera(camIndex);
+            });
 
         }
     }

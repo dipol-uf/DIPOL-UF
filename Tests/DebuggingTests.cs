@@ -3,36 +3,45 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
+using ANDOR_CS.Classes;
 using DipolImage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 
 namespace Tests
 {
+    [TestClass]
     public class DebuggingTests
     {
-        [STAThread]
-        public static int Main()
+        private class A
         {
-            new Debugger();
-            return 0;
+            public static string Get() => "AA";
+            public static string Get2() => Get();
         }
 
-        public class Debugger
+        private class B : A
         {
-            //public Image TestImageUInt16;
+            public new static string Get() => "BB";
+            public new static string Get2() => Get();
 
-            public Debugger()
-            {
-                //var initArr = new ushort[256 * 512];
-                //for (var i = 0; i < 256; i++)
-                //    for (var j = 0; j < 512; j++)
-                //        initArr[i * 512 + j] = (ushort)(Math.Pow(i + j, 1.5));
+        }
 
-                //TestImageUInt16 = new Image(initArr, 512, 256);
-            }
+        [TestMethod]
+        public void Test()
+        {
+            var a = A.Get();
+            var b = B.Get();
 
+            Assert.AreNotEqual(a, b);
+        }
+
+        [TestMethod]
+        public void Test2()
+        {
+            var a = A.Get2();
+            var b = B.Get2();
+
+            Assert.AreNotEqual(a, b);
         }
     }
 }

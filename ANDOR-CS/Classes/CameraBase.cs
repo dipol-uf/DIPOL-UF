@@ -16,9 +16,13 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
+using System.CodeDom;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,15 +65,25 @@ namespace ANDOR_CS.Classes
             = default((Version EPROM, Version COFFile, Version Driver, Version Dll));
         private (Version PCB, Version Decode, Version CameraFirmware) _hardware
             = default((Version PCB, Version Decode, Version CameraFirmware));
+        private bool _isTemperatureMonitored;
         private volatile bool _isAcquiring;
         private volatile bool _isAsyncAcquisition;
 
         protected ConcurrentQueue<Image> _acquiredImages = new ConcurrentQueue<Image>();
 
 
-        public abstract bool IsTemperatureMonitored
+        public virtual bool IsTemperatureMonitored
         {
-            get;
+            get => _isTemperatureMonitored;
+            set
+            {
+                if (value != _isTemperatureMonitored)
+                {
+                    _isTemperatureMonitored = value;
+                    OnPropertyChanged();
+                }
+            }
+
         }
         public bool IsDisposed => _isDisposed;
 
@@ -452,6 +466,14 @@ namespace ANDOR_CS.Classes
             if (!IsDisposed)
                 NewImageReceived?.Invoke(this, e);
         }
+
+
+        public static CameraBase Create(int camIndex = 0, object otherParams = null)
+            => throw new NotSupportedException($"Cannot create instance of abstract class {nameof(CameraBase)}.");
+
+        public static async Task<CameraBase> CreateAsync(int camIndex = 0, object otherParams = null)
+            => await Task.Run(() => Create(camIndex, otherParams));
+
 
         ~CameraBase()
         {

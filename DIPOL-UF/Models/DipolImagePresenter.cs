@@ -900,7 +900,7 @@ namespace DIPOL_UF.Models
                 parameter is CommandEventArgs<SizeChangedEventArgs> args )
             {
                 LastKnownImageControlSize = args.EventArgs.NewSize;
-                ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width/DisplayedImage.Width, 
+                ImageSamplerScaleFactor = Math.Min(args.EventArgs.NewSize.Width / DisplayedImage.Width, 
                                               args.EventArgs.NewSize.Height / DisplayedImage.Height); 
             }
         }
