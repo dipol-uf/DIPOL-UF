@@ -35,7 +35,7 @@ using DipolImage;
 
 namespace DIPOL_Remote.Classes
 {
-    public class RemoteCamera : CameraBase
+    public sealed class RemoteCamera : CameraBase
     {
         private static ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase> remoteCameras
             = new ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase>();
@@ -245,7 +245,7 @@ namespace DIPOL_Remote.Classes
 
         internal RemoteCamera(IRemoteControl sessionInstance, int camIndex)
         {
-            session = sessionInstance ?? throw new ArgumentNullException("Session cannot be null.");
+            session = sessionInstance ?? throw new ArgumentNullException(nameof(sessionInstance));
             CameraIndex = camIndex;
 
             remoteCameras.TryAdd((session.SessionID, camIndex), this);
@@ -340,10 +340,10 @@ namespace DIPOL_Remote.Classes
             }
         }
 
-        protected sealed override void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
+        protected override void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
             => OnPropertyChangedRemotely(property, true);
 
-        protected virtual void OnPropertyChangedRemotely(
+        protected void OnPropertyChangedRemotely(
             [System.Runtime.CompilerServices.CallerMemberName] string property = "",
             bool suppressBaseEvent = false)
         {
