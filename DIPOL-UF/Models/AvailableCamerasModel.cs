@@ -259,17 +259,15 @@ namespace DIPOL_UF.Models
                 _progressBar.AbortButtonClick += (sender, e) => cancelSource.Cancel();
 
                 if (nLocal > 0)
-                    Task.Run(() =>
+                    try
                     {
-                        try
-                        {
-                            QueryLocalCameras(cancelSource.Token);
-                        }
-                        catch (Exception e)
-                        {
-                            Helper.WriteLog(e.Message);
-                        }
-                    }, cancelSource.Token);
+                        QueryLocalCamerasAsync(cancelSource.Token);
+                    }
+                    catch (Exception e)
+                    {
+                        Helper.WriteLog(e.Message);
+                    }
+
 
                 if (nRemote > 0)
                     Task.Run(() =>
@@ -288,7 +286,7 @@ namespace DIPOL_UF.Models
             
         }
 
-        private void QueryLocalCameras(CancellationToken token)
+        private async void QueryLocalCamerasAsync(CancellationToken token)
         {
             // Number of cameras
             int nCams;
@@ -316,7 +314,7 @@ namespace DIPOL_UF.Models
                 {
                     if (!Camera.CamerasInUse.Values.Select(item => item.CameraIndex).Contains(camIndex))
                         //cam = new Camera(camIndex);
-                        cam = Camera.CreateAsync(camIndex).Result;
+                        cam = await Camera.CreateAsync(camIndex);
                 }
                 // Silently catch exception and continue
                 catch (Exception aExp)
