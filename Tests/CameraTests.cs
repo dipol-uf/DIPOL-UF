@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
+using ANDOR_CS.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests
 {
     [TestClass]
-    public class GlobalCameraTests
+    public class CameraTests
     {
         [TestMethod]
 #if X86
@@ -48,6 +49,28 @@ namespace Tests
         public void Test_CameraBaseCreate_AlwaysThrows()
         {
             Assert.ThrowsException<NotSupportedException>(() => CameraBase.Create());
+        }
+
+        [TestMethod]
+#if X86
+        [DeploymentItem("atmcd32d.dll")]
+#endif
+#if X64
+        [DeploymentItem("atmcd64d.dll")]
+#endif
+        public void Test_CameraCreate_ThrowsOrCreates()
+        {
+            var nCam = Camera.GetNumberOfCameras();
+
+            if (nCam == 0)
+                Assert.ThrowsException<AndorSdkException>(() => Camera.Create());
+            else
+            {
+                var cam = Camera.Create();
+                Assert.IsNotNull(cam);
+                cam.Dispose();
+                Assert.IsTrue(cam.IsDisposed);
+            }
         }
 
     }
