@@ -303,7 +303,7 @@ namespace DIPOL_UF.Models
             {
                 nCams = Camera.GetNumberOfCameras();
             }
-            // If for some reason camera retrieval number fails
+            // If for some reason camera number retrieval fails
             catch (AndorSdkException aExp)
             {
                 Helper.WriteLog(aExp);
@@ -311,7 +311,7 @@ namespace DIPOL_UF.Models
             }
 
             // For each found local camera
-            for (int camIndex = 0; camIndex < nCams; camIndex++)
+            for (var camIndex = 0; camIndex < nCams; camIndex++)
             {
                 // Check cancellation request
                 if (token.IsCancellationRequested)
@@ -321,8 +321,9 @@ namespace DIPOL_UF.Models
                 CameraBase cam = null;
                 try
                 {
-                    if(!Camera.CamerasInUse.Values.Select(item => item.CameraIndex).Contains(camIndex))
-                        cam = new Camera(camIndex);
+                    if (!Camera.CamerasInUse.Values.Select(item => item.CameraIndex).Contains(camIndex))
+                        //cam = new Camera(camIndex);
+                        cam = Camera.CreateAsync(camIndex).Result;
                 }
                 // Silently catch exception and continue
                 catch (Exception aExp)
@@ -334,7 +335,6 @@ namespace DIPOL_UF.Models
                 if (token.IsCancellationRequested)
                 {
                     cam?.Dispose();
-                    cam = null;
                     break;
                 }
 
@@ -358,7 +358,7 @@ namespace DIPOL_UF.Models
                 // Close progress bar if everything is done ?
                 if (_progressBar?.Value == _progressBar?.Maximum)
                 {
-                    Task.Delay(750).Wait();
+                    Task.Delay(750, token).Wait(token);
                     Application.Current.Dispatcher.Invoke(_progressView.Close);
                     CanCancel = true;
                 }
@@ -379,10 +379,10 @@ namespace DIPOL_UF.Models
                     try
                     {
                         // Number of available cameras
-                        int nCams = client.GetNumberOfCameras();
+                        var nCams = client.GetNumberOfCameras();
 
                         // For each camera
-                        for (int camIndex = 0; camIndex < nCams; camIndex++)
+                        for (var camIndex = 0; camIndex < nCams; camIndex++)
                         {
                             // If cancellation requested
                             if (token.IsCancellationRequested)
@@ -392,8 +392,9 @@ namespace DIPOL_UF.Models
                             CameraBase cam = null;
                             try
                             {
-                                if(!client.ActiveRemoteCameras().Contains(camIndex))
-                                    cam = client.CreateRemoteCamera(camIndex);  
+                                if (!client.ActiveRemoteCameras().Contains(camIndex))
+                                    //cam = client.CreateRemoteCamera(camIndex);  
+                                    cam = RemoteCamera.CreateAsync(camIndex, client).Result;
                             }
                             // Catch silently
                             catch (Exception aExp)
@@ -405,7 +406,6 @@ namespace DIPOL_UF.Models
                             if (token.IsCancellationRequested)
                             {
                                 cam?.Dispose();
-                                cam = null;
                                 break;
                             }
 
