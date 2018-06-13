@@ -117,7 +117,7 @@ namespace DIPOL_Remote.Classes
 
         public override void Dispose()
         {
-            session.RemoveSettings(SessionID);
+            session.RemoveSettings(SettingsID);
             session = null;
             base.Dispose();
         }
