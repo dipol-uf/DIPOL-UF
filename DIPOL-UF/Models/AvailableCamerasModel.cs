@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Threading;
@@ -18,7 +17,7 @@ using System.ComponentModel;
 
 namespace DIPOL_UF.Models
 {
-    class AvailableCamerasModel : ObservableObject
+    internal class AvailableCamerasModel : ObservableObject
     {
 
         internal enum ClosingState : byte
@@ -28,12 +27,11 @@ namespace DIPOL_UF.Models
             ConnectAll = 2
         }
 
-        private readonly List<Task> _workerPool = new List<Task>();
-        private bool _canCancel = false;
-        private bool _camerasPresent = false;
-        private readonly ProgressBar _progressBar = null;
-        private Views.ProgressWindow _progressView = null;
-        private readonly DipolClient[] _remoteClients = null;
+        private bool _canCancel;
+        private bool _camerasPresent;
+        private readonly ProgressBar _progressBar;
+        private Views.ProgressWindow _progressView;
+        private readonly DipolClient[] _remoteClients;
         private ObservableConcurrentDictionary<string, CameraBase> _foundCameras = new ObservableConcurrentDictionary<string, CameraBase>();
         private ObservableCollection<string> _selectedItems = new ObservableCollection<string>();
 
@@ -47,14 +45,7 @@ namespace DIPOL_UF.Models
         private ObservableCollection<string> SelectedItems
         {
             get => _selectedItems;
-            set
-            {
-                if (value != _selectedItems)
-                {
-                    _selectedItems = value;
-
-                }
-            }
+            set => _selectedItems = value ?? _selectedItems;
         }
 
         public event Action<object> CameraSelectionsMade;
@@ -160,7 +151,7 @@ namespace DIPOL_UF.Models
 
         public AvailableCamerasModel(DipolClient[] remoteClients = null)
         {
-            this._remoteClients = remoteClients;
+            _remoteClients = remoteClients;
 
             _progressBar = new ProgressBar()
             {
@@ -183,25 +174,27 @@ namespace DIPOL_UF.Models
             WindowShownCommand = new DelegateCommand(
                 (param) =>
                 {
-                    if (_progressBar != null)
+                    if (_progressBar == null) return;
+
+                    _progressView = new Views.ProgressWindow(new ViewModels.ProgressBarViewModel(_progressBar))
                     {
-                        _progressView = new Views.ProgressWindow(new ViewModels.ProgressBarViewModel(_progressBar));
-                        _progressView.Owner = (param as CommandEventArgs<EventArgs>)?.Sender as Window;
-                        _progressView.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                        Owner = (param as CommandEventArgs<EventArgs>)?.Sender as Window,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    };
 
-                        if (!_camerasPresent)
+                    if (!_camerasPresent)
+                    {
+                        _progressBar.BarComment = "No cameras found. Check your connections.";
+                        Task.Run(() =>
                         {
-                            _progressBar.BarComment = "No cameras found. Check your connections.";
-                                _workerPool.Add(Task.Run(() => {
-                                    Task.Delay(3750).Wait();
-                                    Application.Current.Dispatcher.Invoke(_progressView.Close);
-                                    CanCancel = true;
-                            }));
-                        }
-
-                        _progressView.Show();
-                        _progressBar.AbortButtonClick += (sender, e) => CanCancel = true;
+                            Task.Delay(3750).Wait();
+                            Application.Current.Dispatcher.Invoke(_progressView.Close);
+                            CanCancel = true;
+                        });
                     }
+
+                    _progressView.Show();
+                    _progressBar.AbortButtonClick += (sender, e) => CanCancel = true;
                 },
                 DelegateCommand.CanExecuteAlways);
 
@@ -233,8 +226,8 @@ namespace DIPOL_UF.Models
         }
         private void QueryAvailableCameras()
         {
-            int nLocal = 0;
-            int nRemote = 0;
+            var nLocal = 0;
+            var nRemote = 0;
 
             try
             {
@@ -259,7 +252,7 @@ namespace DIPOL_UF.Models
             if (nLocal + nRemote > 0)
             {
                 _camerasPresent = true;
-                CancellationTokenSource cancelSource = new CancellationTokenSource();
+                var cancelSource = new CancellationTokenSource();
                 _progressBar.Maximum = nLocal + nRemote;
                 _progressBar.IsIndeterminate = false;
 
@@ -276,7 +269,7 @@ namespace DIPOL_UF.Models
                         {
                             Helper.WriteLog(e.Message);
                         }
-                    });
+                    }, cancelSource.Token);
 
                 if (nRemote > 0)
                     Task.Run(() =>
@@ -290,7 +283,7 @@ namespace DIPOL_UF.Models
                             Helper.WriteLog(e.Message);
                         }
 
-                    });
+                    }, cancelSource.Token);
             }
             
         }
@@ -348,10 +341,9 @@ namespace DIPOL_UF.Models
                     if (Application.Current.Dispatcher.IsAvailable())
                         Application.Current.Dispatcher.Invoke(_progressBar.TryIncrement);
                     else
-                        lock (_progressBar)
-                            _progressBar.TryIncrement();
+                        _progressBar.TryIncrement();
 
-                    _progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired local camera " +
+                    _progressBar.BarComment = cam == null ? "Camera resource is unavailable." : "Acquired local camera " +
                         $"{new Converters.CameraToStringAliasValueConverter().Convert(cam, typeof(string), null, System.Globalization.CultureInfo.CurrentUICulture)}";
                 }
 
@@ -422,14 +414,14 @@ namespace DIPOL_UF.Models
                                     lock (_progressBar)
                                         _progressBar.TryIncrement();
 
-                                _progressBar.BarComment = cam == null ? "Camera resource is unavailable." : $"Acquired remote camera " +
+                                _progressBar.BarComment = cam == null ? "Camera resource is unavailable." : "Acquired remote camera " +
                                     $"{new Converters.CameraToStringAliasValueConverter().Convert(cam, typeof(string), null, System.Globalization.CultureInfo.CurrentUICulture)}";
                             }
 
                             // Close window?
                             if (_progressBar?.Value == _progressBar?.Maximum)
                             {
-                                Task.Delay(TimeSpan.Parse(DIPOL_UF_App.Settings.GetValueOrNullSafe<string>("PopUpDelay", "00:00:00.750"))).Wait();
+                                Task.Delay(TimeSpan.Parse(DIPOL_UF_App.Settings.GetValueOrNullSafe("PopUpDelay", "00:00:00.750")), token).Wait(token);
                                 Application.Current.Dispatcher.Invoke(_progressView.Close);
                                 CanCancel = true;
                             }
