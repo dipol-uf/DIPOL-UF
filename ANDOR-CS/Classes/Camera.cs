@@ -1110,6 +1110,10 @@ namespace ANDOR_CS.Classes
             return cameraCount;
         }
 
+        public new static CameraBase Create(int camIndex = 0, object otherParams = null)
+            => new Camera(camIndex);
+
+
 #if DEBUG
         public static CameraBase GetDebugInterface(int camIndex = 0)
             => new DebugCamera(camIndex);
