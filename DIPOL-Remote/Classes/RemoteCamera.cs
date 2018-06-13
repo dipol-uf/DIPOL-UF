@@ -410,6 +410,19 @@ namespace DIPOL_Remote.Classes
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
-               
+
+        public static CameraBase Create(int camIndex = 0, object otherParams = null)
+        {
+            var commObj = (otherParams
+                 ?? throw new ArgumentNullException(
+                               nameof(otherParams), 
+                               $"{nameof(Create)} requires additional non-null parameter."))
+                as DipolClient
+                ?? throw new ArgumentException(
+                              $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.", 
+                              nameof(otherParams));
+
+            return commObj.CreateRemoteCamera(camIndex);
+        }
     }
 }

@@ -22,9 +22,10 @@ namespace Tests
         {
             using(var client = new DipolClient(@"dipol-2"))
             {
-                client.Connect();
-                client.Remote.RequestCreateCamera(0);
-                Console.WriteLine();
+                var cam = RemoteCamera.Create(0, client);
+                Assert.IsNotNull(cam);
+                cam.Dispose();
+                Assert.IsTrue(cam.IsDisposed);
                 client.Disconnect();
             }
         }
