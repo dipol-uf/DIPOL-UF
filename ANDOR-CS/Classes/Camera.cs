@@ -434,7 +434,7 @@ namespace ANDOR_CS.Classes
         private void TemperatureMonitorCycler(object sender, ElapsedEventArgs e)
         {
             // Checks if temperature can be queried
-            if (!_isDisposed && // camera is not disposed
+            if (!isDisposed && // camera is not disposed
                 (   !IsAcquiring ||  // either it is not acquiring or it supports run-time queries
                     Capabilities.Features.HasFlag(SdkFeatures.ReadTemperatureDuringAcquisition)) &&
                 sender is Timer t && // sender is Timer
@@ -813,7 +813,7 @@ namespace ANDOR_CS.Classes
         protected override void Dispose(bool disposing)
         {
 
-            if (!_isDisposed)
+            if (!isDisposed)
             {
                 base.Dispose(disposing);
                 if (disposing)
