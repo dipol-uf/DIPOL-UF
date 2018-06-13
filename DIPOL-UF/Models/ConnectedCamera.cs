@@ -355,18 +355,25 @@ namespace DIPOL_UF.Models
         }
         private void SetUpAcquisitionCommandExecute(object parameter)
         {
-            var settings = Camera.CurrentSettings ?? Camera.GetAcquisitionSettingsTemplate();
+            var hadSettings = Camera.CurrentSettings != null;
+            
+            var settings = hadSettings 
+                ? Camera.CurrentSettings 
+                : Camera.GetAcquisitionSettingsTemplate();
             
             var viewModel = new ViewModels.AcquisitionSettingsViewModel(settings, Camera);
 
-            if (new Views.AcquisitionSettingsView(viewModel).ShowDialog() == true && 
-                !viewModel.EstimatedTiming.Equals(default))
+            if (new Views.AcquisitionSettingsView(viewModel).ShowDialog() == true)
             {
-                Timing = viewModel.EstimatedTiming.ToTuple();
-                RaisePropertyChanged(nameof(AreSettingsApplied));
-                ControlAcquisitionCommand.OnCanExecuteChanged();
+                if (!viewModel.EstimatedTiming.Equals(default))
+                {
+                    Timing = viewModel.EstimatedTiming.ToTuple();
+                    RaisePropertyChanged(nameof(AreSettingsApplied));
+                    ControlAcquisitionCommand.OnCanExecuteChanged();
+                }
             }
-                        
+            else if(!hadSettings)
+                settings.Dispose();
         }
         private void ControlAcquisitionCommandExecute(object parameter)
         {
