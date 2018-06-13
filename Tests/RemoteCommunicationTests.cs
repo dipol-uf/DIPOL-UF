@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DIPOL_Remote.Classes;
+using DIPOL_Remote.Faults;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests
@@ -22,11 +23,26 @@ namespace Tests
         {
             using(var client = new DipolClient(@"dipol-2"))
             {
-                var cam = RemoteCamera.Create(0, client);
-                Assert.IsNotNull(cam);
-                cam.Dispose();
-                Assert.IsTrue(cam.IsDisposed);
+                client.Connect();
+
+                int nCam = client.GetNumberOfCameras();
+                if (nCam == 0)
+                {
+                  
+                       Assert.ThrowsException<System.ServiceModel.FaultException<AndorSDKServiceException>>(() =>
+                            RemoteCamera.Create(0, client));
+                   
+                }
+                else
+                {
+                    var cam = RemoteCamera.Create(0, client);
+                    Assert.IsNotNull(cam);
+                    cam.Dispose();
+                    Assert.IsTrue(cam.IsDisposed);
+                }
+
                 client.Disconnect();
+
             }
         }
     }
