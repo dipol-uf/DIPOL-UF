@@ -47,7 +47,7 @@ namespace DIPOL_Remote.Classes
         InstanceContextMode = InstanceContextMode.PerSession,
         UseSynchronizationContext = true,
         IncludeExceptionDetailInFaults = true)]
-    public sealed class RemoteControl : IRemoteControl, IDisposable
+    internal sealed class RemoteControl : IRemoteControl, IDisposable
     {
         /// <summary>
         /// Defines max number of attempts to create unique identifier.

@@ -32,7 +32,7 @@ namespace DIPOL_Remote.Classes
         private const string EndpointTemplate = @"net.tcp://{0}:400/DipolRemote"; //new Uri(@"net.tcp://localhost:400/DipolRemote");
 
         private readonly InstanceContext _context = new InstanceContext(new RemoteCallbackHandler());
-        public readonly IRemoteControl _remote;
+        private readonly IRemoteControl _remote;
 
         public IRemoteControl Remote
             => _remote ?? throw CommunicationException;
