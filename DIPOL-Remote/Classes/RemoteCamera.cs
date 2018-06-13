@@ -442,7 +442,7 @@ namespace DIPOL_Remote.Classes
             if(!DipolClient.CameraCreatedEvents.TryAdd((commObj.SessionID, camIndex), resetEvent))
                 throw new InvalidOperationException($"Cannot add {nameof(ManualResetEvent)} to the listening collection.");
 
-            var isCreated = await Task.Run(() => resetEvent.WaitOne());
+            var isCreated = await Task.Run(() => resetEvent.WaitOne(TimeSpan.FromSeconds(10)));
 
             if(isCreated)
                 return new RemoteCamera(commObj.Remote, camIndex);

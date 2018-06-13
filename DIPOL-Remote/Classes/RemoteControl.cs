@@ -741,7 +741,6 @@ namespace DIPOL_Remote.Classes
                     ?.GetCallbackChannel<IRemoteCallback>()
                     ?.NotifyCameraCreatedAsynchronously(camIndex, sessionID);
 
-                Console.WriteLine(isAccepted);
                 if (!isAccepted ?? true)
                     RemoveCamera(camIndex);
             });

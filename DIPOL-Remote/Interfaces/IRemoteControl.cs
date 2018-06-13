@@ -96,7 +96,9 @@ namespace DIPOL_Remote.Interfaces
         [FaultContract(typeof(ServiceException))]
         void CreateCamera(int camIndex = 0);
 
-        [OperationContract(IsOneWay = true)]
+        [OperationContract(IsOneWay = false)]
+        [FaultContract(typeof(AndorSDKServiceException))]
+        [FaultContract(typeof(ServiceException))]
         void RequestCreateCamera(int camIndex);
 
         [OperationContract(IsOneWay = false)]

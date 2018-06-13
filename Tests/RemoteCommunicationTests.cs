@@ -59,7 +59,9 @@ namespace Tests
             {
                 client.Connect();
 
-                RemoteCamera.CreateAsync(0, client).Wait();
+                var cam = RemoteCamera.CreateAsync(0, client).Result;
+
+                cam?.Dispose();
                 //System.Threading.Thread.Sleep(TimeSpan.FromSeconds(25));
                 //System.Threading.Thread.Sleep(TimeSpan.FromSeconds(10));
 
