@@ -29,7 +29,7 @@ namespace Tests
         public void Test_CameraAsyncCreation()
         {
             Assert.IsTrue(Camera.GetNumberOfCameras() > 0);
-            var cam = CameraBase.CreateCameraAsync<Camera>().Result;
+            var cam = CameraBase.CreateAsync().Result;
             Assert.IsNotNull(cam);
             cam.Dispose();
             Assert.IsTrue(cam.IsDisposed);

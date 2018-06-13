@@ -16,11 +16,14 @@ namespace Tests
         private class A
         {
             public static string Get() => "AA";
+            public static string Get2() => Get();
         }
 
         private class B : A
         {
             public new static string Get() => "BB";
+            public new static string Get2() => Get();
+
         }
 
         [TestMethod]
@@ -28,6 +31,15 @@ namespace Tests
         {
             var a = A.Get();
             var b = B.Get();
+
+            Assert.AreNotEqual(a, b);
+        }
+
+        [TestMethod]
+        public void Test2()
+        {
+            var a = A.Get2();
+            var b = B.Get2();
 
             Assert.AreNotEqual(a, b);
         }

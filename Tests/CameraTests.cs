@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,10 +20,8 @@ namespace Tests
 #if X64
         [DeploymentItem("atmcd64d.dll")]
 #endif
-        public void Test_GetNumberOfCameras_ReturnsOne()
-        {
-            Assert.AreEqual(Camera.GetNumberOfCameras(), 1);
-        }
+        public void Test_GetNumberOfCameras_ReturnsOne() 
+            => Assert.AreEqual(Camera.GetNumberOfCameras(), 1);
 
         [TestMethod]
 #if X86
@@ -73,5 +72,42 @@ namespace Tests
             }
         }
 
+
+        [TestMethod]
+#if X86
+        [DeploymentItem("atmcd32d.dll")]
+#endif
+#if X64
+        [DeploymentItem("atmcd64d.dll")]
+#endif
+        public void Test_CameraBaseCreateAsync_AlwaysThrows()
+        {
+            var except = Assert.ThrowsException<AggregateException>(() => CameraBase.CreateAsync().Wait());
+            Assert.IsInstanceOfType(except?.InnerException, typeof(NotSupportedException));
+        }
+
+        [TestMethod]
+#if X86
+        [DeploymentItem("atmcd32d.dll")]
+#endif
+#if X64
+        [DeploymentItem("atmcd64d.dll")]
+#endif
+        public void Test_CameraCreateAsync_ThrowsOrCreates()
+        {
+            var nCam = Camera.GetNumberOfCameras();
+
+            if (nCam == 0)
+                Assert.IsInstanceOfType(
+                    Assert.ThrowsException<AggregateException>(() => Camera.CreateAsync().Wait())?.InnerException,
+                    typeof(AndorSdkException));
+            else
+            {
+                var cam = Camera.CreateAsync(0).Result;
+                Assert.IsNotNull(cam);
+                cam.Dispose();
+                Assert.IsTrue(cam.IsDisposed);
+            }
+        }
     }
 }

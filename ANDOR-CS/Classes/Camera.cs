@@ -1113,6 +1113,8 @@ namespace ANDOR_CS.Classes
         public new static CameraBase Create(int camIndex = 0, object otherParams = null)
             => new Camera(camIndex);
 
+        public new static async Task<CameraBase> CreateAsync(int camIndex = 0, object otherParams = null)
+            => await Task.Run(() => Create(camIndex, otherParams));
 
 #if DEBUG
         public static CameraBase GetDebugInterface(int camIndex = 0)
