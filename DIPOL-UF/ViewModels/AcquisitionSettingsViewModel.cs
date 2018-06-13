@@ -17,7 +17,7 @@ using DIPOL_UF.Commands;
 
 namespace DIPOL_UF.ViewModels
 {
-    class AcquisitionSettingsViewModel : ViewModel<SettingsBase>
+    internal class AcquisitionSettingsViewModel : ViewModel<SettingsBase>
     {
         private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
         private static readonly List<(string, PropertyInfo)> PropertyList =
@@ -27,20 +27,12 @@ namespace DIPOL_UF.ViewModels
             .Select(pi => (PropNameTrimmer.Replace(pi.Name, ""), pi))
             .ToList();
 
-        private readonly CameraBase camera;
+        public DelegateCommand SubmitCommand { get; private set; }
 
-        private Dictionary<string, bool> _supportedSettings = null;
+        public DelegateCommand CancelCommand { get; private set; }
+        public DelegateCommand SaveCommand { get; private set; }
 
-        private DelegateCommand saveCommand;
-        private DelegateCommand loadCommand;
-        private DelegateCommand submitCommand;
-        private DelegateCommand cancelCommand;
-
-        public DelegateCommand SubmitCommand => submitCommand;
-        public DelegateCommand CancelCommand => cancelCommand;
-        public DelegateCommand SaveCommand => saveCommand;
-        public DelegateCommand LoadCommand => loadCommand;
-
+        public DelegateCommand LoadCommand { get; private set; }
         public (float ExposureTime, float AccumulationCycleTime, 
             float KineticCycleTime, int BufferSize) EstimatedTiming
         {
@@ -51,11 +43,12 @@ namespace DIPOL_UF.ViewModels
         /// <summary>
         /// Reference to Camera instance.
         /// </summary>
-        public CameraBase Camera => camera;
+        public CameraBase Camera { get; }
+
         /// <summary>
         /// Collection of supported by a given Camera settings.
         /// </summary>
-        public Dictionary<string, bool> SupportedSettings => _supportedSettings;
+        public Dictionary<string, bool> SupportedSettings { get; private set; }
 
         /// <summary>
         /// Collection of settings that can be set now.
@@ -174,7 +167,7 @@ namespace DIPOL_UF.ViewModels
             {
                 try
                 {
-                    model.SetOutputAmplifier(camera.Properties.OutputAmplifiers[value < 0 ? 0 : value].OutputAmplifier);
+                    model.SetOutputAmplifier(Camera.Properties.OutputAmplifiers[value < 0 ? 0 : value].OutputAmplifier);
                     ValidateProperty(null);
                     //RaisePropertyChanged();
                 }
@@ -518,7 +511,7 @@ namespace DIPOL_UF.ViewModels
             : base(model)
         {
             this.model = model;
-            this.camera = camera;
+            this.Camera = camera;
 
 
             CheckSupportedFeatures();
@@ -529,20 +522,20 @@ namespace DIPOL_UF.ViewModels
 
         private void CheckSupportedFeatures()
         {
-            _supportedSettings = new Dictionary<string, bool>()
+            SupportedSettings = new Dictionary<string, bool>()
             {
-                { nameof(model.VSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed)},
-                { nameof(model.VSAmplitude), camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
+                { nameof(model.VSSpeed), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed)},
+                { nameof(model.VSAmplitude), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
                 { nameof(model.ADConverter), true },
                 { nameof(model.OutputAmplifier), true },
-                { nameof(model.HSSpeed), camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) },
-                { nameof(model.PreAmpGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain) },
+                { nameof(model.HSSpeed), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) },
+                { nameof(model.PreAmpGain), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain) },
                 { nameof(model.AcquisitionMode), true },
                 { nameof(FrameTransferValue), true},
                 { nameof(model.ReadoutMode), true },
                 { nameof(model.TriggerMode), true },
                 { nameof(model.ExposureTime), true },
-                { nameof(model.EMCCDGain), camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) },
+                { nameof(model.EMCCDGain), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) },
                 { nameof(model.ImageArea), true }
             };
         }
@@ -578,22 +571,22 @@ namespace DIPOL_UF.ViewModels
 
         private void InitializeCommands()
         {
-            submitCommand = new DelegateCommand(
+            SubmitCommand = new DelegateCommand(
                 (param) => CloseView(param, false),
                 CanSubmit
                 );
 
-            cancelCommand = new DelegateCommand(
+            CancelCommand = new DelegateCommand(
                 (param) => CloseView(param, true),
                 DelegateCommand.CanExecuteAlways
                 );
 
-            saveCommand = new DelegateCommand(
+            SaveCommand = new DelegateCommand(
                 SaveTo,
                 DelegateCommand.CanExecuteAlways
                 );
 
-            loadCommand = new DelegateCommand(
+            LoadCommand = new DelegateCommand(
                 LoadFrom,
                 DelegateCommand.CanExecuteAlways);
         }
@@ -605,7 +598,7 @@ namespace DIPOL_UF.ViewModels
                 AddExtension = true,
                 CheckPathExists = true,
                 DefaultExt = ".acq",
-                FileName = camera.ToString(),
+                FileName = Camera.ToString(),
                 FilterIndex = 0,
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                 Title = "Save current acquisition settings"
