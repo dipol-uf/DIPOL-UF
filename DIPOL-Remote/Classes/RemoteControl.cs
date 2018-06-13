@@ -739,7 +739,7 @@ namespace DIPOL_Remote.Classes
                 CreateCamera(camIndex);
                 var isAccepted = GetContext()
                     ?.GetCallbackChannel<IRemoteCallback>()
-                    ?.NotifyCameraCreatedAsynchronously(camIndex, sessionID);
+                    ?.NotifyCameraCreatedAsynchronously(camIndex, sessionID, true);
 
                 if (!isAccepted ?? true)
                     RemoveCamera(camIndex);

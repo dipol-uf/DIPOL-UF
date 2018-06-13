@@ -36,10 +36,9 @@ namespace DIPOL_Remote.Classes
         private readonly InstanceContext _context = new InstanceContext(new RemoteCallbackHandler());
         private readonly IRemoteControl _remote;
 
-        internal static ConcurrentDictionary<(string sessionID, int camIndex), ManualResetEvent> CameraCreatedEvents
-        {
-            get;
-        } = new ConcurrentDictionary<(string sessionID, int camIndex), ManualResetEvent>();
+        internal static ConcurrentDictionary<(string sessionID, int camIndex), (ManualResetEvent Event, bool Success)>
+            CameraCreatedEvents { get; } =
+            new ConcurrentDictionary<(string sessionID, int camIndex), (ManualResetEvent, bool)>();
 
         public IRemoteControl Remote
             => _remote ?? throw CommunicationException;

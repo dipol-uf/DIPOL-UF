@@ -23,7 +23,7 @@ using System.Linq;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
-
+using System.Xml.XPath;
 using CameraBase = ANDOR_CS.Classes.CameraBase;
 using IRemoteControl = DIPOL_Remote.Interfaces.IRemoteControl;
 using AcquisitionEventType = DIPOL_Remote.Enums.AcquisitionEventType;
@@ -439,12 +439,18 @@ namespace DIPOL_Remote.Classes
 
             commObj.RequestCreateRemoteCamera(camIndex);
             var resetEvent = new ManualResetEvent(false);
-            if(!DipolClient.CameraCreatedEvents.TryAdd((commObj.SessionID, camIndex), resetEvent))
+            if(!DipolClient.CameraCreatedEvents.TryAdd((commObj.SessionID, camIndex), (resetEvent, false)))
                 throw new InvalidOperationException($"Cannot add {nameof(ManualResetEvent)} to the listening collection.");
 
             var isCreated = await Task.Run(() => resetEvent.WaitOne(TimeSpan.FromSeconds(10)));
 
-            if(isCreated)
+
+            if (!DipolClient.CameraCreatedEvents.TryGetValue((commObj.SessionID, camIndex), out var result))
+                result.Success = false;
+
+            DipolClient.CameraCreatedEvents.TryRemove((commObj.SessionID, camIndex), out _);
+
+            if (isCreated && result.Success)
                 return new RemoteCamera(commObj.Remote, camIndex);
             else
                 throw new CommunicationException("Remote response was never received.");

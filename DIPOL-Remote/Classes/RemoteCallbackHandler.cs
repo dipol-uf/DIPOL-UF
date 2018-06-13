@@ -49,15 +49,18 @@ namespace DIPOL_Remote.Classes
         public void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string session, NewImageReceivedEventArgs e)
             => RemoteCamera.NotifyRemoteNewImageReceivedEventHappened(camIndex, session, e);
 
-        public bool NotifyCameraCreatedAsynchronously(int camIndex, string session)
+        public bool NotifyCameraCreatedAsynchronously(int camIndex, string session, bool success)
         {
             var resetEvent = DipolClient.CameraCreatedEvents
                 .FirstOrDefault(x => x.Key.Equals((session, camIndex)))
-                .Value;
-            resetEvent?.Set();
+                .Value.Event;
 
             if (resetEvent != null)
-                DipolClient.CameraCreatedEvents.TryRemove((session, camIndex), out _);
+            {
+                DipolClient.CameraCreatedEvents.AddOrUpdate((session, camIndex), (resetEvent, true), (x, y) => (resetEvent, success));
+            }
+
+            resetEvent?.Set();
 
             return resetEvent != null;
         }
