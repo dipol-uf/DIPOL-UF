@@ -162,13 +162,15 @@ namespace Tests
                 int nCam = client.GetNumberOfCameras();
                 if (nCam == 0)
                 {
-                    try
-                    {
-                        RemoteCamera.CreateAsync(otherParams: client).Wait();
-                    }
-                    catch (Exception e)
-                    {
-                    }
+                    var exept = Assert.ThrowsException<AggregateException>(() => RemoteCamera.CreateAsync(otherParams: client).Wait());
+                    Assert.IsInstanceOfType(exept.InnerException, typeof(AndorSdkException));
+                }
+                else
+                {
+                    var cam = RemoteCamera.CreateAsync(otherParams: client).Result;
+                    Assert.IsNotNull(cam);
+                    cam.Dispose();
+                    Assert.IsTrue(cam.IsDisposed);
                 }
 
                 client.Disconnect();
