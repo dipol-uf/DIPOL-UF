@@ -654,7 +654,7 @@ namespace DIPOL_UF.ViewModels
                     catch (Exception e)
                     {
                         var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
-                        Application.Current.Dispatcher.Invoke(() =>
+                        Application.Current?.Dispatcher?.Invoke(() =>
                         {
                             MessageBox.Show($"An error occured while reading acquisition settings from {dialog.FileName}.\n" +
                                             $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
@@ -783,7 +783,7 @@ namespace DIPOL_UF.ViewModels
                                 foreach (var fl in failed.Take(listSize))
                                     sb.AppendLine($"[{(fl.Option.Length < messSize ? fl.Option : fl.Option.Substring(0, messSize))}]");
                                 MessageBox.Show(sb.ToString(),
-                                    "Partially unsuccessfull application of settings", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                                    "Partially unsuccessful application of settings", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
 
                                 foreach (var prop in PropertyList.Join(failed, x => x.Item1, y => y.Option, (x, y) =>
                                     new {
