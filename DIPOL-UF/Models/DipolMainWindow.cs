@@ -302,8 +302,8 @@ namespace DIPOL_UF.Models
                 {
                     if (e.PropertyName == nameof(CanConnect))
                     {
-                        if (Application.Current.Dispatcher.IsAvailable())
-                            Application.Current.Dispatcher.Invoke(ConnectButtonCommand.OnCanExecuteChanged);
+                        if (Application.Current?.Dispatcher?.IsAvailable() ?? false)
+                            Application.Current?.Dispatcher?.Invoke(ConnectButtonCommand.OnCanExecuteChanged);
                         else
                             ConnectButtonCommand.OnCanExecuteChanged();
                     }   
@@ -356,8 +356,8 @@ namespace DIPOL_UF.Models
                 catch (System.ServiceModel.EndpointNotFoundException enfe)
                 {
                     Helper.WriteLog(enfe.Message);
-                    if (Application.Current.Dispatcher.IsAvailable())
-                        Application.Current.Dispatcher.Invoke(() => 
+                    if (Application.Current?.Dispatcher?.IsAvailable() ?? false)
+                        Application.Current?.Dispatcher?.Invoke(() => 
                             MessageBox.Show(pbWindow, 
                                 enfe.Message, 
                                 "Host not found or unreachable", 
@@ -376,8 +376,8 @@ namespace DIPOL_UF.Models
 
                 Task.Delay(TimeSpan.Parse(Settings.GetValueOrNullSafe("PopUpDelay", "00:00:00.750"))).Wait();
 
-                if(Application.Current.Dispatcher.IsAvailable())
-                    Application.Current.Dispatcher.Invoke(pbWindow.Close);
+                if(Application.Current?.Dispatcher?.IsAvailable() ?? false)
+                    Application.Current?.Dispatcher?.Invoke(pbWindow.Close);
 
                 CanConnect = true;
 

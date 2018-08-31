@@ -188,7 +188,7 @@ namespace DIPOL_UF.Models
                         Task.Run(() =>
                         {
                             Task.Delay(3750).Wait();
-                            Application.Current.Dispatcher.Invoke(_progressView.Close);
+                            Application.Current?.Dispatcher?.Invoke(_progressView.Close);
                             CanCancel = true;
                         });
                     }
@@ -340,8 +340,8 @@ namespace DIPOL_UF.Models
                     // Try thread-safely increment progress bar
                     if (_progressBar != null)
                     {
-                        if (Application.Current.Dispatcher.IsAvailable())
-                            Application.Current.Dispatcher.Invoke(_progressBar.TryIncrement);
+                        if (Application.Current?.Dispatcher?.IsAvailable() ?? false)
+                            Application.Current?.Dispatcher?.Invoke(_progressBar.TryIncrement);
                         else
                             _progressBar.TryIncrement();
 
@@ -355,7 +355,7 @@ namespace DIPOL_UF.Models
                     if (_progressBar?.Value == _progressBar?.Maximum)
                     {
                         Task.Delay(750, token).Wait(token);
-                        Application.Current.Dispatcher.Invoke(_progressView.Close);
+                        Application.Current?.Dispatcher?.Invoke(_progressView.Close);
                         CanCancel = true;
                     }
                 }, token);
@@ -417,8 +417,8 @@ namespace DIPOL_UF.Models
                             // Try increment progress bar
                             if (_progressBar != null)
                             {
-                                if (Application.Current.Dispatcher.IsAvailable())
-                                    Application.Current.Dispatcher.Invoke(_progressBar.TryIncrement);
+                                if (Application.Current?.Dispatcher?.IsAvailable() ?? false)
+                                    Application.Current?.Dispatcher?.Invoke(_progressBar.TryIncrement);
                                 else
                                     lock (_progressBar)
                                         _progressBar.TryIncrement();
@@ -431,7 +431,7 @@ namespace DIPOL_UF.Models
                             if (_progressBar?.Value == _progressBar?.Maximum)
                             {
                                 Task.Delay(TimeSpan.Parse(DIPOL_UF_App.Settings.GetValueOrNullSafe("PopUpDelay", "00:00:00.750")), token).Wait(token);
-                                Application.Current.Dispatcher.Invoke(_progressView.Close);
+                                Application.Current?.Dispatcher?.Invoke(_progressView.Close);
                                 CanCancel = true;
                             }
 
@@ -494,7 +494,7 @@ namespace DIPOL_UF.Models
             base.OnPropertyChanged(sender, e);
 
             if (e.PropertyName == nameof(CanCancel) && CancelButtonCommand != null)
-                Application.Current.Dispatcher.Invoke(CancelButtonCommand.OnCanExecuteChanged);
+                Application.Current?.Dispatcher?.Invoke(CancelButtonCommand.OnCanExecuteChanged);
         }
     }
 }

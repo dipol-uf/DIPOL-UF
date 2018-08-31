@@ -162,7 +162,7 @@
     <Compile Include="ViewModels\CameraPropertiesViewModel.cs" />
     <Compile Include="ViewModels\ConnectedCameraTreeItemViewModel.cs" />
     <Compile Include="ViewModels\ConnectedCameraViewModel.cs" />
-    <Compile Include="ViewModels\DipolImagePresnterViewModel.cs" />
+    <Compile Include="ViewModels\DipolImagePresenterViewModel.cs" />
     <Compile Include="ViewModels\DipolMainWindowViewModel.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="ViewModels\ConnectedCamerasTreeViewModel.cs" />

@@ -9,11 +9,11 @@ using DIPOL_UF.Models;
 
 namespace DIPOL_UF.ViewModels
 { 
-    public class DipolImagePresnterViewModel :ViewModel<DipolImagePresenter>
+    public class DipolImagePresenterViewModel :ViewModel<DipolImagePresenter>
     {
         private WriteableBitmap _bitmapSource;
 
-        public static Brush[] ColorPickerColor { get; } = Application.Current.Resources["ColorPickerColors"] as Brush[];
+        public static Brush[] ColorPickerColor { get; } = Application.Current?.Resources["ColorPickerColors"] as Brush[];
 
         public WriteableBitmap BitmapSource => _bitmapSource;
         public double ImgScaleMin => model.ImgScaleMin;
@@ -108,7 +108,7 @@ namespace DIPOL_UF.ViewModels
             IsImageLoaded && 
             (IsMouseOverUIControl || IsSamplerFixed);
 
-        public DipolImagePresnterViewModel(DipolImagePresenter model) : base(model)
+        public DipolImagePresenterViewModel(DipolImagePresenter model) : base(model)
         { 
         }
 

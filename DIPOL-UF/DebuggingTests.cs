@@ -45,7 +45,7 @@ namespace Tests
                 var app = new App();
                 app.InitializeComponent();
                 var model = new DipolImagePresenter();
-                var viewModel = new DipolImagePresnterViewModel(model);
+                var viewModel = new DipolImagePresenterViewModel(model);
                 var wind = new DebugWindow()
                 {
                     //TestPresenter = { DataContext = viewModel }
@@ -64,7 +64,7 @@ namespace Tests
                 //{
                 //    r.NextBytes(buffer);
                 //    model.LoadImage(new Image(buffer, 1024, 512, TypeCode.UInt16));
-                //    TextExtension.UpdateUICullture(new CultureInfo("ru-RU"));
+                //    TextExtension.UpdateUiCulture(new CultureInfo("ru-RU"));
                 //    t.Stop();
                 //};
                 //t.Start();

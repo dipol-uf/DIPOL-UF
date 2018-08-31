@@ -27,7 +27,7 @@ namespace DIPOL_UF.ViewModels
             { "OutOfRange", @"The value is expected to be in [{0}, {1}] range." }
         };
 
-        public DipolImagePresnterViewModel ImagePresenterViewModel { get; }
+        public DipolImagePresenterViewModel ImagePresenterViewModel { get; }
 
         public string Key => model.Key;
         public CameraBase Camera => model.Camera;
@@ -181,7 +181,7 @@ namespace DIPOL_UF.ViewModels
         {
             InitializeValidators();
 
-            ImagePresenterViewModel = new DipolImagePresnterViewModel(model.ImagePresenterModel);
+            ImagePresenterViewModel = new DipolImagePresenterViewModel(model.ImagePresenterModel);
 
             model.Camera.PropertyChanged += (sender, e) =>
             {

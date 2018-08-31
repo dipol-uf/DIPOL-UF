@@ -11,7 +11,7 @@
              MinWidth="420" Background="Transparent"
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="420" 
-             d:DataContext="{d:DesignInstance Type=vms:DipolImagePresnterViewModel}"
+             d:DataContext="{d:DesignInstance Type=vms:DipolImagePresenterViewModel}"
              MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
              MouseLeave="{cmnds:EventToCommand MouseHoverCommand}">
             

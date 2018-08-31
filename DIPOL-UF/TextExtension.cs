@@ -21,7 +21,7 @@ namespace DIPOL_UF
     {
         private Tuple<DependencyObject, DependencyProperty> _dependencyObjectInfo;
         /// <summary>
-        /// Raised when application localization is changed through <see cref="UpdateUICullture"/>.
+        /// Raised when application localization is changed through <see cref="UpdateUiCulture"/>.
         /// </summary>
         public static event EventHandler<Tuple<CultureInfo, CultureInfo>> LocalizationChanged;
 
@@ -49,7 +49,7 @@ namespace DIPOL_UF
         /// Updates UI culture and forces update of all localized strings.
         /// </summary>
         /// <param name="newCulture">Culture to switch to.</param>
-        public static void UpdateUICullture(CultureInfo newCulture)
+        public static void UpdateUiCulture(CultureInfo newCulture)
         {
             if(Application.Current?.Dispatcher?.Thread == null)
                 throw new NullReferenceException("Application is not properly initialized.");
