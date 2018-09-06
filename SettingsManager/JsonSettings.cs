@@ -1,4 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Linq;
+using System.Web.Script.Serialization;
+using System.Web.UI.WebControls;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Json = System.Collections.Generic.Dictionary<string, object>;
 
 namespace SettingsManager
@@ -7,45 +13,46 @@ namespace SettingsManager
     {
         private readonly Json _rawSettings;
 
-        public int Count => _rawSettings.Count;
+        private readonly JObject _rawObject;
+
+        public int Count => _rawObject.Count;
 
         public object this[in string name] => Get(name);
-
 
         public void Set(in string name, object val)
         {
             if (HasKey(name))
-                _rawSettings[name] = val;
+                _rawObject[name].Replace(new JValue(val));
             else
-                _rawSettings.Add(name, val);
+                _rawObject.Add(name, new JValue(val));
         }
 
         public void Clear(in string name) => Set(name, null);
 
         public bool TryRemove(in string name) =>
-            _rawSettings.Remove(name);
-            
+            _rawObject.Remove(name);
+
 
         public bool HasKey(in string name) =>
-            _rawSettings?.ContainsKey(name) ?? false;
+            _rawObject.ContainsKey(name);
 
         public T Get<T>(in string name) =>
-            !HasKey(name) ? default : (T) _rawSettings[name];
+            !HasKey(name) ? default : _rawObject.GetValue(name).ToObject<T>();
 
         public T[] GetArray<T>(in string name) =>
-            !HasKey(name) ? new T[] { } : Get<ArrayList>(name).ToArray(typeof(T)) as T[];
-        
+            !HasKey(name) ? new T[] { } : (_rawObject.GetValue(name) as JArray)?.ToObject<T[]>();
+
         public JsonSettings GetJson(in string name) =>
-            !HasKey(name) ? null : new JsonSettings(Get<Json>(name));
+            !HasKey(name) ? null : new JsonSettings(_rawObject.GetValue(name) as JObject);
 
         public object Get(in string name) =>
-            _rawSettings[name];
+            _rawObject.GetValue(name).ToObject(typeof(object));
 
         public bool TryGet<T>(in string name, out T value)
         {
 
-            if (_rawSettings.ContainsKey(name) && 
-                _rawSettings[name] is T result)
+            if (HasKey(name) && 
+                Get(name) is T result)
             {
                 value = result;
                 return true;
@@ -54,16 +61,25 @@ namespace SettingsManager
             value = default;
             return false;
         }
-            
+
+        public string WriteString()
+        {
+
+            var str = new JavaScriptSerializer().Serialize(_rawSettings);
+            return "";
+        }
+
 
         public JsonSettings(in string input)
         {
-            _rawSettings = new System.Web.Script.Serialization.JavaScriptSerializer().Deserialize<Json>(input);
+            var temp = JsonConvert.DeserializeObject(input) as JObject;
+            _rawObject = temp;
+
         }
 
-        private JsonSettings(in Json json)
+        private JsonSettings(in JObject json)
         {
-            _rawSettings = json;
+            _rawObject = json;
         }
     }
 }
