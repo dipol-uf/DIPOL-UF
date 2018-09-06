@@ -16,7 +16,7 @@ namespace Tests
         public JsonSettings Settings;
 
         [TestInitialize]
-        public void Initialzie()
+        public void Initialize()
         {
             string str;
             using (var reader = new StreamReader(Path))
@@ -38,16 +38,6 @@ namespace Tests
             Assert.AreEqual("string", Settings.Get<string>("item_string"));
             Assert.AreEqual("", Settings.Get<string>("item_string_empty"));
             Assert.AreEqual(null, Settings.Get<object>("item_null"));
-            
-            CollectionAssert.AreEqual(new Json(), 
-                Settings.Get<Json>("item_empty"));
-
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5, 6 },
-                Settings.Get<ArrayList>("item_array_int"));
-            
-            CollectionAssert.AreEqual(new object[] {}, 
-                Settings.Get<ArrayList>("item_array_empty"));
-
 
         }
 
@@ -88,31 +78,22 @@ namespace Tests
         [TestMethod]
         public void Test_GetAsObject()
         {
-            Assert.AreEqual(153, Settings.Get("item_int"));
+            Assert.AreEqual(153L, Settings.Get("item_int"));
             Assert.AreEqual(1.23e55, Settings.Get("item_double"));
-            Assert.AreEqual(-123.56m, Settings.Get("item_decimal"));
+            Assert.AreEqual(-123.56, Settings.Get("item_decimal"));
             Assert.AreEqual(1e10, Settings.Get("item_float"));
             Assert.AreEqual("string", Settings.Get("item_string"));
             Assert.AreEqual("", Settings.Get("item_string_empty"));
             Assert.AreEqual(null, Settings.Get("item_null"));
-
-            CollectionAssert.AreEqual(new Json(),
-                Settings.Get("item_empty") as Json);
-
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5, 6 },
-                Settings.Get("item_array_int") as ArrayList);
-
-            CollectionAssert.AreEqual(new object[] { },
-                Settings.Get("item_array_empty") as ArrayList);
-
+            
         }
 
         [TestMethod]
         public void Test_TryGet()
         {
-            Assert.IsTrue(Settings.TryGet("item_int", out int intVal) && intVal == 153);
+            Assert.IsTrue(Settings.TryGet("item_int", out long intVal) && intVal == 153);
             Assert.IsTrue(Settings.TryGet("item_double", out double doubleVal) && Math.Abs(doubleVal - 1.23e55) < double.Epsilon);
-            Assert.IsTrue(Settings.TryGet("item_decimal", out decimal decimalVal) && decimalVal == -123.56m);
+            Assert.IsTrue(Settings.TryGet("item_decimal", out double decimalVal) && Math.Abs(decimalVal - (-123.56)) < double.Epsilon);
             Assert.IsTrue(Settings.TryGet("item_float", out double dFloatVal) && Math.Abs(dFloatVal - 1e10f) < float.Epsilon);
             Assert.IsTrue(Settings.TryGet("item_string", out string stringVal) && stringVal == "string");
             Assert.IsTrue(Settings.TryGet("item_string_empty", out string stringValE) && stringValE == "");
@@ -122,22 +103,14 @@ namespace Tests
         [TestMethod]
         public void Test_this()
         {
-            Assert.AreEqual(153, Settings["item_int"]);
+            Assert.AreEqual(153L, Settings["item_int"]);
             Assert.AreEqual(1.23e55, Settings["item_double"]);
-            Assert.AreEqual(-123.56m, Settings["item_decimal"]);
+            Assert.AreEqual(-123.56, Settings["item_decimal"]);
             Assert.AreEqual(1e10, Settings["item_float"]);
             Assert.AreEqual("string", Settings["item_string"]);
             Assert.AreEqual("", Settings["item_string_empty"]);
             Assert.AreEqual(null, Settings["item_null"]);
 
-            CollectionAssert.AreEqual(new Json(),
-                Settings.Get("item_empty") as Json);
-
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5, 6 },
-                Settings.Get("item_array_int") as ArrayList);
-
-            CollectionAssert.AreEqual(new object[] { },
-                Settings.Get("item_array_empty") as ArrayList);
         }
 
         [TestMethod]
@@ -166,7 +139,7 @@ namespace Tests
         [TestMethod]
         public void Test_Clear()
         {
-            Assert.AreEqual(153, Settings["item_int"]);
+            Assert.AreEqual(153L, Settings["item_int"]);
             Settings.Clear("item_int");
             Assert.AreEqual(null, Settings["item_int"]);
         }
@@ -174,13 +147,20 @@ namespace Tests
         [TestMethod]
         public void Test_TryRemove()
         {
-            var key = "test_key";
+            const string key = "test_key";
             Assert.IsFalse(Settings.HasKey(key));
             Settings.Set(key, key);
             Assert.AreEqual(key, Settings.Get<string>(key));
             Assert.IsTrue(Settings.TryRemove(key));
             Assert.IsFalse(Settings.HasKey(key));
 
+        }
+
+
+        public void Test_WriteString()
+        {
+            Assert.Fail();
+            //Settings.WriteString();
         }
     }
 }
