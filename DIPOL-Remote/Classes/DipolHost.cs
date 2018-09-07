@@ -37,6 +37,7 @@ namespace DIPOL_Remote.Classes
         private static readonly Uri Endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
         private const string LogName = @"Dipol Event Log";
         private const string SourceName = @"Dipol Remote Camera Service";
+        // ReSharper disable once InconsistentNaming
         private static readonly ConcurrentDictionary<int, DipolHost> _OpenedHosts =
             new ConcurrentDictionary<int, DipolHost>();
 
