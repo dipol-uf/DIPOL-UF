@@ -13,7 +13,7 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
 //
-//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+//    Copyright 2017-2018, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
 using System.Collections.Generic;
@@ -27,16 +27,17 @@ namespace DIPOL_Remote.Classes
 {
     public class DipolHost : IDisposable
     {
-        private static readonly Uri endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
-        private static readonly string logName = @"Dipol Event Log";
-        private static readonly string sourceName = @"Dipol Remote Camera Service";
-        private static ConcurrentDictionary<int, DipolHost> _OpenedHosts = new ConcurrentDictionary<int, DipolHost>();
+        private static readonly Uri Endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
+        private const string LogName = @"Dipol Event Log";
+        private const string SourceName = @"Dipol Remote Camera Service";
+        private static readonly ConcurrentDictionary<int, DipolHost> _OpenedHosts =
+            new ConcurrentDictionary<int, DipolHost>();
 
-        private ServiceHost host = null;
+        private readonly ServiceHost _host;
 
 
         public static IReadOnlyDictionary<int, DipolHost> OpenedHosts
-            => _OpenedHosts as IReadOnlyDictionary<int, DipolHost>;
+            => _OpenedHosts;
 
         public delegate void HostEventHandler(object source, string message);
 
@@ -44,46 +45,47 @@ namespace DIPOL_Remote.Classes
 
         public DipolHost()
         {
-            if (!EventLog.SourceExists(sourceName))
-                EventLog.CreateEventSource(sourceName, logName);
+            if (!EventLog.SourceExists(SourceName))
+                EventLog.CreateEventSource(SourceName, LogName);
 
-            var bnd = new NetTcpBinding(SecurityMode.None);
-
-            bnd.OpenTimeout = TimeSpan.FromHours(24);
-            bnd.CloseTimeout = TimeSpan.FromSeconds(15);
-            bnd.SendTimeout = TimeSpan.FromHours(12);
-            bnd.ReceiveTimeout = TimeSpan.FromHours(12);
-
-            host = new ServiceHost(typeof(RemoteControl), endpoint);
-
-            host.AddServiceEndpoint(typeof(IRemoteControl),bnd, "");
-
-            _OpenedHosts.TryAdd(host.BaseAddresses[0].GetHashCode(), this);
-
-            EventReceived += (sender, message)
-                =>
+            var bnd = new NetTcpBinding(SecurityMode.None)
             {
-                string senderString = "";
+                OpenTimeout = TimeSpan.FromHours(24),
+                CloseTimeout = TimeSpan.FromSeconds(15),
+                SendTimeout = TimeSpan.FromHours(12),
+                ReceiveTimeout = TimeSpan.FromHours(12)
+            };
+
+
+            _host = new ServiceHost(typeof(RemoteControl), Endpoint);
+
+            _host.AddServiceEndpoint(typeof(IRemoteControl),bnd, "");
+
+            _OpenedHosts.TryAdd(_host.BaseAddresses[0].GetHashCode(), this);
+
+            EventReceived += (sender, message) =>
+            {
+                string senderString;
                 if (sender is ANDOR_CS.Classes.CameraBase cam)
                     senderString = $"{cam.CameraModel}/{cam.SerialNumber}";
                 else
                     senderString = sender.ToString();
 
-                var logMessage = String.Format($"[{{0,23:yyyy/MM/dd HH-mm-ss.fff}}] @ {senderString}: {message}", DateTime.Now);
+                var logMessage = string.Format($"[{{0,23:yyyy/MM/dd HH-mm-ss.fff}}] @ {senderString}: {message}", DateTime.Now);
 
-                EventLog.WriteEntry(sourceName, logMessage, EventLogEntryType.Information);
+                EventLog.WriteEntry(SourceName, logMessage, EventLogEntryType.Information);
 
             };
         }
         
-        public void Host() => host?.Open();
+        public void Host() => _host?.Open();
 
       
         public void Dispose()
         {
-            var baseAddress = host.BaseAddresses[0];
+            var baseAddress = _host.BaseAddresses[0];
 
-            host?.Close(TimeSpan.FromSeconds(15));
+            _host?.Close(TimeSpan.FromSeconds(15));
 
             _OpenedHosts.TryRemove(baseAddress.GetHashCode(), out _);
         }

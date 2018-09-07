@@ -13,16 +13,11 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
 //
-//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+//    Copyright 2017-2018, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-
 using System.ServiceModel;
 using System.Threading;
 using DIPOL_Remote.Interfaces;
@@ -87,7 +82,8 @@ namespace DIPOL_Remote.Classes
                 bnd,
                 new EndpointAddress(endpoint)).CreateChannel();
 
-            ((IDuplexContextChannel)_remote).OperationTimeout = operationTimeout;
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            ((IDuplexContextChannel) _remote).OperationTimeout = operationTimeout;
         }
 
 
@@ -121,6 +117,7 @@ namespace DIPOL_Remote.Classes
 
         public void Dispose()
         {
+            // ReSharper disable once SuspiciousTypeConversion.Global
             (_remote as ICommunicationObject)?.Close();
         }
 
