@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json.Linq;
 using SettingsManager;
-
-using Json = System.Collections.Generic.Dictionary<string, object>;
 
 namespace Tests
 {
@@ -38,7 +36,6 @@ namespace Tests
             Assert.AreEqual("string", Settings.Get<string>("item_string"));
             Assert.AreEqual("", Settings.Get<string>("item_string_empty"));
             Assert.AreEqual(null, Settings.Get<object>("item_null"));
-
         }
 
         [TestMethod]
@@ -97,7 +94,8 @@ namespace Tests
             Assert.IsTrue(Settings.TryGet("item_float", out double dFloatVal) && Math.Abs(dFloatVal - 1e10f) < float.Epsilon);
             Assert.IsTrue(Settings.TryGet("item_string", out string stringVal) && stringVal == "string");
             Assert.IsTrue(Settings.TryGet("item_string_empty", out string stringValE) && stringValE == "");
-            Assert.IsTrue(!Settings.TryGet("item_null", out object objectVal) && objectVal == null);
+            Assert.IsTrue(Settings.TryGet("item_null", out object objectVal) && objectVal == null);
+            Assert.IsTrue(!Settings.TryGet("missing_item", out object value) && value == null);
         }
 
         [TestMethod]
@@ -137,6 +135,13 @@ namespace Tests
         }
 
         [TestMethod]
+        public void Test_ctor()
+        {
+            var setts = new JsonSettings();
+            Assert.AreEqual(0, setts.Count);
+        }
+
+        [TestMethod]
         public void Test_Clear()
         {
             Assert.AreEqual(153L, Settings["item_int"]);
@@ -156,11 +161,16 @@ namespace Tests
 
         }
 
-
+        [TestMethod]
         public void Test_WriteString()
         {
-            Assert.Fail();
-            //Settings.WriteString();
+            var setts = new JsonSettings(new JObject(new JProperty("test", 123L)));
+            var strRep = setts.WriteString();
+
+            var setts2 = new JsonSettings(strRep);
+
+            Assert.AreEqual(setts.Count, setts2.Count);
+            Assert.AreEqual(setts.Get<int>("name"), setts2.Get<int>("name"));
         }
     }
 }

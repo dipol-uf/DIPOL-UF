@@ -1,18 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Linq;
-using System.Web.Script.Serialization;
-using System.Web.UI.WebControls;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Json = System.Collections.Generic.Dictionary<string, object>;
 
 namespace SettingsManager
 {
     public class JsonSettings
     {
-        private readonly Json _rawSettings;
-
         private readonly JObject _rawObject;
 
         public int Count => _rawObject.Count;
@@ -29,57 +21,55 @@ namespace SettingsManager
 
         public void Clear(in string name) => Set(name, null);
 
-        public bool TryRemove(in string name) =>
-            _rawObject.Remove(name);
+        public bool TryRemove(in string name)
+			=> _rawObject.Remove(name);
 
 
-        public bool HasKey(in string name) =>
-            _rawObject.ContainsKey(name);
+        public bool HasKey(in string name)
+			=> _rawObject.ContainsKey(name);
 
-        public T Get<T>(in string name) =>
-            !HasKey(name) ? default : _rawObject.GetValue(name).ToObject<T>();
+        public T Get<T>(in string name)
+			=> !HasKey(name) ? default : _rawObject.GetValue(name).ToObject<T>();
 
-        public T[] GetArray<T>(in string name) =>
-            !HasKey(name) ? new T[] { } : (_rawObject.GetValue(name) as JArray)?.ToObject<T[]>();
+        public T[] GetArray<T>(in string name)
+			=> !HasKey(name) ? new T[] { } : (_rawObject.GetValue(name) as JArray)?.ToObject<T[]>();
 
-        public JsonSettings GetJson(in string name) =>
-            !HasKey(name) ? null : new JsonSettings(_rawObject.GetValue(name) as JObject);
+        public JsonSettings GetJson(in string name)
+			=> !HasKey(name) ? null : new JsonSettings(_rawObject.GetValue(name) as JObject);
 
-        public object Get(in string name) =>
-            _rawObject.GetValue(name).ToObject(typeof(object));
+        public object Get(in string name)
+            => _rawObject.GetValue(name)?.ToObject(typeof(object));
 
         public bool TryGet<T>(in string name, out T value)
         {
+            value = default;
 
-            if (HasKey(name) && 
-                Get(name) is T result)
+            if (HasKey(name))
             {
-                value = result;
+                if (Get(name) is T result)
+                    value = result;
+
+                if (Get(name) == null &&
+                    typeof(T) == typeof(object))
+                    value = default;
+
+
                 return true;
             }
 
-            value = default;
             return false;
         }
 
         public string WriteString()
-        {
+			=> JsonConvert.SerializeObject(_rawObject, Formatting.Indented);
 
-            var str = new JavaScriptSerializer().Serialize(_rawSettings);
-            return "";
-        }
-
+        public JsonSettings()
+			=> _rawObject = new JObject();
 
         public JsonSettings(in string input)
-        {
-            var temp = JsonConvert.DeserializeObject(input) as JObject;
-            _rawObject = temp;
+			=> _rawObject = JsonConvert.DeserializeObject(input) as JObject;
 
-        }
-
-        private JsonSettings(in JObject json)
-        {
-            _rawObject = json;
-        }
+        public JsonSettings(in JObject json)
+			=> _rawObject = json;
     }
 }
