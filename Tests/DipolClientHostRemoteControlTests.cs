@@ -33,30 +33,20 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Tests
 {
     [TestClass]
-    public class DipolClientHostTests
+    public class DipolClientHostRemoteControlTests
     {
-        private Task _background;
-        private readonly CancellationTokenSource _cancelSource = new CancellationTokenSource();
         private DipolHost _host;
         [TestInitialize]
         public void Initialize()
         {
-            _background = Task.Run(() =>
-            {
-                using (_host = new DipolHost())
-                {
-                    _host.Host();
-                    while (!_cancelSource.Token.IsCancellationRequested)
-                        Task.Delay(TimeSpan.FromSeconds(1)).Wait();
-                }
-            }, _cancelSource.Token);
+            _host = new DipolHost();
+            _host.Host();
         }
 
         [TestCleanup]
         public void Destroy()
         {
-            _cancelSource.Cancel();
-            _background.Wait(TimeSpan.FromSeconds(2));
+            _host.Dispose();
         }
 
         [TestMethod]
