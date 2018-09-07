@@ -24,6 +24,7 @@ namespace DIPOL_UF
                 + "\n}";
 
             str.WriteLine(s);
+
         }
         
     }

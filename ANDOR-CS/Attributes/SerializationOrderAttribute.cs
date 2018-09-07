@@ -14,11 +14,19 @@ namespace ANDOR_CS.Attributes
             get;
         }
 
+        public bool All
+        {
+            get;
+        }
+
         /// <inheritdoc />
         /// <summary>
         /// </summary>
         /// <param name="index"></param>
-        public SerializationOrderAttribute(int index)
-            => Index = index;
+        public SerializationOrderAttribute(int index, bool serializeAll = false)
+        {
+            Index = index;
+            All = serializeAll;
+        }
     }
 }

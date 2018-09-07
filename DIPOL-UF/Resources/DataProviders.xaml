@@ -1,8 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
-                    xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS"
-                    xmlns:local="clr-namespace:DIPOL_UF.Resources">
+                    xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS">
     <ObjectDataProvider x:Key="ShutterModeEnumProvider"
                         MethodName="GetValues"
                         ObjectType="{x:Type sys:Enum}">
@@ -26,4 +25,5 @@
             <x:Type TypeName="enm:VSAmplitude"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
+    
 </ResourceDictionary>

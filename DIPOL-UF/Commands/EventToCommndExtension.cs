@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,7 +26,8 @@ namespace DIPOL_UF.Commands
         /// <summary>
         /// ViewModel command name.
         /// </summary>
-        private IEnumerable<string> commandNames = null;
+        private readonly IEnumerable<string> _commandNames;
+        private MethodInfo _doAction;
 
         public string DataContextProviderControl
         {
@@ -54,10 +56,10 @@ namespace DIPOL_UF.Commands
 
             // Target property can be either MethodInfo or EventInfo
             // If MethodInfo, its signature is (object sender, *EventHandler handler), retrieve type from second argument
-            if (valueTarget.TargetProperty is MethodInfo boundPropertyInfo)
+            if (valueTarget?.TargetProperty is MethodInfo boundPropertyInfo)
                 delegateType = boundPropertyInfo.GetParameters()[1].ParameterType;
             // If EventInfo, it's just EventHandlerType property value
-            else if (valueTarget.TargetProperty is EventInfo boundEventInfo)
+            else if (valueTarget?.TargetProperty is EventInfo boundEventInfo)
                 delegateType = boundEventInfo.EventHandlerType;
             // Otherwise throws
             else
@@ -71,15 +73,13 @@ namespace DIPOL_UF.Commands
                 .ToArray();
 
             if (delegateParameterTypes == null)
-                throw new ArgumentNullException("Failed to retrieve types of delegate parameters. Either illegal binidng or unsupported event type.");
+                throw new ArgumentNullException(message: "Failed to retrieve types of delegate parameters. " +
+                                                "Either illegal binidng or unsupported event type.", innerException: null);
 
             // Constructs appropriate *EventHandler from generic DoAction<T>, substituting *EventArgs type for T
-            var eventHandlerMethodInfo = this
-                .GetType()
-                .GetRuntimeMethods()
-                .First(mi => mi.Name == "DoAction")
+            var eventHandlerMethodInfo = _doAction
                 .MakeGenericMethod(delegateParameterTypes[1]);
-
+            
             // Essentially returns this.DoAction<*EventArgs> with *EventArgs matching bound event handler signature.
             return  Delegate.CreateDelegate(delegateType, this, eventHandlerMethodInfo);
          
@@ -100,7 +100,7 @@ namespace DIPOL_UF.Commands
                 var commandArgs = new CommandEventArgs<T>(sender, e);
 
                 
-                var context = String.IsNullOrWhiteSpace(DataContextProviderControl)
+                var context = string.IsNullOrWhiteSpace(DataContextProviderControl)
                     ? element.DataContext
                     : (Helper.FindParentByName(element, DataContextProviderControl) as FrameworkElement)?.DataContext;
 
@@ -114,7 +114,7 @@ namespace DIPOL_UF.Commands
                 }
 
                 if (context != null)
-                    foreach (var commandName in commandNames)
+                    foreach (var commandName in _commandNames)
                     {
                         // Retrieves ViewModel, then property to which event is bound, then value of this property, which should be ICommand.
                         var delegateCommand = context
@@ -138,12 +138,15 @@ namespace DIPOL_UF.Commands
             // Right now supports only property name binding.
             if (commandName is string commands)
             {
-                commandNames = commands.Split(' ', ';' , '|').Where(x => !string.IsNullOrWhiteSpace(x));
+                _commandNames = commands.Split(' ', ';' , '|').Where(x => !string.IsNullOrWhiteSpace(x));
             }
             else throw new ArgumentException();
-                        
-        }
 
+           _doAction = GetType()
+                        .GetRuntimeMethods()
+                        .First(mi => mi.Name == "DoAction");
+
+        }
        
     }
 }

@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:DIPOL_UF.Resources"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters"
+                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                     >
     <SolidColorBrush x:Key="NegativeEffectButtonBackgroundColor" Color="#FFB28484"/>
     <SolidColorBrush x:Key="NegativeEffectButtonForegroundColor" Color="Black"/>
@@ -30,6 +31,7 @@
     <sys:Double x:Key="TreeItemMarginValue">20</sys:Double>
     <Thickness x:Key="OneLevelTreeItemMarginLeft" Left="{StaticResource TreeItemMarginValue}"/>
     
+    <!-- Colors, brushes and gradients -->
     <!--Temperature text colors-->
     <x:Array x:Key="TemperatureColorBrushCollection" Type="{x:Type SolidColorBrush}">
         <SolidColorBrush Color="Red"/>
@@ -46,7 +48,55 @@
         <SolidColorBrush Color="Orange"/>
         <SolidColorBrush Color="Crimson"/>
     </x:Array>
+
+    <x:Array x:Key="ColorPickerColors" Type="SolidColorBrush">
+        <SolidColorBrush Color="GhostWhite"/>
+        <SolidColorBrush Color="Black"/>
+        <SolidColorBrush Color="Aqua"/>
+        <SolidColorBrush Color="DarkCyan"/>
+        <SolidColorBrush Color="Blue"/>
+        <SolidColorBrush Color="SeaGreen"/>
+        <SolidColorBrush Color="YellowGreen"/>
+        <SolidColorBrush Color="Yellow"/>
+        <SolidColorBrush Color="Tomato"/>
+        <SolidColorBrush Color="Red"/>
+        <SolidColorBrush Color="MediumVioletRed"/>
+    </x:Array>
+
+    <!-- Gradients -->
+       
+    <GradientStopCollection x:Key="SliderThumbRadialGradientCollection">
+        <GradientStop Color="#FC4A1A" Offset="0"/>
+        <GradientStop Color="#F7B733" Offset="1"/>
+    </GradientStopCollection>
+    <GradientStopCollection x:Key="SliderTrackGradientCollection">
+        <GradientStop Color="#93A5CF" Offset="0"/>
+        <GradientStop Color="#E4EFE9" Offset="0.5"/>
+        <GradientStop Color="#93A5CF" Offset="1"/>
+    </GradientStopCollection>
     
+    <GradientStopCollection x:Key="SelectorSliderThumbGradientCollection">
+        <GradientStop Color="#304352" Offset="0"/>
+        <GradientStop Color="#D7D2CC" Offset="1.0"/>
+    </GradientStopCollection>
+
+    <!-- Solid brushes -->
+    
+    <SolidColorBrush x:Key="ColorDisabledBrush" Color="{x:Static SystemColors.ControlLightColor}"/>
+    <SolidColorBrush x:Key="BorderColorDisabledBrush" Color="{x:Static SystemColors.InactiveBorderColor}"/>
+    <SolidColorBrush x:Key="OutlineColorBrush" Color="{StaticResource OutlineColor}"/>  
+    <!-- Backgrounds -->
+
+    <SolidColorBrush x:Key="Background_1" Color="{StaticResource BackgroundColor_1}"/>
+    <SolidColorBrush x:Key="Background_2" Color="{StaticResource BackgroundColor_2}"/>
+    <SolidColorBrush x:Key="Background_3" Color="{StaticResource BackgroundColor_3}"/>
+
+    <!-- Colors -->
+    <Color x:Key="OutlineColor" R="0" G="0" B="0"/>
+    <Color x:Key="BackgroundColor_1">#E27D60</Color>
+    <Color x:Key="BackgroundColor_2">#659DBD</Color>
+    <Color x:Key="BackgroundColor_3">#41B3A3</Color>
+
     <!--Enum text representations-->
     <x:Array x:Key="SwitchEnumTextRepresentation" Type="{x:Type sys:String}">
         <sys:String>Cooling</sys:String>
@@ -54,7 +104,7 @@
     </x:Array>
     
     <!--Margins-->
-    <sys:Double x:Key="MarginValue">3.5</sys:Double>
+    <sys:Double x:Key="MarginValue">4</sys:Double>
 
     <Thickness x:Key="DefaultMargin"
                Left="{StaticResource MarginValue}" 
@@ -67,8 +117,9 @@
 
     <!--PB margin-->
     <Thickness x:Key="VerticalPBMargin" Left="0" Top="8" Right="0" Bottom="9"/>
-    
-    <!--Paddings-->
+    <Thickness x:Key="HorizontalPBMargin" Left="8" Top="2" Right="8" Bottom="2"/>
+
+<!--Paddings-->
 
     <sys:Double x:Key="PaddingValue">2</sys:Double>
     
@@ -79,6 +130,9 @@
                Bottom="{StaticResource PaddingValue}"/>
     
     <!--Fonts-->
-    <sys:Double x:Key="SmallFontSize">12.5</sys:Double>
+    <sys:Double x:Key="SmallFontSize">12</sys:Double>
     <sys:Double x:Key="ContentFontSize">15</sys:Double>
+    
+    <!-- Aniamtion Timing -->
+    <Duration x:Key="ColorChangeDuration">0:00:00.25</Duration>
 </ResourceDictionary>

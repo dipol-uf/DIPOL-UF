@@ -39,12 +39,12 @@ namespace ANDOR_CS.Classes
         protected const int StatusCheckTimeOutMs = 100;
         protected const int TempCheckTimeOutMs = 5000;
 
-        protected bool _isDisposed;
+        protected bool isDisposed;
 
         private bool _isActive;
         private bool _isInitialized;
-        private DeviceCapabilities _capabilities = default(DeviceCapabilities);
-        private CameraProperties _properties = default(CameraProperties);
+        private DeviceCapabilities _capabilities;
+        private CameraProperties _properties;
         private string _serialNumber = "";
         private string _cameraModel = "";
         private FanMode _fanMode = FanMode.Off;
@@ -56,22 +56,30 @@ namespace ANDOR_CS.Classes
            TtlShutterSignal Type,
            int OpenTime,
            int CloseTime) _shutter
-            = (ShutterMode.FullyAuto, null, TtlShutterSignal.Low, 0, 0);
-        private (Version EPROM, Version COFFile, Version Driver, Version Dll) _software
-            = default((Version EPROM, Version COFFile, Version Driver, Version Dll));
-        private (Version PCB, Version Decode, Version CameraFirmware) _hardware
-            = default((Version PCB, Version Decode, Version CameraFirmware));
+            = (ShutterMode.FullyAuto, null, TtlShutterSignal.Low, 27, 27);
+        private (Version EPROM, Version COFFile, Version Driver, Version Dll) _software;
+        private (Version PCB, Version Decode, Version CameraFirmware) _hardware;
+        private bool _isTemperatureMonitored;
         private volatile bool _isAcquiring;
         private volatile bool _isAsyncAcquisition;
 
         protected ConcurrentQueue<Image> _acquiredImages = new ConcurrentQueue<Image>();
 
 
-        public abstract bool IsTemperatureMonitored
+        public virtual bool IsTemperatureMonitored
         {
-            get;
+            get => _isTemperatureMonitored;
+            set
+            {
+                if (value != _isTemperatureMonitored)
+                {
+                    _isTemperatureMonitored = value;
+                    OnPropertyChanged();
+                }
+            }
+
         }
-        public bool IsDisposed => _isDisposed;
+        public bool IsDisposed => isDisposed;
 
         public virtual DeviceCapabilities Capabilities
         {
@@ -363,7 +371,7 @@ namespace ANDOR_CS.Classes
 
         public virtual void CheckIsDisposed()
         {
-            if (_isDisposed)
+            if (isDisposed)
                 throw new ObjectDisposedException("Camera instance is already disposed");
         }
 
@@ -373,7 +381,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         public virtual void Dispose()
         {
-            if (!_isDisposed)
+            if (!isDisposed)
             {
                 Dispose(true);
                 GC.SuppressFinalize(this);
@@ -381,7 +389,7 @@ namespace ANDOR_CS.Classes
         }
         protected virtual void Dispose(bool disposing)
         {
-            _isDisposed = true;
+            isDisposed = true;
         }
 
         /// <summary>
@@ -452,6 +460,14 @@ namespace ANDOR_CS.Classes
             if (!IsDisposed)
                 NewImageReceived?.Invoke(this, e);
         }
+
+
+        public static CameraBase Create(int camIndex = 0, object otherParams = null)
+            => throw new NotSupportedException($"Cannot create instance of abstract class {nameof(CameraBase)}.");
+
+        public static async Task<CameraBase> CreateAsync(int camIndex = 0, object otherParams = null)
+            => await Task.Run(() => Create(camIndex, otherParams));
+
 
         ~CameraBase()
         {

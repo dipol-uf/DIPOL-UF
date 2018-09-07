@@ -29,7 +29,12 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
 using DipolImage;
+#if X86
+using SDK = ATMCD32CS.AndorSDK;
+#endif
+#if X64
 using SDK = ATMCD64CS.AndorSDK;
+#endif
 
 using static ANDOR_CS.Exceptions.AndorSdkException;
 using static ANDOR_CS.Exceptions.AcquisitionInProgressException;
@@ -45,6 +50,7 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public sealed class Camera : CameraBase
     {
+
         private Timer _temperatureMonitorTimer;
         //private Task TemperatureMonitorWorker = null;
         //private CancellationTokenSource TemperatureMonitorCancellationSource
@@ -56,8 +62,6 @@ namespace ANDOR_CS.Classes
         private readonly ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> _runningTasks = 
             new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
-        public override bool IsTemperatureMonitored =>
-            _temperatureMonitorTimer?.Enabled ?? false;
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
@@ -430,7 +434,7 @@ namespace ANDOR_CS.Classes
         private void TemperatureMonitorCycler(object sender, ElapsedEventArgs e)
         {
             // Checks if temperature can be queried
-            if (!_isDisposed && // camera is not disposed
+            if (!isDisposed && // camera is not disposed
                 (   !IsAcquiring ||  // either it is not acquiring or it supports run-time queries
                     Capabilities.Features.HasFlag(SdkFeatures.ReadTemperatureDuringAcquisition)) &&
                 sender is Timer t && // sender is Timer
@@ -774,10 +778,15 @@ namespace ANDOR_CS.Classes
                 _temperatureMonitorTimer.Elapsed += TemperatureMonitorCycler;
 
                 _temperatureMonitorTimer.Start();
-                
+
+                IsTemperatureMonitored = true;
+
             }
             else
+            {
                 _temperatureMonitorTimer?.Stop();
+                IsTemperatureMonitored = false;
+            }
 
         }
 
@@ -804,7 +813,7 @@ namespace ANDOR_CS.Classes
         protected override void Dispose(bool disposing)
         {
 
-            if (!_isDisposed)
+            if (!isDisposed)
             {
                 base.Dispose(disposing);
                 if (disposing)
@@ -812,12 +821,49 @@ namespace ANDOR_CS.Classes
                     // If camera has valid SDK pointer and is initialized
                     if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
                     {
-                        if (CoolerMode == Switch.Enabled)
-                            CoolerControl(Switch.Disabled);
-                        //if (TemperatureMonitorWorker?.Status == TaskStatus.Running)
-                        //    TemperatureMonitor(Switch.Disabled);
+                        if (Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
+                        {
+                            Call(CameraHandle, SDKInstance.CoolerOFF);
+                            CoolerMode = Switch.Disabled;
+                        }
 
-                        if (_temperatureMonitorTimer != null)
+                        if (Capabilities.Features.HasFlag(SdkFeatures.Shutter))
+                        {
+                            if (Capabilities.Features.HasFlag(SdkFeatures.ShutterEx))
+                            {
+
+                                Call(CameraHandle, () => SDKInstance.SetShutterEx(
+                                    (int)Shutter.Type, 
+                                    (int)ShutterMode.PermanentlyClosed, 
+                                    Shutter.CloseTime, Shutter.OpenTime, 
+                                    (int)ShutterMode.PermanentlyClosed));
+
+                                Shutter = (
+                                    Internal: ShutterMode.PermanentlyClosed, 
+                                    External: ShutterMode.PermanentlyClosed, 
+                                    Shutter.Type, 
+                                    Shutter.OpenTime, 
+                                    Shutter.CloseTime);
+                            }
+                            else
+                            {
+
+                                Call(CameraHandle, () => SDKInstance.SetShutter(
+                                    (int)Shutter.Type, 
+                                    (int)ShutterMode.PermanentlyClosed, 
+                                    Shutter.CloseTime, 
+                                    Shutter.OpenTime));
+
+                                Shutter = (
+                                    Internal: ShutterMode.PermanentlyClosed,
+                                    External: null,
+                                    Shutter.Type,
+                                    Shutter.OpenTime,
+                                    Shutter.CloseTime);
+                            }
+                        }
+
+                            if (_temperatureMonitorTimer != null)
                         {
                             if (_temperatureMonitorTimer.Enabled)
                                 _temperatureMonitorTimer.Stop();
@@ -830,6 +876,8 @@ namespace ANDOR_CS.Classes
                             _runningTasks.TryRemove(key, out var item);
                             item.Source.Cancel();
                         }
+
+
                     }
 
                     // If succeeded, removes camera instance from the list of cameras
@@ -1061,6 +1109,12 @@ namespace ANDOR_CS.Classes
 
             return cameraCount;
         }
+
+        public new static CameraBase Create(int camIndex = 0, object otherParams = null)
+            => new Camera(camIndex);
+
+        public new static async Task<CameraBase> CreateAsync(int camIndex = 0, object otherParams = null)
+            => await Task.Run(() => Create(camIndex, otherParams));
 
 #if DEBUG
         public static CameraBase GetDebugInterface(int camIndex = 0)

@@ -10,6 +10,8 @@ namespace DIPOL_UF.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            if (value == null)
+                return Visibility.Hidden;
             var boolVal = (bool)value;
             if (boolVal)
                 return Visibility.Visible;
@@ -35,7 +37,6 @@ namespace DIPOL_UF.Converters
                     if (parameter is bool boolPar)
                         return boolPar;
                     return false;
-                case Visibility.Hidden:
                 default:
                     return false;
             }

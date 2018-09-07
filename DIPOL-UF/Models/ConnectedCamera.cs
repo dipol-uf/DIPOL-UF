@@ -1,40 +1,69 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Controls;
-
+using System.Windows.Threading;
 
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 
 using DIPOL_UF.Commands;
+using DIPOL_UF.Enums;
 
 using static DIPOL_UF.DIPOL_UF_App;
-using System.Windows.Threading;
 
 namespace DIPOL_UF.Models
 {
-    class ConnectedCamera : ObservableObject
+    internal class ConnectedCamera : ObservableObject, IDisposable
     {
-        private CameraBase _camera = null;
-        private Task _acqTask = null;
-        private CancellationTokenSource _acqTaskCancel = null;
-        private float _targetTemperature = 0.0f;
-        private string __targetTemperatureText = "0";
-        private bool _canControlTemperature = false;
-        private Tuple<float, float, float, int> _timing;
-        private DelegateCommand _controlCoolerCommand = null;
-        //private DelegateCommand verifyTextInputCommand = null;
-        private DelegateCommand _setUpAcquisitionCommand = null;
-        private DelegateCommand _controlAcquisitionCommand = null;
-        private int _currentImageIndex = 0;
 
+        private static readonly ConcurrentDictionary<string, ConnectedCamera> connectedCameras 
+            = new ConcurrentDictionary<string, ConnectedCamera>();
+
+        // Used by TreeItemViewModel
+        private ObservableCollection<ViewModels.MenuItemViewModel> _contextMenu
+            = new ObservableCollection<ViewModels.MenuItemViewModel>();
+
+        private CameraBase _camera;
+        private Task _acqTask;
+        private CancellationTokenSource _acqTaskCancel;
+        private float _targetTemperature;
+        private string _targetTemperatureText = "0";
+        private bool _canControlTemperature;
+        private Tuple<float, float, float, int> _timing;
+        private DelegateCommand _controlCoolerCommand;
+        //private DelegateCommand verifyTextInputCommand = null;
+        private DelegateCommand _setUpAcquisitionCommand;
+        private DelegateCommand _controlAcquisitionCommand;
+        private int _currentImageIndex;
+        private ControlState _state = ControlState.Individual;
+
+        // Used by TreeItemViewModel
+        public ObservableCollection<ViewModels.MenuItemViewModel> ContextMenu
+        {
+            get => _contextMenu;
+            set
+            {
+                if (value != _contextMenu)
+                {
+                    _contextMenu = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public IReadOnlyDictionary<string, ConnectedCamera> ConnectedCameras
+            => connectedCameras;
+
+        public string Key
+        {
+            get;
+        }
         public DispatcherTimer ProgBarTimer
         {
             get;
@@ -63,7 +92,7 @@ namespace DIPOL_UF.Models
                 if (Math.Abs(value - _targetTemperature) > float.Epsilon)
                 {
                     _targetTemperature = value;
-                    __targetTemperatureText = value.ToString("F1");
+                    _targetTemperatureText = value.ToString("F1");
                     RaisePropertyChanged();
                     RaisePropertyChanged(nameof(TargetTemperatureText));
                 }
@@ -71,12 +100,12 @@ namespace DIPOL_UF.Models
         }
         public string TargetTemperatureText
         {
-            get => __targetTemperatureText;
+            get => _targetTemperatureText;
             set
             {
-                if (value != __targetTemperatureText)
+                if (value != _targetTemperatureText)
                 {
-                    __targetTemperatureText = value;
+                    _targetTemperatureText = value;
                     _targetTemperature = float.Parse(value,
                         System.Globalization.NumberStyles.Any,
                         System.Globalization.NumberFormatInfo.InvariantInfo);
@@ -158,7 +187,7 @@ namespace DIPOL_UF.Models
             get => _camera;
             private set
             {
-                if (value != _camera)
+                if (!Equals(value, _camera))
                 {
                     _camera = value;
                     RaisePropertyChanged();
@@ -179,6 +208,18 @@ namespace DIPOL_UF.Models
             }
         }
         public bool AreSettingsApplied => Camera.CurrentSettings != null;
+        public ControlState State
+        {
+            get => _state;
+            set
+            {
+                if (value != _state)
+                {
+                    ChangeState(value);
+                    RaisePropertyChanged();
+                }
+            }
+        }
         public DelegateCommand ControlCoolerCommand
         {
             get => _controlCoolerCommand;
@@ -217,15 +258,53 @@ namespace DIPOL_UF.Models
             }
 
         }
-      
 
-        public ConnectedCamera(CameraBase camera)
+        public DipolImagePresenter ImagePresenterModel { get; } = new DipolImagePresenter();
+        
+        public ConnectedCamera(CameraBase camera, string key)
         {
             Camera = camera;
+            Key = key;
             CanControlTemperature = camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature);
             InitializeCommands();
             Camera.PropertyChanged += Camera_PropertyCahnged;
             Camera.NewImageReceived += Camera_NewImageReceived;
+            connectedCameras.TryAdd(Camera.ToString(), this);
+            NotifyCollectionChanged();
+        }
+        public void ContextMenuCommandExecute(object parameter)
+        {
+            if (parameter is string menu)
+            {
+                switch (menu)
+                {
+                    case "Properties":
+                        var propVM = new ViewModels.CameraPropertiesViewModel(Camera);
+                        var window = new Views.CameraPropertiesView(propVM)
+                        {
+                            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                            Topmost = true
+                        };
+                        window.Show();
+                        return;
+                }
+
+            }
+        }
+
+        public void Dispose()
+        {
+            if (Camera != null)
+            {
+                connectedCameras.TryRemove(Camera.ToString(), out _);
+                NotifyCollectionChanged();
+            }
+        }
+
+        private static void NotifyCollectionChanged()
+        {
+            foreach(var item in connectedCameras.Values)
+                item.RaisePropertyChanged(nameof(ConnectedCameras));
         }
 
         private void InitializeCommands()
@@ -276,18 +355,25 @@ namespace DIPOL_UF.Models
         }
         private void SetUpAcquisitionCommandExecute(object parameter)
         {
-            var settings = Camera.CurrentSettings ?? Camera.GetAcquisitionSettingsTemplate();
+            var hadSettings = Camera.CurrentSettings != null;
+            
+            var settings = hadSettings 
+                ? Camera.CurrentSettings 
+                : Camera.GetAcquisitionSettingsTemplate();
             
             var viewModel = new ViewModels.AcquisitionSettingsViewModel(settings, Camera);
 
-            if (new Views.AcquisitionSettingsView(viewModel).ShowDialog() == true && 
-                !viewModel.EstimatedTiming.Equals(default((float, float, float, int))))
+            if (new Views.AcquisitionSettingsView(viewModel).ShowDialog() == true)
             {
-                Timing = viewModel.EstimatedTiming.ToTuple();
-                RaisePropertyChanged(nameof(AreSettingsApplied));
-                ControlAcquisitionCommand.OnCanExecuteChanged();
+                if (!viewModel.EstimatedTiming.Equals(default))
+                {
+                    Timing = viewModel.EstimatedTiming.ToTuple();
+                    RaisePropertyChanged(nameof(AreSettingsApplied));
+                    ControlAcquisitionCommand.OnCanExecuteChanged();
+                }
             }
-                        
+            else if(!hadSettings)
+                settings.Dispose();
         }
         private void ControlAcquisitionCommandExecute(object parameter)
         {
@@ -303,7 +389,7 @@ namespace DIPOL_UF.Models
                 CurrentImageIndex = 0;
                 _acqTaskCancel = new CancellationTokenSource();
                 _acqTask = Camera.StartAcquistionAsync(_acqTaskCancel,
-                    Math.Max((int)(Camera.CurrentSettings.ExposureTime / 50), 50));
+                    Math.Max(Convert.ToInt32(Camera.CurrentSettings.ExposureTime / 50), 50));
                
             }
             else
@@ -315,6 +401,20 @@ namespace DIPOL_UF.Models
         private void Camera_NewImageReceived(object sender, ANDOR_CS.Events.NewImageReceivedEventArgs e)
         {
             CurrentImageIndex = e.First;
+            if(Camera.AcquiredImages.TryDequeue(out var im))
+                ImagePresenterModel.LoadImage(im);
+        }
+
+        private void ChangeState(ControlState newState)
+        {
+            if (newState == ControlState.Master)
+            {
+                foreach(var item in ConnectedCameras.Values)
+                    item.State = ControlState.Slave;
+                NotifyCollectionChanged();
+            }
+            
+            _state = newState;
         }
     }
 }

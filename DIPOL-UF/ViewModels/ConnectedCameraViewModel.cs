@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using DIPOL_UF.Models;
-using DIPOL_UF.Commands;
-
-using ANDOR_CS.Classes;
-using ANDOR_CS.Enums;
 using System.ComponentModel;
 using System.Collections;
 using System.Runtime.CompilerServices;
+
+using ANDOR_CS.Classes;
+using ANDOR_CS.Enums;
+
+using DIPOL_UF.Models;
+using DIPOL_UF.Commands;
+using DIPOL_UF.Enums;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -25,6 +27,9 @@ namespace DIPOL_UF.ViewModels
             { "OutOfRange", @"The value is expected to be in [{0}, {1}] range." }
         };
 
+        public DipolImagePresenterViewModel ImagePresenterViewModel { get; }
+
+        public string Key => model.Key;
         public CameraBase Camera => model.Camera;
         /// <summary>
         /// Minimum allowed cooling temperature
@@ -115,6 +120,8 @@ namespace DIPOL_UF.ViewModels
         public bool IsAcquiring => Camera.IsAcquiring;
         public bool IsNotAcquiring => !IsAcquiring;
 
+        public bool CanChangeMode => model.ConnectedCameras.Count > 1;
+
         public ShutterMode InternalShutterState
         {
             get => model.InternalShutterState;
@@ -156,6 +163,13 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
+        public ControlState State => model.State;
+        public int StateIntVal
+        {
+            get => (int)State;
+            set => model.State = (ControlState)value;
+        }
+
         /// <summary>
         /// Controls cooler.
         /// </summary>
@@ -166,6 +180,8 @@ namespace DIPOL_UF.ViewModels
         public ConnectedCameraViewModel(ConnectedCamera model) : base(model)
         {
             InitializeValidators();
+
+            ImagePresenterViewModel = new DipolImagePresenterViewModel(model.ImagePresenterModel);
 
             model.Camera.PropertyChanged += (sender, e) =>
             {
@@ -201,6 +217,19 @@ namespace DIPOL_UF.ViewModels
         {
             validators.Add(nameof(TargetTemperatureText), IsTemperatureTextInRange);
                 
+        }
+
+        protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            base.OnModelPropertyChanged(sender, e);
+
+            if (e.PropertyName == nameof(model.State))
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(StateIntVal)));
+
+            if (e.PropertyName == nameof(model.ConnectedCameras))
+            {
+                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(CanChangeMode)));
+            }
         }
 
         private bool IsTemperatureTextInRange(object value)

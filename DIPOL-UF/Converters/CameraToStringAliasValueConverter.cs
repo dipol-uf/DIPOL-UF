@@ -14,8 +14,8 @@ namespace DIPOL_UF.Converters
             {
                 var key = $"{cam.CameraModel}_{cam.SerialNumber}";
 
-                var camIndex = DIPOL_UF_App.Settings.GetValueOrNullSafe<object[]>("Cameras");
-                var alias = DIPOL_UF_App.Settings.GetValueOrNullSafe<object[]>("CameraAlias");
+                var camIndex = DIPOL_UF_App.Settings.GetValueOrNullSafe<object[]>("Cameras", new object[0]);
+                var alias = DIPOL_UF_App.Settings.GetValueOrNullSafe<object[]>("CameraAlias", new object[0]);
 
                 string camName = cam.ToString();
 

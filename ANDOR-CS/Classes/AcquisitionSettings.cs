@@ -23,7 +23,13 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
 using static ANDOR_CS.Classes.AndorSdkInitialization;
 using static ANDOR_CS.Exceptions.AndorSdkException;
+
+#if X86
+using SDK = ATMCD32CS.AndorSDK;
+#endif
+#if X64
 using SDK = ATMCD64CS.AndorSDK;
+#endif
 
 namespace ANDOR_CS.Classes
 {
@@ -43,7 +49,7 @@ namespace ANDOR_CS.Classes
         ///     SERIALIZATION TEST CONSTRUCTOR; DO NOT USE
         /// </summary>
 #if DEBUG
-        internal AcquisitionSettings(bool empty = false)
+        public AcquisitionSettings(bool empty = false)
         {
             if (empty) 
                 return;
@@ -55,7 +61,7 @@ namespace ANDOR_CS.Classes
             HSSpeed = (0, 3);
             ImageArea = new Rectangle(1, 1, 128, 256);
 
-            //this.KineticCycle = (12, 23);
+            KineticCycle = (12, 0.23f);
             PreAmpGain = (0, "Gain 1");
             ReadoutMode = ReadMode.FullImage;
 
@@ -83,7 +89,7 @@ namespace ANDOR_CS.Classes
         {
             var output = new List<(string Option, bool Success, uint ReturnCode)>();
 
-            SafeSdkCameraHandle handle = null;
+            SafeSdkCameraHandle handle;
             if (Camera is Camera locCam)
                 handle = locCam.CameraHandle;
             else

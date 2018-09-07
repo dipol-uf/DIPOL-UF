@@ -1,10 +1,30 @@
-﻿using System;
+﻿//    This file is part of Dipol-3 Camera Manager.
+
+//     MIT License
+//     
+//     Copyright(c) 2018 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Image = DipolImage.Image;
 
 namespace FITS_CS
 {
@@ -12,9 +32,7 @@ namespace FITS_CS
     {
         public static readonly int UnitSizeInBytes = 2880;
 
-        private byte[] array = new byte[FITSUnit.UnitSizeInBytes];
-
-        public byte[] Data => array;
+        public byte[] Data { get; } = new byte[UnitSizeInBytes];
 
         public FITSUnit(byte[] data)
         {
@@ -23,17 +41,17 @@ namespace FITS_CS
             if (data.Length != UnitSizeInBytes)
                 throw new ArgumentException($"{nameof(data)} has wrong length");
 
-            Array.Copy(data, array, data.Length);
+            Array.Copy(data, Data, data.Length);
         }
 
         public bool IsKeywords
             => Enumerable.Range(0, UnitSizeInBytes / FITSKey.KeySize)
-            .Select(i => FITSKey.IsFITSKey(Data, i * FITSKey.KeySize))
+            .Select(i => FITSKey.IsFitsKey(Data, i * FITSKey.KeySize))
             .Aggregate(true, (old, nv) => old & nv);
 
         public bool IsData
             => Enumerable.Range(0, UnitSizeInBytes / FITSKey.KeySize)
-            .Select(i => FITSKey.IsFITSKey(Data, i * FITSKey.KeySize))
+            .Select(i => FITSKey.IsFitsKey(Data, i * FITSKey.KeySize))
             .Contains(false);
 
         public bool TryGetKeys(out List<FITSKey> keys)
@@ -42,36 +60,37 @@ namespace FITS_CS
             if (IsData)
                 return false;
 
-            int n = UnitSizeInBytes / FITSKey.KeySize;
+            var n = UnitSizeInBytes / FITSKey.KeySize;
 
             keys = new List<FITSKey>(n);
 
             try
             {
 
-                FITSKey currKey = new FITSKey(array, 0);
-                FITSKey nextKey = new FITSKey(array, FITSKey.KeySize);
-                int i = 1;
+                var currKey = new FITSKey(Data);
+                var nextKey = new FITSKey(Data, FITSKey.KeySize);
+                var i = 1;
                 while (i < n - 1)
                 {
                     //currKey = new FITSKey(array, i * FITSKey.KeySize);
                     //nextKey = i < n-1 ? new FITSKey(array, (i+1) * FITSKey.KeySize) : null;
 
-                    if (nextKey?.IsExtension ?? false)
+                    if ((nextKey?.IsExtension ?? false) &&
+                        currKey != null)
                     {
                         currKey.Extension = nextKey.KeyString;
                         keys.Add(currKey);
                         if (i < n - 1)
-                            currKey = new FITSKey(array, (++i) * FITSKey.KeySize);
+                            currKey = new FITSKey(Data, (++i) * FITSKey.KeySize);
                     }
                     else
                     {
                         keys.Add(currKey);
                         currKey = nextKey;
                     }
-                    nextKey = ++i < n ? new FITSKey(array, i * FITSKey.KeySize) : null;
+                    nextKey = ++i < n ? new FITSKey(Data, i * FITSKey.KeySize) : null;
                 }
-                if (!currKey.IsExtension)
+                if (!currKey?.IsExtension ?? false)
                     keys.Add(currKey);
                 //keys = keys.Where(k => !k.IsEmpty).ToList();
                 return true;
@@ -86,30 +105,30 @@ namespace FITS_CS
         public T[] GetData<T>() where T : struct
         {
             T[] result;
-            int n = 0;
-            int size = 0;
+            int n;
+            int size;
             byte[] mappedArray;
             if (BitConverter.IsLittleEndian)
-                mappedArray = array.Reverse().ToArray();
-            else mappedArray = array;
+                mappedArray = Data.Reverse().ToArray();
+            else mappedArray = Data;
             
-            if (typeof(T) == typeof(Double))
+            if (typeof(T) == typeof(double))
             {
                 size = Math.Abs((short)FITSImageType.Double) / 8;
                 n = UnitSizeInBytes / size;
                 result = new T[n];
-                for (int i = 0; i < n; i++)
+                for (var i = 0; i < n; i++)
                 {
                     dynamic val = BitConverter.ToDouble(mappedArray, (n - i - 1) * size);
                     result[i] = val;
                 }
             }
-            else if (typeof(T) == typeof(Int16))
+            else if (typeof(T) == typeof(short))
             {
                 size = Math.Abs((short)FITSImageType.Int16) / 8;
                 n = UnitSizeInBytes / size;
                 result = new T[n];
-                for (int i = 0; i < n; i++)
+                for (var i = 0; i < n; i++)
                 {
                     dynamic val = BitConverter.ToInt16(mappedArray, (n - i - 1) * size);
                     result[i] = val;
@@ -134,20 +153,20 @@ namespace FITS_CS
 
         public static IEnumerable<FITSUnit> GenerateFromKeywords(params FITSKey[] keys)
         {
-            int keysPerUnit = UnitSizeInBytes / FITSKey.KeySize;
+            var keysPerUnit = UnitSizeInBytes / FITSKey.KeySize;
 
-            int nUnits = (int)Math.Ceiling(1.0 * keys.Length / keysPerUnit);
+            var nUnits = (int)Math.Ceiling(1.0 * keys.Length / keysPerUnit);
 
-            int nEmpty = nUnits * keysPerUnit - keys.Length;
+            var nEmpty = nUnits * keysPerUnit - keys.Length;
 
-            byte[] buffer = new byte[UnitSizeInBytes];
+            var buffer = new byte[UnitSizeInBytes];
 
-            for (int iUnit = 0; iUnit < nUnits; iUnit++)
+            for (var iUnit = 0; iUnit < nUnits; iUnit++)
             {
 
                 if (iUnit != nUnits - 1)
                 {
-                    for (int iKey = 0; iKey < keysPerUnit; iKey++)
+                    for (var iKey = 0; iKey < keysPerUnit; iKey++)
                         Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FITSKey.KeySize, FITSKey.KeySize);
 
                     yield return new FITSUnit(buffer);
@@ -169,18 +188,18 @@ namespace FITS_CS
 
         public static IEnumerable<FITSUnit> GenerateFromArray(byte[] array, FITSImageType type)
         {
-            int size = Math.Abs((short)type) / 8;
-            int n = (int)Math.Ceiling(1.0 * array.Length / UnitSizeInBytes);
-            int m = n / size;
+            var size = Math.Abs((short)type) / 8;
+            var n = (int)Math.Ceiling(1.0 * array.Length / UnitSizeInBytes);
+            var m = n / size;
             byte[] mappedArray;
             if (BitConverter.IsLittleEndian)
                 mappedArray = array.Reverse().ToArray();
             else
                 mappedArray = array;
 
-            byte[] buffer = new byte[UnitSizeInBytes];
+            var buffer = new byte[UnitSizeInBytes];
 
-            for (int iUnit = 0; iUnit < n-1; iUnit++)
+            for (var iUnit = 0; iUnit < n-1; iUnit++)
             {
                 Array.Copy(mappedArray, iUnit * UnitSizeInBytes, buffer, 0, UnitSizeInBytes);
                 yield return new FITSUnit(buffer);

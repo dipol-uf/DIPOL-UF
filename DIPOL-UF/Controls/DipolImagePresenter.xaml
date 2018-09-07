@@ -1,0 +1,352 @@
+﻿<UserControl x:Class="DIPOL_UF.Controls.DipolImagePresenter"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
+             xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
+             xmlns:locl="clr-namespace:DIPOL_UF"
+             xmlns:p="clr-namespace:DIPOL_UF.Properties"
+             Style="{StaticResource ResourceKey=SmallFont}"
+             MinWidth="420" Background="Transparent"
+             mc:Ignorable="d" 
+             d:DesignHeight="500" d:DesignWidth="420" 
+             d:DataContext="{d:DesignInstance Type=vms:DipolImagePresenterViewModel}"
+             MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
+             MouseLeave="{cmnds:EventToCommand MouseHoverCommand}">
+            
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" MinHeight="50"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+              Background="Transparent" Margin="10"
+              MouseMove="{cmnds:EventToCommand MouseHoverCommand}"
+              MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
+              MouseLeave="{cmnds:EventToCommand MouseHoverCommand}"
+              MouseLeftButtonDown="{cmnds:EventToCommand ImageDoubleClickCommand}">
+            <Image x:Name="Im" MinWidth="200" MinHeight="100"
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                Source="{Binding BitmapSource, Mode=OneWay}"
+                SizeChanged="{cmnds:EventToCommand SizeChangedCommand}"
+                Cursor="Cross"
+               />
+            <Canvas Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                    Width="{Binding ElementName=Im, Path=ActualWidth}"
+                    Height="{Binding ElementName=Im, Path=ActualHeight}">
+                <Path 
+                    Data="{Binding ApertureGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
+                    StrokeThickness="{Binding ApertureGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
+                    Visibility="{Binding IsGeometryDisplayed, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Path.RenderTransform>
+                        <TranslateTransform X="{Binding AperturePos.X}" Y ="{Binding AperturePos.Y}"/>
+                    </Path.RenderTransform>
+                </Path>
+                <Path 
+                    Data="{Binding GapGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
+                    StrokeThickness="{Binding GapGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
+                    Visibility="{Binding IsGeometryDisplayed, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Path.RenderTransform>
+                        <TranslateTransform X="{Binding GapPos.X}" Y ="{Binding GapPos.Y}"/>
+                    </Path.RenderTransform>
+                </Path>
+                <Path 
+                    Data="{Binding SamplerGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
+                    StrokeThickness="{Binding SamplerGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
+                    Visibility="{Binding IsGeometryDisplayed, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Path.RenderTransform>
+                        <TranslateTransform X="{Binding SamplerPos.X}" Y ="{Binding SamplerPos.Y}"/>
+                    </Path.RenderTransform>
+                </Path>
+            </Canvas>
+        </Grid>
+        <!-- Contrast sliders -->
+        <Grid Row="1" IsEnabled="{Binding IsImageLoaded, Mode=OneWay}">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Slider Grid.Row="0" Grid.Column="0" 
+                    HorizontalAlignment="Stretch" MaxWidth="400"
+                    Minimum="{Binding ImgScaleMin}"
+                    Maximum="{Binding ImgScaleMax}"
+                    Value="{Binding ThumbLeft, UpdateSourceTrigger=PropertyChanged}"
+                    ValueChanged="{cmnds:EventToCommand ThumbValueChangedCommand}"
+                    Margin="20, 3, 20, 3"
+                    />
+            <Slider Grid.Row="1" Grid.Column="0" 
+                    HorizontalAlignment="Stretch" MaxWidth="400"
+                    Minimum="{Binding ImgScaleMin}"
+                    Maximum="{Binding ImgScaleMax}"
+                    Value="{Binding ThumbRight, UpdateSourceTrigger=PropertyChanged}"
+                    ValueChanged="{cmnds:EventToCommand ThumbValueChangedCommand}"
+                    Margin="20, 3, 20, 3"
+                    />
+        </Grid>
+        <!-- Image sampler info & controls -->
+        <Grid Row="2" HorizontalAlignment="Stretch" 
+              MinWidth="400" MaxWidth="1200"
+              IsEnabled="{Binding IsImageLoaded, Mode=OneWay}" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" MinWidth="70"/>
+                <ColumnDefinition Width="*" MinWidth="70"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="1.5*" MinWidth="70"/>
+                </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            
+           <!-- Left labels -->
+            <!-- Header -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                       Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Aperture, Format='{}{0}:'}"/>
+            <!-- Labels -->
+            <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Median}"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Minimum}"/>
+            <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Maximum}"/>
+            <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Average}"/>
+            <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Intensity}"/>
+            <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
+
+            <!-- Right labels -->
+            <!-- Header -->
+            <TextBlock Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2"
+                       Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterPixel, Format='{}{0}:'}"/>
+            <!-- Labels -->
+            <TextBlock Grid.Row="1" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterPosition}"/>
+            <TextBlock Grid.Row="2" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterValue}"/>
+            <!-- Header -->
+            <TextBlock Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2"
+                       Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Annulus, Format='{}{0}:'}"/>
+            <!-- Labels -->
+            <TextBlock Grid.Row="4" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Average}"/>
+            <TextBlock Grid.Row="5" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_SignalToNoise}"/>
+            <TextBlock Grid.Row="6" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
+
+            <!-- Aperture control labels -->
+            <!-- Header -->
+            <TextBlock Grid.Row="0" Grid.Column="4" Grid.ColumnSpan="2"
+                       Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                       Text="{locl:Text 
+                            Key=DipolImagePresenter_ApertureControlGroup, 
+                            Format='{}{0}:'}"/>
+            <TextBlock Grid.Row="1" Grid.Column="4" 
+                       Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Aperture}"/>
+            <TextBlock Grid.Row="2" Grid.Column="4" 
+                       Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Gap}"/>
+            <TextBlock Grid.Row="3" Grid.Column="4" 
+                       Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Annulus}"/>
+            <TextBlock Grid.Row="4" Grid.Column="4" 
+                       Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=General_Color}"/>
+            <TextBlock Grid.Row="5" Grid.Column="4" 
+                       Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Type}"/>
+            <TextBlock Grid.Row="6" Grid.Column="4" 
+                       Style="{StaticResource TextBlock_SmallFont}" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Thickness}"/>
+            <!-- Left data -->
+            <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[Median], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[Minimum], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[Maximum], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
+            <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[ApertureAvg], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
+            <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[Intensity], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
+            <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[ApertureSd], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
+
+            <!-- Right data -->
+            <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
+                     IsReadOnly="True" TextAlignment="Center" HorizontalContentAlignment="Center">
+                <TextBox.Text>
+                    <MultiBinding StringFormat="{}{0,6:####0}:{1,-6:####0}" Mode="OneWay">
+                        <Binding Path="SamplerCenterPosInPix.X" Mode="OneWay"/>
+                        <Binding Path="SamplerCenterPosInPix.Y" Mode="OneWay"/>
+                    </MultiBinding>
+                </TextBox.Text>
+            </TextBox>
+            <TextBox Grid.Row="2" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        PixValue, 
+                        Mode=OneWay, 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
+            <TextBox Grid.Row="4" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[AnnulusAvg], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
+            <TextBox Grid.Row="5" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[SNR], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
+            <TextBox Grid.Row="6" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
+                     IsReadOnly="True" TextAlignment="Right"
+                     Text="{Binding 
+                        ImageStats[AnnulusSd], 
+                        StringFormat={x:Static 
+                            p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
+
+           
+            <!-- Aperture controls -->
+            <Slider Grid.Column="5" Grid.Row="1" VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch" Width="Auto"
+                    Minimum="{Binding MinGeometryWidth}"
+                    Maximum="{Binding MaxApertureWidth}"
+                    Value="{Binding ImageApertureSize, UpdateSourceTrigger=PropertyChanged}"
+                    IsSnapToTickEnabled="True"
+                    TickFrequency="{Binding GeometrySliderTickFrequency}" 
+                    Margin="{StaticResource HorizontalPBMargin}"
+                    Style="{StaticResource SliderWithValueToolTip}"
+                    />
+
+            <Slider Grid.Column="5" Grid.Row="2" VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch" Width="Auto"
+                    Minimum="{Binding MinGeometryWidth}"
+                    Maximum="{Binding MaxGapWidth}"
+                    Value="{Binding ImageGap, UpdateSourceTrigger=PropertyChanged}"
+                    IsSnapToTickEnabled="True"
+                    TickFrequency="{Binding GeometrySliderTickFrequency}" 
+                    Margin="{StaticResource HorizontalPBMargin}"
+                    Style="{StaticResource SliderWithValueToolTip}"
+            />
+            <Slider Grid.Column="5" Grid.Row="3"  VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch" Width="Auto"
+                    Minimum="{Binding MinGeometryWidth}"
+                    Maximum="{Binding MaxAnnulusWidth}"
+                    Value="{Binding ImageAnnulus, UpdateSourceTrigger=PropertyChanged}"
+                    IsSnapToTickEnabled="True"
+                    TickFrequency="{Binding GeometrySliderTickFrequency}" 
+                    Margin="{StaticResource HorizontalPBMargin}"
+                    Style="{StaticResource SliderWithValueToolTip}"
+            />
+            <ComboBox Grid.Column="5" Grid.Row="4"
+                      HorizontalAlignment="Stretch"
+                      MaxWidth="165"
+                      Style="{StaticResource ComboBoxStyle}"
+                      SelectedIndex="{Binding 
+                        SamplerColorBrushIndex, 
+                        Mode=TwoWay, 
+                        UpdateSourceTrigger=PropertyChanged}" 
+                      ItemsSource="{StaticResource ColorPickerColors}"
+                      Margin="{StaticResource HorizontalPBMargin}"
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border MinHeight="20"  BorderBrush="Black" BorderThickness="1">
+                            <Border.Background>
+                                <Binding Converter="{StaticResource DefaultConverter}">
+                                    <Binding.ConverterParameter>
+                                        <SolidColorBrush Color="Transparent"/>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </Border.Background>
+                        </Border>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ComboBox Grid.Column="5" Grid.Row="5"
+                      HorizontalAlignment="Stretch"
+                      MaxWidth="165"
+                      Style="{StaticResource ComboBoxStyle}"
+                      ItemsSource="{Binding GeometryAliasCollection, Mode=OneTime}"
+                      SelectedIndex="{Binding SelectedGeometryIndex, UpdateSourceTrigger=PropertyChanged}"
+                      Margin="{StaticResource HorizontalPBMargin}"
+                      >
+
+            </ComboBox>
+            <Slider Grid.Column="5" Grid.Row="6"  VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch" Width="Auto"
+                    Minimum="{Binding MinGeometryThickness}"
+                    Maximum="{Binding MaxGeometryThickness}"
+                    Value="{Binding ImageSamplerThickness, UpdateSourceTrigger=PropertyChanged}"
+                    IsSnapToTickEnabled="True"
+                    TickFrequency="{Binding GeometryThicknessSliderTickFrequency}" 
+                    Margin="{StaticResource HorizontalPBMargin}"
+            />
+        </Grid>
+    </Grid>
+</UserControl>

@@ -16,9 +16,14 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System.Runtime.Serialization;
-
-using ATMCD64CS;
 using ANDOR_CS.Enums;
+
+#if X86
+using SDK = ATMCD32CS.AndorSDK;
+#endif
+#if X64
+using SDK = ATMCD64CS.AndorSDK;
+#endif
 
 
 
@@ -98,7 +103,7 @@ namespace ANDOR_CS.DataStructures
             internal set;
         }
 
-        public DeviceCapabilities(AndorSDK.AndorCapabilities capabilities)
+        public DeviceCapabilities(SDK.AndorCapabilities capabilities)
         {
             AcquisitionModes = (AcquisitionMode)capabilities.ulAcqModes;
             ReadModes = (ReadMode)capabilities.ulReadModes;

@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DIPOL_UF.Views"
+        xmlns:loc="clr-namespace:DIPOL_UF"
         mc:Ignorable="d"
-        Title="Set up acquisition process"  WindowStyle="ToolWindow" 
+        Title="{loc:Text Key=AcquisitionSettings_WindowName}"  WindowStyle="ToolWindow" 
         Topmost="True" WindowStartupLocation="CenterOwner"
         Height="500" Width="350"
         MinWidth="300" MinHeight="400"
@@ -22,7 +22,7 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <TabControl Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
-            <TabItem Header="Settings">
+            <TabItem Header="{loc:Text Key=AcquisitionSettings_Settings}">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -542,7 +542,7 @@
                     </Grid>
                 </ScrollViewer>
             </TabItem>
-            <TabItem Header="Image size">
+            <TabItem Header="{loc:Text Key=AcquisitionSettings_ImageSize}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
@@ -723,30 +723,30 @@
                     </TextBox>
                 </Grid>
             </TabItem>
-            <TabItem Header="Cycles">
+            <TabItem Header="{loc:Text Key=AcquisitionSettings_Cycles}">
                 
             </TabItem>
         </TabControl>
         <!--Save-->
         <Button Grid.Column="0" Grid.Row="1" 
                 Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                Content="Save"
+                Content="{loc:Text Key=General_Save}"
                 Command="{Binding SaveCommand}"/>
         <!--Load-->
         <Button Grid.Column="1" Grid.Row="1"
                 Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                Content="Load"
+                Content="{loc:Text Key=General_Load}"
                 Command="{Binding LoadCommand}"/>
         <!--Submit-->
         <Button Grid.Column="0" Grid.Row="2" 
                 Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}"
-                Content="Submit"
+                Content="{loc:Text Key=General_Submit}"
                 Command="{Binding SubmitCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
         <!--Cancel-->
         <Button Grid.Column="1" Grid.Row="2"
                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}"
-                Content="Cancel"
+                Content="{loc:Text Key=General_Cancel}"
                 Command="{Binding CancelCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
     </Grid>

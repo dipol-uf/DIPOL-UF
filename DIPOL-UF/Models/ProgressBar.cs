@@ -1,25 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace DIPOL_UF.Models
 {
     class ProgressBar : ObservableObject
     {
-        private int minimum = 0;
-        private int maximum = 100;
-        private int value = 50;
-        private bool isIndeterminate = false;
-        private bool displayPercents = false;
-        private string barTitle = "";
-        private string barComment = "";
-        private bool isAborted = false;
-        private bool canAbort = true;
+        private int _minimum;
+        private int _maximum = 100;
+        private int _value = 50;
+        private bool _isIndeterminate;
+        private bool _displayPercents;
+        private string _barTitle = "";
+        private string _barComment = "";
+        private bool _isAborted;
+        private bool _canAbort = true;
 
         public event EventHandler AbortButtonClick;
         public event EventHandler MaximumReached;
@@ -27,18 +21,18 @@ namespace DIPOL_UF.Models
 
         public int Minimum
         {
-            get => minimum;
+            get => _minimum;
             set
             {
-                if (value != minimum)
+                if (value != _minimum)
                 {
-                    if (value >= maximum)
-                        minimum = maximum - 1;
+                    if (value >= _maximum)
+                        _minimum = _maximum - 1;
                     else
-                        minimum = value;
+                        _minimum = value;
 
-                    if (Value < minimum)
-                        Value = minimum;
+                    if (Value < _minimum)
+                        Value = _minimum;
 
                     RaisePropertyChanged();
                 }
@@ -47,18 +41,18 @@ namespace DIPOL_UF.Models
 
         public int Maximum
         {
-            get => maximum;
+            get => _maximum;
             set
             {
-                if (value != maximum)
+                if (value != _maximum)
                 {
-                    if (value <= minimum)
-                        maximum = minimum + 1;
+                    if (value <= _minimum)
+                        _maximum = _minimum + 1;
                     else
-                        maximum = value;
+                        _maximum = value;
 
-                    if (Value > maximum)
-                        Value = maximum;
+                    if (Value > _maximum)
+                        Value = _maximum;
 
                     RaisePropertyChanged();
                 }
@@ -67,27 +61,27 @@ namespace DIPOL_UF.Models
 
         public int Value
         {
-            get => value;
+            get => _value;
             set
             {
-                if (value != this.value)
+                if (value != _value)
                 {
-                    int old = this.value;
+                    int old = _value;
 
-                    if (value < minimum)
-                        this.value = minimum;
-                    else if (value > maximum)
-                        this.value = maximum;
+                    if (value < _minimum)
+                        _value = _minimum;
+                    else if (value > _maximum)
+                        _value = _maximum;
                     else
-                        this.value = value;
+                        _value = value;
 
-                    if (this.value != old)
+                    if (_value != old)
                     {
                         RaisePropertyChanged();
 
-                        if (this.value == maximum)
+                        if (_value == _maximum)
                             OnMaximumReached(this, new EventArgs());
-                        else if (this.value == minimum)
+                        else if (_value == _minimum)
                             OnMinimumReached(this, new EventArgs());
                     }
                 }
@@ -96,12 +90,12 @@ namespace DIPOL_UF.Models
 
         public bool IsIndeterminate
         {
-            get => isIndeterminate;
+            get => _isIndeterminate;
             set
             {
-                if (value != isIndeterminate)
+                if (value != _isIndeterminate)
                 {
-                    isIndeterminate = value;
+                    _isIndeterminate = value;
                     RaisePropertyChanged();
                 }
             }
@@ -109,12 +103,12 @@ namespace DIPOL_UF.Models
 
         public bool DisplayPercents
         {
-            get => displayPercents;
+            get => _displayPercents;
             set
             {
-                if (value != displayPercents)
+                if (value != _displayPercents)
                 {
-                    displayPercents = value;
+                    _displayPercents = value;
                     RaisePropertyChanged();
                 }
             }
@@ -122,12 +116,12 @@ namespace DIPOL_UF.Models
 
         public string BarTitle
         {
-            get => barTitle;
+            get => _barTitle;
             set
             {
-                if (value != barTitle)
+                if (value != _barTitle)
                 {
-                    barTitle = value;
+                    _barTitle = value;
                     RaisePropertyChanged();
                 }
             }
@@ -135,12 +129,12 @@ namespace DIPOL_UF.Models
 
         public string BarComment
         {
-            get => barComment;
+            get => _barComment;
             set
             {
-                if (value != barComment)
+                if (value != _barComment)
                 {
-                    barComment = value;
+                    _barComment = value;
                     RaisePropertyChanged();
                 }
             }
@@ -148,12 +142,12 @@ namespace DIPOL_UF.Models
 
         public bool IsAborted
         {
-            get => isAborted;
+            get => _isAborted;
             set
             {
-                if (value != isAborted)
+                if (value != _isAborted)
                 {
-                    isAborted = value;
+                    _isAborted = value;
                     RaisePropertyChanged();
                 }
             }
@@ -161,12 +155,12 @@ namespace DIPOL_UF.Models
 
         public bool CanAbort
         {
-            get => canAbort;
+            get => _canAbort;
             set
             {
-                if (value != canAbort)
+                if (value != _canAbort)
                 {
-                    canAbort = value;
+                    _canAbort = value;
                     RaisePropertyChanged();
                 }
             }
@@ -175,13 +169,11 @@ namespace DIPOL_UF.Models
         public Commands.DelegateCommand WindowDragCommand
         {
             get;
-            private set;
         }
 
         public Commands.DelegateCommand CancelCommand
         {
             get;
-            private set;
         }
 
         public bool TryIncrement()
@@ -189,7 +181,6 @@ namespace DIPOL_UF.Models
 
         public bool Decrement()
             => --Value >= Minimum;
-
 
         public ProgressBar()
         {

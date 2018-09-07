@@ -13,5 +13,11 @@ namespace DIPOL_UF
             [System.Runtime.CompilerServices.CallerMemberName]  string propertyName = "")
             => OnPropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 
+        protected ObservableObject()
+        {
+#if DEBUG
+            DebugTracer.AddTarget(this, this.ToString());
+#endif
+        }
     }
 }

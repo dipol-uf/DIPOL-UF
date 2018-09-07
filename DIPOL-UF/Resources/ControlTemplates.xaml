@@ -1,0 +1,318 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:loc="clr-namespace:DIPOL_UF"
+                    xmlns:cntr="clr-namespace:DIPOL_UF.Controls"
+                    xmlns:enum="clr-namespace:DIPOL_UF.Enums">
+    <Style x:Key="ThumbWithValueToolTip" TargetType="Thumb">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Foreground" >
+            <Setter.Value>
+                <RadialGradientBrush  SpreadMethod="Pad" 
+                                      GradientStops="{StaticResource SliderThumbRadialGradientCollection}"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template" >
+            <Setter.Value>
+                <ControlTemplate  TargetType="Thumb">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <ContentControl Grid.Row="0" 
+                                            Margin ="-60, -20, -60, 0">
+                            <Border BorderThickness="1" 
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    BorderBrush="{x:Static SystemColors.ActiveBorderBrush}"
+                                    Background="{x:Static SystemColors.InfoBrush}">
+                                <Border.Margin>
+                                    <Binding Path ="FontSize"
+                                             RelativeSource="{RelativeSource 
+                                                Mode=FindAncestor,
+                                                AncestorType=Slider}"
+                                             Converter="{StaticResource MarginModifierConverter}">
+                                        <Binding.ConverterParameter>
+                                            <Thickness Top="-1.25"/>
+                                        </Binding.ConverterParameter>
+                                    </Binding>
+                                </Border.Margin>
+                                <TextBlock TextAlignment="Center" 
+                                           HorizontalAlignment="Stretch"
+                                           Margin="2" Padding="2"
+                                           Foreground="{x:Static SystemColors.InfoTextBrush}">
+                                    <TextBlock.Text>
+                                        <Binding Path="Value"
+                                                     RelativeSource="{RelativeSource FindAncestor,
+                                                        AncestorType=Slider}"
+                                                     StringFormat="{loc:Text Key=Slider_PixelToolTipFormat}"/>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </Border>
+                            <ContentControl.Visibility>
+                                <Binding Path="IsMouseOver"
+                                         RelativeSource="{RelativeSource FindAncestor,
+                                            AncestorType=Slider}"
+                                         Converter="{StaticResource BoolToVisibilityConverter}"
+                                         ConverterParameter="{x:Static Visibility.Collapsed}"/>
+                            </ContentControl.Visibility>
+                        </ContentControl>
+                        <Ellipse x:Name="PART_ThumbGeometry"
+                                 Grid.Row="1"  Height="20" Width="20"
+                                 Margin="0" StrokeThickness="1"
+                                 Stroke="{x:Static SystemColors.ActiveBorderBrush}"
+                                 Fill="{TemplateBinding Foreground}"
+                                 />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Fill" TargetName="PART_ThumbGeometry" 
+                                    Value="{StaticResource ColorDisabledBrush}"/>
+                            <Setter Property="Stroke" TargetName="PART_ThumbGeometry" 
+                                    Value="{StaticResource BorderColorDisabledBrush}"/>
+                       </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style x:Key="SelectorThumb" TargetType="Thumb">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Foreground" >
+            <Setter.Value>
+                <RadialGradientBrush  SpreadMethod="Pad" 
+                                      GradientStops="{StaticResource SelectorSliderThumbGradientCollection}"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template" >
+            <Setter.Value>
+                <ControlTemplate  TargetType="Thumb">
+                    <Ellipse x:Name="PART_ThumbGeometry"
+                                 Height="20" Width="20"
+                                 Margin="0" StrokeThickness="0.5"
+                                 Stroke="Black"
+                                 Fill="{TemplateBinding Foreground}"
+                                 />
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Fill" TargetName="PART_ThumbGeometry" 
+                                    Value="{StaticResource ColorDisabledBrush}"/>
+                            <Setter Property="Stroke" TargetName="PART_ThumbGeometry" 
+                                    Value="{StaticResource BorderColorDisabledBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style x:Key="RepeatButtonForSlider" TargetType="RepeatButton">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="Foreground" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border 
+                            Background="{Binding
+                                RelativeSource={RelativeSource
+                                    Mode=FindAncestor,
+                                    AncestorType=RepeatButton},
+                                Path=Foreground}"
+                           BorderThickness="{Binding
+                                RelativeSource={RelativeSource
+                                    Mode=FindAncestor,
+                                    AncestorType=RepeatButton},
+                                Path=BorderThickness}"
+                            BorderBrush="{Binding
+                                RelativeSource={RelativeSource
+                                    Mode=FindAncestor,
+                                    AncestorType=RepeatButton},
+                                Path=BorderBrush}"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SliderWithValueToolTip" TargetType="Slider">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush 
+                    GradientStops="{StaticResource SliderTrackGradientCollection}"
+                    StartPoint="0, 0"
+                    EndPoint="0,1"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template" >
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition MinHeight="{TemplateBinding MinHeight}"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Name="PART_Border"
+                                VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                                Height="8" 
+                                BorderThickness="1"
+                                BorderBrush="{x:Static SystemColors.ActiveBorderBrush}"
+                                Margin="3, 0, 3, 0"
+                                Background="{TemplateBinding Background}"/>
+                        <Track Grid.Row="0" x:Name="PART_Track"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Stretch">
+                            <Track.Thumb>
+                                <Thumb Name="PART_Thumb" 
+                                    Style="{StaticResource ThumbWithValueToolTip}"/>
+                            </Track.Thumb>
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton 
+                                    Margin="0, 0, 12.5, 0"
+                                    Command="Slider.DecreaseLarge"
+                                    Style="{StaticResource RepeatButtonForSlider}"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton
+                                    Margin="-2.5, 0, 0, 0"
+                                    Command="Slider.IncreaseLarge"
+                                    Style="{StaticResource RepeatButtonForSlider}"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="PART_Border" Property="Background" 
+                                    Value="{StaticResource ColorDisabledBrush}"/>
+                            <Setter TargetName="PART_Border" Property="BorderBrush" 
+                                    Value="{StaticResource BorderColorDisabledBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SlaveMasterSlider" TargetType="Slider">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Height" Value="20"/>
+        <Setter Property="Width" Value="80"/>
+        <Setter Property="Minimum" Value="1"/>
+        <Setter Property="Maximum" Value="3"/>
+        <Setter Property="IsSnapToTickEnabled" Value="True"/>
+        <Setter Property="TickFrequency" Value="1"/>
+        <Setter Property="Template" >
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition MinHeight="{TemplateBinding MinHeight}"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Name="PART_Border"
+                                VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                                BorderThickness="1" 
+                                CornerRadius="10"
+                                BorderBrush="{x:Static SystemColors.ActiveBorderBrush}"
+                                Margin="0, 0, 0, 0"
+                               >
+                            <Border.Background>
+                                <SolidColorBrush x:Name="PART_BorderBrush" 
+                                                 Color="{StaticResource BackgroundColor_2}"
+                                                 />
+                            </Border.Background>
+                        </Border>
+                        <Track Grid.Row="0" x:Name="PART_Track"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Stretch"
+                               Margin="3, 0, 3, 0">
+                            <Track.Thumb>
+                                <Thumb Name="PART_Thumb" 
+                                    Style="{StaticResource SelectorThumb}"/>
+                            </Track.Thumb>
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton 
+                                    Margin="0, 0, 12.5, 0"
+                                    Command="Slider.DecreaseLarge"
+                                    Style="{StaticResource RepeatButtonForSlider}"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton
+                                    Margin="-2.5, 0, 0, 0"
+                                    Command="Slider.IncreaseLarge"
+                                    Style="{StaticResource RepeatButtonForSlider}"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="PART_Border" Property="Background" 
+                                    Value="{StaticResource ColorDisabledBrush}"/>
+                            <Setter TargetName="PART_Border" Property="BorderBrush" 
+                                    Value="{StaticResource BorderColorDisabledBrush}"/>
+                        </Trigger>
+                        <Trigger Property="Value" Value="3">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard x:Name="Animation_To_3">
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color">
+                                        <ColorAnimation 
+                                            From="{StaticResource BackgroundColor_2}"
+                                            To="{StaticResource BackgroundColor_3}"
+                                            Duration="{StaticResource ColorChangeDuration}"
+                                            FillBehavior="HoldEnd"
+                                            />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard x:Name="Animation_From_3">
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color">
+                                        <ColorAnimation 
+                                            From="{StaticResource BackgroundColor_3}"
+                                            To="{StaticResource BackgroundColor_2}"
+                                            Duration="{StaticResource ColorChangeDuration}"
+                                            FillBehavior="Stop"
+                                            />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="Value" Value="1">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard x:Name="Animation_To_1" >
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color"
+                                               >
+                                        <ColorAnimation 
+                                            From="{StaticResource BackgroundColor_2}"
+                                            To="{StaticResource BackgroundColor_1}"
+                                            Duration="{StaticResource ColorChangeDuration}"
+                                            FillBehavior="HoldEnd"
+                                           />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard x:Name="Animation_From_1">
+                                    <Storyboard TargetName="PART_BorderBrush" TargetProperty="Color">
+                                        <ColorAnimation 
+                                            From="{StaticResource BackgroundColor_1}"
+                                            To="{StaticResource BackgroundColor_2}"
+                                            Duration="{StaticResource ColorChangeDuration}"
+                                            FillBehavior="Stop"
+                                            />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                                <ResumeStoryboard BeginStoryboardName="Animation_To_1"/>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+</ResourceDictionary>

@@ -39,7 +39,7 @@
                                     <ContextMenu.ItemContainerStyle>
                                         <Style TargetType="{x:Type MenuItem}">
                                             <Setter Property="Command" Value="{Binding Command}"/>
-                                            <Setter Property="CommandParameter" Value="{Binding RelativeSource={RelativeSource Self}}"/>
+                                            <Setter Property="CommandParameter" Value="{Binding Header}"/>
                                         </Style>
                                     </ContextMenu.ItemContainerStyle>
                                 </ContextMenu>
@@ -55,16 +55,13 @@
                                     <CheckBox.IsChecked>
                                         <MultiBinding Converter="{StaticResource ResourceKey=CameraKeyToValueMultiConverter}" 
                                                       UpdateSourceTrigger="PropertyChanged" Mode="OneWay">
-                                            <Binding Path="Key" Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding Path="Key" Mode="OneWay" />
                                             <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" 
                                                      Path="DataContext.CameraPanelSelectedItems" Mode="OneWay"
-                                                     UpdateSourceTrigger="PropertyChanged"/>
+                                                     />
                                         </MultiBinding>
                                     </CheckBox.IsChecked>
                                 </CheckBox>
-                                      <!--Checked="{cmnds:EventToCommand CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"
-                                      Unchecked="{cmnds:EventToCommand CameraTreeViewSelectionChangedCommand, DataContextProviderControl=DipolWindow}"-->
-                                <!--CameraBase.ToString() to get camera name-->
                                 <Label Content="{Binding Value.Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}" VerticalAlignment="Center" Width="155"/>
                             </StackPanel>
                             <!--Second horizontal panel contains temperature information-->
@@ -81,8 +78,7 @@
                                         ConverterParameter="Temp"
                                         UpdateSourceTrigger="PropertyChanged"
                                         StringFormat="\{0,6:#0.00\}">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                                 UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
                                             <Binding Path="Key"/>
                                         </MultiBinding>
                                     </Label.Content>
@@ -93,8 +89,7 @@
                                             Converter="{StaticResource ResourceKey=TemperatureToBrushMultiConverter}"
                                             ConverterParameter="{StaticResource TemperatureColorBrushCollection}"
                                             UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                                 UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
                                             <Binding Path="Key"/>
                                         </MultiBinding>
                                     </Label.Foreground>
@@ -107,8 +102,7 @@
                                             Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
                                             ConverterParameter="TempStatus"
                                             UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                                 UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
                                             <Binding Path="Key"/>
                                         </MultiBinding>
                                     </Label.Content>
@@ -118,8 +112,7 @@
                                             Converter="{StaticResource ResourceKey=TemperatureStatusToBrushMultiConverter}"
                                             ConverterParameter="{StaticResource TemperatureStatusColorBrushCollection}"
                                             UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                                 UpdateSourceTrigger="PropertyChanged"/>
+                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
                                             <Binding Path="Key"/>                                            
                                         </MultiBinding>
                                     </Label.Foreground>
@@ -147,7 +140,17 @@
     
     
     <!--Camera tab view template-->
-    <DataTemplate x:Key="TabControlItemTemplate" DataType="{x:Type vm:ConnectedCameraViewModel}">
+    <DataTemplate 
+        x:Key="TabControlItemTemplate" 
+        DataType="{x:Type vm:ConnectedCameraViewModel}">
         <cntrl:CameraTab/>
+    </DataTemplate>
+
+    <DataTemplate 
+        x:Key="TabControlItemHeaderTemplate"
+        DataType="{x:Type vm:ConnectedCameraViewModel}">
+        <TextBlock
+            Text="{Binding Camera, Mode=OneWay, Converter={StaticResource CameraToStringAliasConverter}}">
+        </TextBlock>
     </DataTemplate>
 </ResourceDictionary>

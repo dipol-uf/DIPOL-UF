@@ -1,25 +1,33 @@
 ﻿//    This file is part of Dipol-3 Camera Manager.
 
-//    Dipol-3 Camera Manager is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-
-//    Dipol-3 Camera Manager is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//    GNU General Public License for more details.
-
-//    You should have received a copy of the GNU General Public License
-//    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
-//
-//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+//     MIT License
+//     
+//     Copyright(c) 2018 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
 
 //#define NO_ACTUAL_CAMERA
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
@@ -34,6 +42,8 @@ using ANDOR_CS.Exceptions;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_Remote.Interfaces;
+using Newtonsoft.Json;
+using SettingsManager;
 
 namespace DIPOL_Remote.Classes
 {
@@ -47,12 +57,14 @@ namespace DIPOL_Remote.Classes
         InstanceContextMode = InstanceContextMode.PerSession,
         UseSynchronizationContext = true,
         IncludeExceptionDetailInFaults = true)]
-    public sealed class RemoteControl : IRemoteControl, IDisposable
+    internal sealed class RemoteControl : IRemoteControl, IDisposable
     {
         /// <summary>
         /// Defines max number of attempts to create unique identifier.
         /// </summary>
         private static readonly int MaxTryAddAttempts = 30;
+
+        private static JsonSettings Config;
 
         /// <summary>
         /// Unique ID of the current session
@@ -70,25 +82,23 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Thread-safe collection of all active instances of AcquisitionSettings.
         /// </summary>
-        private ConcurrentDictionary<string,  SettingsBase> settings
+        private readonly ConcurrentDictionary<string,  SettingsBase> settings
             = new ConcurrentDictionary<string,  SettingsBase>();
 
-        private ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> activeTasks
+        private readonly ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> activeTasks
             = new ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>();
 
         /// <summary>
         /// Thread-safe collection of all active <see cref="RemoteControl"/> service instances.
         /// </summary>
-        private static ConcurrentDictionary<string, RemoteControl> serviceInstances 
+        private static readonly ConcurrentDictionary<string, RemoteControl> serviceInstances 
             = new ConcurrentDictionary<string, RemoteControl>();
         /// <summary>
         /// Thread-safe collection of active remote cameras.
         /// </summary>
-        private static ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
+        private static readonly ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
             = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
 
-
-       
         /// <summary>
         /// Unique ID of current session
         /// </summary>
@@ -555,6 +565,9 @@ namespace DIPOL_Remote.Classes
            int CloseTime) GetShutter(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Shutter;
         [OperationBehavior]
+        public bool GetIsTemperatureMonitored(int camIndex)
+            => GetCameraSafe(sessionID, camIndex).IsTemperatureMonitored;
+        [OperationBehavior]
         public (Version EPROM, Version COFFile, Version Driver, Version Dll) GetSoftware(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Software;
         [OperationBehavior]
@@ -564,7 +577,7 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public (byte[] Data, int Width, int Height, TypeCode TypeCode) PullNewImage(int camIndex)
         {
-            if (GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out ImageDisplayLib.Image im))
+            if (GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out var im))
                 return (im.GetBytes(), im.Width, im.Height, im.UnderlyingType);
             else
                 throw new Exception();
@@ -729,6 +742,59 @@ namespace DIPOL_Remote.Classes
             else
                 return null;
 
+        }
+
+        public void RequestCreateCamera(int camIndex)
+        {
+            Task.Run(() =>
+            {
+                var result = true;
+                try
+                {
+                    CreateCamera(camIndex);
+                }
+                catch
+                {
+                    result = false;
+                }
+
+
+                var isAccepted = GetContext()
+                    ?.GetCallbackChannel<IRemoteCallback>()
+                    ?.NotifyCameraCreatedAsynchronously(camIndex, sessionID, result);
+
+                if (!isAccepted ?? true)
+                    RemoveCamera(camIndex);
+            });
+
+        }
+
+        static RemoteControl()
+        {
+            LoadSettings();
+        }
+
+        private static void LoadSettings(in string path = "dipolconfig.json")
+        {
+            JsonSettings settings = new JsonSettings();
+            if (File.Exists(Path.Combine(Environment.CurrentDirectory, path)))
+                using (var str = new StreamReader(Path.Combine(Environment.CurrentDirectory, path)))
+                {
+                    try
+                    {
+                        settings = new JsonSettings(str.ReadToEnd());
+                    }
+                    catch (JsonReaderException jre)
+                    {
+                        settings = new JsonSettings();
+                    }
+                    catch
+                    {
+                        //TODO: Add logging system to this level and report other IO errors.
+                    }
+                }
+
+            Config = settings;
         }
     }
 }

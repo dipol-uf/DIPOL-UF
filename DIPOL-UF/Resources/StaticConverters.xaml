@@ -16,4 +16,9 @@
     <cnvrt:EnumToDescriptionValueConverter x:Key="EnumToDescriptionConverter"/>
     <cnvrt:BoolToBoolMultiValueConverter x:Key="BoolToBoolMultiConverter"/>
     <cnvrt:ValueTupleToValueValueConverter x:Key="ValueTupleToValueConverter"/>
+    <cnvrt:GeometryRulesToStreamGeometryValueConverter x:Key="GeometryRulesToStreamGeometryConverter"/>
+    <cnvrt:MarginModifierValueConverter x:Key="MarginModifierConverter"/>
+    <cnvrt:DefaultValueConverter x:Key="DefaultConverter"/>
+    <!-- Debug converter -->
+    <cnvrt:DebugConverter x:Key="Debug"/>
 </ResourceDictionary>

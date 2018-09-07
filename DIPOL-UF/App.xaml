@@ -11,6 +11,7 @@
                 <ResourceDictionary Source="/DIPOL-UF;component/Resources/DataProviders.xaml"/>
                 <ResourceDictionary Source="/DIPOL-UF;component/Resources/Styles.xaml"/>
                 <ResourceDictionary Source="/DIPOL-UF;component/Resources/ItemTemplates.xaml"/>
+                <ResourceDictionary Source="/DIPOL-UF;component/Resources/ControlTemplates.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
