@@ -27,6 +27,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
@@ -41,6 +42,8 @@ using ANDOR_CS.Exceptions;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_Remote.Interfaces;
+using Newtonsoft.Json;
+using SettingsManager;
 
 namespace DIPOL_Remote.Classes
 {
@@ -60,6 +63,8 @@ namespace DIPOL_Remote.Classes
         /// Defines max number of attempts to create unique identifier.
         /// </summary>
         private static readonly int MaxTryAddAttempts = 30;
+
+        private static JsonSettings Config;
 
         /// <summary>
         /// Unique ID of the current session
@@ -762,6 +767,34 @@ namespace DIPOL_Remote.Classes
                     RemoveCamera(camIndex);
             });
 
+        }
+
+        static RemoteControl()
+        {
+            LoadSettings();
+        }
+
+        private static void LoadSettings(in string path = "dipolconfig.json")
+        {
+            JsonSettings settings = new JsonSettings();
+            if (File.Exists(Path.Combine(Environment.CurrentDirectory, path)))
+                using (var str = new StreamReader(Path.Combine(Environment.CurrentDirectory, path)))
+                {
+                    try
+                    {
+                        settings = new JsonSettings(str.ReadToEnd());
+                    }
+                    catch (JsonReaderException jre)
+                    {
+                        settings = new JsonSettings();
+                    }
+                    catch
+                    {
+                        //TODO: Add logging system to this level and report other IO errors.
+                    }
+                }
+
+            Config = settings;
         }
     }
 }
