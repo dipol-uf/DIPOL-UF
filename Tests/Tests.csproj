@@ -106,6 +106,7 @@
     <Compile Include="DebuggingTests.cs" />
     <Compile Include="DipolImageTests.cs" />
     <Compile Include="CameraTests.cs" />
+    <Compile Include="FitsTests.cs" />
     <Compile Include="JsonSettingsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteCameraTests.cs" />
@@ -123,6 +124,10 @@
     <ProjectReference Include="..\DipolImage\DipolImage.csproj">
       <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
       <Name>DipolImage</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FITS-CS\FITS-CS.csproj">
+      <Project>{89516f86-17d4-4ed3-89f2-d20df612c7de}</Project>
+      <Name>FITS-CS</Name>
     </ProjectReference>
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj">
       <Project>{f9a3b5ae-04c0-43cc-a0b7-7e03924b6698}</Project>
