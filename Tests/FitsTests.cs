@@ -37,24 +37,32 @@ namespace Tests
     [TestClass]
     public class FitsTests
     {
-        private Image _testImage;
+        private List<double> _testData;
 
         [TestInitialize]
         public void Initialzie()
         {
             var r = new Random();
 
-            var array = Enumerable.Range(0, 1024 * 512)
-                      .Select((i) => (int) ((100 * Math.Sqrt(i % 512) + r.Next(0, 512))))
-                      .ToArray();
+            _testData = Enumerable.Range(0, 1024 * 512)
+                      .Select((i) => ((100 * Math.Sqrt(i % 256) + r.Next(0, 512))))
+                      .ToList();
 
-            _testImage = new Image(array, 1024, 512);
         }
 
         [TestMethod]
         public void Test()
         {
-            FITSStream.WriteImage(_testImage, FITSImageType.Int32, "test.fits");
+            FITSStream.WriteImage(new Image(_testData.ToArray(), 1024, 512),
+                FITSImageType.Double, "test_dbl.fits");
+            FITSStream.WriteImage(new Image(_testData.Select((x) => (float) x).ToArray(), 1024, 512),
+                FITSImageType.Single, "test_sng.fits");
+            FITSStream.WriteImage(new Image(_testData.Select((x) => (int) x).ToArray(), 1024, 512),
+                FITSImageType.Int32, "test_i32.fits");
+            FITSStream.WriteImage(new Image(_testData.Select((x) => (short) x).ToArray(), 1024, 512),
+                FITSImageType.Int16, "test_i16.fits");
+            FITSStream.WriteImage(new Image(_testData.Select((x) => (byte)x).ToArray(), 1024, 512),
+                FITSImageType.UInt8, "test_ui8.fits");
         }
     }
 }
