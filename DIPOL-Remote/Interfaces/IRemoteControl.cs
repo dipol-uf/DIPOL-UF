@@ -227,5 +227,8 @@ namespace DIPOL_Remote.Interfaces
 
         [OperationContract(IsOneWay = false)]
         void RequestCancellation(string taskID);
+
+        //[OperationContract(IsOneWay = false)]
+        //void SaveImageToRemoteDrive()
     }
 }

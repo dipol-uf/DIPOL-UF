@@ -54,6 +54,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
@@ -88,6 +91,13 @@
       <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
       <Name>DipolImage</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SettingsManager\SettingsManager.csproj">
+      <Project>{f9a3b5ae-04c0-43cc-a0b7-7e03924b6698}</Project>
+      <Name>SettingsManager</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
