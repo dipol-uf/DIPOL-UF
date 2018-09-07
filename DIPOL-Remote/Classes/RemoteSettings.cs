@@ -13,7 +13,7 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
 //
-//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+//    Copyright 2017-2018, Ilia Kosenkov, Tuorla Observatory, Finland
 
 using System;
 using System.Collections.Generic;
