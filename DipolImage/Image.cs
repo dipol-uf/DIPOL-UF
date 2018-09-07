@@ -38,7 +38,8 @@ namespace DipolImage
             TypeCode.UInt16,
             TypeCode.Int16,
             TypeCode.UInt32,
-            TypeCode.Int32
+            TypeCode.Int32,
+            TypeCode.Byte
         };
 
         [DataMember]
@@ -125,6 +126,13 @@ namespace DipolImage
             _baseArray = Array.CreateInstance(tp, width * height);
             switch (type)
             {
+                case TypeCode.Byte:
+                    size = sizeof(byte);
+
+                    for (var i = 0; i < Height; i++)
+                        for (var j = 0; j < Width; j++)
+                            Set(initialArray[(i * width + j) * size], i, j);
+                    break;
                 case TypeCode.UInt16:
                     size = sizeof(ushort);
 
@@ -181,6 +189,12 @@ namespace DipolImage
             byte[] byteArray;
             switch (_typeCode)
             {
+                case TypeCode.Byte:
+                {
+                    byteArray = new byte[_baseArray.Length];
+                    Array.Copy(_baseArray, byteArray, _baseArray.Length);
+                    break;
+                }
                 case TypeCode.UInt16:
                 {
                     const int size = sizeof(ushort);
@@ -248,6 +262,18 @@ namespace DipolImage
 
             switch (_typeCode)
             {
+                case TypeCode.Byte:
+                {
+                    var localMax = byte.MinValue;
+                    byte localVal;
+                    for (var i = 0; i < Height; i++)
+                        for (var j = 0; j < Width; j++)
+                            if ((localVal = Get<byte>(i, j)) > localMax)
+                                localMax = localVal;
+
+                    max = localMax;
+                        break;
+                }
                 case TypeCode.UInt16:
                 {
                     var localMax = ushort.MinValue;
@@ -332,6 +358,18 @@ namespace DipolImage
 
             switch (_typeCode)
             {
+                case TypeCode.Byte:
+                {
+                    var localMin = byte.MaxValue;
+                    byte localVal;
+                    for (var i = 0; i < Height; i++)
+                        for (var j = 0; j < Width; j++)
+                            if ((localVal = Get<byte>(i, j)) < localMin)
+                                localMin = localVal;
+
+                    min = localMin;
+                    break;
+                }
                 case TypeCode.UInt16:
                     {
                         var localMin = ushort.MaxValue;
@@ -421,6 +459,19 @@ namespace DipolImage
 
             switch (_typeCode)
             {
+                case TypeCode.Byte:
+                {
+                    var locLow = (byte)(Math.Floor(low));
+                    var locHigh = (byte)(Math.Ceiling(high));
+                    for (var i = 0; i < Height; i++)
+                        for (var j = 0; j < Width; j++)
+                            if (Get<byte>(i, j) < locLow)
+                                Set(locLow, i, j);
+                            else if (Get<byte>(i, j) > locHigh)
+                                Set(locHigh, i, j);
+                    break;
+                }
+
                 case TypeCode.UInt16:
                 {
                     var locLow = (ushort)(Math.Floor(low));
@@ -507,6 +558,46 @@ namespace DipolImage
 
             switch (_typeCode)
             {
+                case TypeCode.Byte:
+                {
+                    var globMin = Convert.ToByte(gMin);
+                    var globMax = Convert.ToByte(gMax);
+                    var locMax = (byte)max;
+                    var locMin = (byte)min;
+
+                    void Worker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set((byte)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
+                                                   (Get<byte>(k, j) - locMin)), k, j);
+                    }
+
+                    void FlatWorker(int k)
+                    {
+                        for (var j = 0; j < Width; j++)
+                            Set(globMin, k, j);
+                    }
+
+                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
+                    {
+                        if (locMin == locMax)
+                            Parallel.For(0, Height, FlatWorker);
+                        else
+                            Parallel.For(0, Height, Worker);
+                    }
+
+                    else
+                    {
+                        if (locMin == locMax)
+                            for (var i = 0; i < Height; i++)
+                                FlatWorker(i);
+                        else
+                            for (var i = 0; i < Height; i++)
+                                Worker(i);
+                    }
+
+                    break;
+                }
                 case TypeCode.UInt16:
                 {
                     var globMin = Convert.ToUInt16(gMin);
@@ -757,6 +848,20 @@ namespace DipolImage
 
             switch (_typeCode)
             {
+                case TypeCode.Byte:
+                {
+                    if (Math.Abs(lvl) < double.Epsilon)
+                        return (byte)Min();
+                    if (Math.Abs(lvl - 1) < double.Epsilon)
+                        return (byte)Max();
+                    var query = ((byte[])_baseArray).OrderBy(x => x);
+
+                    var length = (int)Math.Ceiling(lvl * Width * Height);
+
+
+                    return query.Skip(length - 1).Take(1).First();
+
+                }
                 case TypeCode.UInt16:
                 {
                     if (Math.Abs(lvl) < double.Epsilon)
@@ -849,6 +954,14 @@ namespace DipolImage
         {
             switch (UnderlyingType)
             {
+
+                case TypeCode.Byte:
+                {
+                    var data = (byte[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToByte(data[i] + value);
+                    break;
+                }
                 case TypeCode.UInt16:
                 {
                     var data = (ushort[])_baseArray;
@@ -899,6 +1012,13 @@ namespace DipolImage
         {
             switch (UnderlyingType)
             {
+                case TypeCode.Byte:
+                {
+                    var data = (byte[])_baseArray;
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = Convert.ToByte(data[i] * value);
+                    break;
+                }
                 case TypeCode.UInt16:
                 {
                     var data = (ushort[])_baseArray;
@@ -962,6 +1082,16 @@ namespace DipolImage
 
             switch (_typeCode)
             {
+
+                case TypeCode.Byte:
+                {
+                    var castArray = (byte[])newArray;
+
+                    for (var i = 0; i < Height; i++)
+                        for (var j = 0; j < Width; j++)
+                            castArray[j * Height + i] = Get<byte>(i, j);
+                    break;
+                }
                 case TypeCode.Int16:
                 {
                     var castArray = (short[]) newArray;
@@ -1034,6 +1164,16 @@ namespace DipolImage
 
             switch (_typeCode)
             {
+
+                case TypeCode.Byte:
+                {
+                    var thisArr = (byte[])_baseArray;
+                    var otherArr = (byte[])other._baseArray;
+                    for (var i = 0; i < Width * Height; i++)
+                        if (thisArr[i] != otherArr[i])
+                            return false;
+                    return true;
+                }
                 case TypeCode.Int16:
                 {
                     var thisArr = (short[]) _baseArray;
@@ -1101,6 +1241,8 @@ namespace DipolImage
         {
             switch (_typeCode)
             {
+                case TypeCode.Byte:
+                    return ((byte[])_baseArray).Aggregate(0, (sum, pix) => sum ^ (7 * pix % int.MaxValue));
                 case TypeCode.Int16:
                     return ((short[]) _baseArray).Aggregate(0, (sum, pix) => sum ^ (7 * pix % int.MaxValue));
                 case TypeCode.UInt16:
