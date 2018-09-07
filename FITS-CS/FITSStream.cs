@@ -144,24 +144,28 @@ namespace FITS_CS
             }
         }
 
-        public static void WriteImage(Image image, FITSImageType type, string path)
+        public static void WriteImage(Image image, FITSImageType type, string path, List<FITSKey> extraKeys = null)
         {
 
             var keys = new List<FITSKey>
             {
                 FITSKey.CreateNew("SIMPLE", FITSKeywordType.Logical, true),
-                FITSKey.CreateNew("BITPIX", FITSKeywordType.Integer, (int)Math.Abs((short)type)),
+                FITSKey.CreateNew("BITPIX", FITSKeywordType.Integer, (int)(short)type),
                 FITSKey.CreateNew("NAXIS", FITSKeywordType.Integer, 2),
                 FITSKey.CreateNew("NAXIS1", FITSKeywordType.Integer, image.Width),
                 FITSKey.CreateNew("NAXIS2", FITSKeywordType.Integer, image.Height),
-                FITSKey.CreateNew("NAXIS", FITSKeywordType.Integer, 2),
-                FITSKey.CreateNew("END", FITSKeywordType.Blank, null)
+                FITSKey.CreateNew("NAXIS", FITSKeywordType.Integer, 2)
             };
+
+            if(extraKeys != null)
+                keys.AddRange(extraKeys);
+
+            keys.Add(FITSKey.CreateNew("END", FITSKeywordType.Blank, null));
 
             var keyUnits = FITSUnit.GenerateFromKeywords(keys.ToArray());
             var dataUnits = FITSUnit.GenerateFromArray(image.GetBytes(), type);
 
-            using (var str = new FITSStream(new FileStream(path, FileMode.OpenOrCreate)))
+            using (var str = new FITSStream(new FileStream(path, FileMode.Create)))
             {
                 foreach (var unit in keyUnits)
                     str.WriteUnit(unit);
