@@ -34,6 +34,7 @@ namespace Tests
     public class JsonSettingsTests
     {
         private const string Path = "../../../Tests input/test.Json";
+        private const string Path2 = "../../../Tests/Tests input/test.Json";
 
         public JsonSettings Settings;
 
@@ -41,8 +42,17 @@ namespace Tests
         public void Initialize()
         {
             string str;
-            using (var reader = new StreamReader(Path))
-                str = reader.ReadToEnd();
+            try
+            {
+                using (var reader = new StreamReader(Path))
+                    str = reader.ReadToEnd();
+            }
+            catch
+            {
+                using (var reader = new StreamReader(Path2))
+                    str = reader.ReadToEnd();
+            }
+
             Settings = new JsonSettings(str);
         }
 
