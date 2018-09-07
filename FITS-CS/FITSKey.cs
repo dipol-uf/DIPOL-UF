@@ -1,9 +1,31 @@
-﻿using System;
+﻿//    This file is part of Dipol-3 Camera Manager.
+
+//     MIT License
+//     
+//     Copyright(c) 2018 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-
 using Complex = System.Numerics.Complex;
 
 namespace FITS_CS
@@ -20,25 +42,25 @@ namespace FITS_CS
         public static readonly int KeyHeaderSize = 8;
         public static readonly int LastValueColumnFixed = 29;
         public static readonly int NumericValueMaxLengthFixed = 20;
-        private string data = new string(' ', KeySize);
-        private object rawValue = null;
 
         public static FITSKey Empty => new FITSKey();
 
-        public object RawValue => rawValue;
-        public byte[] Data => Encoding.ASCII.GetBytes(data.ToArray());
+        public object RawValue { get; private set; }
+
+        public byte[] Data => Encoding.ASCII.GetBytes(KeyString.ToArray());
         public string Extension
         {
             get;
             internal set;
         } = null;
-        public string KeyString => data;
-        public bool IsEmpty => String.IsNullOrWhiteSpace(data);
+
+        public string KeyString { get; private set; } = new string(' ', KeySize);
+        public bool IsEmpty => string.IsNullOrWhiteSpace(KeyString);
         public string Header
         {
             get;
             private set;
-        } = null;
+        }
         public string Body
         {
             get;
@@ -48,7 +70,7 @@ namespace FITS_CS
         {
             get;
             private set;
-        } = null;
+        }
         public string Value
         {
             get;
@@ -60,7 +82,7 @@ namespace FITS_CS
             private set;
         }
 
-        public bool IsExtension => !IsEmpty && String.IsNullOrWhiteSpace(Header);
+        public bool IsExtension => !IsEmpty && string.IsNullOrWhiteSpace(Header);
         public FITSKey(byte[] data, int offset = 0)
         {
             if (data == null)
@@ -68,73 +90,73 @@ namespace FITS_CS
             if ((data.Length <= KeySize) || (offset + KeySize > data.Length))
                 throw new ArgumentException($"{nameof(data)} has wrong length");
 
-            this.data = new string(Encoding.ASCII.GetChars(data, offset, KeySize));
+            KeyString = new string(Encoding.ASCII.GetChars(data, offset, KeySize));
 
-            Header = this.data.Substring(0, KeyHeaderSize).Trim();
-            Body = this.data.Substring(KeyHeaderSize);
-            int indexSlash = -1;
-            bool isInQuotes = false;
-            for (int i = KeyHeaderSize; i < KeySize; i++)
-                if (this.data[i] == '\'')
+            Header = KeyString.Substring(0, KeyHeaderSize).Trim();
+            Body = KeyString.Substring(KeyHeaderSize);
+            var indexSlash = -1;
+            var isInQuotes = false;
+            for (var i = KeyHeaderSize; i < KeySize; i++)
+                if (KeyString[i] == '\'')
                     isInQuotes = !isInQuotes;
-                else if (this.data[i] == '/' && !isInQuotes)
+                else if (KeyString[i] == '/' && !isInQuotes)
                 {
                     indexSlash = i;
                     break;
                 }
-            Comment = indexSlash >= KeyHeaderSize ? this.data.Substring(indexSlash + 1) : "";
-            if (this.data[KeyHeaderSize] == '=')
+            Comment = indexSlash >= KeyHeaderSize ? KeyString.Substring(indexSlash + 1) : "";
+            if (KeyString[KeyHeaderSize] == '=')
             {
                 Value = indexSlash >= KeyHeaderSize
-                    ? this.data.Substring(KeyHeaderSize + 1, indexSlash - KeyHeaderSize - 1)
-                    : this.data.Substring(KeyHeaderSize + 1);
+                    ? KeyString.Substring(KeyHeaderSize + 1, indexSlash - KeyHeaderSize - 1)
+                    : KeyString.Substring(KeyHeaderSize + 1);
                 var trimVal = Value.Trim();
 
-                if (String.IsNullOrWhiteSpace(trimVal))
+                if (string.IsNullOrWhiteSpace(trimVal))
                 {
                     Type = FITSKeywordType.Blank;
-                    rawValue = null;
+                    RawValue = null;
                 }
                 else if (trimVal == "F" || trimVal == "T")
                 {
                     Type = FITSKeywordType.Logical;
-                    rawValue = trimVal == "T";
+                    RawValue = trimVal == "T";
                 }
                 else if (trimVal.Contains('\''))
                 {
                     Type = FITSKeywordType.String;
-                    rawValue = trimVal.TrimStart('\'').TrimEnd('\'').Replace("''", "'");
+                    RawValue = trimVal.TrimStart('\'').TrimEnd('\'').Replace("''", "'");
                 }
                 else if (trimVal.Contains(":"))
                 {
                     Type = FITSKeywordType.Complex;
-                    double[] split = trimVal
+                    var split = trimVal
                         .Split(':')
                         .Select(s => double.Parse(s, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo))
                         .ToArray();
-                    rawValue = new System.Numerics.Complex(split[0], split[1]);
+                    RawValue = new Complex(split[0], split[1]);
                 }
-                else if (int.TryParse(trimVal, out int intVal))
+                else if (int.TryParse(trimVal, out var intVal))
                 {
                     Type = FITSKeywordType.Integer;
-                    rawValue = intVal;
+                    RawValue = intVal;
                 }
-                else if (Double.TryParse(trimVal, out double dVal))
+                else if (double.TryParse(trimVal, out var dVal))
                 {
                     Type = FITSKeywordType.Float;
-                    rawValue = dVal;
+                    RawValue = dVal;
                 }
                 else throw new ArgumentException("Keyword value is of unknown format.");
             }
             else
             {
-                Comment = this.data.Substring(KeyHeaderSize + 1).Trim();
+                Comment = KeyString.Substring(KeyHeaderSize + 1).Trim();
                 Value = "";
-                if (String.IsNullOrWhiteSpace(Comment))
+                if (string.IsNullOrWhiteSpace(Comment))
                     Type = FITSKeywordType.Blank;
                 else
                     Type = FITSKeywordType.Comment;
-                rawValue = null;
+                RawValue = null;
             }
         }
         private FITSKey()
@@ -142,23 +164,23 @@ namespace FITS_CS
 
         public T GetValue<T>()
         {
-            dynamic ret = default(T);
+            dynamic ret;
             if (typeof(T) == typeof(bool) && Type == FITSKeywordType.Logical)
-                ret = (bool)rawValue;
+                ret = (bool)RawValue;
             else if (typeof(T) == typeof(string) && Type == FITSKeywordType.String)
-                ret = (string)rawValue;
+                ret = (string)RawValue;
             else if (typeof(T) == typeof(int) && Type == FITSKeywordType.Integer)
-                ret = (int)rawValue;
+                ret = (int)RawValue;
             else if (typeof(T) == typeof(double) && Type == FITSKeywordType.Float)
-                ret = (double)rawValue;
-            else if (typeof(T) == typeof(System.Numerics.Complex) && Type == FITSKeywordType.Complex)
-                ret = (System.Numerics.Complex)rawValue;
+                ret = (double)RawValue;
+            else if (typeof(T) == typeof(Complex) && Type == FITSKeywordType.Complex)
+                ret = (Complex)RawValue;
             else throw new TypeAccessException($"Illegal combination of {Type} and {typeof(T)}.");
             return ret;
         }
-        public override string ToString() => data;
+        public override string ToString() => KeyString;
        
-        public static bool IsFITSKey(byte[] data, int offset = 0)
+        public static bool IsFitsKey(byte[] data, int offset = 0)
         {
             if (data == null)
                 throw new ArgumentNullException($"{nameof(data)} is null");
@@ -175,7 +197,7 @@ namespace FITS_CS
         public static IEnumerable<FITSKey> JoinKeywords(params FITSUnit[] keyUnits)
         {
             foreach (var keyUnit in keyUnits)
-                if (keyUnit.TryGetKeys(out List<FITSKey> keys))
+                if (keyUnit.TryGetKeys(out var keys))
                     foreach (var key in keys)
                         yield return key;
         }
@@ -190,7 +212,7 @@ namespace FITS_CS
         /// <param name="layout">Indicates which layout to use.</param>
         /// <exception cref="ArgumentException"/>
         /// <exception cref="ArgumentNullException"/>
-        /// <returns>A new isntance of FITS keyword</returns>
+        /// <returns>A new instance of FITS keyword</returns>
         public static FITSKey CreateNew(
             string header, FITSKeywordType type, object value, 
             string comment = "", FITSKeyLayout layout = FITSKeyLayout.Fixed)
@@ -203,16 +225,16 @@ namespace FITS_CS
                 throw new ArgumentException($"Header's length ({header.Length}) is too large (max {KeyHeaderSize}).");
 
             // Instance of constructed keyword.
-            FITSKey key = new FITSKey();
+            var key = new FITSKey();
             // String representation of keyword
-            StringBuilder result = new StringBuilder(KeySize);
+            var result = new StringBuilder(KeySize);
             // Initialize with blanks
             result.Append(' ', KeySize);
             // Right-justified header
-            result.Insert(0, String.Format($"{{0, -{KeyHeaderSize}}}", header));
+            result.Insert(0, string.Format($"{{0, -{KeyHeaderSize}}}", header));
             key.Header = header;
             key.Type = type;
-            key.rawValue = value;
+            key.RawValue = value;
 
             // If keyword is of value type
             if (type != FITSKeywordType.Comment & type != FITSKeywordType.Blank)
@@ -227,7 +249,7 @@ namespace FITS_CS
             if (layout == FITSKeyLayout.Fixed)
             {
                 // Last index of data synbol. Used to find position of comment section.
-                int lastIndex = 0;
+                var lastIndex = 0;
 
                 // Switch keyword type
                 switch (type)
@@ -314,11 +336,11 @@ namespace FITS_CS
                 if (!string.IsNullOrWhiteSpace(comment))
                 {
                     var commLength = Math.Max(KeySize - lastIndex - 4, 0);
-                    // Comment delimeter
+                    // Comment delimiter
                     result.Insert(lastIndex + 2, "\\ ");
                     // Truncated comment
                     key.Comment = comment.Substring(0, commLength);
-                    // Inserts comment after comment delimeter
+                    // Inserts comment after comment delimiter
                     result.Insert(lastIndex + 4, key.Comment);
                 }
             }
@@ -330,9 +352,9 @@ namespace FITS_CS
                 result = result.Remove(KeySize, result.Length - KeySize);
 
             // Assigns constructed string 
-            key.data = result.ToString();
+            key.KeyString = result.ToString();
             // And body
-            key.Body = key.data.Substring(KeyHeaderSize);
+            key.Body = key.KeyString.Substring(KeyHeaderSize);
 
             return key;
         }
