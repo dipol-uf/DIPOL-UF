@@ -40,12 +40,12 @@ namespace Tests
             Assert.ThrowsException<ArgumentNullException>(() => new Image(null, 2, 3));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Image(TestArray, 0, 3));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Image(TestArray, 10, 0));
-            Assert.ThrowsException<ArgumentException>(() => new Image(TestByteArray, 1, 1));
+            Assert.ThrowsException<ArgumentException>(() => new Image(new[] {"s"}, 1, 1));
 
             Assert.ThrowsException<ArgumentNullException>(() => new Image(null, 1, 1, TypeCode.Int16));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Image(TestByteArray, 0, 3, TypeCode.Int32));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Image(TestByteArray, 10, 0, TypeCode.Int32));
-            Assert.ThrowsException<ArgumentException>(() => new Image(TestByteArray, 1, 1, TypeCode.Byte));
+            Assert.ThrowsException<ArgumentException>(() => new Image(TestByteArray, 1, 1, TypeCode.Char));
             Assert.ThrowsException<ArgumentException>(() => new Image(TestByteArray, 1, 1, (TypeCode) 45500));
 
         }
@@ -74,12 +74,18 @@ namespace Tests
             foreach (var code in Image.AllowedPixelTypes)
             {
                 var temp = (Convert.ChangeType(value, code)) ?? new object();
-                var mi = typeof(BitConverter)
-                    .GetMethods(BindingFlags.Public | BindingFlags.Static)
-                    .First(m => m.Name == "GetBytes" &&
-                                m.GetParameters().Length == 1 &&
-                                m.GetParameters().First().ParameterType == temp.GetType());
-                var bytes = (byte[])mi.Invoke(null, new [] {temp});
+                byte[] bytes;
+                if (code != TypeCode.Byte)
+                {
+                    var mi = typeof(BitConverter)
+                             .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                             .First(m => m.Name == "GetBytes" &&
+                                         m.GetParameters().Length == 1 &&
+                                         m.GetParameters().First().ParameterType == temp.GetType());
+                    bytes = (byte[]) mi.Invoke(null, new[] {temp});
+                }
+                else
+                    bytes = new [] {(byte) value};
 
                 var image = new Image(bytes, 1, 1, code);
 
@@ -105,16 +111,26 @@ namespace Tests
                 var image = new Image(initArray, 2, 1);
 
                 var bytes = image.GetBytes();
-
-                var mi = typeof(BitConverter)
-                    .GetMethods(BindingFlags.Public | BindingFlags.Static)
-                    .First(m => m.Name == "GetBytes" &&
-                                m.GetParameters().Length == 1 &&
-                                m.GetParameters().First().ParameterType == type);
-                var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
-                var reconstructed = new byte[2 * size];
-                Array.Copy((byte[])mi.Invoke(null, new[]{ initArray.GetValue(0)}), 0, reconstructed, 0, size);
-                Array.Copy((byte[])mi.Invoke(null, new[] { initArray.GetValue(1) }), 0, reconstructed, size, size);
+                byte[] reconstructed;
+                if (code != TypeCode.Byte)
+                {
+                    var mi = typeof(BitConverter)
+                             .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                             .First(m => m.Name == "GetBytes" &&
+                                         m.GetParameters().Length == 1 &&
+                                         m.GetParameters().First().ParameterType == type);
+                    var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
+                    reconstructed = new byte[2 * size];
+                    Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(0)}), 0, reconstructed, 0, size);
+                    Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(1)}), 0, reconstructed, size, size);
+                }
+                else
+                {
+                    var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
+                    reconstructed = new byte[2 * size];
+                    reconstructed[0] = ((byte[])initArray)[0];
+                    reconstructed[1] = ((byte[])initArray)[1];
+                }
 
                 CollectionAssert.AreEqual(reconstructed, bytes);
             }
@@ -320,8 +336,8 @@ namespace Tests
 
                 dynamic m_max = f_mx.GetValue(null);
 
-                var mx = code.ToString().Contains("U") ? m_max / 2 : 5000;
-                var mn = code.ToString().Contains("U") ? m_max/ 4 : -5000;
+                var mx = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max / 2 : 5000;
+                var mn = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max/ 4 : -5000;
 
                 Assert.ThrowsException<ArgumentException>(() => image.Clamp(100, 10));
 
@@ -429,11 +445,11 @@ namespace Tests
                 var array = Array.CreateInstance(type, N);
                 for(var i = 0; i < N / 4; i ++)
                     for (var j = 0; j < 4; j++)
-                        array.SetValue(Convert.ChangeType(i + j, code), i * 4 + j);
+                        array.SetValue(Convert.ChangeType((i + j) % 128, code), i * 4 + j);
 
                 var image = new Image(array, 4, N/4);
 
-                const double scalar = 123.0;
+                const double scalar = 12.0;
 
                 var copyImage = image.Copy();
 
@@ -467,7 +483,7 @@ namespace Tests
                 var array = Array.CreateInstance(type, N);
                 for (var i = 0; i < N / 4; i++)
                     for (var j = 0; j < 4; j++)
-                        array.SetValue(Convert.ChangeType(i + j, code), i * 4 + j);
+                        array.SetValue(Convert.ChangeType((i + j) % 64, code), i * 4 + j);
 
                 var image = new Image(array, 4, N / 4);
 
@@ -509,7 +525,7 @@ namespace Tests
                 for (var i = 0; i < N / 4; i++)
                     for (var j = 0; j < 4; j++)
                     {
-                        array.SetValue(Convert.ChangeType(i + j, code), i * 4 + j);
+                        array.SetValue(Convert.ChangeType((i + j) % 256, code), i * 4 + j);
                         d_array[i * 4 + j] = i + j;
                     }
 
