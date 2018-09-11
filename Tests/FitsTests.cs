@@ -24,23 +24,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DipolImage;
 using FITS_CS;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Tests
 {
-    [TestClass]
+    [TestFixture]
     public class FitsTests
     {
         private List<double> _testData;
 
-        [TestInitialize]
-        public void Initialzie()
+        [SetUp]
+        public void Initialize()
         {
             var r = new Random();
 
@@ -50,7 +47,7 @@ namespace Tests
 
         }
 
-        [TestMethod]
+        [Test]
         public void Test()
         {
             FITSStream.WriteImage(new Image(_testData.ToArray(), 1024, 512),

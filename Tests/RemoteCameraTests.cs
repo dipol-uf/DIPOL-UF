@@ -23,26 +23,21 @@
 //     SOFTWARE.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using ANDOR_CS.Exceptions;
 using DIPOL_Remote.Classes;
 using DIPOL_Remote.Faults;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Tests
 {
-    [TestClass]
+    [TestFixture]
     public class RemoteCameraTests
     {
         private DipolHost host;
         private DipolClient client;
-       
-        [TestInitialize]
+
+        [SetUp]
         public void Initialize()
         {
             host = new DipolHost();
@@ -53,7 +48,7 @@ namespace Tests
             client.Connect();
         }
 
-        [TestCleanup]
+       [TearDown]
         public void Destroy()
         {
             client.Disconnect();
@@ -62,29 +57,37 @@ namespace Tests
             host.Dispose();
         }
 
-        [TestMethod]
+        [Test]
         public void Test_IsConnected()
         {
-            Assert.IsNotNull(client.Remote);
-            Assert.IsTrue(client.GetNumberOfCameras() >= 0);
+            Assert.Multiple(() =>
+            {
+                Assert.That(client.Remote, Is.Not.Null);
+                Assert.That(client.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0));
+            });
         }
 
-        [TestMethod]
+        [Test]
         public void Test_ctor()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => RemoteCamera.Create());
-            Assert.ThrowsException<ArgumentException>(() => RemoteCamera.Create(0, 5));
-
-            Assert.ThrowsExceptionAsync<ArgumentNullException>(() => RemoteCamera.CreateAsync()).Wait();
-            Assert.ThrowsExceptionAsync<ArgumentException>(() => RemoteCamera.CreateAsync(0, 5)).Wait();
-
+            Assert.Multiple(() =>
+            {
+                Assert.Throws<ArgumentNullException>(() => RemoteCamera.Create());
+                Assert.Throws<ArgumentException>(() => RemoteCamera.Create(0, 5));
+                      
+                Assert.ThrowsAsync<ArgumentNullException>(() => RemoteCamera.CreateAsync());
+                Assert.ThrowsAsync<ArgumentException>(() => RemoteCamera.CreateAsync(0, 5));
+            });
         }
 
-        [TestMethod]
+        [Test]
         public void Test_CreateRemoteCamera_NoActualCamera()
         {
-            Assert.ThrowsException<FaultException<AndorSDKServiceException>>(() => RemoteCamera.Create(0, client));
-            Assert.ThrowsExceptionAsync<AndorSdkException>(() => RemoteCamera.CreateAsync(0, client)).Wait();
+            Assert.Multiple(() =>
+            {
+                Assert.Throws<FaultException<AndorSDKServiceException>>(() => RemoteCamera.Create(0, client));
+                Assert.ThrowsAsync<AndorSdkException>(() => RemoteCamera.CreateAsync(0, client));
+            });
         }
     }
 }

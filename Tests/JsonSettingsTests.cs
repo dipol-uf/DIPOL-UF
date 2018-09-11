@@ -30,7 +30,6 @@ using SettingsManager;
 
 namespace Tests
 {
-    //[TestClass]
     [TestFixture]
     public class JsonSettingsTests
     {
