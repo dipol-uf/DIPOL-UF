@@ -24,39 +24,43 @@
 
 using System;
 using System.ServiceModel;
-using System.Threading;
-using System.Threading.Tasks;
+using ANDOR_CS.Exceptions;
 using DIPOL_Remote.Classes;
 using DIPOL_Remote.Faults;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Tests
 {
-    [TestClass]
+    [TestFixture]
     public class DipolClientHostRemoteControlTests
     {
         private DipolHost _host;
-        [TestInitialize]
+        [SetUp]
         public void Initialize()
         {
             _host = new DipolHost();
             _host.Host();
         }
 
-        [TestCleanup]
+        [TearDown]
         public void Destroy()
         {
             _host.Dispose();
         }
 
-        [TestMethod]
+        [Test]
         public void Test_CanConnect()
         {
             using (var client = new DipolClient("localhost"))
             {
                 client.Connect();
-                Assert.IsNotNull(client.Remote);
-                Assert.IsTrue(client.GetNumberOfCameras() >= 0);
+                Assert.Multiple(() =>
+                {
+                    // ReSharper disable once AccessToDisposedClosure
+                    Assert.That(client.Remote, Is.Not.Null);
+                    // ReSharper disable once AccessToDisposedClosure
+                    Assert.That(client.GetNumberOfCameras, Is.GreaterThanOrEqualTo(0));
+                });
                 client.Disconnect();
             }
 
@@ -67,26 +71,35 @@ namespace Tests
                 TimeSpan.FromSeconds(25)))
             {
                 client.Connect();
-                Assert.IsNotNull(client.Remote);
-
-                Assert.IsTrue(client.GetNumberOfCameras() >= 0);
+                Assert.Multiple(() =>
+                {
+                    // ReSharper disable once AccessToDisposedClosure
+                    Assert.That(client.Remote, Is.Not.Null);
+                    // ReSharper disable once AccessToDisposedClosure
+                    Assert.That(client.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0));
+                });
                 client.Disconnect();
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_Properties()
         {
             using (var client = new DipolClient("localhost"))
             {
                 client.Connect();
-                Assert.AreEqual("localhost", client.HostAddress);
-                Assert.IsFalse(string.IsNullOrWhiteSpace(client.SessionID));
+                Assert.Multiple(() =>
+                {
+                    // ReSharper disable once AccessToDisposedClosure
+                    Assert.That(client.HostAddress, Is.EqualTo("localhost"));
+                    // ReSharper disable once AccessToDisposedClosure
+                    Assert.That(string.IsNullOrWhiteSpace(client.SessionID), Is.False);
+                });
                 client.Disconnect();
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_RemoteActiveCamerasCount()
         {
             using (var client = new DipolClient("localhost"))
@@ -97,14 +110,14 @@ namespace Tests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_CreateRemoteCamera_NoActualCamera()
         {
             using (var client = new DipolClient("localhost"))
             {
                 client.Connect();
                 // ReSharper disable once AccessToDisposedClosure
-                Assert.ThrowsException<FaultException<AndorSDKServiceException>>(() => client.CreateRemoteCamera());
+                Assert.Throws<FaultException<AndorSDKServiceException>>(() => client.CreateRemoteCamera());
                 client.Disconnect();
             }
         }
