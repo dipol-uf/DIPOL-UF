@@ -1,4 +1,29 @@
-﻿using System;
+﻿//    This file is part of Dipol-3 Camera Manager.
+
+//     MIT License
+//     
+//     Copyright(c) 2018 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
+
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using DipolImage;
@@ -355,6 +380,7 @@ namespace Tests
         [Test]
         public void Test_Clamp()
         {
+            // ReSharper disable for method InconsistentNaming
             foreach (var code in Image.AllowedPixelTypes)
             {
                 var type = Type.GetType("System." + code) ?? typeof(byte);
@@ -405,9 +431,15 @@ namespace Tests
                 dynamic mn = f_mn.GetValue(null);
 
                 var image = new Image(TestByteArray, 
-                    TestByteArray.Length/4/System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                    TestByteArray.Length / 4 / 
+                        System.Runtime.InteropServices.Marshal.SizeOf(
+                            Type.GetType("System." + code) ?? throw new InvalidOperationException()),
+                            4, code);
                 var imageLarge = new Image(VeryLargeByteArray, 
-                    VeryLargeByteArray.Length / 4 / System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                    VeryLargeByteArray.Length / 4 / 
+                        System.Runtime.InteropServices.Marshal.SizeOf(
+                            Type.GetType("System." + code) ?? throw new InvalidOperationException()), 
+                            4, code);
 
                 image.Clamp(mn / 100, mx / 100);
                 imageLarge.Clamp(mn / 100, mx / 100);
@@ -442,9 +474,15 @@ namespace Tests
             foreach (var code in Image.AllowedPixelTypes)
             {
                 var image = new Image(new byte[TestByteArray.Length],
-                    TestByteArray.Length / 4 / System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                    TestByteArray.Length / 4 / 
+                    System.Runtime.InteropServices.Marshal.SizeOf(
+                        Type.GetType("System." + code) ?? throw new InvalidOperationException()), 
+                        4, code);
                 var imageLarge = new Image(new byte[VeryLargeByteArray.Length], 
-                    VeryLargeByteArray.Length / 4 / System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                    VeryLargeByteArray.Length / 4 / 
+                    System.Runtime.InteropServices.Marshal.SizeOf(
+                        Type.GetType("System." + code) ?? throw new InvalidOperationException()),
+                        4, code);
 
                 image.Scale(1, 10);
                 imageLarge.Scale(1, 10);
