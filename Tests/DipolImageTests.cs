@@ -23,12 +23,10 @@
 //     SOFTWARE.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using DipolImage;
 using NUnit.Framework;
-using Assert2 = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 using CollectionAssert = Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
 
 namespace Tests
