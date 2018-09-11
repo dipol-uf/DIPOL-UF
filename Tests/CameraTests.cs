@@ -1,123 +1,146 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿//    This file is part of Dipol-3 Camera Manager.
+
+//     MIT License
+//     
+//     Copyright(c) 2018 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
+
+
+using System;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
 using DIPOL_Remote.Classes;
 using DIPOL_Remote.Faults;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
+using Assert2 = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace Tests
 {
-    [TestClass]
+    [TestFixture]
     public class CameraTests
     {
-        [TestMethod]
-#if X86
-        [DeploymentItem("atmcd32d.dll")]
-#endif
-#if X64
-        [DeploymentItem("atmcd64d.dll")]
-#endif
-        public void Test_GetNumberOfCameras_ReturnsOne()
-            => Assert.AreEqual(Camera.GetNumberOfCameras(), 1);
 
-        [TestMethod]
+        [Test]
 #if X86
-        [DeploymentItem("atmcd32d.dll")]
+        [DeployItem("../../../../atmcd32d.dll")]
 #endif
 #if X64
-        [DeploymentItem("atmcd64d.dll")]
+        [DeployItem("../../../../atmcd64d.dll")]
+#endif
+        public void Test_GetNumberOfCameras_IsNotNegative()
+            => Assert.That(Camera.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0));
+
+        [Theory]
+#if X86
+        [DeployItem("../../../../atmcd32d.dll")]
+#endif
+#if X64
+        [DeployItem("../../../../atmcd64d.dll")]
 #endif
         public void Test_CameraCtor()
         {
+            Assume.That(Camera.GetNumberOfCameras(), Is.GreaterThan(0));
             CameraBase cam = new Camera();
-            Assert.IsNotNull(cam, "Camera is null.");
+            Assert2.IsNotNull(cam, "Camera is null.");
             cam.Dispose();
-            Assert.IsTrue(cam.IsDisposed, $"Failed to dispose [{nameof(cam.IsDisposed)}].");
+            Assert2.IsTrue(cam.IsDisposed, $"Failed to dispose [{nameof(cam.IsDisposed)}].");
         }
 
-        [TestMethod]
+        //[TestMethod]
 #if X86
-        [DeploymentItem("atmcd32d.dll")]
+        [DeployItem("../../../../atmcd32d.dll")]
 #endif
 #if X64
-        [DeploymentItem("atmcd64d.dll")]
+        [DeployItem("../../../../atmcd64d.dll")]
 #endif
         public void Test_CameraBaseCreate_AlwaysThrows()
         {
-            Assert.ThrowsException<NotSupportedException>(() => CameraBase.Create());
+            Assert2.ThrowsException<NotSupportedException>(() => CameraBase.Create());
         }
 
-        [TestMethod]
+        //[TestMethod]
 #if X86
-        [DeploymentItem("atmcd32d.dll")]
+        [DeployItem("../../../../atmcd32d.dll")]
 #endif
 #if X64
-        [DeploymentItem("atmcd64d.dll")]
+        [DeployItem("../../../../atmcd64d.dll")]
 #endif
         public void Test_CameraCreate_ThrowsOrCreates()
         {
             var nCam = Camera.GetNumberOfCameras();
 
             if (nCam == 0)
-                Assert.ThrowsException<AndorSdkException>(() => Camera.Create());
+                Assert2.ThrowsException<AndorSdkException>(() => Camera.Create());
             else
             {
                 var cam = Camera.Create();
-                Assert.IsNotNull(cam);
+                Assert2.IsNotNull(cam);
                 cam.Dispose();
-                Assert.IsTrue(cam.IsDisposed);
+                Assert2.IsTrue(cam.IsDisposed);
             }
         }
 
 
-        [TestMethod]
+        //[TestMethod]
 #if X86
-        [DeploymentItem("atmcd32d.dll")]
+        [DeployItem("../../../../atmcd32d.dll")]
 #endif
 #if X64
-        [DeploymentItem("atmcd64d.dll")]
+        [DeployItem("../../../../atmcd64d.dll")]
 #endif
         public void Test_CameraBaseCreateAsync_AlwaysThrows()
         {
-            var except = Assert.ThrowsException<AggregateException>(() => CameraBase.CreateAsync().Wait());
-            Assert.IsInstanceOfType(except?.InnerException, typeof(NotSupportedException));
+            var except = Assert2.ThrowsException<AggregateException>(() => CameraBase.CreateAsync().Wait());
+            Assert2.IsInstanceOfType(except?.InnerException, typeof(NotSupportedException));
         }
 
-        [TestMethod]
+        //[TestMethod]
 #if X86
-        [DeploymentItem("atmcd32d.dll")]
+        [DeployItem("../../../../atmcd32d.dll")]
 #endif
 #if X64
-        [DeploymentItem("atmcd64d.dll")]
+        [DeployItem("../../../../atmcd64d.dll")]
 #endif
         public void Test_CameraCreateAsync_ThrowsOrCreates()
         {
             var nCam = Camera.GetNumberOfCameras();
 
             if (nCam == 0)
-                Assert.IsInstanceOfType(
-                    Assert.ThrowsException<AggregateException>(() => Camera.CreateAsync().Wait())?.InnerException,
+                Assert2.IsInstanceOfType(
+                    Assert2.ThrowsException<AggregateException>(() => Camera.CreateAsync().Wait())?.InnerException,
                     typeof(AndorSdkException));
             else
             {
                 var cam = Camera.CreateAsync(0).Result;
-                Assert.IsNotNull(cam);
+                Assert2.IsNotNull(cam);
                 cam.Dispose();
-                Assert.IsTrue(cam.IsDisposed);
+                Assert2.IsTrue(cam.IsDisposed);
             }
         }
 
-        [TestMethod]
+        //[TestMethod]
 #if X86
-        [DeploymentItem("atmcd32d.dll")]
+        [DeployItem("../../../../atmcd32d.dll")]
 #endif
 #if X64
-        [DeploymentItem("atmcd64d.dll")]
+        [DeployItem("../../../../atmcd64d.dll")]
 #endif
         public void Test_RemoteCameraCreate_ThrowsOrCreates()
         {
@@ -129,16 +152,16 @@ namespace Tests
                 if (nCam == 0)
                 {
 
-                    Assert.ThrowsException<System.ServiceModel.FaultException<AndorSDKServiceException>>(() =>
+                    Assert2.ThrowsException<System.ServiceModel.FaultException<AndorSDKServiceException>>(() =>
                         RemoteCamera.Create(0, client));
 
                 }
                 else
                 {
                     var cam = RemoteCamera.Create(0, client);
-                    Assert.IsNotNull(cam);
+                    Assert2.IsNotNull(cam);
                     cam.Dispose();
-                    Assert.IsTrue(cam.IsDisposed);
+                    Assert2.IsTrue(cam.IsDisposed);
                 }
 
                 client.Disconnect();
@@ -146,12 +169,12 @@ namespace Tests
             }
         }
 
-        [TestMethod]
+        //[TestMethod]
 #if X86
-        [DeploymentItem("atmcd32d.dll")]
+        [DeployItem("../../../../atmcd32d.dll")]
 #endif
 #if X64
-        [DeploymentItem("atmcd64d.dll")]
+        [DeployItem("../../../../atmcd64d.dll")]
 #endif
         public void Test_RemoteCameraCreateAsync_ThrowsOrCreates()
         {
@@ -162,15 +185,15 @@ namespace Tests
                 var nCam = client.GetNumberOfCameras();
                 if (nCam == 0)
                 {
-                    var exept = Assert.ThrowsException<AggregateException>(() => RemoteCamera.CreateAsync(otherParams: client).Wait());
-                    Assert.IsInstanceOfType(exept.InnerException, typeof(AndorSdkException));
+                    var exept = Assert2.ThrowsException<AggregateException>(() => RemoteCamera.CreateAsync(otherParams: client).Wait());
+                    Assert2.IsInstanceOfType(exept.InnerException, typeof(AndorSdkException));
                 }
                 else
                 {
                     var cam = RemoteCamera.CreateAsync(otherParams: client).Result;
-                    Assert.IsNotNull(cam);
+                    Assert2.IsNotNull(cam);
                     cam.Dispose();
-                    Assert.IsTrue(cam.IsDisposed);
+                    Assert2.IsTrue(cam.IsDisposed);
                 }
 
                 client.Disconnect();

@@ -24,7 +24,6 @@
 
 using System;
 using System.ServiceModel;
-using ANDOR_CS.Exceptions;
 using DIPOL_Remote.Classes;
 using DIPOL_Remote.Faults;
 using NUnit.Framework;
