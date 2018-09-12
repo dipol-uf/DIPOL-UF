@@ -23,9 +23,9 @@
 //     SOFTWARE.
 
 using System;
-using System.ServiceModel;
+using System.Diagnostics.CodeAnalysis;
+using ANDOR_CS.Classes;
 using DIPOL_Remote.Classes;
-using DIPOL_Remote.Faults;
 using NUnit.Framework;
 
 namespace Tests
@@ -48,6 +48,7 @@ namespace Tests
         }
 
         [Test]
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         public void Test_CanConnect()
         {
             using (var client = new DipolClient("localhost"))
@@ -55,10 +56,10 @@ namespace Tests
                 client.Connect();
                 Assert.Multiple(() =>
                 {
-                    // ReSharper disable once AccessToDisposedClosure
-                    Assert.That(client.Remote, Is.Not.Null);
-                    // ReSharper disable once AccessToDisposedClosure
-                    Assert.That(client.GetNumberOfCameras, Is.GreaterThanOrEqualTo(0));
+                    Assert.That(client.Remote, Is.Not.Null,
+                        "Remote connection should be established.");
+                    Assert.That(client.GetNumberOfCameras, Is.GreaterThanOrEqualTo(0),
+                        "Remote instance should report number of cameras greater than or equal to 0.");
                 });
                 client.Disconnect();
             }
@@ -72,16 +73,18 @@ namespace Tests
                 client.Connect();
                 Assert.Multiple(() =>
                 {
-                    // ReSharper disable once AccessToDisposedClosure
-                    Assert.That(client.Remote, Is.Not.Null);
-                    // ReSharper disable once AccessToDisposedClosure
-                    Assert.That(client.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0));
+                    Assert.That(client.Remote, Is.Not.Null,
+                        "Remote connection should be established.");
+                    Assert.That(client.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0),
+                        "Remote instance should report number of cameras greater than or equal to 0.");
                 });
                 client.Disconnect();
             }
         }
 
         [Test]
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
+
         public void Test_Properties()
         {
             using (var client = new DipolClient("localhost"))
@@ -89,10 +92,11 @@ namespace Tests
                 client.Connect();
                 Assert.Multiple(() =>
                 {
-                    // ReSharper disable once AccessToDisposedClosure
-                    Assert.That(client.HostAddress, Is.EqualTo("localhost"));
-                    // ReSharper disable once AccessToDisposedClosure
-                    Assert.That(string.IsNullOrWhiteSpace(client.SessionID), Is.False);
+                    Assert.That(client.HostAddress, Is.EqualTo("localhost"),
+                        $"Local and remote {nameof(client.HostAddress)} should be equal.");
+
+                    Assert.That(string.IsNullOrWhiteSpace(client.SessionID), Is.False,
+                        $"{client.SessionID} should be assigned.");
                 });
                 client.Disconnect();
             }
@@ -104,19 +108,31 @@ namespace Tests
             using (var client = new DipolClient("localhost"))
             {
                 client.Connect();
-                CollectionAssert.AreEqual(new int[] {}, client.ActiveRemoteCameras());
+                CollectionAssert.AreEqual(new int[] {}, client.ActiveRemoteCameras(),
+                    "No active cameras should be detected on a tested remote instance.");
                 client.Disconnect();
             }
         }
 
-        [Test]
-        public void Test_CreateRemoteCamera_NoActualCamera()
+        [Theory]
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
+        public void Test_CreateRemoteCamera()
         {
             using (var client = new DipolClient("localhost"))
             {
                 client.Connect();
-                // ReSharper disable once AccessToDisposedClosure
-                Assert.Throws<FaultException<AndorSDKServiceException>>(() => client.CreateRemoteCamera());
+                Assume.That(client.GetNumberOfCameras(), Is.GreaterThan(0),
+                    "Camera tests require a camera connected to the computer.");
+
+                CameraBase cam = null;
+
+                Assert.That(() => cam = client.CreateRemoteCamera(), Throws.Nothing,
+                    $"Remote camera should be created with {nameof(client.CreateRemoteCamera)} method.");
+
+                cam.Dispose();
+
+                Assert.That(cam.IsDisposed, Is.True,
+                    "Camera should be disposed.");
                 client.Disconnect();
             }
         }
