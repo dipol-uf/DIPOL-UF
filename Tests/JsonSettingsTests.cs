@@ -24,7 +24,6 @@
 
 using System;
 using System.IO;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using SettingsManager;
 
@@ -45,7 +44,7 @@ namespace Tests
         }
 
         [Test]
-        [DeployItem("../../../Test inputs/test.json")]
+        [DeployItem("../../../Test inputs/test.json", ForceOverwrite = true)]
         public void Test_Constructor()
         {
             var settings = new JsonSettings(GetSettingsFromFile());
@@ -54,7 +53,7 @@ namespace Tests
         }
 
         [Theory]
-        [DeployItem("../../../Test inputs/test.json")]
+        [DeployItem("../../../Test inputs/test.json", ForceOverwrite = true)]
         public void Test_Get()
         {
             var settings = new JsonSettings(GetSettingsFromFile());
@@ -63,62 +62,93 @@ namespace Tests
 
             Assert.Multiple(() =>
             {
-                Assert.That(settings.Get<int>("item_int"), Is.EqualTo(153), $"{nameof(settings.Get)} failed for \"item_int\"");
-                Assert.That(settings.Get<int>("item_int"), Is.EqualTo(153), $"{nameof(settings.Get)} failed for \"item_int\"");
-                Assert.That(settings.Get<double>("item_double"), Is.EqualTo(1.23e55), $"{nameof(settings.Get)} failed for \"item_double\"");
-                Assert.That(settings.Get<decimal>("item_decimal"), Is.EqualTo(-123.56m), $"{nameof(settings.Get)} failed for \"item_decimal\"");
-                Assert.That(settings.Get<double>("item_float"), Is.EqualTo(1e10), $"{nameof(settings.Get)} failed for \"item_float\"");
-                Assert.That(settings.Get<string>("item_string"), Is.EqualTo("string"), $"{nameof(settings.Get)} failed for \"item_string\"");
-                Assert.That(settings.Get<string>("item_string_empty"), Is.EqualTo(""), $"{nameof(settings.Get)} failed for \"item_string_empty\"");
-                Assert.That(settings.Get<object>("item_null"), Is.EqualTo(null), $"{nameof(settings.Get)} failed for \"item_null\"");
+                Assert.That(settings.Get<int>("item_int"), Is.EqualTo(153), $"{nameof(settings.Get)} failed for \"item_int\".");
+                Assert.That(settings.Get<int>("item_int"), Is.EqualTo(153), $"{nameof(settings.Get)} failed for \"item_int\".");
+                Assert.That(settings.Get<double>("item_double"), Is.EqualTo(1.23e55), $"{nameof(settings.Get)} failed for \"item_double\".");
+                Assert.That(settings.Get<decimal>("item_decimal"), Is.EqualTo(-123.56m), $"{nameof(settings.Get)} failed for \"item_decimal\".");
+                Assert.That(settings.Get<double>("item_float"), Is.EqualTo(1e10), $"{nameof(settings.Get)} failed for \"item_float\".");
+                Assert.That(settings.Get<string>("item_string"), Is.EqualTo("string"), $"{nameof(settings.Get)} failed for \"item_string\".");
+                Assert.That(settings.Get<string>("item_string_empty"), Is.EqualTo(""), $"{nameof(settings.Get)} failed for \"item_string_empty\".");
+                Assert.That(settings.Get<object>("item_null"), Is.EqualTo(null), $"{nameof(settings.Get)} failed for \"item_null\".");
             });
         }
 
-        //[Test]
-        //public void Test_Get_MissingKey()
-        //{
-        //    Assert.Multiple(() =>
-        //    {
-        //        Assert.That(Settings.Get<int>("missing_item_int"), Is.EqualTo(0));
-        //        CollectionAssert.AreEqual(new int[] { }, Settings.GetArray<int>("missing_item_array_int"));
-        //    });
-        //}
+        [Theory]
+        [DeployItem("../../../Test inputs/test.json", ForceOverwrite = true)]
+        public void Test_Get_MissingKey()
+        {
+            var settings = new JsonSettings(GetSettingsFromFile());
+            Assume.That(settings, Is.Not.Null,
+                "Settings should be correctly read from JSON file.");
 
-        //[Test]
-        //public void Test_GetArray()
-        //{
-        //    Assert.Multiple(() =>
-        //    {
-        //        CollectionAssert.AreEqual(new[] {1, 2, 3, 4, 5, 6},
-        //            Settings.GetArray<int>("item_array_int"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(settings.Get<int>("missing_item_int"), Is.EqualTo(0),
+                    $"{nameof(settings.Get)} failed for \"missing_item_int\": expected default({nameof(Int32)}).");
+                CollectionAssert.AreEqual(new int[] { }, settings.GetArray<int>("missing_item_array_int"),
+                    $"{nameof(settings.GetArray)} failed for \"missing_item_array_int\".");
+            });
+        }
 
-        //        CollectionAssert.AreEqual(new object[] { },
-        //            Settings.GetArray<object>("item_array_empty"));
-        //    });
-        //}
+        [Theory]
+        [DeployItem("../../../Test inputs/test.json", ForceOverwrite = true)]
+        public void Test_GetArray()
+        {
+            var settings = new JsonSettings(GetSettingsFromFile());
+            Assume.That(settings, Is.Not.Null,
+                "Settings should be correctly read from JSON file.");
 
-        //[Test]
-        //public void Test_GetJson()
-        //{
-        //    var item = Settings.GetJson("item_nested");
+            Assert.Multiple(() =>
+            {
+                CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5, 6 },
+                    settings.GetArray<int>("item_array_int"),
+                    $"{nameof(settings.GetArray)} failed for \"item_array_int\".");
 
-        //    Assert.Multiple(() =>
-        //    {
-        //        Assert.That(item.Count, Is.EqualTo(2));
-        //        Assert.That(item.Get<int>("nested_int"), Is.EqualTo(153));
-        //        Assert.That(item.Get<decimal>("nested_decimal"), Is.EqualTo(1.53m));
-        //    });
-        //}
+                CollectionAssert.AreEqual(new object[] { },
+                    settings.GetArray<object>("item_array_empty"),
+                    $"{nameof(settings.GetArray)} failed for \"item_array_empty\".");
+            });
+        }
 
-        //[Test]
-        //public void Test_HasKey()
-        //{
-        //    Assert.Multiple(() =>
-        //    {
-        //        Assert.That(Settings.HasKey("item_empty"), Is.True);
-        //        Assert.That(Settings.HasKey("missing_item_empty"), Is.False);
-        //    });
-        //}
+        [Theory]
+        [DeployItem("../../../Test inputs/test.json", ForceOverwrite = true)]
+        public void Test_GetJson()
+        {
+            var settings = new JsonSettings(GetSettingsFromFile());
+            Assume.That(settings, Is.Not.Null,
+                "Settings should be correctly read from JSON file.");
+                
+            var item = settings.GetJson("item_nested");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(item, Is.Not.Null, 
+                    $"{nameof(settings.GetJson)} failed for \"item_nested\".");
+                Assert.That(item.Count, Is.EqualTo(2),
+                    "Wrong size of the \"item_nested\" sub collection.");
+                Assert.That(item.Get<int>("nested_int"), Is.EqualTo(153),
+                    "Wrong value of \"nested_int\" of the \"item_nested\" sub collection.");
+                Assert.That(item.Get<decimal>("nested_decimal"), Is.EqualTo(1.53m),
+                    "Wrong value of \"nested_decimal\" of the \"item_nested\" sub collection.");
+            });
+        }
+
+        [Theory]
+        [DeployItem("../../../Test inputs/test.json", ForceOverwrite = true)]
+        public void Test_HasKey()
+        {
+            var settings = new JsonSettings(GetSettingsFromFile());
+            Assume.That(settings, Is.Not.Null,
+                "Settings should be correctly read from JSON file.");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(settings.HasKey("item_empty"), Is.True,
+                    "Failed to read \"item_empty\".");
+                Assert.That(settings.HasKey("missing_item_empty"), Is.False,
+                    "Name of the missing item \"missing_item_empty\" should not be found in the read collection.");
+            });
+        }
 
         //[Test]
         //public void Test_GetAsObject()
