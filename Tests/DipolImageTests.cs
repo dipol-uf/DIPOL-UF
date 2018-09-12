@@ -1,15 +1,36 @@
-﻿using System;
-using System.ComponentModel;
+﻿//    This file is part of Dipol-3 Camera Manager.
+
+//     MIT License
+//     
+//     Copyright(c) 2018 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
+
+using System;
 using System.Linq;
 using System.Reflection;
-using System.Windows.Input;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using DipolImage;
+using NUnit.Framework;
 
 namespace Tests
 {
-    [TestClass]
+    [TestFixture]
     public class DipolImageTests
     {
         public Random R;
@@ -17,7 +38,7 @@ namespace Tests
         public byte[] TestByteArray;
         public byte[] VeryLargeByteArray;
 
-        [TestInitialize]
+        [SetUp]
         public void Test_Initialize()
         {
             R = new Random();
@@ -34,39 +55,46 @@ namespace Tests
 
         }
 
-        [TestMethod]
+        [Test]
         public void Test_ConstructorThrows()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => new Image(null, 2, 3));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Image(TestArray, 0, 3));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Image(TestArray, 10, 0));
-            Assert.ThrowsException<ArgumentException>(() => new Image(new[] {"s"}, 1, 1));
+            Assert.Multiple(() =>
+            {
+                // ReSharper disable for method ObjectCreationAsStatement
 
-            Assert.ThrowsException<ArgumentNullException>(() => new Image(null, 1, 1, TypeCode.Int16));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Image(TestByteArray, 0, 3, TypeCode.Int32));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Image(TestByteArray, 10, 0, TypeCode.Int32));
-            Assert.ThrowsException<ArgumentException>(() => new Image(TestByteArray, 1, 1, TypeCode.Char));
-            Assert.ThrowsException<ArgumentException>(() => new Image(TestByteArray, 1, 1, (TypeCode) 45500));
+                Assert.Throws<ArgumentNullException>(() => new Image(null, 2, 3));
+                Assert.Throws<ArgumentOutOfRangeException>(() => new Image(TestArray, 0, 3));
+                Assert.Throws<ArgumentOutOfRangeException>(() => new Image(TestArray, 10, 0));
+                Assert.Throws<ArgumentException>(() => new Image(new[] {"s"}, 1, 1));
 
+                Assert.Throws<ArgumentNullException>(() => new Image(null, 1, 1, TypeCode.Int16));
+                Assert.Throws<ArgumentOutOfRangeException>(() =>
+                    new Image(TestByteArray, 0, 3, TypeCode.Int32));
+                Assert.Throws<ArgumentOutOfRangeException>(() =>
+                    new Image(TestByteArray, 10, 0, TypeCode.Int32));
+                Assert.Throws<ArgumentException>(() => new Image(TestByteArray, 1, 1, TypeCode.Char));
+                Assert.Throws<ArgumentException>(() => new Image(TestByteArray, 1, 1, (TypeCode) 45500));
+            });
         }
 
-        [TestMethod]
+        [Test]
         public void Test_ImageEqualsToArray()
         {
             var initArray = new[] {1, 2, 3, 4, 5, 6};
 
             var image = new Image(initArray, 2, 3);
 
-            Assert.IsTrue(
+            Assert.That(
                 initArray[0] == image.Get<int>(0, 0) &&
                 initArray[1] == image.Get<int>(0, 1) &&
                 initArray[2] == image.Get<int>(1, 0) &&
                 initArray[3] == image.Get<int>(1, 1) &&
                 initArray[4] == image.Get<int>(2, 0) &&
-                initArray[5] == image.Get<int>(2, 1));
+                initArray[5] == image.Get<int>(2, 1),
+                Is.True);
         }
 
-        [TestMethod]
+        [Test]
         public void Test_ImageInitializedFromBytes()
         {
             const ushort value = 23;
@@ -89,13 +117,16 @@ namespace Tests
 
                 var image = new Image(bytes, 1, 1, code);
 
-                Assert.AreEqual(temp, image[0,0]);
-                Assert.AreEqual(image.UnderlyingType, code);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(image[0, 0], Is.EqualTo(temp));
+                    Assert.That(image.UnderlyingType, Is.EqualTo(code));
+                });
             }
 
         }
 
-        [TestMethod]
+        [Test]
         public void Test_GetBytes()
         {
             const int val1 = 1;
@@ -136,7 +167,7 @@ namespace Tests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_Equals()
         {
             var tempArr = new byte[TestByteArray.Length];
@@ -154,50 +185,54 @@ namespace Tests
                     code == TypeCode.Int16 ? TypeCode.UInt16 : TypeCode.Int16);
                 var wrImage4 = new Image(tempArr, 2, 2, code);
 
-                Assert.IsTrue(image1.Equals(image2));
-                Assert.IsTrue(image2.Equals(image1));
-                Assert.IsTrue(image1.Equals((object) image2));
-                Assert.IsTrue(image1.Equals(image1, image2));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(image1.Equals(image2), Is.True);
+                    Assert.That(image2.Equals(image1), Is.True);
+                    Assert.That(image1.Equals((object) image2), Is.True);
+                    Assert.That(image1.Equals(image1, image2), Is.True);
 
-                Assert.IsFalse(image1.Equals(null));
-                Assert.IsFalse(image1.Equals(wrImage1));
-                Assert.IsFalse(image1.Equals(wrImage2));
-                Assert.IsFalse(image1.Equals(wrImage3));
-                Assert.IsFalse(image1.Equals(wrImage4));
-                Assert.IsFalse(image1.Equals((object) null));
-                Assert.IsFalse(image1.Equals(image1, wrImage1));
-                Assert.IsFalse(image1.Equals(image1, null));
-                Assert.IsFalse(image1.Equals(null, image1));
-
+                    Assert.That(image1.Equals(null), Is.False);
+                    Assert.That(image1.Equals(wrImage1), Is.False);
+                    Assert.That(image1.Equals(wrImage2), Is.False);
+                    Assert.That(image1.Equals(wrImage3), Is.False);
+                    Assert.That(image1.Equals(wrImage4), Is.False);
+                    Assert.That(image1.Equals((object) null), Is.False);
+                    Assert.That(image1.Equals(image1, wrImage1), Is.False);
+                    Assert.That(image1.Equals(image1, null), Is.False);
+                    Assert.That(image1.Equals(null, image1), Is.False);
+                });
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_Copy()
         {
             var array = new byte[1024];
             R.NextBytes(array);
 
             var img = new Image(array, 32, 16, TypeCode.Int16);
-
-            Assert.IsTrue(img.Equals(img.Copy()));
+            Assert.That(img.Equals(img.Copy()), Is.True);
         }
 
-        [TestMethod]
+        [Test]
         public void Test_ThisAccessor()
         {
             var initArray = new[] {1, 2, 3, 4};
             var image = new Image(initArray, 2, 2);
 
-            Assert.AreEqual(initArray[1], image[0, 1]);
-            Assert.AreEqual(initArray[2], image[1, 0]);
+            Assert.Multiple(() =>
+            {
+                Assert.That(image[0, 1], Is.EqualTo(initArray[1]));
+                Assert.That(image[1, 0], Is.EqualTo(initArray[2]));
+            });
 
             image[0, 0] = 430;
 
-            Assert.AreEqual(430, image[0,0]);
+            Assert.That(image[0,0], Is.EqualTo(430));
         }
 
-        [TestMethod]
+        [Test]
         public void Test_GetHashCode()
         {
             var tempArr = new byte[TestByteArray.Length];
@@ -211,15 +246,18 @@ namespace Tests
 
                 var wrImage1 = new Image(tempArr, 2, 2, code);
 
-                Assert.AreEqual(image1.GetHashCode(), image2.GetHashCode());
-                Assert.AreEqual(image1.GetHashCode(image1), image1.GetHashCode(image2));
-                Assert.AreNotEqual(image1.GetHashCode(), wrImage1.GetHashCode());
-                Assert.AreNotEqual(image1.GetHashCode(image1), image1.GetHashCode(wrImage1));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(image1.GetHashCode(), Is.EqualTo(image2.GetHashCode()));
+                    Assert.That(image1.GetHashCode(image1), Is.EqualTo(image1.GetHashCode(image2)));
+                    Assert.That(image1.GetHashCode(), Is.Not.EqualTo(wrImage1.GetHashCode()));
+                    Assert.That(image1.GetHashCode(image1), Is.Not.EqualTo(image1.GetHashCode(wrImage1)));
+                });
 
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_Max()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -243,12 +281,12 @@ namespace Tests
 
                 max = Convert.ChangeType(max, code);
 
-                Assert.AreEqual(max, image.Max());
+                Assert.That(image.Max(), Is.EqualTo(max));
             }
         
         }
 
-        [TestMethod]
+        [Test]
         public void Test_Min()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -281,11 +319,11 @@ namespace Tests
 
                 min = Convert.ChangeType(min, code);
 
-                Assert.AreEqual(min, image.Min());
+                Assert.That(image.Min(), Is.EqualTo(min));
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_Transpose()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -296,35 +334,50 @@ namespace Tests
                 var image = new Image(TestByteArray, TestByteArray.Length / 2 / size, 2, code);
                 var imageT = image.Transpose();
 
-                Assert.AreEqual(image.Width, imageT.Height);
-                Assert.AreEqual(image.Height, imageT.Width);
+                Assert.Multiple(() =>
+                {
 
-                Assert.IsTrue(Enumerable.Range(0, image.Width * image.Height).All( i => image[i % 2, i / 2].Equals(imageT[i / 2, i % 2])));
+                    Assert.That(imageT.Height, Is.EqualTo(image.Width));
+                    Assert.That(imageT.Width, Is.EqualTo(image.Height));
+
+                    Assert.That(Enumerable.Range(0, image.Width * image.Height)
+                                             .All(i => image[i % 2, i / 2].Equals(imageT[i / 2, i % 2])),
+                        Is.True);
+                });
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_Type()
         {
-            foreach (var code in Image.AllowedPixelTypes)
-                Assert.AreEqual(Type.GetType("System." + code), new Image(TestByteArray, 2, 2, code).Type);
+            Assert.Multiple(() =>
+            {
+                foreach (var code in Image.AllowedPixelTypes)
+                    Assert.That(new Image(TestByteArray, 2, 2, code).Type,
+                        Is.EqualTo(Type.GetType("System." + code)));
+            });
         }
 
-        [TestMethod]
+        [Test]
         public void Test_CastTo()
         {
             var image = new Image(TestArray,4, TestArray.Length/4);
-            Assert.IsTrue(image.Equals(image.CastTo<int, int>(x => x)));
-            Assert.ThrowsException<ArgumentException>(() => image.CastTo<int, string>(x => x.ToString()));
+            Assert.Multiple(() =>
+            {
+                Assert.That(image.Equals(image.CastTo<int, int>(x => x)), Is.True);
+                Assert.That(() => image.CastTo<int, string>(x => x.ToString()),
+                    Throws.InstanceOf<ArgumentException>());
+            });
             var otherArray = TestArray.Select(x => (double) x).ToArray();
 
             var otherImage = new Image(otherArray, 4, otherArray.Length/4);
-            Assert.IsTrue(otherImage.Equals(image.CastTo<int, double>(x => 1.0 * x)));
+            Assert.That(otherImage.Equals(image.CastTo<int, double>(x => 1.0 * x)), Is.True);
         }
 
-        [TestMethod]
+        [Test]
         public void Test_Clamp()
         {
+            // ReSharper disable for method InconsistentNaming
             foreach (var code in Image.AllowedPixelTypes)
             {
                 var type = Type.GetType("System." + code) ?? typeof(byte);
@@ -339,20 +392,26 @@ namespace Tests
                 var mx = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max / 2 : 5000;
                 var mn = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max/ 4 : -5000;
 
-                Assert.ThrowsException<ArgumentException>(() => image.Clamp(100, 10));
+                Assert.That(() => image.Clamp(100, 10),
+                    Throws.InstanceOf<ArgumentException>());
 
                 image.Clamp(mn, mx);
 
                 var min = image.Min() as IComparable;
                 var max = image.Max() as IComparable;
 
-                Assert.IsTrue(min?.CompareTo(Convert.ChangeType(mn, code)) >= 0);
-                Assert.IsTrue(max?.CompareTo(Convert.ChangeType(mx, code)) <= 0);
-
+                Assert.Multiple(() =>
+                {
+                    Assert.That(min?.CompareTo(Convert.ChangeType(mn, code)), 
+                        Is.GreaterThanOrEqualTo(0));
+                    Assert.That(max?.CompareTo(Convert.ChangeType(mx, code)),
+                        Is.LessThanOrEqualTo(0));
+                });
             }
         }
 
-        [TestMethod]
+        [Test]
+        [Retry(3)]
         public void Test_Scale()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -369,14 +428,20 @@ namespace Tests
                 dynamic mn = f_mn.GetValue(null);
 
                 var image = new Image(TestByteArray, 
-                    TestByteArray.Length/4/System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                    TestByteArray.Length / 4 / 
+                        System.Runtime.InteropServices.Marshal.SizeOf(
+                            Type.GetType("System." + code) ?? throw new InvalidOperationException()),
+                            4, code);
                 var imageLarge = new Image(VeryLargeByteArray, 
-                    VeryLargeByteArray.Length / 4 / System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                    VeryLargeByteArray.Length / 4 / 
+                        System.Runtime.InteropServices.Marshal.SizeOf(
+                            Type.GetType("System." + code) ?? throw new InvalidOperationException()), 
+                            4, code);
 
                 image.Clamp(mn / 100, mx / 100);
                 imageLarge.Clamp(mn / 100, mx / 100);
 
-                //Assert.ThrowsException<ArgumentException>(() => image.Scale(100, 10));
+                Assert.Throws<ArgumentException>(() => image.Scale(100, 10));
 
                 image.Scale(1, 10);
                 imageLarge.Scale(1, 10);
@@ -387,26 +452,34 @@ namespace Tests
                 var minL = imageLarge.Min() as IComparable ?? throw new ArgumentNullException();
                 var maxL = imageLarge.Max() as IComparable ?? throw new ArgumentNullException();
 
+                Assert.Multiple(() =>
+                {
+                    Assert.That((Math.Abs(min.CompareTo(Convert.ChangeType(1, code))) < float.Epsilon) ||
+                                   (Math.Abs(max.CompareTo(min)) < float.Epsilon), Is.True);
+                    Assert.That((Math.Abs(max.CompareTo(Convert.ChangeType(10, code))) < float.Epsilon) ||
+                                   (Math.Abs(max.CompareTo(min)) < float.Epsilon), Is.True);
 
-                Assert.IsTrue((Math.Abs(min.CompareTo(Convert.ChangeType(1, code))) < float.Epsilon) ||
-                              (Math.Abs(max.CompareTo(min)) < float.Epsilon));
-                Assert.IsTrue((Math.Abs(max.CompareTo(Convert.ChangeType(10, code))) < float.Epsilon) ||
-                              (Math.Abs(max.CompareTo(min)) < float.Epsilon));
-
-                Assert.IsTrue(Math.Abs(minL.CompareTo(Convert.ChangeType(1, code))) < float.Epsilon);
-                Assert.IsTrue(Math.Abs(maxL.CompareTo(Convert.ChangeType(10, code))) < float.Epsilon);
+                    Assert.That(Math.Abs(minL.CompareTo(Convert.ChangeType(1, code))) < float.Epsilon, Is.True);
+                    Assert.That(Math.Abs(maxL.CompareTo(Convert.ChangeType(10, code))) < float.Epsilon, Is.True);
+                });
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_Scale_FlatImage()
         {
             foreach (var code in Image.AllowedPixelTypes)
             {
                 var image = new Image(new byte[TestByteArray.Length],
-                    TestByteArray.Length / 4 / System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                    TestByteArray.Length / 4 / 
+                    System.Runtime.InteropServices.Marshal.SizeOf(
+                        Type.GetType("System." + code) ?? throw new InvalidOperationException()), 
+                        4, code);
                 var imageLarge = new Image(new byte[VeryLargeByteArray.Length], 
-                    VeryLargeByteArray.Length / 4 / System.Runtime.InteropServices.Marshal.SizeOf(Type.GetType("System." + code)), 4, code);
+                    VeryLargeByteArray.Length / 4 / 
+                    System.Runtime.InteropServices.Marshal.SizeOf(
+                        Type.GetType("System." + code) ?? throw new InvalidOperationException()),
+                        4, code);
 
                 image.Scale(1, 10);
                 imageLarge.Scale(1, 10);
@@ -417,22 +490,23 @@ namespace Tests
                 var minL = imageLarge.Min() as IComparable;
                 var maxL = imageLarge.Max() as IComparable;
 
+                Assert.Multiple(() =>
+                {
+                    Assert.That(min?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
+                    Assert.That(max?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
 
-                Assert.IsTrue(min?.CompareTo(Convert.ChangeType(1, code)) == 0);
-                Assert.IsTrue(max?.CompareTo(Convert.ChangeType(1, code)) == 0);
-
-                Assert.IsTrue(minL?.CompareTo(Convert.ChangeType(1, code)) == 0);
-                Assert.IsTrue(maxL?.CompareTo(Convert.ChangeType(1, code)) == 0);
+                    Assert.That(minL?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
+                    Assert.That(maxL?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
+                });
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_AddScalar()
         {
             foreach (var code in Image.AllowedPixelTypes)
             {
                 var type = Type.GetType("System." + code) ?? typeof(byte);
-                var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
                 const int N = 1024;
                 var array = Array.CreateInstance(type, N);
                 for(var i = 0; i < N / 4; i ++)
@@ -459,18 +533,17 @@ namespace Tests
                         var diff = dVal1 - dVal2 - scalar;
 
 
-                        Assert.IsTrue(Math.Abs(diff) < double.Epsilon);
+                        Assert.That(Math.Abs(diff), Is.EqualTo(0).Within(double.Epsilon));
                     }
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_MultiplyByScalar()
         {
             foreach (var code in Image.AllowedPixelTypes)
             {
                 var type = Type.GetType("System." + code) ?? typeof(byte);
-                var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
                 const int N = 1024;
                 var array = Array.CreateInstance(type, N);
                 for (var i = 0; i < N / 4; i++)
@@ -497,12 +570,12 @@ namespace Tests
                         var diff = dVal2 - dVal1/scalar;
 
 
-                        Assert.IsTrue(Math.Abs(diff) < double.Epsilon);
+                        Assert.That(Math.Abs(diff), Is.EqualTo(0).Within(double.Epsilon));
                     }
             }
         }
 
-        [TestMethod]
+        [Test]
         public void Test_Percentile()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -528,12 +601,15 @@ namespace Tests
                 dynamic mn = image.Min();
                 dynamic mx = image.Max();
 
-                Assert.ThrowsException<ArgumentOutOfRangeException>(() => image.Percentile(-1));
-                Assert.ThrowsException<ArgumentOutOfRangeException>(() => image.Percentile(2));
-                Assert.AreEqual(1.0 * mn, image.Percentile(0));
-                Assert.AreEqual(1.0 * mx, image.Percentile(1));
-                var prcnt = image.Percentile(0.5);
-                var factor = d_array.OrderBy(x => x).Count(x => x < prcnt) - 0.5 * array.Length;
+                Assert.Multiple(() =>
+                {
+                    Assert.Throws<ArgumentOutOfRangeException>(() => image.Percentile(-1));
+                    Assert.Throws<ArgumentOutOfRangeException>(() => image.Percentile(2));
+                    Assert.That(image.Percentile(0), Is.EqualTo(mn));
+                    Assert.That(image.Percentile(1), Is.EqualTo(mx));
+                });
+                //var prcnt = image.Percentile(0.5);
+                //var factor = d_array.OrderBy(x => x).Count(x => x < prcnt) - 0.5 * array.Length;
             }
         }
     }
