@@ -25,11 +25,7 @@
 
 using System;
 using ANDOR_CS.Classes;
-using ANDOR_CS.Exceptions;
-using DIPOL_Remote.Classes;
-using DIPOL_Remote.Faults;
 using NUnit.Framework;
-using Assert2 = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace Tests
 {
@@ -38,23 +34,11 @@ namespace Tests
     {
 
         [Test]
-#if X86
-        [DeployItem("../../../../atmcd32d.dll")]
-#endif
-#if X64
-        [DeployItem("../../../../atmcd64d.dll")]
-#endif
         public void Test_GetNumberOfCameras_IsNotNegative()
             => Assert.That(Camera.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0),
                 "Number of cameras should always be greater than or equal to 0.");
 
         [Theory]
-#if X86
-        [DeployItem("../../../../atmcd32d.dll")]
-#endif
-#if X64
-        [DeployItem("../../../../atmcd64d.dll")]
-#endif
         public void Test_CameraCtor()
         {
             Assume.That(Camera.GetNumberOfCameras(), Is.GreaterThan(0),
@@ -70,12 +54,6 @@ namespace Tests
         }
 
         [Test]
-#if X86
-        [DeployItem("../../../../atmcd32d.dll")]
-#endif
-#if X64
-        [DeployItem("../../../../atmcd64d.dll")]
-#endif
         public void Test_CameraBaseCreate_AlwaysThrows()
         {
             Assert.That(() => CameraBase.Create(), 
@@ -84,12 +62,6 @@ namespace Tests
         }
 
         [Theory]
-#if X86
-        [DeployItem("../../../../atmcd32d.dll")]
-#endif
-#if X64
-        [DeployItem("../../../../atmcd64d.dll")]
-#endif
         public void Test_CameraCreate()
         {
             Assume.That(Camera.GetNumberOfCameras(), Is.GreaterThan(0),
@@ -108,12 +80,6 @@ namespace Tests
 
 
         [Test]
-#if X86
-        [DeployItem("../../../../atmcd32d.dll")]
-#endif
-#if X64
-        [DeployItem("../../../../atmcd64d.dll")]
-#endif
         public void Test_CameraBaseCreateAsync_AlwaysThrows()
         {
 
@@ -125,12 +91,6 @@ namespace Tests
         }
 
         [Theory]
-#if X86
-        [DeployItem("../../../../atmcd32d.dll")]
-#endif
-#if X64
-        [DeployItem("../../../../atmcd64d.dll")]
-#endif
         public void Test_CameraCreateAsync()
         {
             Assume.That(Camera.GetNumberOfCameras(), Is.GreaterThan(0),
