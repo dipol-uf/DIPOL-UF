@@ -45,7 +45,8 @@ namespace Tests
         [DeployItem("../../../../atmcd64d.dll")]
 #endif
         public void Test_GetNumberOfCameras_IsNotNegative()
-            => Assert.That(Camera.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0));
+            => Assert.That(Camera.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0),
+                "Number of cameras should always be greater than or equal to 0.");
 
         [Theory]
 #if X86
@@ -56,14 +57,19 @@ namespace Tests
 #endif
         public void Test_CameraCtor()
         {
-            Assume.That(Camera.GetNumberOfCameras(), Is.GreaterThan(0));
-            CameraBase cam = new Camera();
-            Assert2.IsNotNull(cam, "Camera is null.");
+            Assume.That(Camera.GetNumberOfCameras(), Is.GreaterThan(0),
+                "Camera tests require a camera connected to the computer.");
+
+            CameraBase cam = null;
+            Assert.That(() => cam = new Camera(), Throws.Nothing, 
+                "Camera should be created.");
+
             cam.Dispose();
-            Assert2.IsTrue(cam.IsDisposed, $"Failed to dispose [{nameof(cam.IsDisposed)}].");
+            Assert.That(cam.IsDisposed, Is.True, 
+                "Camera should be properly disposed.");
         }
 
-        //[TestMethod]
+        [Test]
 #if X86
         [DeployItem("../../../../atmcd32d.dll")]
 #endif
@@ -72,33 +78,36 @@ namespace Tests
 #endif
         public void Test_CameraBaseCreate_AlwaysThrows()
         {
-            Assert2.ThrowsException<NotSupportedException>(() => CameraBase.Create());
+            Assert.That(() => CameraBase.Create(), 
+                Throws.InstanceOf<NotSupportedException>(),
+                $"{nameof(CameraBase.Create)} should always throw.");
         }
 
-        //[TestMethod]
+        [Theory]
 #if X86
         [DeployItem("../../../../atmcd32d.dll")]
 #endif
 #if X64
         [DeployItem("../../../../atmcd64d.dll")]
 #endif
-        public void Test_CameraCreate_ThrowsOrCreates()
+        public void Test_CameraCreate()
         {
-            var nCam = Camera.GetNumberOfCameras();
+            Assume.That(Camera.GetNumberOfCameras(), Is.GreaterThan(0),
+                "Camera tests require a camera connected to the computer.");
 
-            if (nCam == 0)
-                Assert2.ThrowsException<AndorSdkException>(() => Camera.Create());
-            else
-            {
-                var cam = Camera.Create();
-                Assert2.IsNotNull(cam);
-                cam.Dispose();
-                Assert2.IsTrue(cam.IsDisposed);
-            }
+            CameraBase cam = null;
+
+            Assert.That(() => cam = Camera.Create(), Throws.Nothing, 
+                $"Camera should be created using static method {nameof(Camera.Create)}.");
+
+            cam.Dispose();
+            Assert.That(cam.IsDisposed, Is.True, 
+                "Camera should be properly disposed.");
+
         }
 
 
-        //[TestMethod]
+        [Test]
 #if X86
         [DeployItem("../../../../atmcd32d.dll")]
 #endif
@@ -107,97 +116,36 @@ namespace Tests
 #endif
         public void Test_CameraBaseCreateAsync_AlwaysThrows()
         {
-            var except = Assert2.ThrowsException<AggregateException>(() => CameraBase.CreateAsync().Wait());
-            Assert2.IsInstanceOfType(except?.InnerException, typeof(NotSupportedException));
+
+            Assert.That(() => CameraBase.CreateAsync().Wait(),
+                Throws.InstanceOf<AggregateException>()
+                      .With
+                      .InnerException.InstanceOf<NotSupportedException>(),
+                $"{nameof(CameraBase.CreateAsync)} should always throw.");
         }
 
-        //[TestMethod]
+        [Theory]
 #if X86
         [DeployItem("../../../../atmcd32d.dll")]
 #endif
 #if X64
         [DeployItem("../../../../atmcd64d.dll")]
 #endif
-        public void Test_CameraCreateAsync_ThrowsOrCreates()
+        public void Test_CameraCreateAsync()
         {
-            var nCam = Camera.GetNumberOfCameras();
+            Assume.That(Camera.GetNumberOfCameras(), Is.GreaterThan(0),
+                "Camera tests require a camera connected to the computer.");
 
-            if (nCam == 0)
-                Assert2.IsInstanceOfType(
-                    Assert2.ThrowsException<AggregateException>(() => Camera.CreateAsync().Wait())?.InnerException,
-                    typeof(AndorSdkException));
-            else
-            {
-                var cam = Camera.CreateAsync(0).Result;
-                Assert2.IsNotNull(cam);
-                cam.Dispose();
-                Assert2.IsTrue(cam.IsDisposed);
-            }
+
+            CameraBase cam = null;
+
+            Assert.That(() => cam = Camera.CreateAsync().Result, Throws.Nothing,
+                $"Camera should be created using static async method {nameof(Camera.CreateAsync)}.");
+
+            cam.Dispose();
+            Assert.That(cam.IsDisposed, Is.True,
+                "Camera should be properly disposed.");
         }
-
-        //[TestMethod]
-#if X86
-        [DeployItem("../../../../atmcd32d.dll")]
-#endif
-#if X64
-        [DeployItem("../../../../atmcd64d.dll")]
-#endif
-        public void Test_RemoteCameraCreate_ThrowsOrCreates()
-        {
-            using (var client = new DipolClient(@"dipol-2"))
-            {
-                client.Connect();
-
-                var nCam = client.GetNumberOfCameras();
-                if (nCam == 0)
-                {
-
-                    Assert2.ThrowsException<System.ServiceModel.FaultException<AndorSDKServiceException>>(() =>
-                        RemoteCamera.Create(0, client));
-
-                }
-                else
-                {
-                    var cam = RemoteCamera.Create(0, client);
-                    Assert2.IsNotNull(cam);
-                    cam.Dispose();
-                    Assert2.IsTrue(cam.IsDisposed);
-                }
-
-                client.Disconnect();
-
-            }
-        }
-
-        //[TestMethod]
-#if X86
-        [DeployItem("../../../../atmcd32d.dll")]
-#endif
-#if X64
-        [DeployItem("../../../../atmcd64d.dll")]
-#endif
-        public void Test_RemoteCameraCreateAsync_ThrowsOrCreates()
-        {
-            using (var client = new DipolClient(@"dipol-2"))
-            {
-                client.Connect();
-
-                var nCam = client.GetNumberOfCameras();
-                if (nCam == 0)
-                {
-                    var exept = Assert2.ThrowsException<AggregateException>(() => RemoteCamera.CreateAsync(otherParams: client).Wait());
-                    Assert2.IsInstanceOfType(exept.InnerException, typeof(AndorSdkException));
-                }
-                else
-                {
-                    var cam = RemoteCamera.CreateAsync(otherParams: client).Result;
-                    Assert2.IsNotNull(cam);
-                    cam.Dispose();
-                    Assert2.IsTrue(cam.IsDisposed);
-                }
-
-                client.Disconnect();
-            }
-        }
+        
     }
 }
