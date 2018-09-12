@@ -108,7 +108,6 @@
   <ItemGroup>
     <Compile Include="DeployItemAttribute.cs" />
     <Compile Include="DipolClientHostRemoteControlTests.cs" />
-    <Compile Include="DebuggingTests.cs" />
     <Compile Include="DipolImageTests.cs" />
     <Compile Include="CameraTests.cs" />
     <Compile Include="FitsTests.cs" />
