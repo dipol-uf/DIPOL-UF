@@ -27,7 +27,6 @@ using System.Linq;
 using System.Reflection;
 using DipolImage;
 using NUnit.Framework;
-using CollectionAssert = Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
 
 namespace Tests
 {
