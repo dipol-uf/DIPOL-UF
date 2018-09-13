@@ -56,6 +56,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_ConstructorThrows()
         {
             Assert.Multiple(() =>
@@ -78,6 +79,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_ImageEqualsToArray()
         {
             var initArray = new[] {1, 2, 3, 4, 5, 6};
@@ -95,6 +97,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_ImageInitializedFromBytes()
         {
             const ushort value = 23;
@@ -127,6 +130,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_GetBytes()
         {
             const int val1 = 1;
@@ -206,6 +210,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Copy()
         {
             var array = new byte[1024];
@@ -216,6 +221,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_ThisAccessor()
         {
             var initArray = new[] {1, 2, 3, 4};
@@ -233,6 +239,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_GetHashCode()
         {
             var tempArr = new byte[TestByteArray.Length];
@@ -258,6 +265,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Max()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -287,6 +295,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Min()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -324,6 +333,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Transpose()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -348,6 +358,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Type()
         {
             Assert.Multiple(() =>
@@ -361,7 +372,7 @@ namespace Tests
         [Test]
         public void Test_CastTo()
         {
-            var image = new Image(TestArray,4, TestArray.Length/4);
+            var image = new Image(TestArray, 4, TestArray.Length/4);
             Assert.Multiple(() =>
             {
                 Assert.That(image.Equals(image.CastTo<int, int>(x => x)), Is.True);
@@ -375,6 +386,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Clamp()
         {
             // ReSharper disable for method InconsistentNaming
@@ -412,6 +424,7 @@ namespace Tests
 
         [Test]
         [Retry(3)]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Scale()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -466,6 +479,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Scale_FlatImage()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -502,6 +516,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_AddScalar()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -539,6 +554,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_MultiplyByScalar()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -576,6 +592,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Percentile()
         {
             foreach (var code in Image.AllowedPixelTypes)
