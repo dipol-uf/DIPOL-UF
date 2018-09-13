@@ -194,7 +194,7 @@ namespace FITS_CS
             
         }
 
-        public static IEnumerable<FITSKey> JoinKeywords(params FITSUnit[] keyUnits)
+        public static IEnumerable<FITSKey> JoinKeywords(params FitsUnit[] keyUnits)
         {
             foreach (var keyUnit in keyUnits)
                 if (keyUnit.TryGetKeys(out var keys))
