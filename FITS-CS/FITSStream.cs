@@ -71,8 +71,8 @@ namespace FITS_CS
         public override void Write(byte[] buffer, int offset, int count)
             => _baseStream.Write(buffer, offset, count);
 
-        public void WriteUnit(FITSUnit unit)
-            => Write(unit.Data, 0, FITSUnit.UnitSizeInBytes);
+        public void WriteUnit(FitsUnit unit)
+            => Write(unit.Data, 0, FitsUnit.UnitSizeInBytes);
 
         public FITSStream(Stream str)
             =>  _baseStream = str ?? throw new ArgumentNullException($"{nameof(str)} is null");
@@ -101,20 +101,20 @@ namespace FITS_CS
 
         public override void Close() => Dispose();
 
-        public FITSUnit ReadUnit()
+        public FitsUnit ReadUnit()
         {
             if (IsDisposed)
                 throw new ObjectDisposedException("Stream is already disposed.");
             if (!CanRead)
                 throw new NotSupportedException("Stream does not support reading.");
 
-            var buffer = new byte[FITSUnit.UnitSizeInBytes];
+            var buffer = new byte[FitsUnit.UnitSizeInBytes];
             try
             {
-                if (CanSeek && Position + FITSUnit.UnitSizeInBytes > Length)
+                if (CanSeek && Position + FitsUnit.UnitSizeInBytes > Length)
                     throw new ArgumentException("Stream ended");
-                _baseStream.Read(buffer, 0, FITSUnit.UnitSizeInBytes);
-                return new FITSUnit(buffer);
+                _baseStream.Read(buffer, 0, FitsUnit.UnitSizeInBytes);
+                return new FitsUnit(buffer);
             }
             catch (ArgumentException ae)
             {
@@ -130,7 +130,7 @@ namespace FITS_CS
             }
         }
 
-        public bool TryReadUnit(out FITSUnit unit)
+        public bool TryReadUnit(out FitsUnit unit)
         {
             unit = null;
             try
@@ -162,8 +162,8 @@ namespace FITS_CS
 
             keys.Add(FITSKey.CreateNew("END", FITSKeywordType.Blank, null));
 
-            var keyUnits = FITSUnit.GenerateFromKeywords(keys.ToArray());
-            var dataUnits = FITSUnit.GenerateFromArray(image.GetBytes(), type);
+            var keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
+            var dataUnits = FitsUnit.GenerateFromArray(image.GetBytes(), type);
 
             using (var str = new FITSStream(new FileStream(path, FileMode.Create)))
             {
