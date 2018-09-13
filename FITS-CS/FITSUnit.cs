@@ -28,13 +28,13 @@ using System.Linq;
 
 namespace FITS_CS
 {
-    public class FITSUnit
+    public class FitsUnit
     {
         public static readonly int UnitSizeInBytes = 2880;
 
         public byte[] Data { get; } = new byte[UnitSizeInBytes];
 
-        public FITSUnit(byte[] data)
+        public FitsUnit(byte[] data)
         {
             if (data == null)
                 throw new ArgumentNullException($"{nameof(data)} is null");
@@ -104,54 +104,50 @@ namespace FITS_CS
 
         public T[] GetData<T>() where T : struct
         {
-            T[] result;
-            int n;
-            int size;
-            byte[] mappedArray;
-            if (BitConverter.IsLittleEndian)
-                mappedArray = Data.Reverse().ToArray();
-            else mappedArray = Data;
-            
-            if (typeof(T) == typeof(double))
-            {
-                size = Math.Abs((short)FITSImageType.Double) / 8;
-                n = UnitSizeInBytes / size;
-                result = new T[n];
-                for (var i = 0; i < n; i++)
-                {
-                    dynamic val = BitConverter.ToDouble(mappedArray, (n - i - 1) * size);
-                    result[i] = val;
-                }
-            }
-            else if (typeof(T) == typeof(short))
-            {
-                size = Math.Abs((short)FITSImageType.Int16) / 8;
-                n = UnitSizeInBytes / size;
-                result = new T[n];
-                for (var i = 0; i < n; i++)
-                {
-                    dynamic val = BitConverter.ToInt16(mappedArray, (n - i - 1) * size);
-                    result[i] = val;
-                }
-            }
-            else throw new Exception();
 
+            T[] Worker<TReturn>(FITSImageType type, Func<byte[], int, TReturn> converter)
+            {
+                var size = Math.Abs((short)type) / 8;
+                var n = UnitSizeInBytes / size;
+                var locData = new byte[size];
+                var result = new T[n];
+                for (var i = 0; i < n; i++)
+                {
+                    Array.Copy(Data, i * size, locData, 0, size);
+                    Array.Reverse(locData);
+                    dynamic val = converter(locData, 0);
+                    result[i] = val;
+                }
+
+                return result;
+            }
+
+            if (typeof(T) == typeof(double))
+                return Worker(FITSImageType.Double, BitConverter.ToDouble);
+            if (typeof(T) == typeof(float))
+                return Worker(FITSImageType.Single, BitConverter.ToSingle);
+            if (typeof(T) == typeof(int))
+                return Worker(FITSImageType.Int32, BitConverter.ToInt32);
+            if (typeof(T) == typeof(short))
+                return Worker(FITSImageType.Int16, BitConverter.ToInt16);
+            if (typeof(T) == typeof(byte))
+                return Worker(FITSImageType.UInt8, (arr, ind) => arr[0]);
+            throw new NotSupportedException($"Provided type {typeof(T)} is not supported by FITS format.");
             
-            return result;
         }
 
-        public static IEnumerable<T> JoinData<T>(params FITSUnit[] units) where T: struct
+        public static IEnumerable<T> JoinData<T>(params FitsUnit[] units) where T: struct
         {
             foreach (var unit in units)
             {
                 if (!unit.IsData)
-                    throw new ArgumentException($"One of the {nameof(FITSUnit)} is not data.");
+                    throw new ArgumentException($"One of the {nameof(FitsUnit)} is not data.");
                 foreach (var item in unit.GetData<T>())
                     yield return item;
             }
         }
 
-        public static IEnumerable<FITSUnit> GenerateFromKeywords(params FITSKey[] keys)
+        public static IEnumerable<FitsUnit> GenerateFromKeywords(params FITSKey[] keys)
         {
             var keysPerUnit = UnitSizeInBytes / FITSKey.KeySize;
 
@@ -169,16 +165,16 @@ namespace FITS_CS
                     for (var iKey = 0; iKey < keysPerUnit; iKey++)
                         Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FITSKey.KeySize, FITSKey.KeySize);
 
-                    yield return new FITSUnit(buffer);
+                    yield return new FitsUnit(buffer);
                 }
                 else
                 {
-                    for (int iKey = 0; iKey < keysPerUnit - nEmpty; iKey++)
+                    for (var iKey = 0; iKey < keysPerUnit - nEmpty; iKey++)
                         Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FITSKey.KeySize, FITSKey.KeySize);
-                    for (int iKey = keysPerUnit - nEmpty; iKey < keysPerUnit; iKey++)
+                    for (var iKey = keysPerUnit - nEmpty; iKey < keysPerUnit; iKey++)
                         Array.Copy(FITSKey.Empty.Data, 0, buffer, iKey * FITSKey.KeySize, FITSKey.KeySize);
 
-                    yield return new FITSUnit(buffer);
+                    yield return new FitsUnit(buffer);
 
                 }
             }
@@ -186,29 +182,26 @@ namespace FITS_CS
 
         }
 
-        public static IEnumerable<FITSUnit> GenerateFromArray(byte[] array, FITSImageType type)
+        public static IEnumerable<FitsUnit> GenerateFromArray(byte[] array, FITSImageType type)
         {
             var size = Math.Abs((short)type) / 8;
             var n = (int)Math.Ceiling(1.0 * array.Length / UnitSizeInBytes);
-            var m = n / size;
-            byte[] mappedArray;
+            var mappedArray = new byte[n * UnitSizeInBytes];
+            Array.Copy(array, mappedArray, array.Length);
+
             if (BitConverter.IsLittleEndian)
-                mappedArray = array.Reverse().ToArray();
-            else
-                mappedArray = array;
+                for (var i = 0; i < array.Length / size; i++)
+                    Array.Reverse(mappedArray, i * size, size);
+           
 
             var buffer = new byte[UnitSizeInBytes];
 
-            for (var iUnit = 0; iUnit < n-1; iUnit++)
+            for (var iUnit = 0; iUnit < n; iUnit++)
             {
                 Array.Copy(mappedArray, iUnit * UnitSizeInBytes, buffer, 0, UnitSizeInBytes);
-                yield return new FITSUnit(buffer);
+                yield return new FitsUnit(buffer);
             }
 
-            Array.Clear(buffer, 0, UnitSizeInBytes);
-            Array.Copy(mappedArray, (n-1) * UnitSizeInBytes, buffer, 0, mappedArray.Length - (n-1) * UnitSizeInBytes);
-
-           yield return new FITSUnit(buffer);
         }
     }
 }
