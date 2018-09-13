@@ -1076,7 +1076,7 @@ namespace DipolImage
 
         public Image Transpose()
         {
-            var type = Type.GetType("System." + _typeCode, true, true) ?? typeof(byte);
+            var type = Type.GetType("System." + _typeCode, true, true);
 
             var newArray = Array.CreateInstance(type, Width * Height);
 
@@ -1215,16 +1215,16 @@ namespace DipolImage
                     var thisArr = (float[])_baseArray;
                     var otherArr = (float[])other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
-                        if (Math.Abs(thisArr[i] - otherArr[i]) > float.Epsilon)
+                        if (!AlmostEqual(thisArr[i], otherArr[i]))
                             return false;
-                    return true;
+                        return true;
                 }
                 default:
                 {
                     var thisArr = (double[])_baseArray;
                     var otherArr = (double[])other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
-                        if (Math.Abs(thisArr[i] - otherArr[i]) > double.Epsilon)
+                        if(!AlmostEqual(thisArr[i], otherArr[i]))
                             return false;
                     return true;
                 }
@@ -1257,6 +1257,36 @@ namespace DipolImage
                     return ((double[])_baseArray).Aggregate(0, (sum, pix) => sum ^ pix.GetHashCode());
                 
             }
+        }
+
+        private static bool AlmostEqual(double a, double b, double eps = double.Epsilon)
+        {
+            var mA = Math.Abs(a);
+            var mB = Math.Abs(b);
+            var diff = Math.Abs(a - b);
+
+            if (mA > 0)
+                return diff / mA < eps;
+            if (mB > 0)
+                return diff / mB < eps;
+
+            return diff < eps;
+           
+        }
+
+        private static bool AlmostEqual(float a, float b, float eps = float.Epsilon)
+        {
+            var mA = Math.Abs(a);
+            var mB = Math.Abs(b);
+            var diff = Math.Abs(a - b);
+
+            if (mA > 0f)
+                return diff / mA < eps;
+            if (mB > 0f)
+                return diff / mB < eps;
+
+            return diff < eps;
+
         }
     }
 }
