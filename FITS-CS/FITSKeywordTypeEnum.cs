@@ -27,7 +27,7 @@ using System.Runtime.Serialization;
 namespace FITS_CS
 {
     [DataContract]
-    public enum FITSKeywordType : byte
+    public enum FitsKeywordType : byte
     {
         [EnumMember]
         Logical = 1,

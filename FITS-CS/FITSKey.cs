@@ -32,7 +32,7 @@ namespace FITS_CS
 {
     public class FITSKey
     {
-        public enum FITSKeyLayout : byte
+        public enum FitsKeyLayout : byte
         {
             Fixed = 1,
             NonFixed = 2,
@@ -76,7 +76,7 @@ namespace FITS_CS
             get;
             private set;
         }
-        public FITSKeywordType Type
+        public FitsKeywordType Type
         {
             get;
             private set;
@@ -114,22 +114,22 @@ namespace FITS_CS
 
                 if (string.IsNullOrWhiteSpace(trimVal))
                 {
-                    Type = FITSKeywordType.Blank;
+                    Type = FitsKeywordType.Blank;
                     RawValue = null;
                 }
                 else if (trimVal == "F" || trimVal == "T")
                 {
-                    Type = FITSKeywordType.Logical;
+                    Type = FitsKeywordType.Logical;
                     RawValue = trimVal == "T";
                 }
                 else if (trimVal.Contains('\''))
                 {
-                    Type = FITSKeywordType.String;
+                    Type = FitsKeywordType.String;
                     RawValue = trimVal.TrimStart('\'').TrimEnd('\'').Replace("''", "'");
                 }
                 else if (trimVal.Contains(":"))
                 {
-                    Type = FITSKeywordType.Complex;
+                    Type = FitsKeywordType.Complex;
                     var split = trimVal
                         .Split(':')
                         .Select(s => double.Parse(s, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo))
@@ -138,12 +138,12 @@ namespace FITS_CS
                 }
                 else if (int.TryParse(trimVal, out var intVal))
                 {
-                    Type = FITSKeywordType.Integer;
+                    Type = FitsKeywordType.Integer;
                     RawValue = intVal;
                 }
                 else if (double.TryParse(trimVal, out var dVal))
                 {
-                    Type = FITSKeywordType.Float;
+                    Type = FitsKeywordType.Float;
                     RawValue = dVal;
                 }
                 else throw new ArgumentException("Keyword value is of unknown format.");
@@ -153,9 +153,9 @@ namespace FITS_CS
                 Comment = KeyString.Substring(KeyHeaderSize + 1).Trim();
                 Value = "";
                 if (string.IsNullOrWhiteSpace(Comment))
-                    Type = FITSKeywordType.Blank;
+                    Type = FitsKeywordType.Blank;
                 else
-                    Type = FITSKeywordType.Comment;
+                    Type = FitsKeywordType.Comment;
                 RawValue = null;
             }
         }
@@ -165,15 +165,15 @@ namespace FITS_CS
         public T GetValue<T>()
         {
             dynamic ret;
-            if (typeof(T) == typeof(bool) && Type == FITSKeywordType.Logical)
+            if (typeof(T) == typeof(bool) && Type == FitsKeywordType.Logical)
                 ret = (bool)RawValue;
-            else if (typeof(T) == typeof(string) && Type == FITSKeywordType.String)
+            else if (typeof(T) == typeof(string) && Type == FitsKeywordType.String)
                 ret = (string)RawValue;
-            else if (typeof(T) == typeof(int) && Type == FITSKeywordType.Integer)
+            else if (typeof(T) == typeof(int) && Type == FitsKeywordType.Integer)
                 ret = (int)RawValue;
-            else if (typeof(T) == typeof(double) && Type == FITSKeywordType.Float)
+            else if (typeof(T) == typeof(double) && Type == FitsKeywordType.Float)
                 ret = (double)RawValue;
-            else if (typeof(T) == typeof(Complex) && Type == FITSKeywordType.Complex)
+            else if (typeof(T) == typeof(Complex) && Type == FitsKeywordType.Complex)
                 ret = (Complex)RawValue;
             else throw new TypeAccessException($"Illegal combination of {Type} and {typeof(T)}.");
             return ret;
@@ -189,7 +189,7 @@ namespace FITS_CS
 
             return Encoding.ASCII.GetChars(data, offset, KeyHeaderSize)
                 .Where(c => c != ' ')
-                .All(c => Char.IsLetterOrDigit(c) || c == '-');
+                .All(c => char.IsLetterOrDigit(c) || c == '-');
                 
             
         }
@@ -214,8 +214,8 @@ namespace FITS_CS
         /// <exception cref="ArgumentNullException"/>
         /// <returns>A new instance of FITS keyword</returns>
         public static FITSKey CreateNew(
-            string header, FITSKeywordType type, object value, 
-            string comment = "", FITSKeyLayout layout = FITSKeyLayout.Fixed)
+            string header, FitsKeywordType type, object value, 
+            string comment = "", FitsKeyLayout layout = FitsKeyLayout.Fixed)
         {
             // Throw if no header
             if (string.IsNullOrWhiteSpace(header))
@@ -237,7 +237,7 @@ namespace FITS_CS
             key.RawValue = value;
 
             // If keyword is of value type
-            if (type != FITSKeywordType.Comment & type != FITSKeywordType.Blank)
+            if (type != FitsKeywordType.Comment & type != FitsKeywordType.Blank)
             {
                 // Header/content separator
                 result.Insert(KeyHeaderSize, "= ");
@@ -246,7 +246,7 @@ namespace FITS_CS
                     throw new ArgumentNullException($"Key requires a value ({type}), but non provided.");
             }
             // If layout is fixed (old)
-            if (layout == FITSKeyLayout.Fixed)
+            if (layout == FitsKeyLayout.Fixed)
             {
                 // Last index of data synbol. Used to find position of comment section.
                 var lastIndex = 0;
@@ -254,7 +254,7 @@ namespace FITS_CS
                 // Switch keyword type
                 switch (type)
                 {
-                    case FITSKeywordType.Logical:
+                    case FitsKeywordType.Logical:
                         if (value is bool logicalValue)
                         {
                             key.Value = logicalValue ? "T" : "F";
@@ -267,11 +267,11 @@ namespace FITS_CS
                             throw new ArgumentException($"{type} key requires {typeof(bool)} value, but caller provided {value.GetType()}.");
                         break;
 
-                    case FITSKeywordType.Integer:
+                    case FitsKeywordType.Integer:
                         if (value is int integerValue)
                         {
                             key.Value = integerValue.ToString();
-                            // Inserts right-justivied int up to 3-th column
+                            // Inserts right-justified int up to 3-th column
                             result.Insert(KeyHeaderSize + 2, String.Format($"{{0, {NumericValueMaxLengthFixed}}}", integerValue));
                             // Index of last symbol of value string
                             lastIndex = LastValueColumnFixed;
@@ -280,13 +280,13 @@ namespace FITS_CS
                             throw new ArgumentException($"{type} key requires {typeof(int)} value, but caller provided {value.GetType()}.");
                         break;
 
-                    case FITSKeywordType.Float:
+                    case FitsKeywordType.Float:
                         // If value is double
                         if (value is double doubleValue)
-                            key.Value = String.Format($"{{0, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 7)}E+000}}", doubleValue);
+                            key.Value = string.Format($"{{0, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 7)}E+000}}", doubleValue);
                         // If value is float
                         else if (value is float floatValue)
-                            key.Value = String.Format($"{{0, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 6)}E+00}}", floatValue);
+                            key.Value = string.Format($"{{0, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 6)}E+00}}", floatValue);
                         else
                             throw new ArgumentException($"{type} key requires {typeof(double)} or {typeof(float)} value, but caller provided {value.GetType()}.");
 
@@ -296,7 +296,7 @@ namespace FITS_CS
                         lastIndex = LastValueColumnFixed;
                         break;
 
-                    case FITSKeywordType.String:
+                    case FitsKeywordType.String:
                         if (value is string stringValue)
                         {
                             // Replaces single quotes ' with double '', adds preceding '
@@ -317,7 +317,7 @@ namespace FITS_CS
 
                         break;
 
-                    case FITSKeywordType.Complex:
+                    case FitsKeywordType.Complex:
                         // Complex is represented as two subsequent floats
                         if (value is Complex complexValue)
                             key.Value = String.Format($"{{0, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 8)}E+000}}" +

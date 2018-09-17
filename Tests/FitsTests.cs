@@ -80,7 +80,7 @@ namespace Tests
 
             void GenerateAssert<T>(string path, IEnumerable compareTo) where T: struct
             {
-                using (var str = new FITSStream(new FileStream(GetPath(path), FileMode.Open)))
+                using (var str = new FitsStream(new FileStream(GetPath(path), FileMode.Open)))
                 {
                     var data = new List<T>(width * height);
                     while (str.TryReadUnit(out var unit))
@@ -94,7 +94,7 @@ namespace Tests
 
             var file = $"test_dbl_{width:0000}x{height:0000}.fits";
             var doubleData = testData.Select(x => 1.0 * x).ToArray();
-            FITSStream.WriteImage(new Image(doubleData, width, height),
+            FitsStream.WriteImage(new Image(doubleData, width, height),
                 FITSImageType.Double, GetPath(file));
             AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<double>(file, doubleData);
@@ -102,7 +102,7 @@ namespace Tests
 
             file = $"test_sng_{width:0000}x{height:0000}.fits";
             var singleData = testData.Select(x => 1.0f * x).ToArray();
-            FITSStream.WriteImage(new Image(singleData, width, height),
+            FitsStream.WriteImage(new Image(singleData, width, height),
                 FITSImageType.Single, GetPath(file));
             AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<float>(file, singleData);
@@ -110,7 +110,7 @@ namespace Tests
 
             file = $"test_ui8_{width:0000}x{height:0000}.fits";
             var byteData = testData.Select(x => (byte)x).ToArray();
-            FITSStream.WriteImage(new Image(byteData, width, height),
+            FitsStream.WriteImage(new Image(byteData, width, height),
                 FITSImageType.UInt8, GetPath(file));
             AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<byte>(file, byteData);
@@ -118,7 +118,7 @@ namespace Tests
 
             file = $"test_i16_{width:0000}x{height:0000}.fits";
             var shortData = testData.Select(x => (short) x).ToArray();
-            FITSStream.WriteImage(new Image(shortData, width, height),
+            FitsStream.WriteImage(new Image(shortData, width, height),
                 FITSImageType.Int16, GetPath(file));
             AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<short>(file, shortData);
@@ -126,7 +126,7 @@ namespace Tests
 
             file = $"test_i32_{width:0000}x{height:0000}.fits";
             var intData = testData.ToArray();
-            FITSStream.WriteImage(new Image(intData, width, height),
+            FitsStream.WriteImage(new Image(intData, width, height),
                 FITSImageType.Int32, GetPath(file));
             AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<int>(file, intData);

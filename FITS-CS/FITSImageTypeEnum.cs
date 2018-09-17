@@ -27,7 +27,7 @@ using System.Runtime.Serialization;
 namespace FITS_CS
 {
     [DataContract]
-    public enum FITSImageType : short
+    public enum FitsImageType : short
     {
         [EnumMember]
         UInt8 = 8,
