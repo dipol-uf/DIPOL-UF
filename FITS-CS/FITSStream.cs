@@ -30,7 +30,7 @@ using DipolImage;
 
 namespace FITS_CS
 {
-    public class FITSStream : Stream, IDisposable
+    public class FitsStream : Stream, IDisposable
     {
         private readonly Stream _baseStream;
 
@@ -74,7 +74,7 @@ namespace FITS_CS
         public void WriteUnit(FitsUnit unit)
             => Write(unit.Data, 0, FitsUnit.UnitSizeInBytes);
 
-        public FITSStream(Stream str)
+        public FitsStream(Stream str)
             =>  _baseStream = str ?? throw new ArgumentNullException($"{nameof(str)} is null");
                     
 
@@ -149,29 +149,34 @@ namespace FITS_CS
 
             var keys = new List<FITSKey>
             {
-                FITSKey.CreateNew("SIMPLE", FITSKeywordType.Logical, true),
-                FITSKey.CreateNew("BITPIX", FITSKeywordType.Integer, (int)(short)type),
-                FITSKey.CreateNew("NAXIS", FITSKeywordType.Integer, 2),
-                FITSKey.CreateNew("NAXIS1", FITSKeywordType.Integer, image.Width),
-                FITSKey.CreateNew("NAXIS2", FITSKeywordType.Integer, image.Height),
-                FITSKey.CreateNew("NAXIS", FITSKeywordType.Integer, 2)
+                FITSKey.CreateNew("SIMPLE", FitsKeywordType.Logical, true),
+                FITSKey.CreateNew("BITPIX", FitsKeywordType.Integer, (int)(short)type),
+                FITSKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2),
+                FITSKey.CreateNew("NAXIS1", FitsKeywordType.Integer, image.Width),
+                FITSKey.CreateNew("NAXIS2", FitsKeywordType.Integer, image.Height),
+                FITSKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2)
             };
 
             if(extraKeys != null)
                 keys.AddRange(extraKeys);
 
-            keys.Add(FITSKey.CreateNew("END", FITSKeywordType.Blank, null));
+            keys.Add(FITSKey.CreateNew("END", FitsKeywordType.Blank, null));
 
             var keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
             var dataUnits = FitsUnit.GenerateFromArray(image.GetBytes(), type);
 
-            using (var str = new FITSStream(new FileStream(path, FileMode.Create)))
+            using (var str = new FitsStream(new FileStream(path, FileMode.Create)))
             {
                 foreach (var unit in keyUnits)
                     str.WriteUnit(unit);
                 foreach (var unit in dataUnits)
                     str.WriteUnit(unit);
             }
+        }
+
+        public static void ReadImage(string path)
+        {
+
         }
     }
 }
