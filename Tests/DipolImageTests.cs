@@ -172,6 +172,7 @@ namespace Tests
         }
 
         [Test]
+        [Retry(3)]
         public void Test_Equals()
         {
             var tempArr = new byte[TestByteArray.Length];

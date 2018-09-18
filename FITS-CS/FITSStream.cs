@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using DipolImage;
 
 
@@ -144,23 +145,23 @@ namespace FITS_CS
             }
         }
 
-        public static void WriteImage(Image image, FITSImageType type, string path, List<FITSKey> extraKeys = null)
+        public static void WriteImage(Image image, FitsImageType type, string path, IEnumerable<FitsKey> extraKeys = null)
         {
 
-            var keys = new List<FITSKey>
+            var keys = new List<FitsKey>
             {
-                FITSKey.CreateNew("SIMPLE", FitsKeywordType.Logical, true),
-                FITSKey.CreateNew("BITPIX", FitsKeywordType.Integer, (int)(short)type),
-                FITSKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2),
-                FITSKey.CreateNew("NAXIS1", FitsKeywordType.Integer, image.Width),
-                FITSKey.CreateNew("NAXIS2", FitsKeywordType.Integer, image.Height),
-                FITSKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2)
+                FitsKey.CreateNew("SIMPLE", FitsKeywordType.Logical, true),
+                FitsKey.CreateNew("BITPIX", FitsKeywordType.Integer, (int)(short)type),
+                FitsKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2),
+                FitsKey.CreateNew("NAXIS1", FitsKeywordType.Integer, image.Width),
+                FitsKey.CreateNew("NAXIS2", FitsKeywordType.Integer, image.Height),
+                FitsKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2)
             };
 
             if(extraKeys != null)
                 keys.AddRange(extraKeys);
 
-            keys.Add(FITSKey.CreateNew("END", FitsKeywordType.Blank, null));
+            keys.Add(FitsKey.CreateNew("END", FitsKeywordType.Blank, null));
 
             var keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
             var dataUnits = FitsUnit.GenerateFromArray(image.GetBytes(), type);
@@ -174,9 +175,58 @@ namespace FITS_CS
             }
         }
 
-        public static void ReadImage(string path)
+        public static Image ReadImage(string path, out List<FitsKey> keywords)
         {
+            var units = new List<FitsUnit>(2);
 
+            using (var str = new FitsStream(new FileStream(path, FileMode.Open)))
+            {
+                while(str.TryReadUnit(out var unit))
+                    units.Add(unit);
+            }
+
+            keywords = new List<FitsKey>(6);
+
+            foreach (var keywordUnit in units.TakeWhile(u => u.IsKeywords))
+                if (keywordUnit.TryGetKeys(out var keys))
+                    keywords.AddRange(keys);
+
+            keywords = keywords.Where(k => !k.IsEmpty).ToList();
+
+            var type = (FitsImageType)(keywords.FirstOrDefault(k => k.Header == "BITPIX")?.GetValue<int>()
+                       ?? throw new FileFormatException(new Uri(path), "Fits file has no required keyword \"BITPIX\"."));
+            var width = keywords.FirstOrDefault(k => k.Header == "NAXIS1")?.GetValue<int>()
+                        ?? throw new FileFormatException(new Uri(path), "Fits file has no required keyword \"NAXIS1\".");
+            var height = keywords.FirstOrDefault(k => k.Header == "NAXIS2")?.GetValue<int>()
+                        ?? throw new FileFormatException(new Uri(path), "Fits file has no required keyword \"NAXIS2\".");
+
+            Array GetData<T>() where T: struct
+            {
+                var data = new List<T>(width * height);
+                foreach (var dataUnit in units.SkipWhile(u => u.IsKeywords))
+                    data.AddRange(dataUnit.GetData<T>());
+
+                data.RemoveRange(width * height, data.Count - width * height);
+                data.TrimExcess();
+
+                return data.ToArray();
+            }
+
+            switch (type)
+            {
+                case FitsImageType.UInt8:
+                    return new Image(GetData<byte>(), width, height);
+                case FitsImageType.Int16:
+                    return new Image(GetData<short>(), width, height);
+                case FitsImageType.Int32: 
+                    return new Image(GetData<int>(), width, height);
+                case FitsImageType.Single:
+                    return new Image(GetData<float>(), width, height);
+                case FitsImageType.Double:
+                    return new Image(GetData<double>(), width, height);
+                default:
+                    throw new NotSupportedException($"Fits image of type {type} is not supported.");
+            }
         }
     }
 }
