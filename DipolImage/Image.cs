@@ -122,7 +122,7 @@ namespace DipolImage
             Width = width;
             Height = height;
             _typeCode = type;
-            var tp = Type.GetType("System." + _typeCode, true, true) ?? throw new ArgumentException();
+            var tp = Type.GetType("System." + _typeCode, true, true);
             _baseArray = Array.CreateInstance(tp, width * height);
             switch (type)
             {

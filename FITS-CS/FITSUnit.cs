@@ -45,30 +45,30 @@ namespace FITS_CS
         }
 
         public bool IsKeywords
-            => Enumerable.Range(0, UnitSizeInBytes / FITSKey.KeySize)
-            .Select(i => FITSKey.IsFitsKey(Data, i * FITSKey.KeySize))
+            => Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
+            .Select(i => FitsKey.IsFitsKey(Data, i * FitsKey.KeySize))
             .Aggregate(true, (old, nv) => old & nv);
 
         public bool IsData
-            => Enumerable.Range(0, UnitSizeInBytes / FITSKey.KeySize)
-            .Select(i => FITSKey.IsFitsKey(Data, i * FITSKey.KeySize))
+            => Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
+            .Select(i => FitsKey.IsFitsKey(Data, i * FitsKey.KeySize))
             .Contains(false);
 
-        public bool TryGetKeys(out List<FITSKey> keys)
+        public bool TryGetKeys(out List<FitsKey> keys)
         {
             keys = null;
             if (IsData)
                 return false;
 
-            var n = UnitSizeInBytes / FITSKey.KeySize;
+            var n = UnitSizeInBytes / FitsKey.KeySize;
 
-            keys = new List<FITSKey>(n);
+            keys = new List<FitsKey>(n);
 
             try
             {
 
-                var currKey = new FITSKey(Data);
-                var nextKey = new FITSKey(Data, FITSKey.KeySize);
+                var currKey = new FitsKey(Data);
+                var nextKey = new FitsKey(Data, FitsKey.KeySize);
                 var i = 1;
                 while (i < n - 1)
                 {
@@ -81,14 +81,14 @@ namespace FITS_CS
                         currKey.Extension = nextKey.KeyString;
                         keys.Add(currKey);
                         if (i < n - 1)
-                            currKey = new FITSKey(Data, (++i) * FITSKey.KeySize);
+                            currKey = new FitsKey(Data, (++i) * FitsKey.KeySize);
                     }
                     else
                     {
                         keys.Add(currKey);
                         currKey = nextKey;
                     }
-                    nextKey = ++i < n ? new FITSKey(Data, i * FITSKey.KeySize) : null;
+                    nextKey = ++i < n ? new FitsKey(Data, i * FitsKey.KeySize) : null;
                 }
                 if (!currKey?.IsExtension ?? false)
                     keys.Add(currKey);
@@ -105,7 +105,7 @@ namespace FITS_CS
         public T[] GetData<T>() where T : struct
         {
 
-            T[] Worker<TReturn>(FITSImageType type, Func<byte[], int, TReturn> converter)
+            T[] Worker<TReturn>(FitsImageType type, Func<byte[], int, TReturn> converter)
             {
                 var size = Math.Abs((short)type) / 8;
                 var n = UnitSizeInBytes / size;
@@ -123,15 +123,15 @@ namespace FITS_CS
             }
 
             if (typeof(T) == typeof(double))
-                return Worker(FITSImageType.Double, BitConverter.ToDouble);
+                return Worker(FitsImageType.Double, BitConverter.ToDouble);
             if (typeof(T) == typeof(float))
-                return Worker(FITSImageType.Single, BitConverter.ToSingle);
+                return Worker(FitsImageType.Single, BitConverter.ToSingle);
             if (typeof(T) == typeof(int))
-                return Worker(FITSImageType.Int32, BitConverter.ToInt32);
+                return Worker(FitsImageType.Int32, BitConverter.ToInt32);
             if (typeof(T) == typeof(short))
-                return Worker(FITSImageType.Int16, BitConverter.ToInt16);
+                return Worker(FitsImageType.Int16, BitConverter.ToInt16);
             if (typeof(T) == typeof(byte))
-                return Worker(FITSImageType.UInt8, (arr, ind) => arr[0]);
+                return Worker(FitsImageType.UInt8, (arr, ind) => arr[0]);
             throw new NotSupportedException($"Provided type {typeof(T)} is not supported by FITS format.");
             
         }
@@ -147,9 +147,9 @@ namespace FITS_CS
             }
         }
 
-        public static IEnumerable<FitsUnit> GenerateFromKeywords(params FITSKey[] keys)
+        public static IEnumerable<FitsUnit> GenerateFromKeywords(params FitsKey[] keys)
         {
-            var keysPerUnit = UnitSizeInBytes / FITSKey.KeySize;
+            var keysPerUnit = UnitSizeInBytes / FitsKey.KeySize;
 
             var nUnits = (int)Math.Ceiling(1.0 * keys.Length / keysPerUnit);
 
@@ -163,16 +163,16 @@ namespace FITS_CS
                 if (iUnit != nUnits - 1)
                 {
                     for (var iKey = 0; iKey < keysPerUnit; iKey++)
-                        Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FITSKey.KeySize, FITSKey.KeySize);
+                        Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FitsKey.KeySize, FitsKey.KeySize);
 
                     yield return new FitsUnit(buffer);
                 }
                 else
                 {
                     for (var iKey = 0; iKey < keysPerUnit - nEmpty; iKey++)
-                        Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FITSKey.KeySize, FITSKey.KeySize);
+                        Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FitsKey.KeySize, FitsKey.KeySize);
                     for (var iKey = keysPerUnit - nEmpty; iKey < keysPerUnit; iKey++)
-                        Array.Copy(FITSKey.Empty.Data, 0, buffer, iKey * FITSKey.KeySize, FITSKey.KeySize);
+                        Array.Copy(FitsKey.Empty.Data, 0, buffer, iKey * FitsKey.KeySize, FitsKey.KeySize);
 
                     yield return new FitsUnit(buffer);
 
@@ -182,7 +182,7 @@ namespace FITS_CS
 
         }
 
-        public static IEnumerable<FitsUnit> GenerateFromArray(byte[] array, FITSImageType type)
+        public static IEnumerable<FitsUnit> GenerateFromArray(byte[] array, FitsImageType type)
         {
             var size = Math.Abs((short)type) / 8;
             var n = (int)Math.Ceiling(1.0 * array.Length / UnitSizeInBytes);
