@@ -27,6 +27,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using DipolImage;
@@ -113,6 +114,27 @@ namespace Tests
                 yield return new TestCaseData("BITPIX  = slgjslhgskbdksd", 0, typeof(ArgumentException));
             }
         }
+
+        public static IEnumerable Test_CreateNew_Data
+        {
+            get
+            {
+                yield return new TestCaseData("SIMPLE", FitsKeywordType.Logical, true, "First keyword");
+                yield return new TestCaseData("OBJECT", FitsKeywordType.String, "NGC4151", "String keyword");
+                yield return new TestCaseData("BITPIX", FitsKeywordType.Integer, 16, "Integer keyword");
+                yield return new TestCaseData("BITPIX", FitsKeywordType.Integer, -64, "Integer keyword");
+                yield return new TestCaseData("DOUBLE", FitsKeywordType.Float, -64.0, "Double keyword");
+                yield return new TestCaseData("FLOAT", FitsKeywordType.Float, -64.0f, "Double keyword");
+                yield return new TestCaseData("COMPLEX", FitsKeywordType.Complex, new Complex(-100, 1e30),
+                    "Complex keyword");
+                yield return new TestCaseData("COMM", FitsKeywordType.Complex, new Complex(-100, 1e30), 
+                    "Extremely long overflowing comment that should exceed the size of the keyword and be trimmed.");
+                yield return new TestCaseData("HISTORY", FitsKeywordType.Comment, "Plain content", "");
+                yield return new TestCaseData("COMMENT", FitsKeywordType.Comment, "Plain content", "");
+                yield return new TestCaseData("", FitsKeywordType.Blank, "Plain content", "");
+
+            }
+        }
     }
     [TestFixture]
     public class FitsTests
@@ -158,7 +180,7 @@ namespace Tests
             var doubleData = testData.Select(x => 1.0 * x).ToArray();
             FitsStream.WriteImage(new Image(doubleData, width, height),
                 FitsImageType.Double, GetPath(file));
-            AssumeExistsAndScheduleForCleanup(file);
+           // AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<double>(file, doubleData);
 
 
@@ -196,7 +218,7 @@ namespace Tests
 
         }
 
-        [Theory]
+        //[Theory]
         [TestCaseSource(typeof(FitsTestsData), nameof(FitsTestsData.Test_ReadWrite_Data))]
         [Parallelizable(ParallelScope.Self)]
         public void Test_ReadWriteImage(int width, int height)
@@ -273,32 +295,7 @@ namespace Tests
             Assert.That(FitsKey.IsFitsKey(bytes, offset), Is.EqualTo(isKey));
         }
 
-        [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_IsFitsKey_Throws()
-        {
-            Assert.Multiple(() =>
-            {
-                Assert.That(() => FitsKey.IsFitsKey(null), Throws.InstanceOf<ArgumentNullException>());
-                Assert.That(() => FitsKey.IsFitsKey(new[] {(byte) 0}),
-                    Throws.InstanceOf<ArgumentException>()
-                          .With
-                          .Message.Length.GreaterThan(0));
-                Assert.That(() => FitsKey.IsFitsKey(Enumerable.Range(1, FitsKey.KeySize - 10)
-                                                              .Select(x => (byte) x)
-                                                              .ToArray()),
-                    Throws.InstanceOf<ArgumentException>()
-                          .With
-                          .Message.Length.GreaterThan(0));
-                Assert.That(() => FitsKey.IsFitsKey(Enumerable.Range(1, FitsKey.KeySize)
-                                                              .Select(x => (byte) x)
-                                                              .ToArray(), 10),
-                    Throws.InstanceOf<ArgumentException>()
-                          .With
-                          .Message.Length.GreaterThan(0));
-            });
-        }
-
+       
         [Test]
         [TestCaseSource(typeof(FitsTestsData), nameof(FitsTestsData.Test_FitsKeyCtor_Data))]
         [Parallelizable(ParallelScope.All)]
@@ -341,6 +338,113 @@ namespace Tests
 
             Assert.That(() => new FitsKey(data, offset), Throws.InstanceOf(exceptType));
         }
+
+
+        [Test]
+        [TestCaseSource(typeof(FitsTestsData), nameof(FitsTestsData.Test_CreateNew_Data))]
+        [Parallelizable(ParallelScope.All)]
+        public void Test_FitsKey_CreateNew(string header, FitsKeywordType type, object value, string comment)
+        {
+            FitsKey key = null;
+
+            // ReSharper disable once ImplicitlyCapturedClosure
+            Assert.That(() => key = FitsKey.CreateNew(header, type, new object(), comment),
+                Throws.InstanceOf<ArgumentException>());
+            Assert.Multiple(() =>
+            {
+                Assert.That(() => key = FitsKey.CreateNew(header, type, value, comment), Throws.Nothing,
+                    $"Fails for {header}");
+                Assert.That(key.Header, Is.EqualTo(header.Trim()),
+                    $"Fails for {header}");
+                Assert.That(key.RawValue, Is.EqualTo(value),
+                    $"Fails for {header}");
+                Assert.That(comment.StartsWith(key.Comment) || key.Comment.Length == 0, Is.True,
+                    $"Fails for {header}");
+                Assert.That(key.Type, Is.EqualTo(type),
+                    $"Fails for {type}");
+                Assert.That(key.KeyString, Has.Length.EqualTo(FitsKey.KeySize));
+            });
+        }
+
+        [Test]
+        public void Test_FitsUnit_GenerateFromKeywords()
+        {
+            var keys = new[]
+            {
+                FitsKey.CreateNew("SIMPLE", FitsKeywordType.Logical, true),
+                FitsKey.CreateNew("BITPIX", FitsKeywordType.Integer, 16),
+                FitsKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2),
+                FitsKey.CreateNew("NAXIS1", FitsKeywordType.Integer, 4),
+                FitsKey.CreateNew("NAXIS2", FitsKeywordType.Integer, 4),
+                FitsKey.CreateNew("END", FitsKeywordType.Blank, null)
+
+            };
+
+            var unit = FitsUnit.GenerateFromKeywords(keys).ToList()[0];
+            var test = FitsKey.IsFitsKey(unit.Data, 0);
+        }
+
+        [Test]
+        public void Test_FitsKet_CreateNew_Throws()
+        {
+            Assert.Multiple(() =>
+            {
+
+                Assert.That(() => FitsKey.CreateNew(null, FitsKeywordType.Blank, null),
+                    Throws.ArgumentNullException);
+                Assert.That(() => FitsKey.CreateNew("EXTREMELYLONGHEADER", FitsKeywordType.Blank, null),
+                    Throws.ArgumentException);
+                Assert.That(() => FitsKey.CreateNew("DOUBLE", FitsKeywordType.Float, double.MaxValue),
+                    Throws.InstanceOf<OverflowException>());
+                Assert.That(
+                    () => FitsKey.CreateNew("COMPLEX", FitsKeywordType.Complex, new Complex(double.MaxValue, 0)),
+                    Throws.InstanceOf<OverflowException>());
+                Assert.That(() => FitsKey.CreateNew("STRING", FitsKeywordType.String,
+                        new string('+', 123)),
+                    Throws.ArgumentException);
+                Assert.That(() => FitsKey.CreateNew("NOTCOMM", FitsKeywordType.Comment,
+                        null),
+                    Throws.ArgumentException);
+                Assert.That(() => FitsKey.CreateNew("NOTBLNK", FitsKeywordType.Blank,
+                        null),
+                    Throws.ArgumentException);
+                Assert.That(() => FitsKey.CreateNew("NOTBLNK", (FitsKeywordType)123,
+                        null),
+                    Throws.InstanceOf<NotSupportedException>());
+            });
+        }
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_IsFitsKey_Throws()
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(() => FitsKey.IsFitsKey(null), Throws.InstanceOf<ArgumentNullException>());
+                Assert.That(() => FitsKey.IsFitsKey(new[] { (byte)0 }),
+                    Throws.InstanceOf<ArgumentException>()
+                          .With
+                          .Message.Length.GreaterThan(0));
+                Assert.That(() => FitsKey.IsFitsKey(Enumerable.Range(1, FitsKey.KeySize - 10)
+                                                              .Select(x => (byte)x)
+                                                              .ToArray()),
+                    Throws.InstanceOf<ArgumentException>()
+                          .With
+                          .Message.Length.GreaterThan(0));
+                Assert.That(() => FitsKey.IsFitsKey(Enumerable.Range(1, FitsKey.KeySize)
+                                                              .Select(x => (byte)x)
+                                                              .ToArray(), 10),
+                    Throws.InstanceOf<ArgumentException>()
+                          .With
+                          .Message.Length.GreaterThan(0));
+            });
+        }
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_Empty()
+            => Assert.That(FitsKey.Empty.IsEmpty, Is.True,
+                "\"Empty\" keyword is not empty.");
 
 
         private void AssumeExistsAndScheduleForCleanup(string path)
