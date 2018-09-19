@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -31,17 +32,20 @@ using Complex = System.Numerics.Complex;
 
 namespace FITS_CS
 {
+    [DebuggerDisplay(@"\{Header: {Header}, Value: {Value}, Comment: {Comment}\}")]
     public class FitsKey
     {
         public enum FitsKeyLayout : byte
         {
             Fixed = 1,
-            NonFixed = 2,
+            //NonFixed = 2,
         }
 
         public static readonly int KeySize = 80;
         public static readonly int KeyHeaderSize = 8;
+        public static readonly int ReservedSize = 2;
         public static readonly int LastValueColumnFixed = 29;
+        public static readonly int StringQuotePos = 20;
         public static readonly int NumericValueMaxLengthFixed = 20;
 
         public static FitsKey Empty => new FitsKey();
@@ -55,28 +59,38 @@ namespace FITS_CS
             internal set;
         } = null;
 
-        public string KeyString { get; private set; } = new string(' ', KeySize);
+        public string KeyString => $"{Header, -8}{Body}";
         public bool IsEmpty => string.IsNullOrWhiteSpace(KeyString) ;
         public string Header
         {
             get;
             private set;
         }
+
         public string Body
         {
-            get;
-            private set;
+            get
+            {
+                var isUsual = Type != FitsKeywordType.Blank && Type != FitsKeywordType.Comment;
+                var body = string.Empty;
+                if (!string.IsNullOrWhiteSpace(Value))
+                {
+                    if (isUsual)
+                        body += "= ";
+                    body += Value;
+                }
+                if (!string.IsNullOrWhiteSpace(Comment))
+                    body += " / " + Comment;
+
+
+                body = string.Format($"{{0, {(isUsual ? -1 : 1) * (KeySize - KeyHeaderSize)}}}", body)
+                                 .Substring(0, KeySize - KeyHeaderSize);
+                return body;
+            }
         }
-        public string Comment
-        {
-            get;
-            private set;
-        }
-        public string Value
-        {
-            get;
-            private set;
-        }
+
+        public string Comment { get; private set; } = "";
+        public string Value { get; private set; } = "";
         public FitsKeywordType Type
         {
             get;
@@ -91,26 +105,26 @@ namespace FITS_CS
             if (data.Length < KeySize + offset)
                 throw new ArgumentException($"{nameof(data)} has wrong length");
 
-            KeyString = new string(Encoding.ASCII.GetChars(data, offset, KeySize));
+            var keyString = new string(Encoding.ASCII.GetChars(data, offset, KeySize));
 
-            Header = KeyString.Substring(0, KeyHeaderSize).Trim();
-            Body = KeyString.Substring(KeyHeaderSize);
+            Header = keyString.Substring(0, KeyHeaderSize).Trim();
+            //Body = keyString.Substring(KeyHeaderSize);
             var indexSlash = -1;
             var isInQuotes = false;
             for (var i = KeyHeaderSize; i < KeySize; i++)
-                if (KeyString[i] == '\'')
+                if (keyString[i] == '\'')
                     isInQuotes = !isInQuotes;
-                else if (KeyString[i] == '/' && !isInQuotes)
+                else if (keyString[i] == '/' && !isInQuotes)
                 {
                     indexSlash = i;
                     break;
                 }
-            Comment = indexSlash >= KeyHeaderSize ? KeyString.Substring(indexSlash + 1) : "";
-            if (KeyString[KeyHeaderSize] == '=')
+            Comment = indexSlash >= KeyHeaderSize ? keyString.Substring(indexSlash + 1) : "";
+            if (keyString[KeyHeaderSize] == '=')
             {
                 Value = indexSlash >= KeyHeaderSize
-                    ? KeyString.Substring(KeyHeaderSize + 1, indexSlash - KeyHeaderSize - 1)
-                    : KeyString.Substring(KeyHeaderSize + 1);
+                    ? keyString.Substring(KeyHeaderSize + 1, indexSlash - KeyHeaderSize - 1)
+                    : keyString.Substring(KeyHeaderSize + 1);
                 var trimVal = Value.Trim();
 
                 if (string.IsNullOrWhiteSpace(trimVal))
@@ -154,7 +168,7 @@ namespace FITS_CS
             }
             else
             {
-                Comment = KeyString.Substring(KeyHeaderSize + 1).Trim();
+                Comment = keyString.Substring(KeyHeaderSize + 1).Trim();
                 Value = "";
                 if (string.IsNullOrWhiteSpace(Comment))
                     Type = FitsKeywordType.Blank;
@@ -183,7 +197,17 @@ namespace FITS_CS
             return ret;
         }
         public override string ToString() => KeyString;
-       
+        public override bool Equals(object obj)
+        {
+            if (obj is FitsKey key)
+                return Header.Equals(key.Header) &&
+                       Value.Equals(key.Value) &&
+                       Comment.Equals(key.Comment);
+            return false;
+        }
+        public override int GetHashCode()
+            => KeyString.GetHashCode();
+
         /// <summary>
         /// Checks if data chunk has a valid FITS header
         /// </summary>
@@ -219,161 +243,124 @@ namespace FITS_CS
                         yield return key;
         }
 
-        /// <summary>
-        /// Creates a new custom FITS keyword.
-        /// </summary>
-        /// <param name="header">Header, char string of max 8 symbols.</param>
-        /// <param name="type">Keyword data type.</param>
-        /// <param name="value">Actual keyword value. Should agree with type. String values CAN BE truncated.</param>
-        /// <param name="comment">An optional comment. Comments can be truncated (or removed) to fit in FITS keyword size limit of 80 chars.</param>
-        /// <param name="layout">Indicates which layout to use.</param>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="ArgumentNullException"/>
-        /// <returns>A new instance of FITS keyword</returns>
-        public static FitsKey CreateNew(
-            string header, FitsKeywordType type, object value, 
+        public static FitsKey CreateNew(string header, FitsKeywordType type, object value,
             string comment = "", FitsKeyLayout layout = FitsKeyLayout.Fixed)
         {
-            // Throw if no header
-            if (string.IsNullOrWhiteSpace(header))
-                throw new ArgumentNullException($"{nameof(header)} cannot be null/empty string (provided '{header}'),");
-            // Throws of header is too large
+            if(header is null)
+                throw new ArgumentNullException(nameof(header));
+
             if (header.Length > KeyHeaderSize)
-                throw new ArgumentException($"Header's length ({header.Length}) is too large (max {KeyHeaderSize}).");
+                throw new ArgumentException($"\"{nameof(header)}\" is too long");
 
-            // Instance of constructed keyword.
-            var key = new FitsKey();
-            // String representation of keyword
-            var result = new StringBuilder(KeySize);
-            // Initialize with blanks
-            result.Append(' ', KeySize);
-            // Right-justified header
-            result.Insert(0, string.Format($"{{0, -{KeyHeaderSize}}}", header));
-            key.Header = header;
-            key.Type = type;
-            key.RawValue = value;
-
-            // If keyword is of value type
-            if (type != FitsKeywordType.Comment & type != FitsKeywordType.Blank)
+            var key = new FitsKey
             {
-                // Header/content separator
-                result.Insert(KeyHeaderSize, "= ");
-                // Throw is no value provided
-                if (value == null)
-                    throw new ArgumentNullException($"Key requires a value ({type}), but non provided.");
-            }
-            // If layout is fixed (old)
-            if (layout == FitsKeyLayout.Fixed)
+                Header = header.Trim(),
+                RawValue = value,
+                Type = type
+            };
+
+            var maxValuePos = NumericValueMaxLengthFixed;
+            var dblDecPrecision = maxValuePos - 7;
+            const string complexSep = "";
+            var strQuotePos = StringQuotePos - 1;
+
+            switch (type)
             {
-                // Last index of data synbol. Used to find position of comment section.
-                var lastIndex = 0;
+                case FitsKeywordType.Logical:
+                    if (value is bool bVal)
+                        key.Value = string.Format($"{{0, {maxValuePos}}}", bVal ? 'T': 'F');
+                    else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(bool)}.");
+                    break;
+                case FitsKeywordType.Integer:
+                    if (value is int iVal)
+                        key.Value = string.Format($"{{0, {maxValuePos}}}", iVal);
+                    else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(int)}.");
+                    break;
+                case FitsKeywordType.Float:
+                    if (value is float fVal)
+                        key.Value = string.Format($"{{0, {maxValuePos}}}", fVal.ToString("E8"));
+                    else if (value is double dVal)
+                    {
+                        if(Math.Abs(dVal) >= 1e100 || Math.Abs(dVal) <= 1e-100)
+                            throw new OverflowException($"{typeof(double)} with exponent" +
+                                                        " greater than 99 or smaller than -99 " +
+                                                        "cannot be represented in fixed mode.");
+                        key.Value = string.Format($"{{0, {maxValuePos}}}", FormatDouble(dVal, dblDecPrecision));
+                    }
+                    else throw new ArgumentException($"\"{nameof(value)}\" should be of type" +
+                                                     $" {typeof(float)} or {typeof(double)}.");
+                    break;
+                case FitsKeywordType.Complex:
+                    if (value is Complex cVal)
+                    {
+                        if(Math.Abs(cVal.Real) >= 1e100 ||
+                           Math.Abs(cVal.Real) <= 1e-100 ||
+                           Math.Abs(cVal.Imaginary) >= 1e100 ||
+                           Math.Abs(cVal.Imaginary) <= 1e-100)
+                            throw new OverflowException($"{typeof(Complex)} with exponent" +
+                                                        " greater than 99 or smaller than -99 " +
+                                                        "cannot be represented in fixed mode.");
+                        key.Value = string.Format($"{{0, {maxValuePos}}}{complexSep}{{1, {maxValuePos}}}", 
+                            FormatDouble(cVal.Real, dblDecPrecision),
+                            FormatDouble(cVal.Imaginary, dblDecPrecision));
+                    }
+                    else throw new ArgumentException($"\"{nameof(value)}\" should be of type" +
+                                                     $" {typeof(Complex)}.");
+                    break;
 
-                // Switch keyword type
-                switch (type)
-                {
-                    case FitsKeywordType.Logical:
-                        if (value is bool logicalValue)
-                        {
-                            key.Value = logicalValue ? "T" : "F";
-                            // Puts T or F in 29 char (30th column)
-                            result.Insert(LastValueColumnFixed, key.Value);
-                            // Index of last symbol of value string
-                            lastIndex = LastValueColumnFixed;
-                        }
-                        else
-                            throw new ArgumentException($"{type} key requires {typeof(bool)} value, but caller provided {value.GetType()}.");
-                        break;
-
-                    case FitsKeywordType.Integer:
-                        if (value is int integerValue)
-                        {
-                            key.Value = integerValue.ToString();
-                            // Inserts right-justified int up to 3-th column
-                            result.Insert(KeyHeaderSize + 2, String.Format($"{{0, {NumericValueMaxLengthFixed}}}", integerValue));
-                            // Index of last symbol of value string
-                            lastIndex = LastValueColumnFixed;
-                        }
-                        else
-                            throw new ArgumentException($"{type} key requires {typeof(int)} value, but caller provided {value.GetType()}.");
-                        break;
-
-                    case FitsKeywordType.Float:
-                        // If value is double
-                        if (value is double doubleValue)
-                            key.Value = string.Format($"{{0, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 7)}E+000}}", doubleValue);
-                        // If value is float
-                        else if (value is float floatValue)
-                            key.Value = string.Format($"{{0, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 6)}E+00}}", floatValue);
-                        else
-                            throw new ArgumentException($"{type} key requires {typeof(double)} or {typeof(float)} value, but caller provided {value.GetType()}.");
-
-                        result.Insert(KeyHeaderSize + 1, key.Value);
-                        key.Value = key.Value.Trim();
-                        // Index of last symbol of value string
-                        lastIndex = LastValueColumnFixed;
-                        break;
-
-                    case FitsKeywordType.String:
-                        if (value is string stringValue)
-                        {
-                            // Replaces single quotes ' with double '', adds preceding '
-                            stringValue = ('\'' + stringValue.Replace("'", "''"));
-                            // Truncates string
-                            if (stringValue.Length > KeySize - KeyHeaderSize - 3)
-                                stringValue = stringValue.Substring(0, KeySize - KeyHeaderSize - 3);
-                            // Insert string value with trailing '
-                            result.Insert(KeyHeaderSize + 2,
-                                stringValue + '\'');
-
-                            key.Value = stringValue;
-                            // Last index depends on the actual string value length
-                            lastIndex = Math.Max(LastValueColumnFixed, stringValue.Length + KeyHeaderSize + 2);
-                        }
-                        else
-                            throw new ArgumentException($"{type} key requires {typeof(string)} value, but caller provided {value.GetType()}.");
-
-                        break;
-
-                    case FitsKeywordType.Complex:
-                        // Complex is represented as two subsequent floats
-                        if (value is Complex complexValue)
-                            key.Value = String.Format($"{{0, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 8)}E+000}}" +
-                                $"{{1, {NumericValueMaxLengthFixed}: 0.{new string('0', NumericValueMaxLengthFixed - 8)}E+000}}", complexValue.Real, complexValue.Imaginary);
-                        else
-                            throw new ArgumentException($"{type} key requires {typeof(Complex)} value, but caller provided {value.GetType()}.");
-
-                        result.Insert(KeyHeaderSize + 2, key.Value);
-                        key.Value = key.Value.Trim();
-                        // Last index depends on 2 times size of numerical value (20 symbols)
-                        lastIndex = KeyHeaderSize + 1 + 2 * NumericValueMaxLengthFixed;
-                        break;
-                }
-
-                // If comment is not null
-                if (!string.IsNullOrWhiteSpace(comment))
-                {
-                    var commLength = Math.Max(KeySize - lastIndex - 4, 0);
-                    // Comment delimiter
-                    result.Insert(lastIndex + 2, "/ ");
-                    // Truncated comment
-                    key.Comment = comment.Substring(0, Math.Min(commLength, comment.Length));
-                    // Inserts comment after comment delimiter
-                    result.Insert(lastIndex + 4, key.Comment);
-                }
+                case FitsKeywordType.String:
+                    if (value is string sVal)
+                    {
+                        sVal = sVal.Replace("\'", "''").TrimEnd();
+                        if(sVal.Length > KeySize - KeyHeaderSize - ReservedSize - 2)
+                            throw new ArgumentException($"String \"{nameof(value)}\" is too long.");
+                        key.Value = string.Format($"'{{0, {-strQuotePos}}}'", sVal);
+                    }
+                    else throw new ArgumentException($"\"{nameof(value)}\" should be of type" +
+                                                     $" {typeof(string)}.");
+                    break;
+                case FitsKeywordType.Comment:
+                    if(header != "COMMENT" && header != "HISTORY")
+                        throw new ArgumentException($"\"{nameof(header)}\" should be either \"COMMENT\" or \"HISTORY\".");
+                    if (value is string commVal)
+                        key.Value = commVal.Substring(0, Math.Min(commVal.Length, KeySize - KeyHeaderSize));
+                    else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(string)}.");
+                    break;
+                case FitsKeywordType.Blank:
+                    if (value is string blankVal)
+                        key.Value = blankVal?.Substring(0, Math.Min(blankVal.Length, KeySize - KeyHeaderSize));
+                    else if (value is null)
+                        key.Value = "";
+                    else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(string)}.");
+                    break;
+                default:
+                    throw new NotSupportedException($"Unsupported \"{nameof(type)}\".");
             }
-            else
-                throw new NotImplementedException();
 
-            // Ensures keyword representation can be fitted into 80 symbols string 
-            if (result.Length > KeySize)
-                result = result.Remove(KeySize, result.Length - KeySize);
+            if (!string.IsNullOrWhiteSpace(comment))
+            {
+                var remSpace = KeySize - KeyHeaderSize;
+                if (type != FitsKeywordType.Blank && type != FitsKeywordType.Comment)
+                    remSpace -= ReservedSize + key.Value.Length;
 
-            // Assigns constructed string 
-            key.KeyString = result.ToString();
-            // And body
-            key.Body = key.KeyString.Substring(KeyHeaderSize);
+                if (remSpace > 0)
+                    key.Comment = comment.Substring(0, Math.Min(comment.Length, remSpace));
+            }
 
             return key;
+        }
+
+        public static bool operator ==(FitsKey key1, FitsKey key2)
+            => key1?.Equals(key2) ?? false;
+
+        public static bool operator !=(FitsKey key1, FitsKey key2)
+            => !(key1 == key2);
+
+        private static string FormatDouble(double input, int decPlaces)
+        {
+            var format = $"E{decPlaces}";
+            var str = input.ToString(format);
+            return Regex.Replace(str, "([+-])[0-9]([0-9]{2})$", "$1$2");
         }
     }
 }
