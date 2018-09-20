@@ -288,6 +288,8 @@ namespace FITS_CS
                 ret = (string)RawValue;
             else if (typeof(T) == typeof(int) && Type == FitsKeywordType.Integer)
                 ret = (int)RawValue;
+            else if (typeof(T) == typeof(float) && Type == FitsKeywordType.Float)
+                ret = (float)RawValue;
             else if (typeof(T) == typeof(double) && Type == FitsKeywordType.Float)
                 ret = (double)RawValue;
             else if (typeof(T) == typeof(Complex) && Type == FitsKeywordType.Complex)

@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Resources;
 using System.Security.Cryptography;
 using System.Text;
 using DipolImage;
@@ -379,24 +380,6 @@ namespace Tests
             });
         }
 
-        //[Test]
-        //public void Test_FitsUnit_GenerateFromKeywords()
-        //{
-        //    var keys = new[]
-        //    {
-        //        new FitsKey("SIMPLE", FitsKeywordType.Logical, true),
-        //        new FitsKey("BITPIX", FitsKeywordType.Integer, 16),
-        //        new FitsKey("NAXIS", FitsKeywordType.Integer, 2),
-        //        new FitsKey("NAXIS1", FitsKeywordType.Integer, 4),
-        //        new FitsKey("NAXIS2", FitsKeywordType.Integer, 4),
-        //        new FitsKey("END", FitsKeywordType.Blank, null)
-
-        //    };
-
-        //    var unit = FitsUnit.GenerateFromKeywords(keys).ToList()[0];
-        //    var test = FitsKey.IsFitsKey(unit.Data, 0);
-        //}
-
         [Test]
         [Parallelizable(ParallelScope.Self)]
         public void Test_FitsKet_CreateNew_Throws()
@@ -479,6 +462,36 @@ namespace Tests
                     Assert.That(areEqual ^ areHashEqual, Is.False);
                 }
             }
+        }
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_FitsKey_GetValue()
+        {
+            void Test<T>(T input, FitsKeywordType type)
+            {
+                var key = new FitsKey("TSTKEY", type, input);
+                Assert.That(key.GetValue<T>(), Is.EqualTo(input),
+                    $"Failed to get {typeof(T)} from key of type {type}.");
+            }
+
+            Assert.Multiple(() =>
+            {
+                Test(float.MaxValue, FitsKeywordType.Float);
+                Test(1.0 * float.MaxValue, FitsKeywordType.Float);
+                Test("String", FitsKeywordType.String);
+                Test(true, FitsKeywordType.Logical);
+                Test(false, FitsKeywordType.Logical);
+                Test(100, FitsKeywordType.Integer);
+                Test(-100, FitsKeywordType.Integer);
+                Test(int.MaxValue, FitsKeywordType.Integer);
+                Test(new Complex(float.MaxValue, float.MinValue), FitsKeywordType.Complex);
+
+                Assert.That(() => new FitsKey("THROWS", FitsKeywordType.String, "TESTSTR").GetValue<double>(),
+                    Throws.InstanceOf<TypeAccessException>(),
+                    "Should throw if underlying and provided type mismatch.");
+            });
+
         }
 
         private void AssumeExistsAndScheduleForCleanup(string path)
