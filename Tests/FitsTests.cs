@@ -493,7 +493,7 @@ namespace Tests
             });
 
         }
-
+        
         private void AssumeExistsAndScheduleForCleanup(string path)
         {
             AssumeExists(path);

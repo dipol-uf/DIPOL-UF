@@ -337,14 +337,6 @@ namespace FITS_CS
             return isKey;
         }
 
-        public static IEnumerable<FitsKey> JoinKeywords(params FitsUnit[] keyUnits)
-        {
-            foreach (var keyUnit in keyUnits)
-                if (keyUnit.TryGetKeys(out var keys))
-                    foreach (var key in keys)
-                        yield return key;
-        }
-
         [Obsolete("Use constructor instead")]
         public static FitsKey CreateNew(string header, FitsKeywordType type, object value,
             string comment = "", FitsKeyLayout layout = FitsKeyLayout.Fixed)
