@@ -50,17 +50,15 @@ namespace FITS_CS
 
         public static FitsKey Empty => new FitsKey();
 
-        public object RawValue { get; private set; }
+        public object RawValue { get;}
 
         public byte[] Data => Encoding.ASCII.GetBytes(KeyString.ToArray());
-        public string Extension
-        {
-            get;
-            internal set;
-        } = null;
 
         public string KeyString => $"{Header, -8}{Body}";
-        public bool IsEmpty => string.IsNullOrWhiteSpace(KeyString) ;
+
+        public bool IsEmpty => string.IsNullOrWhiteSpace(Header) &&
+                               string.IsNullOrWhiteSpace(Value) &&
+                               string.IsNullOrWhiteSpace(Comment);
         public string Header
         {
             get;
@@ -92,9 +90,7 @@ namespace FITS_CS
         {
             get;
         }
-        public bool IsExtension => !IsEmpty && string.IsNullOrWhiteSpace(Header);
-
-
+        
         public FitsKey(byte[] data, int offset = 0)
         {
             if (data == null)
@@ -276,6 +272,7 @@ namespace FITS_CS
             }
 
         }
+
         private FitsKey()
         { }
 
@@ -297,6 +294,7 @@ namespace FITS_CS
             else throw new TypeAccessException($"Illegal combination of {Type} and {typeof(T)}.");
             return ret;
         }
+
         public override string ToString() => KeyString;
         public override bool Equals(object obj)
         {
