@@ -107,8 +107,9 @@ namespace FITS_CS
 
             var keyString = new string(Encoding.ASCII.GetChars(data, offset, KeySize));
 
+            int maxPos = NumericValueMaxLengthFixed;
+
             Header = keyString.Substring(0, KeyHeaderSize).Trim();
-            //Body = keyString.Substring(KeyHeaderSize);
             var indexSlash = -1;
             var isInQuotes = false;
             for (var i = KeyHeaderSize; i < KeySize; i++)
@@ -119,12 +120,12 @@ namespace FITS_CS
                     indexSlash = i;
                     break;
                 }
-            Comment = indexSlash >= KeyHeaderSize ? keyString.Substring(indexSlash + 1) : "";
+            Comment = indexSlash >= KeyHeaderSize ? keyString.Substring(indexSlash + 2).Trim() : "";
             if (keyString[KeyHeaderSize] == '=')
             {
                 Value = indexSlash >= KeyHeaderSize
-                    ? keyString.Substring(KeyHeaderSize + 1, indexSlash - KeyHeaderSize - 1)
-                    : keyString.Substring(KeyHeaderSize + 1);
+                    ? keyString.Substring(KeyHeaderSize + 2, indexSlash - KeyHeaderSize - 3)
+                    : keyString.Substring(KeyHeaderSize + 2).TrimEnd();
                 var trimVal = Value.Trim();
 
                 if (string.IsNullOrWhiteSpace(trimVal))
@@ -140,19 +141,14 @@ namespace FITS_CS
                 else if (trimVal.Contains('\''))
                 {
                     Type = FitsKeywordType.String;
-                    //RawValue = trimVal.TrimStart('\'').TrimEnd('\'').Replace("''", "'");
                     RawValue = Regex.Match(trimVal, "'(.*)'").Groups[1].Value.Replace("''", "'");
                 }
-                else if (trimVal.Contains(":"))
+                else if (Value.Length > maxPos + 1 && 
+                         double.TryParse(Value.Substring(0, maxPos), out var real) &&
+                         double.TryParse(Value.Substring(maxPos), out var img))
                 {
                     Type = FitsKeywordType.Complex;
-                    var split = trimVal
-                        .Split(':')
-                        .Select(s => double.Parse(s.Trim(), 
-                                    System.Globalization.NumberStyles.Any, 
-                                    System.Globalization.NumberFormatInfo.InvariantInfo))
-                        .ToList();
-                    RawValue = new Complex(split[0], split[1]);
+                    RawValue = new Complex(real, img);
                 }
                 else if (int.TryParse(trimVal, out var intVal))
                 {
@@ -262,7 +258,7 @@ namespace FITS_CS
             var maxValuePos = NumericValueMaxLengthFixed;
             var dblDecPrecision = maxValuePos - 7;
             const string complexSep = "";
-            var strQuotePos = StringQuotePos - 1;
+            var strQuotePos = StringQuotePos - 2 - ReservedSize - KeyHeaderSize;
 
             switch (type)
             {
@@ -315,6 +311,8 @@ namespace FITS_CS
                         if(sVal.Length > KeySize - KeyHeaderSize - ReservedSize - 2)
                             throw new ArgumentException($"String \"{nameof(value)}\" is too long.");
                         key.Value = string.Format($"'{{0, {-strQuotePos}}}'", sVal);
+                        if(key.Value.Length < maxValuePos)
+                            key.Value += new string(' ', maxValuePos - key.Value.Length);
                     }
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type" +
                                                      $" {typeof(string)}.");
@@ -328,7 +326,7 @@ namespace FITS_CS
                     break;
                 case FitsKeywordType.Blank:
                     if (value is string blankVal)
-                        key.Value = blankVal?.Substring(0, Math.Min(blankVal.Length, KeySize - KeyHeaderSize));
+                        key.Value = blankVal.Substring(0, Math.Min(blankVal.Length, KeySize - KeyHeaderSize));
                     else if (value is null)
                         key.Value = "";
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(string)}.");
