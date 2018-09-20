@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 
 namespace FITS_CS
 {
@@ -66,33 +67,10 @@ namespace FITS_CS
 
             try
             {
+                for(var i = 0; i < n; i++)
+                    keys.Add(new FitsKey(Data, i * FitsKey.KeySize));
 
-                var currKey = new FitsKey(Data);
-                var nextKey = new FitsKey(Data, FitsKey.KeySize);
-                var i = 1;
-                while (i < n - 1)
-                {
-                    //currKey = new FITSKey(array, i * FITSKey.KeySize);
-                    //nextKey = i < n-1 ? new FITSKey(array, (i+1) * FITSKey.KeySize) : null;
-
-                    if ((nextKey?.IsExtension ?? false) &&
-                        currKey != null)
-                    {
-                        currKey.Extension = nextKey.KeyString;
-                        keys.Add(currKey);
-                        if (i < n - 1)
-                            currKey = new FitsKey(Data, (++i) * FitsKey.KeySize);
-                    }
-                    else
-                    {
-                        keys.Add(currKey);
-                        currKey = nextKey;
-                    }
-                    nextKey = ++i < n ? new FitsKey(Data, i * FitsKey.KeySize) : null;
-                }
-                if (!currKey?.IsExtension ?? false)
-                    keys.Add(currKey);
-                //keys = keys.Where(k => !k.IsEmpty).ToList();
+                keys = keys.Where(x => !x.IsEmpty).ToList();
                 return true;
             }
             catch
