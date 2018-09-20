@@ -138,16 +138,16 @@ namespace Tests
 
         public static List<FitsKey> ExtraKeys => new List<FitsKey>(10)
             {
-                FitsKey.CreateNew("LGT", FitsKeywordType.Logical, true, "Logical true"),
-                FitsKey.CreateNew("LGF", FitsKeywordType.Logical, false, "Logical false"),
-                FitsKey.CreateNew("STREMP", FitsKeywordType.String, "", "Empty string"),
-                FitsKey.CreateNew("STRCNT", FitsKeywordType.String, "String with some content and quotes '", "String w content"),
-                FitsKey.CreateNew("INTZRO", FitsKeywordType.Integer, 0, "Zero int"),
-                FitsKey.CreateNew("INTPOS", FitsKeywordType.Integer, 100, "Positive int"),
-                FitsKey.CreateNew("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
-                FitsKey.CreateNew("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
-                FitsKey.CreateNew("FLOAT", FitsKeywordType.Float, -100e50),
-                FitsKey.CreateNew("CMPLX", FitsKeywordType.Complex, new Complex(-1.14151645e30, -1e45), "")
+                new FitsKey("LGT", FitsKeywordType.Logical, true, "Logical true"),
+                new FitsKey("LGF", FitsKeywordType.Logical, false, "Logical false"),
+                new FitsKey("STREMP", FitsKeywordType.String, "", "Empty string"),
+                new FitsKey("STRCNT", FitsKeywordType.String, "String with some content and quotes '", "String w content"),
+                new FitsKey("INTZRO", FitsKeywordType.Integer, 0, "Zero int"),
+                new FitsKey("INTPOS", FitsKeywordType.Integer, 100, "Positive int"),
+                new FitsKey("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
+                new FitsKey("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
+                new FitsKey("FLOAT", FitsKeywordType.Float, -100e50),
+                new FitsKey("CMPLX", FitsKeywordType.Complex, new Complex(-1.14151645e30, -1e45), "")
             };
     }
     [TestFixture]
@@ -356,16 +356,16 @@ namespace Tests
         [Test]
         [TestCaseSource(typeof(FitsTestsData), nameof(FitsTestsData.Test_CreateNew_Data))]
         [Parallelizable(ParallelScope.All)]
-        public void Test_FitsKey_CreateNew(string header, FitsKeywordType type, object value, string comment)
+        public void Test_FitsKeyCtor_2(string header, FitsKeywordType type, object value, string comment)
         {
             FitsKey key = null;
 
             // ReSharper disable once ImplicitlyCapturedClosure
-            Assert.That(() => key = FitsKey.CreateNew(header, type, new object(), comment),
+            Assert.That(() => key = new FitsKey(header, type, new object(), comment),
                 Throws.InstanceOf<ArgumentException>());
             Assert.Multiple(() =>
             {
-                Assert.That(() => key = FitsKey.CreateNew(header, type, value, comment), Throws.Nothing,
+                Assert.That(() => key = new FitsKey(header, type, value, comment), Throws.Nothing,
                     $"Fails for {header}");
                 Assert.That(key.Header, Is.EqualTo(header.Trim()),
                     $"Fails for {header}");
@@ -384,12 +384,12 @@ namespace Tests
         //{
         //    var keys = new[]
         //    {
-        //        FitsKey.CreateNew("SIMPLE", FitsKeywordType.Logical, true),
-        //        FitsKey.CreateNew("BITPIX", FitsKeywordType.Integer, 16),
-        //        FitsKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2),
-        //        FitsKey.CreateNew("NAXIS1", FitsKeywordType.Integer, 4),
-        //        FitsKey.CreateNew("NAXIS2", FitsKeywordType.Integer, 4),
-        //        FitsKey.CreateNew("END", FitsKeywordType.Blank, null)
+        //        new FitsKey("SIMPLE", FitsKeywordType.Logical, true),
+        //        new FitsKey("BITPIX", FitsKeywordType.Integer, 16),
+        //        new FitsKey("NAXIS", FitsKeywordType.Integer, 2),
+        //        new FitsKey("NAXIS1", FitsKeywordType.Integer, 4),
+        //        new FitsKey("NAXIS2", FitsKeywordType.Integer, 4),
+        //        new FitsKey("END", FitsKeywordType.Blank, null)
 
         //    };
 
@@ -404,22 +404,22 @@ namespace Tests
             Assert.Multiple(() =>
             {
 
-                Assert.That(() => FitsKey.CreateNew(null, FitsKeywordType.Blank, null),
+                Assert.That(() => new FitsKey(null, FitsKeywordType.Blank, null),
                     Throws.ArgumentNullException);
-                Assert.That(() => FitsKey.CreateNew("EXTREMELYLONGHEADER", FitsKeywordType.Blank, null),
+                Assert.That(() => new FitsKey("EXTREMELYLONGHEADER", FitsKeywordType.Blank, null),
                     Throws.ArgumentException);
-                Assert.That(() => FitsKey.CreateNew("DOUBLE", FitsKeywordType.Float, double.MaxValue),
+                Assert.That(() => new FitsKey("DOUBLE", FitsKeywordType.Float, double.MaxValue),
                     Throws.InstanceOf<OverflowException>());
                 Assert.That(
-                    () => FitsKey.CreateNew("COMPLEX", FitsKeywordType.Complex, new Complex(double.MaxValue, 0)),
+                    () => new FitsKey("COMPLEX", FitsKeywordType.Complex, new Complex(double.MaxValue, 0)),
                     Throws.InstanceOf<OverflowException>());
-                Assert.That(() => FitsKey.CreateNew("STRING", FitsKeywordType.String,
+                Assert.That(() => new FitsKey("STRING", FitsKeywordType.String,
                         new string('+', 123)),
                     Throws.ArgumentException);
-                Assert.That(() => FitsKey.CreateNew("NOTCOMM", FitsKeywordType.Comment,
+                Assert.That(() => new FitsKey("NOTCOMM", FitsKeywordType.Comment,
                         null),
                     Throws.ArgumentException);
-                Assert.That(() => FitsKey.CreateNew("NOTBLNK", (FitsKeywordType)123,
+                Assert.That(() => new FitsKey("NOTBLNK", (FitsKeywordType)123,
                         null),
                     Throws.InstanceOf<NotSupportedException>());
             });
