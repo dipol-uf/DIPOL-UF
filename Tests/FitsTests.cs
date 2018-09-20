@@ -88,8 +88,8 @@ namespace Tests
                         (H:"NSIMPLE", B:"=         F", C:"", O:0, V: false),
                         (H:"STRSIM", B:"= 'some string'", C:"With comment", O:0, V: "some string" as object),
                         (H:"STRQUO", B:"= 'some string with ''quotes'''", C:"", O:0, V: "some string with 'quotes'" as object),
-                        (H:"HISTORY", B:"", C:"", O:0, V: null),
-                        (H:"COMMENT", B:"", C:"Comment", O:0, V: null),
+                        (H:"HISTORY", B:"History entry", C:"", O:0, V: "History entry"),
+                        (H:"COMMENT", B:"Comment", C:"", O:0, V: "Comment"),
                         (H:"BLANK", B:"= ", C:" With comment", O:0, V: null),
                         (H:"INTVAL1", B:"=      1234", C:"Comment", O:0, V: 1234),
                         (H:"INTVAL2", B:"=      -1234", C:"Comment", O:0, V: -1234),
@@ -148,7 +148,8 @@ namespace Tests
                 new FitsKey("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
                 new FitsKey("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
                 new FitsKey("FLOAT", FitsKeywordType.Float, -100e50),
-                new FitsKey("CMPLX", FitsKeywordType.Complex, new Complex(-1.14151645e30, -1e45), "")
+                new FitsKey("CMPLX", FitsKeywordType.Complex, new Complex(-1.14151645e30, -1e45), ""),
+                new FitsKey("HISTORY", FitsKeywordType.Comment, "First history entry")
             };
     }
     [TestFixture]

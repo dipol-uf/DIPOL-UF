@@ -157,13 +157,9 @@ namespace FITS_CS
             }
             else
             {
-                Comment = keyString.Substring(KeyHeaderSize + 1).Trim();
-                Value = "";
-                if (string.IsNullOrWhiteSpace(Comment))
-                    Type = FitsKeywordType.Blank;
-                else
-                    Type = FitsKeywordType.Comment;
-                RawValue = null;
+                Value = keyString.Substring(KeyHeaderSize).Trim();
+                RawValue = Value;
+                Type = FitsKeywordType.Comment;
             }
         }
 
