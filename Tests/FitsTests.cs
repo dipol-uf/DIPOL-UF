@@ -96,7 +96,7 @@ namespace Tests
                         (H:"DBLVAL2", B:"=      -1234.0", C:"Comment", O:0, V: -1234.0),
                         (H:"DBLVAL3", B:"=      1234e30", C:"Comment", O:0, V: 1234e30),
                         (H:"DBLVAL4", B:"=      -1234e-30", C:"Comment", O:0, V: -1234e-30),
-                        (H:"DBLVAL4", B:"=      12:23.5", C:"Comment", O:0, V: new System.Numerics.Complex(12, 23.5))
+                        (H:"DBLVAL4", B:"=                   1223.5", C:"Comment", O:0, V: new System.Numerics.Complex(12, 23.5))
                     }
                     .Select(x => new TestCaseData(
                         new string(' ', x.O) + $"{x.H, -8}{x.B}"+
@@ -135,6 +135,20 @@ namespace Tests
 
             }
         }
+
+        public static List<FitsKey> ExtraKeys => new List<FitsKey>(10)
+            {
+                FitsKey.CreateNew("LGT", FitsKeywordType.Logical, true, "Logical true"),
+                FitsKey.CreateNew("LGF", FitsKeywordType.Logical, false, "Logical false"),
+                FitsKey.CreateNew("STREMP", FitsKeywordType.String, "", "Empty string"),
+                FitsKey.CreateNew("STRCNT", FitsKeywordType.String, "String with some content and quotes '", "String w content"),
+                FitsKey.CreateNew("INTZRO", FitsKeywordType.Integer, 0, "Zero int"),
+                FitsKey.CreateNew("INTPOS", FitsKeywordType.Integer, 100, "Positive int"),
+                FitsKey.CreateNew("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
+                FitsKey.CreateNew("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
+                FitsKey.CreateNew("FLOAT", FitsKeywordType.Float, -100e50),
+                FitsKey.CreateNew("CMPLX", FitsKeywordType.Complex, new Complex(-1.14151645e30, -1e45), "")
+            };
     }
     [TestFixture]
     public class FitsTests
@@ -172,7 +186,9 @@ namespace Tests
                         if (unit.IsData)
                             data.AddRange(unit.GetData<T>());
                     }
-                    Assert.That(data.Take(width * height), Is.EqualTo(compareTo).AsCollection);
+                    Assert.That(data.Take(width * height), 
+                        Is.EqualTo(compareTo).AsCollection, 
+                        $"Failed for [{width:0000}x{height:0000}] of type {typeof(T)}.");
                 }
             }
 
@@ -180,7 +196,7 @@ namespace Tests
             var doubleData = testData.Select(x => 1.0 * x).ToArray();
             FitsStream.WriteImage(new Image(doubleData, width, height),
                 FitsImageType.Double, GetPath(file));
-           // AssumeExistsAndScheduleForCleanup(file);
+            AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<double>(file, doubleData);
 
 
@@ -218,7 +234,7 @@ namespace Tests
 
         }
 
-        //[Theory]
+        [Theory]
         [TestCaseSource(typeof(FitsTestsData), nameof(FitsTestsData.Test_ReadWrite_Data))]
         [Parallelizable(ParallelScope.Self)]
         public void Test_ReadWriteImage(int width, int height)
@@ -259,26 +275,23 @@ namespace Tests
 
         }
 
-        //[Test]
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_WriteExtraKeywords()
         {
             var image = new Image(new [] {1, 2, 3, 4}, 2, 2);
             const string path = "fits_keys_short.fits";
-            var extraKeys = new List<FitsKey>(10)
-            {
-                FitsKey.CreateNew("LGT", FitsKeywordType.Logical, true, "Logical true"),
-                FitsKey.CreateNew("LGF", FitsKeywordType.Logical, false, "Logical false"),
-                FitsKey.CreateNew("STREMP", FitsKeywordType.String, "", "Empty string"),
-                FitsKey.CreateNew("STRCNT", FitsKeywordType.String, "String with some content and quotes '", "String w content"),
-                FitsKey.CreateNew("INTZRO", FitsKeywordType.Integer, 0, "Zero int"),
-                FitsKey.CreateNew("INTPOS", FitsKeywordType.Integer, 100, "Positive int"),
-                FitsKey.CreateNew("INTNEG", FitsKeywordType.Integer, -100, "Negative int")
-            };
+            var extraKeys = FitsTestsData.ExtraKeys;
 
             FitsStream.WriteImage(image, FitsImageType.Int32, GetPath(path),extraKeys);
             FitsStream.ReadImage(GetPath(path), out var readKeys);
 
-            Assert.That(readKeys, Contains.Key(extraKeys.Select(k => k.Header)));
+            foreach (var key in extraKeys)
+            {
+                var readKey = readKeys.FirstOrDefault(x => x.Header == key.Header);
+                Assert.That(readKey != FitsKey.Empty, Is.True);
+                Assert.That(readKey == key, Is.True);
+            }
 
         }
 
@@ -366,25 +379,26 @@ namespace Tests
             });
         }
 
+        //[Test]
+        //public void Test_FitsUnit_GenerateFromKeywords()
+        //{
+        //    var keys = new[]
+        //    {
+        //        FitsKey.CreateNew("SIMPLE", FitsKeywordType.Logical, true),
+        //        FitsKey.CreateNew("BITPIX", FitsKeywordType.Integer, 16),
+        //        FitsKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2),
+        //        FitsKey.CreateNew("NAXIS1", FitsKeywordType.Integer, 4),
+        //        FitsKey.CreateNew("NAXIS2", FitsKeywordType.Integer, 4),
+        //        FitsKey.CreateNew("END", FitsKeywordType.Blank, null)
+
+        //    };
+
+        //    var unit = FitsUnit.GenerateFromKeywords(keys).ToList()[0];
+        //    var test = FitsKey.IsFitsKey(unit.Data, 0);
+        //}
+
         [Test]
-        public void Test_FitsUnit_GenerateFromKeywords()
-        {
-            var keys = new[]
-            {
-                FitsKey.CreateNew("SIMPLE", FitsKeywordType.Logical, true),
-                FitsKey.CreateNew("BITPIX", FitsKeywordType.Integer, 16),
-                FitsKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2),
-                FitsKey.CreateNew("NAXIS1", FitsKeywordType.Integer, 4),
-                FitsKey.CreateNew("NAXIS2", FitsKeywordType.Integer, 4),
-                FitsKey.CreateNew("END", FitsKeywordType.Blank, null)
-
-            };
-
-            var unit = FitsUnit.GenerateFromKeywords(keys).ToList()[0];
-            var test = FitsKey.IsFitsKey(unit.Data, 0);
-        }
-
-        [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_FitsKet_CreateNew_Throws()
         {
             Assert.Multiple(() =>
@@ -403,9 +417,6 @@ namespace Tests
                         new string('+', 123)),
                     Throws.ArgumentException);
                 Assert.That(() => FitsKey.CreateNew("NOTCOMM", FitsKeywordType.Comment,
-                        null),
-                    Throws.ArgumentException);
-                Assert.That(() => FitsKey.CreateNew("NOTBLNK", FitsKeywordType.Blank,
                         null),
                     Throws.ArgumentException);
                 Assert.That(() => FitsKey.CreateNew("NOTBLNK", (FitsKeywordType)123,
@@ -446,6 +457,29 @@ namespace Tests
             => Assert.That(FitsKey.Empty.IsEmpty, Is.True,
                 "\"Empty\" keyword is not empty.");
 
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_Equals()
+        {
+            Assert.That(FitsKey.Empty.Equals(null), Is.False);
+        }
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_ToString_GetHashCode()
+        {
+            foreach (var key in FitsTestsData.ExtraKeys)
+            {
+                Assert.That(key.ToString(), Is.EqualTo(key.KeyString));
+                foreach (var key2 in FitsTestsData.ExtraKeys)
+                {
+                    var areEqual = key == key2;
+                    var areHashEqual = key.GetHashCode() == key2.GetHashCode();
+                    Assert.That(areEqual ^ areHashEqual, Is.False);
+                }
+            }
+        }
 
         private void AssumeExistsAndScheduleForCleanup(string path)
         {
