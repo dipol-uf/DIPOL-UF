@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -48,6 +49,7 @@ namespace FITS_CS
         public static readonly int StringQuotePos = 20;
         public static readonly int NumericValueMaxLengthFixed = 20;
 
+        public static FitsKey End => new FitsKey("END", FitsKeywordType.Comment, "");
         public static FitsKey Empty => new FitsKey();
 
         public object RawValue { get;}
@@ -240,8 +242,8 @@ namespace FITS_CS
                                                      $" {typeof(string)}.");
                     break;
                 case FitsKeywordType.Comment:
-                    if (header != "COMMENT" && header != "HISTORY")
-                        throw new ArgumentException($"\"{nameof(header)}\" should be either \"COMMENT\" or \"HISTORY\".");
+                    if (header != "COMMENT" && header != "HISTORY" && header != "END")
+                        throw new ArgumentException($"\"{nameof(header)}\" should be either \"COMMENT\" or \"HISTORY\" or \"END\".");
                     if (value is string commVal)
                         Value = commVal.Substring(0, Math.Min(commVal.Length, KeySize - KeyHeaderSize));
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(string)}.");
@@ -287,6 +289,8 @@ namespace FITS_CS
                 ret = (double)RawValue;
             else if (typeof(T) == typeof(Complex) && Type == FitsKeywordType.Complex)
                 ret = (Complex)RawValue;
+            else if (typeof(T) == typeof(string) && Type == FitsKeywordType.Comment)
+                ret = (string) RawValue;
             else throw new TypeAccessException($"Illegal combination of {Type} and {typeof(T)}.");
             return ret;
         }
@@ -326,10 +330,25 @@ namespace FITS_CS
                         strRep.StartsWith("END") ||
                         string.IsNullOrWhiteSpace(strRep);
 
-            isKey |= Regex.IsMatch(strRep, $@"^[A-Za-z\ \-0-9]{{{KeyHeaderSize}}}=\ ");
+            isKey |= Regex.IsMatch(strRep, $@"^[A-Za-z\ \-_0-9]{{{KeyHeaderSize}}}=\ ");
 
             return isKey;
         }
+        public static bool IsEmptyKey(byte[] data, int offset = 0)
+        {
+            return Enumerable.Range(offset, KeySize).All(i => data[i] == 0) ||
+                Enumerable.Range(offset, KeySize).All(i => data[i] == (byte)' ');
+        }
+
+        public static FitsKey CreateComment(string text)
+            => new FitsKey("COMMENT", FitsKeywordType.Comment, text);
+
+        public static FitsKey CreateHistory(string text)
+            => new FitsKey("HISTORY", FitsKeywordType.Comment, text);
+
+        public static FitsKey CreateDate(string header, DateTime date, 
+            string comment = "", string format = "yyyy/MM/dd HH:mm:ss.fff")
+            => new FitsKey(header, FitsKeywordType.String, string.Format($"{{0:{format}}}", date), comment);
 
         [Obsolete("Use constructor instead")]
         public static FitsKey CreateNew(string header, FitsKeywordType type, object value,

@@ -56,9 +56,8 @@ namespace FITS_CS
         }
 
         public override void Flush()
-        {
-            _baseStream.Flush();
-        }
+            => _baseStream.Flush();
+        
 
         public override int Read(byte[] buffer, int offset, int count)
             => _baseStream.Read(buffer, offset, count);
@@ -67,13 +66,16 @@ namespace FITS_CS
             => _baseStream.Seek(offset, origin);
 
         public override void SetLength(long value)
-            => _baseStream.SetLength(value);
+            => throw new NotSupportedException();
 
         public override void Write(byte[] buffer, int offset, int count)
             => _baseStream.Write(buffer, offset, count);
 
         public void WriteUnit(FitsUnit unit)
-            => Write(unit.Data, 0, FitsUnit.UnitSizeInBytes);
+        {
+            Write(unit.Data, 0, FitsUnit.UnitSizeInBytes);
+            Flush();
+        }
 
         public FitsStream(Stream str)
             =>  _baseStream = str ?? throw new ArgumentNullException($"{nameof(str)} is null");
@@ -93,7 +95,6 @@ namespace FITS_CS
             if (disposing)
                 if (_baseStream != null)
                 {
-                    _baseStream.Close();
                     _baseStream.Dispose();
                     IsDisposed = true;
                 }
@@ -110,25 +111,12 @@ namespace FITS_CS
                 throw new NotSupportedException("Stream does not support reading.");
 
             var buffer = new byte[FitsUnit.UnitSizeInBytes];
-            try
-            {
+            
                 if (CanSeek && Position + FitsUnit.UnitSizeInBytes > Length)
                     throw new ArgumentException("Stream ended");
                 _baseStream.Read(buffer, 0, FitsUnit.UnitSizeInBytes);
                 return new FitsUnit(buffer);
-            }
-            catch (ArgumentException ae)
-            {
-                throw new EndOfStreamException("Stream end was reached.", ae);
-            }
-            catch (IOException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                throw new IOException("An unexpected error happened while reading the stream.", e);
-            }
+            
         }
 
         public bool TryReadUnit(out FitsUnit unit)
@@ -150,18 +138,18 @@ namespace FITS_CS
 
             var keys = new List<FitsKey>
             {
-                FitsKey.CreateNew("SIMPLE", FitsKeywordType.Logical, true),
-                FitsKey.CreateNew("BITPIX", FitsKeywordType.Integer, (int)(short)type),
-                FitsKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2),
-                FitsKey.CreateNew("NAXIS1", FitsKeywordType.Integer, image.Width),
-                FitsKey.CreateNew("NAXIS2", FitsKeywordType.Integer, image.Height),
-                FitsKey.CreateNew("NAXIS", FitsKeywordType.Integer, 2)
+                new FitsKey("SIMPLE", FitsKeywordType.Logical, true),
+                new FitsKey("BITPIX", FitsKeywordType.Integer, (int)(short)type),
+                new FitsKey("NAXIS", FitsKeywordType.Integer, 2),
+                new FitsKey("NAXIS1", FitsKeywordType.Integer, image.Width),
+                new FitsKey("NAXIS2", FitsKeywordType.Integer, image.Height),
+                new FitsKey("NAXIS", FitsKeywordType.Integer, 2)
             };
 
             if(extraKeys != null)
                 keys.AddRange(extraKeys);
 
-            keys.Add(FitsKey.CreateNew("END", FitsKeywordType.Blank, null));
+            keys.Add(new FitsKey("END", FitsKeywordType.Blank, null));
 
             var keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
             var dataUnits = FitsUnit.GenerateFromArray(image.GetBytes(), type);

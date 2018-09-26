@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Web;
 
@@ -47,13 +48,12 @@ namespace FITS_CS
 
         public bool IsKeywords
             => Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
-            .Select(i => FitsKey.IsFitsKey(Data, i * FitsKey.KeySize))
-            .Aggregate(true, (old, nv) => old & nv);
+                         .All(i => FitsKey.IsFitsKey(Data, i * FitsKey.KeySize) ||
+                                   FitsKey.IsEmptyKey(Data, i * FitsKey.KeySize));
 
         public bool IsData
             => Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
-            .Select(i => FitsKey.IsFitsKey(Data, i * FitsKey.KeySize))
-            .Contains(false);
+                         .All(i => !FitsKey.IsFitsKey(Data, i * FitsKey.KeySize));
 
         public bool TryGetKeys(out List<FitsKey> keys)
         {

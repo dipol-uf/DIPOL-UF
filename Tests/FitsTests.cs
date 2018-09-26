@@ -25,6 +25,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -33,8 +34,11 @@ using System.Security.Cryptography;
 using System.Text;
 using DipolImage;
 using FITS_CS;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NUnit.Framework;
 using NUnit.Framework.Internal.Commands;
+using Assert = NUnit.Framework.Assert;
+using TestContext = NUnit.Framework.TestContext;
 
 namespace Tests
 {
@@ -295,6 +299,7 @@ namespace Tests
                 Assert.That(readKey == key, Is.True);
             }
 
+            AssumeExistsAndScheduleForCleanup(path);
         }
 
         [Test]
@@ -495,6 +500,140 @@ namespace Tests
 
         }
 
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_FitsKey_FactoryMethods()
+        {
+            const string cStr = "Comment str";
+            const string hStr = "History entry";
+            var comment = FitsKey.CreateComment(cStr);
+            var history = FitsKey.CreateHistory(hStr);
+
+            Assert.That(comment.Header == "COMMENT" && 
+                        comment.Type == FitsKeywordType.Comment && 
+                        comment.RawValue is string s1 && 
+                        s1 == cStr &&
+                        comment.GetValue<string>() == cStr);
+
+            Assert.That(history.Header == "HISTORY" &&
+                        history.Type == FitsKeywordType.Comment &&
+                        history.RawValue is string s2 &&
+                        s2 == hStr &&
+                        history.GetValue<string>() == hStr);
+        }
+
+
+        [Theory]
+        [DeployItem(
+            "../../../Test inputs/UITfuv2582gc.fits", 
+            CopyTo = "_dispose_twice_and_close.fits",
+            ForceOverwrite = true)]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_Fits_DisposeTwiceAndClose()
+        {
+            var path = GetPath("_dispose_twice_and_close.fits");
+
+            FitsStream str = null;
+            Assume.That(() => str = new FitsStream(new FileStream(path, FileMode.Open)), 
+                Throws.Nothing);
+
+            Assert.That(str, Is.Not.Null);
+            str.Dispose();
+            Assert.That(str, Has.Property(nameof(str.IsDisposed)).True);
+            Assert.That(str.Dispose,
+                Throws.Nothing);
+            Assert.That(str, Has.Property(nameof(str.IsDisposed)).True);
+            Assert.That(str.Close,
+                Throws.Nothing);
+            Assert.That(str, Has.Property(nameof(str.IsDisposed)).True);
+            
+            Assert.That(str.ReadUnit, 
+                Throws.InstanceOf<ObjectDisposedException>());
+            AssumeExistsAndScheduleForCleanup("_dispose_twice_and_close.fits");
+            
+        }
+
+        [Test]
+        [DeployItem("../../../Test inputs/UITfuv2582gc_unsupp_bitpix.fits")]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_Fits_ReadImage_Unsupported_Format()
+        {
+            Assert.That(() => FitsStream.ReadImage(GetPath("UITfuv2582gc_unsupp_bitpix.fits"), out _),
+                Throws.InstanceOf<NotSupportedException>());
+            AssumeExistsAndScheduleForCleanup("UITfuv2582gc_unsupp_bitpix.fits");
+        }
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_Fits_CannotWrite()
+        {
+            using (var fstr = new FitsStream(new MemoryStream(new byte[1], false)))
+                Assert.Multiple(() =>
+                {
+                    Assert.That(fstr.CanWrite, Is.False);
+                    // ReSharper disable once AccessToDisposedClosure
+                    Assert.That(() => fstr.Write(new byte[] {1}, 0, 1),
+                        Throws.InstanceOf<NotSupportedException>());
+                });
+        }
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
+        public void Test_Fits_Seeking()
+        {
+            using (var fstr = new FitsStream(new MemoryStream(new byte[2880], true)))
+                Assert.Multiple(() =>
+                {
+                    Assert.That(fstr.CanRead, Is.True);
+                    Assert.That(fstr.CanSeek, Is.True);
+
+                    Assert.That(fstr.Position, Is.EqualTo(0));
+
+                    fstr.Seek(1440, SeekOrigin.Current);
+                    Assert.That(fstr.Position, Is.EqualTo(1440));
+
+                    fstr.Position /= 2;
+                    Assert.That(fstr.Position, Is.EqualTo(720));
+                });
+        }
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_SetLong_NotImplemented()
+        {
+            using (var fstr = new FitsStream(new MemoryStream(new byte[1], true)))
+            {
+                // ReSharper disable once AccessToDisposedClosure
+                Assert.That(() => fstr.SetLength(0),
+                    Throws.InstanceOf<NotSupportedException>());
+            }
+        }
+
+        [Theory]
+        [Parallelizable(ParallelScope.Self)]
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
+        public void Test_Fits_CannotRead()
+        {
+            var path = "write_only.fits";
+
+            using (var str = new FitsStream(new FileStream(GetPath(path), 
+                FileMode.Create, FileAccess.Write)))
+            {
+                var buff = new byte[1];
+                Assume.That(str.CanWrite && !str.CanRead, Is.True);
+                Assert.That(() => str.Write(new byte[] {128}, 0, 1),
+                    Throws.Nothing);
+                str.Flush();
+                Assert.That(() => str.Read(buff, 0, 1),
+                    Throws.InstanceOf<NotSupportedException>());
+
+                Assert.That(() => str.ReadUnit(),
+                    Throws.InstanceOf<NotSupportedException>());
+            }
+
+            AssumeExistsAndScheduleForCleanup(path);
+        }
 
         private void AssumeExistsAndScheduleForCleanup(string path)
         {
