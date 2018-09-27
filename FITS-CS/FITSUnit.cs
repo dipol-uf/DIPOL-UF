@@ -44,16 +44,22 @@ namespace FITS_CS
                 throw new ArgumentException($"{nameof(data)} has wrong length");
 
             Array.Copy(data, Data, data.Length);
+
+            IsKeywords = Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
+                                   .All(i => FitsKey.IsFitsKey(Data, i * FitsKey.KeySize) ||
+                                             FitsKey.IsEmptyKey(Data, i * FitsKey.KeySize));
+
+            IsData = !IsKeywords;
         }
 
-        public bool IsKeywords
-            => Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
-                         .All(i => FitsKey.IsFitsKey(Data, i * FitsKey.KeySize) ||
-                                   FitsKey.IsEmptyKey(Data, i * FitsKey.KeySize));
+        public bool IsKeywords { get; }
+            //=> Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
+            //             .All(i => FitsKey.IsFitsKey(Data, i * FitsKey.KeySize) ||
+            //                       FitsKey.IsEmptyKey(Data, i * FitsKey.KeySize));
 
-        public bool IsData
-            => Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
-                         .All(i => !FitsKey.IsFitsKey(Data, i * FitsKey.KeySize));
+        public bool IsData { get; }
+            //=> Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
+            //             .All(i => !FitsKey.IsFitsKey(Data, i * FitsKey.KeySize));
 
         public bool TryGetKeys(out List<FitsKey> keys)
         {
