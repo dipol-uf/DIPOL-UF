@@ -160,26 +160,31 @@ namespace FITS_CS
 
         }
 
-        public static IEnumerable<FitsUnit> GenerateFromArray(byte[] array, FitsImageType type)
+        public static List<FitsUnit> GenerateFromArray(byte[] array, FitsImageType type)
         {
+
             var size = Math.Abs((short)type) / 8;
             var n = (int)Math.Ceiling(1.0 * array.Length / UnitSizeInBytes);
-            var mappedArray = new byte[n * UnitSizeInBytes];
-            Array.Copy(array, mappedArray, array.Length);
+            var result = new List<FitsUnit>(n);
 
-            if (BitConverter.IsLittleEndian)
-                for (var i = 0; i < array.Length / size; i++)
-                    Array.Reverse(mappedArray, i * size, size);
-           
+            //if (BitConverter.IsLittleEndian)
+            //for (var i = 0; i < array.Length / size; i++)
+            //    Array.Reverse(mappedArray, i * size, size);
+
 
             var buffer = new byte[UnitSizeInBytes];
 
             for (var iUnit = 0; iUnit < n; iUnit++)
             {
-                Array.Copy(mappedArray, iUnit * UnitSizeInBytes, buffer, 0, UnitSizeInBytes);
-                yield return new FitsUnit(buffer);
+                var cpSize = Math.Min(UnitSizeInBytes, array.Length - iUnit * UnitSizeInBytes);
+                Array.Copy(array, iUnit * UnitSizeInBytes, buffer, 0, cpSize);
+                if(BitConverter.IsLittleEndian)
+                    for (var i = 0; i < buffer.Length / size; i++)
+                        Array.Reverse(buffer, i * size, size);
+                result.Add(new FitsUnit(buffer));
             }
 
+            return result;
         }
     }
 }

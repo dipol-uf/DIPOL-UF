@@ -190,14 +190,21 @@ namespace FITS_CS
 
             Array GetData<T>() where T: struct
             {
-                var data = new List<T>(width * height);
+                var bSize = System.Runtime.InteropServices.Marshal.SizeOf<T>();
+                //var size = (int) (Math.Ceiling(1.0 * width * height * bSize / FitsUnit.UnitSizeInBytes)
+                //                  * FitsUnit.UnitSizeInBytes
+                //                  / bSize);
+
+                var data = new T[width * height];
+                var pos = 0;
                 foreach (var dataUnit in units.SkipWhile(u => u.IsKeywords))
-                    data.AddRange(dataUnit.GetData<T>());
-
-                data.RemoveRange(width * height, data.Count - width * height);
-                data.TrimExcess();
-
-                return data.ToArray();
+                {
+                    var buffer = dataUnit.GetData<T>();
+                    Array.Copy(buffer, 0, data, pos, Math.Min(buffer.Length, data.Length - pos));
+                    pos += buffer.Length;
+                }
+                
+                return data;
             }
 
             switch (type)
