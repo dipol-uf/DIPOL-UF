@@ -181,20 +181,19 @@ namespace FITS_CS
 
             keywords = keywords.Where(k => !k.IsEmpty).ToList();
 
-            var type = (FitsImageType)(keywords.FirstOrDefault(k => k.Header == "BITPIX")?.GetValue<int>()
-                       ?? throw new FileFormatException(new Uri(path), "Fits file has no required keyword \"BITPIX\"."));
-            var width = keywords.FirstOrDefault(k => k.Header == "NAXIS1")?.GetValue<int>()
-                        ?? throw new FileFormatException(new Uri(path), "Fits file has no required keyword \"NAXIS1\".");
-            var height = keywords.FirstOrDefault(k => k.Header == "NAXIS2")?.GetValue<int>()
-                        ?? throw new FileFormatException(new Uri(path), "Fits file has no required keyword \"NAXIS2\".");
+            var type = (FitsImageType) (keywords.FirstOrDefault(k => k.Header == "BITPIX")?.RawValue
+                                        ?? throw new FileFormatException(new Uri(path),
+                                            "Fits file has no required keyword \"BITPIX\"."));
+            var width = (int) (keywords.FirstOrDefault(k => k.Header == "NAXIS1")?.RawValue
+                               ?? throw new FileFormatException(new Uri(path),
+                                   "Fits file has no required keyword \"NAXIS1\"."));
+            var height = (int) (keywords.FirstOrDefault(k => k.Header == "NAXIS2")?.RawValue
+                                ?? throw new FileFormatException(new Uri(path),
+                                    "Fits file has no required keyword \"NAXIS2\"."));
 
             Array GetData<T>() where T: struct
             {
-                var bSize = System.Runtime.InteropServices.Marshal.SizeOf<T>();
-                //var size = (int) (Math.Ceiling(1.0 * width * height * bSize / FitsUnit.UnitSizeInBytes)
-                //                  * FitsUnit.UnitSizeInBytes
-                //                  / bSize);
-
+                
                 var data = new T[width * height];
                 var pos = 0;
                 foreach (var dataUnit in units.SkipWhile(u => u.IsKeywords))
