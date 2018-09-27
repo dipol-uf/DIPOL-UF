@@ -1,19 +1,26 @@
 ﻿//    This file is part of Dipol-3 Camera Manager.
 
-//    Dipol-3 Camera Manager is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-
-//    Dipol-3 Camera Manager is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//    GNU General Public License for more details.
-
-//    You should have received a copy of the GNU General Public License
-//    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
-//
-//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+//     MIT License
+//     
+//     Copyright(c) 2018 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -21,6 +28,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace DipolImage
 {
@@ -184,74 +192,95 @@ namespace DipolImage
 
         public byte[] GetBytes()
         {
-            //var size = System.Runtime.InteropServices.Marshal.SizeOf(this[0, 0]);
+            //var width = Width;
+            //byte[] byteArray;
+            //switch (_typeCode)
+            //{
+            //    case TypeCode.Byte:
+            //    {
+            //        byteArray = new byte[_baseArray.Length];
+            //        Array.Copy(_baseArray, byteArray, _baseArray.Length);
+            //        break;
+            //    }
+            //    case TypeCode.UInt16:
+            //    {
+            //        const int size = sizeof(ushort);
+            //        var srcArr = (ushort[]) _baseArray;
+            //        byteArray = new byte[Width * Height * size];
+            //        for (var i = 0; i < Height; i++)
+            //            for (var j = 0; j < Width; j++)
+            //                Array.Copy(BitConverter.GetBytes(srcArr[i * Width + j]), 0, byteArray,
+            //                    (i * Width + j) * size, size);
+            //        break;
+            //    }
+            //    case TypeCode.Int16:
+            //    {
+            //        const int size = sizeof(short);
+            //        var srcArr = (short[]) _baseArray;
+            //        byteArray = new byte[Width * Height * size];
+            //        for (var i = 0; i < Height; i++)
+            //            for (var j = 0; j < Width; j++)
+            //                Array.Copy(BitConverter.GetBytes(srcArr[i * Width + j]), 0, byteArray,
+            //                    (i * Width + j) * size, size);
+            //        break;
+            //    }
+            //    case TypeCode.UInt32:
+            //    {
+            //        const int size = sizeof(uint);
+            //        var srcArr = (uint[]) _baseArray;
+            //        byteArray = new byte[Width * Height * size];
+            //        for (var i = 0; i < Height; i++)
+            //            for (var j = 0; j < Width; j++)
+            //                Array.Copy(BitConverter.GetBytes(srcArr[i * Width + j]), 0, byteArray,
+            //                    (i * Width + j) * size, size);
+            //        break;
+            //    }
+            //    case TypeCode.Int32:
+            //    {
+            //        const int size = sizeof(int);
+            //        var srcArr = (int[]) _baseArray;
+            //        byteArray = new byte[Width * Height * size];
+            //        for (var i = 0; i < Height; i++)
+            //            for (var j = 0; j < Width; j++)
+            //                Array.Copy(BitConverter.GetBytes(srcArr[i * Width + j]), 0, byteArray,
+            //                    (i * Width + j) * size, size);
+            //        break;
+            //    }
+            //    case TypeCode.Single:
+            //    {
+            //        const int size = sizeof(float);
+            //        var srcArr = (float[]) _baseArray;
+            //        byteArray = new byte[Width * Height * size];
+            //        for (var i = 0; i < Height; i++)
+            //            for (var j = 0; j < Width; j++)
+            //                Array.Copy(BitConverter.GetBytes(srcArr[i * Width + j]), 0, byteArray,
+            //                    (i * Width + j) * size, size);
+            //        break;
+            //    }
+            //    default:
+            //    {
+            //        const int size = sizeof(double);
+            //        //var srcArr = (double[]) _baseArray;
+            //        var handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
 
-            byte[] byteArray;
-            switch (_typeCode)
-            {
-                case TypeCode.Byte:
-                {
-                    byteArray = new byte[_baseArray.Length];
-                    Array.Copy(_baseArray, byteArray, _baseArray.Length);
-                    break;
-                }
-                case TypeCode.UInt16:
-                {
-                    const int size = sizeof(ushort);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<ushort>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                case TypeCode.Int16:
-                {
-                    const int size = sizeof(short);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<short>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                case TypeCode.UInt32:
-                {
-                    const int size = sizeof(uint);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<uint>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                case TypeCode.Int32:
-                {
-                    const int size = sizeof(int);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<int>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                case TypeCode.Single:
-                {
-                    const int size = sizeof(float);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<float>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                default:
-                {
-                    const int size = sizeof(double);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<double>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                
-            }
+            //        byteArray = new byte[width * Height * size];
+            //        Marshal.Copy(handle.AddrOfPinnedObject(), byteArray, 0, Width * Height * size);
 
+            //        handle.Free();
+                  
+            //        break;
+            //    }
+
+            //}
+
+
+            //return byteArray;
+
+            var size = Marshal.SizeOf(_baseArray.GetValue(0));
+            var handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
+            var byteArray = new byte[Width * Height * size];
+            Marshal.Copy(handle.AddrOfPinnedObject(), byteArray, 0, byteArray.Length);
+            handle.Free();
 
             return byteArray;
         }
