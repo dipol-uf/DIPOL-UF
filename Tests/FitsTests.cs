@@ -24,12 +24,14 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Resources;
+using System.Runtime;
 using System.Security.Cryptography;
 using System.Text;
 using DipolImage;
@@ -38,6 +40,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NUnit.Framework;
 using NUnit.Framework.Internal.Commands;
 using Assert = NUnit.Framework.Assert;
+using CollectionAssert = Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
 using TestContext = NUnit.Framework.TestContext;
 
 namespace Tests
@@ -57,6 +60,10 @@ namespace Tests
                 yield return new TestCaseData(431, 197);
                 yield return new TestCaseData(512, 512);
                 yield return new TestCaseData(1024, 1024);
+#if X64
+                yield return new TestCaseData(4096, 4096);
+#endif
+
             }
         }
 
@@ -159,22 +166,19 @@ namespace Tests
     [TestFixture]
     public class FitsTests
     {
-        private readonly List<Action> _cleanupActions = new List<Action>();
+        private readonly ConcurrentQueue<Action> _cleanActions
+            = new ConcurrentQueue<Action>();
 
         [TearDown]
         public void TearDown()
         {
-            foreach (var action in _cleanupActions)
-            {
+            while (_cleanActions.TryDequeue(out var action))
                 action();
-            }
-
-            _cleanupActions.Clear();
         }
 
         [Theory]
         [TestCaseSource(typeof(FitsTestsData), nameof(FitsTestsData.Test_ReadWrite_Data))]
-        [Parallelizable(ParallelScope.Self)]
+        [Parallelizable(ParallelScope.All)]
         public void Test_ReadWriteRaw(int  width, int height)
         {
 
@@ -186,63 +190,74 @@ namespace Tests
             {
                 using (var str = new FitsStream(new FileStream(GetPath(path), FileMode.Open)))
                 {
-                    var data = new List<T>(width * height);
+                    var bSize = System.Runtime.InteropServices.Marshal.SizeOf<T>();
+                    var propSize = (int)(Math.Ceiling(1.0 * width * height * bSize / FitsUnit.UnitSizeInBytes)
+                                   * FitsUnit.UnitSizeInBytes
+                                   / bSize);
+                    var data = new T[propSize];
+                    var pos = 0;
                     while (str.TryReadUnit(out var unit))
-                    {
                         if (unit.IsData)
-                            data.AddRange(unit.GetData<T>());
-                    }
-                    Assert.That(data.Take(width * height), 
-                        Is.EqualTo(compareTo).AsCollection, 
+                        {
+                            var buffer = unit.GetData<T>();
+                            Array.Copy(buffer, 0, data, pos, buffer.Length);
+                            pos += buffer.Length;
+                        }
+
+                    Assert.That(data.Take(width * height),
+                        Is.EqualTo(compareTo).AsCollection,
                         $"Failed for [{width:0000}x{height:0000}] of type {typeof(T)}.");
                 }
+
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect(2, GCCollectionMode.Forced, true, true);
             }
 
             var file = $"test_dbl_{width:0000}x{height:0000}.fits";
             var doubleData = testData.Select(x => 1.0 * x).ToArray();
             FitsStream.WriteImage(new Image(doubleData, width, height),
                 FitsImageType.Double, GetPath(file));
-            AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<double>(file, doubleData);
+            AssumeExistsAndScheduleForCleanup(file);
 
 
             file = $"test_sng_{width:0000}x{height:0000}.fits";
             var singleData = testData.Select(x => 1.0f * x).ToArray();
             FitsStream.WriteImage(new Image(singleData, width, height),
                 FitsImageType.Single, GetPath(file));
-            AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<float>(file, singleData);
+            AssumeExistsAndScheduleForCleanup(file);
 
 
             file = $"test_ui8_{width:0000}x{height:0000}.fits";
             var byteData = testData.Select(x => (byte)x).ToArray();
             FitsStream.WriteImage(new Image(byteData, width, height),
                 FitsImageType.UInt8, GetPath(file));
-            AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<byte>(file, byteData);
+            AssumeExistsAndScheduleForCleanup(file);
 
 
             file = $"test_i16_{width:0000}x{height:0000}.fits";
             var shortData = testData.Select(x => (short) x).ToArray();
             FitsStream.WriteImage(new Image(shortData, width, height),
                 FitsImageType.Int16, GetPath(file));
-            AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<short>(file, shortData);
+            AssumeExistsAndScheduleForCleanup(file);
 
 
             file = $"test_i32_{width:0000}x{height:0000}.fits";
             var intData = testData.ToArray();
             FitsStream.WriteImage(new Image(intData, width, height),
                 FitsImageType.Int32, GetPath(file));
-            AssumeExistsAndScheduleForCleanup(file);
             GenerateAssert<int>(file, intData);
+            AssumeExistsAndScheduleForCleanup(file);
 
 
         }
 
         [Theory]
         [TestCaseSource(typeof(FitsTestsData), nameof(FitsTestsData.Test_ReadWrite_Data))]
-        [Parallelizable(ParallelScope.Self)]
+        [Parallelizable(ParallelScope.All)]
         public void Test_ReadWriteImage(int width, int height)
         {
             var testData = Enumerable.Range(0, width * height)
@@ -252,32 +267,32 @@ namespace Tests
             var file = $"test_dbl_img_{width:0000}x{height:0000}.fits";
             var dblImage = new Image(testData.Select(x => 1.0 * x).ToArray(), width, height);
             FitsStream.WriteImage(dblImage, FitsImageType.Double, GetPath(file));
-            AssumeExistsAndScheduleForCleanup(file);
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(dblImage));
+            AssumeExistsAndScheduleForCleanup(file);
 
             file = $"test_sng_img_{width:0000}x{height:0000}.fits";
             var sngImage = new Image(testData.Select(x => 1.0f * x).ToArray(), width, height);
             FitsStream.WriteImage(sngImage, FitsImageType.Single, GetPath(file));
-            AssumeExistsAndScheduleForCleanup(file);
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(sngImage));
+            AssumeExistsAndScheduleForCleanup(file);
 
             file = $"test_ui8_img_{width:0000}x{height:0000}.fits";
             var ui8Image = new Image(testData.Select(x => (byte) x).ToArray(), width, height);
             FitsStream.WriteImage(ui8Image, FitsImageType.UInt8, GetPath(file));
-            AssumeExistsAndScheduleForCleanup(file);
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(ui8Image));
+            AssumeExistsAndScheduleForCleanup(file);
 
             file = $"test_i16_img_{width:0000}x{height:0000}.fits";
             var i16Image = new Image(testData.Select(x => (short)x).ToArray(), width, height);
             FitsStream.WriteImage(i16Image, FitsImageType.Int16, GetPath(file));
-            AssumeExistsAndScheduleForCleanup(file);
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(i16Image));
+            AssumeExistsAndScheduleForCleanup(file);
 
             file = $"test_i32_img_{width:0000}x{height:0000}.fits";
             var intImage = new Image(testData, width, height);
             FitsStream.WriteImage(intImage, FitsImageType.Int32, GetPath(file));
-            AssumeExistsAndScheduleForCleanup(file);
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(intImage));
+            AssumeExistsAndScheduleForCleanup(file);
 
         }
 
@@ -638,7 +653,7 @@ namespace Tests
         private void AssumeExistsAndScheduleForCleanup(string path)
         {
             AssumeExists(path);
-            _cleanupActions.Add(() => CleanupFile(path));
+            _cleanActions.Enqueue(() => CleanupFile(path));
         }
 
         private static string GetPath(in string path)
