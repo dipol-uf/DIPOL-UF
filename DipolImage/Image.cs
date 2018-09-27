@@ -277,8 +277,8 @@ namespace DipolImage
             //return byteArray;
 
             var size = Marshal.SizeOf(_baseArray.GetValue(0));
-            var handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
             var byteArray = new byte[Width * Height * size];
+            var handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
             Marshal.Copy(handle.AddrOfPinnedObject(), byteArray, 0, byteArray.Length);
             handle.Free();
 
