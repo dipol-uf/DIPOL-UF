@@ -26,15 +26,18 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Web;
 
 namespace FITS_CS
 {
     public class FitsUnit
     {
+        private byte[] _data = new byte[UnitSizeInBytes];
+
         public static readonly int UnitSizeInBytes = 2880;
 
-        public byte[] Data { get; } = new byte[UnitSizeInBytes];
+        public byte[] Data => _data;
 
         public FitsUnit(byte[] data)
         {
@@ -43,23 +46,18 @@ namespace FITS_CS
             if (data.Length != UnitSizeInBytes)
                 throw new ArgumentException($"{nameof(data)} has wrong length");
 
-            Array.Copy(data, Data, data.Length);
+            Array.Copy(data, _data, data.Length);
 
             IsKeywords = Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
-                                   .All(i => FitsKey.IsFitsKey(Data, i * FitsKey.KeySize) ||
-                                             FitsKey.IsEmptyKey(Data, i * FitsKey.KeySize));
+                                   .All(i => FitsKey.IsFitsKey(_data, i * FitsKey.KeySize) ||
+                                             FitsKey.IsEmptyKey(_data, i * FitsKey.KeySize));
 
             IsData = !IsKeywords;
         }
 
         public bool IsKeywords { get; }
-            //=> Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
-            //             .All(i => FitsKey.IsFitsKey(Data, i * FitsKey.KeySize) ||
-            //                       FitsKey.IsEmptyKey(Data, i * FitsKey.KeySize));
 
         public bool IsData { get; }
-            //=> Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
-            //             .All(i => !FitsKey.IsFitsKey(Data, i * FitsKey.KeySize));
 
         public bool TryGetKeys(out List<FitsKey> keys)
         {
@@ -88,36 +86,21 @@ namespace FITS_CS
 
         public T[] GetData<T>() where T : struct
         {
+            var workData = new byte[_data.Length];
+            Array.Copy(_data, workData, _data.Length);
+            var size = Marshal.SizeOf<T>();
+            var n = UnitSizeInBytes / size;
+            var result = new T[n];
 
-            T[] Worker<TReturn>(FitsImageType type, Func<byte[], int, TReturn> converter)
-            {
-                var size = Math.Abs((short)type) / 8;
-                var n = UnitSizeInBytes / size;
-                var locData = new byte[size];
-                var result = new T[n];
+            if(BitConverter.IsLittleEndian)
                 for (var i = 0; i < n; i++)
-                {
-                    Array.Copy(Data, i * size, locData, 0, size);
-                    Array.Reverse(locData);
-                    dynamic val = converter(locData, 0);
-                    result[i] = val;
-                }
+                    Array.Reverse(workData, i * size, size);
 
-                return result;
-            }
+            var handle = GCHandle.Alloc(result, GCHandleType.Pinned);
+            Marshal.Copy(workData, 0, handle.AddrOfPinnedObject(), workData.Length);
+            handle.Free();
 
-            if (typeof(T) == typeof(double))
-                return Worker(FitsImageType.Double, BitConverter.ToDouble);
-            if (typeof(T) == typeof(float))
-                return Worker(FitsImageType.Single, BitConverter.ToSingle);
-            if (typeof(T) == typeof(int))
-                return Worker(FitsImageType.Int32, BitConverter.ToInt32);
-            if (typeof(T) == typeof(short))
-                return Worker(FitsImageType.Int16, BitConverter.ToInt16);
-            if (typeof(T) == typeof(byte))
-                return Worker(FitsImageType.UInt8, (arr, ind) => arr[0]);
-            throw new NotSupportedException($"Provided type {typeof(T)} is not supported by FITS format.");
-            
+            return result;
         }
 
         public static IEnumerable<T> JoinData<T>(params FitsUnit[] units) where T: struct
