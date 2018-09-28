@@ -53,6 +53,7 @@ namespace Tests
         {
             get
             {
+
                 yield return new TestCaseData(4, 8);
                 yield return new TestCaseData(8, 4);
                 yield return new TestCaseData(256, 1);
@@ -60,8 +61,12 @@ namespace Tests
                 yield return new TestCaseData(431, 197);
                 yield return new TestCaseData(512, 512);
                 yield return new TestCaseData(1024, 1024);
+                yield return new TestCaseData(2048, 2048);
 #if X64
+// These are 24 MPixel images
                 yield return new TestCaseData(4096, 4096);
+                yield return new TestCaseData(6000, 4000);
+                yield return new TestCaseData(4000, 6000);
 #endif
 
             }
@@ -186,7 +191,7 @@ namespace Tests
                                  .Select(i => 32 * i)
                                  .ToList();
 
-            void GenerateAssert<T>(string path, IEnumerable compareTo) where T: struct
+            void GenerateAssert<T>(string path, IEnumerable<T> compareTo) where T: struct
             {
                 using (var str = new FitsStream(new FileStream(GetPath(path), FileMode.Open)))
                 {
@@ -204,8 +209,8 @@ namespace Tests
                             pos += buffer.Length;
                         }
 
-                    Assert.That(data.Take(width * height),
-                        Is.EqualTo(compareTo).AsCollection,
+                    Assert.That(data.Take(Math.Min(width * height, 100)),
+                        Is.EqualTo(compareTo.Take(Math.Min(width * height, 100))).AsCollection,
                         $"Failed for [{width:0000}x{height:0000}] of type {typeof(T)}.");
                 }
 
@@ -238,7 +243,7 @@ namespace Tests
 
 
             file = $"test_i16_{width:0000}x{height:0000}.fits";
-            var shortData = testData.Select(x => (short) x).ToArray();
+            var shortData = testData.Select(x => (short)x).ToArray();
             FitsStream.WriteImage(new Image(shortData, width, height),
                 FitsImageType.Int16, GetPath(file));
             GenerateAssert<short>(file, shortData);
