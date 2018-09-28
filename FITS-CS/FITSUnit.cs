@@ -39,6 +39,18 @@ namespace FITS_CS
 
         public byte[] Data => _data;
 
+        private FitsUnit(byte[] data, bool isKeywords = false)
+        {
+            if (data == null)
+                throw new ArgumentNullException($"{nameof(data)} is null");
+            if (data.Length != UnitSizeInBytes)
+                throw new ArgumentException($"{nameof(data)} has wrong length");
+
+            Array.Copy(data, _data, data.Length);
+
+            IsKeywords = isKeywords;
+        }
+
         public FitsUnit(byte[] data)
         {
             if (data == null)
@@ -51,13 +63,11 @@ namespace FITS_CS
             IsKeywords = Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
                                    .All(i => FitsKey.IsFitsKey(_data, i * FitsKey.KeySize) ||
                                              FitsKey.IsEmptyKey(_data, i * FitsKey.KeySize));
-
-            IsData = !IsKeywords;
         }
 
         public bool IsKeywords { get; }
 
-        public bool IsData { get; }
+        public bool IsData => !IsKeywords;
 
         public bool TryGetKeys(out List<FitsKey> keys)
         {
@@ -149,17 +159,12 @@ namespace FITS_CS
 
         }
 
-        public static List<FitsUnit> GenerateFromArray(byte[] array, FitsImageType type)
+        public static List<FitsUnit> GenerateFromDataArray(byte[] array, FitsImageType type)
         {
 
             var size = Math.Abs((short)type) / 8;
             var n = (int)Math.Ceiling(1.0 * array.Length / UnitSizeInBytes);
             var result = new List<FitsUnit>(n);
-
-            //if (BitConverter.IsLittleEndian)
-            //for (var i = 0; i < array.Length / size; i++)
-            //    Array.Reverse(mappedArray, i * size, size);
-
 
             var buffer = new byte[UnitSizeInBytes];
 
@@ -170,7 +175,7 @@ namespace FITS_CS
                 if(BitConverter.IsLittleEndian)
                     for (var i = 0; i < buffer.Length / size; i++)
                         Array.Reverse(buffer, i * size, size);
-                result.Add(new FitsUnit(buffer));
+                result.Add(new FitsUnit(buffer, false));
             }
 
             return result;
