@@ -152,7 +152,7 @@ namespace FITS_CS
             keys.Add(new FitsKey("END", FitsKeywordType.Blank, null));
 
             var keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
-            var dataUnits = FitsUnit.GenerateFromArray(image.GetBytes(), type);
+            var dataUnits = FitsUnit.GenerateFromDataArray(image.GetBytes(), type);
 
             using (var str = new FitsStream(new FileStream(path, FileMode.Create)))
             {
@@ -181,7 +181,7 @@ namespace FITS_CS
 
             keywords = keywords.Where(k => !k.IsEmpty).ToList();
 
-            var type = (FitsImageType) (keywords.FirstOrDefault(k => k.Header == "BITPIX")?.RawValue
+            var type = (FitsImageType)(int)(keywords.FirstOrDefault(k => k.Header == "BITPIX")?.RawValue
                                         ?? throw new FileFormatException(new Uri(path),
                                             "Fits file has no required keyword \"BITPIX\"."));
             var width = (int) (keywords.FirstOrDefault(k => k.Header == "NAXIS1")?.RawValue
