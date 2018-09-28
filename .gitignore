@@ -88,3 +88,4 @@ Temporary Items
 
 **/*.config
 **/bin/*
+ANDOR-CS/obj/x64/Release/build.force
