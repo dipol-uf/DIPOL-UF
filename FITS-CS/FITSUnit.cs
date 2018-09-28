@@ -172,13 +172,77 @@ namespace FITS_CS
             {
                 var cpSize = Math.Min(UnitSizeInBytes, array.Length - iUnit * UnitSizeInBytes);
                 Array.Copy(array, iUnit * UnitSizeInBytes, buffer, 0, cpSize);
-                if(BitConverter.IsLittleEndian)
-                    for (var i = 0; i < buffer.Length / size; i++)
-                        Array.Reverse(buffer, i * size, size);
+                if(BitConverter.IsLittleEndian && size > 1)
+                {
+                    if(size == 2)
+                        for (var i = 0; i < buffer.Length / 2; i++)
+                            ArrayReverseBy2(buffer, i * 2);
+                    else if (size == 4)
+                        for (var i = 0; i < buffer.Length / 4; i++)
+                            ArrayReverseBy4(buffer, i * 4);
+                    else if (size == 8)
+                        for (var i = 0; i < buffer.Length / 8; i++)
+                            ArrayReverseBy8(buffer, i * 8);
+                    else
+                        for (var i = 0; i < buffer.Length / size; i++)
+                            ArrayReverse(buffer, i * size, size);
+
+                }
                 result.Add(new FitsUnit(buffer, false));
             }
 
             return result;
         }
+
+        public static void ArrayReverse(byte[] array, int start, int count)
+        {
+            if (count <= 1)
+                return;
+           
+            for (var i = 0; i < count / 2; i++)
+            {
+                var buff = array[start + i];
+                array[start + i] = array[start + count - 1 -i];
+                array[start + count - 1 - i] = buff;
+            }
+        }
+
+        public static void ArrayReverseBy2(byte[] array, int start)
+        {
+            var buff = array[start + 1];
+            array[start + 1] = array[start];
+            array[start] = buff;
+        }
+
+        public static void ArrayReverseBy4(byte[] array, int start)
+        {
+            var buff = array[start + 3];
+            array[start + 3] = array[start];
+            array[start] = buff;
+
+            buff = array[start + 2];
+            array[start + 2] = array[start + 1];
+            array[start + 1] = buff;
+        }
+
+        public static void ArrayReverseBy8(byte[] array, int start)
+        {
+            var buff = array[start + 7];
+            array[start + 7] = array[start];
+            array[start] = buff;
+
+            buff = array[start + 6];
+            array[start + 6] = array[start + 1];
+            array[start + 1] = buff;
+
+            buff = array[start + 5];
+            array[start + 5] = array[start + 2];
+            array[start + 2] = buff;
+
+            buff = array[start + 4];
+            array[start + 4] = array[start + 3];
+            array[start + 3] = buff;
+        }
+
     }
 }
