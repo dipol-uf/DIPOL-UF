@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
+using ANDOR_CS.Exceptions;
 using DipolImage;
 
 namespace ANDOR_CS.Classes
@@ -325,7 +326,7 @@ namespace ANDOR_CS.Classes
            ShutterMode inter,
            ShutterMode exter = ShutterMode.FullyAuto,
            TtlShutterSignal type = TtlShutterSignal.Low);
-        public abstract void TemperatureMonitor(Switch mode, int timeout = 150);
+        public abstract void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs);
         public abstract SettingsBase GetAcquisitionSettingsTemplate();
 
         public abstract void StartAcquisition();
@@ -336,11 +337,11 @@ namespace ANDOR_CS.Classes
         /// <see cref="TaskCanceledException"/>. To cancel async acquisition, use 
         /// <see cref="CancellationToken"/>.
         /// </summary>
-        /// <exception cref="AndorSDKException"/>
+        /// <exception cref="AndorSdkException"/>
         /// <exception cref="TaskCanceledException"/>
         public abstract void AbortAcquisition();
 
-        public abstract Task StartAcquistionAsync(CancellationTokenSource token, int timeout);
+        public abstract Task StartAcquisitionAsync(CancellationTokenSource token, int timeout = StatusCheckTimeOutMs);
 
         /// <summary>
         /// String representation of the camera instance.
