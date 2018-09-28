@@ -133,9 +133,8 @@ namespace FITS_CS
             }
         }
 
-        public static void WriteImage(Image image, FitsImageType type, string path, IEnumerable<FitsKey> extraKeys = null)
+        public static void WriteImage(Image image, FitsImageType type, Stream stream, IEnumerable<FitsKey> extraKeys = null)
         {
-
             var keys = new List<FitsKey>
             {
                 new FitsKey("SIMPLE", FitsKeywordType.Logical, true),
@@ -146,7 +145,7 @@ namespace FITS_CS
                 new FitsKey("NAXIS", FitsKeywordType.Integer, 2)
             };
 
-            if(extraKeys != null)
+            if (extraKeys != null)
                 keys.AddRange(extraKeys);
 
             keys.Add(new FitsKey("END", FitsKeywordType.Blank, null));
@@ -154,24 +153,26 @@ namespace FITS_CS
             var keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
             var dataUnits = FitsUnit.GenerateFromDataArray(image.GetBytes(), type);
 
-            using (var str = new FitsStream(new FileStream(path, FileMode.Create)))
-            {
-                foreach (var unit in keyUnits)
-                    str.WriteUnit(unit);
-                foreach (var unit in dataUnits)
-                    str.WriteUnit(unit);
-            }
+            var str = new FitsStream(stream);
+            foreach (var unit in keyUnits)
+                str.WriteUnit(unit);
+            foreach (var unit in dataUnits)
+                str.WriteUnit(unit);
         }
 
-        public static Image ReadImage(string path, out List<FitsKey> keywords)
+        public static void WriteImage(Image image, FitsImageType type, string path, IEnumerable<FitsKey> extraKeys = null)
+        {
+            using (var str = new FileStream(path, FileMode.Create))
+                WriteImage(image, type, str, extraKeys);
+        }
+
+        public static Image ReadImage(Stream stream, out List<FitsKey> keywords)
         {
             var units = new List<FitsUnit>(2);
 
-            using (var str = new FitsStream(new FileStream(path, FileMode.Open)))
-            {
-                while(str.TryReadUnit(out var unit))
-                    units.Add(unit);
-            }
+            var str = new FitsStream(stream);
+            while (str.TryReadUnit(out var unit))
+                units.Add(unit);
 
             keywords = new List<FitsKey>(6);
 
@@ -182,18 +183,18 @@ namespace FITS_CS
             keywords = keywords.Where(k => !k.IsEmpty).ToList();
 
             var type = (FitsImageType)(int)(keywords.FirstOrDefault(k => k.Header == "BITPIX")?.RawValue
-                                        ?? throw new FileFormatException(new Uri(path),
-                                            "Fits file has no required keyword \"BITPIX\"."));
-            var width = (int) (keywords.FirstOrDefault(k => k.Header == "NAXIS1")?.RawValue
-                               ?? throw new FileFormatException(new Uri(path),
-                                   "Fits file has no required keyword \"NAXIS1\"."));
-            var height = (int) (keywords.FirstOrDefault(k => k.Header == "NAXIS2")?.RawValue
-                                ?? throw new FileFormatException(new Uri(path),
-                                    "Fits file has no required keyword \"NAXIS2\"."));
+                                        ?? throw new FormatException(
+                                                "Fits data has no required keyword \"BITPIX\"."));
+            var width = (int)(keywords.FirstOrDefault(k => k.Header == "NAXIS1")?.RawValue
+                              ?? throw new FormatException(
+                                  "Fits data has no required keyword \"NAXIS1\"."));
+            var height = (int)(keywords.FirstOrDefault(k => k.Header == "NAXIS2")?.RawValue
+                               ?? throw new FormatException(
+                                   "Fits data has no required keyword \"NAXIS2\"."));
 
-            Array GetData<T>() where T: struct
+            Array GetData<T>() where T : struct
             {
-                
+
                 var data = new T[width * height];
                 var pos = 0;
                 foreach (var dataUnit in units.SkipWhile(u => u.IsKeywords))
@@ -202,7 +203,7 @@ namespace FITS_CS
                     Array.Copy(buffer, 0, data, pos, Math.Min(buffer.Length, data.Length - pos));
                     pos += buffer.Length;
                 }
-                
+
                 return data;
             }
 
@@ -212,7 +213,7 @@ namespace FITS_CS
                     return new Image(GetData<byte>(), width, height);
                 case FitsImageType.Int16:
                     return new Image(GetData<short>(), width, height);
-                case FitsImageType.Int32: 
+                case FitsImageType.Int32:
                     return new Image(GetData<int>(), width, height);
                 case FitsImageType.Single:
                     return new Image(GetData<float>(), width, height);
@@ -221,6 +222,14 @@ namespace FITS_CS
                 default:
                     throw new NotSupportedException($"Fits image of type {type} is not supported.");
             }
+        }
+
+        public static Image ReadImage(string path, out List<FitsKey> keywords)
+        {
+
+            using (var str = new FileStream(path, FileMode.Open))
+                return ReadImage(str, out keywords);
+                
         }
     }
 }
