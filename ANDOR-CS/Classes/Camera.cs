@@ -28,7 +28,6 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
-using DipolImage;
 #if X86
 using SDK = ATMCD32CS.AndorSDK;
 #endif
@@ -56,7 +55,7 @@ namespace ANDOR_CS.Classes
         //private CancellationTokenSource TemperatureMonitorCancellationSource
         //    = new CancellationTokenSource();
 
-        private static readonly ConcurrentDictionary<int, CameraBase> _createdCameras
+        private static readonly ConcurrentDictionary<int, CameraBase> CreatedCameras
             = new ConcurrentDictionary<int, CameraBase>();
         
         private readonly ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> _runningTasks = 
@@ -90,7 +89,7 @@ namespace ANDOR_CS.Classes
         /// Read-only collection of all local cameras in use.
         /// </summary>
         public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
-            => _createdCameras;
+            => CreatedCameras;
 
 
         /// <summary>
@@ -174,7 +173,7 @@ namespace ANDOR_CS.Classes
             // If it is not the case, then either it was not set active (wrong design of program) or an error happened 
             // while switching control to this camera (and thus behaviour is undefined)
             //if (!IsActive)
-            //    throw new AndorSdkException("Camera is not active. Cannnot perform this operation.", null);
+            //    throw new AndorSdkException("Camera is not active. Cannot perform this operation.", null);
 
             // Stores return codes of ANDOR functions
             uint result;
@@ -203,7 +202,7 @@ namespace ANDOR_CS.Classes
                     throw new AndorSdkException($"SDK function {nameof(SDKInstance.GetTemperatureRange)} returned invalid temperature range (should be {min} <= {max})", null);
             }
 
-            // Variable used to retrieve horizotal and vertical (maximum?) detector size in pixels (if applicable)
+            // Variable used to retrieve horizontal and vertical (maximum?) detector size in pixels (if applicable)
             var h = 0;
             var v = 0;
 
@@ -213,9 +212,9 @@ namespace ANDOR_CS.Classes
                 // Manual synchronization
                 result = Call(CameraHandle, (ref (int H, int V) output) =>
                     SDKInstance.GetDetector(ref output.H, ref output.V),
-                    out var oHV);
-                h = oHV.H;
-                v = oHV.V;
+                    out var detectorSize);
+                h = detectorSize.H;
+                v = detectorSize.V;
 
                 ThrowIfError(result, nameof(SDKInstance.GetDetector));
 
@@ -224,7 +223,7 @@ namespace ANDOR_CS.Classes
                     throw new AndorSdkException($"SDK function {nameof(SDKInstance.GetDetector)} returned invalid detector size (should be {h} > 0 and {v} > 0)", null);
             }
 
-            // Variable used to store retrieved infromation about presence of private mechanical shutter (if applicable)
+            // Variable used to store retrieved information about presence of private mechanical shutter (if applicable)
             var shutter = false;
 
             // private shutters are only present in these cameras (according to documentation)
@@ -261,12 +260,13 @@ namespace ANDOR_CS.Classes
                 result = Call(CameraHandle, SDKInstance.GetBitDepth, adcIndex, out int localBitDepth);
                 ThrowIfError(result, nameof(SDKInstance.GetBitDepth));
 
-                // If it is successful, asssign obtained bit depth to an element of an array
+                // If it is successful, assign obtained bit depth to an element of an array
                 aDsBitRange[adcIndex] = localBitDepth;
             }
 
 
             result = Call(CameraHandle, SDKInstance.GetNumberAmp, out int amps);
+            ThrowIfError(result, nameof(SDKInstance.GetNumberAmp));
             // Again, according to documentation the only return code is DRV_SUCCESS = (uint) 20002, 
             // thus the number of amplifiers should be checked to be in a valid range (> 0)
             if (amps <= 0)
@@ -278,9 +278,10 @@ namespace ANDOR_CS.Classes
             for (var ampIndex = 0; ampIndex < amps; ampIndex++)
             {
 
+                var locIndex = ampIndex;
                 // Manual synchronization
                 result = Call(CameraHandle, (ref string output) =>
-                    SDKInstance.GetAmpDesc(ampIndex, ref output, AmpDescriptorMaxLength), out var ampName);
+                    SDKInstance.GetAmpDesc(locIndex, ref output, AmpDescriptorMaxLength), out var ampName);
 
                 ThrowIfError(result, nameof(SDKInstance.GetAmpDesc));
 
@@ -303,20 +304,21 @@ namespace ANDOR_CS.Classes
             result = Call(CameraHandle, SDKInstance.GetNumberPreAmpGains, out int preAmpGainMaxNumber);
             ThrowIfError(result, nameof(SDKInstance.GetNumberPreAmpGains));
 
-            // Array of pre amp gain desciptions
+            // Array of pre amp gain descriptions
             var preAmpGainDesc = new string[preAmpGainMaxNumber];
 
 
             for (var preAmpIndex = 0; preAmpIndex < preAmpGainMaxNumber; preAmpIndex++)
             {
 
-                // Retrieves decription
+                // Retrieves description
                 // Manual synchronization
                 //result = Call((ref string output) =>
                 //    SDKInstance.GetPreAmpGainText(preAmpIndex, ref output, PreAmpGainDescriptorMaxLength),
                 //    out string desc);                    
                 var desc = "";
-                result = Call(CameraHandle, () => SDKInstance.GetPreAmpGainText(preAmpIndex, ref desc, PreAmpGainDescriptorMaxLength));
+                var index = preAmpIndex;
+                result = Call(CameraHandle, () => SDKInstance.GetPreAmpGainText(index, ref desc, PreAmpGainDescriptorMaxLength));
                 ThrowIfError(result, nameof(SDKInstance.GetPreAmpGainText));
 
                 // If success, adds it to array
@@ -345,18 +347,18 @@ namespace ANDOR_CS.Classes
                 speedArray[speedIndex] = localSpeed;
             }
 
-            (int low, int high) = (0, 0);
+            var (low, high) = (0, 0);
 
             if (Capabilities.GetFunctions.HasFlag(GetFunction.EmccdGain))
             {
                 Call(CameraHandle, (ref (int Low, int High) output) =>
                     SDKInstance.GetEMGainRange(ref output.Low, ref output.High),
-                    out var oLH);
-                low = oLH.Low;
-                high = oLH.High;
+                    out var gainRange);
+                low = gainRange.Low;
+                high = gainRange.High;
             }
 
-            // Assemples a new CameraProperties object using collected above information
+            // Assembles a new CameraProperties object using collected above information
             Properties = new CameraProperties
             {
                 AllowedTemperatures = (Minimum: min, Maximum: max),
@@ -441,14 +443,14 @@ namespace ANDOR_CS.Classes
                 t.Enabled) // and Timer is enabled (not stopped and not in process of disposal)
             {
                 // Gets temperature and status
-                (var status, var temp) = GetCurrentTemperature();
+                var (status, temp) = GetCurrentTemperature();
 
                 // Fires event
                 OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
             }
         }
         /// <summary>
-        /// Retrives new image from camera buffer and pushes it to queue.
+        /// Retrieves new image from camera buffer and pushes it to queue.
         /// </summary>
         /// <param name="e">Parameters obtained from <see cref="CameraBase.NewImageReceived"/> event.</param>
         private void PushNewImage(NewImageReceivedEventArgs e)
@@ -456,13 +458,15 @@ namespace ANDOR_CS.Classes
 
             CheckIsDisposed();
 
-            var array = new ushort[CurrentSettings.ImageArea.Value.Height * CurrentSettings.ImageArea.Value.Width];
-            (int First, int Last) = (0, 0);
-            ThrowIfError(Call(CameraHandle, () =>
-                SDKInstance.GetImages16(e.Last, e.Last, array, (uint)(array.Length), ref First, ref Last)), nameof(SDKInstance.GetImages16));
+            if (CurrentSettings.ImageArea != null)
+            {
+                var array = new ushort[CurrentSettings.ImageArea.Value.Height * CurrentSettings.ImageArea.Value.Width];
+                var (first, last) = (0, 0);
+                ThrowIfError(Call(CameraHandle, () =>
+                    SDKInstance.GetImages16(e.Last, e.Last, array, (uint)(array.Length), ref first, ref last)), nameof(SDKInstance.GetImages16));
 
-            _acquiredImages.Enqueue(new Image(array, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height));
-
+                _acquiredImages.Enqueue(new Image(array, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height));
+            }
         }
 
 
@@ -507,7 +511,7 @@ namespace ANDOR_CS.Classes
             // If acquisition is started without background task, camera instance 
             // is in acquisition state, but actual camera returns status that is different
             // from "Acquiring", then updates status, acknowledging end of acquisition 
-            // end firing AcquisitioFinished event.
+            // end firing AcquisitionFinished event.
             // Without this call there is no way to synchronously update instance of camera class
             // when real acquisition on camera finished.
             if (!IsAcquiring || IsAsyncAcquisition || camStatus == CameraStatus.Acquiring)
@@ -618,7 +622,7 @@ namespace ANDOR_CS.Classes
             int clTime,
             int opTime,
             ShutterMode inter,
-            ShutterMode exter = ShutterMode.FullyAuto,
+            ShutterMode extrn = ShutterMode.FullyAuto,
             TtlShutterSignal type = TtlShutterSignal.Low)
         {
             if (clTime < 0)
@@ -636,12 +640,12 @@ namespace ANDOR_CS.Classes
             if (Capabilities.Features.HasFlag(SdkFeatures.ShutterEx))
             {
 
-                var result = Call(CameraHandle, () => SDKInstance.SetShutterEx((int)type, (int)inter, clTime, opTime, (int)exter));
+                var result = Call(CameraHandle, () => SDKInstance.SetShutterEx((int)type, (int)inter, clTime, opTime, (int)extrn));
 
 
                 ThrowIfError(result, nameof(SDKInstance.SetShutterEx));
 
-                Shutter = (Internal: inter, External: exter, Type: type, OpenTime: opTime, CloseTime: clTime);
+                Shutter = (Internal: inter, External: extrn, Type: type, OpenTime: opTime, CloseTime: clTime);
             }
             else
             {
@@ -655,10 +659,11 @@ namespace ANDOR_CS.Classes
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Returns current camera temperature and temperature status
         /// </summary>
-        /// <exception cref="AndorSdkException"/>
+        /// <exception cref="T:ANDOR_CS.Exceptions.AndorSdkException" />
         /// <returns>Temperature status and temperature in degrees</returns>
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
         {
@@ -689,10 +694,10 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Starts acquisition of the image. Does not block current thread.
         /// To monitor acquisition progress, use <see cref="GetStatus"/>.
-        /// Fires <see cref="OnAcquisitionStarted(AcquisitionStatusEventArgs)"/> 
+        /// Fires <see cref="CameraBase.OnAcquisitionStarted"/> 
         /// with <see cref="AcquisitionStatusEventArgs.IsAsync"/> = false.
         /// NOTE: this method is not recommended. Consider using async version
-        /// <see cref="StartAcquistionAsync(CancellationToken, int)"/>.
+        /// <see cref="StartAcquisitionAsync(CancellationTokenSource,int)"/>.
         /// Async version allows <see cref="Camera"/> to properly monitor acquisition progress.
         /// </summary>
         /// <exception cref="AcquisitionInProgressException"/>
@@ -731,7 +736,7 @@ namespace ANDOR_CS.Classes
 
             // If there is no acquisition, throws exception
             if (!IsAcquiring)
-                throw new AndorSdkException("Acquisition abort atemted while there is no acquisition in proress.", null);
+                throw new AndorSdkException("Acquisition abort attempted while there is no acquisition in progress.", null);
 
             //if (IsAsyncAcquisition)
             //    throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
@@ -761,7 +766,7 @@ namespace ANDOR_CS.Classes
             if (!Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
                 throw new NotSupportedException("Camera dose not support temperature queries.");
 
-            // If monitor shold be enbled
+            // If monitor should be enabled
             if (mode == Switch.Enabled)
             {
 
@@ -807,7 +812,7 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
-        /// A realisation of <see cref="IDisposable.Dispose"/> method.
+        /// An implementation of <see cref="IDisposable.Dispose"/> method.
         /// Frees SDK-related resources
         /// </summary>
         protected override void Dispose(bool disposing)
@@ -881,7 +886,7 @@ namespace ANDOR_CS.Classes
                     }
 
                     // If succeeded, removes camera instance from the list of cameras
-                    _createdCameras.TryRemove(CameraHandle.SdkPtr, out _);
+                    CreatedCameras.TryRemove(CameraHandle.SdkPtr, out _);
                     // ShutsDown camera
                     CameraHandle.Dispose();
                 }
@@ -890,7 +895,7 @@ namespace ANDOR_CS.Classes
 
         /// <summary>
         /// Creates a new instance of Camera class to represent a connected Andor device.
-        /// Maximum 8 cameras can be controled at the same time
+        /// Maximum 8 cameras can be controlled at the same time
         /// </summary>
         /// <exception cref="AndorSdkException"/>
         /// <exception cref="ArgumentException"/>
@@ -910,14 +915,14 @@ namespace ANDOR_CS.Classes
             if (camIndex > n)
                 throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
             // If camera with such index is already in use, throws exception
-            if (_createdCameras.Count(cam => cam.Value.CameraIndex == camIndex) != 0)
+            if (CreatedCameras.Count(cam => cam.Value.CameraIndex == camIndex) != 0)
                 throw new ArgumentException($"Camera with index {camIndex} is already created.");
 
             // Stores the handle (SDK private pointer) to the camera. A unique identifier
             var result = CallWithoutHandle(SDKInstance.GetCameraHandle, camIndex, out int handle);
             ThrowIfError(result, nameof(SDKInstance.GetCameraHandle));
 
-            // If succede, assigns handle to Camera property
+            // If succeed, assigns handle to Camera property
             CameraHandle = new SafeSdkCameraHandle(handle);
 
             // Sets current camera active
@@ -931,7 +936,7 @@ namespace ANDOR_CS.Classes
 
             // If succeeded, sets IsInitialized flag to true and adds current camera to the list of initialized cameras
             IsInitialized = true;
-            if (!_createdCameras.TryAdd(CameraHandle.SdkPtr, this))
+            if (!CreatedCameras.TryAdd(CameraHandle.SdkPtr, this))
                 throw new InvalidOperationException("Failed to add camera to the concurrent dictionary");
 
             CameraIndex = camIndex;
@@ -984,7 +989,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSdkException"/>
         /// <returns>Task that can be queried for execution status.</returns>
-        public override async Task StartAcquistionAsync(CancellationTokenSource source, int timeout = StatusCheckTimeOutMs)
+        public override async Task StartAcquisitionAsync(CancellationTokenSource source, int timeout = StatusCheckTimeOutMs)
         {
             CheckIsDisposed();
 
@@ -1000,10 +1005,10 @@ namespace ANDOR_CS.Classes
                     if (GetStatus() != CameraStatus.Idle)
                         throw new AndorSdkException("Camera is not in the idle mode.", null);
 
-                    // Marks acuisition asynchronous
+                    // Marks acquisition asynchronous
                     IsAsyncAcquisition = true;
 
-                    // Start scquisition
+                    // Start acquisition
                     StartAcquisition();
 
                     status = GetStatus();
@@ -1016,16 +1021,18 @@ namespace ANDOR_CS.Classes
                         // Fires AcquisitionStatusChecked event
                         OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, true));
 
-                        // Checks if new image is already acuired and is available in camera memory
+                        // Checks if new image is already acquired and is available in camera memory
 
                         // Gets indexes of first and last available new images
-                        acquiredImagesIndex = (0, 0);
-
-
-                        ThrowIfError(Call(CameraHandle, () => SDKInstance.GetNumberNewImages(ref acquiredImagesIndex.First, ref acquiredImagesIndex.Last)),
+                        var temp = (0, 0);
+                        // ReSharper disable once AccessToModifiedClosure
+                        ThrowIfError(Call(CameraHandle, () => SDKInstance.GetNumberNewImages(
+                                ref temp.Item1, 
+                                ref temp.Item2)),
                             nameof(SDKInstance.GetNumberNewImages));
+                        acquiredImagesIndex = temp;
 
-                        // If there is new image, updates indexes of previous abailable images and fires an event.
+                        // If there is new image, updates indexes of previous available images and fires an event.
                         if (acquiredImagesIndex.Last != previousImages.Last
                             || acquiredImagesIndex.First != previousImages.First)
                         {
@@ -1055,7 +1062,7 @@ namespace ANDOR_CS.Classes
                         SDKInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
                         out acquiredImagesIndex), nameof(SDKInstance.GetNumberNewImages));
 
-                    // If there is new image, updates indexes of previous abailable images and fires an event.
+                    // If there is new image, updates indexes of previous available images and fires an event.
                     if (acquiredImagesIndex.Last != previousImages.Last
                         || acquiredImagesIndex.First != previousImages.First)
                     {
@@ -1064,11 +1071,11 @@ namespace ANDOR_CS.Classes
 
                     // If after end of acquisition camera status is not idle, throws exception
                     if (!source.Token.IsCancellationRequested && status != CameraStatus.Idle)
-                        throw new AndorSdkException($"Acquisiotn finished with non-Idle status ({status}).", null);
+                        throw new AndorSdkException($"Acquisition finished with non-Idle status ({status}).", null);
 
                 }
                 // If there were exceptions during status checking loop
-                catch (Exception e)
+                catch
                 {
                     // Fire event
                     OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(status, true));
@@ -1084,7 +1091,7 @@ namespace ANDOR_CS.Classes
                 }
             });
 
-            int id = task.Id;
+            var id = task.Id;
 
             _runningTasks.TryAdd(id, (Task: task, Source: source));
 
