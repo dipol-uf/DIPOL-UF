@@ -10,7 +10,8 @@ namespace Benchmark
     {
         static void Main(string[] args)
         {
-            BenchmarkDotNet.Running.BenchmarkRunner.Run<IOBench>();
+            //BenchmarkDotNet.Running.BenchmarkRunner.Run<IOBench>();
+            BenchmarkDotNet.Running.BenchmarkRunner.Run<KeyWordAccess>();
         }
     }
 }

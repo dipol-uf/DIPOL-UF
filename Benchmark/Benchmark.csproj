@@ -226,6 +226,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ImageIO.cs" />
+    <Compile Include="KeyWordAccess.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
