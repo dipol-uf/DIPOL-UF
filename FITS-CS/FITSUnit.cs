@@ -24,28 +24,22 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Web;
 
 namespace FITS_CS
 {
     public class FitsUnit
     {
-        private byte[] _data = new byte[UnitSizeInBytes];
-
         public static readonly int UnitSizeInBytes = 2880;
 
-        public byte[] Data => _data;
+        // ReSharper disable once InconsistentNaming
+        internal readonly byte[] _data = new byte[UnitSizeInBytes];
+
+        public IReadOnlyList<byte> Data => _data;
 
         private FitsUnit(byte[] data, bool isKeywords = false)
         {
-            if (data == null)
-                throw new ArgumentNullException($"{nameof(data)} is null");
-            if (data.Length != UnitSizeInBytes)
-                throw new ArgumentException($"{nameof(data)} has wrong length");
-
             Array.Copy(data, _data, data.Length);
 
             IsKeywords = isKeywords;
@@ -79,26 +73,28 @@ namespace FITS_CS
 
             keys = new List<FitsKey>(n);
 
-            try
-            {
-                for(var i = 0; i < n; i++)
-                    keys.Add(new FitsKey(Data, i * FitsKey.KeySize));
 
-                keys = keys.Where(x => !x.IsEmpty).ToList();
-                return true;
-            }
-            catch
-            {
-                keys = null;
-                return false;
-            }
+            for (var i = 0; i < n; i++)
+                keys.Add(new FitsKey(_data, i * FitsKey.KeySize));
+
+            keys = keys.Where(x => !x.IsEmpty).ToList();
+            return true;
+
         }
 
         public T[] GetData<T>() where T : struct
         {
+            var size = Marshal.SizeOf<T>();
+            // Hardcoded values 
+            if (size != 1 &&
+                size != 2 &&
+                size != 4 &&
+                size != 8)
+                throw new ArgumentException(
+                    $"{typeof(T)} is not compatible with allowed {nameof(FitsImageType)} types.");
+
             var workData = new byte[_data.Length];
             Array.Copy(_data, workData, _data.Length);
-            var size = Marshal.SizeOf<T>();
             var n = UnitSizeInBytes / size;
             var result = new T[n];
 
@@ -113,9 +109,11 @@ namespace FITS_CS
                 else if (size == 8)
                     for (var i = 0; i < n; i++)
                         ArrayReverseBy8(workData, i * 8);
-                else
-                    for (var i = 0; i < n; i++)
-                        ArrayReverse(workData, i * size, size);
+
+                // [size]
+                //else
+                //    for (var i = 0; i < n; i++)
+                //        ArrayReverse(workData, i * size, size);
             }
 
             var handle = GCHandle.Alloc(result, GCHandleType.Pinned);
@@ -125,20 +123,10 @@ namespace FITS_CS
             return result;
         }
 
-        public static IEnumerable<T> JoinData<T>(params FitsUnit[] units) where T: struct
-        {
-            foreach (var unit in units)
-            {
-                if (!unit.IsData)
-                    throw new ArgumentException($"One of the {nameof(FitsUnit)} is not data.");
-                foreach (var item in unit.GetData<T>())
-                    yield return item;
-            }
-        }
-
-        public static IEnumerable<FitsUnit> GenerateFromKeywords(params FitsKey[] keys)
+        public static List<FitsUnit> GenerateFromKeywords(params FitsKey[] keys)
         {
             var keysPerUnit = UnitSizeInBytes / FitsKey.KeySize;
+            var result = new List<FitsUnit>(keys.Length / keysPerUnit + 1);
 
             var nUnits = (int)Math.Ceiling(1.0 * keys.Length / keysPerUnit);
 
@@ -154,7 +142,7 @@ namespace FITS_CS
                     for (var iKey = 0; iKey < keysPerUnit; iKey++)
                         Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FitsKey.KeySize, FitsKey.KeySize);
 
-                    yield return new FitsUnit(buffer);
+                    result.Add(new FitsUnit(buffer)); 
                 }
                 else
                 {
@@ -163,12 +151,12 @@ namespace FITS_CS
                     for (var iKey = keysPerUnit - nEmpty; iKey < keysPerUnit; iKey++)
                         Array.Copy(FitsKey.Empty.Data, 0, buffer, iKey * FitsKey.KeySize, FitsKey.KeySize);
 
-                    yield return new FitsUnit(buffer);
+                    result.Add(new FitsUnit(buffer));
 
                 }
             }
 
-
+            return result;
         }
 
         public static List<FitsUnit> GenerateFromDataArray(byte[] array, FitsImageType type)
@@ -195,9 +183,13 @@ namespace FITS_CS
                     else if (size == 8)
                         for (var i = 0; i < buffer.Length / 8; i++)
                             ArrayReverseBy8(buffer, i * 8);
-                    else
-                        for (var i = 0; i < buffer.Length / size; i++)
-                            ArrayReverse(buffer, i * size, size);
+                    
+                    // As [size] is determined based on the [FitsImageType] enum,
+                    // it can never be anything other than (8, 16, 32, 64) / 8,
+                    // therefore other options are not considered
+                    //else
+                    //    for (var i = 0; i < buffer.Length / size; i++)
+                    //        ArrayReverse(buffer, i * size, size);
 
                 }
                 result.Add(new FitsUnit(buffer, false));
@@ -206,18 +198,18 @@ namespace FITS_CS
             return result;
         }
 
-        protected internal static void ArrayReverse(byte[] array, int start, int count)
-        {
-            if (count <= 1)
-                return;
+        //protected internal static void ArrayReverse(byte[] array, int start, int count)
+        //{
+        //    if (count <= 1)
+        //        return;
            
-            for (var i = 0; i < count / 2; i++)
-            {
-                var buff = array[start + i];
-                array[start + i] = array[start + count - 1 -i];
-                array[start + count - 1 - i] = buff;
-            }
-        }
+        //    for (var i = 0; i < count / 2; i++)
+        //    {
+        //        var buff = array[start + i];
+        //        array[start + i] = array[start + count - 1 -i];
+        //        array[start + count - 1 - i] = buff;
+        //    }
+        //}
 
         protected internal static void ArrayReverseBy2(byte[] array, int start)
         {
