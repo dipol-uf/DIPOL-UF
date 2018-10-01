@@ -33,6 +33,9 @@ namespace Benchmark
     public class ImageAccess
     {
         private Image _image;
+        private Image _image2;
+        private Image _image3;
+
 
         [ParamsSource(nameof(szSource))]
         public (int Width, int Height) size;
@@ -47,17 +50,33 @@ namespace Benchmark
         public void GlobalSetup()
         {
             var data = Enumerable.Range(0, size.Width * size.Height)
-                                 .Select(i => 1.0f * i)
+                                 .Select(i => 1.0 * i)
                                  .ToArray();
 
             _image = new Image(data, size.Width, size.Height);
+            _image2 = _image.Copy();
+            _image3 = _image.Copy();
+
         }
 
         [Benchmark(Baseline = true)]
-        public void Clamp()
+        public void Scale()
         {
-            _image.Clamp(10, 1000);
+            _image.Scale(10, 100);
         }
+
+        //[Benchmark]
+        //public void Scale2()
+        //{
+        //    _image2.Scale2(10, 100);
+
+        //}
+
+        //[Benchmark]
+        //public void Scale3()
+        //{
+        //    _image3.Scale3(10, 100);
+        //}
 
         //[Benchmark]
         //public void Clamp2()
