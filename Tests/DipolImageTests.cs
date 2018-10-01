@@ -25,6 +25,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using DipolImage;
 using NUnit.Framework;
 
@@ -175,18 +176,23 @@ namespace Tests
         [Retry(3)]
         public void Test_Equals()
         {
-            var tempArr = new byte[TestByteArray.Length];
-            Array.Copy(TestByteArray, tempArr, tempArr.Length);
-            tempArr[0] = (byte) (tempArr[0] == 0 ? 127 : 0);
 
             foreach (var code in Image.AllowedPixelTypes)
             {
-                var image1 = new Image(TestByteArray, 2, 2, code);
-                var image2 = new Image(TestByteArray, 2, 2, code);
+                var type = Type.GetType("System." + code, true);
+                var size = Marshal.SizeOf(type);
+                var arr = TestByteArray.Take(size * 2 * 2).ToArray();
 
-                var wrImage1 = new Image(TestByteArray, 2, 1, code);
-                var wrImage2 = new Image(TestByteArray, 1, 2, code);
-                var wrImage3 = new Image(TestByteArray, 2, 2,
+                var tempArr = new byte[arr.Length];
+                Array.Copy(arr, tempArr, tempArr.Length);
+                tempArr[0] = (byte) (tempArr[0] == 0 ? 127 : 0);
+
+                var image1 = new Image(arr, 2, 2, code);
+                var image2 = new Image(arr, 2, 2, code);
+
+                var wrImage1 = new Image(arr.Take(size * 2).ToArray(), 2, 1, code);
+                var wrImage2 = new Image(arr.Take(size * 2).ToArray(), 1, 2, code);
+                var wrImage3 = new Image(arr, 2, 2,
                     code == TypeCode.Int16 ? TypeCode.UInt16 : TypeCode.Int16);
                 var wrImage4 = new Image(tempArr, 2, 2, code);
 
@@ -243,14 +249,18 @@ namespace Tests
         [Parallelizable(ParallelScope.Self)]
         public void Test_GetHashCode()
         {
-            var tempArr = new byte[TestByteArray.Length];
-            Array.Copy(TestByteArray, tempArr, tempArr.Length);
-            tempArr[0] = (byte)(tempArr[0] == 0 ? 127 : 0);
 
             foreach (var code in Image.AllowedPixelTypes)
             {
-                var image1 = new Image(TestByteArray, 2, 2, code);
-                var image2 = new Image(TestByteArray, 2, 2, code);
+                var type = Type.GetType("System." + code, true);
+                var size = Marshal.SizeOf(type);
+                var arr = TestByteArray.Take(size * 2 * 2).ToArray();
+
+                var tempArr = new byte[arr.Length];
+                Array.Copy(arr, tempArr, tempArr.Length);
+                tempArr[0] = (byte)(tempArr[0] == 0 ? 127 : 0);
+                var image1 = new Image(arr, 2, 2, code);
+                var image2 = new Image(arr, 2, 2, code);
 
                 var wrImage1 = new Image(tempArr, 2, 2, code);
 
@@ -365,8 +375,13 @@ namespace Tests
             Assert.Multiple(() =>
             {
                 foreach (var code in Image.AllowedPixelTypes)
-                    Assert.That(new Image(TestByteArray, 2, 2, code).Type,
-                        Is.EqualTo(Type.GetType("System." + code)));
+                {
+                    var type = Type.GetType("System." + code, true);
+                    var size = Marshal.SizeOf(type);
+                    var img = new Image(TestByteArray.Take(size * 2 * 2).ToArray(), 2, 2, code);
+                    Assert.That(img.Type, Is.EqualTo(type));
+
+                }
             });
         }
 
@@ -410,14 +425,14 @@ namespace Tests
 
                 image.Clamp(mn, mx);
 
-                var min = image.Min() as IComparable;
-                var max = image.Max() as IComparable;
+                var min = image.Min();
+                var max = image.Max();
 
                 Assert.Multiple(() =>
                 {
-                    Assert.That(min?.CompareTo(Convert.ChangeType(mn, code)), 
+                    Assert.That(min.CompareTo(Convert.ChangeType(mn, code)), 
                         Is.GreaterThanOrEqualTo(0));
-                    Assert.That(max?.CompareTo(Convert.ChangeType(mx, code)),
+                    Assert.That(max.CompareTo(Convert.ChangeType(mx, code)),
                         Is.LessThanOrEqualTo(0));
                 });
             }
@@ -455,26 +470,27 @@ namespace Tests
                 image.Clamp(mn / 100, mx / 100);
                 imageLarge.Clamp(mn / 100, mx / 100);
 
-                Assert.Throws<ArgumentException>(() => image.Scale(100, 10));
+                Assert.That(() => image.Scale(100, 10),
+                    Throws.InstanceOf<ArgumentException>());
 
                 image.Scale(1, 10);
                 imageLarge.Scale(1, 10);
 
-                var min = image.Min() as IComparable ?? throw new ArgumentNullException();
-                var max = image.Max() as IComparable ?? throw new ArgumentNullException();
+                var min = image.Min();
+                var max = image.Max();
 
-                var minL = imageLarge.Min() as IComparable ?? throw new ArgumentNullException();
-                var maxL = imageLarge.Max() as IComparable ?? throw new ArgumentNullException();
+                var minL = imageLarge.Min();
+                var maxL = imageLarge.Max();
 
                 Assert.Multiple(() =>
                 {
-                    Assert.That((Math.Abs(min.CompareTo(Convert.ChangeType(1, code))) < float.Epsilon) ||
-                                   (Math.Abs(max.CompareTo(min)) < float.Epsilon), Is.True);
-                    Assert.That((Math.Abs(max.CompareTo(Convert.ChangeType(10, code))) < float.Epsilon) ||
-                                   (Math.Abs(max.CompareTo(min)) < float.Epsilon), Is.True);
+                    Assert.That(Math.Abs(min - 1) < double.Epsilon ||
+                                   Math.Abs(max - min) < double.Epsilon, Is.True);
+                    Assert.That(Math.Abs(max - 10) < double.Epsilon ||
+                                   Math.Abs(max - min) < double.Epsilon, Is.True);
 
-                    Assert.That(Math.Abs(minL.CompareTo(Convert.ChangeType(1, code))) < float.Epsilon, Is.True);
-                    Assert.That(Math.Abs(maxL.CompareTo(Convert.ChangeType(10, code))) < float.Epsilon, Is.True);
+                    Assert.That(Math.Abs(minL - 1) < double.Epsilon, Is.True);
+                    Assert.That(Math.Abs(maxL - 10) < double.Epsilon, Is.True);
                 });
             }
         }
@@ -487,31 +503,31 @@ namespace Tests
             {
                 var image = new Image(new byte[TestByteArray.Length],
                     TestByteArray.Length / 4 / 
-                    System.Runtime.InteropServices.Marshal.SizeOf(
+                    Marshal.SizeOf(
                         Type.GetType("System." + code) ?? throw new InvalidOperationException()), 
                         4, code);
                 var imageLarge = new Image(new byte[VeryLargeByteArray.Length], 
                     VeryLargeByteArray.Length / 4 / 
-                    System.Runtime.InteropServices.Marshal.SizeOf(
+                    Marshal.SizeOf(
                         Type.GetType("System." + code) ?? throw new InvalidOperationException()),
                         4, code);
 
                 image.Scale(1, 10);
                 imageLarge.Scale(1, 10);
 
-                var min = image.Min() as IComparable;
-                var max = image.Max() as IComparable;
+                var min = image.Min();
+                var max = image.Max();
 
-                var minL = imageLarge.Min() as IComparable;
-                var maxL = imageLarge.Max() as IComparable;
+                var minL = imageLarge.Min();
+                var maxL = imageLarge.Max();
 
                 Assert.Multiple(() =>
                 {
-                    Assert.That(min?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
-                    Assert.That(max?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
+                    Assert.That(Math.Abs(min - 1), Is.LessThanOrEqualTo(double.Epsilon));
+                    Assert.That(Math.Abs(max - 1), Is.LessThanOrEqualTo(double.Epsilon));
 
-                    Assert.That(minL?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
-                    Assert.That(maxL?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
+                    Assert.That(Math.Abs(minL - 1), Is.LessThanOrEqualTo(double.Epsilon));
+                    Assert.That(Math.Abs(maxL - 1), Is.LessThanOrEqualTo(double.Epsilon));
                 });
             }
         }
