@@ -63,7 +63,7 @@ namespace ANDOR_CS.Classes
                 return false;
 
             // If SDK handle is null, resource cannot be freed
-            if (AndorSdkInitialization.SDKInstance == null)
+            if (AndorSdkInitialization.SdkInstance == null)
                 return false;
 
             // Variable holds return codes of some Andor SDK methods
@@ -72,12 +72,12 @@ namespace ANDOR_CS.Classes
             
             return AndorSdkInitialization.CallWithoutHandle(() =>
             {
-                var result = AndorSdkInitialization.SDKInstance.GetCurrentCamera(ref cameraHandle);
+                var result = AndorSdkInitialization.SdkInstance.GetCurrentCamera(ref cameraHandle);
                 if (result != AndorSDK.DRV_SUCCESS)
                     return result;
 
                 // Frees camera handles
-                result = AndorSdkInitialization.SDKInstance.ShutDown();
+                result = AndorSdkInitialization.SdkInstance.ShutDown();
 
                 return result;
             }) == AndorSDK.DRV_SUCCESS;
