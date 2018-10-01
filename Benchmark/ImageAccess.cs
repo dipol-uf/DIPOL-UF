@@ -22,15 +22,61 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System.Collections.Generic;
+using System.Linq;
+using BenchmarkDotNet.Attributes;
+using DipolImage;
+
 namespace Benchmark
 {
-    class Program
+    [SimpleJob]
+    public class ImageAccess
     {
-        static void Main(string[] args)
+        private Image _image;
+
+        [ParamsSource(nameof(szSource))]
+        public (int Width, int Height) size;
+
+        public IEnumerable<(int Width, int Height)> szSource => new[]
         {
-            //BenchmarkDotNet.Running.BenchmarkRunner.Run<IOBench>();
-            //BenchmarkDotNet.Running.BenchmarkRunner.Run<KeyWordAccess>();
-            BenchmarkDotNet.Running.BenchmarkRunner.Run<ImageAccess>();
+            (Width: 640, Height: 480),
+            (Width: 1024, Height: 768)
+        };
+
+        [GlobalSetup]
+        public void GlobalSetup()
+        {
+            var data = Enumerable.Range(0, size.Width * size.Height)
+                                 .Select(i => 1.0f * i)
+                                 .ToArray();
+
+            _image = new Image(data, size.Width, size.Height);
         }
+
+        [Benchmark(Baseline = true)]
+        public void Clamp()
+        {
+            _image.Clamp(10, 1000);
+        }
+
+        //[Benchmark]
+        //public void Clamp2()
+        //{
+        //    _image.Clamp2(10, 1000);
+        //}
+
+        //[Benchmark]
+        //public void Min2()
+        //{
+        //    var x = _image.Min2();
+
+        //}
+
+        //[Benchmark]
+        //public void Min3()
+        //{
+        //    var x = _image.Min3();
+
+        //}
     }
 }
