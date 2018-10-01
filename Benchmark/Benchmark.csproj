@@ -225,6 +225,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ImageAccess.cs" />
     <Compile Include="ImageIO.cs" />
     <Compile Include="KeyWordAccess.cs" />
     <Compile Include="Program.cs" />
