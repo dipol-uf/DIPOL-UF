@@ -126,67 +126,26 @@ namespace DipolImage
             if (!AllowedTypes.Contains(type))
                 throw new ArgumentException($"Specified type {type} is not allowed.");
 
-            int size;
             Width = width;
             Height = height;
             _typeCode = type;
             var tp = Type.GetType("System." + _typeCode, true, true);
+            var size = Marshal.SizeOf(tp);
             _baseArray = Array.CreateInstance(tp, width * height);
-            switch (type)
+
+
+            GCHandle handle = default;
+
+            try
             {
-                case TypeCode.Byte:
-                    size = sizeof(byte);
-
-                    for (var i = 0; i < Height; i++)
-                        for (var j = 0; j < Width; j++)
-                            Set(initialArray[(i * width + j) * size], i, j);
-                    break;
-                case TypeCode.UInt16:
-                    size = sizeof(ushort);
-
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToUInt16(initialArray, (i * width + j) * size), i, j);
-                    break;
-                case TypeCode.Int16:
-                    size = sizeof(short);
-
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToInt16(initialArray, (i * width + j) * size), i, j);
-                    break;
-                case TypeCode.UInt32:
-                    size = sizeof(uint);
-                    
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToUInt32(initialArray, (i * width + j) * size), i, j);
-                    break;
-                case TypeCode.Int32:
-                    size = sizeof(int);
-                   
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToInt32(initialArray, (i * width + j) * size), i, j);
-                    break;
-                case TypeCode.Single:
-                    size = sizeof(float);
-                   
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToSingle(initialArray, (i * width + j) * size), i, j);
-                    break;
-                case TypeCode.Double:
-                    size = sizeof(double);
-                   
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToDouble(initialArray, (i * width + j) * size), i, j);
-                    break;
-                
+                handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
+                Marshal.Copy(initialArray, 0, handle.AddrOfPinnedObject(), 
+                    Math.Min(initialArray.Length, width * height * size));
             }
-
-            
+            finally
+            {
+                handle.Free();
+            }
 
         }
 
@@ -194,27 +153,33 @@ namespace DipolImage
         {
             var size = Marshal.SizeOf(_baseArray.GetValue(0));
             var byteArray = new byte[Width * Height * size];
-            var handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
-            Marshal.Copy(handle.AddrOfPinnedObject(), byteArray, 0, byteArray.Length);
-            handle.Free();
+            GCHandle handle = default;
+            try
+            {
+                handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
+                Marshal.Copy(handle.AddrOfPinnedObject(), byteArray, 0, byteArray.Length);
+            }
+            finally
+            {
+                handle.Free();
+            }
 
             return byteArray;
         }
 
-        public object Max()
+        public double Max()
         {
-            object max;
+            double max;
 
             switch (_typeCode)
             {
                 case TypeCode.Byte:
                 {
                     var localMax = byte.MinValue;
-                    byte localVal;
-                    for (var i = 0; i < Height; i++)
-                        for (var j = 0; j < Width; j++)
-                            if ((localVal = Get<byte>(i, j)) > localMax)
-                                localMax = localVal;
+                    var arr = (byte[]) _baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
                     max = localMax;
                         break;
@@ -222,71 +187,65 @@ namespace DipolImage
                 case TypeCode.UInt16:
                 {
                     var localMax = ushort.MinValue;
-                    ushort localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<ushort>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (ushort[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
-                    max = localMax;
+                        max = localMax;
                     break;
                 }
                 case TypeCode.Int16:
                 {
                     var localMax = short.MinValue;
-                    short localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<short>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (short[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
-                    max = localMax;
+                        max = localMax;
                     break;
                 }
                 case TypeCode.UInt32:
                 {
                     var localMax = uint.MinValue;
-                    uint localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<uint>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (uint[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
-                    max = localMax;
+                        max = localMax;
                     break;
                 }
                 case TypeCode.Int32:
                 {
                     var localMax = int.MinValue;
-                    int localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<int>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (int[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
-                    max = localMax;
+                        max = localMax;
                     break;
                 }
                 case TypeCode.Single:
                 {
                     var localMax = float.MinValue;
-                    float localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<float>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (float[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
-                    max = localMax;
+                        max = localMax;
                     break;
                 }
                 default:
                 {
                     var localMax = double.MinValue;
-                    double localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<double>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (double[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
                     max = localMax;
                     break;
@@ -297,32 +256,30 @@ namespace DipolImage
             return max;
         }
 
-        public object Min()
+        public double Min()
         {
-            object min;
+            double min;
 
             switch (_typeCode)
             {
                 case TypeCode.Byte:
                 {
                     var localMin = byte.MaxValue;
-                    byte localVal;
-                    for (var i = 0; i < Height; i++)
-                        for (var j = 0; j < Width; j++)
-                            if ((localVal = Get<byte>(i, j)) < localMin)
-                                localMin = localVal;
+                    var arr = (byte[])_baseArray;
+                    foreach (var item in arr)
+                        if (item <= localMin)
+                            localMin = item;
 
-                    min = localMin;
+                        min = localMin;
                     break;
                 }
                 case TypeCode.UInt16:
                     {
                         var localMin = ushort.MaxValue;
-                        ushort localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<ushort>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (ushort[])_baseArray;
+                        foreach (var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -330,11 +287,10 @@ namespace DipolImage
                 case TypeCode.Int16:
                     {
                         var localMin = short.MaxValue;
-                        short localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<short>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (short[])_baseArray;
+                        foreach (var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -342,11 +298,10 @@ namespace DipolImage
                 case TypeCode.UInt32:
                     {
                         var localMin = uint.MaxValue;
-                        uint localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<uint>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (uint[])_baseArray;
+                        foreach (var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -354,11 +309,10 @@ namespace DipolImage
                 case TypeCode.Int32:
                     {
                         var localMin = int.MaxValue;
-                        int localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<int>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (int[])_baseArray;
+                        foreach (var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -366,11 +320,10 @@ namespace DipolImage
                 case TypeCode.Single:
                     {
                         var localMin = float.MaxValue;
-                        float localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<float>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (float[])_baseArray;
+                        foreach (var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -378,11 +331,10 @@ namespace DipolImage
                 default:
                     {
                         var localMin = double.MaxValue;
-                        double localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<double>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (double[]) _baseArray;
+                        foreach(var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -408,85 +360,90 @@ namespace DipolImage
                 {
                     var locLow = (byte)(Math.Floor(low));
                     var locHigh = (byte)(Math.Ceiling(high));
-                    for (var i = 0; i < Height; i++)
-                        for (var j = 0; j < Width; j++)
-                            if (Get<byte>(i, j) < locLow)
-                                Set(locLow, i, j);
-                            else if (Get<byte>(i, j) > locHigh)
-                                Set(locHigh, i, j);
-                    break;
+                    var arr = (byte[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
+                        break;
                 }
 
                 case TypeCode.UInt16:
                 {
                     var locLow = (ushort)(Math.Floor(low));
                     var locHigh = (ushort)(Math.Ceiling(high));
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<ushort>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<ushort>(i, j) > locHigh)
-                            Set(locHigh, i, j);
-                    break;
+                    var arr = (ushort[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
+                        break;
                 }
                 case TypeCode.Int16:
                 {
                     var locLow = (short)(Math.Floor(low));
                     var locHigh = (short)(Math.Ceiling(high));
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<short>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<short>(i, j) > locHigh)
-                            Set(locHigh, i, j);
-                    break;
+                    var arr = (short[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
+                        break;
                 }
                 case TypeCode.UInt32:
                 {
                     var locLow = (uint)(Math.Floor(low));
                     var locHigh = (uint)(Math.Ceiling(high));
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<uint>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<uint>(i, j) > locHigh)
-                            Set(locHigh, i, j);
-                    break;
+                    var arr = (uint[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
+                        break;
                 }
                 case TypeCode.Int32:
                 {
                     var locLow = (int)(Math.Floor(low));
                     var locHigh = (int)(Math.Ceiling(high));
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<int>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<int>(i, j) > locHigh)
-                            Set(locHigh, i, j);
+                    var arr = (int[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
                     break;
                 }
                 case TypeCode.Single:
                 {
                     var locLow = (float)(low);
                     var locHigh = (float)(high);
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<float>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<float>(i, j) > locHigh)
-                            Set(locHigh, i, j);
-                    break;
+                    var arr = (float[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
+                        break;
                 }
                 default:
                 {
-                    var locLow = low;
-                    var locHigh = high;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<double>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<double>(i, j) > locHigh)
-                            Set(locHigh, i, j);
+                    var arr = (double[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < low)
+                            arr[i] = low;
+                        else if (arr[i] > high)
+                            arr[i] = high;
                     break;
                 }
                
