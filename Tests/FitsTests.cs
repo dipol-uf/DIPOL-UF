@@ -32,8 +32,10 @@ using System.Linq;
 using System.Numerics;
 using System.Resources;
 using System.Runtime;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Windows;
 using DipolImage;
 using FITS_CS;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -113,7 +115,7 @@ namespace Tests
                         (H:"DBLVAL2", B:"=      -1234.0", C:"Comment", O:0, V: -1234.0),
                         (H:"DBLVAL3", B:"=      1234e30", C:"Comment", O:0, V: 1234e30),
                         (H:"DBLVAL4", B:"=      -1234e-30", C:"Comment", O:0, V: -1234e-30),
-                        (H:"DBLVAL4", B:"=                   1223.5", C:"Comment", O:0, V: new System.Numerics.Complex(12, 23.5))
+                        (H:"DBLVAL4", B:"=                   1223.5", C:"Comment", O:0, V: new Complex(12, 23.5))
                     }
                     .Select(x => new TestCaseData(
                         new string(' ', x.O) + $"{x.H, -8}{x.B}"+
@@ -171,6 +173,15 @@ namespace Tests
     [TestFixture]
     public class FitsTests
     {
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VeryLargeStruct
+        {
+            private double Item1;
+            private double Item2;
+            private double Item3;
+            private double Item4;
+        }
+
         private readonly ConcurrentQueue<Action> _cleanActions
             = new ConcurrentQueue<Action>();
 
@@ -514,7 +525,7 @@ namespace Tests
                 Test(new Complex(float.MaxValue, float.MinValue), FitsKeywordType.Complex);
 
                 Assert.That(() => new FitsKey("THROWS", FitsKeywordType.String, "TESTSTR").GetValue<double>(),
-                    Throws.InstanceOf<TypeAccessException>(),
+                    Throws.InstanceOf<ArgumentException>(),
                     "Should throw if underlying and provided type mismatch.");
             });
 
@@ -653,6 +664,96 @@ namespace Tests
             }
 
             AssumeExistsAndScheduleForCleanup(path);
+        }
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_SpecialKeys()
+        {
+            var key = new FitsKey("", FitsKeywordType.Blank, null);
+
+            var date = DateTime.Now;
+            var dateKey = FitsKey.CreateDate("TDATE", date);
+
+            var parsedVal = DateTime.Parse(dateKey.GetValue<string>());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(key.IsEmpty, Is.True);
+#pragma warning disable 618
+                Assert.That(() => FitsKey.CreateNew("", FitsKeywordType.Blank, null),
+                    Throws.InstanceOf<NotSupportedException>());
+#pragma warning restore 618
+                Assert.That(parsedVal, Is.EqualTo(date).Within(TimeSpan.FromSeconds(1e-3)));
+            });
+        }
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_FitsUniCtor()
+        {
+
+            var test = new byte[1];
+            var test2 = new byte[FitsUnit.UnitSizeInBytes];
+            Assert.Multiple(() =>
+            {
+                Assert.That(() => new FitsUnit(null),
+                    Throws.InstanceOf<ArgumentNullException>(),
+                    $"{nameof(FitsUnit)} ctor should through if argument is null.");
+
+                Assert.That(() => new FitsUnit(test),
+                    Throws.InstanceOf<ArgumentException>(),
+                    $"{nameof(FitsUnit)} ctor should throw is array size is not equal to unit size.");
+
+                Assert.That(new FitsUnit(test2).Data,
+                    Is.EqualTo(test2).AsCollection);
+            });
+        }
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_FitsUnit_GetData_Throws()
+        {
+            
+            var test = new byte[FitsUnit.UnitSizeInBytes];
+            var unit = new FitsUnit(test);
+            Assert.That(unit.GetData<VeryLargeStruct>,
+                Throws.InstanceOf<ArgumentException>(),
+                $"{nameof(FitsUnit.GetData)} should throw if type size is incorrect.");
+        }
+
+        [Test]
+        [Parallelizable(ParallelScope.Self)]
+        public void Test_FitsUnit_GenerateFromKeywords()
+        {
+            const int n = 4;
+            var keys = Enumerable.Range(0, n * FitsUnit.UnitSizeInBytes / FitsKey.KeySize)
+                                 .Select(i => FitsKey.CreateDate($"DT_{i:000}", DateTime.Now))
+                                 .ToArray();
+
+            var result = FitsUnit.GenerateFromKeywords(keys);
+            Assert.That(result, Has.Count.EqualTo(n));
+            for (var j = 0; j < n; j++)
+            {
+                Assert.That(result[j], Has.Property(nameof(FitsUnit.IsKeywords)).True);
+                var isKeys = result[j].TryGetKeys(out var lKeys);
+                Assert.That(isKeys, Is.True);
+                Assert.That(lKeys, Has.Count.EqualTo(FitsUnit.UnitSizeInBytes / FitsKey.KeySize));
+            }
+
+        }
+
+        [Theory]
+        [Parallelizable(ParallelScope.Self)]
+        [Retry(10)]
+        public void Test_FitsUnit_TryGetKeywords()
+        {
+            var data = new byte[FitsUnit.UnitSizeInBytes];
+            new Random().NextBytes(data);
+            var unit = new FitsUnit(data);
+
+            Assume.That(unit, Has.Property(nameof(unit.IsData)).True);
+            Assert.That(unit.TryGetKeys(out _), Is.False);
         }
 
         private void AssumeExistsAndScheduleForCleanup(string path)
