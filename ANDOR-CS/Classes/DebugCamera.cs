@@ -26,12 +26,13 @@ using ANDOR_CS.Events;
 using DipolImage;
 using System.Collections.Concurrent;
 
+#pragma warning disable 1591
 namespace ANDOR_CS.Classes
 {
     public sealed class DebugCamera : CameraBase
     {
-        private static readonly Random _r = new Random();
-        private static volatile object _locker = new object();
+        private static readonly Random R = new Random();
+        private static readonly object Locker = new object();
         private const ConsoleColor Green = ConsoleColor.DarkGreen;
         private const ConsoleColor Red = ConsoleColor.Red;
         private const ConsoleColor Blue = ConsoleColor.Blue;
@@ -49,7 +50,7 @@ namespace ANDOR_CS.Classes
                 if (token.IsCancellationRequested)
                     return;
 
-                (var status, var temp) = GetCurrentTemperature();
+                var (status, temp) = GetCurrentTemperature();
 
                 OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
 
@@ -84,12 +85,12 @@ namespace ANDOR_CS.Classes
         public override void SetTemperature(int temperature) 
             => WriteMessage($"Temperature was set to {temperature}.", Blue);
 
-        public override void ShutterControl(int clTime, int opTime, ShutterMode inter, ShutterMode exter = ShutterMode.FullyAuto, TtlShutterSignal type = TtlShutterSignal.Low) 
+        public override void ShutterControl(int clTime, int opTime, ShutterMode inter, ShutterMode extrn = ShutterMode.FullyAuto, TtlShutterSignal type = TtlShutterSignal.Low) 
             => WriteMessage("Shutter settings were changed.", Blue);
 
-        public override void TemperatureMonitor(Switch mode, int timeout)
+        public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs)
         {
-            // If monitor shold be enbled
+            // If monitor should be enabled
             if (mode == Switch.Enabled)
             {
                 // If background task has not been started yet
@@ -125,7 +126,7 @@ namespace ANDOR_CS.Classes
         public DebugCamera(int camIndex)
         {
             CameraIndex = camIndex;
-            SerialNumber = $"XYZ-{_r.Next(9999):0000}";
+            SerialNumber = $"XYZ-{R.Next(9999):0000}";
             Capabilities = new DeviceCapabilities()
             {
                 CameraType = CameraType.IXonUltra
@@ -155,7 +156,7 @@ namespace ANDOR_CS.Classes
 
         private void WriteMessage(string message, ConsoleColor col)
         {
-            lock (_locker)
+            lock (Locker)
             {
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.Write("[{0,-3:000}-{1:hh:mm:ss.ff}] > ", CameraIndex, DateTime.Now);
@@ -166,8 +167,9 @@ namespace ANDOR_CS.Classes
 
         }
 
-        public async override Task StartAcquistionAsync(CancellationTokenSource token, int timeout)
+        public override async Task StartAcquisitionAsync(CancellationTokenSource token, int timeout = StatusCheckTimeOutMs)
         {
+            await Task.Delay(TimeSpan.FromMilliseconds(1));
             throw new NotImplementedException();
         }
 

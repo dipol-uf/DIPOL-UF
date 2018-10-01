@@ -1,19 +1,26 @@
 ﻿//    This file is part of Dipol-3 Camera Manager.
 
-//    Dipol-3 Camera Manager is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-
-//    Dipol-3 Camera Manager is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//    GNU General Public License for more details.
-
-//    You should have received a copy of the GNU General Public License
-//    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
-//
-//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+//     MIT License
+//     
+//     Copyright(c) 2018 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
 
 using System;
 using System.Collections.Concurrent;
@@ -28,6 +35,7 @@ using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
 using DipolImage;
 
+#pragma warning disable 1591
 namespace ANDOR_CS.Classes
 {
     /// <summary>
@@ -40,7 +48,7 @@ namespace ANDOR_CS.Classes
         protected const int StatusCheckTimeOutMs = 100;
         protected const int TempCheckTimeOutMs = 5000;
 
-        protected bool isDisposed;
+        private bool _isDisposed;
 
         private bool _isActive;
         private bool _isInitialized;
@@ -64,6 +72,7 @@ namespace ANDOR_CS.Classes
         private volatile bool _isAcquiring;
         private volatile bool _isAsyncAcquisition;
 
+        // ReSharper disable once InconsistentNaming
         protected ConcurrentQueue<Image> _acquiredImages = new ConcurrentQueue<Image>();
 
 
@@ -80,7 +89,19 @@ namespace ANDOR_CS.Classes
             }
 
         }
-        public bool IsDisposed => isDisposed;
+
+        public bool IsDisposed
+        {
+            get => _isDisposed;
+            protected set
+            {
+                if (value != _isDisposed)
+                {
+                    _isDisposed = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public virtual DeviceCapabilities Capabilities
         {
@@ -301,7 +322,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         public event AcquisitionStatusEventHandler AcquisitionAborted;
         /// <summary>
-        /// Fires when backround task acsynchronously checks temperature
+        /// Fires when background task asynchronously checks temperature
         /// </summary>
         public event TemperatureStatusEventHandler TemperatureStatusChecked;
         public event NewImageReceivedHandler NewImageReceived;
@@ -324,7 +345,7 @@ namespace ANDOR_CS.Classes
            int clTime,
            int opTime,
            ShutterMode inter,
-           ShutterMode exter = ShutterMode.FullyAuto,
+           ShutterMode extrn = ShutterMode.FullyAuto,
            TtlShutterSignal type = TtlShutterSignal.Low);
         public abstract void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs);
         public abstract SettingsBase GetAcquisitionSettingsTemplate();
@@ -372,7 +393,7 @@ namespace ANDOR_CS.Classes
 
         public virtual void CheckIsDisposed()
         {
-            if (isDisposed)
+            if (_isDisposed)
                 throw new ObjectDisposedException("Camera instance is already disposed");
         }
 
@@ -382,7 +403,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         public virtual void Dispose()
         {
-            if (!isDisposed)
+            if (!_isDisposed)
             {
                 Dispose(true);
                 GC.SuppressFinalize(this);
@@ -390,7 +411,7 @@ namespace ANDOR_CS.Classes
         }
         protected virtual void Dispose(bool disposing)
         {
-            isDisposed = true;
+            _isDisposed = true;
         }
 
         /// <summary>
@@ -441,7 +462,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Fires <see cref="AcquisitionAborted"/> event.
         /// </summary>
-        /// <param name="e">Status of camera when abortion happeed</param>
+        /// <param name="e">Status of camera when abortion happened</param>
         protected virtual void OnAcquisitionAborted(AcquisitionStatusEventArgs e)
         {
             if (!IsDisposed)

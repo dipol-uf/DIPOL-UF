@@ -20,18 +20,47 @@ using ANDOR_CS.Classes;
 
 namespace ANDOR_CS.Exceptions
 {
+    /// <inheritdoc />
     public class AcquisitionInProgressException : Exception
     {
+        /// <inheritdoc />
         public AcquisitionInProgressException(string message) :
             base(message)
         { }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cam"></param>
+        /// <exception cref="AcquisitionInProgressException"></exception>
+        [Obsolete]
         public static void ThrowIfAcquiring(Camera cam) 
             
         {
             if (cam.IsAcquiring)
                 throw new AcquisitionInProgressException("Camera is acquiring image(s) at the moment.");
         }
-        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cam"></param>
+        /// <param name="except"></param>
+        /// <returns></returns>
+        public static bool FailIfAcquiring(Camera cam, out Exception except)
+        {
+            except = null;
+
+            if (cam.IsAcquiring)
+            {
+                except = new AcquisitionInProgressException("Camera is acquiring image(s) at the moment.");
+                return true;
+            }
+
+            return false;
+
+
+        }
+
     }
 }

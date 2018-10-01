@@ -412,7 +412,7 @@ namespace DIPOL_UF.Models
 
                 CurrentImageIndex = 0;
                 _acqTaskCancel = new CancellationTokenSource();
-                _acqTask = Camera.StartAcquistionAsync(_acqTaskCancel,
+                _acqTask = Camera.StartAcquisitionAsync(_acqTaskCancel,
                     Math.Max(Convert.ToInt32(Camera.CurrentSettings.ExposureTime / 50), 50));
                
             }

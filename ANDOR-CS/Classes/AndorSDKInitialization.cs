@@ -32,6 +32,8 @@ using AndorSDK = ATMCD32CS.AndorSDK;
 using AndorSDK = ATMCD64CS.AndorSDK;
 #endif
 
+#pragma warning disable 1591
+
 namespace ANDOR_CS.Classes
 {
     /// <summary>
@@ -50,22 +52,27 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Gets an singleton instance of a basic AndorSDK class
         /// </summary>
-        public static AndorSDK SDKInstance
+        public static AndorSDK SdkInstance
         {
             get;
         } = new AndorSDK();
 
 
+        /// <inheritdoc />
         public delegate uint AndorSdk<T1>(ref T1 p1);
+
+        /// <inheritdoc />
         public delegate uint AndorSdk<in T1, T2>(T1 p1, ref T2 p2);
+
+        /// <inheritdoc />
         public delegate uint AndorSdk<in T1, in T2, T3>(T1 p1, T2 p2, ref T3 p3);
-        //public delegate uint AndorSDK<T1, T2, T3>(T1 p1, ref T2 p2, ref T3 p3);
 
         /// <summary>
         /// Task-safely invokes SDK method with one output ref parameter
         /// </summary>
         /// <typeparam name="T1">Type of first parameter</typeparam>
-        /// <param name="method"><see cref="SDKInstance"/> method to invoke</param>
+        /// <param name="handle">Sdk handle</param>
+        /// <param name="method"><see cref="SdkInstance"/> method to invoke</param>
         /// <param name="p1">Stores result of the function call</param>
         /// <returns>Return code</returns>
         public static uint Call<T1>(SafeSdkCameraHandle handle, AndorSdk<T1> method, out T1 p1)
@@ -93,12 +100,13 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
-        /// Task-safely invokes SDK method with oneinput and one output ref parameter
+        /// Task-safely invokes SDK method with one input and one output ref parameter
         /// </summary>
         /// <typeparam name="T1">Type of first parameter</typeparam>
         /// <typeparam name="T2">Type of second parameter</typeparam>
-        /// <param name="method"><see cref="SDKInstance"/> method to invoke</param>
-        /// <param name="p1">Inpput argument of the method</param>
+        /// <param name="handle">Sdk handle</param>
+        /// <param name="method"><see cref="SdkInstance"/> method to invoke</param>
+        /// <param name="p1">Input argument of the method</param>
         /// <param name="p2">Stores result of the function call</param>
         /// <returns>Return code</returns>
         public static uint Call<T1, T2>(SafeSdkCameraHandle handle, AndorSdk<T1, T2> method, T1 p1, out T2 p2)
@@ -124,14 +132,15 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
-        /// Task-safely invokes SDK method with oneinput and one output ref parameter
+        /// Task-safely invokes SDK method with one input and one output ref parameter
         /// </summary>
         /// <typeparam name="T1">Type of first parameter</typeparam>
         /// <typeparam name="T2">Type of second parameter</typeparam>
         /// <typeparam name="T3">Type of third parameter</typeparam>
-        /// <param name="method"><see cref="SDKInstance"/> method to invoke</param>
-        /// <param name="p1">First inpput argument of the method</param>
-        /// <param name="p2">Second inpput argument of the method</param>
+        /// <param name="handle">Sdk handle</param>
+        /// <param name="method"><see cref="SdkInstance"/> method to invoke</param>
+        /// <param name="p1">First input argument of the method</param>
+        /// <param name="p2">Second input argument of the method</param>
         /// <param name="p3">Stores result of the function call</param>
         /// <returns>Return code</returns>
         public static uint Call<T1, T2, T3>(SafeSdkCameraHandle handle, AndorSdk<T1, T2, T3> method, T1 p1, T2 p2, out T3 p3)
@@ -264,12 +273,12 @@ namespace ANDOR_CS.Classes
             if (handle == null) return;
 
             var currHandle = 0;
-            if (SDKInstance.GetCurrentCamera(ref currHandle) != AndorSDK.DRV_SUCCESS)
+            if (SdkInstance.GetCurrentCamera(ref currHandle) != AndorSDK.DRV_SUCCESS)
                 throw new Exception();
 
             if (currHandle == handle.SdkPtr) return;
 
-            if (SDKInstance.SetCurrentCamera(handle.SdkPtr) != AndorSDK.DRV_SUCCESS)
+            if (SdkInstance.SetCurrentCamera(handle.SdkPtr) != AndorSDK.DRV_SUCCESS)
                 throw new Exception();
         }
         
