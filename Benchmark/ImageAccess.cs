@@ -33,8 +33,8 @@ namespace Benchmark
     public class ImageAccess
     {
         private Image _image;
-        private Image _image2;
-        private Image _image3;
+        //private Image _image2;
+        //private Image _image3;
 
 
         [ParamsSource(nameof(szSource))]
@@ -54,48 +54,29 @@ namespace Benchmark
                                  .ToArray();
 
             _image = new Image(data, size.Width, size.Height);
-            _image2 = _image.Copy();
-            _image3 = _image.Copy();
+            //_image2 = _image.Copy();
+            //_image3 = _image.Copy();
 
         }
 
         [Benchmark(Baseline = true)]
-        public void Scale()
+        public void This()
         {
-            _image.Scale(10, 100);
+            var sum = 0.0;
+
+            for(var i = 0; i < _image.Height; i++)
+                for (var j = 0; j < _image.Width; j++)
+                    sum += (double)_image[i, j];
         }
 
-        //[Benchmark]
-        //public void Scale2()
-        //{
-        //    _image2.Scale2(10, 100);
+        [Benchmark]
+        public void Get()
+        {
+            var sum = 0.0;
 
-        //}
-
-        //[Benchmark]
-        //public void Scale3()
-        //{
-        //    _image3.Scale3(10, 100);
-        //}
-
-        //[Benchmark]
-        //public void Clamp2()
-        //{
-        //    _image.Clamp2(10, 1000);
-        //}
-
-        //[Benchmark]
-        //public void Min2()
-        //{
-        //    var x = _image.Min2();
-
-        //}
-
-        //[Benchmark]
-        //public void Min3()
-        //{
-        //    var x = _image.Min3();
-
-        //}
+            for (var i = 0; i < _image.Height; i++)
+                for (var j = 0; j < _image.Width; j++)
+                    sum += _image.Get<double>(i, j);
+        }
     }
 }
