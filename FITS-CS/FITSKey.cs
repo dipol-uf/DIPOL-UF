@@ -23,9 +23,7 @@
 //     SOFTWARE.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -45,7 +43,7 @@ namespace FITS_CS
         public static readonly int KeySize = 80;
         public static readonly int KeyHeaderSize = 8;
         public static readonly int ReservedSize = 2;
-        public static readonly int LastValueColumnFixed = 29;
+        //public static readonly int LastValueColumnFixed = 29;
         public static readonly int StringQuotePos = 20;
         public static readonly int NumericValueMaxLengthFixed = 20;
 
@@ -166,7 +164,9 @@ namespace FITS_CS
         }
 
         public FitsKey(string header, FitsKeywordType type, object value,
-            string comment = "", FitsKeyLayout layout = FitsKeyLayout.Fixed)
+            string comment = "", 
+            // ReSharper disable once UnusedParameter.Local
+            FitsKeyLayout layout = FitsKeyLayout.Fixed)
         {
             if (header is null)
                 throw new ArgumentNullException(nameof(header));
@@ -275,25 +275,11 @@ namespace FITS_CS
         { }
 
         public T GetValue<T>()
-        {
-            dynamic ret;
-            if (typeof(T) == typeof(bool) && Type == FitsKeywordType.Logical)
-                ret = (bool)RawValue;
-            else if (typeof(T) == typeof(string) && Type == FitsKeywordType.String)
-                ret = (string)RawValue;
-            else if (typeof(T) == typeof(int) && Type == FitsKeywordType.Integer)
-                ret = (int)RawValue;
-            else if (typeof(T) == typeof(float) && Type == FitsKeywordType.Float)
-                ret = (float)RawValue;
-            else if (typeof(T) == typeof(double) && Type == FitsKeywordType.Float)
-                ret = (double)RawValue;
-            else if (typeof(T) == typeof(Complex) && Type == FitsKeywordType.Complex)
-                ret = (Complex)RawValue;
-            else if (typeof(T) == typeof(string) && Type == FitsKeywordType.Comment)
-                ret = (string) RawValue;
-            else throw new TypeAccessException($"Illegal combination of {Type} and {typeof(T)}.");
-            return ret;
-        }
+            => RawValue is T tVal
+                ? tVal
+                : throw new ArgumentException(
+                    $"Cannot convert {nameof(RawValue)} of type {RawValue?.GetType()} to type {typeof(T)}.");
+        
 
         public override string ToString() => KeyString;
         public override bool Equals(object obj)
@@ -354,8 +340,7 @@ namespace FITS_CS
         public static FitsKey CreateNew(string header, FitsKeywordType type, object value,
             string comment = "", FitsKeyLayout layout = FitsKeyLayout.Fixed)
         {
-
-            return new FitsKey(header, type, value, comment, layout);
+            throw new NotSupportedException();
         }
 
         public static bool operator ==(FitsKey key1, FitsKey key2)

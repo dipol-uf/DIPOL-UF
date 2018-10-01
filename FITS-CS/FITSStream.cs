@@ -73,7 +73,7 @@ namespace FITS_CS
 
         public void WriteUnit(FitsUnit unit)
         {
-            Write(unit.Data, 0, FitsUnit.UnitSizeInBytes);
+            Write(unit._data, 0, FitsUnit.UnitSizeInBytes);
             Flush();
         }
 
@@ -148,7 +148,7 @@ namespace FITS_CS
             if (extraKeys != null)
                 keys.AddRange(extraKeys);
 
-            keys.Add(new FitsKey("END", FitsKeywordType.Blank, null));
+            keys.Add(FitsKey.End);
 
             var keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
             var dataUnits = FitsUnit.GenerateFromDataArray(image.GetBytes(), type);
