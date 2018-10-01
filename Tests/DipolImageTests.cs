@@ -38,7 +38,7 @@ namespace Tests
         public int[] TestArray;
         public byte[] TestByteArray;
         public byte[] VeryLargeByteArray;
-
+       
         [SetUp]
         public void Test_Initialize()
         {
@@ -53,7 +53,6 @@ namespace Tests
 
             VeryLargeByteArray = new byte[1024 * 1024 * 8];
             R.NextBytes(VeryLargeByteArray);
-
         }
 
         [Test]
@@ -155,7 +154,7 @@ namespace Tests
                              .First(m => m.Name == "GetBytes" &&
                                          m.GetParameters().Length == 1 &&
                                          m.GetParameters().First().ParameterType == type);
-                    var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
+                    var size = Marshal.SizeOf(type);
                     reconstructed = new byte[2 * size];
                     Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(0)}), 0, reconstructed, 0, size);
                     Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(1)}), 0, reconstructed, size, size);
@@ -312,7 +311,7 @@ namespace Tests
             foreach (var code in Image.AllowedPixelTypes)
             {
                 var type = Type.GetType("System." + code) ?? typeof(byte);
-                var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
+                var size = Marshal.SizeOf(type);
 
                 var min = type
                     .GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -445,89 +444,35 @@ namespace Tests
         {
             foreach (var code in Image.AllowedPixelTypes)
             {
-                var f_mx = (Type.GetType("System." + code) ?? typeof(byte))
-                    .GetFields(BindingFlags.Public | BindingFlags.Static)
-                    .First(fi => fi.Name == "MaxValue");
 
-                var f_mn = (Type.GetType("System." + code) ?? typeof(byte))
-                    .GetFields(BindingFlags.Public | BindingFlags.Static)
-                    .First(fi => fi.Name == "MinValue");
+                var type = Type.GetType("System." + code, true);
+                var arr = Array.CreateInstance(type, 4096);
 
-                dynamic mx = f_mx.GetValue(null);
-                dynamic mn = f_mn.GetValue(null);
+                if (code == TypeCode.Byte)
 
-                var image = new Image(TestByteArray, 
-                    TestByteArray.Length / 4 / 
-                        System.Runtime.InteropServices.Marshal.SizeOf(
-                            Type.GetType("System." + code) ?? throw new InvalidOperationException()),
-                            4, code);
-                var imageLarge = new Image(VeryLargeByteArray, 
-                    VeryLargeByteArray.Length / 4 / 
-                        System.Runtime.InteropServices.Marshal.SizeOf(
-                            Type.GetType("System." + code) ?? throw new InvalidOperationException()), 
-                            4, code);
+                    for (var i = 0; i < arr.Length; i++)
+                        arr.SetValue((byte)(i % 255), i);
+                else
+                    for (var i = 0; i < arr.Length; i++)
+                        arr.SetValue(Convert.ChangeType(i, code), i);
 
-                image.Clamp(mn / 100, mx / 100);
-                imageLarge.Clamp(mn / 100, mx / 100);
+                var image = new Image(arr, 1024, 4);
 
                 Assert.That(() => image.Scale(100, 10),
                     Throws.InstanceOf<ArgumentException>());
 
-                image.Scale(1, 10);
-                imageLarge.Scale(1, 10);
+                image.Scale(1, 9);
 
                 var min = image.Min();
                 var max = image.Max();
 
-                var minL = imageLarge.Min();
-                var maxL = imageLarge.Max();
 
                 Assert.Multiple(() =>
                 {
                     Assert.That(Math.Abs(min - 1) < double.Epsilon ||
-                                   Math.Abs(max - min) < double.Epsilon, Is.True);
-                    Assert.That(Math.Abs(max - 10) < double.Epsilon ||
-                                   Math.Abs(max - min) < double.Epsilon, Is.True);
-
-                    Assert.That(Math.Abs(minL - 1) < double.Epsilon, Is.True);
-                    Assert.That(Math.Abs(maxL - 10) < double.Epsilon, Is.True);
-                });
-            }
-        }
-
-        [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_Scale_FlatImage()
-        {
-            foreach (var code in Image.AllowedPixelTypes)
-            {
-                var image = new Image(new byte[TestByteArray.Length],
-                    TestByteArray.Length / 4 / 
-                    Marshal.SizeOf(
-                        Type.GetType("System." + code) ?? throw new InvalidOperationException()), 
-                        4, code);
-                var imageLarge = new Image(new byte[VeryLargeByteArray.Length], 
-                    VeryLargeByteArray.Length / 4 / 
-                    Marshal.SizeOf(
-                        Type.GetType("System." + code) ?? throw new InvalidOperationException()),
-                        4, code);
-
-                image.Scale(1, 10);
-                imageLarge.Scale(1, 10);
-
-                var min = image.Min();
-                var max = image.Max();
-
-                var minL = imageLarge.Min();
-                var maxL = imageLarge.Max();
-
-                Assert.Multiple(() =>
-                {
-                    Assert.That(Math.Abs(min - 1), Is.LessThanOrEqualTo(double.Epsilon));
-                    Assert.That(Math.Abs(max - 1), Is.LessThanOrEqualTo(double.Epsilon));
-
-                    Assert.That(Math.Abs(minL - 1), Is.LessThanOrEqualTo(double.Epsilon));
-                    Assert.That(Math.Abs(maxL - 1), Is.LessThanOrEqualTo(double.Epsilon));
+                                Math.Abs(max + min - 10) < double.Epsilon, Is.True);
+                    Assert.That(Math.Abs(max - 9) < double.Epsilon ||
+                                Math.Abs(max + min - 10) < double.Epsilon, Is.True);
                 });
             }
         }
