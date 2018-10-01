@@ -702,49 +702,49 @@ namespace DipolImage
                 {
                     var data = (byte[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToByte(data[i] + value);
+                        data[i] = (byte)(data[i] + value);
                     break;
                 }
                 case TypeCode.UInt16:
                 {
                     var data = (ushort[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToUInt16(data[i] + value);
+                        data[i] = (ushort)(data[i] + value);
                     break;
                 }
                 case TypeCode.Int16:
                 {
                     var data = (short[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToInt16(data[i] + value);
+                        data[i] = (short)(data[i] + value);
                     break;
                 }
                 case TypeCode.UInt32:
                 {
                     var data = (uint[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToUInt32(data[i] + value);
+                        data[i] = (uint)(data[i] + value);
                     break;
                 }
                 case TypeCode.Int32:
                 {
                     var data = (int[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToInt32(data[i] + value);
+                        data[i] = (int)(data[i] + value);
                     break;
                 }
                 case TypeCode.Single:
                 {
                     var data = (float[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToSingle(data[i] + value);
+                        data[i] = (float)(data[i] + value);
                     break;
                 }
                 default:
                 {
                     var data = (double[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToDouble(data[i] + value);
+                        data[i] = data[i] + value;
                     break;
                 }
                
