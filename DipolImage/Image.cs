@@ -134,18 +134,21 @@ namespace DipolImage
             _baseArray = Array.CreateInstance(tp, width * height);
 
 
-            GCHandle handle = default;
+            //GCHandle handle = default;
 
-            try
-            {
-                handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
-                Marshal.Copy(initialArray, 0, handle.AddrOfPinnedObject(), 
-                    Math.Min(initialArray.Length, width * height * size));
-            }
-            finally
-            {
-                handle.Free();
-            }
+            //try
+            //{
+            //    handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
+            //    Marshal.Copy(initialArray, 0, handle.AddrOfPinnedObject(), 
+            //        Math.Min(initialArray.Length, width * height * size));
+            //}
+            //finally
+            //{
+            //    handle.Free();
+            //}
+            Buffer.BlockCopy(initialArray, 0, _baseArray, 0,
+                Math.Min(initialArray.Length, width * height * size));
+
 
         }
 
@@ -153,16 +156,18 @@ namespace DipolImage
         {
             var size = Marshal.SizeOf(_baseArray.GetValue(0));
             var byteArray = new byte[Width * Height * size];
-            GCHandle handle = default;
-            try
-            {
-                handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
-                Marshal.Copy(handle.AddrOfPinnedObject(), byteArray, 0, byteArray.Length);
-            }
-            finally
-            {
-                handle.Free();
-            }
+            //GCHandle handle = default;
+            //try
+            //{
+            //    handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
+            //    Marshal.Copy(handle.AddrOfPinnedObject(), byteArray, 0, byteArray.Length);
+            //}
+            //finally
+            //{
+            //    handle.Free();
+            //}
+
+            Buffer.BlockCopy(_baseArray, 0, byteArray, 0, byteArray.Length);
 
             return byteArray;
         }
