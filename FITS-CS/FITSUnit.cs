@@ -116,9 +116,10 @@ namespace FITS_CS
                 //        ArrayReverse(workData, i * size, size);
             }
 
-            var handle = GCHandle.Alloc(result, GCHandleType.Pinned);
-            Marshal.Copy(workData, 0, handle.AddrOfPinnedObject(), workData.Length);
-            handle.Free();
+            //var handle = GCHandle.Alloc(result, GCHandleType.Pinned);
+            //Marshal.Copy(workData, 0, handle.AddrOfPinnedObject(), workData.Length);
+            //handle.Free();
+            Buffer.BlockCopy(workData, 0, result, 0, workData.Length);
 
             return result;
         }
