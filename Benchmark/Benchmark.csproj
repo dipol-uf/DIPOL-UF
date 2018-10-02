@@ -32,6 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BenchmarkDotNet, Version=0.11.1.0, Culture=neutral, PublicKeyToken=aa0ca2f9092cefc4, processorArchitecture=MSIL">
@@ -225,6 +226,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArrayCopyBench.cs" />
     <Compile Include="ImageAccess.cs" />
     <Compile Include="ImageIO.cs" />
     <Compile Include="KeyWordAccess.cs" />
