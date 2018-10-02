@@ -30,7 +30,8 @@ namespace Benchmark
         {
             //BenchmarkDotNet.Running.BenchmarkRunner.Run<IOBench>();
             //BenchmarkDotNet.Running.BenchmarkRunner.Run<KeyWordAccess>();
-            BenchmarkDotNet.Running.BenchmarkRunner.Run<ImageAccess>();
+            //BenchmarkDotNet.Running.BenchmarkRunner.Run<ImageAccess>();
+            BenchmarkDotNet.Running.BenchmarkRunner.Run<ArrayCopyBench>();
         }
     }
 }
