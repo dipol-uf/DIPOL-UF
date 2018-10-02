@@ -25,12 +25,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using DipolImage;
 
 
 namespace FITS_CS
 {
-    public class FITSStream : Stream, IDisposable
+    public class FitsStream : Stream, IDisposable
     {
         private readonly Stream _baseStream;
 
@@ -55,9 +56,8 @@ namespace FITS_CS
         }
 
         public override void Flush()
-        {
-            _baseStream.Flush();
-        }
+            => _baseStream.Flush();
+        
 
         public override int Read(byte[] buffer, int offset, int count)
             => _baseStream.Read(buffer, offset, count);
@@ -66,15 +66,18 @@ namespace FITS_CS
             => _baseStream.Seek(offset, origin);
 
         public override void SetLength(long value)
-            => _baseStream.SetLength(value);
+            => throw new NotSupportedException();
 
         public override void Write(byte[] buffer, int offset, int count)
             => _baseStream.Write(buffer, offset, count);
 
-        public void WriteUnit(FITSUnit unit)
-            => Write(unit.Data, 0, FITSUnit.UnitSizeInBytes);
+        public void WriteUnit(FitsUnit unit)
+        {
+            Write(unit._data, 0, FitsUnit.UnitSizeInBytes);
+            Flush();
+        }
 
-        public FITSStream(Stream str)
+        public FitsStream(Stream str)
             =>  _baseStream = str ?? throw new ArgumentNullException($"{nameof(str)} is null");
                     
 
@@ -92,7 +95,6 @@ namespace FITS_CS
             if (disposing)
                 if (_baseStream != null)
                 {
-                    _baseStream.Close();
                     _baseStream.Dispose();
                     IsDisposed = true;
                 }
@@ -101,36 +103,23 @@ namespace FITS_CS
 
         public override void Close() => Dispose();
 
-        public FITSUnit ReadUnit()
+        public FitsUnit ReadUnit()
         {
             if (IsDisposed)
                 throw new ObjectDisposedException("Stream is already disposed.");
             if (!CanRead)
                 throw new NotSupportedException("Stream does not support reading.");
 
-            var buffer = new byte[FITSUnit.UnitSizeInBytes];
-            try
-            {
-                if (CanSeek && Position + FITSUnit.UnitSizeInBytes > Length)
+            var buffer = new byte[FitsUnit.UnitSizeInBytes];
+            
+                if (CanSeek && Position + FitsUnit.UnitSizeInBytes > Length)
                     throw new ArgumentException("Stream ended");
-                _baseStream.Read(buffer, 0, FITSUnit.UnitSizeInBytes);
-                return new FITSUnit(buffer);
-            }
-            catch (ArgumentException ae)
-            {
-                throw new EndOfStreamException("Stream end was reached.", ae);
-            }
-            catch (IOException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                throw new IOException("An unexpected error happened while reading the stream.", e);
-            }
+                _baseStream.Read(buffer, 0, FitsUnit.UnitSizeInBytes);
+                return new FitsUnit(buffer);
+            
         }
 
-        public bool TryReadUnit(out FITSUnit unit)
+        public bool TryReadUnit(out FitsUnit unit)
         {
             unit = null;
             try
@@ -144,34 +133,103 @@ namespace FITS_CS
             }
         }
 
-        public static void WriteImage(Image image, FITSImageType type, string path, List<FITSKey> extraKeys = null)
+        public static void WriteImage(Image image, FitsImageType type, Stream stream, IEnumerable<FitsKey> extraKeys = null)
         {
-
-            var keys = new List<FITSKey>
+            var keys = new List<FitsKey>
             {
-                FITSKey.CreateNew("SIMPLE", FITSKeywordType.Logical, true),
-                FITSKey.CreateNew("BITPIX", FITSKeywordType.Integer, (int)(short)type),
-                FITSKey.CreateNew("NAXIS", FITSKeywordType.Integer, 2),
-                FITSKey.CreateNew("NAXIS1", FITSKeywordType.Integer, image.Width),
-                FITSKey.CreateNew("NAXIS2", FITSKeywordType.Integer, image.Height),
-                FITSKey.CreateNew("NAXIS", FITSKeywordType.Integer, 2)
+                new FitsKey("SIMPLE", FitsKeywordType.Logical, true),
+                new FitsKey("BITPIX", FitsKeywordType.Integer, (int)(short)type),
+                new FitsKey("NAXIS", FitsKeywordType.Integer, 2),
+                new FitsKey("NAXIS1", FitsKeywordType.Integer, image.Width),
+                new FitsKey("NAXIS2", FitsKeywordType.Integer, image.Height),
+                new FitsKey("NAXIS", FitsKeywordType.Integer, 2)
             };
 
-            if(extraKeys != null)
+            if (extraKeys != null)
                 keys.AddRange(extraKeys);
 
-            keys.Add(FITSKey.CreateNew("END", FITSKeywordType.Blank, null));
+            keys.Add(FitsKey.End);
 
-            var keyUnits = FITSUnit.GenerateFromKeywords(keys.ToArray());
-            var dataUnits = FITSUnit.GenerateFromArray(image.GetBytes(), type);
+            var keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
+            var dataUnits = FitsUnit.GenerateFromDataArray(image.GetBytes(), type);
 
-            using (var str = new FITSStream(new FileStream(path, FileMode.Create)))
+            var str = new FitsStream(stream);
+            foreach (var unit in keyUnits)
+                str.WriteUnit(unit);
+            foreach (var unit in dataUnits)
+                str.WriteUnit(unit);
+        }
+
+        public static void WriteImage(Image image, FitsImageType type, string path, IEnumerable<FitsKey> extraKeys = null)
+        {
+            using (var str = new FileStream(path, FileMode.Create))
+                WriteImage(image, type, str, extraKeys);
+        }
+
+        public static Image ReadImage(Stream stream, out List<FitsKey> keywords)
+        {
+            var units = new List<FitsUnit>(2);
+
+            var str = new FitsStream(stream);
+            while (str.TryReadUnit(out var unit))
+                units.Add(unit);
+
+            keywords = new List<FitsKey>(6);
+
+            foreach (var keywordUnit in units.TakeWhile(u => u.IsKeywords))
+                if (keywordUnit.TryGetKeys(out var keys))
+                    keywords.AddRange(keys);
+
+            keywords = keywords.Where(k => !k.IsEmpty).ToList();
+
+            var type = (FitsImageType)(int)(keywords.FirstOrDefault(k => k.Header == "BITPIX")?.RawValue
+                                        ?? throw new FormatException(
+                                                "Fits data has no required keyword \"BITPIX\"."));
+            var width = (int)(keywords.FirstOrDefault(k => k.Header == "NAXIS1")?.RawValue
+                              ?? throw new FormatException(
+                                  "Fits data has no required keyword \"NAXIS1\"."));
+            var height = (int)(keywords.FirstOrDefault(k => k.Header == "NAXIS2")?.RawValue
+                               ?? throw new FormatException(
+                                   "Fits data has no required keyword \"NAXIS2\"."));
+
+            Array GetData<T>() where T : struct
             {
-                foreach (var unit in keyUnits)
-                    str.WriteUnit(unit);
-                foreach (var unit in dataUnits)
-                    str.WriteUnit(unit);
+
+                var data = new T[width * height];
+                var pos = 0;
+                foreach (var dataUnit in units.SkipWhile(u => u.IsKeywords))
+                {
+                    var buffer = dataUnit.GetData<T>();
+                    Array.Copy(buffer, 0, data, pos, Math.Min(buffer.Length, data.Length - pos));
+                    pos += buffer.Length;
+                }
+
+                return data;
             }
+
+            switch (type)
+            {
+                case FitsImageType.UInt8:
+                    return new Image(GetData<byte>(), width, height);
+                case FitsImageType.Int16:
+                    return new Image(GetData<short>(), width, height);
+                case FitsImageType.Int32:
+                    return new Image(GetData<int>(), width, height);
+                case FitsImageType.Single:
+                    return new Image(GetData<float>(), width, height);
+                case FitsImageType.Double:
+                    return new Image(GetData<double>(), width, height);
+                default:
+                    throw new NotSupportedException($"Fits image of type {type} is not supported.");
+            }
+        }
+
+        public static Image ReadImage(string path, out List<FitsKey> keywords)
+        {
+
+            using (var str = new FileStream(path, FileMode.Open))
+                return ReadImage(str, out keywords);
+                
         }
     }
 }

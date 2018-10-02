@@ -25,6 +25,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using DipolImage;
 using NUnit.Framework;
 
@@ -37,7 +38,7 @@ namespace Tests
         public int[] TestArray;
         public byte[] TestByteArray;
         public byte[] VeryLargeByteArray;
-
+       
         [SetUp]
         public void Test_Initialize()
         {
@@ -52,10 +53,10 @@ namespace Tests
 
             VeryLargeByteArray = new byte[1024 * 1024 * 8];
             R.NextBytes(VeryLargeByteArray);
-
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_ConstructorThrows()
         {
             Assert.Multiple(() =>
@@ -78,6 +79,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_ImageEqualsToArray()
         {
             var initArray = new[] {1, 2, 3, 4, 5, 6};
@@ -95,6 +97,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_ImageInitializedFromBytes()
         {
             const ushort value = 23;
@@ -127,6 +130,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_GetBytes()
         {
             const int val1 = 1;
@@ -150,7 +154,7 @@ namespace Tests
                              .First(m => m.Name == "GetBytes" &&
                                          m.GetParameters().Length == 1 &&
                                          m.GetParameters().First().ParameterType == type);
-                    var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
+                    var size = Marshal.SizeOf(type);
                     reconstructed = new byte[2 * size];
                     Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(0)}), 0, reconstructed, 0, size);
                     Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(1)}), 0, reconstructed, size, size);
@@ -168,20 +172,26 @@ namespace Tests
         }
 
         [Test]
+        [Retry(3)]
         public void Test_Equals()
         {
-            var tempArr = new byte[TestByteArray.Length];
-            Array.Copy(TestByteArray, tempArr, tempArr.Length);
-            tempArr[0] = (byte) (tempArr[0] == 0 ? 127 : 0);
 
             foreach (var code in Image.AllowedPixelTypes)
             {
-                var image1 = new Image(TestByteArray, 2, 2, code);
-                var image2 = new Image(TestByteArray, 2, 2, code);
+                var type = Type.GetType("System." + code, true);
+                var size = Marshal.SizeOf(type);
+                var arr = TestByteArray.Take(size * 2 * 2).ToArray();
 
-                var wrImage1 = new Image(TestByteArray, 2, 1, code);
-                var wrImage2 = new Image(TestByteArray, 1, 2, code);
-                var wrImage3 = new Image(TestByteArray, 2, 2,
+                var tempArr = new byte[arr.Length];
+                Array.Copy(arr, tempArr, tempArr.Length);
+                tempArr[0] = (byte) (tempArr[0] == 0 ? 127 : 0);
+
+                var image1 = new Image(arr, 2, 2, code);
+                var image2 = new Image(arr, 2, 2, code);
+
+                var wrImage1 = new Image(arr.Take(size * 2).ToArray(), 2, 1, code);
+                var wrImage2 = new Image(arr.Take(size * 2).ToArray(), 1, 2, code);
+                var wrImage3 = new Image(arr, 2, 2,
                     code == TypeCode.Int16 ? TypeCode.UInt16 : TypeCode.Int16);
                 var wrImage4 = new Image(tempArr, 2, 2, code);
 
@@ -206,6 +216,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Copy()
         {
             var array = new byte[1024];
@@ -216,6 +227,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_ThisAccessor()
         {
             var initArray = new[] {1, 2, 3, 4};
@@ -233,16 +245,21 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_GetHashCode()
         {
-            var tempArr = new byte[TestByteArray.Length];
-            Array.Copy(TestByteArray, tempArr, tempArr.Length);
-            tempArr[0] = (byte)(tempArr[0] == 0 ? 127 : 0);
 
             foreach (var code in Image.AllowedPixelTypes)
             {
-                var image1 = new Image(TestByteArray, 2, 2, code);
-                var image2 = new Image(TestByteArray, 2, 2, code);
+                var type = Type.GetType("System." + code, true);
+                var size = Marshal.SizeOf(type);
+                var arr = TestByteArray.Take(size * 2 * 2).ToArray();
+
+                var tempArr = new byte[arr.Length];
+                Array.Copy(arr, tempArr, tempArr.Length);
+                tempArr[0] = (byte)(tempArr[0] == 0 ? 127 : 0);
+                var image1 = new Image(arr, 2, 2, code);
+                var image2 = new Image(arr, 2, 2, code);
 
                 var wrImage1 = new Image(tempArr, 2, 2, code);
 
@@ -258,6 +275,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Max()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -287,12 +305,13 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Min()
         {
             foreach (var code in Image.AllowedPixelTypes)
             {
                 var type = Type.GetType("System." + code) ?? typeof(byte);
-                var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
+                var size = Marshal.SizeOf(type);
 
                 var min = type
                     .GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -324,6 +343,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Transpose()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -348,20 +368,26 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Type()
         {
             Assert.Multiple(() =>
             {
                 foreach (var code in Image.AllowedPixelTypes)
-                    Assert.That(new Image(TestByteArray, 2, 2, code).Type,
-                        Is.EqualTo(Type.GetType("System." + code)));
+                {
+                    var type = Type.GetType("System." + code, true);
+                    var size = Marshal.SizeOf(type);
+                    var img = new Image(TestByteArray.Take(size * 2 * 2).ToArray(), 2, 2, code);
+                    Assert.That(img.Type, Is.EqualTo(type));
+
+                }
             });
         }
 
         [Test]
         public void Test_CastTo()
         {
-            var image = new Image(TestArray,4, TestArray.Length/4);
+            var image = new Image(TestArray, 4, TestArray.Length/4);
             Assert.Multiple(() =>
             {
                 Assert.That(image.Equals(image.CastTo<int, int>(x => x)), Is.True);
@@ -375,6 +401,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Clamp()
         {
             // ReSharper disable for method InconsistentNaming
@@ -397,14 +424,14 @@ namespace Tests
 
                 image.Clamp(mn, mx);
 
-                var min = image.Min() as IComparable;
-                var max = image.Max() as IComparable;
+                var min = image.Min();
+                var max = image.Max();
 
                 Assert.Multiple(() =>
                 {
-                    Assert.That(min?.CompareTo(Convert.ChangeType(mn, code)), 
+                    Assert.That(min.CompareTo(Convert.ChangeType(mn, code)), 
                         Is.GreaterThanOrEqualTo(0));
-                    Assert.That(max?.CompareTo(Convert.ChangeType(mx, code)),
+                    Assert.That(max.CompareTo(Convert.ChangeType(mx, code)),
                         Is.LessThanOrEqualTo(0));
                 });
             }
@@ -412,96 +439,46 @@ namespace Tests
 
         [Test]
         [Retry(3)]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Scale()
         {
             foreach (var code in Image.AllowedPixelTypes)
             {
-                var f_mx = (Type.GetType("System." + code) ?? typeof(byte))
-                    .GetFields(BindingFlags.Public | BindingFlags.Static)
-                    .First(fi => fi.Name == "MaxValue");
 
-                var f_mn = (Type.GetType("System." + code) ?? typeof(byte))
-                    .GetFields(BindingFlags.Public | BindingFlags.Static)
-                    .First(fi => fi.Name == "MinValue");
+                var type = Type.GetType("System." + code, true);
+                var arr = Array.CreateInstance(type, 4096);
 
-                dynamic mx = f_mx.GetValue(null);
-                dynamic mn = f_mn.GetValue(null);
+                if (code == TypeCode.Byte)
 
-                var image = new Image(TestByteArray, 
-                    TestByteArray.Length / 4 / 
-                        System.Runtime.InteropServices.Marshal.SizeOf(
-                            Type.GetType("System." + code) ?? throw new InvalidOperationException()),
-                            4, code);
-                var imageLarge = new Image(VeryLargeByteArray, 
-                    VeryLargeByteArray.Length / 4 / 
-                        System.Runtime.InteropServices.Marshal.SizeOf(
-                            Type.GetType("System." + code) ?? throw new InvalidOperationException()), 
-                            4, code);
+                    for (var i = 0; i < arr.Length; i++)
+                        arr.SetValue((byte)(i % 255), i);
+                else
+                    for (var i = 0; i < arr.Length; i++)
+                        arr.SetValue(Convert.ChangeType(i, code), i);
 
-                image.Clamp(mn / 100, mx / 100);
-                imageLarge.Clamp(mn / 100, mx / 100);
+                var image = new Image(arr, 1024, 4);
 
-                Assert.Throws<ArgumentException>(() => image.Scale(100, 10));
+                Assert.That(() => image.Scale(100, 10),
+                    Throws.InstanceOf<ArgumentException>());
 
-                image.Scale(1, 10);
-                imageLarge.Scale(1, 10);
+                image.Scale(1, 9);
 
-                var min = image.Min() as IComparable ?? throw new ArgumentNullException();
-                var max = image.Max() as IComparable ?? throw new ArgumentNullException();
+                var min = image.Min();
+                var max = image.Max();
 
-                var minL = imageLarge.Min() as IComparable ?? throw new ArgumentNullException();
-                var maxL = imageLarge.Max() as IComparable ?? throw new ArgumentNullException();
 
                 Assert.Multiple(() =>
                 {
-                    Assert.That((Math.Abs(min.CompareTo(Convert.ChangeType(1, code))) < float.Epsilon) ||
-                                   (Math.Abs(max.CompareTo(min)) < float.Epsilon), Is.True);
-                    Assert.That((Math.Abs(max.CompareTo(Convert.ChangeType(10, code))) < float.Epsilon) ||
-                                   (Math.Abs(max.CompareTo(min)) < float.Epsilon), Is.True);
-
-                    Assert.That(Math.Abs(minL.CompareTo(Convert.ChangeType(1, code))) < float.Epsilon, Is.True);
-                    Assert.That(Math.Abs(maxL.CompareTo(Convert.ChangeType(10, code))) < float.Epsilon, Is.True);
+                    Assert.That(Math.Abs(min - 1) < double.Epsilon ||
+                                Math.Abs(max + min - 10) < double.Epsilon, Is.True);
+                    Assert.That(Math.Abs(max - 9) < double.Epsilon ||
+                                Math.Abs(max + min - 10) < double.Epsilon, Is.True);
                 });
             }
         }
 
         [Test]
-        public void Test_Scale_FlatImage()
-        {
-            foreach (var code in Image.AllowedPixelTypes)
-            {
-                var image = new Image(new byte[TestByteArray.Length],
-                    TestByteArray.Length / 4 / 
-                    System.Runtime.InteropServices.Marshal.SizeOf(
-                        Type.GetType("System." + code) ?? throw new InvalidOperationException()), 
-                        4, code);
-                var imageLarge = new Image(new byte[VeryLargeByteArray.Length], 
-                    VeryLargeByteArray.Length / 4 / 
-                    System.Runtime.InteropServices.Marshal.SizeOf(
-                        Type.GetType("System." + code) ?? throw new InvalidOperationException()),
-                        4, code);
-
-                image.Scale(1, 10);
-                imageLarge.Scale(1, 10);
-
-                var min = image.Min() as IComparable;
-                var max = image.Max() as IComparable;
-
-                var minL = imageLarge.Min() as IComparable;
-                var maxL = imageLarge.Max() as IComparable;
-
-                Assert.Multiple(() =>
-                {
-                    Assert.That(min?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
-                    Assert.That(max?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
-
-                    Assert.That(minL?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
-                    Assert.That(maxL?.CompareTo(Convert.ChangeType(1, code)), Is.EqualTo(0));
-                });
-            }
-        }
-
-        [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_AddScalar()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -539,6 +516,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_MultiplyByScalar()
         {
             foreach (var code in Image.AllowedPixelTypes)
@@ -576,6 +554,7 @@ namespace Tests
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public void Test_Percentile()
         {
             foreach (var code in Image.AllowedPixelTypes)

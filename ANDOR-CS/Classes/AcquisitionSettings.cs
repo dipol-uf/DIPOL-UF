@@ -1,19 +1,26 @@
 ﻿//    This file is part of Dipol-3 Camera Manager.
 
-//    Dipol-3 Camera Manager is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-
-//    Dipol-3 Camera Manager is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//    GNU General Public License for more details.
-
-//    You should have received a copy of the GNU General Public License
-//    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
-//
-//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+//     MIT License
+//     
+//     Copyright(c) 2018 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
 
 
 using System;
@@ -34,7 +41,7 @@ using SDK = ATMCD64CS.AndorSDK;
 namespace ANDOR_CS.Classes
 {
     /// <summary>
-    ///     Represents all possible acuisition/Camera settings that can be adjusted before taking any images
+    ///     Represents all possible acquisition/Camera settings that can be adjusted before taking any images
     /// </summary>
     public class AcquisitionSettings : SettingsBase
     {
@@ -48,7 +55,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         ///     SERIALIZATION TEST CONSTRUCTOR; DO NOT USE
         /// </summary>
-#if DEBUG
+//#if DEBUG
         public AcquisitionSettings(bool empty = false)
         {
             if (empty) 
@@ -70,7 +77,7 @@ namespace ANDOR_CS.Classes
             VSSpeed = (0, 0.3f);
         }
 
-#endif
+//#endif
         private SafeSdkCameraHandle Handle
             => Camera is Camera cam
                 ? cam.CameraHandle
@@ -101,28 +108,28 @@ namespace ANDOR_CS.Classes
 
             if (VSSpeed.HasValue)
                 {
-                    result = Call(handle, SDKInstance.SetVSSpeed, VSSpeed.Value.Index);
+                    result = Call(handle, SdkInstance.SetVSSpeed, VSSpeed.Value.Index);
 
                     output.Add((nameof(VSSpeed), result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (VSAmplitude.HasValue)
                 {
-                    result = Call(handle, SDKInstance.SetVSAmplitude, (int) VSAmplitude.Value);
+                    result = Call(handle, SdkInstance.SetVSAmplitude, (int) VSAmplitude.Value);
 
                     output.Add((nameof(VSAmplitude), result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (ADConverter.HasValue)
                 {
-                    result = Call(handle, SDKInstance.SetADChannel, ADConverter.Value.Index);
+                    result = Call(handle, SdkInstance.SetADChannel, ADConverter.Value.Index);
 
                     output.Add((nameof(ADConverter), result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (OutputAmplifier.HasValue)
                 {
-                    result = Call(handle, SDKInstance.SetOutputAmplifier, OutputAmplifier.Value.Index);
+                    result = Call(handle, SdkInstance.SetOutputAmplifier, OutputAmplifier.Value.Index);
 
                     output.Add((nameof(OutputAmplifier), result == SDK.DRV_SUCCESS, result));
                 }
@@ -130,14 +137,14 @@ namespace ANDOR_CS.Classes
                 if (HSSpeed.HasValue)
                 {
                     result = Call(handle,
-                        () => SDKInstance.SetHSSpeed(OutputAmplifier?.Item3 ?? 0, HSSpeed.Value.Index));
+                        () => SdkInstance.SetHSSpeed(OutputAmplifier?.Item3 ?? 0, HSSpeed.Value.Index));
 
                     output.Add((nameof(HSSpeed), result == SDK.DRV_SUCCESS, result));
                 }
 
                 if (PreAmpGain.HasValue)
                 {
-                    result = Call(handle, SDKInstance.SetPreAmpGain, PreAmpGain.Value.Index);
+                    result = Call(handle, SdkInstance.SetPreAmpGain, PreAmpGain.Value.Index);
 
                     output.Add((nameof(PreAmpGain), result == SDK.DRV_SUCCESS, result));
                 }
@@ -146,7 +153,7 @@ namespace ANDOR_CS.Classes
                 if (ImageArea.HasValue)
                 {
                     result = Call(handle,
-                        () => SDKInstance.SetImage(1, 1, ImageArea.Value.X1, ImageArea.Value.X2, ImageArea.Value.Y1,
+                        () => SdkInstance.SetImage(1, 1, ImageArea.Value.X1, ImageArea.Value.X2, ImageArea.Value.Y1,
                             ImageArea.Value.Y2));
 
 
@@ -159,19 +166,19 @@ namespace ANDOR_CS.Classes
 
                     if (mode.HasFlag(Enums.AcquisitionMode.FrameTransfer))
                     {
-                        result = Call(handle, SDKInstance.SetFrameTransferMode, 1);
-                        ThrowIfError(result, nameof(SDKInstance.SetFrameTransferMode));
+                        result = Call(handle, SdkInstance.SetFrameTransferMode, 1);
+                        ThrowIfError(result, nameof(SdkInstance.SetFrameTransferMode));
                         mode ^= Enums.AcquisitionMode.FrameTransfer;
 
                         output.Add(("FrameTransfer", result == SDK.DRV_SUCCESS, result));
                     }
                     else
                     {
-                        ThrowIfError(Call(handle, SDKInstance.SetFrameTransferMode, 0),
-                            nameof(SDKInstance.SetFrameTransferMode));
+                        ThrowIfError(Call(handle, SdkInstance.SetFrameTransferMode, 0),
+                            nameof(SdkInstance.SetFrameTransferMode));
                     }
 
-                    result = Call(handle, SDKInstance.SetAcquisitionMode, EnumConverter.AcquisitionModeTable[mode]);
+                    result = Call(handle, SdkInstance.SetAcquisitionMode, EnumConverter.AcquisitionModeTable[mode]);
 
                     output.Add((nameof(AcquisitionMode), result == SDK.DRV_SUCCESS, result));
                 }
@@ -183,7 +190,7 @@ namespace ANDOR_CS.Classes
 
                 if (ReadoutMode.HasValue)
                 {
-                    result = Call(handle, SDKInstance.SetReadMode, EnumConverter.ReadModeTable[ReadoutMode.Value]);
+                    result = Call(handle, SdkInstance.SetReadMode, EnumConverter.ReadModeTable[ReadoutMode.Value]);
 
                     output.Add((nameof(ReadoutMode), result == SDK.DRV_SUCCESS, result));
                 }
@@ -195,7 +202,7 @@ namespace ANDOR_CS.Classes
 
                 if (TriggerMode.HasValue)
                 {
-                    result = Call(handle, SDKInstance.SetTriggerMode,
+                    result = Call(handle, SdkInstance.SetTriggerMode,
                         EnumConverter.TriggerModeTable[TriggerMode.Value]);
 
                     output.Add((nameof(TriggerMode), result == SDK.DRV_SUCCESS, result));
@@ -207,7 +214,7 @@ namespace ANDOR_CS.Classes
 
                 if (ExposureTime.HasValue)
                 {
-                    result = Call(handle, SDKInstance.SetExposureTime, ExposureTime.Value);
+                    result = Call(handle, SdkInstance.SetExposureTime, ExposureTime.Value);
 
                     output.Add((nameof(ExposureTime), result == SDK.DRV_SUCCESS, result));
                 }
@@ -222,11 +229,11 @@ namespace ANDOR_CS.Classes
                         throw new NullReferenceException(
                             $"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
 
-                    result = Call(handle, SDKInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
+                    result = Call(handle, SdkInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
                     output.Add((nameof(AccumulateCycle)+"Number", result == SDK.DRV_SUCCESS, result));
 
 
-                    result = Call(handle, SDKInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
+                    result = Call(handle, SdkInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
                     //ThrowIfError(result, nameof(SDKInstance.SetAccumulationCycleTime));
                     output.Add((nameof(AccumulateCycle)+"Time", result == SDK.DRV_SUCCESS, result));
                 }
@@ -241,21 +248,21 @@ namespace ANDOR_CS.Classes
                         throw new NullReferenceException(
                             $"Kinetic cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
 
-                    result = Call(handle, SDKInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
+                    result = Call(handle, SdkInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
                     //ThrowIfError(result, nameof(SDKInstance.SetNumberAccumulations));
                     output.Add((nameof(AccumulateCycle) + "Number", result == SDK.DRV_SUCCESS, result));
 
 
-                    result = Call(handle, SDKInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
+                    result = Call(handle, SdkInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
                     //ThrowIfError(result, nameof(SDKInstance.SetAccumulationCycleTime));
                     output.Add((nameof(AccumulateCycle) + "Time", result == SDK.DRV_SUCCESS, result));
 
-                    result = Call(handle, SDKInstance.SetNumberKinetics, KineticCycle.Value.Frames);
+                    result = Call(handle, SdkInstance.SetNumberKinetics, KineticCycle.Value.Frames);
                     //ThrowIfError(result, nameof(SDKInstance.SetNumberKinetics));
                     output.Add((nameof(KineticCycle)+"Number", result == SDK.DRV_SUCCESS, result));
 
 
-                    result = Call(handle, SDKInstance.SetKineticCycleTime, KineticCycle.Value.Time);
+                    result = Call(handle, SdkInstance.SetKineticCycleTime, KineticCycle.Value.Time);
                     //ThrowIfError(result, nameof(SDKInstance.SetKineticCycleTime));
                     output.Add((nameof(AccumulateCycle) + "Time", result == SDK.DRV_SUCCESS, result));
                 }
@@ -267,7 +274,7 @@ namespace ANDOR_CS.Classes
                         throw new NullReferenceException(
                             $"OutputAmplifier should be set to {OutputAmplification.Conventional}");
 
-                    result = Call(handle, SDKInstance.SetEMCCDGain, EMCCDGain.Value);
+                    result = Call(handle, SdkInstance.SetEMCCDGain, EMCCDGain.Value);
                     //ThrowIfError(result, nameof(SDKInstance.SetEMCCDGain));
                     output.Add((nameof(EMCCDGain), result == SDK.DRV_SUCCESS, result));
                 }
@@ -276,11 +283,11 @@ namespace ANDOR_CS.Classes
                 var accTime = 0f;
                 var kinTime = 0f;
 
-                result = Call(handle, () => SDKInstance.GetAcquisitionTimings(ref expTime, ref accTime, ref kinTime));
-                ThrowIfError(result, nameof(SDKInstance.GetAcquisitionTimings));
+                result = Call(handle, () => SdkInstance.GetAcquisitionTimings(ref expTime, ref accTime, ref kinTime));
+                ThrowIfError(result, nameof(SdkInstance.GetAcquisitionTimings));
 
-                result = Call(handle, SDKInstance.GetSizeOfCircularBuffer, out int size);
-                ThrowIfError(result, nameof(SDKInstance.GetSizeOfCircularBuffer));
+                result = Call(handle, SdkInstance.GetSizeOfCircularBuffer, out int size);
+                ThrowIfError(result, nameof(SdkInstance.GetSizeOfCircularBuffer));
 
                 timing =
                     (ExposureTime: expTime, AccumulationCycleTime: accTime, KineticCycleTime: kinTime, BufferSize: size
@@ -314,8 +321,8 @@ namespace ANDOR_CS.Classes
                 var speedIndex = -1;
                 var speedVal = 0.0f;
 
-                var result = Call(Handle, () => SDKInstance.GetFastestRecommendedVSSpeed(ref speedIndex, ref speedVal));
-                ThrowIfError(result, nameof(SDKInstance.GetFastestRecommendedVSSpeed));
+                var result = Call(Handle, () => SdkInstance.GetFastestRecommendedVSSpeed(ref speedIndex, ref speedVal));
+                ThrowIfError(result, nameof(SdkInstance.GetFastestRecommendedVSSpeed));
 
                 // Available speeds max index
                 var length = Camera.Properties.VSSpeeds.Length;
@@ -360,8 +367,8 @@ namespace ANDOR_CS.Classes
             else
             {
                 // Gets the number of availab;e speeds
-                var result = Call(Handle, SDKInstance.GetNumberHSSpeeds, adConverter, amplifier, out int nSpeeds);
-                ThrowIfError(result, nameof(SDKInstance.GetNumberHSSpeeds));
+                var result = Call(Handle, SdkInstance.GetNumberHSSpeeds, adConverter, amplifier, out int nSpeeds);
+                ThrowIfError(result, nameof(SdkInstance.GetNumberHSSpeeds));
 
                 // Checks if obtained value is valid
                 if (nSpeeds < 0)
@@ -374,8 +381,8 @@ namespace ANDOR_CS.Classes
                     float locSpeed = 0;
 
                     result = Call(Handle,
-                        () => SDKInstance.GetHSSpeed(adConverter, amplifier, speedIndex, ref locSpeed));
-                    ThrowIfError(result, nameof(SDKInstance.GetHSSpeed));
+                        () => SdkInstance.GetHSSpeed(adConverter, amplifier, speedIndex, ref locSpeed));
+                    ThrowIfError(result, nameof(SdkInstance.GetHSSpeed));
 
                     // Returns speed index and speed value for evvery subsequent call
                     yield return (Index: speedIndex, Speed: locSpeed);
@@ -414,9 +421,9 @@ namespace ANDOR_CS.Classes
                 {
                     var status = -1;
 
-                    var result = Call(Handle, () => SDKInstance.IsPreAmpGainAvailable(
+                    var result = Call(Handle, () => SdkInstance.IsPreAmpGainAvailable(
                         adConverter, amplifier, hsSpeed, gainIndex, ref status));
-                    ThrowIfError(result, nameof(SDKInstance.IsPreAmpGainAvailable));
+                    ThrowIfError(result, nameof(SdkInstance.IsPreAmpGainAvailable));
 
                     // If status of a certain combination of settings is 1, return it
                     if (status == 1)
@@ -462,16 +469,16 @@ namespace ANDOR_CS.Classes
                 return false;
 
             // Gets the number of availab;e speeds
-            var result = Call(Handle, SDKInstance.GetNumberHSSpeeds, adConverter, amplifier, out int nSpeeds);
-            ThrowIfError(result, nameof(SDKInstance.GetNumberHSSpeeds));
+            var result = Call(Handle, SdkInstance.GetNumberHSSpeeds, adConverter, amplifier, out int nSpeeds);
+            ThrowIfError(result, nameof(SdkInstance.GetNumberHSSpeeds));
 
             // Checks if speedIndex is in allowed range
             if (speedIndex < 0 || speedIndex >= nSpeeds)
                 return false;
 
             // Retrieves float value of currently selected horizontal speed
-            result = Call(Handle, () => SDKInstance.GetHSSpeed(adConverter, amplifier, speedIndex, ref locSpeed));
-            ThrowIfError(result, nameof(SDKInstance.GetHSSpeed));
+            result = Call(Handle, () => SdkInstance.GetHSSpeed(adConverter, amplifier, speedIndex, ref locSpeed));
+            ThrowIfError(result, nameof(SdkInstance.GetHSSpeed));
 
             speed = locSpeed;
 

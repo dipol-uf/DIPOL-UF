@@ -25,9 +25,10 @@ using AndorSDK = ATMCD64CS.AndorSDK;
 #endif
 
 
+#pragma warning disable 1591
 namespace ANDOR_CS.Exceptions
 {
-   
+    /// <inheritdoc />
     public class AndorSdkException : Exception
     {
         
@@ -51,12 +52,27 @@ namespace ANDOR_CS.Exceptions
             return $"{Message} [{ErrorCode}]";
         }
 
+        [Obsolete]
         public static void ThrowIfError(uint returnCode, string name)
         {
             if (returnCode != AndorSDK.DRV_SUCCESS 
-                & returnCode != AndorSDK.DRV_NO_NEW_DATA)
+                && returnCode != AndorSDK.DRV_NO_NEW_DATA)
                 throw new AndorSdkException($"{name} returned error code.",
                     returnCode);
+        }
+
+        public static bool FailIfError(uint returnCode, string name, out Exception except)
+        {
+            except = null;
+            if (returnCode != AndorSDK.DRV_SUCCESS
+                && returnCode != AndorSDK.DRV_NO_NEW_DATA)
+            {
+                except = new AndorSdkException($"{name} returned error code.",
+                    returnCode);
+                return true;
+            }
+
+            return false;
         }
     }
 }

@@ -1,19 +1,26 @@
 ﻿//    This file is part of Dipol-3 Camera Manager.
 
-//    Dipol-3 Camera Manager is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-
-//    Dipol-3 Camera Manager is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//    GNU General Public License for more details.
-
-//    You should have received a copy of the GNU General Public License
-//    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
-//
-//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+//     MIT License
+//     
+//     Copyright(c) 2018 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -21,6 +28,8 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 
 namespace DipolImage
 {
@@ -42,8 +51,7 @@ namespace DipolImage
             TypeCode.Byte
         };
 
-        [DataMember]
-        private volatile bool _isParallelEnabled = true;
+        [DataMember] private volatile bool _isParallelEnabled;
 
         [DataMember]
         private readonly Array _baseArray;
@@ -118,158 +126,65 @@ namespace DipolImage
             if (!AllowedTypes.Contains(type))
                 throw new ArgumentException($"Specified type {type} is not allowed.");
 
-            int size;
             Width = width;
             Height = height;
             _typeCode = type;
-            var tp = Type.GetType("System." + _typeCode, true, true) ?? throw new ArgumentException();
+            var tp = Type.GetType("System." + _typeCode, true, true);
+            var size = Marshal.SizeOf(tp);
             _baseArray = Array.CreateInstance(tp, width * height);
-            switch (type)
-            {
-                case TypeCode.Byte:
-                    size = sizeof(byte);
 
-                    for (var i = 0; i < Height; i++)
-                        for (var j = 0; j < Width; j++)
-                            Set(initialArray[(i * width + j) * size], i, j);
-                    break;
-                case TypeCode.UInt16:
-                    size = sizeof(ushort);
 
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToUInt16(initialArray, (i * width + j) * size), i, j);
-                    break;
-                case TypeCode.Int16:
-                    size = sizeof(short);
+            //GCHandle handle = default;
 
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToInt16(initialArray, (i * width + j) * size), i, j);
-                    break;
-                case TypeCode.UInt32:
-                    size = sizeof(uint);
-                    
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToUInt32(initialArray, (i * width + j) * size), i, j);
-                    break;
-                case TypeCode.Int32:
-                    size = sizeof(int);
-                   
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToInt32(initialArray, (i * width + j) * size), i, j);
-                    break;
-                case TypeCode.Single:
-                    size = sizeof(float);
-                   
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToSingle(initialArray, (i * width + j) * size), i, j);
-                    break;
-                case TypeCode.Double:
-                    size = sizeof(double);
-                   
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Set(BitConverter.ToDouble(initialArray, (i * width + j) * size), i, j);
-                    break;
-                
-            }
+            //try
+            //{
+            //    handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
+            //    Marshal.Copy(initialArray, 0, handle.AddrOfPinnedObject(), 
+            //        Math.Min(initialArray.Length, width * height * size));
+            //}
+            //finally
+            //{
+            //    handle.Free();
+            //}
+            Buffer.BlockCopy(initialArray, 0, _baseArray, 0,
+                Math.Min(initialArray.Length, width * height * size));
 
-            
 
         }
 
         public byte[] GetBytes()
         {
-            //var size = System.Runtime.InteropServices.Marshal.SizeOf(this[0, 0]);
+            var size = Marshal.SizeOf(_baseArray.GetValue(0));
+            var byteArray = new byte[Width * Height * size];
+            //GCHandle handle = default;
+            //try
+            //{
+            //    handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
+            //    Marshal.Copy(handle.AddrOfPinnedObject(), byteArray, 0, byteArray.Length);
+            //}
+            //finally
+            //{
+            //    handle.Free();
+            //}
 
-            byte[] byteArray;
-            switch (_typeCode)
-            {
-                case TypeCode.Byte:
-                {
-                    byteArray = new byte[_baseArray.Length];
-                    Array.Copy(_baseArray, byteArray, _baseArray.Length);
-                    break;
-                }
-                case TypeCode.UInt16:
-                {
-                    const int size = sizeof(ushort);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<ushort>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                case TypeCode.Int16:
-                {
-                    const int size = sizeof(short);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<short>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                case TypeCode.UInt32:
-                {
-                    const int size = sizeof(uint);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<uint>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                case TypeCode.Int32:
-                {
-                    const int size = sizeof(int);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<int>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                case TypeCode.Single:
-                {
-                    const int size = sizeof(float);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<float>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                default:
-                {
-                    const int size = sizeof(double);
-                    byteArray = new byte[Width * Height * size];
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        Array.Copy(BitConverter.GetBytes(Get<double>(i, j)), 0, byteArray, (i * Width + j) * size, size);
-                    break;
-                }
-                
-            }
-
+            Buffer.BlockCopy(_baseArray, 0, byteArray, 0, byteArray.Length);
 
             return byteArray;
         }
 
-        public object Max()
+        public double Max()
         {
-            object max;
+            double max;
 
             switch (_typeCode)
             {
                 case TypeCode.Byte:
                 {
                     var localMax = byte.MinValue;
-                    byte localVal;
-                    for (var i = 0; i < Height; i++)
-                        for (var j = 0; j < Width; j++)
-                            if ((localVal = Get<byte>(i, j)) > localMax)
-                                localMax = localVal;
+                    var arr = (byte[]) _baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
                     max = localMax;
                         break;
@@ -277,71 +192,65 @@ namespace DipolImage
                 case TypeCode.UInt16:
                 {
                     var localMax = ushort.MinValue;
-                    ushort localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<ushort>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (ushort[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
-                    max = localMax;
+                        max = localMax;
                     break;
                 }
                 case TypeCode.Int16:
                 {
                     var localMax = short.MinValue;
-                    short localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<short>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (short[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
-                    max = localMax;
+                        max = localMax;
                     break;
                 }
                 case TypeCode.UInt32:
                 {
                     var localMax = uint.MinValue;
-                    uint localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<uint>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (uint[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
-                    max = localMax;
+                        max = localMax;
                     break;
                 }
                 case TypeCode.Int32:
                 {
                     var localMax = int.MinValue;
-                    int localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<int>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (int[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
-                    max = localMax;
+                        max = localMax;
                     break;
                 }
                 case TypeCode.Single:
                 {
                     var localMax = float.MinValue;
-                    float localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<float>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (float[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
-                    max = localMax;
+                        max = localMax;
                     break;
                 }
                 default:
                 {
                     var localMax = double.MinValue;
-                    double localVal;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if ((localVal = Get<double>(i, j)) > localMax)
-                            localMax = localVal;
+                    var arr = (double[])_baseArray;
+                    foreach (var item in arr)
+                        if (item >= localMax)
+                            localMax = item;
 
                     max = localMax;
                     break;
@@ -352,32 +261,30 @@ namespace DipolImage
             return max;
         }
 
-        public object Min()
+        public double Min()
         {
-            object min;
+            double min;
 
             switch (_typeCode)
             {
                 case TypeCode.Byte:
                 {
                     var localMin = byte.MaxValue;
-                    byte localVal;
-                    for (var i = 0; i < Height; i++)
-                        for (var j = 0; j < Width; j++)
-                            if ((localVal = Get<byte>(i, j)) < localMin)
-                                localMin = localVal;
+                    var arr = (byte[])_baseArray;
+                    foreach (var item in arr)
+                        if (item <= localMin)
+                            localMin = item;
 
-                    min = localMin;
+                        min = localMin;
                     break;
                 }
                 case TypeCode.UInt16:
                     {
                         var localMin = ushort.MaxValue;
-                        ushort localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<ushort>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (ushort[])_baseArray;
+                        foreach (var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -385,11 +292,10 @@ namespace DipolImage
                 case TypeCode.Int16:
                     {
                         var localMin = short.MaxValue;
-                        short localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<short>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (short[])_baseArray;
+                        foreach (var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -397,11 +303,10 @@ namespace DipolImage
                 case TypeCode.UInt32:
                     {
                         var localMin = uint.MaxValue;
-                        uint localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<uint>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (uint[])_baseArray;
+                        foreach (var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -409,11 +314,10 @@ namespace DipolImage
                 case TypeCode.Int32:
                     {
                         var localMin = int.MaxValue;
-                        int localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<int>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (int[])_baseArray;
+                        foreach (var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -421,11 +325,10 @@ namespace DipolImage
                 case TypeCode.Single:
                     {
                         var localMin = float.MaxValue;
-                        float localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<float>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (float[])_baseArray;
+                        foreach (var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -433,11 +336,10 @@ namespace DipolImage
                 default:
                     {
                         var localMin = double.MaxValue;
-                        double localVal;
-                        for (var i = 0; i < Height; i++)
-                            for (var j = 0; j < Width; j++)
-                                if ((localVal = Get<double>(i, j)) < localMin)
-                                    localMin = localVal;
+                        var arr = (double[]) _baseArray;
+                        foreach(var item in arr)
+                            if (item <= localMin)
+                                localMin = item;
 
                         min = localMin;
                         break;
@@ -463,85 +365,90 @@ namespace DipolImage
                 {
                     var locLow = (byte)(Math.Floor(low));
                     var locHigh = (byte)(Math.Ceiling(high));
-                    for (var i = 0; i < Height; i++)
-                        for (var j = 0; j < Width; j++)
-                            if (Get<byte>(i, j) < locLow)
-                                Set(locLow, i, j);
-                            else if (Get<byte>(i, j) > locHigh)
-                                Set(locHigh, i, j);
-                    break;
+                    var arr = (byte[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
+                        break;
                 }
 
                 case TypeCode.UInt16:
                 {
                     var locLow = (ushort)(Math.Floor(low));
                     var locHigh = (ushort)(Math.Ceiling(high));
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<ushort>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<ushort>(i, j) > locHigh)
-                            Set(locHigh, i, j);
-                    break;
+                    var arr = (ushort[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
+                        break;
                 }
                 case TypeCode.Int16:
                 {
                     var locLow = (short)(Math.Floor(low));
                     var locHigh = (short)(Math.Ceiling(high));
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<short>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<short>(i, j) > locHigh)
-                            Set(locHigh, i, j);
-                    break;
+                    var arr = (short[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
+                        break;
                 }
                 case TypeCode.UInt32:
                 {
                     var locLow = (uint)(Math.Floor(low));
                     var locHigh = (uint)(Math.Ceiling(high));
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<uint>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<uint>(i, j) > locHigh)
-                            Set(locHigh, i, j);
-                    break;
+                    var arr = (uint[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
+                        break;
                 }
                 case TypeCode.Int32:
                 {
                     var locLow = (int)(Math.Floor(low));
                     var locHigh = (int)(Math.Ceiling(high));
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<int>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<int>(i, j) > locHigh)
-                            Set(locHigh, i, j);
+                    var arr = (int[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
                     break;
                 }
                 case TypeCode.Single:
                 {
                     var locLow = (float)(low);
                     var locHigh = (float)(high);
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<float>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<float>(i, j) > locHigh)
-                            Set(locHigh, i, j);
-                    break;
+                    var arr = (float[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < locLow)
+                            arr[i] = locLow;
+                        else if (arr[i] > locHigh)
+                            arr[i] = locHigh;
+                        break;
                 }
                 default:
                 {
-                    var locLow = low;
-                    var locHigh = high;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        if (Get<double>(i, j) < locLow)
-                            Set(locLow, i, j);
-                        else if (Get<double>(i, j) > locHigh)
-                            Set(locHigh, i, j);
+                    var arr = (double[])_baseArray;
+
+                    for (var i = 0; i < arr.Length; i++)
+                        if (arr[i] < low)
+                            arr[i] = low;
+                        else if (arr[i] > high)
+                            arr[i] = high;
                     break;
                 }
                
@@ -556,285 +463,126 @@ namespace DipolImage
             var min = Min();
             var max = Max();
 
+            var factor = 1.0 * (gMax - gMin) / (max - min);
+
+
             switch (_typeCode)
             {
                 case TypeCode.Byte:
                 {
-                    var globMin = Convert.ToByte(gMin);
-                    var globMax = Convert.ToByte(gMax);
-                    var locMax = (byte)max;
-                    var locMin = (byte)min;
+                    var arr = (byte[])_baseArray;
 
-                    void Worker(int k)
+                    if (AlmostEqual(min, max))
                     {
-                        for (var j = 0; j < Width; j++)
-                            Set((byte)Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
-                                                   (Get<byte>(k, j) - locMin)), k, j);
+                        var val = (byte)(0.5 * (gMin + gMax));
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = val;
                     }
-
-                    void FlatWorker(int k)
-                    {
-                        for (var j = 0; j < Width; j++)
-                            Set(globMin, k, j);
-                    }
-
-                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    {
-                        if (locMin == locMax)
-                            Parallel.For(0, Height, FlatWorker);
-                        else
-                            Parallel.For(0, Height, Worker);
-                    }
-
                     else
-                    {
-                        if (locMin == locMax)
-                            for (var i = 0; i < Height; i++)
-                                FlatWorker(i);
-                        else
-                            for (var i = 0; i < Height; i++)
-                                Worker(i);
-                    }
 
-                    break;
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = (byte)(gMin + factor * (arr[i] - min));
+
+                        break;
                 }
                 case TypeCode.UInt16:
                 {
-                    var globMin = Convert.ToUInt16(gMin);
-                    var globMax = Convert.ToUInt16(gMax);
-                    var locMax = (ushort) max;
-                    var locMin = (ushort) min;
+                    var arr = (ushort[])_baseArray;
 
-                    void Worker(int k)
+                    if (AlmostEqual(min, max))
                     {
-                        for (var j = 0; j < Width; j++)
-                            Set((ushort) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
-                                                    (Get<ushort>(k, j) - locMin)), k, j);
+                        var val = (ushort)(0.5 * (gMin + gMax));
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = val;
                     }
-
-                    void FlatWorker(int k)
-                    {
-                        for (var j = 0; j < Width; j++)
-                            Set(globMin, k, j);
-                    }
-
-                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    {
-                        if (locMin == locMax)
-                            Parallel.For(0, Height, FlatWorker);
-                        else
-                            Parallel.For(0, Height, Worker);
-                    }
-
                     else
-                    {
-                        if (locMin == locMax)
-                            for (var i = 0; i < Height; i++)
-                                FlatWorker(i);
-                        else
-                            for (var i = 0; i < Height; i++)
-                                Worker(i);
-                    }
 
-                    break;
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = (ushort)(gMin + factor * (arr[i] - min));
+
+                        break;
                 }
                 case TypeCode.Int16:
                 {
-                    var globMin = Convert.ToInt16(gMin);
-                    var globMax = Convert.ToInt16(gMax);
-                    var locMax = (short) max;
-                    var locMin = (short) min;
+                    var arr = (short[])_baseArray;
 
-                    void Worker(int k)
+                    if (AlmostEqual(min, max))
                     {
-                        for (var j = 0; j < Width; j++)
-                            Set((short) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
-                                                   (Get<short>(k, j) - locMin)), k, j);
+                        var val = (short)(0.5 * (gMin + gMax));
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = val;
                     }
-
-                    void FlatWorker(int k)
-                    {
-                        for (var j = 0; j < Width; j++)
-                            Set(globMin, k, j);
-                    }
-
-                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    {
-                        if (locMin == locMax)
-                            Parallel.For(0, Height, FlatWorker);
-                        else
-                            Parallel.For(0, Height, Worker);
-                    }
-
                     else
-                    {
-                        if (locMin == locMax)
-                            for (var i = 0; i < Height; i++)
-                                FlatWorker(i);
-                        else
-                            for (var i = 0; i < Height; i++)
-                                Worker(i);
-                    }
 
-                    break;
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = (short)(gMin + factor * (arr[i] - min));
+
+                        break;
                 }
                 case TypeCode.UInt32:
                 {
-                    var globMin = Convert.ToUInt32(gMin);
-                    var globMax = Convert.ToUInt32(gMax);
-                    var locMax = (uint)max;
-                    var locMin = (uint)min;
+                    var arr = (uint[])_baseArray;
 
-                    void Worker(int k)
+                    if (AlmostEqual(min, max))
                     {
-                        for (var j = 0; j < Width; j++)
-                            Set((uint) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
-                                                  (Get<uint>(k, j) - locMin)), k, j);
-                    }
-
-                    void FlatWorker(int k)
-                    {
-                        for (var j = 0; j < Width; j++)
-                            Set(globMin, k, j);
-                    }
-
-                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    {
-                        if(locMin == locMax)
-                            Parallel.For(0, Height, FlatWorker);
-                            else
-                            Parallel.For(0, Height, Worker);
+                        var val = (uint)(0.5 * (gMin + gMax));
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = val;
                     }
                     else
-                    {
-                        if (locMin == locMax)
-                            for (var i = 0; i < Height; i++)
-                                FlatWorker(i);
-                        else
-                            for (var i = 0; i < Height; i++)
-                                Worker(i);
-                    }
 
-                    break;
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = (uint)(gMin + factor * (arr[i] - min));
+                        break;
                 }
                 case TypeCode.Int32:
                 {
-                    var globMin = Convert.ToInt32(gMin);
-                    var globMax = Convert.ToInt32(gMax);
-                    var locMax = (int) max;
-                    var locMin = (int) min;
+                    var arr = (int[])_baseArray;
 
-                    void Worker(int k)
+                    if (AlmostEqual(min, max))
                     {
-                        for (var j = 0; j < Width; j++)
-                            Set((int) Math.Floor(globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
-                                                 (Get<int>(k, j) - locMin)), k, j);
-                    }
-
-                    void FlatWorker(int k)
-                    {
-                        for (var j = 0; j < Width; j++)
-                            Set(globMin, k, j);
-                    }
-
-                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    {
-                        if (locMin == locMax)
-                            Parallel.For(0, Height, FlatWorker);
-
-                        else
-                            Parallel.For(0, Height, Worker);
+                        var val = (int)(0.5 * (gMin + gMax));
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = val;
                     }
                     else
-                    {
-                        if (locMin == locMax)
-                            for (var i = 0; i < Height; i++)
-                                FlatWorker(i);
-                        else
-                            for (var i = 0; i < Height; i++)
-                                Worker(i);
-                    }
 
-                    break;
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = (int)(gMin + factor * (arr[i] - min));
+
+                        break;
                 }
                 case TypeCode.Single:
                 {
-                    var globMin = Convert.ToSingle(gMin);
-                    var globMax = Convert.ToSingle(gMax);
-                    var locMax = (float) max;
-                    var locMin = (float) min;
+                    var arr = (float[]) _baseArray;
 
-                    void Worker(int k)
+                    if (AlmostEqual(min, max))
                     {
-                        for (var j = 0; j < Width; j++)
-                            Set((float) (globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
-                                         (Get<float>(k, j) - locMin)), k, j);
-                    }
-
-                    void FlatWorker(int k)
-                    {
-                        for (var j = 0; j < Width; j++)
-                            Set(globMin, k, j);
-                    }
-
-                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    {
-                        if (Math.Abs(locMin - locMax) < float.Epsilon)
-                            Parallel.For(0, Height, FlatWorker);
-                        else
-                            Parallel.For(0, Height, Worker);
+                        var val = (float) (0.5 * (gMin + gMax));
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = val;
                     }
                     else
-                    {
-                        if (Math.Abs(locMin - locMax) < float.Epsilon)
 
-                            for (var i = 0; i < Height; i++)
-                                FlatWorker(i);
-                        else
-                            for (var i = 0; i < Height; i++)
-                                Worker(i);
-                    }
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = (float) (gMin + factor * (arr[i] - min));
 
                     break;
                 }
                 default:
                 {
-                    var globMin = Convert.ToDouble(gMin);
-                    var globMax = Convert.ToDouble(gMax);
-                    var locMax = (double) max;
-                    var locMin = (double) min;
+                    var arr = (double[]) _baseArray;
 
-                    void Worker(int k)
+                    if (AlmostEqual(min, max))
                     {
-                        for (var j = 0; j < Width; j++)
-                            Set((globMin + 1.0 * (globMax - globMin) / (locMax - locMin) *
-                                 (Get<double>(k, j) - locMin)), k, j);
+                        var val = 0.5 * (gMin + gMax);
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = val;
                     }
 
-                    void FlatWorker(int k)
-                    {
-                        for (var j = 0; j < Width; j++)
-                            Set(globMin, k, j);
-                    }
-
-
-
-                    if (_isParallelEnabled && Width * Height > MaxImageSingleThreadSize)
-                    {
-                        if (Math.Abs(locMin - locMax) < double.Epsilon)
-                            Parallel.For(0, Height, FlatWorker);
-                        else
-                            Parallel.For(0, Height, Worker);
-                    }
                     else
-                    {
-                        if (Math.Abs(locMin - locMax) < double.Epsilon)
-                            for (var i = 0; i < Height; i++)
-                                FlatWorker(i);
-                        else
-                            for (var i = 0; i < Height; i++)
-                                Worker(i);
-                    }
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = gMin + factor * (arr[i] - min);
 
                     break;
                 }
@@ -959,49 +707,49 @@ namespace DipolImage
                 {
                     var data = (byte[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToByte(data[i] + value);
+                        data[i] = (byte)(data[i] + value);
                     break;
                 }
                 case TypeCode.UInt16:
                 {
                     var data = (ushort[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToUInt16(data[i] + value);
+                        data[i] = (ushort)(data[i] + value);
                     break;
                 }
                 case TypeCode.Int16:
                 {
                     var data = (short[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToInt16(data[i] + value);
+                        data[i] = (short)(data[i] + value);
                     break;
                 }
                 case TypeCode.UInt32:
                 {
                     var data = (uint[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToUInt32(data[i] + value);
+                        data[i] = (uint)(data[i] + value);
                     break;
                 }
                 case TypeCode.Int32:
                 {
                     var data = (int[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToInt32(data[i] + value);
+                        data[i] = (int)(data[i] + value);
                     break;
                 }
                 case TypeCode.Single:
                 {
                     var data = (float[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToSingle(data[i] + value);
+                        data[i] = (float)(data[i] + value);
                     break;
                 }
                 default:
                 {
                     var data = (double[])_baseArray;
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = Convert.ToDouble(data[i] + value);
+                        data[i] = data[i] + value;
                     break;
                 }
                
@@ -1076,7 +824,7 @@ namespace DipolImage
 
         public Image Transpose()
         {
-            var type = Type.GetType("System." + _typeCode, true, true) ?? typeof(byte);
+            var type = Type.GetType("System." + _typeCode, true, true);
 
             var newArray = Array.CreateInstance(type, Width * Height);
 
@@ -1215,16 +963,16 @@ namespace DipolImage
                     var thisArr = (float[])_baseArray;
                     var otherArr = (float[])other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
-                        if (Math.Abs(thisArr[i] - otherArr[i]) > float.Epsilon)
+                        if (!AlmostEqual(thisArr[i], otherArr[i]))
                             return false;
-                    return true;
+                        return true;
                 }
                 default:
                 {
                     var thisArr = (double[])_baseArray;
                     var otherArr = (double[])other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
-                        if (Math.Abs(thisArr[i] - otherArr[i]) > double.Epsilon)
+                        if(!AlmostEqual(thisArr[i], otherArr[i]))
                             return false;
                     return true;
                 }
@@ -1257,6 +1005,36 @@ namespace DipolImage
                     return ((double[])_baseArray).Aggregate(0, (sum, pix) => sum ^ pix.GetHashCode());
                 
             }
+        }
+
+        private static bool AlmostEqual(double a, double b, double eps = double.Epsilon)
+        {
+            var mA = Math.Abs(a);
+            var mB = Math.Abs(b);
+            var diff = Math.Abs(a - b);
+
+            if (mA > 0)
+                return diff / mA < eps;
+            if (mB > 0)
+                return diff / mB < eps;
+
+            return diff < eps;
+           
+        }
+
+        private static bool AlmostEqual(float a, float b, float eps = float.Epsilon)
+        {
+            var mA = Math.Abs(a);
+            var mB = Math.Abs(b);
+            var diff = Math.Abs(a - b);
+
+            if (mA > 0f)
+                return diff / mA < eps;
+            if (mB > 0f)
+                return diff / mB < eps;
+
+            return diff < eps;
+
         }
     }
 }
