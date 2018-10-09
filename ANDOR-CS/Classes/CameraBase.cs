@@ -48,8 +48,11 @@ namespace ANDOR_CS.Classes
         protected const int StatusCheckTimeOutMs = 100;
         protected const int TempCheckTimeOutMs = 5000;
 
+        protected string _imgDir = SettingsProvider.Settings.Get<string>("ImageDir");
+
         private bool _isDisposed;
 
+        private string _filePattern = null;
         private bool _isActive;
         private bool _isInitialized;
         private DeviceCapabilities _capabilities;
@@ -98,6 +101,19 @@ namespace ANDOR_CS.Classes
                 if (value != _isDisposed)
                 {
                     _isDisposed = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public virtual string FilePattern
+        {
+            get => _filePattern;
+            protected set
+            {
+                if (value != _filePattern)
+                {
+                    _filePattern = value;
                     OnPropertyChanged();
                 }
             }
@@ -297,6 +313,7 @@ namespace ANDOR_CS.Classes
         } = null;
 
 
+        /// <inheritdoc />
         /// <summary>
         /// Fires when one of the properties was changed
         /// </summary>
@@ -349,6 +366,8 @@ namespace ANDOR_CS.Classes
            TtlShutterSignal type = TtlShutterSignal.Low);
         public abstract void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs);
         public abstract SettingsBase GetAcquisitionSettingsTemplate();
+
+        public abstract void EnableAutosave(in string pattern);
 
         public abstract void StartAcquisition();
 

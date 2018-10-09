@@ -614,7 +614,7 @@ namespace DIPOL_UF.ViewModels
                 }
                 catch (Exception e)
                 {
-                    var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
+                    var messSize = SettingsProvider.Settings.Get("ExceptionStringLimit", 80);
                     MessageBox.Show($"An error occured while saving acquisition settings to {dialog.FileName}.\n" +
                                     $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]", 
                         "Unable to save file", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
@@ -653,7 +653,7 @@ namespace DIPOL_UF.ViewModels
                     }
                     catch (Exception e)
                     {
-                        var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
+                        var messSize = SettingsProvider.Settings.Get("ExceptionStringLimit", 80);
                         Application.Current?.Dispatcher?.Invoke(() =>
                         {
                             MessageBox.Show($"An error occured while reading acquisition settings from {dialog.FileName}.\n" +
@@ -775,8 +775,8 @@ namespace DIPOL_UF.ViewModels
                             var failed = applicationResult.Where(item => !item.Success).ToList();
                             if (failed.Count > 0)
                             {
-                                var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
-                                var listSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 5);
+                                var messSize = SettingsProvider.Settings.Get("ExceptionStringLimit", 80);
+                                var listSize = SettingsProvider.Settings.Get("ExceptionStringLimit", 5);
                                 var sb = new StringBuilder(messSize * listSize);
 
                                 sb.AppendLine("Some of the settings were applied unsuccessfully:");
@@ -798,7 +798,7 @@ namespace DIPOL_UF.ViewModels
                         }
                         catch (Exception e)
                         {
-                            var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
+                            var messSize = SettingsProvider.Settings.Get("ExceptionStringLimit", 80);
                             MessageBox.Show("Failed to apply current settings to target camera.\n" +
                                             $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
                                 "Incompatible settings", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);

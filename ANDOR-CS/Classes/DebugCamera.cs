@@ -150,6 +150,12 @@ namespace ANDOR_CS.Classes
             throw new NotImplementedException();
         }
 
+        public override void EnableAutosave(in string pattern)
+        {
+            throw new NotImplementedException();
+        }
+
+
         public override void Dispose()
             => WriteMessage("Camera disposed.", Red);
 

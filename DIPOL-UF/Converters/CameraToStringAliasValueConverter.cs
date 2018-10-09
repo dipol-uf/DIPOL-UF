@@ -3,9 +3,11 @@ using System.Windows.Data;
 using System.Linq;
 using System.Globalization;
 using System.Collections;
+using ANDOR_CS.Classes;
+
 namespace DIPOL_UF.Converters
 {
-    [ValueConversion(typeof(ANDOR_CS.Classes.CameraBase), typeof(string))]
+    [ValueConversion(typeof(CameraBase), typeof(string))]
     class CameraToStringAliasValueConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -14,20 +16,18 @@ namespace DIPOL_UF.Converters
             {
                 var key = $"{cam.CameraModel}_{cam.SerialNumber}";
 
-                var camIndex = DIPOL_UF_App.Settings.GetValueOrNullSafe<object[]>("Cameras", new object[0]);
-                var alias = DIPOL_UF_App.Settings.GetValueOrNullSafe<object[]>("CameraAlias", new object[0]);
+                var camIndex = SettingsProvider.Settings.GetArray<string>("Cameras") ?? new string [0];
+                var alias = SettingsProvider.Settings.GetArray<string>("CameraAlias") ?? new string[0];
 
-                string camName = cam.ToString();
+                var camName = cam.ToString();
 
-                if (camIndex.Length == alias.Length &&
-                    camIndex.All(item => item is string) &&
-                    alias.All(item => item is string))
+                if (camIndex.Length == alias.Length)
                 {
 
                     for (int index = 0; index < camIndex.Length; index++)
-                        if ((string)camIndex[index] == key)
+                        if (camIndex[index] == key)
                         {
-                            camName = (string)alias[index];
+                            camName = alias[index];
                             break;
                         }
                 }

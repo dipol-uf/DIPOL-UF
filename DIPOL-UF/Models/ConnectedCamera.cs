@@ -27,6 +27,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -38,7 +39,7 @@ using ANDOR_CS.Enums;
 
 using DIPOL_UF.Commands;
 using DIPOL_UF.Enums;
-
+using FITS_CS;
 using static DIPOL_UF.DIPOL_UF_App;
 
 namespace DIPOL_UF.Models
@@ -180,11 +181,11 @@ namespace DIPOL_UF.Models
                     value != _camera.Shutter.Internal)
                 {
                     _camera.ShutterControl(
-                       Settings.GetValueOrNullSafe("ShutterOpenTimeMS", 27),
-                       Settings.GetValueOrNullSafe("ShutterCloseTimeMS", 27),
+                       SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
+                       SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27),
                        value,
                        _camera.Shutter.External ?? ShutterMode.PermanentlyOpen,
-                       (TtlShutterSignal)Settings.GetValueOrNullSafe("TTLShutterSignal", 1));
+                       (TtlShutterSignal)SettingsProvider.Settings.Get("TTLShutterSignal", 1));
                     RaisePropertyChanged();
                 }
             }
@@ -198,11 +199,11 @@ namespace DIPOL_UF.Models
                     value != _camera.Shutter.Internal)
                 {
                     _camera.ShutterControl(
-                        Settings.GetValueOrNullSafe("ShutterOpenTimeMS", 27),
-                        Settings.GetValueOrNullSafe("ShutterCloseTimeMS", 27), 
+                        SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
+                        SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27), 
                         _camera.Shutter.Internal, 
                         value ?? ShutterMode.PermanentlyOpen, 
-                        (TtlShutterSignal)Settings.GetValueOrNullSafe("TTLShutterSignal", 1));
+                        (TtlShutterSignal)SettingsProvider.Settings.Get("TTLShutterSignal", 1));
                     RaisePropertyChanged();
                 }
             }
@@ -304,7 +305,7 @@ namespace DIPOL_UF.Models
             Key = key;
             CanControlTemperature = camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature);
             InitializeCommands();
-            Camera.PropertyChanged += Camera_PropertyCahnged;
+            Camera.PropertyChanged += Camera_PropertyChanged;
             Camera.NewImageReceived += Camera_NewImageReceived;
             connectedCameras.TryAdd(Camera.ToString(), this);
             NotifyCollectionChanged();
@@ -361,7 +362,7 @@ namespace DIPOL_UF.Models
                 ControlAcquisitionCommandExecute,
                 (par) => Camera.CurrentSettings != null);
         }
-        private void Camera_PropertyCahnged(object sender, PropertyChangedEventArgs e)
+        private void Camera_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(Camera.IsAcquiring))
             {
@@ -375,6 +376,14 @@ namespace DIPOL_UF.Models
                 else
                     ProgBarTimer.Stop();
             }
+
+            if (e.PropertyName == nameof(Autosave))
+            {
+                if(Autosave)
+                    Camera.EnableAutosave("{0}_{2:s}.fits");
+                else
+                    Camera.EnableAutosave("");
+            }   
         }
         private void ControlCoolerCommandExecute(object parameter)
         {
@@ -438,7 +447,7 @@ namespace DIPOL_UF.Models
         private void Camera_NewImageReceived(object sender, ANDOR_CS.Events.NewImageReceivedEventArgs e)
         {
             CurrentImageIndex = e.First;
-            if(Camera.AcquiredImages.TryDequeue(out var im))
+            if (Camera.AcquiredImages.TryDequeue(out var im))
                 ImagePresenterModel.LoadImage(im);
         }
 

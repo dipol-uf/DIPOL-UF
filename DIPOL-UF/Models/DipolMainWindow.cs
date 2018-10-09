@@ -29,11 +29,8 @@ namespace DIPOL_UF.Models
         private bool _canConnect;
         private bool _isDisposed;
         private readonly string[] _remoteLocations
-            = Settings
-                  .GetValueOrNullSafe<object[]>("RemoteLocations")
-                  ?.Cast<string>()
-                  .ToArray()
-            ?? new string[0];
+            = SettingsProvider.Settings.GetArray<string>("RemoteLocations")
+                ?? new string[0];
         private DipolClient[] _remoteClients;
 
         /// <summary>
@@ -251,7 +248,7 @@ namespace DIPOL_UF.Models
             InitializeRemoteSessions();
 
             _uiStatusUpdateTimer = new DispatcherTimer(
-                TimeSpan.FromMilliseconds(Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 1000)),
+                TimeSpan.FromMilliseconds(SettingsProvider.Settings.Get("UICamStatusUpdateDelay", 1000)),
                 DispatcherPriority.DataBind,
                 DispatcherTimerTickHandler,
                 Application.Current.Dispatcher
@@ -346,10 +343,10 @@ namespace DIPOL_UF.Models
                 try
                 {
                     var client = new DipolClient(_remoteLocations[i], 
-                        TimeSpan.Parse(Settings.GetValueOrNullSafe("RemoteOpenTimeout", "00:00:30")), 
-                        TimeSpan.Parse(Settings.GetValueOrNullSafe("RemoteSendTimeout", "00:00:30")), 
-                        TimeSpan.Parse(Settings.GetValueOrNullSafe("RemoteOperationTimeout", "00:00:30")), 
-                        TimeSpan.Parse(Settings.GetValueOrNullSafe("RemoteCloseTimeout", "00:00:30")));
+                        TimeSpan.Parse(SettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")), 
+                        TimeSpan.Parse(SettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")), 
+                        TimeSpan.Parse(SettingsProvider.Settings.Get("RemoteOperationTimeout", "00:00:30")), 
+                        TimeSpan.Parse(SettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
                     client.Connect();
                     connectedClients.Add(client);
                 }
@@ -374,7 +371,7 @@ namespace DIPOL_UF.Models
                 _remoteClients = connectedClients.ToArray();
                 pb.BarComment = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
 
-                Task.Delay(TimeSpan.Parse(Settings.GetValueOrNullSafe("PopUpDelay", "00:00:00.750"))).Wait();
+                Task.Delay(TimeSpan.Parse(SettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750"))).Wait();
 
                 if(Application.Current?.Dispatcher?.IsAvailable() ?? false)
                     Application.Current?.Dispatcher?.Invoke(pbWindow.Close);
@@ -591,7 +588,7 @@ namespace DIPOL_UF.Models
             if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
             {
                 cam.TemperatureMonitor(Switch.Enabled,
-                     Settings.GetValueOrNullSafe("UICamStatusUpdateDelay", 500));
+                    SettingsProvider.Settings.Get("UICamStatusUpdateDelay", 500));
                 Camera_PropertyChanged(cam, new System.ComponentModel.PropertyChangedEventArgs(nameof(cam.FanMode)));
             }
         }

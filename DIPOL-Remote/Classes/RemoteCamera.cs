@@ -305,6 +305,11 @@ namespace DIPOL_Remote.Classes
         public override SettingsBase GetAcquisitionSettingsTemplate()
             => new RemoteSettings(session.SessionID, CameraIndex, session.CreateSettings(CameraIndex), session);
 
+        public override void EnableAutosave(in string pattern)
+        {
+            
+        }
+
         public override async Task StartAcquisitionAsync(CancellationTokenSource token, int timeout)
         {
             _acquiredImages = new ConcurrentQueue<Image>();

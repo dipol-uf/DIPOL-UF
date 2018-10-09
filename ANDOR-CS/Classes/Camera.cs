@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -34,6 +35,7 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
+using FITS_CS;
 #if X86
 using SDK = ATMCD32CS.AndorSDK;
 #endif
@@ -56,7 +58,6 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public sealed class Camera : CameraBase
     {
-
         private Timer _temperatureMonitorTimer;
         //private Task TemperatureMonitorWorker = null;
         //private CancellationTokenSource TemperatureMonitorCancellationSource
@@ -535,8 +536,14 @@ namespace ANDOR_CS.Classes
                 var (first, last) = (0, 0);
                 ThrowIfError(Call(CameraHandle, () =>
                     SdkInstance.GetImages16(e.Last, e.Last, array, (uint)(array.Length), ref first, ref last)), nameof(SdkInstance.GetImages16));
-
+                
                 _acquiredImages.Enqueue(new Image(array, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height));
+
+                if (!(FilePattern is null))
+                {
+                    var path = Path.Combine(_imgDir, 
+                        string.Format(FilePattern, CameraModel, last, e.EventTime));
+                }
             }
         }
 
@@ -760,6 +767,11 @@ namespace ANDOR_CS.Classes
 
             return (Status: status, Temperature: temp);
 
+        }
+
+        public override void EnableAutosave(in string pattern)
+        {
+            FilePattern = pattern;
         }
 
         /// <summary>
