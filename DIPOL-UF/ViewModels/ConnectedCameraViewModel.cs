@@ -170,6 +170,12 @@ namespace DIPOL_UF.ViewModels
             set => model.State = (ControlState)value;
         }
 
+        public bool Autosave
+        {
+            get => model.Autosave;
+            set => model.Autosave = value;
+        }
+
         /// <summary>
         /// Controls cooler.
         /// </summary>

@@ -160,6 +160,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Autosave.
+        /// </summary>
+        public static string CameraTab_Autosave_Checkbox {
+            get {
+                return ResourceManager.GetString("CameraTab_Autosave_Checkbox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cooler.
         /// </summary>
         public static string CameraTab_Cooler {

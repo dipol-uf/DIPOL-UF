@@ -37,6 +37,11 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
                 <TextBlock Grid.Row="0" 
                            Text="{Binding Model}" 
                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
@@ -48,6 +53,13 @@
                         TickFrequency="1"
                         IsSnapToTickEnabled="True"
                         Value="{Binding StateIntVal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Row="1" Grid.Column="1"
+                           HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                           TextAlignment="Right"
+                           Padding="0,0,15,0"
+                           Text="{loc:Text Key=CameraTab_Autosave_Checkbox}"/>
+                <CheckBox Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                          IsChecked="{Binding Autosave}"/>
             </Grid>
             <!--Placeholder for detailed status-->
             <Label Grid.Row="1" Grid.Column="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>

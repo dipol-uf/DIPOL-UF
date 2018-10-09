@@ -150,6 +150,9 @@
   <data name="CameraTab_AcquisitionSettings" xml:space="preserve">
     <value>Acq. Settings</value>
   </data>
+  <data name="CameraTab_Autosave_Checkbox" xml:space="preserve">
+    <value>Autosave</value>
+  </data>
   <data name="CameraTab_Cooler" xml:space="preserve">
     <value>Cooler</value>
   </data>

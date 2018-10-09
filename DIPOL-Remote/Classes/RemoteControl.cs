@@ -42,8 +42,8 @@ using ANDOR_CS.Exceptions;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_Remote.Interfaces;
-using Newtonsoft.Json;
 using SettingsManager;
+using Newtonsoft.Json;
 
 namespace DIPOL_Remote.Classes
 {

@@ -53,6 +53,7 @@ namespace DIPOL_UF.Models
         private ObservableCollection<ViewModels.MenuItemViewModel> _contextMenu
             = new ObservableCollection<ViewModels.MenuItemViewModel>();
 
+        private bool _autosave;
         private CameraBase _camera;
         private Task _acqTask;
         private CancellationTokenSource _acqTaskCancel;
@@ -240,6 +241,18 @@ namespace DIPOL_UF.Models
                 if (value != _state)
                 {
                     ChangeState(value);
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        public bool Autosave
+        {
+            get => _autosave;
+            set
+            {
+                if(value != _autosave)
+                {
+                    _autosave = value;
                     RaisePropertyChanged();
                 }
             }
