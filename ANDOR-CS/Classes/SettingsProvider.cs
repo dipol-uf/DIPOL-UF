@@ -22,7 +22,9 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System.Collections.Generic;
 using System.IO;
+using FITS_CS;
 using SettingsManager;
 using StreamReader = System.IO.StreamReader;
 
@@ -40,7 +42,13 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// 
         /// </summary>
-        public static SettingsManager.JsonSettings Settings;
+        public static JsonSettings Settings;
+
+        public static readonly List<FitsKey> MetaFitsKeys = new List<FitsKey>()
+        {
+            FitsKey.CreateComment("Created using Dipol-UF software."), 
+            FitsKey.CreateComment("STATUS_DEBUG"), 
+        };
 
         static SettingsProvider()
         {

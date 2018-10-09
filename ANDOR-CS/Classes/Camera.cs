@@ -536,13 +536,22 @@ namespace ANDOR_CS.Classes
                 var (first, last) = (0, 0);
                 ThrowIfError(Call(CameraHandle, () =>
                     SdkInstance.GetImages16(e.Last, e.Last, array, (uint)(array.Length), ref first, ref last)), nameof(SdkInstance.GetImages16));
-                
-                _acquiredImages.Enqueue(new Image(array, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height));
+                var im = new Image(array, CurrentSettings.ImageArea.Value.Width,
+                    CurrentSettings.ImageArea.Value.Height);
+                _acquiredImages.Enqueue(im);
 
                 if (!(FilePattern is null))
                 {
                     var path = Path.Combine(_imgDir, 
                         string.Format(FilePattern, CameraModel, last, e.EventTime));
+                    // ReSharper disable once AssignNullToNotNullAttribute
+                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+
+                    var keys = new FitsKey[SettingsProvider.MetaFitsKeys.Count + 1];
+                    SettingsProvider.MetaFitsKeys.CopyTo(0, keys, 1, SettingsProvider.MetaFitsKeys.Count);
+                    keys[0] = FitsKey.CreateDate("OBSTIME", e.EventTime);
+                    using (var str = new FileStream(path, FileMode.OpenOrCreate))
+                        FitsStream.WriteImage(im, FitsImageType.Int16, str, keys);
                 }
             }
         }

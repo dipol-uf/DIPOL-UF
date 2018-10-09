@@ -376,14 +376,6 @@ namespace DIPOL_UF.Models
                 else
                     ProgBarTimer.Stop();
             }
-
-            if (e.PropertyName == nameof(Autosave))
-            {
-                if(Autosave)
-                    Camera.EnableAutosave("{0}_{2:s}.fits");
-                else
-                    Camera.EnableAutosave("");
-            }   
         }
         private void ControlCoolerCommandExecute(object parameter)
         {
@@ -461,6 +453,19 @@ namespace DIPOL_UF.Models
             }
             
             _state = newState;
+        }
+
+        protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(sender, e);
+
+            if (e.PropertyName == nameof(Autosave))
+            {
+                if(Autosave)
+                    Camera.EnableAutosave("Autosave/{0}_{2:yyyy.MM.dd_HH-mm-ss.ffffff}.fits");
+                else
+                    Camera.EnableAutosave("");
+            }   
         }
     }
 }
