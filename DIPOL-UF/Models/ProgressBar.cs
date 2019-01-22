@@ -1,22 +1,18 @@
 ﻿using System;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Windows;
 using Reactive.Bindings;
 using Reactive.Bindings.Extensions;
 
 namespace DIPOL_UF.Models
 {
-    internal class ProgressBar // : ObservableObject
+    internal class ProgressBar
     {
-        public event EventHandler AbortButtonClick;
-        public event EventHandler MaximumReached;
-        public event EventHandler MinimumReached;
-      
         public Commands.DelegateCommand WindowDragCommand
         {
             get;
         }
-
-
         public ReactiveCommand CancelCommand { get; }
 
         public ReactiveProperty<int> Minimum { get; }
@@ -29,14 +25,35 @@ namespace DIPOL_UF.Models
         public ReactiveProperty<bool> IsAborted { get; }
         public ReactiveProperty<bool> CanAbort { get; }
 
+        public IObservable<bool> MaximumReached { get; }
+        public IObservable<bool> MinimumReached { get; }
+
+
         public bool TryIncrement()
-            => ++Value.Value <= Maximum.Value;
+        {
+            if (Value.Value < Maximum.Value)
+            {
+                Value.Value++;
+                return true;
+            }
+
+            return false;
+        }
 
         public bool Decrement()
-            => --Value.Value >= Minimum.Value;
+        {
+            if (Value.Value > Minimum.Value)
+            {
+                Value.Value--;
+                return true;
+            }
+
+            return false;
+        }
 
         public ProgressBar()
         {
+            
             Minimum = new ReactiveProperty<int>(0).SetValidateNotifyError(x => Validators.Validator.CannotBeGreaterThan(x, Maximum.Value));
             Maximum = new ReactiveProperty<int>(100).SetValidateNotifyError(x => Validators.Validator.CannotBeLessThan(x, Minimum.Value));
             Value = new ReactiveProperty<int>(0).SetValidateNotifyError(x => Validators.Validator.ShouldFallWithinRange(x, Minimum.Value, Maximum.Value));
@@ -46,6 +63,9 @@ namespace DIPOL_UF.Models
             BarComment = new ReactiveProperty<string>("");
             IsAborted = new ReactiveProperty<bool>(false);
             CanAbort = new ReactiveProperty<bool>(true);
+
+            MaximumReached = Value.CombineLatest(Maximum, (v, m) => v == m).Where(x => x);
+            MinimumReached = Value.CombineLatest(Minimum, (v, m) => v == m).Where(x => x);
 
             CancelCommand = new ReactiveCommand(new[] {CanAbort, IsAborted.Inverse()}.CombineLatestValuesAreAllTrue());
             WindowDragCommand = new Commands.WindowDragCommandProvider().Command;
@@ -66,13 +86,5 @@ namespace DIPOL_UF.Models
                 }
             });
         }
-
-
-        protected virtual void OnAbortButtonClick(object sender, EventArgs e)
-            => AbortButtonClick?.Invoke(this, e);
-        protected virtual void OnMaximumReached(object sender, EventArgs e)
-            => MaximumReached?.Invoke(this, e);
-        protected virtual void OnMinimumReached(object sender, EventArgs e)
-            => MinimumReached?.Invoke(this, e);
     }
 }
