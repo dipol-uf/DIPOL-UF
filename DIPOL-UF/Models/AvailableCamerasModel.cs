@@ -60,7 +60,11 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-       
+
+        public IEnumerable<KeyValuePair<string, CameraBase>> SelectedCameras
+            => FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x)
+                           .DefaultIfEmpty(default);
+                           
         public bool CanCancel
         {
             get => _canCancel;

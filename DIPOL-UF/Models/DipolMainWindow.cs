@@ -420,6 +420,8 @@ namespace DIPOL_UF.Models
             wind.ShowDialog();
             CanConnect = true;
 
+            var cams = camQueryModel.SelectedCameras.ToList();
+
         }
         /// <summary>
         /// Disconnects cams
