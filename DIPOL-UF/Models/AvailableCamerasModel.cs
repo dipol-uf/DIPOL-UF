@@ -27,6 +27,7 @@ namespace DIPOL_UF.Models
             ConnectAll = 2
         }
 
+        private List<KeyValuePair<string, CameraBase>> _selectedCameras;
         private bool _canCancel;
         private bool _camerasPresent;
         private readonly ProgressBar _progressBar;
@@ -61,14 +62,6 @@ namespace DIPOL_UF.Models
             }
         }
 
-        public List<KeyValuePair<string, CameraBase>> SelectedCameras
-        {
-            get;
-            private set;
-        }
-           
-    
-                           
         public bool CanCancel
         {
             get => _canCancel;
@@ -477,9 +470,8 @@ namespace DIPOL_UF.Models
         }
         private void WindowClosingHandler(object parameter)
         {
-            //OnCameraSelectionsMade();
             Parallel.ForEach(FoundCameras.Where(item => !SelectedItems.Contains(item.Key)), (item) => item.Value?.Dispose());
-            SelectedCameras = FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x).ToList();
+            _selectedCameras = FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x).ToList();
             FoundCameras.Clear();
             SelectedItems.Clear();
                 
@@ -492,5 +484,7 @@ namespace DIPOL_UF.Models
             if (e.PropertyName == nameof(CanCancel) && CancelButtonCommand != null)
                 Application.Current?.Dispatcher?.Invoke(CancelButtonCommand.OnCanExecuteChanged);
         }
+
+        public List<KeyValuePair<string, CameraBase>> GetSelection() => _selectedCameras;
     }
 }

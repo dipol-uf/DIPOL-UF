@@ -13,7 +13,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 
 using DIPOL_Remote.Classes;
-
+using Reactive.Bindings;
 using MenuCollection = System.Collections.ObjectModel.ObservableCollection<DIPOL_UF.ViewModels.MenuItemViewModel>;
 using DelegateCommand = DIPOL_UF.Commands.DelegateCommand;
 
@@ -296,6 +296,7 @@ namespace DIPOL_UF.Models
         }
         private void InitializeCommands()
         {
+            
             ConnectButtonCommand = new DelegateCommand(
                 ConnectButtonCommandExecute,
                 (param) => CanConnect);
@@ -420,7 +421,7 @@ namespace DIPOL_UF.Models
             wind.ShowDialog();
             CanConnect = true;
 
-            var cams = camQueryModel.SelectedCameras.ToList();
+            
 
         }
         /// <summary>
