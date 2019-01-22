@@ -62,8 +62,12 @@ namespace DIPOL_UF.Models
         }
 
         public IEnumerable<KeyValuePair<string, CameraBase>> SelectedCameras
-            => FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x)
-                           .DefaultIfEmpty(default);
+        {
+            get;
+            private set;
+        }
+           
+    
                            
         public bool CanCancel
         {
@@ -475,7 +479,7 @@ namespace DIPOL_UF.Models
         {
             //OnCameraSelectionsMade();
             Parallel.ForEach(FoundCameras.Where(item => !SelectedItems.Contains(item.Key)), (item) => item.Value?.Dispose());
-                        
+            SelectedCameras = FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x);
             FoundCameras.Clear();
             SelectedItems.Clear();
                 
