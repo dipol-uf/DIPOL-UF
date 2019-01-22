@@ -1,97 +1,68 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reactive.Linq;
 using System.Windows.Input;
+using DIPOL_UF.Models;
+using Reactive.Bindings;
 
 namespace DIPOL_UF.ViewModels
 {
-    class ProgressBarViewModel : ViewModel<Models.ProgressBar>
+    internal class ProgressBarViewModel // : ViewModel<Models.ProgressBar>
     {
 
-        public int Minimum
+        private readonly ProgressBar _model;
+
+        public ReactiveProperty<int> Value => _model.Value;
+        public ReactiveProperty<int> Minimum => _model.Minimum;
+        public ReactiveProperty<int> Maximum => _model.Maximum;
+        public ReactiveProperty<bool> IsIndeterminate => _model.IsIndeterminate;
+        public ReactiveProperty<bool> DisplayPercents => _model.DisplayPercents;
+        public ReactiveProperty<string> BarTitle => _model.BarTitle;
+        public ReactiveProperty<string> BarComment => _model.BarComment;
+        public ReadOnlyReactiveProperty<string> ProgressText { get; }
+        
+        public ReadOnlyReactiveProperty<bool> CanAbort => _model.CanAbort.ToReadOnlyReactiveProperty();
+
+        public ReactiveCommand MouseDragEventHandler => _model.WindowDragCommand;
+
+        public ReactiveCommand CancelCommand => _model.CancelCommand;
+
+        public ProgressBarViewModel(ProgressBar model)
         {
-            get => model.Minimum;
-            set => model.Minimum = value;
-        }
-
-        public int Maximum
-        {
-            get => model.Maximum;
-            set => model.Maximum = value;
-        }
-
-        public int Value
-        {
-            get => model.Value;
-            set => model.Value = value;
-        }
-
-        public bool IsIndeterminate
-        {
-            get => model.IsIndeterminate;
-            set => model.IsIndeterminate = value;
-        }
-
-        public bool DisplayPercents
-        {
-            get => model.DisplayPercents;
-            set => model.DisplayPercents = value;
-        }
-
-        public string BarTitle
-        {
-            get => model.BarTitle;
-            set => model.BarTitle = value;
-        }
-
-        public string BarComment
-        {
-            get => model.BarComment;
-            set => model.BarComment = value;
-        }
-
-        public string ProgressText
-        {
-            get
-            {
-                if (IsIndeterminate)
-                    return string.Empty;
-
-                if (DisplayPercents)
-                    return $"{100.0 * Value / (Maximum - Minimum):F0}%";
-                var decDigits = Math.Ceiling(Math.Log10(Maximum % 10 == 0 ? Maximum + 1 : Maximum));
-
-                if (Minimum == 0)
+            _model = model ?? throw new ArgumentNullException(nameof(model));
+            
+            //IsIndeterminate.
+            ProgressText = IsIndeterminate.CombineLatest(DisplayPercents, Value, Minimum, Maximum,
+                (isInd, percent, val, min, max) =>
                 {
-                    var format = $"{{0, {decDigits:F0} }}/{{1, {decDigits:F0} }}";
-                    return string.Format(format, Value, Maximum);
-                }
-                else
-                {
-                    var format = $"{{0, {decDigits:F0} }} in ({{1, {decDigits:F0} }}, {{2, {decDigits:F0} }})";
+                    if (isInd)
+                        return Properties.Localization.ProgressBar_IndeterminateString;
+                    if (percent)
+                        return string.Format(
+                            Properties.Localization.ProgressBar_DisplayPercentString,
+                            100 * val / (max - min));
 
-                    return string.Format(format, Value, Minimum, Maximum);
-                }
+                    var decDigits =
+                        Math.Ceiling(Math.Log10(max % 10 == 0 ? max + 1 : max));
+                    var format = "";
 
-            }
+                    if (min == 0)
+                    {
+                        format = string.Format(
+                            Properties.Localization.ProgressBar_DisplayCountFormatString,
+                            decDigits);
+                        return string.Format(format, val, max);
+                    }
+
+                    format = string.Format(
+                        Properties.Localization.ProgressBar_DisplayRangeFormatString,
+                        decDigits);
+
+                    return string.Format(format, val, min, max);
+                }).ToReadOnlyReactiveProperty();
         }
 
-        public bool CanAbort => model.CanAbort;
 
-        public ICommand MouseDragEventHandler => model.WindowDragCommand;
-
-        public ICommand CancelCommand => model.CancelCommand;
-
-        public ProgressBarViewModel(Models.ProgressBar model) : base(model)
-        {
-        }
-
-        protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            base.OnModelPropertyChanged(sender, e);
-
-            if (e.PropertyName != nameof(BarTitle) && e.PropertyName != nameof(BarComment))
-                OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(ProgressText)));
-        }
 
     }
 }
