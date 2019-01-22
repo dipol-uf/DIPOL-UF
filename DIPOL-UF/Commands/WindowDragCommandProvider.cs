@@ -16,35 +16,33 @@ namespace DIPOL_UF.Commands
 {
     sealed class WindowDragCommandProvider 
     {
-        private DelegateCommand command;
-
-        private void Execute(object parameter)
+        private static void Execute(object parameter)
         {
 
-            if (parameter is CommandEventArgs<MouseButtonEventArgs> commandArgs)
+            if (parameter is CommandEventArgs<MouseButtonEventArgs> commandArgs &&
+                commandArgs.Sender is FrameworkElement sender)
             {
-                var sender = commandArgs.Sender as FrameworkElement;
                 var parent = VisualTreeHelper.GetParent(sender);
-                while (!(parent is Window))
+                while (!(parent is Window) && !(parent is null))
                     parent = VisualTreeHelper.GetParent(parent);
 
-                if (parent is Window w)
+                if (parent != null)
                 {
                     if(commandArgs.EventArgs.LeftButton== MouseButtonState.Pressed)
-                        w.DragMove();
+                        (parent as Window).DragMove();
                 }
             }
 
 
         }
 
-        private bool CanExecute(object parameter) => true;
+        private static bool CanExecute(object parameter) => true;
 
 
         public WindowDragCommandProvider()
-            => command = new DelegateCommand(Execute, CanExecute);
+            => Command = new DelegateCommand(Execute, CanExecute);
 
 
-        public DelegateCommand Command => command;
+        public DelegateCommand Command { get; }
     }
 }

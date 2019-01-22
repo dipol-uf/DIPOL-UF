@@ -89,13 +89,13 @@ namespace DIPOL_UF.ViewModels
             => ErrorsChanged?.Invoke(sender, e);
 
         protected virtual void RaiseErrorChanged(
-           [System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
+           [CallerMemberName] string propertyName = "")
            => OnErrorChanged(this, new DataErrorsChangedEventArgs(propertyName));
 
         protected virtual void AddError(
             ValidationErrorInstance error,
             ErrorPriority priority = ErrorPriority.Low,
-            [System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
+            [CallerMemberName] string propertyName = "")
         {
             if (!string.IsNullOrWhiteSpace(propertyName))
             {
@@ -115,7 +115,7 @@ namespace DIPOL_UF.ViewModels
 
         protected virtual void RemoveError(
             ValidationErrorInstance error,
-            [System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
+            [CallerMemberName] string propertyName = "")
         {
             if (errorCollection.ContainsKey(propertyName) &&
                 errorCollection[propertyName].Contains(error))
@@ -130,7 +130,7 @@ namespace DIPOL_UF.ViewModels
 
         protected virtual bool IsValid(
             object value,
-            [System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
+            [CallerMemberName] string propertyName = "")
             => true;
 
 

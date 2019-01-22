@@ -590,5 +590,32 @@ namespace DIPOL_UF.Properties {
                 return ResourceManager.GetString("StringFormat_Float_DipolImagePresenter_Statistics", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value cannot be greater than {0}..
+        /// </summary>
+        public static string Validation_ValueCannotBeGreaterThan {
+            get {
+                return ResourceManager.GetString("Validation_ValueCannotBeGreaterThan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value cannot be less than {0}..
+        /// </summary>
+        public static string Validation_ValueCannotBeLessThan {
+            get {
+                return ResourceManager.GetString("Validation_ValueCannotBeLessThan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value cannot be outside of the [{0}, {1}] range..
+        /// </summary>
+        public static string Validation_ValueShouldFallWithinRange {
+            get {
+                return ResourceManager.GetString("Validation_ValueShouldFallWithinRange", resourceCulture);
+            }
+        }
     }
 }
