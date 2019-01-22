@@ -112,6 +112,9 @@ namespace DIPOL_UF.Models
             }
         }
 
+        public ObservableConcurrentDictionary<string, CameraBase> ConnectedCamerasEx { get; } 
+            = new ObservableConcurrentDictionary<string, CameraBase>();
+
         /// <summary>
         /// Tree representation of connected cameras.
         /// </summary>
@@ -262,9 +265,9 @@ namespace DIPOL_UF.Models
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool diposing)
+        protected virtual void Dispose(bool disposing)
         {
-            if (diposing)
+            if (disposing)
             {
                
                 _uiStatusUpdateTimer.Stop();
@@ -495,10 +498,12 @@ namespace DIPOL_UF.Models
                             }));
                     camModel.ContextMenu = new MenuCollection(ctxMenu);
 
+                    // TODO: Dispose & Message if failure
                     if (_connectedCams.TryAdd(x.Key,  new ConnectedCameraViewModel(camModel)))
                         HookCamera(x.Key, x.Value);
                     lock(_connectedCams)
-                    ConnectedCameras = new ObservableConcurrentDictionary<string, ConnectedCameraViewModel>(_connectedCams.OrderByDescending(item => item.Value.Camera.ToString()));
+                        ConnectedCameras = new ObservableConcurrentDictionary<string, ConnectedCameraViewModel>(_connectedCams.OrderByDescending(item => item.Value.Camera.ToString()));
+                    
                 }
 
                 foreach (var x in inst)
@@ -635,7 +640,7 @@ namespace DIPOL_UF.Models
 
         private string GetCameraKey(CameraBase instance)
             => ConnectedCameras.FirstOrDefault(item => Equals(item.Value.Camera, instance)).Key;
-        private void DispatcherTimerTickHandler(object sener, EventArgs e)
+        private void DispatcherTimerTickHandler(object sender, EventArgs e)
             =>   RaisePropertyChanged(nameof(CameraRealTimeStats));
 
 

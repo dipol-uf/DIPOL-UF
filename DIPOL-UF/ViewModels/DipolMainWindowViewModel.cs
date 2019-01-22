@@ -1,16 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Windows.Input;
-using System.Windows;
-
 using DIPOL_UF.Models;
-
-using ANDOR_CS.Classes;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -26,9 +17,9 @@ namespace DIPOL_UF.ViewModels
         public bool AnyCameraConnected => !model.ConnectedCameras.IsEmpty;
 
         public ICommand CameraPanelSelectedAllCommand => model.CameraPanelSelectedAllCommand;
-        public ICommand ConnectButtonCommand => model.ConnectButtonCommand as ICommand;
-        public ICommand DisconnectButtonCommand => model.DisconnectButtonCommand as ICommand;
-        public ICommand CameraPanelSelectionChangedCommand => model.CameraPanelSelectionChangedCommand as ICommand;
+        public ICommand ConnectButtonCommand => model.ConnectButtonCommand;
+        public ICommand DisconnectButtonCommand => model.DisconnectButtonCommand;
+        public ICommand CameraPanelSelectionChangedCommand => model.CameraPanelSelectionChangedCommand;
 
         public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
         //public ObservableConcurrentDictionary<string, ConnectedCameraViewModel> ConnectedCameras => model.ConnectedCameras;
