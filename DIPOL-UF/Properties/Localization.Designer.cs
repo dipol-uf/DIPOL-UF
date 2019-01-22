@@ -574,6 +574,42 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {{0, {0:F0} }}/{{1, {0:F0} }}.
+        /// </summary>
+        public static string ProgressBar_DisplayCountFormatString {
+            get {
+                return ResourceManager.GetString("ProgressBar_DisplayCountFormatString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:F0}%.
+        /// </summary>
+        public static string ProgressBar_DisplayPercentString {
+            get {
+                return ResourceManager.GetString("ProgressBar_DisplayPercentString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {{0, {0:F0} }} in ({{1, {0:F0} }}, {{2, {0:F0} }}).
+        /// </summary>
+        public static string ProgressBar_DisplayRangeFormatString {
+            get {
+                return ResourceManager.GetString("ProgressBar_DisplayRangeFormatString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string ProgressBar_IndeterminateString {
+            get {
+                return ResourceManager.GetString("ProgressBar_IndeterminateString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0:f0} pix.
         /// </summary>
         public static string Slider_PixelToolTipFormat {

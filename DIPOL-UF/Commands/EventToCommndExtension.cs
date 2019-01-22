@@ -138,7 +138,7 @@ namespace DIPOL_UF.Commands
             // Right now supports only property name binding.
             if (commandName is string commands)
             {
-                _commandNames = commands.Split(' ', ';' , '|').Where(x => !string.IsNullOrWhiteSpace(x));
+                _commandNames = commands.Split(';' , '|').Where(x => !string.IsNullOrWhiteSpace(x));
             }
             else throw new ArgumentException();
 

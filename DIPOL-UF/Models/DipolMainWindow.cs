@@ -330,12 +330,13 @@ namespace DIPOL_UF.Models
         }
         private void InitializeRemoteSessions()
         {
-            var pb = new ProgressBar()
-            {
-                IsIndeterminate = true,
-                CanAbort = false,
-                BarTitle = "Connecting to remote locations..."
-            };
+            // TODO : FIX HERE
+            var pb = new ProgressBar();
+            //{
+            //    IsIndeterminate = true,
+            //    CanAbort = false,
+            //    BarTitle = "Connecting to remote locations..."
+            //};
 
             var pbWindow = new Views.ProgressWindow(new ProgressBarViewModel(pb));
 
@@ -374,7 +375,7 @@ namespace DIPOL_UF.Models
             connect.ContinueWith((task) =>
             {
                 _remoteClients = connectedClients.ToArray();
-                pb.BarComment = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
+                pb.BarComment.Value = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
 
                 Task.Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750"))).Wait();
 

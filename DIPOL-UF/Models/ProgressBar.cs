@@ -50,8 +50,8 @@ namespace DIPOL_UF.Models
         public ProgressBar()
         {
             
-            Minimum = new ReactiveProperty<int>(0).SetValidateNotifyError(x => Validators.Validator.CannotBeGreaterThan(x, Maximum.Value));
-            Maximum = new ReactiveProperty<int>(100).SetValidateNotifyError(x => Validators.Validator.CannotBeLessThan(x, Minimum.Value));
+            Minimum = new ReactiveProperty<int>(0, ReactivePropertyMode.IgnoreInitialValidationError).SetValidateNotifyError(x => Validators.Validator.CannotBeGreaterThan(x, Maximum.Value));
+            Maximum = new ReactiveProperty<int>(100, ReactivePropertyMode.IgnoreInitialValidationError).SetValidateNotifyError(x => Validators.Validator.CannotBeLessThan(x, Minimum.Value));
             Value = new ReactiveProperty<int>(0).SetValidateNotifyError(x => Validators.Validator.ShouldFallWithinRange(x, Minimum.Value, Maximum.Value));
             IsIndeterminate = new ReactiveProperty<bool>(false);
             DisplayPercents = new ReactiveProperty<bool>(false);

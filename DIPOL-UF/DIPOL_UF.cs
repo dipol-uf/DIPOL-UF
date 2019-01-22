@@ -27,6 +27,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using DIPOL_UF.Models;
+using DIPOL_UF.ViewModels;
 using Newtonsoft.Json.Linq;
 using SettingsManager;
 
@@ -38,22 +40,24 @@ namespace DIPOL_UF
         [STAThread]
         private static int Main(string[] args)
         {
-            System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
-            System.Diagnostics.Debug.AutoFlush = true;
-            System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
-            System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+            //System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
+            //System.Diagnostics.Debug.AutoFlush = true;
+            //System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            //System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
 
-            var applicationInstance = new App();
-            applicationInstance.InitializeComponent();
+            //var applicationInstance = new App();
+            //applicationInstance.InitializeComponent();
 
 
-            using (var mainModel = new Models.DipolMainWindow())
-            {
-                var view = new ViewModels.DipolMainWindowViewModel(mainModel);
+            //using (var mainModel = new Models.DipolMainWindow())
+            //{
+            //    var view = new ViewModels.DipolMainWindowViewModel(mainModel);
 
-                applicationInstance.Run(new Views.DipolMainWindow(view));
+            //    applicationInstance.Run(new Views.DipolMainWindow(view));
 
-            }
+            //}
+
+            Test();
 
             return 0;
         }
@@ -63,6 +67,21 @@ namespace DIPOL_UF
             
         }
 
-        
+        private static void Test()
+        {
+            var applicationInstance = new App();
+            applicationInstance.InitializeComponent();
+
+            var sch = Reactive.Bindings.ReactivePropertyScheduler.Default;
+            var model = new ProgressBar();
+            model.Maximum.Value = 100;
+            model.Minimum.Value = 0;
+            model.Value.Value = 53;
+            model.BarTitle.Value = "TestTitle";
+            model.BarComment.Value = "TestComment";
+            var vm = new ProgressBarViewModel(model);
+
+            applicationInstance.Run(new Views.ProgressWindow(vm));
+        }
     }
 }
