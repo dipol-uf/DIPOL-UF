@@ -15,6 +15,8 @@ namespace DIPOL_UF
     {
         protected Dispatcher Dispatcher = System.Windows.Application.Current?.Dispatcher;
 
+        protected ObservableValueCollection _readOnlyCollection;
+
         public event PropertyChangedEventHandler PropertyChanged;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
@@ -47,7 +49,7 @@ namespace DIPOL_UF
                        new KeyValuePair<TKey, TValue>(key, value)));
 
                OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Values)));
-                OnPropertyChanged(this, new PropertyChangedEventArgs("Item[]"));
+               OnPropertyChanged(this, new PropertyChangedEventArgs("Item[]"));
 
                 if (!keyExists)
                 {
@@ -76,7 +78,8 @@ namespace DIPOL_UF
 
                 OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Values)));
                 OnPropertyChanged(this, new PropertyChangedEventArgs("Item[]"));
-                if (isUpdate)
+
+                if (!isUpdate)
                 {
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Count)));
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Keys)));
@@ -103,7 +106,7 @@ namespace DIPOL_UF
                 OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Values)));
                 OnPropertyChanged(this, new PropertyChangedEventArgs("Item[]"));
 
-                if (isUpdate)
+                if (!isUpdate)
                 {
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Count)));
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Keys)));
@@ -193,6 +196,7 @@ namespace DIPOL_UF
         public new bool TryRemove(TKey key, out TValue value)
         {
             var removed = false;
+            value = default;
             try
             {
                 return removed = base.TryRemove(key, out value);
@@ -201,7 +205,9 @@ namespace DIPOL_UF
             {
                 if (removed)
                 {
-                    OnNotifyCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    OnNotifyCollectionChanged(this, 
+                        new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
+                            new KeyValuePair<TKey, TValue>(key, value)));
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Count)));
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Keys)));
                     OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Values)));
@@ -220,7 +226,8 @@ namespace DIPOL_UF
             finally
             {
                 OnNotifyCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace,
-                    newValue, comparisonValue));
+                    new KeyValuePair<TKey, TValue>(key, newValue), 
+                    new KeyValuePair<TKey, TValue>(key, comparisonValue)));
                 OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Count)));
                 OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Keys)));
                 OnPropertyChanged(this, new PropertyChangedEventArgs(nameof(Values)));
@@ -248,7 +255,8 @@ namespace DIPOL_UF
         public void OnNotifyCollectionChanged(NotifyCollectionChangedEventArgs e)
             => OnNotifyCollectionChanged(this, e);
 
-        public ObservableValueCollection ObservableValues() => new ObservableValueCollection(this);
+        public ObservableValueCollection ObservableValues() =>
+            _readOnlyCollection ?? new ObservableValueCollection(this);
         
 
         public class ObservableValueCollection : ICollection<TValue>, INotifyPropertyChanged, INotifyCollectionChanged,
@@ -330,6 +338,52 @@ namespace DIPOL_UF
                     
                 };
             }
+        }
+
+
+        public ObservableConcurrentDictionary<TKey, TTarget> PropagateCollectionChanges<TTarget>(
+            Func<TValue, TTarget> propagator)
+        {
+            var target = new ObservableConcurrentDictionary<TKey, TTarget>(this.Select(x => new KeyValuePair<TKey, TTarget>(x.Key, propagator(x.Value))));
+
+            void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+            {
+
+                switch (e.Action)
+                {
+                    case NotifyCollectionChangedAction.Reset:
+                        target.Clear();
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                    {
+                        foreach (var item in e.OldItems)
+                            target.TryRemove(((KeyValuePair<TKey, TValue>)item).Key, out _);
+
+                        break;
+                    }
+                    case NotifyCollectionChangedAction.Add:
+                        foreach (var item in e.NewItems)
+                        {
+                            var locItem = (KeyValuePair<TKey, TValue>)item;
+                            target.TryAdd(locItem.Key,
+                                propagator(locItem.Value));
+                        }
+
+                        break;
+                    case NotifyCollectionChangedAction.Replace:
+                        foreach (var item in e.NewItems)
+                        {
+                            var locItem = (KeyValuePair<TKey, TValue>)item;
+                            target.TryUpdate(locItem.Key, propagator(locItem.Value), default);
+                        }
+
+                        break;
+                }
+            }
+
+            this.CollectionChanged += CollectionChanged;
+
+            return target;
         }
     }
 }

@@ -112,8 +112,9 @@ namespace DIPOL_UF.Models
             }
         }
 
-        public ObservableConcurrentDictionary<string, CameraBase> ConnectedCamerasEx { get; } 
-            = new ObservableConcurrentDictionary<string, CameraBase>();
+        // TODO: This is an attempt to properly implement MVVM
+        public ObservableConcurrentDictionary<string, ConnectedCamera> ConnectedCamerasEx { get; } 
+            = new ObservableConcurrentDictionary<string, ConnectedCamera>();
 
         /// <summary>
         /// Tree representation of connected cameras.
@@ -416,9 +417,8 @@ namespace DIPOL_UF.Models
             if (parameter is Window owner)
                 wind.Owner = owner;
             CanConnect = false;
-            wind.Show();
-
-            camQueryModel.CameraSelectionsMade += CameraSelectionsMade;           
+            wind.ShowDialog();
+            CanConnect = true;
 
         }
         /// <summary>
@@ -499,10 +499,24 @@ namespace DIPOL_UF.Models
                     camModel.ContextMenu = new MenuCollection(ctxMenu);
 
                     // TODO: Dispose & Message if failure
-                    if (_connectedCams.TryAdd(x.Key,  new ConnectedCameraViewModel(camModel)))
-                        HookCamera(x.Key, x.Value);
-                    lock(_connectedCams)
-                        ConnectedCameras = new ObservableConcurrentDictionary<string, ConnectedCameraViewModel>(_connectedCams.OrderByDescending(item => item.Value.Camera.ToString()));
+                    if (ConnectedCamerasEx.TryAdd(x.Key, camModel))
+                    {
+                         HookCamera(x.Key, x.Value);
+                        _connectedCams.TryAdd(x.Key, new ConnectedCameraViewModel(camModel));
+                    }
+                    else
+                    {
+                        x.Value.Dispose();
+                        MessageBox.Show(
+                            Properties.Localization.MainWindow_MB_FailedToAddCamera_Message,
+                            Properties.Localization.MainWindow_MB_FailedToAddCamera_Message,
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                    }
+                    // For compatibility
+
+                    //lock(_connectedCams)
+                    //    ConnectedCameras = new ObservableConcurrentDictionary<string, ConnectedCameraViewModel>(_connectedCams.OrderByDescending(item => item.Value.Camera.ToString()));
                     
                 }
 

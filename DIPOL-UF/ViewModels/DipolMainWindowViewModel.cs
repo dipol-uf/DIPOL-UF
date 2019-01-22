@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using DIPOL_UF.Models;
@@ -7,7 +8,7 @@ namespace DIPOL_UF.ViewModels
 {
     class DipolMainWindowViewModel : ViewModel<DipolMainWindow>
     {
-        public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
+       public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
         {
             ConnectedCameras.CollectionChanged += (sender, e) => RaisePropertyChanged(nameof(AnyCameraConnected));
         }
@@ -33,6 +34,5 @@ namespace DIPOL_UF.ViewModels
         public ObservableConcurrentDictionary<string, Dictionary<string, object>> CameraRealTimeStats => 
             model.CameraRealTimeStats;
 
-       
     }
 }

@@ -556,6 +556,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error.
+        /// </summary>
+        public static string MainWindow_MB_FailedToAddCamera_Caption {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_FailedToAddCamera_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to connect camera {0}. Please, try again..
+        /// </summary>
+        public static string MainWindow_MB_FailedToAddCamera_Message {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_FailedToAddCamera_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0:f0} pix.
         /// </summary>
         public static string Slider_PixelToolTipFormat {

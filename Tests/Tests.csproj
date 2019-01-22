@@ -115,6 +115,7 @@
     <Compile Include="CameraTests.cs" />
     <Compile Include="FitsTests.cs" />
     <Compile Include="JsonSettingsTests.cs" />
+    <Compile Include="ObservableCollectionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteCameraTests.cs" />
     <Compile Include="RemoteCommunicationTests.cs" />
@@ -127,6 +128,10 @@
     <ProjectReference Include="..\DIPOL-Remote\DIPOL-Remote.csproj">
       <Project>{355d3461-6989-4022-9fde-b2bea3581590}</Project>
       <Name>DIPOL-Remote</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DIPOL-UF\DIPOL-UF.csproj">
+      <Project>{edb4e90e-b8fa-4a97-b684-8ed430f2a1f7}</Project>
+      <Name>DIPOL-UF</Name>
     </ProjectReference>
     <ProjectReference Include="..\DipolImage\DipolImage.csproj">
       <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>

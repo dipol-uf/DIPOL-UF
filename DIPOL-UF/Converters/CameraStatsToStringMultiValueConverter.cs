@@ -14,15 +14,14 @@ namespace DIPOL_UF.Converters
 
             if (value is Enum en)
             {
-                var tp = en.GetType();
                 var resourceName = $"General_{en.GetType().Name}_{en}";
                 var localizedText = Properties.Localization.ResourceManager.GetString(resourceName);
                 return localizedText ?? Helper.GetEnumDescription(en, en.GetType());
             }
 
-            if (value is float)
-                return ((float)value).ToString("#0.00");
-            else return value?.ToString() ?? "";
+            if (value is float f)
+                return f.ToString("#0.00");
+            return value?.ToString() ?? "";
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

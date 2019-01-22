@@ -48,8 +48,6 @@ namespace DIPOL_UF.Models
             set => _selectedItems = value ?? _selectedItems;
         }
 
-        public event Action<object> CameraSelectionsMade;
-
         public ObservableConcurrentDictionary<string, CameraBase> FoundCameras
         {
             get => _foundCameras;
@@ -471,22 +469,12 @@ namespace DIPOL_UF.Models
         }
         private void WindowClosingHandler(object parameter)
         {
-            OnCameraSelectionsMade();
+            //OnCameraSelectionsMade();
             Parallel.ForEach(FoundCameras.Where(item => !SelectedItems.Contains(item.Key)), (item) => item.Value?.Dispose());
                         
             FoundCameras.Clear();
             SelectedItems.Clear();
                 
-        }
-
-
-        protected virtual void OnCameraSelectionsMade()
-        {
-            var query = from camObj in FoundCameras
-                        join key in SelectedItems
-                        on camObj.Key equals key
-                        select camObj;
-            CameraSelectionsMade?.Invoke(query.ToArray());
         }
 
         protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)

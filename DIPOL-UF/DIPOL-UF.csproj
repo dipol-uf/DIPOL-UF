@@ -131,7 +131,6 @@
     <Compile Include="Converters\TemperatureToBrushMultiValueConverter.cs" />
     <Compile Include="Converters\ValueTupleToValueValueConverter.cs" />
     <Compile Include="Converters\TypeValueConverter.cs" />
-    <Compile Include="DebuggingTests.cs" />
     <Compile Include="DebugTracer.cs" />
     <Compile Include="DebugWindow.xaml.cs">
       <DependentUpon>DebugWindow.xaml</DependentUpon>

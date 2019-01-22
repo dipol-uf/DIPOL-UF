@@ -70,7 +70,7 @@
                                        HorizontalContentAlignment="Right"
                                        Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}"
                                        x:Name="TemperatureLabel">
-                                    <!--Content is multi-bound to DipolWindow's Context colletion of camera statuses and to the string ID of a current camera (Key)-->
+                                    <!--Content is multi-bound to DipolWindow's Context collection of camera statuses and to the string ID of a current camera (Key)-->
                                     <!--Converter parameter is used to retrieve specific parameter string from camera status dictionary-->
                                     <Label.Content>
                                         <MultiBinding

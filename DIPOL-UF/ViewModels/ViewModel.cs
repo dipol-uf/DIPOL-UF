@@ -2,9 +2,12 @@
 using System.Linq;
 using System.Reflection;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Windows;
 
@@ -20,6 +23,9 @@ namespace DIPOL_UF.ViewModels
 
         protected Dictionary<string, List<ValidationErrorInstance>> errorCollection
             = new Dictionary<string, List<ValidationErrorInstance>>();
+        // ReSharper disable once StaticMemberInGenericType
+        // Stores property names of each specialized type
+        // It is NOT intended to be shared among all generics of this type
         protected static string[] declaredProperties = null;
         protected T model;
 
@@ -126,5 +132,7 @@ namespace DIPOL_UF.ViewModels
             object value,
             [System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
             => true;
+
+
     } 
 }
