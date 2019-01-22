@@ -25,7 +25,7 @@
         <ListView DockPanel.Dock="Top" BorderThickness="0" Height="300" IsSynchronizedWithCurrentItem="True"
                   Style="{StaticResource ResourceKey=ListViewStyle}"
                   ItemContainerStyle="{StaticResource ResourceKey=SelectableListViewItemStyle}"
-                  ItemsSource="{Binding FoundCameras}"
+                  ItemsSource="{Binding FoundCamerasEx}"
                   ItemTemplate="{StaticResource ResourceKey=FoundCamerasListViewItemTemplate}"
                   SelectionMode="Multiple" SelectedIndex="-1"
                   SelectionChanged="{cmnds:EventToCommand SelectionChangedCommand}">

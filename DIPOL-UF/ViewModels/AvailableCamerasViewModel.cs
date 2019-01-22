@@ -1,4 +1,5 @@
-﻿using System.Windows.Input;
+﻿using System;
+using System.Windows.Input;
 using DIPOL_UF.Models;
 
 using ANDOR_CS.Classes;
@@ -8,6 +9,9 @@ namespace DIPOL_UF.ViewModels
     class AvailableCamerasViewModel : ViewModel<AvailableCamerasModel>
     {
         public ObservableConcurrentDictionary<string, CameraBase> FoundCameras => model.FoundCameras;
+
+        public ObservableConcurrentDictionary<string, CameraBase> FoundCamerasEx =>
+            model.FoundCameras.PropagateCollectionChanges(x => x);
 
         // ReSharper disable UnusedMember.Global
         public ICommand SelectionChangedCommand => model.SelectionChangedCommand;
