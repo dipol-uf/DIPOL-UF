@@ -14,9 +14,9 @@ using System.Windows.Shapes;
 
 namespace DIPOL_UF.Commands
 {
-    sealed class WindowDragCommandProvider 
+    static class WindowDragCommandProvider 
     {
-        private static void Execute(object parameter)
+        public static void Execute(object parameter)
         {
 
             if (parameter is CommandEventArgs<MouseButtonEventArgs> commandArgs &&
@@ -36,13 +36,13 @@ namespace DIPOL_UF.Commands
 
         }
 
-        private static bool CanExecute(object parameter) => true;
+        public static bool CanExecute(object parameter) => true;
 
 
-        public WindowDragCommandProvider()
+        static WindowDragCommandProvider()
             => Command = new DelegateCommand(Execute, CanExecute);
 
 
-        public DelegateCommand Command { get; }
+        public static DelegateCommand Command { get; }
     }
 }

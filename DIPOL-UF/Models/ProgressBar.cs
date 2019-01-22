@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Windows;
 using Reactive.Bindings;
 using Reactive.Bindings.Extensions;
 
 namespace DIPOL_UF.Models
 {
-    internal class ProgressBar
+    internal class ProgressBar 
     {
-        public Commands.DelegateCommand WindowDragCommand
-        {
-            get;
-        }
+        public ReactiveCommand WindowDragCommand { get; }
         public ReactiveCommand CancelCommand { get; }
 
         public ReactiveProperty<int> Minimum { get; }
@@ -68,7 +64,7 @@ namespace DIPOL_UF.Models
             MinimumReached = Value.CombineLatest(Minimum, (v, m) => v == m).Where(x => x);
 
             CancelCommand = new ReactiveCommand(new[] {CanAbort, IsAborted.Inverse()}.CombineLatestValuesAreAllTrue());
-            WindowDragCommand = new Commands.WindowDragCommandProvider().Command;
+            WindowDragCommand = new ReactiveCommand();
 
             HookCommands();
         }
@@ -85,6 +81,8 @@ namespace DIPOL_UF.Models
                     w.Close();
                 }
             });
+
+            WindowDragCommand.Subscribe(Commands.WindowDragCommandProvider.Execute);
         }
     }
 }
