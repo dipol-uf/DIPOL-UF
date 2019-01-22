@@ -181,11 +181,11 @@ namespace DIPOL_UF.Models
                     value != _camera.Shutter.Internal)
                 {
                     _camera.ShutterControl(
-                       SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
-                       SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27),
+                       UiSettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
+                       UiSettingsProvider.Settings.Get("ShutterCloseTimeMS", 27),
                        value,
                        _camera.Shutter.External ?? ShutterMode.PermanentlyOpen,
-                       (TtlShutterSignal)SettingsProvider.Settings.Get("TTLShutterSignal", 1));
+                       (TtlShutterSignal)UiSettingsProvider.Settings.Get("TTLShutterSignal", 1));
                     RaisePropertyChanged();
                 }
             }
@@ -199,11 +199,11 @@ namespace DIPOL_UF.Models
                     value != _camera.Shutter.Internal)
                 {
                     _camera.ShutterControl(
-                        SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
-                        SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27), 
+                        UiSettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
+                        UiSettingsProvider.Settings.Get("ShutterCloseTimeMS", 27), 
                         _camera.Shutter.Internal, 
                         value ?? ShutterMode.PermanentlyOpen, 
-                        (TtlShutterSignal)SettingsProvider.Settings.Get("TTLShutterSignal", 1));
+                        (TtlShutterSignal)UiSettingsProvider.Settings.Get("TTLShutterSignal", 1));
                     RaisePropertyChanged();
                 }
             }

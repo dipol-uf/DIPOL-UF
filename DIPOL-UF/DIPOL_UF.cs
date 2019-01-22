@@ -26,20 +26,15 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using Newtonsoft.Json.Linq;
+using SettingsManager;
 
 
 namespace DIPOL_UF
 {
     public static class DIPOL_UF_App
     {
-        //private const string CoreConfigPath = "core.dipolconfig.json";
-
-        //public static Dictionary<string, object> Settings
-        //{
-        //    get;
-        //}
-
-
         [STAThread]
         private static int Main(string[] args)
         {
@@ -48,7 +43,7 @@ namespace DIPOL_UF
             System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
 
-            App applicationInstance = new App();
+            var applicationInstance = new App();
             applicationInstance.InitializeComponent();
 
 
@@ -57,7 +52,7 @@ namespace DIPOL_UF
                 var view = new ViewModels.DipolMainWindowViewModel(mainModel);
 
                 applicationInstance.Run(new Views.DipolMainWindow(view));
-                
+
             }
 
             return 0;
@@ -65,23 +60,7 @@ namespace DIPOL_UF
 
         static DIPOL_UF_App()
         {
-            //System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
-            //System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
-
-            //try
-            //{
-            //    if (File.Exists(CoreConfigPath))
-            //        using (var str = new StreamReader(CoreConfigPath))
-            //            Settings = SettingsManager.Read(str);
-            //    else
-            //        Settings = new Dictionary<string, object>();
-            //}
-            //catch (Exception e)
-            //{
-            //    Settings = new Dictionary<string, object>();
-            //    Helper.WriteLog(e);
-            //}
-        
+            
         }
 
         

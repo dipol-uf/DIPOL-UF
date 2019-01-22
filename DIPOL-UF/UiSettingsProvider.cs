@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -28,32 +28,27 @@ using FITS_CS;
 using SettingsManager;
 using StreamReader = System.IO.StreamReader;
 
-namespace ANDOR_CS.Classes
+namespace DIPOL_UF
 {
     /// <summary>
     /// 
     /// </summary>
-    public class SettingsProvider
+    public class UiSettingsProvider
     {
         /// <summary>
         /// 
         /// </summary>
-        private static readonly string Path = "config.json";
+        private const string Path = "ui-config.json";
+
         /// <summary>
         /// 
         /// </summary>
         public static JsonSettings Settings;
 
-        public static readonly List<FitsKey> MetaFitsKeys = new List<FitsKey>()
+        static UiSettingsProvider()
         {
-            FitsKey.CreateComment("Created using Dipol-UF software."), 
-            FitsKey.CreateComment("STATUS_DEBUG"), 
-        };
-
-        static SettingsProvider()
-        {
-            if(File.Exists(Path))
-                using(var str = new StreamReader(Path))
+            if (File.Exists(Path))
+                using (var str = new StreamReader(Path))
                     Settings = new JsonSettings(str.ReadToEnd());
             else
                 Settings = new JsonSettings();

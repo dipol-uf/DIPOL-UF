@@ -6,7 +6,6 @@
         xmlns:loc="clr-namespace:DIPOL_UF"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
         xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         x:Name="AvailableCamerasWindow"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vms:AvailableCamerasViewModel}"
@@ -22,7 +21,7 @@
                BorderBrush="{StaticResource ResourceKey=BorderColor}"
                BorderThickness="{StaticResource ResourceKey=BottomOnlyBorderThickness}"/>
 
-        <ListView DockPanel.Dock="Top" BorderThickness="0" Height="300" IsSynchronizedWithCurrentItem="True"
+        <ListView DockPanel.Dock="Top" Height="300" IsSynchronizedWithCurrentItem="True"
                   Style="{StaticResource ResourceKey=ListViewStyle}"
                   ItemContainerStyle="{StaticResource ResourceKey=SelectableListViewItemStyle}"
                   ItemsSource="{Binding FoundCamerasEx}"

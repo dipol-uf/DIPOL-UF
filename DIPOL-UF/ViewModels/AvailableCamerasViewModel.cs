@@ -3,6 +3,7 @@ using System.Windows.Input;
 using DIPOL_UF.Models;
 
 using ANDOR_CS.Classes;
+using DIPOL_UF.Converters;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -10,8 +11,8 @@ namespace DIPOL_UF.ViewModels
     {
         public ObservableConcurrentDictionary<string, CameraBase> FoundCameras => model.FoundCameras;
 
-        public ObservableConcurrentDictionary<string, CameraBase> FoundCamerasEx =>
-            model.FoundCameras.PropagateCollectionChanges(x => x);
+        public ObservableConcurrentDictionary<string, string> FoundCamerasEx =>
+            model.FoundCameras.PropagateCollectionChanges(ConverterImplementations.CameraToStringAliasConversion);
 
         // ReSharper disable UnusedMember.Global
         public ICommand SelectionChangedCommand => model.SelectionChangedCommand;

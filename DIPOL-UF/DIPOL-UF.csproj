@@ -116,6 +116,7 @@
     </Compile>
     <Compile Include="Converters\BoolToBoolMultiValueConverter.cs" />
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
+    <Compile Include="Converters\ConverterImplementations.cs" />
     <Compile Include="Converters\DebugConverter.cs" />
     <Compile Include="Converters\DefaultValueConverter.cs" />
     <Compile Include="Converters\GeometryRulesToStreamGeometryValueConverter.cs" />
@@ -158,8 +159,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Localization.ru-RU.resx</DependentUpon>
     </Compile>
-    <Compile Include="SettingsManager.cs" />
     <Compile Include="TextExtension.cs" />
+    <Compile Include="UiSettingsProvider.cs" />
     <Compile Include="ValidationErrorInstance.cs" />
     <Compile Include="ViewModels\AcquisitionSettingsViewModel.cs" />
     <Compile Include="ViewModels\AvailableCamerasViewModel.cs" />
@@ -267,6 +268,9 @@
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="ui-config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>

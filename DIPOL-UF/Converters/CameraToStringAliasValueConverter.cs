@@ -12,28 +12,9 @@ namespace DIPOL_UF.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is ANDOR_CS.Classes.CameraBase cam)
+            if (value is CameraBase cam)
             {
-                var key = $"{cam.CameraModel}_{cam.SerialNumber}";
-
-                var camIndex = SettingsProvider.Settings.GetArray<string>("Cameras") ?? new string [0];
-                var alias = SettingsProvider.Settings.GetArray<string>("CameraAlias") ?? new string[0];
-
-                var camName = cam.ToString();
-
-                if (camIndex.Length == alias.Length)
-                {
-
-                    for (int index = 0; index < camIndex.Length; index++)
-                        if (camIndex[index] == key)
-                        {
-                            camName = alias[index];
-                            break;
-                        }
-                }
-
-
-                return camName;
+                return ConverterImplementations.CameraToStringAliasConversion(cam);
             }
             else return null;
         }

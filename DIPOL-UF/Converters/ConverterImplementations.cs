@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -22,41 +22,24 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System.Collections.Generic;
-using System.IO;
-using FITS_CS;
-using SettingsManager;
-using StreamReader = System.IO.StreamReader;
+using System.Linq;
+using ANDOR_CS.Classes;
+using Newtonsoft.Json.Linq;
 
-namespace ANDOR_CS.Classes
+namespace DIPOL_UF.Converters
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public class SettingsProvider
+    internal static class ConverterImplementations
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        private static readonly string Path = "config.json";
-        /// <summary>
-        /// 
-        /// </summary>
-        public static JsonSettings Settings;
-
-        public static readonly List<FitsKey> MetaFitsKeys = new List<FitsKey>()
+        public static string CameraToStringAliasConversion(CameraBase cam)
         {
-            FitsKey.CreateComment("Created using Dipol-UF software."), 
-            FitsKey.CreateComment("STATUS_DEBUG"), 
-        };
+            var camString = $"{cam.CameraModel}_{cam.SerialNumber}";
+            return UiSettingsProvider.Settings
+                                     .GetArray<JToken>(@"CameraDescriptors")
+                                     .Where(x => x.Value<string>(@"Name") == camString)
+                                     .Select(x => x.Value<string>(@"Alias"))
+                                     .DefaultIfEmpty(camString)
+                                     .FirstOrDefault();
 
-        static SettingsProvider()
-        {
-            if(File.Exists(Path))
-                using(var str = new StreamReader(Path))
-                    Settings = new JsonSettings(str.ReadToEnd());
-            else
-                Settings = new JsonSettings();
         }
     }
 }
