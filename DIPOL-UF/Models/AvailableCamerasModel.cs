@@ -61,7 +61,7 @@ namespace DIPOL_UF.Models
             }
         }
 
-        public IEnumerable<KeyValuePair<string, CameraBase>> SelectedCameras
+        public List<KeyValuePair<string, CameraBase>> SelectedCameras
         {
             get;
             private set;
@@ -466,11 +466,11 @@ namespace DIPOL_UF.Models
             if (parameter is CommandEventArgs<SelectionChangedEventArgs> commandPar)
             {
                 foreach (var remItem in commandPar.EventArgs.RemovedItems)
-                    if (remItem is KeyValuePair<string, CameraBase> rawItem)
+                    if (remItem is KeyValuePair<string, string> rawItem)
                         _selectedItems.Remove(rawItem.Key);
 
                 foreach (var addItem in commandPar.EventArgs.AddedItems)
-                    if (addItem is KeyValuePair<string, CameraBase> rawItem)
+                    if (addItem is KeyValuePair<string, string> rawItem)
                         _selectedItems.Add(rawItem.Key);
 
             }
@@ -479,7 +479,7 @@ namespace DIPOL_UF.Models
         {
             //OnCameraSelectionsMade();
             Parallel.ForEach(FoundCameras.Where(item => !SelectedItems.Contains(item.Key)), (item) => item.Value?.Dispose());
-            SelectedCameras = FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x);
+            SelectedCameras = FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x).ToList();
             FoundCameras.Clear();
             SelectedItems.Clear();
                 
