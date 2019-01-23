@@ -27,25 +27,25 @@
         <ProgressBar Name="Bar" VerticalAlignment="Center" 
                      Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                      Style="{StaticResource ResourceKey=ProgressBarStyle}"
-                     IsIndeterminate="{Binding Path=IsIndeterminate.Value, UpdateSourceTrigger=PropertyChanged}"
-                     Minimum="{Binding Minimum.Value, UpdateSourceTrigger=PropertyChanged}"
-                     Maximum="{Binding Maximum.Value, UpdateSourceTrigger=PropertyChanged}"
-                     Value="{Binding Value.Value, UpdateSourceTrigger=PropertyChanged}"/>
+                     IsIndeterminate="{Binding Path=IsIndeterminate.Value, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
+                     Minimum="{Binding Minimum.Value, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
+                     Maximum="{Binding Maximum.Value, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
+                     Value="{Binding Value.Value, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"/>
         <Label Name="TitleBox" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-               Content="{Binding BarTitle.Value, UpdateSourceTrigger=PropertyChanged}" 
+               Content="{Binding BarTitle.Value, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
                Style="{StaticResource ResourceKey=TitleFont_Label}"/>
         <TextBlock Name="CommentBox" Grid.Row="2" Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-               Text="{Binding BarComment.Value, UpdateSourceTrigger=PropertyChanged}" 
+               Text="{Binding BarComment.Value, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
                TextWrapping="WrapWithOverflow"
                    Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                />
         <Label Name="ProgressNumberBox" Grid.Row ="1" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" 
-               Content="{Binding ProgressText.Value, UpdateSourceTrigger=PropertyChanged}"
+               Content="{Binding ProgressText.Value, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
                Style="{StaticResource ResourceKey=ContentFont_Label}"/>
 
         <Button Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" Margin="10, 5, 10, 5"
                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}"
-                IsCancel="True" Visibility="{Binding CanAbort.Value, Converter={StaticResource BoolToVisibilityConverter}}"
+                IsCancel="True" Visibility="{Binding CanAbort.Value, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"
                 Content="{loc:Text Key=General_Abort}"
                 Command="{Binding CancelCommand}" CommandParameter="{Binding ElementName=ProgressWindowInstance}"/>
 

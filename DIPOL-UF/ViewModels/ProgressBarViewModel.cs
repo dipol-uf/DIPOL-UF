@@ -1,9 +1,15 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Reactive.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Input;
 using DIPOL_UF.Models;
+using DIPOL_UF.Properties;
+using MathNet.Numerics;
 using Reactive.Bindings;
+using ReactiveUI;
+using ReactiveCommand = Reactive.Bindings.ReactiveCommand;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -12,13 +18,13 @@ namespace DIPOL_UF.ViewModels
 
         private readonly ProgressBar _model;
 
-        public ReactiveProperty<int> Value => _model.Value;
-        public ReactiveProperty<int> Minimum => _model.Minimum;
-        public ReactiveProperty<int> Maximum => _model.Maximum;
-        public ReactiveProperty<bool> IsIndeterminate => _model.IsIndeterminate;
-        public ReactiveProperty<bool> DisplayPercents => _model.DisplayPercents;
-        public ReactiveProperty<string> BarTitle => _model.BarTitle;
-        public ReactiveProperty<string> BarComment => _model.BarComment;
+        public ReadOnlyReactiveProperty<int> Value => _model.Value.ToReadOnlyReactiveProperty();
+        public ReadOnlyReactiveProperty<int> Minimum => _model.Minimum.ToReadOnlyReactiveProperty();
+        public ReadOnlyReactiveProperty<int> Maximum => _model.Maximum.ToReadOnlyReactiveProperty();
+        public ReadOnlyReactiveProperty<bool> IsIndeterminate => _model.IsIndeterminate.ToReadOnlyReactiveProperty();
+        public ReadOnlyReactiveProperty<bool> DisplayPercents => _model.DisplayPercents.ToReadOnlyReactiveProperty();
+        public ReadOnlyReactiveProperty<string> BarTitle => _model.BarTitle.ToReadOnlyReactiveProperty();
+        public ReadOnlyReactiveProperty<string> BarComment => _model.BarComment.ToReadOnlyReactiveProperty();
         public ReadOnlyReactiveProperty<string> ProgressText { get; }
         
         public ReadOnlyReactiveProperty<bool> CanAbort => _model.CanAbort.ToReadOnlyReactiveProperty();
@@ -30,40 +36,42 @@ namespace DIPOL_UF.ViewModels
         public ProgressBarViewModel(ProgressBar model)
         {
             _model = model ?? throw new ArgumentNullException(nameof(model));
-            
-            //IsIndeterminate.
-            ProgressText = IsIndeterminate.CombineLatest(DisplayPercents, Value, Minimum, Maximum,
-                (isInd, percent, val, min, max) =>
-                {
-                    if (isInd)
-                        return Properties.Localization.ProgressBar_IndeterminateString;
-                    if (percent)
-                        return string.Format(
-                            Properties.Localization.ProgressBar_DisplayPercentString,
-                            100 * val / (max - min));
 
-                    var decDigits =
-                        Math.Ceiling(Math.Log10(max % 10 == 0 ? max + 1 : max));
-                    var format = "";
+            //ReSharper disable once InvokeAsExtensionMethod
+            ProgressText = Value.CombineLatest(
+                                    Minimum, Maximum, DisplayPercents, IsIndeterminate,
+                                    ProgressTextFormatter)
+                                .ToReadOnlyReactiveProperty();
 
-                    if (min == 0)
-                    {
-                        format = string.Format(
-                            Properties.Localization.ProgressBar_DisplayCountFormatString,
-                            decDigits);
-                        return string.Format(format, val, max);
-                    }
-
-                    format = string.Format(
-                        Properties.Localization.ProgressBar_DisplayRangeFormatString,
-                        decDigits);
-
-                    return string.Format(format, val, min, max);
-                }).ToReadOnlyReactiveProperty();
+            ProgressText.Subscribe(Console.WriteLine);
         }
 
+        private static string ProgressTextFormatter(int value, int min, int max, bool displayPercent, bool isIndeterminate)
+        {
+            if (isIndeterminate)
+                return Properties.Localization.ProgressBar_IndeterminateString;
 
+            if (displayPercent)
+                return string.Format(Localization.ProgressBar_DisplayPercentString, 100.0 * value / (max - min));
 
+            var format = "";
+            var decDigit = new[] {value, min, max}
+                       .Select(x => Math.Log10(x))
+                       .Select(x => new {Log = x, Ceiling = Math.Ceiling(x)})
+                       .Select(x => x.Log.AlmostEqualRelative(x.Ceiling) ? x.Ceiling + 1 : x.Ceiling)
+                       .Max();
+
+            if (min == 0)
+            {
+                format = string.Format(Localization.ProgressBar_DisplayCountFormatString, decDigit);
+
+                return string.Format(format, value, max);
+            }
+
+            format = string.Format(Localization.ProgressBar_DisplayRangeFormatString, decDigit);
+
+            return string.Format(format, value, min, max);
+        }
     }
 }
 

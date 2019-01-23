@@ -50,15 +50,18 @@ namespace DIPOL_UF.Models
         public ProgressBar()
         {
             
-            Minimum = new ReactiveProperty<int>(0, ReactivePropertyMode.IgnoreInitialValidationError).SetValidateNotifyError(x => Validators.Validator.CannotBeGreaterThan(x, Maximum.Value));
-            Maximum = new ReactiveProperty<int>(100, ReactivePropertyMode.IgnoreInitialValidationError).SetValidateNotifyError(x => Validators.Validator.CannotBeLessThan(x, Minimum.Value));
-            Value = new ReactiveProperty<int>(0).SetValidateNotifyError(x => Validators.Validator.ShouldFallWithinRange(x, Minimum.Value, Maximum.Value));
-            IsIndeterminate = new ReactiveProperty<bool>(false);
-            DisplayPercents = new ReactiveProperty<bool>(false);
-            BarTitle = new ReactiveProperty<string>("");
-            BarComment = new ReactiveProperty<string>("");
-            IsAborted = new ReactiveProperty<bool>(false);
-            CanAbort = new ReactiveProperty<bool>(true);
+            Minimum = new ReactiveProperty<int>(0, ReactivePropertyMode.IgnoreInitialValidationError | ReactivePropertyMode.RaiseLatestValueOnSubscribe)
+                .SetValidateNotifyError(x => Validators.Validator.CannotBeGreaterThan(x, Maximum.Value));
+            Maximum = new ReactiveProperty<int>(100, ReactivePropertyMode.IgnoreInitialValidationError | ReactivePropertyMode.RaiseLatestValueOnSubscribe)
+                .SetValidateNotifyError(x => Validators.Validator.CannotBeLessThan(x, Minimum.Value));
+            Value = new ReactiveProperty<int>(0, ReactivePropertyMode.RaiseLatestValueOnSubscribe)
+                .SetValidateNotifyError(x => Validators.Validator.ShouldFallWithinRange(x, Minimum.Value, Maximum.Value));
+            IsIndeterminate = new ReactiveProperty<bool>(false, ReactivePropertyMode.RaiseLatestValueOnSubscribe);
+            DisplayPercents = new ReactiveProperty<bool>(false, ReactivePropertyMode.RaiseLatestValueOnSubscribe);
+            BarTitle = new ReactiveProperty<string>("", ReactivePropertyMode.RaiseLatestValueOnSubscribe);
+            BarComment = new ReactiveProperty<string>("", ReactivePropertyMode.RaiseLatestValueOnSubscribe);
+            IsAborted = new ReactiveProperty<bool>(false, ReactivePropertyMode.RaiseLatestValueOnSubscribe);
+            CanAbort = new ReactiveProperty<bool>(true, ReactivePropertyMode.RaiseLatestValueOnSubscribe);
 
             MaximumReached = Value.CombineLatest(Maximum, (v, m) => v == m).Where(x => x);
             MinimumReached = Value.CombineLatest(Minimum, (v, m) => v == m).Where(x => x);

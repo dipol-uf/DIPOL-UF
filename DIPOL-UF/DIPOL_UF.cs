@@ -27,6 +27,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
 using Newtonsoft.Json.Linq;
@@ -72,14 +74,25 @@ namespace DIPOL_UF
             var applicationInstance = new App();
             applicationInstance.InitializeComponent();
 
-            var sch = Reactive.Bindings.ReactivePropertyScheduler.Default;
             var model = new ProgressBar();
             model.Maximum.Value = 100;
-            model.Minimum.Value = 0;
+            model.Minimum.Value = -20;
             model.Value.Value = 53;
             model.BarTitle.Value = "TestTitle";
             model.BarComment.Value = "TestComment";
             var vm = new ProgressBarViewModel(model);
+
+            Task.Run(() =>
+            {
+                while(!model.IsIndeterminate.Value && model.TryIncrement())
+                    Task.Delay(TimeSpan.FromMilliseconds(500)).Wait();
+            });
+
+            Task.Run(() =>
+            {
+                Task.Delay(TimeSpan.FromSeconds(3)).Wait();
+                model.IsIndeterminate.Value = true;
+            });
 
             applicationInstance.Run(new Views.ProgressWindow(vm));
         }
