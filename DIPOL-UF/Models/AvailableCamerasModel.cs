@@ -184,7 +184,7 @@ namespace DIPOL_UF.Models
 
                     if (!_camerasPresent)
                     {
-                        _progressBar.BarComment.Value = "No cameras found. Check your connections.";
+                        _progressBar.BarComment = "No cameras found. Check your connections.";
                         Task.Run(() =>
                         {
                             Task.Delay(3750).Wait();
@@ -254,8 +254,8 @@ namespace DIPOL_UF.Models
             {
                 _camerasPresent = true;
                 var cancelSource = new CancellationTokenSource();
-                _progressBar.Maximum.Value = nLocal + nRemote;
-                _progressBar.IsIndeterminate.Value = false;
+                _progressBar.Maximum = nLocal + nRemote;
+                _progressBar.IsIndeterminate = false;
 
                 // TODO : Fix here
                 //_progressBar.AbortButtonClick += (sender, e) => cancelSource.Cancel();
@@ -347,7 +347,7 @@ namespace DIPOL_UF.Models
                         else
                             _progressBar.TryIncrement();
 
-                        _progressBar.BarComment.Value = cam == null
+                        _progressBar.BarComment = cam == null
                             ? "Camera resource is unavailable."
                             : "Acquired local camera " +
                               $"{new Converters.CameraToStringAliasValueConverter().Convert(cam, typeof(string), null, System.Globalization.CultureInfo.CurrentUICulture)}";
@@ -425,7 +425,7 @@ namespace DIPOL_UF.Models
                                     lock (_progressBar)
                                         _progressBar.TryIncrement();
 
-                                _progressBar.BarComment.Value = cam == null ? "Camera resource is unavailable." : "Acquired remote camera " +
+                                _progressBar.BarComment = cam == null ? "Camera resource is unavailable." : "Acquired remote camera " +
                                     $"{new Converters.CameraToStringAliasValueConverter().Convert(cam, typeof(string), null, System.Globalization.CultureInfo.CurrentUICulture)}";
                             }
 

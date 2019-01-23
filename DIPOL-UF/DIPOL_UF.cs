@@ -31,6 +31,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
+using DynamicData.Binding;
 using Newtonsoft.Json.Linq;
 using SettingsManager;
 
@@ -75,26 +76,38 @@ namespace DIPOL_UF
             applicationInstance.InitializeComponent();
 
             var model = new ProgressBar();
-            model.Maximum.Value = 100;
-            model.Minimum.Value = -20;
-            model.Value.Value = 53;
-            model.BarTitle.Value = "TestTitle";
-            model.BarComment.Value = "TestComment";
-            var vm = new ProgressBarViewModel(model);
+            model.WhenPropertyChanged(x => x.Value).Subscribe(x => Console.WriteLine($"Value is {x.Value}"));
+            model.WhenPropertyChanged(x => x.HasErrors)
+                 .Subscribe(x => Console.WriteLine(x.Value ? "Errors" : "No Errors"));
+            model.Maximum = 100;
+            model.Minimum = 50;
+            model.Value = -201;
+            model.BarTitle = "TestTitle";
+            model.BarComment = "TestComment";
+            //model.Value = 67;
+
+
+            //var vm = new ProgressBarViewModel(model);
 
             Task.Run(() =>
             {
-                while(!model.IsIndeterminate.Value && model.TryIncrement())
-                    Task.Delay(TimeSpan.FromMilliseconds(500)).Wait();
+                while (!model.IsIndeterminate && model.Value++ < model.Maximum)
+                    Task.Delay(TimeSpan.FromMilliseconds(200)).Wait();
             });
 
             Task.Run(() =>
             {
-                Task.Delay(TimeSpan.FromSeconds(3)).Wait();
-                model.IsIndeterminate.Value = true;
-            });
+                Task.Delay(TimeSpan.FromSeconds(5)).Wait();
+                model.IsIndeterminate = true;
+                model.BarComment = "New comment";
+                Task.Delay(TimeSpan.FromSeconds(1)).Wait();
+                model.IsIndeterminate = false;
+                model.DisplayPercents = true;
 
-            applicationInstance.Run(new Views.ProgressWindow(vm));
+
+            }).Wait();
+
+            //applicationInstance.Run(new Views.ProgressWindow(vm));
         }
     }
 }
