@@ -242,6 +242,8 @@ namespace DIPOL_UF
             result = result <= max ? result : max;
             return result;
         }
-        
+
+        public static void AddTo(this IDisposable subscription, IList<IDisposable> storage)
+            => storage.Add(subscription);
     }
 }
