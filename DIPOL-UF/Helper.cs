@@ -242,13 +242,6 @@ namespace DIPOL_UF
             result = result <= max ? result : max;
             return result;
         }
-
-        public static bool AreEqual(double first, double second)
-            => AreEqual(first, second, 2 * MathNet.Numerics.Precision.MachineEpsilon);
-
-        public static bool AreEqual(double first, double second, double epsilon)
-        {
-            return Abs(first - second) < Max(Min(first, second) * epsilon, epsilon);
-        }
+        
     }
 }
