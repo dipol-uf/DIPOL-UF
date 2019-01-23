@@ -13,7 +13,6 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 
 using DIPOL_Remote.Classes;
-using Reactive.Bindings;
 using MenuCollection = System.Collections.ObjectModel.ObservableCollection<DIPOL_UF.ViewModels.MenuItemViewModel>;
 using DelegateCommand = DIPOL_UF.Commands.DelegateCommand;
 
@@ -375,7 +374,7 @@ namespace DIPOL_UF.Models
             connect.ContinueWith((task) =>
             {
                 _remoteClients = connectedClients.ToArray();
-                pb.BarComment.Value = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
+                pb.BarComment = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
 
                 Task.Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750"))).Wait();
 
