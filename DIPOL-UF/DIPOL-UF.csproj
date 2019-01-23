@@ -231,6 +231,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Localization.ru-RU.resx</DependentUpon>
     </Compile>
+    <Compile Include="ReactiveObjectEx.cs" />
     <Compile Include="TextExtension.cs" />
     <Compile Include="UiSettingsProvider.cs" />
     <Compile Include="ValidationErrorInstance.cs" />
