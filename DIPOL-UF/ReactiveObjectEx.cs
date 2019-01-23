@@ -3,10 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DynamicData.Kernel;
 using ReactiveUI;
 
 using PropertyErrorCache = DynamicData.SourceCache<(string ErrorType, string Message), string>;
@@ -23,11 +19,11 @@ namespace DIPOL_UF
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
-        public bool IsDisposing { get; private set; } = false;
-        public bool IsDisposed { get; private set; } = false;
+        public bool IsDisposing { get; private set; }
+        public bool IsDisposed { get; private set; }
         public bool HasErrors => _observableErrors.KeyValues.Any(x => x.Value.Errors.KeyValues.Any());
 
-        private void UpdateErrors(string error, string propertyName, string validatorName)
+        protected void UpdateErrors(string error, string propertyName, string validatorName)
         {
             this.RaisePropertyChanging(nameof(HasErrors));
 
@@ -35,7 +31,7 @@ namespace DIPOL_UF
             {
                 var globalCollection = global.Lookup(propertyName);
 
-                var value = globalCollection.Value;
+                (string Property, PropertyErrorCache Errors) value = default;
                 if (!globalCollection.HasValue)
                 {
                     value = (Property: propertyName, Errors: new PropertyErrorCache(x => x.ErrorType));
@@ -43,6 +39,8 @@ namespace DIPOL_UF
                          .Subscribe(_ => OnErrorsChanged(new DataErrorsChangedEventArgs(propertyName)))
                          .AddTo(_subscriptions);
                 }
+                else
+                    value = globalCollection.Value;
 
                 value.Errors.Edit(local =>
                 {
