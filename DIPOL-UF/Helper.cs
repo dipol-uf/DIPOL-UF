@@ -9,6 +9,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 
+using static System.Math;
+
 namespace DIPOL_UF
 {
     public static class Helper
@@ -30,7 +32,7 @@ namespace DIPOL_UF
             return new Size(formattedText.Width, formattedText.Height);
         }
 
-        public static T FindParentOfType<T>(DependencyObject element) where T:DependencyObject
+        public static T FindParentOfType<T>(DependencyObject element) where T : DependencyObject
         {
             if (element is T)
                 return element as T;
@@ -57,18 +59,20 @@ namespace DIPOL_UF
         {
             var showingAsDialogField = typeof(Window).GetField("_showingAsDialog",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                       
-            return (bool)(showingAsDialogField?.GetValue(window) ?? false);
+
+            return (bool) (showingAsDialogField?.GetValue(window) ?? false);
         }
 
         public static void WriteLog(string entry)
         {
             System.Diagnostics.Debug.WriteLine(entry);
         }
+
         public static void WriteLog(ANDOR_CS.Exceptions.AndorSdkException entry)
         {
             System.Diagnostics.Debug.WriteLine($"{entry.Message} [{entry.ErrorCode}]");
         }
+
         public static void WriteLog(object entry)
             => WriteLog(entry.ToString());
 
@@ -97,10 +101,12 @@ namespace DIPOL_UF
             else
                 Application.Current.Dispatcher.Invoke(action);
         }
+
         public static T ExecuteOnUI<T>(Func<T> action)
         {
             if (!Application.Current?.Dispatcher?.IsAvailable() ?? true)
-                throw new InvalidOperationException("Application and/or Dispatcher are unavailable. Cannot execute code on UI thread");
+                throw new InvalidOperationException(
+                    "Application and/or Dispatcher are unavailable. Cannot execute code on UI thread");
 
             if (Thread.CurrentThread == Application.Current.Dispatcher.Thread)
                 return action();
@@ -117,10 +123,13 @@ namespace DIPOL_UF
         /// <returns>Either item associated with key, or null, if not present.</returns>
         public static object GetValueOrNullSafe(this Dictionary<string, object> settings, string key)
             => (settings ?? throw new ArgumentNullException($"{nameof(settings)} argument cannot be null."))
-                .TryGetValue(key, out object item) ? item : null;
+                .TryGetValue(key, out object item)
+                    ? item
+                    : null;
 
 
-        public static T GetValueOrNullSafe<T>(this Dictionary<string, object> settings, string key, T nullReplacement = default(T))
+        public static T GetValueOrNullSafe<T>(this Dictionary<string, object> settings, string key,
+            T nullReplacement = default(T))
         {
             var tempValue = GetValueOrNullSafe(settings, key);
 
@@ -132,7 +141,7 @@ namespace DIPOL_UF
                 value = tempValue;
 
             if (value is T)
-                return (T)value;
+                return (T) value;
             else
                 return nullReplacement;
         }
@@ -162,14 +171,14 @@ namespace DIPOL_UF
         {
             // Retrieves string representation of the enum value
             string fieldName = Enum.GetName(enumType, enumValue);
-            
+
             // Which corresponds to field name of Enum-derived class
             var descriptionAttr = enumType
-                .GetField(fieldName)
-                // It is possible that such field is not defined (type error), from this point return null
-                ?.GetCustomAttributes(typeof(DescriptionAttribute), false)
-                .DefaultIfEmpty(null)
-                .FirstOrDefault();
+                                  .GetField(fieldName)
+                                  // It is possible that such field is not defined (type error), from this point return null
+                                  ?.GetCustomAttributes(typeof(DescriptionAttribute), false)
+                                  .DefaultIfEmpty(null)
+                                  .FirstOrDefault();
 
             // Casts result to DescriptionAttribute. 
             // If attribute is not found or value is of wrong type, cast gives null and method returns fieldName
@@ -213,7 +222,7 @@ namespace DIPOL_UF
         /// <param name="enm">Flags to convert to array.</param>
         /// <exception cref="ArgumentException"/>
         /// <returns>An array of flags found in input parameter, one flag per each aray item.</returns>
-        public static T[] EnumFlagsToArray<T>(T enm) 
+        public static T[] EnumFlagsToArray<T>(T enm)
         {
             if (typeof(T).BaseType != typeof(Enum))
                 throw new ArgumentException($"Provided type {typeof(T)} should be {typeof(Enum)}-based ");
@@ -221,10 +230,10 @@ namespace DIPOL_UF
             var castEnm = enm as Enum;
 
             return Enum
-                .GetValues(typeof(T))
-                .OfType<T>()
-                .Where(item => castEnm.HasFlag(item as Enum))
-                .ToArray();
+                   .GetValues(typeof(T))
+                   .OfType<T>()
+                   .Where(item => castEnm.HasFlag(item as Enum))
+                   .ToArray();
         }
 
         public static double Clamp(this double val, double min, double max)
@@ -232,6 +241,14 @@ namespace DIPOL_UF
             var result = val >= min ? val : min;
             result = result <= max ? result : max;
             return result;
+        }
+
+        public static bool AreEqual(double first, double second)
+            => AreEqual(first, second, 2 * MathNet.Numerics.Precision.MachineEpsilon);
+
+        public static bool AreEqual(double first, double second, double epsilon)
+        {
+            return Abs(first - second) < Max(Min(first, second) * epsilon, epsilon);
         }
     }
 }
