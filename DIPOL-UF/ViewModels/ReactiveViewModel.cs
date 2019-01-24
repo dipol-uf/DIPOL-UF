@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reactive.Linq;
 using DynamicData.Binding;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -15,21 +16,57 @@ namespace DIPOL_UF.ViewModels
             Model = model ?? throw new ArgumentNullException(nameof(model));
         }
 
-        protected ObservableAsPropertyHelper<TProperty> PropagateProperty<TProperty>(
-            Expression<Func<TModel, TProperty>> sourceProperty,
-            string targetProperty)
+        protected void PropagateErrors(string sourceName, string targetName)
         {
-            var property = Model.WhenPropertyChanged(sourceProperty)
-                                .Select(x => x.Value)
-                                .ToProperty(this, targetProperty);
-
-            var name = sourceProperty.Body.GetMemberInfo().Name;
             CreateValidator(
-                Model.WhenErrorsChangedTyped.Where(x => x.Property == name)
+                Model.WhenErrorsChangedTyped.Where(x => x.Property == sourceName)
                      .Select(x => (x.Type, x.Message)),
-                targetProperty);
+                targetName);
+        }
 
-            return property;
+        protected static void PropagateReadOnlyProperty<TTarget, TProperty>(
+            TTarget @this,
+            Expression<Func<TModel, TProperty>> sourceProperty,
+            Expression<Func<TTarget, TProperty>> targetProperty,
+            bool withErrors = true) where TTarget : ReactiveViewModel<TModel>
+        {
+            @this.Model.WhenPropertyChanged(sourceProperty)
+                                .Select(x => x.Value)
+                                .ToPropertyEx(@this, targetProperty);
+
+            var sourceName = sourceProperty?.Body.GetMemberInfo().Name;
+            var targetName = targetProperty?.Body.GetMemberInfo().Name;
+            if(withErrors)
+                @this.PropagateErrors(sourceName, targetName);
+
+        }
+
+        protected static void PropagateReadOnlyProperty<TTarget, TSource, TProperty>(
+            TTarget @this,
+            Expression<Func<TModel, TSource>> sourceProperty,
+            Expression<Func<TTarget, TProperty>> targetProperty,
+            Func<TSource, TProperty> converter,
+            bool withErrors = true) where TTarget : ReactiveViewModel<TModel>
+        {
+            @this.Model.WhenPropertyChanged(sourceProperty)
+                 .Select(x => converter(x.Value))
+                 .ToPropertyEx(@this, targetProperty);
+
+            var sourceName = sourceProperty?.Body.GetMemberInfo().Name;
+            var targetName = targetProperty?.Body.GetMemberInfo().Name;
+            if(withErrors)
+                @this.PropagateErrors(sourceName, targetName);
+
+        }
+
+        protected static void PropagateReadOnlyProperty<TTarget, TSource, TProperty>(
+            TTarget @this,
+            IObservable<TSource> source,
+            Expression<Func<TTarget, TProperty>> targetProperty,
+            Func<TSource, TProperty> converter) where TTarget : ReactiveViewModel<TModel>
+        {
+                 source.Select(converter)
+                 .ToPropertyEx(@this, targetProperty);
         }
     }
 }

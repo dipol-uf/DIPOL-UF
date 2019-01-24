@@ -610,6 +610,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string ProgressBar_IsInvalidString {
+            get {
+                return ResourceManager.GetString("ProgressBar_IsInvalidString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0:f0} pix.
         /// </summary>
         public static string Slider_PixelToolTipFormat {
