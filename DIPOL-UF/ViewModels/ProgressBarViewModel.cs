@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Linq;
+using System.Windows.Input;
 using DIPOL_UF.Properties;
 using DynamicData.Binding;
 using MathNet.Numerics;
@@ -27,13 +27,8 @@ namespace DIPOL_UF.ViewModels
         public string ProgressText { [ObservableAsProperty] get; }
         // ReSharper restore UnassignedGetOnlyAutoProperty
 
-        public ReactiveCommand<object, Unit> WindowDragCommand => Model.WindowDragCommand;
-
-        //public ReadOnlyReactiveProperty<bool> CanAbort => _model.CanAbort.ToReadOnlyReactiveProperty();
-
-        //public ReactiveCommand MouseDragEventHandler => _model.WindowDragCommand;
-
-        //public ReactiveCommand CancelCommand => _model.CancelCommand;
+        public ReactiveCommand<System.Windows.Window, Unit> WindowDragCommand => Model.WindowDragCommand;
+        public ICommand CancelCommand => Model.CancelCommand;
 
         public ProgressBarViewModel(ProgressBar model) : base(model)
         {
@@ -58,10 +53,7 @@ namespace DIPOL_UF.ViewModels
                     nameof(Maximum), nameof(IsIndeterminate),
                     nameof(DisplayPercent), nameof(HasErrors)),
                 x => x.ProgressText,
-                ProgressTextFormatter,
-                Model.WhenErrorsChangedTyped
-                     .Where(x => x.Property == nameof(Value))
-                     .Select(x => (x.Type, x.Message)));
+                ProgressTextFormatter);
         }
 
         private static string ProgressTextFormatter(ProgressBarViewModel @this)
@@ -77,7 +69,7 @@ namespace DIPOL_UF.ViewModels
                     Localization.ProgressBar_DisplayPercentString, 
                     100.0 * @this.Value / (@this.Maximum - @this.Minimum));
 
-            var format = "";
+            string format;
             var decDigit = new[] { @this.Value, @this.Minimum, @this.Maximum }
                        .Select(x => Math.Log10(x))
                        .Select(x => new {Log = x, Ceiling = Math.Ceiling(x)})

@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows;
@@ -15,6 +16,9 @@ namespace DIPOL_UF
 {
     public static class Helper
     {
+        public static Dispatcher UiDispatcher => Application.Current?.Dispatcher;
+
+
         public static Size MeasureString(string strToMeasure, TextBlock presenter)
         {
             var formattedText = new FormattedText(strToMeasure,
@@ -95,8 +99,7 @@ namespace DIPOL_UF
 
         public static void ExecuteOnUI(Action action)
         {
-            if (!Application.Current?.Dispatcher?.IsAvailable() ?? true ||
-                Thread.CurrentThread == Application.Current?.Dispatcher?.Thread)
+            if (!Application.Current?.Dispatcher?.IsAvailable() ?? true)
                 action();
             else
                 Application.Current.Dispatcher.Invoke(action);
@@ -245,5 +248,14 @@ namespace DIPOL_UF
 
         public static void AddTo(this IDisposable subscription, IList<IDisposable> storage)
             => storage.Add(subscription);
+
+        public static IObservable<T> ObserveOnUi<T>(this IObservable<T> input)
+            => input.ObserveOn(UiDispatcher);
+
+        public static IObservable<T> ModifyIf<T>(
+            this IObservable<T> input,
+            bool condition,
+            Func<IObservable<T>, IObservable<T>> modifier) =>
+            condition ? modifier(input) : input;
     }
 }

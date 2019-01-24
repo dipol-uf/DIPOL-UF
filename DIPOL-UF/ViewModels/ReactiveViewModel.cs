@@ -20,7 +20,8 @@ namespace DIPOL_UF.ViewModels
         {
             CreateValidator(
                 Model.WhenErrorsChangedTyped.Where(x => x.Property == sourceName)
-                     .Select(x => (x.Type, x.Message)),
+                     .Select(x => (x.Type, x.Message))
+                     .ObserveOnUi(),
                 targetName);
         }
 
@@ -31,8 +32,9 @@ namespace DIPOL_UF.ViewModels
             bool withErrors = true) where TTarget : ReactiveViewModel<TModel>
         {
             @this.Model.WhenPropertyChanged(sourceProperty)
-                                .Select(x => x.Value)
-                                .ToPropertyEx(@this, targetProperty);
+                 .Select(x => x.Value)
+                 .ObserveOnUi()
+                 .ToPropertyEx(@this, targetProperty);
 
             var sourceName = sourceProperty?.Body.GetMemberInfo().Name;
             var targetName = targetProperty?.Body.GetMemberInfo().Name;
@@ -50,6 +52,7 @@ namespace DIPOL_UF.ViewModels
         {
             @this.Model.WhenPropertyChanged(sourceProperty)
                  .Select(x => converter(x.Value))
+                 .ObserveOnUi()
                  .ToPropertyEx(@this, targetProperty);
 
             var sourceName = sourceProperty?.Body.GetMemberInfo().Name;
@@ -66,11 +69,14 @@ namespace DIPOL_UF.ViewModels
             Func<TSource, TProperty> converter,
             IObservable<(string Type, string Message)> validationSource = null) where TTarget : ReactiveViewModel<TModel>
         {
-                 source.Select(converter)
-                 .ToPropertyEx(@this, targetProperty);
+                 source
+                     .Select(converter)
+                     .ObserveOnUi()
+                     .ToPropertyEx(@this, targetProperty);
                  if(!(validationSource is null))
                      @this.CreateValidator(
-                         validationSource,
+                         validationSource
+                             .ObserveOnUi(),
                          targetProperty.Body.GetMemberInfo().Name);
         }
     }
