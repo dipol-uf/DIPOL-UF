@@ -84,36 +84,36 @@ namespace DIPOL_UF
                 BarTitle = "TestTitle",
                 BarComment = "TestComment"
             };
-
-            model.WhenErrorsChanged
-              .Subscribe(x => Console.WriteLine(
-                  $"\t\t\t\tModel: {x.PropertyName}: " +
-                  $"{model.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
-            model.WhenAnyPropertyChanged(nameof(model.HasErrors))
-              .Subscribe(x => Console.WriteLine($"\t\t\t\tHas errors {x.HasErrors}"));
-
-            model.WhenErrorsChanged.Where(x => x.PropertyName == nameof(model.Minimum))
-                 .Subscribe(x => Console.WriteLine(
-                     $"\t\t\t\t\tModel: {x.PropertyName}: " +
-                     $"{model.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
-
             var vm = new ProgressBarViewModel(model);
-            vm.WhenErrorsChanged
-              .Subscribe(x =>
-              {
-                  var msg = vm.GetTypedErrors(x.PropertyName).FirstOrDefault().Message;
-                  Console.WriteLine(
-                      $"VM: {x.PropertyName}: " +
-                      $"{msg}");
-              });
 
-            vm.WhenAnyPropertyChanged(nameof(vm.HasErrors))
-              .Subscribe(x => Console.WriteLine($"VM Has errors {x.HasErrors}"));
+            //model.WhenErrorsChanged
+            //  .Subscribe(x => Console.WriteLine(
+            //      $"\t\t\t\tModel: {x.PropertyName}: " +
+            //      $"{model.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
+            //model.WhenAnyPropertyChanged(nameof(model.HasErrors))
+            //  .Subscribe(x => Console.WriteLine($"\t\t\t\tHas errors {x.HasErrors}"));
 
-            vm.WhenErrorsChanged.Where(x => x.PropertyName == nameof(vm.Minimum))
-              .Subscribe(x => Console.WriteLine(
-                  $"VM: {x.PropertyName}: " +
-                  $"{vm.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
+            //model.WhenErrorsChanged.Where(x => x.PropertyName == nameof(model.Minimum))
+            //     .Subscribe(x => Console.WriteLine(
+            //         $"\t\t\t\t\tModel: {x.PropertyName}: " +
+            //         $"{model.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
+
+            //vm.WhenErrorsChanged
+            //  .Subscribe(x =>
+            //  {
+            //      var msg = vm.GetTypedErrors(x.PropertyName).FirstOrDefault().Message;
+            //      Console.WriteLine(
+            //          $"VM: {x.PropertyName}: " +
+            //          $"{msg}");
+            //  });
+
+            //vm.WhenAnyPropertyChanged(nameof(vm.HasErrors))
+            //  .Subscribe(x => Console.WriteLine($"VM Has errors {x.HasErrors}"));
+
+            //vm.WhenErrorsChanged.Where(x => x.PropertyName == nameof(vm.Minimum))
+            //  .Subscribe(x => Console.WriteLine(
+            //      $"VM: {x.PropertyName}: " +
+            //      $"{vm.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
 
 
             Task.Run(() =>
@@ -137,6 +137,7 @@ namespace DIPOL_UF
                 Task.Delay(TimeSpan.FromSeconds(1)).Wait();
                 model.IsIndeterminate = false;
                 model.DisplayPercents = true;
+                model.CanAbort = true;
 
             });
             applicationInstance.Run(new Views.ProgressWindow(vm));

@@ -13,8 +13,8 @@ namespace DIPOL_UF.Models
     internal class ProgressBar : ReactiveObjectEx
     {
         
-        public ReactiveCommand<object, Unit> WindowDragCommand { get; }
-        public ReactiveCommand<object, Unit> CancelCommand { get; }
+        public ReactiveCommand<Window, Unit> WindowDragCommand { get; }
+        public ReactiveCommand<Window, Unit> CancelCommand { get; }
 
         [Reactive]
         public int Minimum { get; set; }
@@ -31,7 +31,7 @@ namespace DIPOL_UF.Models
         [Reactive]
         public string BarComment { get; set; }
         [Reactive]
-        public bool IsAborted { get; set; }
+        public bool IsAborted { get; private set; }
         [Reactive]
         public bool CanAbort { get; set; }
 
@@ -51,20 +51,18 @@ namespace DIPOL_UF.Models
                                  .Select(x => x.Value);
 
 
-            WindowDragCommand = ReactiveCommand.Create<object>(
+            WindowDragCommand = ReactiveCommand.Create<Window>(
                 Commands.WindowDragCommandProvider.Execute);
-            CancelCommand = ReactiveCommand.Create<object>(param =>
+            CancelCommand = ReactiveCommand.Create<Window>(param =>
             {
-                if (param is Window w)
-                {
-                    if (Helper.IsDialogWindow(w))
-                        w.DialogResult = false;
-                    IsAborted = true;
-                    w.Close();
-                }
+                if (Helper.IsDialogWindow(param))
+                    param.DialogResult = false;
+                IsAborted = true;
+                param.Close();
             }, this.WhenAnyPropertyChanged(nameof(CanAbort), nameof(IsAborted))
-                   .Select(x => x.CanAbort && !x.IsAborted));
-
+                     .Select(x => x.CanAbort && !x.IsAborted)
+                     .ObserveOnUi());
+            
 
             HookValidators();
             HookObservers();
@@ -144,7 +142,6 @@ namespace DIPOL_UF.Models
 
             return false;
         }
-
 
     }
 }
