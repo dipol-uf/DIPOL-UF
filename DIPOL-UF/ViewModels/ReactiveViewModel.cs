@@ -63,10 +63,15 @@ namespace DIPOL_UF.ViewModels
             TTarget @this,
             IObservable<TSource> source,
             Expression<Func<TTarget, TProperty>> targetProperty,
-            Func<TSource, TProperty> converter) where TTarget : ReactiveViewModel<TModel>
+            Func<TSource, TProperty> converter,
+            IObservable<(string Type, string Message)> validationSource = null) where TTarget : ReactiveViewModel<TModel>
         {
                  source.Select(converter)
                  .ToPropertyEx(@this, targetProperty);
+                 if(!(validationSource is null))
+                     @this.CreateValidator(
+                         validationSource,
+                         targetProperty.Body.GetMemberInfo().Name);
         }
     }
 }
