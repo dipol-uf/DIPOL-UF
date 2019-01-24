@@ -3,19 +3,24 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:cmds="clr-namespace:DIPOL_UF.Commands"
+        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:loc="clr-namespace:DIPOL_UF"
-        xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
+        xmlns:viewModels="clr-namespace:DIPOL_UF.ViewModels"
         x:Name="ProgressWindowInstance"
         Title="ProgressWindow" Height="150" Width="500" WindowStyle="None" ResizeMode="NoResize"
         Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" 
         BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" 
         IsTabStop="False" ShowInTaskbar="False"
         mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance Type=vms:ProgressBarViewModel}">
-    <Grid 
-        Margin="5" Background="Transparent" 
-        MouseDown="{cmds:EventToCommand MouseDragEventHandler}">
+        d:DataContext="{d:DesignInstance Type=viewModels:ProgressBarViewModel}">
+    <Grid Margin="5" Background="Transparent">
+        <behaviors:Interaction.Triggers>
+            <behaviors:EventTrigger EventName="MouseDown" >
+                <behaviors:InvokeCommandAction
+                    Command="{Binding WindowDragCommand}"
+                    CommandParameter="{Binding ElementName=ProgressWindowInstance}"/>
+            </behaviors:EventTrigger>
+        </behaviors:Interaction.Triggers>
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"/>
             <RowDefinition Height="1*"/>

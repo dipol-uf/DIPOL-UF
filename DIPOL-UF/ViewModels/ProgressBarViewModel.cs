@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
-using System.Windows.Forms.VisualStyles;
 using DIPOL_UF.Properties;
 using DynamicData.Binding;
 using MathNet.Numerics;
@@ -26,7 +26,8 @@ namespace DIPOL_UF.ViewModels
         public string BarComment { [ObservableAsProperty] get; }
         public string ProgressText { [ObservableAsProperty] get; }
         // ReSharper restore UnassignedGetOnlyAutoProperty
-        
+
+        public ReactiveCommand<object, Unit> WindowDragCommand => Model.WindowDragCommand;
 
         //public ReadOnlyReactiveProperty<bool> CanAbort => _model.CanAbort.ToReadOnlyReactiveProperty();
 
@@ -36,7 +37,12 @@ namespace DIPOL_UF.ViewModels
 
         public ProgressBarViewModel(ProgressBar model) : base(model)
         {
-            
+            MapProperties();
+            HookValidators();
+        }
+
+        private void MapProperties()
+        {
             PropagateReadOnlyProperty(this, x => x.Value, y => y.Value);
             PropagateReadOnlyProperty(this, x => x.Minimum, y => y.Minimum);
             PropagateReadOnlyProperty(this, x => x.Maximum, y => y.Maximum);
@@ -56,9 +62,6 @@ namespace DIPOL_UF.ViewModels
                 Model.WhenErrorsChangedTyped
                      .Where(x => x.Property == nameof(Value))
                      .Select(x => (x.Type, x.Message)));
-                
-
-            HookValidators();
         }
 
         private static string ProgressTextFormatter(ProgressBarViewModel @this)
