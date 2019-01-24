@@ -70,9 +70,7 @@ namespace DIPOL_UF
 
             WhenErrorsChanged.Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
                                      .AddTo(_subscriptions);
-
             WhenErrorsChanged.Subscribe(OnErrorsChanged).AddTo(_subscriptions);
-
 
         }
 
@@ -87,7 +85,7 @@ namespace DIPOL_UF
         public virtual IEnumerable GetErrors(string propertyName)
         {
             return _validationErrors.Items
-                                    .Where(x => x.Property == propertyName)
+                                    .Where(x => x.Property == propertyName && !(x.Message is null))
                                     .Select(x => x.Message);
         }
         

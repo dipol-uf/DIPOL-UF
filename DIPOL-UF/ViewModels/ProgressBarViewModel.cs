@@ -13,17 +13,20 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class ProgressBarViewModel : ReactiveViewModel<ProgressBar>
     {
-        private readonly ObservableAsPropertyHelper<int> _value;
 
-        public int Value => _value.Value;
-        //public ReactiveProperty<int> Value => _model.Value;
-        //public ReactiveProperty<int> Minimum => _model.Minimum;
-        //public ReactiveProperty<int> Maximum => _model.Maximum;
-
-        //public ReadOnlyReactiveProperty<bool> IsIndeterminate { get; }
-        //public ReadOnlyReactiveProperty<string> BarTitle { get; }
-        //public ReadOnlyReactiveProperty<string> BarComment { get; }
-        //public ReadOnlyReactiveProperty<string> ProgressText { get; }
+        // [ObservableAsProperty] generates readonly property
+        // with a backing field via ReactiveUI.Fody
+        // ReSharper disable UnassignedGetOnlyAutoProperty
+        public int Value { [ObservableAsProperty] get; }
+        public int Minimum { [ObservableAsProperty] get; }
+        public int Maximum { [ObservableAsProperty] get; }
+        public bool IsIndeterminate { [ObservableAsProperty] get; }
+        public bool DisplayPercent { [ObservableAsProperty] get; }
+        public string BarTitle { [ObservableAsProperty] get; }
+        public string BarComment { [ObservableAsProperty] get; }
+        public string ProgressText { [ObservableAsProperty] get; }
+        // ReSharper restore UnassignedGetOnlyAutoProperty
+        
 
         //public ReadOnlyReactiveProperty<bool> CanAbort => _model.CanAbort.ToReadOnlyReactiveProperty();
 
@@ -33,54 +36,70 @@ namespace DIPOL_UF.ViewModels
 
         public ProgressBarViewModel(ProgressBar model) : base(model)
         {
-            _value = PropagateProperty(x => x.Value, nameof(Value));
+            
+            PropagateReadOnlyProperty(this, x => x.Value, y => y.Value);
+            PropagateReadOnlyProperty(this, x => x.Minimum, y => y.Minimum);
+            PropagateReadOnlyProperty(this, x => x.Maximum, y => y.Maximum);
+            PropagateReadOnlyProperty(this, x => x.IsIndeterminate, y => y.IsIndeterminate);
+            PropagateReadOnlyProperty(this, x => x.BarTitle, y => y.BarTitle);
+            PropagateReadOnlyProperty(this, x => x.BarComment, y => y.BarComment);
+            PropagateReadOnlyProperty(this, x => x.DisplayPercents, y => y.DisplayPercent);
 
-            //Value = new ObservableAsPropertyHelper<int>(Model.WhenPropertyChanged(x => x.Value).Select(x => x.Value),
-            //    x => this.RaisePropertyChanged(nameof(Value)),
-            //    x => this.RaisePropertyChanging(nameof(Value)));
-            //    IsIndeterminate = _model.IsIndeterminate.ToReadOnlyReactiveProperty();
-            //    BarTitle = _model.BarTitle.ToReadOnlyReactiveProperty();
-            //    BarComment = _model.BarComment.ToReadOnlyReactiveProperty();
-
-            //    //Value = _model.Value.ToReadOnlyReactiveProperty();
-            //    //Value.Subscribe(x => Console.WriteLine($"Value is {x}"));
-
-            //    //ReSharper disable once InvokeAsExtensionMethod
-            //    ProgressText = Value.CombineLatest(
-            //                            Minimum, Maximum, _model.DisplayPercents, IsIndeterminate,
-            //                            ProgressTextFormatter)
-            //                        .ToReadOnlyReactiveProperty();
-
-            //    ProgressText.Subscribe(Console.WriteLine);
+            PropagateReadOnlyProperty(
+                this,
+                this.WhenAnyPropertyChanged(
+                    nameof(Value), nameof(Minimum),
+                    nameof(Maximum), nameof(IsIndeterminate), 
+                    nameof(DisplayPercent), nameof(HasErrors)),
+                x => x.ProgressText,
+                ProgressTextFormatter);
+                
 
             HookValidators();
         }
 
-        private static string ProgressTextFormatter(int value, int min, int max, bool displayPercent, bool isIndeterminate)
+        protected override void HookValidators()
         {
-            if (isIndeterminate)
+            base.HookValidators();
+
+            CreateValidator(
+                Model.WhenErrorsChangedTyped
+                    .Where(x => x.Property == nameof(Value))
+                    .Select(x => (x.Type, x.Message)),
+                nameof(ProgressText));
+
+        }
+
+        private static string ProgressTextFormatter(ProgressBarViewModel @this)
+        {
+            if (@this.HasErrors)
+                return Localization.ProgressBar_IsInvalidString;
+
+            if (@this.IsIndeterminate)
                 return Localization.ProgressBar_IndeterminateString;
 
-            if (displayPercent)
-                return string.Format(Localization.ProgressBar_DisplayPercentString, 100.0 * value / (max - min));
+            if (@this.DisplayPercent)
+                return string.Format(
+                    Localization.ProgressBar_DisplayPercentString, 
+                    100.0 * @this.Value / (@this.Maximum - @this.Minimum));
 
             var format = "";
-            var decDigit = new[] {value, min, max}
+            var decDigit = new[] { @this.Value, @this.Minimum, @this.Maximum }
                        .Select(x => Math.Log10(x))
                        .Select(x => new {Log = x, Ceiling = Math.Ceiling(x)})
                        .Select(x => x.Log.AlmostEqualRelative(x.Ceiling) ? x.Ceiling + 1 : x.Ceiling)
                        .Max();
 
-            if (min == 0)
+            if (@this.Minimum == 0)
             {
                 format = string.Format(Localization.ProgressBar_DisplayCountFormatString, decDigit);
 
-                return string.Format(format, value, max);
+                return string.Format(format, @this.Value, @this.Maximum);
             }
 
             format = string.Format(Localization.ProgressBar_DisplayRangeFormatString, decDigit);
 
-            return string.Format(format, value, min, max);
+            return string.Format(format, @this.Value, @this.Minimum, @this.Maximum);
         }
     }
 }

@@ -300,6 +300,9 @@
   <data name="ProgressBar_IndeterminateString" xml:space="preserve">
     <value />
   </data>
+  <data name="ProgressBar_IsInvalidString" xml:space="preserve">
+    <value />
+  </data>
   <data name="Slider_PixelToolTipFormat" xml:space="preserve">
     <value>{0:f0} pix</value>
     <comment>Nonlocalized general resource</comment>

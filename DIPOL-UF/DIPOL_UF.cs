@@ -76,65 +76,70 @@ namespace DIPOL_UF
             var applicationInstance = new App();
             applicationInstance.InitializeComponent();
 
-            var model = new ProgressBar();
-            model.WhenPropertyChanged(x => x.Value).Subscribe(x => Console.WriteLine($"Value is {x.Value}"));
+            var model = new ProgressBar
+            {
+                Maximum = 140,
+                Minimum = 30,
+                Value = 0,
+                BarTitle = "TestTitle",
+                BarComment = "TestComment"
+            };
 
+            model.WhenErrorsChanged
+              .Subscribe(x => Console.WriteLine(
+                  $"\t\t\t\tModel: {x.PropertyName}: " +
+                  $"{model.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
+            model.WhenAnyPropertyChanged(nameof(model.HasErrors))
+              .Subscribe(x => Console.WriteLine($"\t\t\t\tHas errors {x.HasErrors}"));
 
-            model.Maximum = 100;
-            model.Minimum = 0;
-            model.Value = 100;
-            model.BarTitle = "TestTitle";
-            model.BarComment = "TestComment";
+            model.WhenErrorsChanged.Where(x => x.PropertyName == nameof(model.Minimum))
+                 .Subscribe(x => Console.WriteLine(
+                     $"\t\t\t\t\tModel: {x.PropertyName}: " +
+                     $"{model.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
 
             var vm = new ProgressBarViewModel(model);
+            vm.WhenErrorsChanged
+              .Subscribe(x =>
+              {
+                  var msg = vm.GetTypedErrors(x.PropertyName).FirstOrDefault().Message;
+                  Console.WriteLine(
+                      $"VM: {x.PropertyName}: " +
+                      $"{msg}");
+              });
 
-            model.WhenPropertyChanged(x => x.HasErrors)
-                 .Subscribe(x => Console.WriteLine(x.Value ? "Errors" : "No Errors"));
+            vm.WhenAnyPropertyChanged(nameof(vm.HasErrors))
+              .Subscribe(x => Console.WriteLine($"VM Has errors {x.HasErrors}"));
 
-            Observable.FromEventPattern<DataErrorsChangedEventArgs>(
-                          x => model.ErrorsChanged += x,
-                          x => model.ErrorsChanged -= x)
-                      .Subscribe(x => Console.WriteLine(x.EventArgs.PropertyName));
+            vm.WhenErrorsChanged.Where(x => x.PropertyName == nameof(vm.Minimum))
+              .Subscribe(x => Console.WriteLine(
+                  $"VM: {x.PropertyName}: " +
+                  $"{vm.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
 
-            model.ErrorsChanged += (sender, args) => Console.WriteLine($"Event {args.PropertyName}");
-
-            //model.WhenPropertyChanged(x => x.Value)
-            //  .Subscribe(x => Console.WriteLine($"VM Value is {x.Value}"));
-
-            vm.WhenAnyPropertyChanged(nameof(vm.Value)).
-              Subscribe(x => Console.WriteLine($"\t\tVM Value is {x.Value}"));
-
-            vm.WhenPropertyChanged(x => x.HasErrors)
-                .Subscribe(x => Console.WriteLine("\t\tVM " + (x.Value ? "Errors" : "No Errors")));
-            Observable.FromEventPattern<DataErrorsChangedEventArgs>(
-                          x => vm.ErrorsChanged += x,
-                          x => vm.ErrorsChanged -= x)
-                      .Subscribe(x => Console.WriteLine("\t\tVM " + x.EventArgs.PropertyName));
-            vm.ErrorsChanged += (sender, args) => Console.WriteLine($"\t\tVM Event {args.PropertyName}");
 
             Task.Run(() =>
             {
-                while (!model.IsIndeterminate && model.Value < 116)
+                while (!model.IsIndeterminate && model.Value < 100)
                 {
                     model.Value++;
+                    if(model.Value == model.Minimum)
+                        Console.WriteLine("Correct values");
                     Task.Delay(TimeSpan.FromMilliseconds(100)).Wait();
                 }
             });
 
             Task.Run(() =>
             {
-                Task.Delay(TimeSpan.FromSeconds(1.5)).Wait();
-                //model.IsIndeterminate = true;
-                model.Value = 95;
+                Task.Delay(TimeSpan.FromSeconds(7)).Wait();
+                Console.WriteLine("\r\nTo indeterminate\r\n");
+                model.IsIndeterminate = true;
+                //model.Value = 55;
                 model.BarComment = "New comment";
                 Task.Delay(TimeSpan.FromSeconds(1)).Wait();
                 model.IsIndeterminate = false;
                 model.DisplayPercents = true;
 
-
-            }).Wait();
-            Console.ReadKey();
-            //applicationInstance.Run(new Views.ProgressWindow(vm));
+            });
+            applicationInstance.Run(new Views.ProgressWindow(vm));
         }
     }
 }

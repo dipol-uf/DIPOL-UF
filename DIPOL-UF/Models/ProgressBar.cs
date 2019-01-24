@@ -88,7 +88,8 @@ namespace DIPOL_UF.Models
         protected sealed override void HookValidators()
         {
             CreateValidator(
-                this.WhenAnyPropertyChanged(nameof(Value), nameof(Minimum), nameof(Maximum))
+                this.WhenAnyPropertyChanged(
+                        nameof(Value), nameof(Minimum), nameof(Maximum))
                     .Select(x => (
                         Type: nameof(Validate.ShouldFallWithinRange),
                          Message: Validate.ShouldFallWithinRange(x.Value, x.Minimum, x.Maximum))),
