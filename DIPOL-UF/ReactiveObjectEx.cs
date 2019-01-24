@@ -3,64 +3,38 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reactive.Subjects;
-using DIPOL_UF.Models;
-using DIPOL_UF.ViewModels;
-using DynamicData.Alias;
+using System.Reactive.Linq;
 using ReactiveUI;
 
-using PropertyErrorCache = DynamicData.SourceCache<(string ErrorType, string Message), string>;
-using GlobalErrorCache = DynamicData.SourceCache<(string Property, DynamicData.SourceCache<(string ErrorType, string Message), string> Errors), string>;
+using ValidationErrorsCache = DynamicData.SourceCache<(string Property, string Type, string Message), (string Property, string Type)>;
 
 namespace DIPOL_UF
 {
     public abstract class ReactiveObjectEx : ReactiveObject, INotifyDataErrorInfo, IDisposable
     {
-        private readonly GlobalErrorCache _observableErrors =
-            new GlobalErrorCache(x => x.Property);
+        private readonly ValidationErrorsCache _validationErrors =
+            new ValidationErrorsCache(x => (x.Property, x.Type));
+
         protected readonly List<IDisposable> _subscriptions = new List<IDisposable>();
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
         public bool IsDisposed { get; private set; }
-        public bool HasErrors => _observableErrors.KeyValues.Any(x => x.Value.Errors.KeyValues.Any());
+        public bool HasErrors => _validationErrors.Items.Any(x => !(x.Message is null));
 
         private void UpdateErrors(string error, string propertyName, string validatorName)
         {
             this.RaisePropertyChanging(nameof(HasErrors));
 
-            _observableErrors.Edit(global =>
+            _validationErrors.Edit(context =>
             {
-                var globalCollection = global.Lookup(propertyName);
-
-                // TODO: Localize exception
-                if(!globalCollection.HasValue)
-                    throw new InvalidOperationException("Poorly attached validator");
-
-                var value = globalCollection.Value;
-
-                value.Errors.Edit(local =>
-                {
-                    if (error is null)
-                        local.Remove(validatorName);
-                    else
-                        local.AddOrUpdate((validatorName, error));
-                });
-                global.AddOrUpdate(value);
-
+                context.AddOrUpdate((propertyName, validatorName, error));
             });
+
         }
         
         protected void CreateValidator(IObservable<string> validationSource, string propertyName, string validatorName)
         {
-            if (!_observableErrors.Keys.Contains(propertyName))
-            {
-                var value = (Property: propertyName, Errors: new PropertyErrorCache(x => x.ErrorType));
-               _observableErrors.Edit(global =>
-               {
-                   global.AddOrUpdate(value);
-               });
-            }
             validationSource
                 .Subscribe(x => UpdateErrors(x, propertyName, validatorName))
                 .AddTo(_subscriptions);
@@ -71,20 +45,38 @@ namespace DIPOL_UF
 
         protected virtual void HookValidators()
         {
-            _observableErrors.Connect()
-                             .Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
-                             .AddTo(_subscriptions);
+
+            var propertyChangedObservable =
+                _validationErrors.Connect()
+                                 .Select(x =>
+                                     x.Select(y => (y.Current.Property, y.Current.Message)).ToList())
+                                 .Select(x => Observable.For(x, Observable.Return))
+                                 .Merge()
+                                 .DistinctUntilChanged();
+
+            propertyChangedObservable.Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
+                                     .AddTo(_subscriptions);
+
+            propertyChangedObservable
+                .Subscribe(x => OnErrorsChanged(new DataErrorsChangedEventArgs(x.Property)))
+                .AddTo(_subscriptions);
+
+
         }
 
-        public virtual List<(string ErrorType, string Message)> GetTypedErrors(string propertyName)
+        public virtual List<(string Type, string Message)> GetTypedErrors(string propertyName)
         {
-            var result = _observableErrors.Lookup(propertyName);
-            return result.HasValue ? result.Value.Errors.Items.ToList() : null;
+            return _validationErrors.Items
+                                    .Where(x => x.Property == propertyName)
+                                    .Select(x => (x.Type, x.Message))
+                                    .ToList();
         }
 
-        public virtual IEnumerable GetErrors(string propertyName) {
-            var result = _observableErrors.Lookup(propertyName);
-            return result.HasValue ? result.Value.Errors.Items.Select(x => x.Message).ToList() : null;
+        public virtual IEnumerable GetErrors(string propertyName)
+        {
+            return _validationErrors.Items
+                                    .Where(x => x.Property == propertyName)
+                                    .Select(x => x.Message);
         }
         
         public virtual void Dispose(bool disposing)
@@ -95,9 +87,8 @@ namespace DIPOL_UF
                 {
                     foreach (var sub in _subscriptions)
                         sub.Dispose();
-                    foreach(var (_, error) in _observableErrors.Items)
-                        error.Dispose();
-                    _observableErrors.Dispose();
+
+                    _validationErrors.Dispose();
                 }
 
                 IsDisposed = true;
