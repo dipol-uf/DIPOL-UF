@@ -70,6 +70,13 @@ namespace DIPOL_UF.Models
             HookObservers();
         }
 
+        private void Reset()
+        {
+            Minimum = 0;
+            Maximum = 100;
+            Value = 0;
+        }
+
         private void HookObservers()
         {
             this.WhenAnyPropertyChanged(nameof(IsIndeterminate))
@@ -82,27 +89,37 @@ namespace DIPOL_UF.Models
         {
             CreateValidator(
                 this.WhenAnyPropertyChanged(nameof(Value), nameof(Minimum), nameof(Maximum))
-                    .Select(x => Validate.ShouldFallWithinRange(x.Value, x.Minimum, x.Maximum)),
-                nameof(Value), nameof(Validate.ShouldFallWithinRange));
+                    .Select(x => (
+                        Type: nameof(Validate.ShouldFallWithinRange),
+                         Message: Validate.ShouldFallWithinRange(x.Value, x.Minimum, x.Maximum))),
+                nameof(Value));
 
             CreateValidator(
                 this.WhenAnyPropertyChanged(nameof(Minimum))
-                    .Select(x => Validate.CannotBeGreaterThan(x.Minimum, x.Maximum)),
-                nameof(Minimum), nameof(Validate.CannotBeGreaterThan));
+                    .Select(x => (
+                        Type: nameof(Validate.CannotBeGreaterThan),
+                        Message: Validate.CannotBeGreaterThan(x.Minimum, x.Maximum))),
+                nameof(Minimum));
 
             CreateValidator(
                 this.WhenAnyPropertyChanged(nameof(Maximum))
-                    .Select(x => Validate.CannotBeLessThan(x.Maximum, x.Minimum)),
-                nameof(Maximum), nameof(Validate.CannotBeLessThan));
+                    .Select(x => (
+                        Type: nameof(Validate.CannotBeLessThan),
+                        Message: Validate.CannotBeLessThan(x.Maximum, x.Minimum))),
+                nameof(Maximum));
 
             base.HookValidators();
         }
-        
-        private void Reset()
+
+        public override void Dispose(bool disposing)
         {
-            Minimum = 0;
-            Maximum = 100;
-            Value = 0;
+            if (!IsDisposed && disposing)
+            {
+                CancelCommand.Dispose();
+                WindowDragCommand.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
 
         public bool TryIncrement()

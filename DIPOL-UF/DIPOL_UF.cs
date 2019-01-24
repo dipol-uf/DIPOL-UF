@@ -77,9 +77,9 @@ namespace DIPOL_UF
             applicationInstance.InitializeComponent();
 
             var model = new ProgressBar();
-            //model.WhenPropertyChanged(x => x.Value).Subscribe(x => Console.WriteLine($"Value is {x.Value}"));
-           
-            
+            model.WhenPropertyChanged(x => x.Value).Subscribe(x => Console.WriteLine($"Value is {x.Value}"));
+
+
             model.Maximum = 100;
             model.Minimum = 0;
             model.Value = 100;
@@ -89,26 +89,28 @@ namespace DIPOL_UF
             var vm = new ProgressBarViewModel(model);
 
             model.WhenPropertyChanged(x => x.HasErrors)
-                 .Subscribe(x => Console.WriteLine(x.Value ? "VM Errors" : "VM No Errors"));
+                 .Subscribe(x => Console.WriteLine(x.Value ? "Errors" : "No Errors"));
+
             Observable.FromEventPattern<DataErrorsChangedEventArgs>(
                           x => model.ErrorsChanged += x,
                           x => model.ErrorsChanged -= x)
-                      .Subscribe(x => Console.WriteLine($"Errors changed on {x.EventArgs.PropertyName}:" +
-                                                        $"{model.GetTypedErrors(x.EventArgs.PropertyName).Count}"));
+                      .Subscribe(x => Console.WriteLine(x.EventArgs.PropertyName));
 
-            //Observable.FromEventPattern<DataErrorsChangedEventArgs>(
-            //              x => vm.ErrorsChanged += x,
-            //              x => vm.ErrorsChanged -= x)
-            //          .Subscribe(x => Console.WriteLine($"VM Errors changed on {x.EventArgs.PropertyName}:" +
-            //                                            $"{vm.GetTypedErrors(x.EventArgs.PropertyName).Count}"));
+            model.ErrorsChanged += (sender, args) => Console.WriteLine($"Event {args.PropertyName}");
 
-            //vm.ErrorsChanged += (sender, args) => Console.WriteLine($"vm: {args.PropertyName}");
+            //model.WhenPropertyChanged(x => x.Value)
+            //  .Subscribe(x => Console.WriteLine($"VM Value is {x.Value}"));
 
-            vm.WhenPropertyChanged(x => x.Value)
-              .Subscribe(x => Console.WriteLine($"VM Value is {x.Value.Value}"));
+            vm.WhenAnyPropertyChanged(nameof(vm.Value)).
+              Subscribe(x => Console.WriteLine($"\t\tVM Value is {x.Value}"));
 
-
-            //var vm = new ProgressBarViewModel(model);
+            vm.WhenPropertyChanged(x => x.HasErrors)
+                .Subscribe(x => Console.WriteLine("\t\tVM " + (x.Value ? "Errors" : "No Errors")));
+            Observable.FromEventPattern<DataErrorsChangedEventArgs>(
+                          x => vm.ErrorsChanged += x,
+                          x => vm.ErrorsChanged -= x)
+                      .Subscribe(x => Console.WriteLine("\t\tVM " + x.EventArgs.PropertyName));
+            vm.ErrorsChanged += (sender, args) => Console.WriteLine($"\t\tVM Event {args.PropertyName}");
 
             Task.Run(() =>
             {

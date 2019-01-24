@@ -19,6 +19,13 @@ namespace DIPOL_UF
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
+        internal IObservable<(string Property, string Type, string Message)> WhenErrorsChangedTyped
+        {
+            get;
+            private set;
+        }
+
+        public IObservable<DataErrorsChangedEventArgs> WhenErrorsChanged { get; private set; }
         public bool IsDisposed { get; private set; }
         public bool HasErrors => _validationErrors.Items.Any(x => !(x.Message is null));
 
@@ -33,10 +40,10 @@ namespace DIPOL_UF
 
         }
         
-        protected void CreateValidator(IObservable<string> validationSource, string propertyName, string validatorName)
+        protected void CreateValidator(IObservable<(string Type, string Message)> validationSource, string propertyName)
         {
             validationSource
-                .Subscribe(x => UpdateErrors(x, propertyName, validatorName))
+                .Subscribe(x => UpdateErrors(x.Message, propertyName, x.Type))
                 .AddTo(_subscriptions);
         }
 
@@ -46,20 +53,25 @@ namespace DIPOL_UF
         protected virtual void HookValidators()
         {
 
-            var propertyChangedObservable =
+            WhenErrorsChangedTyped =
+                _validationErrors.Connect()
+                                 .Select(x => Observable.For(x, y => Observable.Return(y.Current)))
+                                 .Merge()
+                                 .DistinctUntilChanged();
+
+            WhenErrorsChanged =
                 _validationErrors.Connect()
                                  .Select(x =>
                                      x.Select(y => (y.Current.Property, y.Current.Message)).ToList())
                                  .Select(x => Observable.For(x, Observable.Return))
                                  .Merge()
-                                 .DistinctUntilChanged();
+                                 .DistinctUntilChanged()
+                                 .Select(x => new DataErrorsChangedEventArgs(x.Property));
 
-            propertyChangedObservable.Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
+            WhenErrorsChanged.Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
                                      .AddTo(_subscriptions);
 
-            propertyChangedObservable
-                .Subscribe(x => OnErrorsChanged(new DataErrorsChangedEventArgs(x.Property)))
-                .AddTo(_subscriptions);
+            WhenErrorsChanged.Subscribe(OnErrorsChanged).AddTo(_subscriptions);
 
 
         }
