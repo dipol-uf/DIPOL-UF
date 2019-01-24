@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -76,29 +77,53 @@ namespace DIPOL_UF
             applicationInstance.InitializeComponent();
 
             var model = new ProgressBar();
-            model.WhenPropertyChanged(x => x.Value).Subscribe(x => Console.WriteLine($"Value is {x.Value}"));
-            model.WhenPropertyChanged(x => x.HasErrors)
-                 .Subscribe(x => Console.WriteLine(x.Value ? "Errors" : "No Errors"));
+            //model.WhenPropertyChanged(x => x.Value).Subscribe(x => Console.WriteLine($"Value is {x.Value}"));
+           
+            
             model.Maximum = 100;
-            model.Minimum = 50;
-            model.Value = -201;
+            model.Minimum = 0;
+            model.Value = 100;
             model.BarTitle = "TestTitle";
             model.BarComment = "TestComment";
-            //model.Value = 67;
+
+            var vm = new ProgressBarViewModel(model);
+
+            model.WhenPropertyChanged(x => x.HasErrors)
+                 .Subscribe(x => Console.WriteLine(x.Value ? "VM Errors" : "VM No Errors"));
+            Observable.FromEventPattern<DataErrorsChangedEventArgs>(
+                          x => model.ErrorsChanged += x,
+                          x => model.ErrorsChanged -= x)
+                      .Subscribe(x => Console.WriteLine($"Errors changed on {x.EventArgs.PropertyName}:" +
+                                                        $"{model.GetTypedErrors(x.EventArgs.PropertyName).Count}"));
+
+            //Observable.FromEventPattern<DataErrorsChangedEventArgs>(
+            //              x => vm.ErrorsChanged += x,
+            //              x => vm.ErrorsChanged -= x)
+            //          .Subscribe(x => Console.WriteLine($"VM Errors changed on {x.EventArgs.PropertyName}:" +
+            //                                            $"{vm.GetTypedErrors(x.EventArgs.PropertyName).Count}"));
+
+            //vm.ErrorsChanged += (sender, args) => Console.WriteLine($"vm: {args.PropertyName}");
+
+            vm.WhenPropertyChanged(x => x.Value)
+              .Subscribe(x => Console.WriteLine($"VM Value is {x.Value.Value}"));
 
 
             //var vm = new ProgressBarViewModel(model);
 
             Task.Run(() =>
             {
-                while (!model.IsIndeterminate && model.Value++ < model.Maximum)
-                    Task.Delay(TimeSpan.FromMilliseconds(200)).Wait();
+                while (!model.IsIndeterminate && model.Value < 116)
+                {
+                    model.Value++;
+                    Task.Delay(TimeSpan.FromMilliseconds(100)).Wait();
+                }
             });
 
             Task.Run(() =>
             {
-                Task.Delay(TimeSpan.FromSeconds(5)).Wait();
-                model.IsIndeterminate = true;
+                Task.Delay(TimeSpan.FromSeconds(1.5)).Wait();
+                //model.IsIndeterminate = true;
+                model.Value = 95;
                 model.BarComment = "New comment";
                 Task.Delay(TimeSpan.FromSeconds(1)).Wait();
                 model.IsIndeterminate = false;
@@ -106,7 +131,7 @@ namespace DIPOL_UF
 
 
             }).Wait();
-
+            Console.ReadKey();
             //applicationInstance.Run(new Views.ProgressWindow(vm));
         }
     }

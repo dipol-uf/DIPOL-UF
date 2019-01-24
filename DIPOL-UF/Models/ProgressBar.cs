@@ -43,15 +43,16 @@ namespace DIPOL_UF.Models
         {
             Reset();
 
-            MaximumReached = this.WhenAnyValue(x => x.Value, y => y.Maximum)
-                                 .Where(x => x.Item1 == x.Item2)
-                                 .Select(x => x.Item1);
-            MinimumReached = this.WhenAnyValue(x => x.Value, y => y.Minimum)
-                                 .Where(x => x.Item1 == x.Item2)
-                                 .Select(x => x.Item1);
+            MaximumReached = this.WhenAnyPropertyChanged(nameof(Value), nameof(Maximum))
+                                 .Where(x => x.Value == x.Maximum)
+                                 .Select(x => x.Value);
+            MinimumReached = this.WhenAnyPropertyChanged(nameof(Value), nameof(Minimum))
+                                 .Where(x => x.Value == x.Minimum)
+                                 .Select(x => x.Value);
 
 
-            WindowDragCommand = ReactiveCommand.Create<object>(Commands.WindowDragCommandProvider.Execute);
+            WindowDragCommand = ReactiveCommand.Create<object>(
+                Commands.WindowDragCommandProvider.Execute);
             CancelCommand = ReactiveCommand.Create<object>(param =>
             {
                 if (param is Window w)
@@ -61,7 +62,8 @@ namespace DIPOL_UF.Models
                     IsAborted = true;
                     w.Close();
                 }
-            }, this.WhenAnyPropertyChanged(nameof(CanAbort), nameof(IsAborted)).Select(x => x.CanAbort && !x.IsAborted));
+            }, this.WhenAnyPropertyChanged(nameof(CanAbort), nameof(IsAborted))
+                   .Select(x => x.CanAbort && !x.IsAborted));
 
 
             HookValidators();
@@ -70,7 +72,7 @@ namespace DIPOL_UF.Models
 
         private void HookObservers()
         {
-            this.WhenPropertyChanged(x => x.IsIndeterminate)
+            this.WhenAnyPropertyChanged(nameof(IsIndeterminate))
                 .DistinctUntilChanged()
                 .Subscribe(x => Reset())
                 .AddTo(_subscriptions);
@@ -78,21 +80,20 @@ namespace DIPOL_UF.Models
 
         protected sealed override void HookValidators()
         {
+            CreateValidator(
+                this.WhenAnyPropertyChanged(nameof(Value), nameof(Minimum), nameof(Maximum))
+                    .Select(x => Validate.ShouldFallWithinRange(x.Value, x.Minimum, x.Maximum)),
+                nameof(Value), nameof(Validate.ShouldFallWithinRange));
 
-            this.WhenAnyPropertyChanged(nameof(Value), nameof(Minimum), nameof(Maximum))
-                .Select(x => Validate.ShouldFallWithinRange(x.Value, x.Minimum, x.Maximum))
-                .Subscribe(x => UpdateErrors(x, nameof(Value), nameof(Validate.ShouldFallWithinRange)))
-                .AddTo(_subscriptions);
+            CreateValidator(
+                this.WhenAnyPropertyChanged(nameof(Minimum))
+                    .Select(x => Validate.CannotBeGreaterThan(x.Minimum, x.Maximum)),
+                nameof(Minimum), nameof(Validate.CannotBeGreaterThan));
 
-            this.WhenPropertyChanged(x => x.Minimum)
-                .Select(x => Validate.CannotBeGreaterThan(x.Value, Maximum))
-                .Subscribe(x => UpdateErrors(x, nameof(Minimum), nameof(Validate.CannotBeGreaterThan)))
-                .AddTo(_subscriptions);
-
-            this.WhenPropertyChanged(x => x.Maximum)
-                .Select(x => Validate.CannotBeLessThan(x.Value, Minimum))
-                .Subscribe(x => UpdateErrors(x, nameof(Maximum), nameof(Validate.CannotBeLessThan)))
-                .AddTo(_subscriptions);
+            CreateValidator(
+                this.WhenAnyPropertyChanged(nameof(Maximum))
+                    .Select(x => Validate.CannotBeLessThan(x.Maximum, x.Minimum)),
+                nameof(Maximum), nameof(Validate.CannotBeLessThan));
 
             base.HookValidators();
         }
