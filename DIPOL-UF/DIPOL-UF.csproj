@@ -246,6 +246,7 @@
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="ViewModels\ConnectedCamerasTreeViewModel.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
+    <Compile Include="ViewModels\ReactiveViewModel.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />
     <Compile Include="Views\AcquisitionSettingsView.xaml.cs">
       <DependentUpon>AcquisitionSettingsView.xaml</DependentUpon>

@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Windows.Forms.VisualStyles;
 using DIPOL_UF.Properties;
+using DynamicData.Binding;
 using MathNet.Numerics;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using ProgressBar = DIPOL_UF.Models.ProgressBar;
 
 namespace DIPOL_UF.ViewModels
 {
-    internal class ProgressBarViewModel // : ViewModel<Models.ProgressBar>
+    internal sealed class ProgressBarViewModel : ReactiveViewModel<ProgressBar>
     {
-
-        private readonly ProgressBar _model;
-
+        public ObservableAsPropertyHelper<int> Value { get; }
         //public ReactiveProperty<int> Value => _model.Value;
         //public ReactiveProperty<int> Minimum => _model.Minimum;
         //public ReactiveProperty<int> Maximum => _model.Maximum;
@@ -26,10 +29,15 @@ namespace DIPOL_UF.ViewModels
 
         //public ReactiveCommand CancelCommand => _model.CancelCommand;
 
-        public ProgressBarViewModel(ProgressBar model)
+        public ProgressBarViewModel(ProgressBar model) : base(model)
         {
-            _model = model ?? throw new ArgumentNullException(nameof(model));
+            Value = Model.WhenAnyPropertyChanged(nameof(Model.Value))
+                 .Select(x => x.Value)
+                 .ToProperty(this, nameof(Value));
 
+            //Value = new ObservableAsPropertyHelper<int>(Model.WhenPropertyChanged(x => x.Value).Select(x => x.Value),
+            //    x => this.RaisePropertyChanged(nameof(Value)),
+            //    x => this.RaisePropertyChanging(nameof(Value)));
             //    IsIndeterminate = _model.IsIndeterminate.ToReadOnlyReactiveProperty();
             //    BarTitle = _model.BarTitle.ToReadOnlyReactiveProperty();
             //    BarComment = _model.BarComment.ToReadOnlyReactiveProperty();
@@ -45,7 +53,7 @@ namespace DIPOL_UF.ViewModels
 
             //    ProgressText.Subscribe(Console.WriteLine);
 
-
+            HookValidators();
         }
 
         private static string ProgressTextFormatter(int value, int min, int max, bool displayPercent, bool isIndeterminate)
