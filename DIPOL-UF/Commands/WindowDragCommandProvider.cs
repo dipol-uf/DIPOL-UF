@@ -18,8 +18,10 @@ namespace DIPOL_UF.Commands
     {
         public static void Execute(object parameter)
         {
+            if (parameter is Window window)
+                window.DragMove();
 
-            if (parameter is CommandEventArgs<MouseButtonEventArgs> commandArgs &&
+            else if (parameter is CommandEventArgs<MouseButtonEventArgs> commandArgs &&
                 commandArgs.Sender is FrameworkElement sender)
             {
                 var parent = VisualTreeHelper.GetParent(sender);
@@ -32,7 +34,6 @@ namespace DIPOL_UF.Commands
                         (parent as Window).DragMove();
                 }
             }
-
 
         }
 
