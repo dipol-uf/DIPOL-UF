@@ -1,6 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq.Expressions;
 using System.Reactive.Linq;
+using DynamicData.Binding;
+using ReactiveUI;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -12,19 +15,21 @@ namespace DIPOL_UF.ViewModels
             Model = model ?? throw new ArgumentNullException(nameof(model));
         }
 
-        protected override void HookValidators()
+        protected ObservableAsPropertyHelper<TProperty> PropagateProperty<TProperty>(
+            Expression<Func<TModel, TProperty>> sourceProperty,
+            string targetProperty)
         {
-            //Observable.FromEventPattern<DataErrorsChangedEventArgs>(
-            //              x => Model.ErrorsChanged += x,
-            //              x => Model.ErrorsChanged -= x)
-            //          .Subscribe(errorInfo =>
-            //          {
-            //              foreach (var (errorType, message) in Model.GetTypedErrors(errorInfo.EventArgs.PropertyName))
-            //                  UpdateErrors(message, errorInfo.EventArgs.PropertyName, errorType);
-            //          })
-            //          .AddTo(_subscriptions);
+            var property = Model.WhenPropertyChanged(sourceProperty)
+                                .Select(x => x.Value)
+                                .ToProperty(this, targetProperty);
 
-            //base.HookValidators();
+            var name = sourceProperty.Body.GetMemberInfo().Name;
+            CreateValidator(
+                Model.WhenErrorsChangedTyped.Where(x => x.Property == name)
+                     .Select(x => (x.Type, x.Message)),
+                targetProperty);
+
+            return property;
         }
     }
 }

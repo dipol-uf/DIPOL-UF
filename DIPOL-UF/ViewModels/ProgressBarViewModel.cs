@@ -13,7 +13,9 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class ProgressBarViewModel : ReactiveViewModel<ProgressBar>
     {
-        public ObservableAsPropertyHelper<int> Value { get; }
+        private readonly ObservableAsPropertyHelper<int> _value;
+
+        public int Value => _value.Value;
         //public ReactiveProperty<int> Value => _model.Value;
         //public ReactiveProperty<int> Minimum => _model.Minimum;
         //public ReactiveProperty<int> Maximum => _model.Maximum;
@@ -31,9 +33,7 @@ namespace DIPOL_UF.ViewModels
 
         public ProgressBarViewModel(ProgressBar model) : base(model)
         {
-            Value = Model.WhenAnyPropertyChanged(nameof(Model.Value))
-                 .Select(x => x.Value)
-                 .ToProperty(this, nameof(Value));
+            _value = PropagateProperty(x => x.Value, nameof(Value));
 
             //Value = new ObservableAsPropertyHelper<int>(Model.WhenPropertyChanged(x => x.Value).Select(x => x.Value),
             //    x => this.RaisePropertyChanged(nameof(Value)),
