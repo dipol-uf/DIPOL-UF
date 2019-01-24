@@ -49,25 +49,16 @@ namespace DIPOL_UF.ViewModels
                 this,
                 this.WhenAnyPropertyChanged(
                     nameof(Value), nameof(Minimum),
-                    nameof(Maximum), nameof(IsIndeterminate), 
+                    nameof(Maximum), nameof(IsIndeterminate),
                     nameof(DisplayPercent), nameof(HasErrors)),
                 x => x.ProgressText,
-                ProgressTextFormatter);
+                ProgressTextFormatter,
+                Model.WhenErrorsChangedTyped
+                     .Where(x => x.Property == nameof(Value))
+                     .Select(x => (x.Type, x.Message)));
                 
 
             HookValidators();
-        }
-
-        protected override void HookValidators()
-        {
-            base.HookValidators();
-
-            CreateValidator(
-                Model.WhenErrorsChangedTyped
-                    .Where(x => x.Property == nameof(Value))
-                    .Select(x => (x.Type, x.Message)),
-                nameof(ProgressText));
-
         }
 
         private static string ProgressTextFormatter(ProgressBarViewModel @this)
