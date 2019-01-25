@@ -14,8 +14,8 @@ namespace DIPOL_UF.Models
     internal class ProgressBar : ReactiveObjectEx
     {
         
-        public ReactiveCommand<Window, Unit> WindowDragCommand { get; }
-        public ReactiveCommand<Window, Unit> CancelCommand { get; }
+        public ReactiveCommand<Window, Unit> WindowDragCommand { get; private set; }
+        public ReactiveCommand<Window, Unit> CancelCommand { get; private set; }
 
         [Reactive]
         public int Minimum { get; set; }
@@ -36,35 +36,16 @@ namespace DIPOL_UF.Models
         [Reactive]
         public bool CanAbort { get; set; }
 
-        public IObservable<int> MaximumReached { get; }
-        public IObservable<int> MinimumReached { get; }
+        public IObservable<int> MaximumReached { get; private set;}
+        public IObservable<int> MinimumReached { get; private set; }
 
 
         public ProgressBar()
         {
             Reset();
 
-            MaximumReached = this.WhenAnyPropertyChanged(nameof(Value), nameof(Maximum))
-                                 .Where(x => x.Value == x.Maximum)
-                                 .Select(x => x.Value);
-            MinimumReached = this.WhenAnyPropertyChanged(nameof(Value), nameof(Minimum))
-                                 .Where(x => x.Value == x.Minimum)
-                                 .Select(x => x.Value);
-
-
-            WindowDragCommand = ReactiveCommand.Create<Window>(
-                Commands.WindowDragCommandProvider.Execute);
-            CancelCommand = ReactiveCommand.Create<Window>(param =>
-            {
-                if (Helper.IsDialogWindow(param))
-                    param.DialogResult = false;
-                IsAborted = true;
-                param.Close();
-            }, this.WhenAnyPropertyChanged(nameof(CanAbort), nameof(IsAborted))
-                     .Select(x => x.CanAbort && !x.IsAborted)
-                     .ObserveOnUi());
             
-
+            InitializeCommands();
             HookValidators();
             HookObservers();
         }
@@ -76,8 +57,31 @@ namespace DIPOL_UF.Models
             Value = 0;
         }
 
+        private void InitializeCommands()
+        {
+            WindowDragCommand = ReactiveCommand.Create<Window>(
+                Commands.WindowDragCommandProvider.Execute);
+            CancelCommand = ReactiveCommand.Create<Window>(param =>
+            {
+                if (Helper.IsDialogWindow(param))
+                    param.DialogResult = false;
+                IsAborted = true;
+                param.Close();
+            }, this.WhenAnyPropertyChanged(nameof(CanAbort), nameof(IsAborted))
+                     .Select(x => x.CanAbort && !x.IsAborted)
+                     .ObserveOnUi());
+        }
+
         private void HookObservers()
         {
+            MaximumReached = this.WhenAnyPropertyChanged(nameof(Value), nameof(Maximum))
+                                 .Where(x => x.Value == x.Maximum)
+                                 .Select(x => x.Value);
+            MinimumReached = this.WhenAnyPropertyChanged(nameof(Value), nameof(Minimum))
+                                 .Where(x => x.Value == x.Minimum)
+                                 .Select(x => x.Value);
+
+
             this.WhenAnyPropertyChanged(nameof(IsIndeterminate))
                 .DistinctUntilChanged()
                 .Subscribe(x => Reset())
