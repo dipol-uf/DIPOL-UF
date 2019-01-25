@@ -646,6 +646,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Host not found or unreachable.
+        /// </summary>
+        public static string RemoteConnection_UnreachableHostTitle {
+            get {
+                return ResourceManager.GetString("RemoteConnection_UnreachableHostTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0:f0} pix.
         /// </summary>
         public static string Slider_PixelToolTipFormat {

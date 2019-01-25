@@ -17,7 +17,9 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 
 using DIPOL_Remote.Classes;
+using DynamicData.Binding;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using MenuCollection = System.Collections.ObjectModel.ObservableCollection<DIPOL_UF.ViewModels.MenuItemViewModel>;
 using DelegateCommand = DIPOL_UF.Commands.DelegateCommand;
 
@@ -25,22 +27,17 @@ using static DIPOL_UF.DIPOL_UF_App;
 
 namespace DIPOL_UF.Models
 {
-    internal class DipolMainWindow : ObservableObject, IDisposable
+    internal class DipolMainWindow : ReactiveObjectEx, IDisposable
     {
         private readonly DispatcherTimer _uiStatusUpdateTimer;
 
         private bool? _camPanelAreAllSelected = false;
-        private bool _canConnect;
         private bool _isDisposed;
         private readonly string[] _remoteLocations
             = UiSettingsProvider.Settings.GetArray<string>("RemoteLocations")
                 ?? new string[0];
         private DipolClient[] _remoteClients;
 
-        /// <summary>
-        /// Connect button command
-        /// </summary>
-        private DelegateCommand _connectButtonCommand;
         /// <summary>
         /// Disconnect button command
         /// </summary>
@@ -95,7 +92,7 @@ namespace DIPOL_UF.Models
                 if (value != _menuBarItems)
                 {
                     _menuBarItems = value;
-                    RaisePropertyChanged();
+                    // RaisePropertyChanged();
                 }
             }
         }
@@ -111,7 +108,7 @@ namespace DIPOL_UF.Models
                 if (value != _connectedCams)
                 {
                     _connectedCams = value;
-                    RaisePropertyChanged();
+                    // RaisePropertyChanged();
                 }
             }
         }
@@ -131,7 +128,7 @@ namespace DIPOL_UF.Models
                 if (value != _camPanel)
                 {
                     _camPanel = value;
-                    RaisePropertyChanged();
+                    // RaisePropertyChanged();
                 }
             }
         }
@@ -146,7 +143,7 @@ namespace DIPOL_UF.Models
                 if (value != _camPanelSelectedItems)
                 {
                     _camPanelSelectedItems = value;
-                    RaisePropertyChanged();
+                    // RaisePropertyChanged();
                 }
             }
         }
@@ -158,23 +155,11 @@ namespace DIPOL_UF.Models
                 if (value != _camRealTimeStats)
                 {
                     _camRealTimeStats = value;
-                    RaisePropertyChanged();
+                    // RaisePropertyChanged();
                 }
             }
         }
 
-        public DelegateCommand ConnectButtonCommand
-        {
-            get => _connectButtonCommand;
-            set
-            {
-                if (value != _connectButtonCommand)
-                {
-                    _connectButtonCommand = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
         public DelegateCommand DisconnectButtonCommand
         {
             get => _disconnectButtonCommand;
@@ -183,7 +168,7 @@ namespace DIPOL_UF.Models
                 if (value != _disconnectButtonCommand)
                 {
                     _disconnectButtonCommand = value;
-                    RaisePropertyChanged();
+                    // RaisePropertyChanged();
                 }
             }
         }
@@ -195,7 +180,7 @@ namespace DIPOL_UF.Models
                 if (value != _camPanelSelectionChangedCommand)
                 {
                     _camPanelSelectionChangedCommand = value;
-                    RaisePropertyChanged();
+                    // RaisePropertyChanged();
                 }
             }
         }
@@ -207,7 +192,7 @@ namespace DIPOL_UF.Models
                 if (value != _camPanelSelectedAllCommand)
                 {
                     _camPanelSelectedAllCommand = value;
-                    RaisePropertyChanged();
+                    // RaisePropertyChanged();
                 }
             }
         }
@@ -220,7 +205,7 @@ namespace DIPOL_UF.Models
                 if (value != _camPanelAreAllSelected)
                 {
                     _camPanelAreAllSelected = value;
-                    RaisePropertyChanged();
+                    // RaisePropertyChanged();
                 }
             }
         }
@@ -232,28 +217,15 @@ namespace DIPOL_UF.Models
                 if (value != _isDisposed)
                 {
                     _isDisposed = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-        public bool CanConnect
-        {
-            get => _canConnect;
-            set
-            {
-                if (value != _canConnect)
-                {
-                    _canConnect = value;
-                    RaisePropertyChanged();
+                    // RaisePropertyChanged();
                 }
             }
         }
 
         public DipolMainWindow()
         {
-            InitializeMenu();
             InitializeCommands();
-
+            HookObservables();
             _uiStatusUpdateTimer = new DispatcherTimer(
                 TimeSpan.FromMilliseconds(UiSettingsProvider.Settings.Get("UICamStatusUpdateDelay", 1000)),
                 DispatcherPriority.DataBind,
@@ -294,121 +266,60 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private void InitializeMenu()
-        {
-
-        }
         private void InitializeCommands()
         {
             
-            ConnectButtonCommand = new DelegateCommand(
-                ConnectButtonCommandExecute,
-                (param) => CanConnect);
-            PropertyChanged += (sender, e) =>
-                {
-                    if (e.PropertyName == nameof(CanConnect))
-                    {
-                        if (Application.Current?.Dispatcher?.IsAvailable() ?? false)
-                            Application.Current?.Dispatcher?.Invoke(ConnectButtonCommand.OnCanExecuteChanged);
-                        else
-                            ConnectButtonCommand.OnCanExecuteChanged();
-                    }   
-                };
+
+            //ConnectButtonCommand = new DelegateCommand(
+            //    ConnectButtonCommandExecute,
+            //    (param) => CanConnect);
+            //PropertyChanged += (sender, e) =>
+            //    {
+            //        if (e.PropertyName == nameof(CanConnect))
+            //        {
+            //            if (Application.Current?.Dispatcher?.IsAvailable() ?? false)
+            //                Application.Current?.Dispatcher?.Invoke(ConnectButtonCommand.OnCanExecuteChanged);
+            //            else
+            //                ConnectButtonCommand.OnCanExecuteChanged();
+            //        }   
+            //    };
                     
-            DisconnectButtonCommand = new DelegateCommand(
-                DisconnectButtonCommandExecute,
-                CanDisconnectButtonCommandExecute);
-            _connectedCams.CollectionChanged += (sender, e) => DisconnectButtonCommand.OnCanExecuteChanged();
-            CameraPanelSelectedItems.CollectionChanged += (sender, e) 
-                => DisconnectButtonCommand.OnCanExecuteChanged();
+            //DisconnectButtonCommand = new DelegateCommand(
+            //    DisconnectButtonCommandExecute,
+            //    CanDisconnectButtonCommandExecute);
+            //_connectedCams.CollectionChanged += (sender, e) => DisconnectButtonCommand.OnCanExecuteChanged();
+            //CameraPanelSelectedItems.CollectionChanged += (sender, e) 
+            //    => DisconnectButtonCommand.OnCanExecuteChanged();
             
-            CameraPanelSelectionChangedCommand = new DelegateCommand(
-                CameraPanelSelectionChangedCommandExecute,
-                DelegateCommand.CanExecuteAlways);
+            //CameraPanelSelectionChangedCommand = new DelegateCommand(
+            //    CameraPanelSelectionChangedCommandExecute,
+            //    DelegateCommand.CanExecuteAlways);
 
 
-            CameraPanelSelectedAllCommand = new DelegateCommand(
-                CameraPanelSelectedAllCommandExecute,
-                DelegateCommand.CanExecuteAlways);
+            //CameraPanelSelectedAllCommand = new DelegateCommand(
+            //    CameraPanelSelectedAllCommandExecute,
+            //    DelegateCommand.CanExecuteAlways);
             #region v2_0
 
-            WindowLoadedCommand = ReactiveCommand.CreateFromObservable<Window, Unit>(WindowLoadedCommandExecute);
+            WindowLoadedCommand = ReactiveCommand.CreateFromObservable<Window, Unit>(
+                _ => Observable.FromAsync(InitializeRemoteSessionsAsync));
+
+            ConnectButtonCommand = ReactiveCommand.CreateFromObservable<Unit, Unit>(
+                _ => Observable.FromAsync(ConnectButtonCommandExecuteAsync),
+                this.WhenAnyPropertyChanged(nameof(CanConnect))
+                    .Select(x => x.CanConnect)
+                    .ObserveOnUi());
 
             #endregion
 
         }
 
-        private async Task InitializeRemoteSessionsAsync()
+        private void HookObservables()
         {
-            // TODO : FIX HERE
-
-            ProgressBar pb = null;
-            ProgressBarViewModel pbViewModel = null;
-
-            await Task.Factory.StartNew(() =>
-            {
-                pb = new ProgressBar()
-                {
-                    Minimum = 0,
-                    Maximum = 1,
-                    Value = 0,
-                    IsIndeterminate = true,
-                    CanAbort = false,
-                    BarTitle = "Connecting to remote locations..."
-                };
-                pbViewModel = new ProgressBarViewModel(pb);
-            }).ConfigureAwait(false);
-            
-            var pbWindow = Helper.ExecuteOnUi(() => new Views.ProgressWindow().WithDataContext(pbViewModel));
-
-            var connectedClients = new List<DipolClient>(_remoteLocations.Length);
-
-            void ConnectToClient() => Parallel.For(0, _remoteLocations.Length, (i) =>
-            {
-                try
-                {
-                    var client = new DipolClient(_remoteLocations[i],
-                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")),
-                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")),
-                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOperationTimeout", "00:00:30")),
-                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
-                    client.Connect();
-                    connectedClients.Add(client);
-                }
-                catch (System.ServiceModel.EndpointNotFoundException enfe)
-                {
-                    Helper.WriteLog(enfe.Message);
-                    if (Application.Current?.Dispatcher?.IsAvailable() ?? false)
-                        Application.Current?.Dispatcher?.Invoke(() =>
-                            MessageBox.Show(pbWindow,
-                                enfe.Message,
-                                "Host not found or unreachable",
-                                MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
-                    else
-                        MessageBox.Show(enfe.Message, "Host not found or unreachable", MessageBoxButton.OK,
-                            MessageBoxImage.Information, MessageBoxResult.OK);
-                }
-            });
-
-
-            Helper.ExecuteOnUi(pbWindow.Show);
-            await Task.Factory.StartNew(ConnectToClient).ConfigureAwait(false);
-
-            _remoteClients = connectedClients.ToArray();
-            pb.BarComment = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
-
-            await Task.Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")));
-
-            Helper.ExecuteOnUi(pbWindow.Close);
-
-            CanConnect = true;
-
-            await Task.Factory.StartNew(() =>
-            {
-                pbViewModel.Dispose();
-                pb.Dispose();
-            }).ConfigureAwait(false);
-
+            WindowLoadedCommand.IsExecuting
+                               .DistinctUntilChanged()
+                               .Select(x => !x)
+                               .ToPropertyEx(this, x => x.CanConnect);
         }
 
         private void CameraPanelSelectionChangedCommandExecute(object parameter)
@@ -433,19 +344,6 @@ namespace DIPOL_UF.Models
         }
         private bool CanDisconnectButtonCommandExecute(object parameter)
             => CameraPanelSelectedItems.Any(item => item.Value);
-        private void ConnectButtonCommandExecute(object parameter)
-        {
-            // TODO: Fix here
-            //var camQueryModel = new AvailableCamerasModel(_remoteClients);
-            //var viewModel = new AvailableCamerasViewModel(camQueryModel);
-            //var wind = new Views.AvailableCameraView(viewModel);
-            //if (parameter is Window owner)
-            //    wind.Owner = owner;
-            //CanConnect = false;
-            //wind.ShowDialog();
-            //CanConnect = true;
-
-        }
         /// <summary>
         /// Disconnects cams
         /// </summary>
@@ -487,7 +385,7 @@ namespace DIPOL_UF.Models
                     if (CameraPanelSelectedItems.TryGetValue(key, out var oldVal))
                         CameraPanelSelectedItems.TryUpdate(key, true, oldVal);
                 }
-                RaisePropertyChanged(nameof(CameraPanelSelectedItems));
+                this.RaisePropertyChanged(nameof(CameraPanelSelectedItems));
                 CameraPanelAreAllSelected = true;
             }
             else
@@ -497,7 +395,7 @@ namespace DIPOL_UF.Models
                     if (CameraPanelSelectedItems.TryGetValue(key, out var oldVal))
                         CameraPanelSelectedItems.TryUpdate(key, false, oldVal);
                 }
-                RaisePropertyChanged(nameof(CameraPanelSelectedItems));
+                this.RaisePropertyChanged(nameof(CameraPanelSelectedItems));
                 CameraPanelAreAllSelected = false;
             }
         }
@@ -534,7 +432,7 @@ namespace DIPOL_UF.Models
                         x.Value.Dispose();
                         MessageBox.Show(
                             Properties.Localization.MainWindow_MB_FailedToAddCamera_Message,
-                            Properties.Localization.MainWindow_MB_FailedToAddCamera_Message,
+                            Properties.Localization.MainWindow_MB_FailedToAddCamera_Caption,
                             MessageBoxButton.OK,
                             MessageBoxImage.Error);
                     }
@@ -592,8 +490,9 @@ namespace DIPOL_UF.Models
                 }
             }
 
-            _canConnect = true;
-            ConnectButtonCommand?.OnCanExecuteChanged();
+            // TODO : Check here
+            //_canConnect = true;
+            //ConnectButtonCommand?.OnCanExecuteChanged();
 
         }
 
@@ -680,7 +579,7 @@ namespace DIPOL_UF.Models
         private string GetCameraKey(CameraBase instance)
             => ConnectedCameras.FirstOrDefault(item => Equals(item.Value.Camera, instance)).Key;
         private void DispatcherTimerTickHandler(object sender, EventArgs e)
-            =>   RaisePropertyChanged(nameof(CameraRealTimeStats));
+            =>   this.RaisePropertyChanged(nameof(CameraRealTimeStats));
 
         private async Task DisposeCamera(string camId, bool removeSelection = true)
         {
@@ -704,13 +603,94 @@ namespace DIPOL_UF.Models
         }
 
         #region v2_0
-        public ReactiveCommand<Window, Unit> WindowLoadedCommand { get; private set; }
 
-        private IObservable<Unit> WindowLoadedCommandExecute(Window window)
+        [ObservableAsProperty]
+        // ReSharper disable UnassignedGetOnlyAutoProperty
+        public bool CanConnect { get;}
+        // ReSharper restore UnassignedGetOnlyAutoProperty
+
+        public ReactiveCommand<Window, Unit> WindowLoadedCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit> ConnectButtonCommand { get; private set; }
+
+        private async Task InitializeRemoteSessionsAsync()
         {
-            //return Observable.Return(Unit.Default);
-            return Observable.FromAsync(InitializeRemoteSessionsAsync);
+            ProgressBar pb = null;
+            ProgressBarViewModel pbViewModel = null;
+
+            await Task.Factory.StartNew(() =>
+            {
+                pb = new ProgressBar()
+                {
+                    Minimum = 0,
+                    Maximum = 1,
+                    Value = 0,
+                    IsIndeterminate = true,
+                    CanAbort = false,
+                    BarTitle = "Connecting to remote locations..."
+                };
+                pbViewModel = new ProgressBarViewModel(pb);
+            }).ConfigureAwait(false);
+            
+            var pbWindow = Helper.ExecuteOnUi(() => new Views.ProgressWindow().WithDataContext(pbViewModel));
+
+            var connectedClients = new List<DipolClient>(_remoteLocations.Length);
+
+            void ConnectToClient() => Parallel.For(0, _remoteLocations.Length, (i) =>
+            {
+                try
+                {
+                    var client = new DipolClient(_remoteLocations[i],
+                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")),
+                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")),
+                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOperationTimeout", "00:00:30")),
+                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
+                    client.Connect();
+                    connectedClients.Add(client);
+                }
+                catch (System.ServiceModel.EndpointNotFoundException endpointException)
+                {
+                    Helper.WriteLog(endpointException.Message);
+                    Helper.ExecuteOnUi(() => MessageBox.Show(pbWindow,
+                        endpointException.Message,
+                        Properties.Localization.RemoteConnection_UnreachableHostTitle,
+                        MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
+                }
+            });
+
+
+            Helper.ExecuteOnUi(pbWindow.Show);
+            await Task.Factory.StartNew(ConnectToClient).ConfigureAwait(false);
+
+            _remoteClients = connectedClients.ToArray();
+            pb.BarComment = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
+
+            await Task.Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")));
+
+            Helper.ExecuteOnUi(pbWindow.Close);
+
+            //CanConnect = true;
+
+            await Task.Factory.StartNew(() =>
+            {
+                pbViewModel.Dispose();
+                pb.Dispose();
+            }).ConfigureAwait(false);
+
         }
+        private Task ConnectButtonCommandExecuteAsync()
+        {
+            // TODO: Fix here
+            //var camQueryModel = new AvailableCamerasModel(_remoteClients);
+            //var viewModel = new AvailableCamerasViewModel(camQueryModel);
+            //var wind = new Views.AvailableCameraView(viewModel);
+            //if (parameter is Window owner)
+            //    wind.Owner = owner;
+            //CanConnect = false;
+            //wind.ShowDialog();
+            //CanConnect = true;
+            throw new NotImplementedException();
+        }
+        
         #endregion
     }
 }
