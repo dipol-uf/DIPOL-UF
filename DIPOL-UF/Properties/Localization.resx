@@ -144,6 +144,9 @@
   <data name="AvailableCameras_CameraIsUnavailable" xml:space="preserve">
     <value>Camera resource is unavailable.</value>
   </data>
+  <data name="AvailableCameras_CheckingConnection_BarTitle" xml:space="preserve">
+    <value>Checking connections...</value>
+  </data>
   <data name="AvailableCameras_Found" xml:space="preserve">
     <value>Found</value>
   </data>

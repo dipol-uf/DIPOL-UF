@@ -3,8 +3,10 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -14,7 +16,7 @@ namespace DIPOL_UF
 {
     public static class Helper
     {
-        public static Dispatcher UiDispatcher => 
+        public static Dispatcher UiDispatcher =>
             Application.Current?.Dispatcher
             ?? throw new InvalidOperationException("Dispatcher is unavailable.");
 
@@ -79,7 +81,7 @@ namespace DIPOL_UF
 
         public static void WriteLog(object entry)
             => WriteLog(entry.ToString());
-        
+
         public static string GetCameraHostName(string input)
         {
             string host = input.Split(':')[0];
@@ -127,7 +129,7 @@ namespace DIPOL_UF
 
         public static T ExecuteOnUi<T>(Func<T> action)
         {
-            if(UiDispatcher.CheckAccess())
+            if (UiDispatcher.CheckAccess())
                 return action();
             return Application.Current.Dispatcher.Invoke(action);
         }
@@ -245,7 +247,7 @@ namespace DIPOL_UF
             if (typeof(T).BaseType != typeof(Enum))
                 throw new ArgumentException($"Provided type {typeof(T)} should be {typeof(Enum)}-based ");
 
-            if(enm is Enum castEnm)
+            if (enm is Enum castEnm)
                 return Enum
                        .GetValues(typeof(T))
                        .OfType<T>()
@@ -276,5 +278,34 @@ namespace DIPOL_UF
             control.DataContext = dataContext;
             return control;
         }
+
+        public static ConfiguredTaskAwaitable RunNoMarshall(Action action)
+            => Task.Run(action).ConfigureAwait(false);
+
+        public static ConfiguredTaskAwaitable<T> RunNoMarshall<T>(Func<T> action)
+            => Task.Run(action).ConfigureAwait(false);
+
+        public static ConfiguredTaskAwaitable ExpectCancellation(
+            this Task input,
+            bool marshal = false)
+            => input.ContinueWith((task, param) =>
+                    {
+#if DEBUG
+                        if (!(task.Exception is null))
+                            WriteLog(task.Exception.Message);
+#endif
+                    }, null)
+                    .ConfigureAwait(marshal);
+
+        public static ConfiguredTaskAwaitable ExpectCancellation<T>(
+            this Task<T> input, bool marshal = false)
+            => input.ContinueWith((task, param) =>
+                    {
+#if DEBUG
+                        if (!(task.Exception is null))
+                            WriteLog(task.Exception.Message);
+#endif
+                    }, null, TaskContinuationOptions.OnlyOnCanceled)
+                    .ConfigureAwait(marshal);
     }
 }

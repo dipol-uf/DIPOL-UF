@@ -18,9 +18,11 @@ using System.Net.Mime;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.RightsManagement;
 using DIPOL_UF.Converters;
 using DIPOL_UF.ViewModels;
+using DIPOL_UF.Views;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -31,65 +33,54 @@ namespace DIPOL_UF.Models
     internal sealed class AvailableCamerasModel : ReactiveObjectEx
     {
 
-        internal enum ClosingState : byte
-        {
-            Canceled = 0,
-            Connect = 1,
-            ConnectAll = 2
-        }
-
-        private readonly ProgressBar _progressBar;
         private readonly DipolClient[] _remoteClients;
-        private readonly List<int> _nRemote;
 
         private readonly SourceCache<(string Id, CameraBase Camera), string> FoundDevices
             = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id);
 
-        private int _nLocal;
-       
         [Reactive]
-        public bool CanCancel { get; private set; }
+        public bool IsInteractive { get; private set; }
 
-        public ReactiveCommand<Window, Unit> WindowClosingCommand { get; }
-        public ReactiveCommand<Window, Unit> CancelButtonCommand { get; }
-        public ReactiveCommand<Window, Unit> WindowShownCommand { get; }
-        public ReactiveCommand<Unit, Unit> ConnectButtonCommand { get; }
-        public ReactiveCommand<Unit, Unit> ConnectAllButtonCommand { get; }
+        public object FoundCameras { get; private set; }
+
+        public ReactiveCommand<Window, Window> WindowContentRenderedCommand { get; private set; }
+        public ReactiveCommand<Window, Unit> WindowClosingCommand { get; private set; }
+        public ReactiveCommand<Window, Unit> CancelButtonCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit> QueryCamerasCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit> ConnectButtonCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit> ConnectAllButtonCommand { get; private set; }
         
         
         public AvailableCamerasModel(DipolClient[] remoteClients = null)
         {
             _remoteClients = remoteClients;
-            _nRemote = new List<int>(remoteClients?.Length ?? 0);
 
-            _progressBar = new ProgressBar()
-            {
-                Minimum = 0,
-                Value = 0,
-                Maximum = 1,
-                IsIndeterminate = true,
-                CanAbort = true,
-                DisplayPercents = false,
-                BarTitle = "Checking connections...."
-            };
-
-            _progressBar.DisposeWith(_subscriptions);
-
-            CancelButtonCommand = ReactiveCommand.Create<Window>(
-                x => x?.Close(),
-                this.WhenAnyPropertyChanged(nameof(CanCancel))
-                    .Select(x => x.CanCancel)
-                    .ObserveOnUi());
-
-            WindowShownCommand = ReactiveCommand.Create<Window>(
-                WindowShownCommandExecuteAsync);
-
+            InitializeCommands();
             HookValidators();
-            HookObservers();
+            HookObservables();
         }
 
         private void InitializeCommands()
         {
+            CancelButtonCommand =
+                ReactiveCommand.Create<Window>(
+                                   x => x?.Close())
+                               .DisposeWith(_subscriptions);
+
+            QueryCamerasCommand =
+                ReactiveCommand.CreateFromObservable<Unit, Unit>(
+                                  _ => Observable.FromAsync(QueryCamerasCommandExecuteAsync))
+                               .DisposeWith(_subscriptions);
+
+            WindowClosingCommand =
+                ReactiveCommand.Create<Window>(
+                                   WindowClosingCommandExecute)
+                               .DisposeWith(_subscriptions);
+
+            WindowContentRenderedCommand =
+                ReactiveCommand.Create<Window, Window>(x => x)
+                               .DisposeWith(_subscriptions);
+
             //WindowShownCommand = new DelegateCommand(
             //    (param) =>
             //    {
@@ -115,14 +106,14 @@ namespace DIPOL_UF.Models
             //        //_progressView.Show();
             //        // TODO: Fix here
             //        //_progressBar.AbortButtonClick += (sender, e) => CanCancel = true;
-                    
+
 
             //    },
             //    DelegateCommand.CanExecuteAlways);
 
-           
 
-            
+
+
             //ConnectButtonCommand = new DelegateCommand(
             //    (param) => ButtonClickCloseWindow(param as Window, ClosingState.Connect),
             //    (param) => SelectedItems.Count > 0);
@@ -134,11 +125,15 @@ namespace DIPOL_UF.Models
             //FoundCameras.CollectionChanged += (sender, e) => ConnectAllButtonCommand.OnCanExecuteChanged();
 
         }
-        private async Task QueryAvailableCamerasAsync()
+
+        private async Task QueryAvailableCamerasAsync(CancellationToken cancelToken, ProgressBar pb)
         {
+            var nLocal = 0;
+            var nRemote = new List<int>();
+
             try
             {
-                _nLocal = Camera.GetNumberOfCameras();
+                nLocal = await Helper.RunNoMarshall(Camera.GetNumberOfCameras);
             }
             catch (AndorSdkException aExp)
             {
@@ -148,74 +143,65 @@ namespace DIPOL_UF.Models
             foreach (var client in _remoteClients)
                 try
                 {
-                    _nRemote.Add(client?.GetNumberOfCameras() ?? 0);
+                    nRemote.Add(await Helper.RunNoMarshall(() => client?.GetNumberOfCameras() ?? 0));
                 }
                 catch (Exception e)
                 {
                     Helper.WriteLog(e.Message);
                 }
 
-            if (_nRemote.Sum() is var nRemoteTotal && _nLocal + nRemoteTotal > 0)
+            cancelToken.ThrowIfCancellationRequested();
+
+            if (nRemote.Sum() is var nRemoteTotal && nLocal + nRemoteTotal > 0)
             {
-                var cancelSource = new CancellationTokenSource();
-                _progressBar.Maximum = _nLocal + nRemoteTotal;
-                _progressBar.IsIndeterminate = false;
+                pb.IsIndeterminate = false;
+                pb.Maximum = nLocal + nRemoteTotal;
+                var queryTasks = new List<Task>(2);
 
-                using (_progressBar
-                       .WhenAnyPropertyChanged(nameof(_progressBar.IsAborted))
-                       .DistinctUntilChanged()
-                       .Where(x => x.IsAborted)
-                       .Subscribe(_ => cancelSource.Cancel()))
-                {
-                    var queryTasks = new List<Task>(2);
-
-                    if (_nLocal > 0)
-                        try
-                        {
-                            queryTasks.Add(QueryLocalCamerasAsync(cancelSource.Token));
-                        }
-                        catch (Exception e)
-                        {
-                            Helper.WriteLog(e.Message);
-                        }
+                if (nLocal > 0)
+                    try
+                    {
+                        queryTasks.Add(QueryLocalCamerasAsync(nLocal, cancelToken, pb));
+                    }
+                    catch (Exception e)
+                    {
+                        Helper.WriteLog(e.Message);
+                    }
 
 
-                    if (nRemoteTotal > 0)
-                        try
-                        {
-                            queryTasks.Add(QueryRemoteCamerasAsync(cancelSource.Token));
-                        }
-                        catch (Exception e)
-                        {
-                            Helper.WriteLog(e.Message);
-                        }
+                if (nRemoteTotal > 0)
+                    try
+                    {
+                        queryTasks.Add(QueryRemoteCamerasAsync(nRemote, cancelToken, pb));
+                    }
+                    catch (Exception e)
+                    {
+                        Helper.WriteLog(e.Message);
+                    }
 
-                    await Task.WhenAll(queryTasks);
-                }
+                await Task.WhenAll(queryTasks).ExpectCancellation();
+
             }
-            
-        }
 
-        private async Task QueryLocalCamerasAsync(CancellationToken token)
+        }
+        private async Task QueryLocalCamerasAsync(int nLocal, CancellationToken token, ProgressBar pb)
         {
             // Number of cameras
             
-            var workers = new Task[_nLocal];
-
+            var workers = new Task[nLocal];
             // For each found local camera
-            for (var camIndex = 0; camIndex < _nLocal; camIndex++)
+            for (var camIndex = 0; camIndex < nLocal; camIndex++)
             {
                 // Check cancellation request
-                if (token.IsCancellationRequested)
-                    break;
+                token.ThrowIfCancellationRequested();
                 var index = camIndex;
-                workers[camIndex] = Task.Run(async () => 
+                workers[camIndex] = Task.Run(async () =>
                 {
                     // If camera is nor present on the active list
                     CameraBase cam = null;
                     try
                     {
-                        cam = await Camera.CreateAsync(index);
+                        cam = await Camera.CreateAsync(index).ConfigureAwait(false);
                     }
                     // Silently catch exception and continue
                     catch (Exception aExp)
@@ -227,7 +213,7 @@ namespace DIPOL_UF.Models
                     if (token.IsCancellationRequested)
                     {
                         cam?.Dispose();
-                        return;
+                        token.ThrowIfCancellationRequested();
                     }
 
                     // If camera is OK, add it to the list
@@ -240,24 +226,21 @@ namespace DIPOL_UF.Models
                             cam = null;
                         }
                         else
-                            FoundDevices.Edit(context =>
-                            {
-                                context.AddOrUpdate((Id : id, Camera : cam));
-                            });
+                            FoundDevices.Edit(context => { context.AddOrUpdate((Id: id, Camera: cam)); });
                     }
-                   
+
                     // Try thread-safely increment progress bar
-                    if (!(_progressBar is null))
-                        _progressBar.BarComment = cam == null
+                    if (!(pb is null) && pb.TryIncrement())
+                        pb.BarComment = cam == null
                             ? Properties.Localization.AvailableCameras_CameraIsUnavailable
                             : string.Format(Properties.Localization.AvailableCameras_AcquiredLocalCamera,
                                 ConverterImplementations.CameraToStringAliasConversion(cam));
                 }, token);
             }
 
-            await Task.WhenAll(workers);
+            await Task.WhenAll(workers).ExpectCancellation();
         }
-        private async Task QueryRemoteCamerasAsync(CancellationToken token)
+        private async Task QueryRemoteCamerasAsync(IReadOnlyList<int> nRemote, CancellationToken token, ProgressBar pb)
         {
             var workers = new Task[_remoteClients.Length];
             var clientIndex = 0;
@@ -265,8 +248,7 @@ namespace DIPOL_UF.Models
             foreach (var client in _remoteClients)
             {
                 // Checks if cancellation is requested
-                if (token.IsCancellationRequested)
-                    break;
+                token.ThrowIfCancellationRequested();
                 // Runs task in parallel
                 var localIndex = clientIndex;
                 workers[clientIndex++] = Task.Run(async () =>
@@ -274,11 +256,10 @@ namespace DIPOL_UF.Models
                     try
                     {
                         // For each camera
-                        for (var camIndex = 0; camIndex < _nRemote[localIndex]; camIndex++)
+                        for (var camIndex = 0; camIndex < nRemote[localIndex]; camIndex++)
                         {
                             // If cancellation requested
-                            if (token.IsCancellationRequested)
-                                break;
+                            token.ThrowIfCancellationRequested();
 
                             // Try to create remote camera
                             CameraBase cam = null;
@@ -286,7 +267,8 @@ namespace DIPOL_UF.Models
                             {
                                 if (!client.ActiveRemoteCameras().Contains(camIndex))
                                     //cam = client.CreateRemoteCamera(camIndex);  
-                                    cam = await RemoteCamera.CreateAsync(camIndex, client);
+                                    cam = await RemoteCamera.CreateAsync(camIndex, client)
+                                                            .ConfigureAwait(false);
                             }
                             // Catch silently
                             catch (Exception aExp)
@@ -298,7 +280,7 @@ namespace DIPOL_UF.Models
                             if (token.IsCancellationRequested)
                             {
                                 cam?.Dispose();
-                                break;
+                                token.ThrowIfCancellationRequested();
                             }
 
                             // Add to collection
@@ -318,14 +300,12 @@ namespace DIPOL_UF.Models
                             }
 
                             // Try increment progress bar
-                            if (!(_progressBar is null))
-                            {
-                                //_progressBar.TryIncrement();
-                                _progressBar.BarComment = cam == null
+                            if (!(pb is null) && pb.TryIncrement())
+                                pb.BarComment = cam == null
                                     ? Properties.Localization.AvailableCameras_CameraIsUnavailable
                                     : string.Format(Properties.Localization.AvailableCameras_AcquiredRemoteCamera,
                                         ConverterImplementations.CameraToStringAliasConversion(cam));
-                            }
+                            
                         }
                     }
                     catch (Exception e)
@@ -335,12 +315,69 @@ namespace DIPOL_UF.Models
                 }, token);
             }
 
-            await Task.WhenAll(workers);
+            await Task.WhenAll(workers).ExpectCancellation();
         }
 
-        private async void WindowShownCommandExecuteAsync(Window param)
+        private async Task QueryCamerasCommandExecuteAsync(CancellationToken token)
         {
-            await QueryAvailableCamerasAsync();
+            var disposables = new CompositeDisposable();
+
+            var pb = await Helper.RunNoMarshall(() =>
+                new ProgressBar()
+                {
+                    IsIndeterminate = true,
+                    CanAbort = true,
+                    DisplayPercents = false,
+                    BarTitle = Properties.Localization.AvailableCameras_CheckingConnection_BarTitle
+                }.DisposeWith(disposables));
+
+            var viewModel = await Helper.RunNoMarshall(() =>
+                new ProgressBarViewModel(pb).DisposeWith(disposables));
+
+
+            var linkedSrc = CancellationTokenSource
+                .CreateLinkedTokenSource(token)
+                .DisposeWith(disposables);
+
+            await Helper.RunNoMarshall(() =>
+                pb.CancelCommand
+                  .Subscribe(_ =>
+                  {
+                      if(!disposables.IsDisposed)
+                         linkedSrc.Cancel();
+                  })
+                  .DisposeWith(disposables));
+
+            var view = Helper.ExecuteOnUi(() => new ProgressWindow()
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            }.WithDataContext(viewModel));
+
+
+            WindowContentRenderedCommand.Subscribe(x =>
+            {
+                view.Owner = x;
+                Helper.ExecuteOnUI(() => view.ShowDialog());
+            }).DisposeWith(disposables);
+
+            await QueryAvailableCamerasAsync(linkedSrc.Token, pb)
+                .ExpectCancellation();
+            await Task.Delay(TimeSpan.FromSeconds(10), linkedSrc.Token)
+                      .ExpectCancellation();
+
+            Helper.ExecuteOnUi(view.Close);
+
+            await Helper.RunNoMarshall(disposables.Dispose);
+        }
+
+        private void WindowClosingCommandExecute(Window window)
+        {
+            //WindowShownCommand.Dispose();
+            //Parallel.ForEach(FoundCameras.Where(item => !SelectedItems.Contains(item.Key)), (item) => item.Value?.Dispose());
+            //_selectedCameras = FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x).ToList();
+            //FoundCameras.Clear();
+            //SelectedItems.Clear();
+
         }
 
         private void ButtonClickCloseWindow(object sender, EventArgs e)
@@ -367,22 +404,15 @@ namespace DIPOL_UF.Models
 
             }
         }
-        private void WindowClosingHandler()
-        {
-            //Parallel.ForEach(FoundCameras.Where(item => !SelectedItems.Contains(item.Key)), (item) => item.Value?.Dispose());
-            //_selectedCameras = FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x).ToList();
-            //FoundCameras.Clear();
-            //SelectedItems.Clear();
-                
-        }
 
-        private void HookObservers()
+        private void HookObservables()
         {
-            _progressBar
-                ?.WhenPropertyChanged(x => x.IsAborted)
-                .DistinctUntilChanged()
-                .Subscribe(x => CanCancel = x.Value)
-                .DisposeWith(_subscriptions);
+
+            //_progressBar
+            //    ?.WhenPropertyChanged(x => x.IsAborted)
+            //    .DistinctUntilChanged()
+            //    .Subscribe(x => CanCancel = x.Value)
+            //    .DisposeWith(_subscriptions);
 
             //_progressBar
                 //?.MaximumReached

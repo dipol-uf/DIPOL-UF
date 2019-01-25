@@ -142,6 +142,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Checking connections....
+        /// </summary>
+        public static string AvailableCameras_CheckingConnection_BarTitle {
+            get {
+                return ResourceManager.GetString("AvailableCameras_CheckingConnection_BarTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Found.
         /// </summary>
         public static string AvailableCameras_Found {
