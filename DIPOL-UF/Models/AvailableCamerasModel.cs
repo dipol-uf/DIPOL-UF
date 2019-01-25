@@ -14,11 +14,14 @@ using DIPOL_Remote.Classes;
 
 using DIPOL_UF.Commands;
 using System.ComponentModel;
+using System.Net.Mime;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Security.RightsManagement;
+using DIPOL_UF.Converters;
 using DIPOL_UF.ViewModels;
+using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -37,7 +40,12 @@ namespace DIPOL_UF.Models
 
         private readonly ProgressBar _progressBar;
         private readonly DipolClient[] _remoteClients;
+        private readonly List<int> _nRemote;
 
+        private readonly SourceCache<(string Id, CameraBase Camera), string> FoundDevices
+            = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id);
+
+        private int _nLocal;
        
         [Reactive]
         public bool CanCancel { get; private set; }
@@ -52,6 +60,7 @@ namespace DIPOL_UF.Models
         public AvailableCamerasModel(DipolClient[] remoteClients = null)
         {
             _remoteClients = remoteClients;
+            _nRemote = new List<int>(remoteClients?.Length ?? 0);
 
             _progressBar = new ProgressBar()
             {
@@ -131,12 +140,9 @@ namespace DIPOL_UF.Models
         }
         private void QueryAvailableCameras()
         {
-            var nLocal = 0;
-            var nRemote = 0;
-
             try
             {
-                nLocal = Camera.GetNumberOfCameras();
+                _nLocal = Camera.GetNumberOfCameras();
             }
             catch (AndorSdkException aExp)
             {
@@ -146,35 +152,31 @@ namespace DIPOL_UF.Models
             foreach (var client in _remoteClients)
                 try
                 {
-                    nRemote += client?.GetNumberOfCameras() ?? 0;
+                    _nRemote.Add(client?.GetNumberOfCameras() ?? 0);
                 }
                 catch (Exception e)
                 {
                     Helper.WriteLog(e.Message);
                 }
 
-
-            if (nLocal + nRemote > 0)
+            if (_nRemote.Sum() is var nRemoteTotal && _nLocal + nRemoteTotal > 0)
             {
-                // TODO : Check here
-                //_camerasPresent = true;
                 var cancelSource = new CancellationTokenSource();
-                _progressBar.Maximum = nLocal + nRemote;
+                _progressBar.Maximum = _nLocal + nRemoteTotal;
                 _progressBar.IsIndeterminate = false;
 
-                // TODO : Fix here
-                //_progressBar.AbortButtonClick += (sender, e) => cancelSource.Cancel();
                 using (_progressBar
                        .WhenAnyPropertyChanged(nameof(_progressBar.IsAborted))
                        .DistinctUntilChanged()
                        .Where(x => x.IsAborted)
                        .Subscribe(_ => cancelSource.Cancel()))
                 {
+                    var queryTasks = new List<Task>(2);
 
-                    if (nLocal > 0)
+                    if (_nLocal > 0)
                         try
                         {
-                            QueryLocalCamerasAsync(cancelSource.Token);
+                            queryTasks.Add(QueryLocalCamerasAsync(cancelSource.Token));
                         }
                         catch (Exception e)
                         {
@@ -182,43 +184,30 @@ namespace DIPOL_UF.Models
                         }
 
 
-                    if (nRemote > 0)
-                        Task.Run(() =>
+                    if (nRemoteTotal > 0)
+                        try
                         {
-                            try
-                            {
-                                QueryRemoteCamerasAsync(cancelSource.Token);
-                            }
-                            catch (Exception e)
-                            {
-                                Helper.WriteLog(e.Message);
-                            }
+                            queryTasks.Add(QueryRemoteCamerasAsync(cancelSource.Token));
+                        }
+                        catch (Exception e)
+                        {
+                            Helper.WriteLog(e.Message);
+                        }
 
-                        }, cancelSource.Token);
+                    Task.WhenAll(queryTasks);
                 }
             }
             
         }
 
-        private async void QueryLocalCamerasAsync(CancellationToken token)
+        private async Task QueryLocalCamerasAsync(CancellationToken token)
         {
             // Number of cameras
-            int nCams;
-            try
-            {
-                nCams = Camera.GetNumberOfCameras();
-            }
-            // If for some reason camera number retrieval fails
-            catch (AndorSdkException aExp)
-            {
-                Helper.WriteLog(aExp);
-                nCams = 0;
-            }
-
-            var workers = new Task[nCams];
+            
+            var workers = new Task[_nLocal];
 
             // For each found local camera
-            for (var camIndex = 0; camIndex < nCams; camIndex++)
+            for (var camIndex = 0; camIndex < _nLocal; camIndex++)
             {
                 // Check cancellation request
                 if (token.IsCancellationRequested)
@@ -230,9 +219,7 @@ namespace DIPOL_UF.Models
                     CameraBase cam = null;
                     try
                     {
-                        if (!Camera.CamerasInUse.Values.Select(item => item.CameraIndex).Contains(index))
-                            //cam = new Camera(camIndex);
-                            cam = await Camera.CreateAsync(index);
+                        cam = await Camera.CreateAsync(index);
                     }
                     // Silently catch exception and continue
                     catch (Exception aExp)
@@ -248,28 +235,34 @@ namespace DIPOL_UF.Models
                     }
 
                     // If camera is OK, add it to the list
-                    // TODO : Fix here
-                    //if (cam != null)
-                    //    FoundCameras.TryAdd($"localhost:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
-
+                    if (cam != null)
+                    {
+                        var id = $"localhost:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}";
+                        if (FoundDevices.Lookup(id).HasValue)
+                        {
+                            cam.Dispose();
+                            cam = null;
+                        }
+                        else
+                            FoundDevices.Edit(context =>
+                            {
+                                context.AddOrUpdate((Id : id, Camera : cam));
+                            });
+                    }
+                   
                     // Try thread-safely increment progress bar
                     if (!(_progressBar is null))
-                    {
-                        _progressBar.TryIncrement();
-
                         _progressBar.BarComment = cam == null
-                            ? "Camera resource is unavailable."
-                            : "Acquired local camera " +
-                              $"{new Converters.CameraToStringAliasValueConverter().Convert(cam, typeof(string), null, System.Globalization.CultureInfo.CurrentUICulture)}";
-                    }
+                            ? Properties.Localization.AvailableCameras_CameraIsUnavailable
+                            : string.Format(Properties.Localization.AvailableCameras_AcquiredLocalCamera,
+                                ConverterImplementations.CameraToStringAliasConversion(cam));
                 }, token);
             }
 
             await Task.WhenAll(workers);
         }
-        private async void QueryRemoteCamerasAsync(CancellationToken token)
+        private async Task QueryRemoteCamerasAsync(CancellationToken token)
         {
-
             var workers = new Task[_remoteClients.Length];
             var clientIndex = 0;
             // For each remote client
@@ -279,15 +272,13 @@ namespace DIPOL_UF.Models
                 if (token.IsCancellationRequested)
                     break;
                 // Runs task in parallel
+                var localIndex = clientIndex;
                 workers[clientIndex++] = Task.Run(async () =>
                 {
                     try
                     {
-                        // Number of available cameras
-                        var nCams = client.GetNumberOfCameras();
-
                         // For each camera
-                        for (var camIndex = 0; camIndex < nCams; camIndex++)
+                        for (var camIndex = 0; camIndex < _nRemote[localIndex]; camIndex++)
                         {
                             // If cancellation requested
                             if (token.IsCancellationRequested)
@@ -315,21 +306,29 @@ namespace DIPOL_UF.Models
                             }
 
                             // Add to collection
-                            // TODO : Fix here
-                            //if (cam != null)
-                            //    FoundCameras.TryAdd($"{client.HostAddress}:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
+                            if (cam != null)
+                            {
+                                var id = $"{client.HostAddress}:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}";
+                                if (FoundDevices.Lookup(id).HasValue)
+                                {
+                                    cam.Dispose();
+                                    cam = null;
+                                }
+                                else
+                                    FoundDevices.Edit(context =>
+                                    {
+                                        context.AddOrUpdate((Id : id, Camera : cam));
+                                    });
+                            }
 
                             // Try increment progress bar
-                            if (_progressBar != null)
+                            if (!(_progressBar is null))
                             {
-                                if (Application.Current?.Dispatcher?.IsAvailable() ?? false)
-                                    Application.Current?.Dispatcher?.Invoke(_progressBar.TryIncrement);
-                                else
-                                    lock (_progressBar)
-                                        _progressBar.TryIncrement();
-
-                                _progressBar.BarComment = cam == null ? "Camera resource is unavailable." : "Acquired remote camera " +
-                                    $"{new Converters.CameraToStringAliasValueConverter().Convert(cam, typeof(string), null, System.Globalization.CultureInfo.CurrentUICulture)}";
+                                //_progressBar.TryIncrement();
+                                _progressBar.BarComment = cam == null
+                                    ? Properties.Localization.AvailableCameras_CameraIsUnavailable
+                                    : string.Format(Properties.Localization.AvailableCameras_AcquiredRemoteCamera,
+                                        ConverterImplementations.CameraToStringAliasConversion(cam));
                             }
                         }
                     }
