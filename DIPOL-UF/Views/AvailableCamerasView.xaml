@@ -32,13 +32,23 @@
                BorderBrush="{StaticResource ResourceKey=BorderColor}"
                BorderThickness="{StaticResource ResourceKey=BottomOnlyBorderThickness}"/>
 
-        <ListView DockPanel.Dock="Top" Height="300" IsSynchronizedWithCurrentItem="True"
+        <ListView DockPanel.Dock="Top" Height="300" IsSynchronizedWithCurrentItem="False"
                   Style="{StaticResource ResourceKey=ListViewStyle}"
                   ItemContainerStyle="{StaticResource ResourceKey=SelectableListViewItemStyle}"
-                  ItemsSource="{Binding FoundCameras}"
-                  SelectionMode="Multiple" SelectedIndex="-1"
-                  SelectionChanged="{cmnds:EventToCommand SelectionChangedCommand}">
-                  <!--ItemTemplate="{StaticResource ResourceKey=FoundCamerasListViewItemTemplate}"-->
+                  ItemsSource="{Binding ListedCameras}"
+                  ItemTemplate="{StaticResource ResourceKey=FoundCamerasListViewItemTemplate}"
+                  SelectionMode="Multiple">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger
+                    EventName="SelectionChanged" 
+                    SourceObject="{Binding RelativeSource={RelativeSource 
+                            FindAncestor, AncestorType=ListView}}">
+                    <behaviors:InvokeCommandAction
+                        Command ="{Binding TestCommand}"
+                        CommandParameter="{Binding SelectedItems, 
+                        RelativeSource={RelativeSource FindAncestor, AncestorType=ListView}}"/>
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
         </ListView>
         <Border DockPanel.Dock="Top" VerticalAlignment="Bottom" 
                 Style="{StaticResource ResourceKey=BorderStyle}"

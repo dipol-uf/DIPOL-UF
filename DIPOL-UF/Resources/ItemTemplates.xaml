@@ -13,8 +13,8 @@
     <!--Active cameras list representation-->
     <DataTemplate x:Key="FoundCamerasListViewItemTemplate">
         <StackPanel Orientation="Horizontal">
-            <Label Width="80" Content="{Binding Key, Converter={StaticResource ResourceKey=CameraKeyToStringConverter}}" HorizontalContentAlignment="Right"/>
-            <Label Content="{Binding Value}" HorizontalContentAlignment="Right"/>
+            <Label Width="80" Content="{Binding Item1}" HorizontalContentAlignment="Right"/>
+            <Label Content="{Binding Item2}" HorizontalContentAlignment="Right"/>
         </StackPanel>
     </DataTemplate>
     

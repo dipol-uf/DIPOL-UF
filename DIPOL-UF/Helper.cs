@@ -84,11 +84,16 @@ namespace DIPOL_UF
 
         public static string GetCameraHostName(string input)
         {
-            string host = input.Split(':')[0];
-            if (!String.IsNullOrWhiteSpace(host))
-                return host.ToLowerInvariant() == "localhost" ? "Local" : host;
-            else
-                return String.Empty;
+            var splits = input.Split(':');
+            if (splits.Length > 0)
+            {
+                var host = splits[0];
+                if (!string.IsNullOrWhiteSpace(host))
+                    return host.ToLowerInvariant().Trim() == "localhost"
+                        ? Properties.Localization.General_LocalHostName
+                        : host;
+            }
+            return string.Empty;
         }
 
         /// <summary>

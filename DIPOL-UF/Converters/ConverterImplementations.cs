@@ -22,24 +22,38 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System.Collections.Generic;
 using System.Linq;
 using ANDOR_CS.Classes;
+using DynamicData.Kernel;
 using Newtonsoft.Json.Linq;
 
 namespace DIPOL_UF.Converters
 {
     internal static class ConverterImplementations
     {
+        private static List<(string Name, string Alias)> _cachedAliases;
+
         public static string CameraToStringAliasConversion(CameraBase cam)
         {
+            if (cam is null)
+                return string.Empty;
             var camString = $"{cam.CameraModel}_{cam.SerialNumber}";
-            return UiSettingsProvider.Settings
-                                     .GetArray<JToken>(@"CameraDescriptors")
-                                     .Where(x => x.Value<string>(@"Name") == camString)
-                                     .Select(x => x.Value<string>(@"Alias"))
-                                     .DefaultIfEmpty(camString)
-                                     .FirstOrDefault();
-
+            if (_cachedAliases is null)
+                _cachedAliases =
+                    UiSettingsProvider.Settings
+                                      .GetArray<JToken>(@"CameraDescriptors")
+                                      .Select(x => (Name: x.Value<string>(@"Name"),
+                                          CachedAliases: x.Value<string>(@"Alias")))
+                                      .ToList();
+            return _cachedAliases
+                       .FirstOrOptional(x => x.Name == camString) is var result
+                   && result.HasValue
+                ? result.Value.Alias
+                : camString;
         }
+
+        public static string CameraKeyToHostConversion(string input)
+            => Helper.GetCameraHostName(input);
     }
 }
