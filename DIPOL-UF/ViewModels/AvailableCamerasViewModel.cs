@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
@@ -11,34 +12,51 @@ using DIPOL_UF.Converters;
 using DynamicData;
 using DynamicData.Alias;
 using DynamicData.Binding;
+using ReactiveUI;
 
 namespace DIPOL_UF.ViewModels
 {
     internal sealed class AvailableCamerasViewModel : ReactiveViewModel<AvailableCamerasModel>
     {
-        public IObservableCollection<string> FoundCameras { get; }
-            = new ObservableCollectionExtended<string>();
+        public IObservableCollection<Tuple<string, string>> ListedCameras { get; }
+         = new ObservableCollectionExtended<Tuple<string, string>>();
 
+        
         public ICommand WindowClosingCommand => Model.WindowClosingCommand;
         public ICommand CancelButtonCommand => Model.CancelButtonCommand;
         public ICommand ConnectButtonCommand => Model.ConnectButtonCommand;
         public ICommand ConnectAllButtonCommand => Model.ConnectAllButtonCommand;
         public ICommand WindowContentRenderedCommand => Model.WindowContentRenderedCommand;
         
+        public ICommand TestCommand { get; private set; }
+
         public AvailableCamerasViewModel(AvailableCamerasModel model) 
             : base(model)
         {
+            TestCommand = ReactiveCommand.Create<object, Unit>(
+                x => { return Unit.Default;});
+
           HookValidators();
           HookObservables();
         }
 
+        
         private void HookObservables()
         {
-            Model.FoundCameras.Connect().Select(x => x.Id)
-                 .ObserveOnUi()
-                 .Bind(FoundCameras)
-                 .Subscribe()
-                 .DisposeWith(_subscriptions);
+            var observer = Model.FoundCameras.Connect();
+            observer.Select(x => new Tuple<string, string>(
+                        ConverterImplementations.CameraKeyToHostConversion(x.Id),
+                         ConverterImplementations.CameraToStringAliasConversion(x.Camera)))
+                    .Sort(SortExpressionComparer<Tuple<string, string>>
+                          .Ascending(x => x.Item1).ThenByAscending(x => x.Item2))
+                    .ObserveOnUi()
+                    .Bind(ListedCameras)
+                    .Subscribe()
+                    .DisposeWith(_subscriptions);
+            //observer.DynamicData.KernelSelect(
+            //            x => (Host: ConverterImplementations.CameraKeyToHostConversion(x.Id),
+            //                Alias: ConverterImplementations.CameraToStringAliasConversion(x.Id)))
+            //        .Sort(SortExpressionComparer<string>.Descending(x => x.Host));
         }
 
         

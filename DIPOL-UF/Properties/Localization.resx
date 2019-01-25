@@ -273,6 +273,9 @@
   <data name="General_Load" xml:space="preserve">
     <value>Load</value>
   </data>
+  <data name="General_LocalHostName" xml:space="preserve">
+    <value>Local</value>
+  </data>
   <data name="General_Save" xml:space="preserve">
     <value>Save</value>
   </data>
