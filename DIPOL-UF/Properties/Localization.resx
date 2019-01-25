@@ -150,6 +150,9 @@
   <data name="AvailableCameras_Found" xml:space="preserve">
     <value>Found</value>
   </data>
+  <data name="AvailableCameras_NoNewCameras" xml:space="preserve">
+    <value>No cameras available. Check connections and try again.</value>
+  </data>
   <data name="CameraProperties_Property" xml:space="preserve">
     <value>Property</value>
   </data>

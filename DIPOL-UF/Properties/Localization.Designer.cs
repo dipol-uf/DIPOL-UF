@@ -160,6 +160,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No cameras available. Check connections and try again..
+        /// </summary>
+        public static string AvailableCameras_NoNewCameras {
+            get {
+                return ResourceManager.GetString("AvailableCameras_NoNewCameras", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Property.
         /// </summary>
         public static string CameraProperties_Property {
