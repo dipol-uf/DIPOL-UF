@@ -14,10 +14,18 @@ using DIPOL_Remote.Classes;
 
 using DIPOL_UF.Commands;
 using System.ComponentModel;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Security.RightsManagement;
+using DIPOL_UF.ViewModels;
+using DynamicData.Binding;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace DIPOL_UF.Models
 {
-    internal class AvailableCamerasModel : ObservableObject
+    internal sealed class AvailableCamerasModel : ReactiveObjectEx
     {
 
         internal enum ClosingState : byte
@@ -27,202 +35,98 @@ namespace DIPOL_UF.Models
             ConnectAll = 2
         }
 
-        private List<KeyValuePair<string, CameraBase>> _selectedCameras;
-        private bool _canCancel;
-        private bool _camerasPresent;
         private readonly ProgressBar _progressBar;
-        private Views.ProgressWindow _progressView;
         private readonly DipolClient[] _remoteClients;
-        private ObservableConcurrentDictionary<string, CameraBase> _foundCameras = new ObservableConcurrentDictionary<string, CameraBase>();
-        private ObservableCollection<string> _selectedItems = new ObservableCollection<string>();
 
-        private DelegateCommand _selectionChangedCommand;
-        private DelegateCommand _cancelButtonCommand;
-        private DelegateCommand _connectButtonCommand;
-        private DelegateCommand _connectAllButtonCommand;
-        private DelegateCommand _windowClosingCommand;
-        private DelegateCommand _windowShownCommand;
+       
+        [Reactive]
+        public bool CanCancel { get; private set; }
 
-        private ObservableCollection<string> SelectedItems
-        {
-            get => _selectedItems;
-            set => _selectedItems = value ?? _selectedItems;
-        }
-
-        public ObservableConcurrentDictionary<string, CameraBase> FoundCameras
-        {
-            get => _foundCameras;
-            set
-            {
-                if (value != _foundCameras)
-                {
-                    _foundCameras = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        public bool CanCancel
-        {
-            get => _canCancel;
-            set
-            {
-                if (value != _canCancel)
-                {
-                    _canCancel = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        public DelegateCommand SelectionChangedCommand
-        {
-            get => _selectionChangedCommand;
-            private set
-            {
-                if (value != _selectionChangedCommand)
-                {
-                    _selectionChangedCommand = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-        public DelegateCommand WindowClosingCommand
-        {
-            get => _windowClosingCommand;
-            private set
-            {
-                if (value != _windowClosingCommand)
-                {
-                    _windowClosingCommand = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-        public DelegateCommand CancelButtonCommand
-        {
-            get => _cancelButtonCommand;
-            private set
-            {
-                if (value != _cancelButtonCommand)
-                {
-                    _cancelButtonCommand = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-        public DelegateCommand ConnectButtonCommand
-        {
-            get => _connectButtonCommand;
-            private set
-            {
-                if (value != _connectButtonCommand)
-                {
-                    _connectButtonCommand = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-        public DelegateCommand ConnectAllButtonCommand
-        {
-            get => _connectAllButtonCommand;
-            private set
-            {
-                if (value != _connectAllButtonCommand)
-                {
-                    _connectAllButtonCommand = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-        public DelegateCommand WindowShownCommand
-        {
-            get => _windowShownCommand;
-            private set
-            {
-                if (value != _windowShownCommand)
-                {
-                    _windowShownCommand = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
+        public ReactiveCommand<Window, Unit> WindowClosingCommand { get; }
+        public ReactiveCommand<Window, Unit> CancelButtonCommand { get; }
+        public ReactiveCommand<Window, Unit> WindowShownCommand { get; }
+        public ReactiveCommand<Unit, Unit> ConnectButtonCommand { get; }
+        public ReactiveCommand<Unit, Unit> ConnectAllButtonCommand { get; }
+        
+        
         public AvailableCamerasModel(DipolClient[] remoteClients = null)
         {
             _remoteClients = remoteClients;
 
-            // TODO: FIX HERE
-            _progressBar = new ProgressBar();
-            //{
-            //    Minimum.Value = 0,
-            //    Value = 0,
-            //    Maximum = 1,
-            //    IsIndeterminate = true,
-            //    CanAbort = true,
-            //    DisplayPercents = false,
-            //    BarTitle = "Checking connections...."
-            //};
+            _progressBar = new ProgressBar()
+            {
+                Minimum = 0,
+                Value = 0,
+                Maximum = 1,
+                IsIndeterminate = true,
+                CanAbort = true,
+                DisplayPercents = false,
+                BarTitle = "Checking connections...."
+            };
 
-            InitializeCommands();
+            _progressBar.DisposeWith(_subscriptions);
+
+            CancelButtonCommand = ReactiveCommand.Create<Window>(
+                x => x?.Close(),
+                this.WhenAnyPropertyChanged(nameof(CanCancel))
+                    .Select(x => x.CanCancel)
+                    .ObserveOnUi());
+
+            WindowShownCommand = ReactiveCommand.Create<Window>(
+                WindowShownCommandExecute);
+
+            HookValidators();
+            HookObservers();
+
+            
             QueryAvailableCameras();
         
         }
 
         private void InitializeCommands()
         {
-            WindowShownCommand = new DelegateCommand(
-                (param) =>
-                {
-                    if (_progressBar == null) return;
+            //WindowShownCommand = new DelegateCommand(
+            //    (param) =>
+            //    {
+            //        if (_progressBar == null) return;
 
-                    _progressView = new Views.ProgressWindow(new ViewModels.ProgressBarViewModel(_progressBar))
-                    {
-                        Owner = (param as CommandEventArgs<EventArgs>)?.Sender as Window,
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner
-                    };
+            //        //_progressView = new Views.ProgressWindow(new ViewModels.ProgressBarViewModel(_progressBar))
+            //        //{
+            //        //    Owner = (param as CommandEventArgs<EventArgs>)?.Sender as Window,
+            //        //    WindowStartupLocation = WindowStartupLocation.CenterOwner
+            //        //};
 
-                    if (!_camerasPresent)
-                    {
-                        _progressBar.BarComment = "No cameras found. Check your connections.";
-                        Task.Run(() =>
-                        {
-                            Task.Delay(3750).Wait();
-                            Application.Current?.Dispatcher?.Invoke(_progressView.Close);
-                            CanCancel = true;
-                        });
-                    }
+            //        //if (!_camerasPresent)
+            //        //{
+            //        //    _progressBar.BarComment = "No cameras found. Check your connections.";
+            //        //    Task.Run(() =>
+            //        //    {
+            //        //        Task.Delay(3750).Wait();
+            //        //        Application.Current?.Dispatcher?.Invoke(_progressView.Close);
+            //        //        CanCancel = true;
+            //        //    });
+            //        //}
 
-                    _progressView.Show();
-                    // TODO: Fix here
-                    //_progressBar.AbortButtonClick += (sender, e) => CanCancel = true;
-                },
-                DelegateCommand.CanExecuteAlways);
+            //        //_progressView.Show();
+            //        // TODO: Fix here
+            //        //_progressBar.AbortButtonClick += (sender, e) => CanCancel = true;
+                    
+
+            //    },
+            //    DelegateCommand.CanExecuteAlways);
+
+           
 
             
-            SelectionChangedCommand = new DelegateCommand(
-                SelectionChangedHandler,
-                DelegateCommand.CanExecuteAlways);
+            //ConnectButtonCommand = new DelegateCommand(
+            //    (param) => ButtonClickCloseWindow(param as Window, ClosingState.Connect),
+            //    (param) => SelectedItems.Count > 0);
+            //SelectedItems.CollectionChanged += (sender, e) => ConnectButtonCommand.OnCanExecuteChanged();
 
-            WindowClosingCommand = new DelegateCommand(
-                WindowClosingHandler,
-                DelegateCommand.CanExecuteAlways);
-
-            CancelButtonCommand = new DelegateCommand(
-                (param) => ButtonClickCloseWindow(param as Window, ClosingState.Canceled),
-                (param) => CanCancel);
-            
-            ConnectButtonCommand = new DelegateCommand(
-                (param) => ButtonClickCloseWindow(param as Window, ClosingState.Connect),
-                (param) => SelectedItems.Count > 0);
-            SelectedItems.CollectionChanged += (sender, e) => ConnectButtonCommand.OnCanExecuteChanged();
-
-            ConnectAllButtonCommand = new DelegateCommand(
-                (param) => ButtonClickCloseWindow(param as Window, ClosingState.ConnectAll),
-                (param) => FoundCameras.Count > 0);
-            FoundCameras.CollectionChanged += (sender, e) => ConnectAllButtonCommand.OnCanExecuteChanged();
-
-
+            //ConnectAllButtonCommand = new DelegateCommand(
+            //    (param) => ButtonClickCloseWindow(param as Window, ClosingState.ConnectAll),
+            //    (param) => FoundCameras.Count > 0);
+            //FoundCameras.CollectionChanged += (sender, e) => ConnectAllButtonCommand.OnCanExecuteChanged();
 
         }
         private void QueryAvailableCameras()
@@ -252,38 +156,46 @@ namespace DIPOL_UF.Models
 
             if (nLocal + nRemote > 0)
             {
-                _camerasPresent = true;
+                // TODO : Check here
+                //_camerasPresent = true;
                 var cancelSource = new CancellationTokenSource();
                 _progressBar.Maximum = nLocal + nRemote;
                 _progressBar.IsIndeterminate = false;
 
                 // TODO : Fix here
                 //_progressBar.AbortButtonClick += (sender, e) => cancelSource.Cancel();
+                using (_progressBar
+                       .WhenAnyPropertyChanged(nameof(_progressBar.IsAborted))
+                       .DistinctUntilChanged()
+                       .Where(x => x.IsAborted)
+                       .Subscribe(_ => cancelSource.Cancel()))
+                {
 
-                if (nLocal > 0)
-                    try
-                    {
-                        QueryLocalCamerasAsync(cancelSource.Token);
-                    }
-                    catch (Exception e)
-                    {
-                        Helper.WriteLog(e.Message);
-                    }
-
-
-                if (nRemote > 0)
-                    Task.Run(() =>
-                    {
+                    if (nLocal > 0)
                         try
                         {
-                            QueryRemoteCamerasAsync(cancelSource.Token);
+                            QueryLocalCamerasAsync(cancelSource.Token);
                         }
                         catch (Exception e)
                         {
                             Helper.WriteLog(e.Message);
                         }
 
-                    }, cancelSource.Token);
+
+                    if (nRemote > 0)
+                        Task.Run(() =>
+                        {
+                            try
+                            {
+                                QueryRemoteCamerasAsync(cancelSource.Token);
+                            }
+                            catch (Exception e)
+                            {
+                                Helper.WriteLog(e.Message);
+                            }
+
+                        }, cancelSource.Token);
+                }
             }
             
         }
@@ -336,29 +248,19 @@ namespace DIPOL_UF.Models
                     }
 
                     // If camera is OK, add it to the list
-                    if (cam != null)
-                        FoundCameras.TryAdd($"localhost:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
+                    // TODO : Fix here
+                    //if (cam != null)
+                    //    FoundCameras.TryAdd($"localhost:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
 
                     // Try thread-safely increment progress bar
-                    if (_progressBar != null)
+                    if (!(_progressBar is null))
                     {
-                        if (Application.Current?.Dispatcher?.IsAvailable() ?? false)
-                            Application.Current?.Dispatcher?.Invoke(_progressBar.TryIncrement);
-                        else
-                            _progressBar.TryIncrement();
+                        _progressBar.TryIncrement();
 
                         _progressBar.BarComment = cam == null
                             ? "Camera resource is unavailable."
                             : "Acquired local camera " +
                               $"{new Converters.CameraToStringAliasValueConverter().Convert(cam, typeof(string), null, System.Globalization.CultureInfo.CurrentUICulture)}";
-                    }
-
-                    // Close progress bar if everything is done ?
-                    if (_progressBar?.Value == _progressBar?.Maximum)
-                    {
-                        Task.Delay(750, token).Wait(token);
-                        Application.Current?.Dispatcher?.Invoke(_progressView.Close);
-                        CanCancel = true;
                     }
                 }, token);
             }
@@ -413,8 +315,9 @@ namespace DIPOL_UF.Models
                             }
 
                             // Add to collection
-                            if (cam != null)
-                                FoundCameras.TryAdd($"{client.HostAddress}:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
+                            // TODO : Fix here
+                            //if (cam != null)
+                            //    FoundCameras.TryAdd($"{client.HostAddress}:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}", cam);
 
                             // Try increment progress bar
                             if (_progressBar != null)
@@ -428,15 +331,6 @@ namespace DIPOL_UF.Models
                                 _progressBar.BarComment = cam == null ? "Camera resource is unavailable." : "Acquired remote camera " +
                                     $"{new Converters.CameraToStringAliasValueConverter().Convert(cam, typeof(string), null, System.Globalization.CultureInfo.CurrentUICulture)}";
                             }
-
-                            // Close window?
-                            if (_progressBar?.Value == _progressBar?.Maximum)
-                            {
-                                Task.Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")), token).Wait(token);
-                                Application.Current?.Dispatcher?.Invoke(_progressView.Close);
-                                CanCancel = true;
-                            }
-
                         }
                     }
                     catch (Exception e)
@@ -449,45 +343,65 @@ namespace DIPOL_UF.Models
             await Task.WhenAll(workers);
         }
 
-        private void ButtonClickCloseWindow(Window window, ClosingState state)
+        private void WindowShownCommandExecute(Window param)
         {
-            if (state == ClosingState.ConnectAll)
-                SelectedItems = new ObservableCollection<string>(FoundCameras.Keys);
-
-            window?.Close();
+            if (_progressBar is null)
+                return;
         }
 
-        private void SelectionChangedHandler(object parameter)
+        private void ButtonClickCloseWindow(object sender, EventArgs e)
         {
-            if (parameter is CommandEventArgs<SelectionChangedEventArgs> commandPar)
-            {
-                foreach (var remItem in commandPar.EventArgs.RemovedItems)
-                    if (remItem is KeyValuePair<string, string> rawItem)
-                        _selectedItems.Remove(rawItem.Key);
+            //if (state == ClosingState.ConnectAll)
+            //    SelectedItems = new ObservableCollection<string>(FoundCameras.Keys);
 
-                foreach (var addItem in commandPar.EventArgs.AddedItems)
-                    if (addItem is KeyValuePair<string, string> rawItem)
-                        _selectedItems.Add(rawItem.Key);
+            if(sender is Window w)
+                w.Close();
+            //window?.Close();
+        }
+
+        private void SelectionChangedHandler(object sender, EventArgs e)
+        {
+            if (e is SelectionChangedEventArgs param)
+            {
+                //foreach (var remItem in param.RemovedItems)
+                //    if (remItem is KeyValuePair<string, string> rawItem)
+                //        _selectedItems.Remove(rawItem.Key);
+
+                //foreach (var addItem in param.AddedItems)
+                //    if (addItem is KeyValuePair<string, string> rawItem)
+                //        _selectedItems.Add(rawItem.Key);
 
             }
         }
-        private void WindowClosingHandler(object parameter)
+        private void WindowClosingHandler()
         {
-            Parallel.ForEach(FoundCameras.Where(item => !SelectedItems.Contains(item.Key)), (item) => item.Value?.Dispose());
-            _selectedCameras = FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x).ToList();
-            FoundCameras.Clear();
-            SelectedItems.Clear();
+            //Parallel.ForEach(FoundCameras.Where(item => !SelectedItems.Contains(item.Key)), (item) => item.Value?.Dispose());
+            //_selectedCameras = FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x).ToList();
+            //FoundCameras.Clear();
+            //SelectedItems.Clear();
                 
         }
 
-        protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void HookObservers()
         {
-            base.OnPropertyChanged(sender, e);
+            _progressBar
+                ?.WhenPropertyChanged(x => x.IsAborted)
+                .DistinctUntilChanged()
+                .Subscribe(x => CanCancel = x.Value)
+                .DisposeWith(_subscriptions);
 
-            if (e.PropertyName == nameof(CanCancel) && CancelButtonCommand != null)
-                Application.Current?.Dispatcher?.Invoke(CancelButtonCommand.OnCanExecuteChanged);
+            //_progressBar
+                //?.MaximumReached
+                //.Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")))
+                //.ObserveOnUi()
+                //.Subscribe(_ =>
+                //{
+                //    if(_progressView?.IsVisible ?? false)
+                //        _progressView.Close();
+                //    CanCancel = true;
+                //})
+                //.DisposeWith(_subscriptions);
         }
 
-        public List<KeyValuePair<string, CameraBase>> GetSelection() => _selectedCameras;
     }
 }

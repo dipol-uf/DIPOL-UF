@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using ReactiveUI;
 
@@ -15,7 +16,7 @@ namespace DIPOL_UF
         private readonly ValidationErrorsCache _validationErrors =
             new ValidationErrorsCache(x => (x.Property, x.Type));
 
-        protected readonly List<IDisposable> _subscriptions = new List<IDisposable>();
+        protected  readonly  CompositeDisposable _subscriptions = new CompositeDisposable();
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
@@ -32,7 +33,7 @@ namespace DIPOL_UF
         private void UpdateErrors(string error, string propertyName, string validatorName)
         {
             this.RaisePropertyChanging(nameof(HasErrors));
-
+            
             _validationErrors.Edit(context =>
             {
                 context.AddOrUpdate((propertyName, validatorName, error));
@@ -44,7 +45,7 @@ namespace DIPOL_UF
         {
             validationSource
                 .Subscribe(x => UpdateErrors(x.Message, propertyName, x.Type))
-                .AddTo(_subscriptions);
+                .DisposeWith(_subscriptions);
         }
 
         protected virtual void OnErrorsChanged(DataErrorsChangedEventArgs e) =>
@@ -68,10 +69,13 @@ namespace DIPOL_UF
                                  .DistinctUntilChanged()
                                  .Select(x => new DataErrorsChangedEventArgs(x.Property));
 
-            WhenErrorsChanged.Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
-                                     .AddTo(_subscriptions);
-            WhenErrorsChanged.Subscribe(OnErrorsChanged).AddTo(_subscriptions);
+            WhenErrorsChanged
+                .Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
+                .DisposeWith(_subscriptions);
 
+            WhenErrorsChanged
+                .Subscribe(OnErrorsChanged)
+                .DisposeWith(_subscriptions);
         }
 
         public virtual List<(string Type, string Message)> GetTypedErrors(string propertyName)
@@ -95,8 +99,8 @@ namespace DIPOL_UF
             {
                 if (disposing)
                 {
-                    foreach (var sub in _subscriptions)
-                        sub.Dispose();
+                    if(!_subscriptions.IsDisposed)
+                        _subscriptions.Dispose();
 
                     _validationErrors.Dispose();
                 }

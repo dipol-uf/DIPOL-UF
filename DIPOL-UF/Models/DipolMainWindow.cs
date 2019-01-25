@@ -20,7 +20,7 @@ using static DIPOL_UF.DIPOL_UF_App;
 
 namespace DIPOL_UF.Models
 {
-    class DipolMainWindow : ObservableObject, IDisposable
+    internal class DipolMainWindow : ObservableObject, IDisposable
     {
         private readonly DispatcherTimer _uiStatusUpdateTimer;
 
@@ -330,12 +330,12 @@ namespace DIPOL_UF.Models
         private void InitializeRemoteSessions()
         {
             // TODO : FIX HERE
-            var pb = new ProgressBar();
-            //{
-            //    IsIndeterminate = true,
-            //    CanAbort = false,
-            //    BarTitle = "Connecting to remote locations..."
-            //};
+            var pb = new ProgressBar()
+            {
+                IsIndeterminate = true,
+                CanAbort = false,
+                BarTitle = "Connecting to remote locations..."
+            };
 
             var pbWindow = new Views.ProgressWindow(new ProgressBarViewModel(pb));
 
@@ -412,17 +412,16 @@ namespace DIPOL_UF.Models
             => CameraPanelSelectedItems.Any(item => item.Value);
         private void ConnectButtonCommandExecute(object parameter)
         {
-            var camQueryModel = new AvailableCamerasModel(_remoteClients);
-            var viewModel = new AvailableCamerasViewModel(camQueryModel);
-            var wind = new Views.AvailableCameraView(viewModel);
-            if (parameter is Window owner)
-                wind.Owner = owner;
-            CanConnect = false;
-            wind.ShowDialog();
-            CanConnect = true;
-
+            // TODO: Fix here
+            //var camQueryModel = new AvailableCamerasModel(_remoteClients);
+            //var viewModel = new AvailableCamerasViewModel(camQueryModel);
+            //var wind = new Views.AvailableCameraView(viewModel);
+            //if (parameter is Window owner)
+            //    wind.Owner = owner;
+            //CanConnect = false;
+            //wind.ShowDialog();
+            //CanConnect = true;
             
-
         }
         /// <summary>
         /// Disconnects cams

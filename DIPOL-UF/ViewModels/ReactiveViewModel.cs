@@ -1,6 +1,6 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Linq.Expressions;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -34,7 +34,8 @@ namespace DIPOL_UF.ViewModels
             @this.Model.WhenPropertyChanged(sourceProperty)
                  .Select(x => x.Value)
                  .ObserveOnUi()
-                 .ToPropertyEx(@this, targetProperty);
+                 .ToPropertyEx(@this, targetProperty)
+                 .DisposeWith(@this._subscriptions);
 
             var sourceName = sourceProperty?.Body.GetMemberInfo().Name;
             var targetName = targetProperty?.Body.GetMemberInfo().Name;
@@ -53,7 +54,8 @@ namespace DIPOL_UF.ViewModels
             @this.Model.WhenPropertyChanged(sourceProperty)
                  .Select(x => converter(x.Value))
                  .ObserveOnUi()
-                 .ToPropertyEx(@this, targetProperty);
+                 .ToPropertyEx(@this, targetProperty)
+                 .DisposeWith(@this._subscriptions);
 
             var sourceName = sourceProperty?.Body.GetMemberInfo().Name;
             var targetName = targetProperty?.Body.GetMemberInfo().Name;
@@ -72,7 +74,9 @@ namespace DIPOL_UF.ViewModels
                  source
                      .Select(converter)
                      .ObserveOnUi()
-                     .ToPropertyEx(@this, targetProperty);
+                     .ToPropertyEx(@this, targetProperty)
+                     .DisposeWith(@this._subscriptions);
+
                  if(!(validationSource is null))
                      @this.CreateValidator(
                          validationSource

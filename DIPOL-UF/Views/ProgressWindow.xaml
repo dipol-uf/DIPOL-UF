@@ -70,7 +70,8 @@
             Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}"
             IsCancel="True"
             Content="{loc:Text Key=General_Abort}"
-            Command="{Binding CancelCommand}" CommandParameter="{Binding ElementName=ProgressWindowInstance}"/>
+            Command="{Binding CancelCommand}" 
+            CommandParameter="{Binding ElementName=ProgressWindowInstance}"/>
 
     </Grid>
 </Window>
