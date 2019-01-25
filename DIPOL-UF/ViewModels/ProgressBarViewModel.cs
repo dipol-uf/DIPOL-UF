@@ -70,12 +70,12 @@ namespace DIPOL_UF.ViewModels
                     100.0 * @this.Value / (@this.Maximum - @this.Minimum));
 
             string format;
-            var decDigit = new[] { @this.Value, @this.Minimum, @this.Maximum }
-                       .Select(x => Math.Log10(x))
-                       .Select(x => new {Log = x, Ceiling = Math.Ceiling(x)})
-                       .Select(x => x.Log.AlmostEqualRelative(x.Ceiling) ? x.Ceiling + 1 : x.Ceiling)
-                       .Max();
-
+            var decDigit = new[] { @this.Value, @this.Minimum, @this.Maximum, 1 }
+                           .Where(x => x != 0)
+                           .Select(x => Math.Log10(Math.Abs(x)))
+                           .Select(x => new {Log = x, Ceiling = Math.Ceiling(x)})
+                           .Select(x => x.Log.AlmostEqualRelative(x.Ceiling) ? x.Ceiling + 1 : x.Ceiling)
+                           .Max();
             if (@this.Minimum == 0)
             {
                 format = string.Format(Localization.ProgressBar_DisplayCountFormatString, decDigit);

@@ -22,6 +22,8 @@ namespace DIPOL_UF.ViewModels
         public ICommand DisconnectButtonCommand => model.DisconnectButtonCommand;
         public ICommand CameraPanelSelectionChangedCommand => model.CameraPanelSelectionChangedCommand;
 
+        public ICommand WindowLoadedCommand => model.WindowLoadedCommand;
+
         public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
         //public ObservableConcurrentDictionary<string, ConnectedCameraViewModel> ConnectedCameras => model.ConnectedCameras;
         public ObservableConcurrentDictionary<string, ConnectedCameraViewModel>.ObservableValueCollection

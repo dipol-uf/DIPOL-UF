@@ -9,11 +9,11 @@ namespace DIPOL_UF.ViewModels
 {
     class AvailableCamerasViewModel : ViewModel<AvailableCamerasModel>
     {
-        public ObservableConcurrentDictionary<string, string> FoundCamerasEx =>
-            model.FoundCameras.PropagateCollectionChanges(ConverterImplementations.CameraToStringAliasConversion);
+        //public ObservableConcurrentDictionary<string, string> FoundCamerasEx =>
+        //    model.FoundCameras.PropagateCollectionChanges(ConverterImplementations.CameraToStringAliasConversion);
 
         // ReSharper disable UnusedMember.Global
-        public ICommand SelectionChangedCommand => model.SelectionChangedCommand;
+        //public ICommand SelectionChangedCommand => model.SelectionChangedCommand;
         public ICommand WindowClosingCommand => model.WindowClosingCommand;
         public ICommand CancelButtonCommand => model.CancelButtonCommand;
         public ICommand ConnectButtonCommand => model.ConnectButtonCommand;
