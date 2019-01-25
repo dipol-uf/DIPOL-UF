@@ -59,17 +59,21 @@ namespace DIPOL_UF.Models
 
         private void InitializeCommands()
         {
-            WindowDragCommand = ReactiveCommand.Create<Window>(
-                Commands.WindowDragCommandProvider.Execute);
-            CancelCommand = ReactiveCommand.Create<Window>(param =>
-            {
-                if (Helper.IsDialogWindow(param))
-                    param.DialogResult = false;
-                IsAborted = true;
-                param.Close();
-            }, this.WhenAnyPropertyChanged(nameof(CanAbort), nameof(IsAborted))
-                     .Select(x => x.CanAbort && !x.IsAborted)
-                     .ObserveOnUi());
+            WindowDragCommand =
+                ReactiveCommand.Create<Window>(
+                                   Commands.WindowDragCommandProvider.Execute)
+                               .DisposeWith(_subscriptions);
+            CancelCommand =
+                ReactiveCommand.Create<Window>(param =>
+                               {
+                                   if (Helper.IsDialogWindow(param))
+                                       param.DialogResult = false;
+                                   IsAborted = true;
+                                   param.Close();
+                               }, this.WhenAnyPropertyChanged(nameof(CanAbort), nameof(IsAborted))
+                                      .Select(x => x.CanAbort && !x.IsAborted)
+                                      .ObserveOnUi())
+                               .DisposeWith(_subscriptions);
         }
 
         private void HookObservers()

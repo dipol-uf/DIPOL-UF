@@ -3,19 +3,29 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:loc="clr-namespace:DIPOL_UF"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
         xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
-        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         x:Name="AvailableCamerasWindow"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vms:AvailableCamerasViewModel}"
         Style="{StaticResource ResourceKey=ContentFont}"
         Title="{loc:Text Key=AvailableCameras}" Height="auto" Width="auto" 
         WindowStyle="ThreeDBorderWindow" SizeToContent="WidthAndHeight" Topmost="True" 
-        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Closing="{cmnds:EventToCommand WindowClosingCommand}"
-        ContentRendered="{cmnds:EventToCommand WindowShownCommand}">
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="ContentRendered">
+            <behaviors:InvokeCommandAction
+                Command="{Binding WindowContentRenderedCommand}"
+                CommandParameter="{Binding ElementName=AvailableCamerasWindow}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger EventName="Closing">
+            <behaviors:InvokeCommandAction
+                Command="{Binding WindowClosingCommand}"
+                CommandParameter="{Binding ElementName=AvailableCamerasWindow}"/>
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
     <DockPanel Margin="10, 5, 10, 5">
         <Label DockPanel.Dock="Top" 
                Content="{loc:Text Key=AvailableCameras_Found,Format='\{0\}:'}" 

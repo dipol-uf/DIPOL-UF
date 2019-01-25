@@ -7,6 +7,7 @@ using System.Windows.Threading;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -304,10 +305,11 @@ namespace DIPOL_UF.Models
             WindowLoadedCommand = ReactiveCommand.CreateFromObservable<Window, Unit>(
                 _ => Observable.FromAsync(InitializeRemoteSessionsAsync));
 
-            ConnectButtonCommand = ReactiveCommand.CreateFromObservable<Unit, Unit>(
-                _ => Observable.FromAsync(ConnectButtonCommandExecuteAsync),
+            ConnectButtonCommand = ReactiveCommand.CreateFromObservable<Window, Unit>(
+                x => Observable.FromAsync(_ => ConnectButtonCommandExecuteAsync(x)),
                 this.WhenAnyPropertyChanged(nameof(CanConnect))
                     .Select(x => x.CanConnect)
+                    .DistinctUntilChanged()
                     .ObserveOnUi());
 
             #endregion
@@ -316,10 +318,15 @@ namespace DIPOL_UF.Models
 
         private void HookObservables()
         {
-            WindowLoadedCommand.IsExecuting
-                               .DistinctUntilChanged()
-                               .Select(x => !x)
-                               .ToPropertyEx(this, x => x.CanConnect);
+            new[]
+                {
+                    WindowLoadedCommand.IsExecuting,
+                    ConnectButtonCommand.IsExecuting
+                }
+                .Select(x => x.DistinctUntilChanged())
+                .CombineLatest(x => !x[0] && !x[1])
+                .ToPropertyEx(this, x => x.CanConnect);
+
         }
 
         private void CameraPanelSelectionChangedCommandExecute(object parameter)
@@ -610,16 +617,12 @@ namespace DIPOL_UF.Models
         // ReSharper restore UnassignedGetOnlyAutoProperty
 
         public ReactiveCommand<Window, Unit> WindowLoadedCommand { get; private set; }
-        public ReactiveCommand<Unit, Unit> ConnectButtonCommand { get; private set; }
+        public ReactiveCommand<Window, Unit> ConnectButtonCommand { get; private set; }
 
         private async Task InitializeRemoteSessionsAsync()
         {
-            ProgressBar pb = null;
-            ProgressBarViewModel pbViewModel = null;
-
-            await Task.Factory.StartNew(() =>
-            {
-                pb = new ProgressBar()
+            var pb = await Task.Run(() =>
+                new ProgressBar()
                 {
                     Minimum = 0,
                     Maximum = 1,
@@ -627,10 +630,10 @@ namespace DIPOL_UF.Models
                     IsIndeterminate = true,
                     CanAbort = false,
                     BarTitle = "Connecting to remote locations..."
-                };
-                pbViewModel = new ProgressBarViewModel(pb);
-            }).ConfigureAwait(false);
-            
+                }).ConfigureAwait(false);
+
+            var pbViewModel = await Task.Run(() => new ProgressBarViewModel(pb)).ConfigureAwait(false);
+
             var pbWindow = Helper.ExecuteOnUi(() => new Views.ProgressWindow().WithDataContext(pbViewModel));
 
             var connectedClients = new List<DipolClient>(_remoteLocations.Length);
@@ -677,18 +680,49 @@ namespace DIPOL_UF.Models
             }).ConfigureAwait(false);
 
         }
-        private Task ConnectButtonCommandExecuteAsync()
+        private async Task ConnectButtonCommandExecuteAsync(Window param)
         {
+            var disposables = new CompositeDisposable();
+
+            var camQueryModel = await Helper.RunNoMarshall(
+                () => new AvailableCamerasModel(_remoteClients)
+                    .DisposeWith(disposables));
+
+            var viewModel = await Helper.RunNoMarshall(
+                () => new AvailableCamerasViewModel(camQueryModel)
+                    .DisposeWith(disposables));
+
+            var wind = Helper.ExecuteOnUi(() =>
+                new Views.AvailableCameraView()
+                {
+                    Owner = param
+                }.WithDataContext(viewModel));
+
+            var tokenSrc = new CancellationTokenSource()
+                .DisposeWith(disposables);
+
+
+            (await Helper.RunNoMarshall(() => camQueryModel
+                .QueryCamerasCommand.Execute()))
+                .Subscribe(_ => { }, () => { }, tokenSrc.Token);
+
+            var result = Helper.ExecuteOnUi(wind.ShowDialog);
+
+            //tokenSrc.Cancel();
+
+            await Helper.RunNoMarshall(() =>
+            {
+                tokenSrc.Cancel();
+                disposables.Dispose();
+            });
+
             // TODO: Fix here
-            //var camQueryModel = new AvailableCamerasModel(_remoteClients);
-            //var viewModel = new AvailableCamerasViewModel(camQueryModel);
-            //var wind = new Views.AvailableCameraView(viewModel);
             //if (parameter is Window owner)
             //    wind.Owner = owner;
             //CanConnect = false;
             //wind.ShowDialog();
             //CanConnect = true;
-            throw new NotImplementedException();
+            //await Task.Delay(1);
         }
         
         #endregion

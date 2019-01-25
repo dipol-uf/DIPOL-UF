@@ -27,7 +27,7 @@ namespace DIPOL_UF.ViewModels
         public string ProgressText { [ObservableAsProperty] get; }
         // ReSharper restore UnassignedGetOnlyAutoProperty
 
-        public ReactiveCommand<System.Windows.Window, Unit> WindowDragCommand => Model.WindowDragCommand;
+        public ICommand WindowDragCommand => Model.WindowDragCommand;
         public ICommand CancelCommand => Model.CancelCommand;
 
         public ProgressBarViewModel(ProgressBar model) : base(model)

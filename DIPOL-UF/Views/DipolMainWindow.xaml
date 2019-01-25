@@ -6,7 +6,6 @@
         xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:loc="clr-namespace:DIPOL_UF"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
-        xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
         Title="{loc:Text Key=ApplicationName}" 
         Height="960" Width="1280" HorizontalContentAlignment="Stretch" MinWidth="768" MinHeight="576"
         Style="{StaticResource ResourceKey=ContentFont}"
@@ -92,7 +91,7 @@
                                 Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" 
                                 Content="{loc:Text Key=General_Connect}"
                                 Command="{Binding ConnectButtonCommand}"
-                                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" 
+                                CommandParameter="{Binding ElementName=DipolWindow}" 
                                 />
                         <Button x:Name="ReleaseExistingCamerasButton" DockPanel.Dock="Right"
                                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
