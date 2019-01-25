@@ -82,14 +82,10 @@ namespace DIPOL_UF.Models
                     .ObserveOnUi());
 
             WindowShownCommand = ReactiveCommand.Create<Window>(
-                WindowShownCommandExecute);
+                WindowShownCommandExecuteAsync);
 
             HookValidators();
             HookObservers();
-
-            
-            QueryAvailableCameras();
-        
         }
 
         private void InitializeCommands()
@@ -138,7 +134,7 @@ namespace DIPOL_UF.Models
             //FoundCameras.CollectionChanged += (sender, e) => ConnectAllButtonCommand.OnCanExecuteChanged();
 
         }
-        private void QueryAvailableCameras()
+        private async Task QueryAvailableCamerasAsync()
         {
             try
             {
@@ -194,7 +190,7 @@ namespace DIPOL_UF.Models
                             Helper.WriteLog(e.Message);
                         }
 
-                    Task.WhenAll(queryTasks);
+                    await Task.WhenAll(queryTasks);
                 }
             }
             
@@ -342,10 +338,9 @@ namespace DIPOL_UF.Models
             await Task.WhenAll(workers);
         }
 
-        private void WindowShownCommandExecute(Window param)
+        private async void WindowShownCommandExecuteAsync(Window param)
         {
-            if (_progressBar is null)
-                return;
+            await QueryAvailableCamerasAsync();
         }
 
         private void ButtonClickCloseWindow(object sender, EventArgs e)

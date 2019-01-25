@@ -140,7 +140,7 @@ namespace DIPOL_UF
                 model.CanAbort = true;
 
             });
-            applicationInstance.Run(new Views.ProgressWindow(vm));
+            applicationInstance.Run(new Views.ProgressWindow().WithDataContext(vm));
         }
     }
 }

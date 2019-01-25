@@ -14,7 +14,9 @@ namespace DIPOL_UF
 {
     public static class Helper
     {
-        public static Dispatcher UiDispatcher => Application.Current?.Dispatcher;
+        public static Dispatcher UiDispatcher => 
+            Application.Current?.Dispatcher
+            ?? throw new InvalidOperationException("Dispatcher is unavailable.");
 
 
         public static Size MeasureString(string strToMeasure, TextBlock presenter)
@@ -113,6 +115,21 @@ namespace DIPOL_UF
                 return action();
             else
                 return Application.Current.Dispatcher.Invoke(action);
+        }
+
+        public static void ExecuteOnUi(Action action)
+        {
+            if (UiDispatcher.CheckAccess())
+                action();
+            else
+                UiDispatcher.Invoke(action);
+        }
+
+        public static T ExecuteOnUi<T>(Func<T> action)
+        {
+            if(UiDispatcher.CheckAccess())
+                return action();
+            return Application.Current.Dispatcher.Invoke(action);
         }
 
         /// <summary>

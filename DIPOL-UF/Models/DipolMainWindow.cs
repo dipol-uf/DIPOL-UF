@@ -5,7 +5,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using System.Linq;
-
+using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using System.Runtime.InteropServices;
+using System.Threading;
 using DIPOL_UF.ViewModels;
 
 using ANDOR_CS.Classes;
@@ -13,6 +17,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 
 using DIPOL_Remote.Classes;
+using ReactiveUI;
 using MenuCollection = System.Collections.ObjectModel.ObservableCollection<DIPOL_UF.ViewModels.MenuItemViewModel>;
 using DelegateCommand = DIPOL_UF.Commands.DelegateCommand;
 
@@ -248,7 +253,6 @@ namespace DIPOL_UF.Models
         {
             InitializeMenu();
             InitializeCommands();
-            InitializeRemoteSessions();
 
             _uiStatusUpdateTimer = new DispatcherTimer(
                 TimeSpan.FromMilliseconds(UiSettingsProvider.Settings.Get("UICamStatusUpdateDelay", 1000)),
@@ -279,6 +283,7 @@ namespace DIPOL_UF.Models
 
                 Task.WaitAll(pool);
                
+                if(!(_remoteClients is null))
                 Parallel.ForEach(_remoteClients, (client) =>
                 {
                     client?.Disconnect();
@@ -325,21 +330,36 @@ namespace DIPOL_UF.Models
             CameraPanelSelectedAllCommand = new DelegateCommand(
                 CameraPanelSelectedAllCommandExecute,
                 DelegateCommand.CanExecuteAlways);
+            #region v2_0
+
+            WindowLoadedCommand = ReactiveCommand.CreateFromObservable<Window, Unit>(WindowLoadedCommandExecute);
+
+            #endregion
 
         }
-        private void InitializeRemoteSessions()
+
+        private async Task InitializeRemoteSessionsAsync()
         {
             // TODO : FIX HERE
-            var pb = new ProgressBar()
+
+            ProgressBar pb = null;
+            ProgressBarViewModel pbViewModel = null;
+
+            await Task.Factory.StartNew(() =>
             {
-                IsIndeterminate = true,
-                CanAbort = false,
-                BarTitle = "Connecting to remote locations..."
-            };
-
-            var pbWindow = new Views.ProgressWindow(new ProgressBarViewModel(pb));
-
-            pbWindow.Show();
+                pb = new ProgressBar()
+                {
+                    Minimum = 0,
+                    Maximum = 1,
+                    Value = 0,
+                    IsIndeterminate = true,
+                    CanAbort = false,
+                    BarTitle = "Connecting to remote locations..."
+                };
+                pbViewModel = new ProgressBarViewModel(pb);
+            }).ConfigureAwait(false);
+            
+            var pbWindow = Helper.ExecuteOnUi(() => new Views.ProgressWindow().WithDataContext(pbViewModel));
 
             var connectedClients = new List<DipolClient>(_remoteLocations.Length);
 
@@ -347,10 +367,10 @@ namespace DIPOL_UF.Models
             {
                 try
                 {
-                    var client = new DipolClient(_remoteLocations[i], 
-                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")), 
-                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")), 
-                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOperationTimeout", "00:00:30")), 
+                    var client = new DipolClient(_remoteLocations[i],
+                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")),
+                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")),
+                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOperationTimeout", "00:00:30")),
                         TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
                     client.Connect();
                     connectedClients.Add(client);
@@ -359,35 +379,38 @@ namespace DIPOL_UF.Models
                 {
                     Helper.WriteLog(enfe.Message);
                     if (Application.Current?.Dispatcher?.IsAvailable() ?? false)
-                        Application.Current?.Dispatcher?.Invoke(() => 
-                            MessageBox.Show(pbWindow, 
-                                enfe.Message, 
-                                "Host not found or unreachable", 
+                        Application.Current?.Dispatcher?.Invoke(() =>
+                            MessageBox.Show(pbWindow,
+                                enfe.Message,
+                                "Host not found or unreachable",
                                 MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
                     else
-                        MessageBox.Show(enfe.Message, "Host not found or unreachable", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                        MessageBox.Show(enfe.Message, "Host not found or unreachable", MessageBoxButton.OK,
+                            MessageBoxImage.Information, MessageBoxResult.OK);
                 }
             });
 
-            var connect = Task.Factory.StartNew(ConnectToClient);
 
-            connect.ContinueWith((task) =>
+            Helper.ExecuteOnUi(pbWindow.Show);
+            await Task.Factory.StartNew(ConnectToClient).ConfigureAwait(false);
+
+            _remoteClients = connectedClients.ToArray();
+            pb.BarComment = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
+
+            await Task.Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")));
+
+            Helper.ExecuteOnUi(pbWindow.Close);
+
+            CanConnect = true;
+
+            await Task.Factory.StartNew(() =>
             {
-                _remoteClients = connectedClients.ToArray();
-                pb.BarComment = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
-
-                Task.Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750"))).Wait();
-
-                if(Application.Current?.Dispatcher?.IsAvailable() ?? false)
-                    Application.Current?.Dispatcher?.Invoke(pbWindow.Close);
-
-                CanConnect = true;
-
-            });
-
+                pbViewModel.Dispose();
+                pb.Dispose();
+            }).ConfigureAwait(false);
 
         }
-       
+
         private void CameraPanelSelectionChangedCommandExecute(object parameter)
         {
             if (parameter is string key)
@@ -421,7 +444,7 @@ namespace DIPOL_UF.Models
             //CanConnect = false;
             //wind.ShowDialog();
             //CanConnect = true;
-            
+
         }
         /// <summary>
         /// Disconnects cams
@@ -659,7 +682,6 @@ namespace DIPOL_UF.Models
         private void DispatcherTimerTickHandler(object sender, EventArgs e)
             =>   RaisePropertyChanged(nameof(CameraRealTimeStats));
 
-
         private async Task DisposeCamera(string camId, bool removeSelection = true)
         {
 
@@ -680,5 +702,15 @@ namespace DIPOL_UF.Models
                 });
            
         }
+
+        #region v2_0
+        public ReactiveCommand<Window, Unit> WindowLoadedCommand { get; private set; }
+
+        private IObservable<Unit> WindowLoadedCommandExecute(Window window)
+        {
+            //return Observable.Return(Unit.Default);
+            return Observable.FromAsync(InitializeRemoteSessionsAsync);
+        }
+        #endregion
     }
 }
