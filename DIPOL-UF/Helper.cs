@@ -297,7 +297,7 @@ namespace DIPOL_UF
                     }, null)
                     .ConfigureAwait(marshal);
 
-        public static ConfiguredTaskAwaitable ExpectCancellation<T>(
+        public static ConfiguredTaskAwaitable<T> ExpectCancellation<T>(
             this Task<T> input, bool marshal = false)
             => input.ContinueWith((task, param) =>
                     {
@@ -305,7 +305,8 @@ namespace DIPOL_UF
                         if (!(task.Exception is null))
                             WriteLog(task.Exception.Message);
 #endif
-                    }, null, TaskContinuationOptions.OnlyOnCanceled)
+                        return task.IsCompleted ? task.Result : default;
+                    }, null)
                     .ConfigureAwait(marshal);
     }
 }
