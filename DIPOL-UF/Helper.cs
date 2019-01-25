@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
-
+using DIPOL_UF.ViewModels;
 using static System.Math;
 
 namespace DIPOL_UF
@@ -79,7 +79,7 @@ namespace DIPOL_UF
 
         public static void WriteLog(object entry)
             => WriteLog(entry.ToString());
-
+        
         public static string GetCameraHostName(string input)
         {
             string host = input.Split(':')[0];
@@ -246,9 +246,6 @@ namespace DIPOL_UF
             return result;
         }
 
-        public static void AddTo(this IDisposable subscription, IList<IDisposable> storage)
-            => storage.Add(subscription);
-
         public static IObservable<T> ObserveOnUi<T>(this IObservable<T> input)
             => input.ObserveOn(UiDispatcher);
 
@@ -257,5 +254,12 @@ namespace DIPOL_UF
             bool condition,
             Func<IObservable<T>, IObservable<T>> modifier) =>
             condition ? modifier(input) : input;
+
+        public static T WithDataContext<T>(this T control, ReactiveObjectEx dataContext)
+            where T : FrameworkElement
+        {
+            control.DataContext = dataContext;
+            return control;
+        }
     }
 }

@@ -6,6 +6,7 @@
         xmlns:loc="clr-namespace:DIPOL_UF"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
         xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
+        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         x:Name="AvailableCamerasWindow"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vms:AvailableCamerasViewModel}"
@@ -28,7 +29,6 @@
                   ItemTemplate="{StaticResource ResourceKey=FoundCamerasListViewItemTemplate}"
                   SelectionMode="Multiple" SelectedIndex="-1"
                   SelectionChanged="{cmnds:EventToCommand SelectionChangedCommand}">
-            
         </ListView>
         <Border DockPanel.Dock="Top" VerticalAlignment="Bottom" 
                 Style="{StaticResource ResourceKey=BorderStyle}"

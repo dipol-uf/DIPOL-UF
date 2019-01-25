@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows;
 using DynamicData.Binding;
@@ -80,7 +81,7 @@ namespace DIPOL_UF.Models
             this.WhenAnyPropertyChanged(nameof(IsIndeterminate))
                 .DistinctUntilChanged()
                 .Subscribe(x => Reset())
-                .AddTo(_subscriptions);
+                .DisposeWith(_subscriptions);
         }
 
         protected sealed override void HookValidators()

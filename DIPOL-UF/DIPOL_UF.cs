@@ -44,24 +44,24 @@ namespace DIPOL_UF
         [STAThread]
         private static int Main(string[] args)
         {
-            //System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
-            //System.Diagnostics.Debug.AutoFlush = true;
-            //System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
-            //System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+            System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
+            System.Diagnostics.Debug.AutoFlush = true;
+            System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
 
-            //var applicationInstance = new App();
-            //applicationInstance.InitializeComponent();
+            var applicationInstance = new App();
+            applicationInstance.InitializeComponent();
 
 
-            //using (var mainModel = new Models.DipolMainWindow())
-            //{
-            //    var view = new ViewModels.DipolMainWindowViewModel(mainModel);
+            using (var mainModel = new Models.DipolMainWindow())
+            {
+                var view = new ViewModels.DipolMainWindowViewModel(mainModel);
 
-            //    applicationInstance.Run(new Views.DipolMainWindow(view));
+                applicationInstance.Run(new Views.DipolMainWindow(view));
 
-            //}
+            }
 
-            Test();
+            //Test();
 
             return 0;
         }
