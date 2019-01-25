@@ -9,8 +9,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
-using DIPOL_UF.ViewModels;
-using static System.Math;
 
 namespace DIPOL_UF
 {
@@ -92,7 +90,7 @@ namespace DIPOL_UF
         /// <summary>
         /// Checks if dispatcher has not been shut down yet.
         /// </summary>
-        /// <param name="d">Dispatcher instance (usually <see cref="Application.Current.Dispatcher"/>)</param>
+        /// <param name="d">Dispatcher instance (usually <see cref="Dispatcher"/>)</param>
         /// <returns>True if Dispatcher.Invoke can still be called.</returns>
         public static bool IsAvailable(this Dispatcher d)
             => !d.HasShutdownStarted && !d.HasShutdownFinished;
@@ -132,11 +130,11 @@ namespace DIPOL_UF
 
 
         public static T GetValueOrNullSafe<T>(this Dictionary<string, object> settings, string key,
-            T nullReplacement = default(T))
+            T nullReplacement = default)
         {
             var tempValue = GetValueOrNullSafe(settings, key);
 
-            object value = null;
+            object value;
 
             if (tempValue is System.Collections.ArrayList list)
                 value = list.ToArray();
@@ -156,10 +154,10 @@ namespace DIPOL_UF
             var s = new StringBuilder();
 
             if (enumer.MoveNext())
-                s.Append(enumer.Current.ToString());
+                s.Append(enumer.Current);
 
             while (enumer.MoveNext())
-                s.Append(", " + enumer.Current.ToString());
+                s.Append(", " + enumer.Current);
 
             return s.ToString();
         }
@@ -230,13 +228,13 @@ namespace DIPOL_UF
             if (typeof(T).BaseType != typeof(Enum))
                 throw new ArgumentException($"Provided type {typeof(T)} should be {typeof(Enum)}-based ");
 
-            var castEnm = enm as Enum;
-
-            return Enum
-                   .GetValues(typeof(T))
-                   .OfType<T>()
-                   .Where(item => castEnm.HasFlag(item as Enum))
-                   .ToArray();
+            if(enm is Enum castEnm)
+                return Enum
+                       .GetValues(typeof(T))
+                       .OfType<T>()
+                       .Where(item => item is Enum enumItem && castEnm.HasFlag(enumItem))
+                       .ToArray();
+            return new T[0];
         }
 
         public static double Clamp(this double val, double min, double max)

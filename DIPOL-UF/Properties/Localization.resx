@@ -135,6 +135,15 @@
   <data name="AvailableCameras" xml:space="preserve">
     <value>Available Cameras</value>
   </data>
+  <data name="AvailableCameras_AcquiredLocalCamera" xml:space="preserve">
+    <value>Acquired local camera {0}.</value>
+  </data>
+  <data name="AvailableCameras_AcquiredRemoteCamera" xml:space="preserve">
+    <value>Acquired remote camera {0}.</value>
+  </data>
+  <data name="AvailableCameras_CameraIsUnavailable" xml:space="preserve">
+    <value>Camera resource is unavailable.</value>
+  </data>
   <data name="AvailableCameras_Found" xml:space="preserve">
     <value>Found</value>
   </data>

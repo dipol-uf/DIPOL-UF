@@ -115,6 +115,33 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Acquired local camera {0}..
+        /// </summary>
+        public static string AvailableCameras_AcquiredLocalCamera {
+            get {
+                return ResourceManager.GetString("AvailableCameras_AcquiredLocalCamera", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acquired remote camera {0}..
+        /// </summary>
+        public static string AvailableCameras_AcquiredRemoteCamera {
+            get {
+                return ResourceManager.GetString("AvailableCameras_AcquiredRemoteCamera", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Camera resource is unavailable..
+        /// </summary>
+        public static string AvailableCameras_CameraIsUnavailable {
+            get {
+                return ResourceManager.GetString("AvailableCameras_CameraIsUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Found.
         /// </summary>
         public static string AvailableCameras_Found {
