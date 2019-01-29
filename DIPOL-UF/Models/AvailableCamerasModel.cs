@@ -26,6 +26,7 @@ using DIPOL_UF.Views;
 using DynamicData;
 using DynamicData.Alias;
 using DynamicData.Binding;
+using DynamicData.Kernel;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -36,26 +37,30 @@ namespace DIPOL_UF.Models
 
         private readonly DipolClient[] _remoteClients;
 
-        private readonly SourceCache<(string Id, CameraBase Camera), string> FoundDevices
-            = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id);
+        private readonly SourceCache<(string Id, CameraBase Camera), string> FoundDevices;
 
         [Reactive]
         public bool IsInteractive { get; private set; }
 
         public IObservableCache<(string Id, CameraBase Camera), string> FoundCameras { get; private set; }
+        public SourceList<string> SelectedIds { get; }
 
         public ReactiveCommand<Window, Window> WindowContentRenderedCommand { get; private set; }
-        public ReactiveCommand<Window, Unit> WindowClosingCommand { get; private set; }
-        public ReactiveCommand<Window, Unit> CancelButtonCommand { get; private set; }
+        public ReactiveCommand<Window, Window> CancelButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> QueryCamerasCommand { get; private set; }
-        public ReactiveCommand<Unit, Unit> ConnectButtonCommand { get; private set; }
-        public ReactiveCommand<Unit, Unit> ConnectAllButtonCommand { get; private set; }
+        public ReactiveCommand<Window, Unit> ConnectButtonCommand { get; private set; }
+        public ReactiveCommand<Window, Window> ConnectAllButtonCommand { get; private set; }
         
         
         public AvailableCamerasModel(DipolClient[] remoteClients = null)
         {
             _remoteClients = remoteClients;
             IsInteractive = true;
+            SelectedIds = new SourceList<string>().DisposeWith(_subscriptions);
+
+            FoundDevices =
+                new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
+                    .DisposeWith(_subscriptions);
 
             FoundDevices.Edit(context =>
             {
@@ -72,8 +77,8 @@ namespace DIPOL_UF.Models
             });
 
 
-            InitializeCommands();
             HookValidators();
+            InitializeCommands();
             HookObservables();
         }
 
@@ -85,35 +90,29 @@ namespace DIPOL_UF.Models
                     .ObserveOnUi();
 
             CancelButtonCommand =
-                ReactiveCommand.Create<Window>(
-                                   x => x?.Close(),
+                ReactiveCommand.Create<Window, Window>(CancelButtonCommandExecute,
                                    interactivitySrc)
                                .DisposeWith(_subscriptions);
 
             ConnectAllButtonCommand
-                = ReactiveCommand.CreateFromObservable<Unit, Unit>(
-                                     _ => Observable.FromAsync(ConnectAllButtonCommandExecuteAsync),
-                                     interactivitySrc)
+                = ReactiveCommand.Create<Window, Window>(ConnectAllButtonCommandExecute,
+                                     interactivitySrc.CombineLatest(FoundDevices.CountChanged.Select(x => x != 0),
+                                         (x, y) => x && y))
                                  .DisposeWith(_subscriptions);
 
             ConnectButtonCommand
-                = ReactiveCommand.CreateFromObservable<Unit, Unit>(
-                                     _ => Observable.FromAsync(ConnectButtonCommandExecuteAsync),
-                                     interactivitySrc)
+                = ReactiveCommand.Create<Window>(CloseWindow,
+                                     interactivitySrc.CombineLatest(SelectedIds.CountChanged.Select(x => x != 0),
+                                         (x, y) => x && y))
                                  .DisposeWith(_subscriptions);
-
+            
 
             QueryCamerasCommand =
                 ReactiveCommand.CreateFromObservable<Unit, Unit>(
                                   _ => Observable.FromAsync(QueryCamerasCommandExecuteAsync))
                                .DisposeWith(_subscriptions);
 
-            WindowClosingCommand =
-                ReactiveCommand.Create<Window>(
-                                   WindowClosingCommandExecute)
-                               .DisposeWith(_subscriptions);
-
-            WindowContentRenderedCommand =
+           WindowContentRenderedCommand =
                 ReactiveCommand.Create<Window, Window>(x => x)
                                .DisposeWith(_subscriptions);
         }
@@ -389,46 +388,45 @@ namespace DIPOL_UF.Models
             IsInteractive = true;
         }
 
-        private async Task ConnectAllButtonCommandExecuteAsync()
+        private Window ConnectAllButtonCommandExecute(Window param)
         {
-            await Task.Delay(1);
-        }
-
-        private async Task ConnectButtonCommandExecuteAsync()
-        {
-            await Task.Delay(1);
-        }
-
-        private void WindowClosingCommandExecute(Window window)
-        {
-            //WindowShownCommand.Dispose();
-            //Parallel.ForEach(FoundCameras.Where(item => !SelectedItems.Contains(item.Key)), (item) => item.Value?.Dispose());
-            //_selectedCameras = FoundCameras.Join(SelectedItems, x => x.Key, y => y, (x, y) => x).ToList();
-            //FoundCameras.Clear();
-            //SelectedItems.Clear();
-
-        }
-
-
-        private void SelectionChangedHandler(object sender, EventArgs e)
-        {
-            if (e is SelectionChangedEventArgs param)
+            SelectedIds.Edit(context =>
             {
-                //foreach (var remItem in param.RemovedItems)
-                //    if (remItem is KeyValuePair<string, string> rawItem)
-                //        _selectedItems.Remove(rawItem.Key);
-
-                //foreach (var addItem in param.AddedItems)
-                //    if (addItem is KeyValuePair<string, string> rawItem)
-                //        _selectedItems.Add(rawItem.Key);
-
-            }
+                context.Clear();
+                context.AddRange(FoundCameras.Keys);
+            });
+            return param;
         }
+        private Window CancelButtonCommandExecute(Window param)
+        {
+            SelectedIds.Edit(context =>
+            {
+                context.Clear();
+            });
+            return param;
+        }
+
+        private static void CloseWindow(Window param)
+            => param?.Close();
+        
 
         private void HookObservables()
         {
-            FoundCameras = FoundDevices.AsObservableCache();
+            FoundCameras = FoundDevices.AsObservableCache().DisposeWith(_subscriptions);
+            ConnectAllButtonCommand.Subscribe(CloseWindow).DisposeWith(_subscriptions);
+            CancelButtonCommand.Subscribe(CloseWindow).DisposeWith(_subscriptions);
+            SelectedIds.CountChanged.Subscribe(Console.WriteLine).DisposeWith(_subscriptions);
         }
 
+        public override void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if(disposing)
+                    foreach(var (_, cam) in FoundDevices.Items)
+                        cam?.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 }

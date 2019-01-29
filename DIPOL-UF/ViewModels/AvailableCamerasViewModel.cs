@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -22,25 +24,23 @@ namespace DIPOL_UF.ViewModels
          = new ObservableCollectionExtended<Tuple<string, string>>();
 
         
-        public ICommand WindowClosingCommand => Model.WindowClosingCommand;
         public ICommand CancelButtonCommand => Model.CancelButtonCommand;
         public ICommand ConnectButtonCommand => Model.ConnectButtonCommand;
         public ICommand ConnectAllButtonCommand => Model.ConnectAllButtonCommand;
         public ICommand WindowContentRenderedCommand => Model.WindowContentRenderedCommand;
         
-        public ICommand TestCommand { get; private set; }
+        public ICommand SelectionChangedCommand { get; private set; }
 
         public AvailableCamerasViewModel(AvailableCamerasModel model) 
             : base(model)
         {
-            TestCommand = ReactiveCommand.Create<object, Unit>(
-                x => { return Unit.Default;});
 
           HookValidators();
+          HookCommands();
           HookObservables();
         }
 
-        
+
         private void HookObservables()
         {
             var observer = Model.FoundCameras.Connect();
@@ -53,12 +53,33 @@ namespace DIPOL_UF.ViewModels
                     .Bind(ListedCameras)
                     .Subscribe()
                     .DisposeWith(_subscriptions);
+
+
+            (SelectionChangedCommand as ReactiveCommand<IList, IList>)
+                ?.ObserveOnUi()
+                .Select(x => x.Cast<Tuple<string, string>>().Select(y => y.Item1).ToList())
+                .Subscribe(x =>
+                {
+                    Model.SelectedIds.Edit(context =>
+                    {
+                        context.Clear();
+                        context.AddRange(x);
+                    });
+                })
+                .DisposeWith(_subscriptions);
+
             //observer.DynamicData.KernelSelect(
             //            x => (Host: ConverterImplementations.CameraKeyToHostConversion(x.Id),
             //                Alias: ConverterImplementations.CameraToStringAliasConversion(x.Id)))
             //        .Sort(SortExpressionComparer<string>.Descending(x => x.Host));
         }
 
-        
+        private void HookCommands()
+        {
+            SelectionChangedCommand =
+                ReactiveCommand.Create<IList, IList>(x => x)
+                               .DisposeWith(_subscriptions);
+        }
+     
     }
 }
