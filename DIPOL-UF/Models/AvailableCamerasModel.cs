@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,28 +9,20 @@ using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
 
 using DIPOL_Remote.Classes;
-
-using DIPOL_UF.Commands;
-using System.ComponentModel;
-using System.Net.Mime;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.RightsManagement;
 using DIPOL_UF.Converters;
 using DIPOL_UF.ViewModels;
 using DIPOL_UF.Views;
 using DynamicData;
-using DynamicData.Alias;
 using DynamicData.Binding;
-using DynamicData.Kernel;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace DIPOL_UF.Models
 {
-    internal sealed class AvailableCamerasModel : ReactiveObjectEx
+    internal sealed class AvailableCamerasModel : ReactiveObjectEx //-V3073
     {
 
         private readonly DipolClient[] _remoteClients;
@@ -62,21 +52,6 @@ namespace DIPOL_UF.Models
                 new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
                     .DisposeWith(_subscriptions);
 
-            FoundDevices.Edit(context =>
-            {
-                context.AddOrUpdate(
-                    new (string Id, CameraBase Camera)[]
-                    {
-                        ("111111", null),
-                        ("222222", null),
-                        ("333333", null),
-                        ("666666", null),
-                        ("444444", null),
-                        ("555555", null),
-                    });
-            });
-
-
             HookValidators();
             InitializeCommands();
             HookObservables();
@@ -96,7 +71,8 @@ namespace DIPOL_UF.Models
 
             ConnectAllButtonCommand
                 = ReactiveCommand.Create<Window, Window>(ConnectAllButtonCommandExecute,
-                                     interactivitySrc.CombineLatest(FoundDevices.CountChanged.Select(x => x != 0),
+                                     interactivitySrc.CombineLatest(
+                                         FoundDevices.CountChanged.ObserveOnUi().Select(x => x != 0),
                                          (x, y) => x && y))
                                  .DisposeWith(_subscriptions);
 
@@ -409,13 +385,14 @@ namespace DIPOL_UF.Models
         private static void CloseWindow(Window param)
             => param?.Close();
         
-
         private void HookObservables()
         {
+            // Binding source collection to the public read-only interface
             FoundCameras = FoundDevices.AsObservableCache().DisposeWith(_subscriptions);
+            // Invokes [CloseWindow] after selection is updated
             ConnectAllButtonCommand.Subscribe(CloseWindow).DisposeWith(_subscriptions);
+            // Invokes [CloseWindow] after selection is updated
             CancelButtonCommand.Subscribe(CloseWindow).DisposeWith(_subscriptions);
-            SelectedIds.CountChanged.Subscribe(Console.WriteLine).DisposeWith(_subscriptions);
         }
 
         public override void Dispose(bool disposing)
@@ -427,6 +404,27 @@ namespace DIPOL_UF.Models
                         cam?.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        public List<(string Id, CameraBase Camera)> RetrieveSelectedDevices()
+        {
+            var result = new List<(string Id, CameraBase Camera)>();
+
+            FoundDevices.Edit(context =>
+            {
+                foreach (var id in SelectedIds.Items)
+                {
+                    var val = context.Lookup(id);
+                    if (val.HasValue)
+                    {
+                        result.Add(val.Value);
+                        context.Remove(id);
+                    }
+
+                }
+            });
+
+            return result;
         }
     }
 }

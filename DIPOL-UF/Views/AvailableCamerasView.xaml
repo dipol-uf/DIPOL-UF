@@ -6,7 +6,6 @@
         xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:loc="clr-namespace:DIPOL_UF"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
-        xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
         x:Name="AvailableCamerasWindow"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vms:AvailableCamerasViewModel}"
@@ -22,7 +21,7 @@
         </behaviors:EventTrigger>
         <behaviors:EventTrigger EventName="Closing">
             <behaviors:InvokeCommandAction
-                Command="{Binding WindowClosingCommand}"
+                Command="{Binding CancelButtonCommand}"
                 CommandParameter="{Binding ElementName=AvailableCamerasWindow}"/>
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>

@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using DIPOL_UF.Models;
-
-using ANDOR_CS.Classes;
 using DIPOL_UF.Converters;
 using DynamicData;
 using DynamicData.Alias;
@@ -67,11 +62,6 @@ namespace DIPOL_UF.ViewModels
                     });
                 })
                 .DisposeWith(_subscriptions);
-
-            //observer.DynamicData.KernelSelect(
-            //            x => (Host: ConverterImplementations.CameraKeyToHostConversion(x.Id),
-            //                Alias: ConverterImplementations.CameraToStringAliasConversion(x.Id)))
-            //        .Sort(SortExpressionComparer<string>.Descending(x => x.Host));
         }
 
         private void HookCommands()

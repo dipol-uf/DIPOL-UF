@@ -708,7 +708,7 @@ namespace DIPOL_UF.Models
 
             var result = Helper.ExecuteOnUi(wind.ShowDialog);
 
-            //tokenSrc.Cancel();
+            var cams = camQueryModel.RetrieveSelectedDevices();
 
             await Helper.RunNoMarshall(() =>
             {
@@ -716,13 +716,7 @@ namespace DIPOL_UF.Models
                 disposables.Dispose();
             });
 
-            // TODO: Fix here
-            //if (parameter is Window owner)
-            //    wind.Owner = owner;
-            //CanConnect = false;
-            //wind.ShowDialog();
-            //CanConnect = true;
-            //await Task.Delay(1);
+            
         }
         
         #endregion
