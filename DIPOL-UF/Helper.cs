@@ -105,24 +105,10 @@ namespace DIPOL_UF
             => !d.HasShutdownStarted && !d.HasShutdownFinished;
 
         public static void ExecuteOnUI(Action action)
-        {
-            if (!Application.Current?.Dispatcher?.IsAvailable() ?? true)
-                action();
-            else
-                Application.Current.Dispatcher.Invoke(action);
-        }
+            => ExecuteOnUi(action);
 
         public static T ExecuteOnUI<T>(Func<T> action)
-        {
-            if (!Application.Current?.Dispatcher?.IsAvailable() ?? true)
-                throw new InvalidOperationException(
-                    "Application and/or Dispatcher are unavailable. Cannot execute code on UI thread");
-
-            if (Thread.CurrentThread == Application.Current.Dispatcher.Thread)
-                return action();
-            else
-                return Application.Current.Dispatcher.Invoke(action);
-        }
+            => ExecuteOnUi(action);
 
         public static void ExecuteOnUi(Action action)
         {
@@ -310,7 +296,7 @@ namespace DIPOL_UF
                         if (!(task.Exception is null))
                             WriteLog(task.Exception.Message);
 #endif
-                        return task.IsCompleted ? task.Result : default;
+                        return task.Status == TaskStatus.RanToCompletion ? task.Result : default;
                     }, null)
                     .ConfigureAwait(marshal);
     }
