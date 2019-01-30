@@ -708,6 +708,7 @@ namespace DIPOL_UF.Models
 
             var result = Helper.ExecuteOnUi(wind.ShowDialog);
 
+            // TODO: Process cams
             var cams = camQueryModel.RetrieveSelectedDevices();
 
             await Helper.RunNoMarshall(() =>
@@ -716,7 +717,8 @@ namespace DIPOL_UF.Models
                 disposables.Dispose();
             });
 
-            
+            foreach(var(_, cam) in cams)
+                cam?.Dispose();
         }
         
         #endregion
