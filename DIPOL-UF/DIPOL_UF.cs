@@ -46,9 +46,7 @@ namespace DIPOL_UF
         [STAThread]
         private static int Main(string[] args)
         {
-            Test();
-            return 0;
-
+          
             System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
             System.Diagnostics.Debug.AutoFlush = true;
             System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
@@ -71,32 +69,30 @@ namespace DIPOL_UF
             return 0;
         }
 
-        static DIPOL_UF_App()
-        {
-            
-        }
-
         private static void Test()
         {
             var list = new SourceList<int>();
-            var list2 =  new SourceList<int>();
+            var list2 = new SourceCache<int, int>(x => x);
             list.Connect().Bind(out var coll1).Subscribe();
             list2.Connect().Bind(out var coll2).Subscribe();
 
 
             //coll1.ObserveCollectionChanges().Subscribe(x => Console.WriteLine(x.EventArgs.Action));
             //coll2.ObserveCollectionChanges().Subscribe(x => Console.WriteLine(x.EventArgs.Action));
-            
-            list.Connect().Except(list2.Connect()).Bind(out var test).Subscribe();
-            test.WhenPropertyChanged(x => x.Count).Select(x => x.Value != 0).Subscribe(Console.WriteLine);
+
+            list.Connect().Except(list2.Connect().RemoveKey()).Bind(out var coll).Subscribe();
+            coll.WhenValueChanged(x => x.Count).Select(x => x != 0).Subscribe(Console.WriteLine);
+
 
             list.AddRange(new [] {1, 2, 3, 4, 5, 10, 99});
             Console.WriteLine("-----------------");
-            list2.AddRange(new [] {1, 2, 3, 4, 5, 6});
-            list2.Add(99);
+            list2.AddOrUpdate(new [] {1, 2, 3, 4, 5, 6});
+            list2.AddOrUpdate(99);
             list.Add(-123);
-            //coll1.Except(coll2).Subscribe(new AnonymousObserver<int>(x => Console.WriteLine(x)));
-            //coll1.
+            list2.Edit(context => context.Remove(6));
+            list2.AddOrUpdate(new[]{-123, 10});
+
+
 
             list.Dispose();
         }
