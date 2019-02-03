@@ -150,7 +150,17 @@ namespace DIPOL_UF.Models
 
                 return result.Sum();
             }
+#if DEBUG
 
+            FoundDevices.Edit(context =>
+            {
+                context.AddOrUpdate(
+                    Enumerable.Range(0, 4)
+                              .Select(Camera.GetDebugInterface)
+                              .Select(x => (Id: $"localhost:{x.ToString()}", Camera: x)));
+            });
+
+#endif
             return 0;
         }
         private async Task<int> QueryLocalCamerasAsync(int nLocal, CancellationToken token, ProgressBar pb)
