@@ -75,8 +75,9 @@
                     </Grid>
                 </Border>
                 <ListView x:Name="CameraTreeListView" 
-                            BorderThickness="0" TabIndex="0" 
+                            TabIndex="0" 
                             Grid.Row="1" 
+                            
                             KeyboardNavigation.ControlTabNavigation="Cycle"
                             ItemsSource="{Binding CameraPanel}"
                             Style="{StaticResource ResourceKey=ListTreeViewStyle}"

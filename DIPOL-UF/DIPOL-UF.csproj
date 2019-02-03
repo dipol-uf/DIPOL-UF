@@ -221,7 +221,6 @@
     <Compile Include="Helper.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
     <Compile Include="Models\ConnectedCamera.cs" />
-    <Compile Include="Models\ConnectedCamerasTreeModel.cs" />
     <Compile Include="Models\DipolImagePresenter.cs" />
     <Compile Include="Models\DipolMainWindow.cs" />
     <Compile Include="Models\MenuItemModel.cs" />
@@ -247,12 +246,12 @@
     <Compile Include="ViewModels\AcquisitionSettingsViewModel.cs" />
     <Compile Include="ViewModels\AvailableCamerasViewModel.cs" />
     <Compile Include="ViewModels\CameraPropertiesViewModel.cs" />
-    <Compile Include="ViewModels\ConnectedCameraTreeItemViewModel.cs" />
+    <Compile Include="ViewModels\MainWindowTreeItemViewModel.cs" />
     <Compile Include="ViewModels\ConnectedCameraViewModel.cs" />
     <Compile Include="ViewModels\DipolImagePresenterViewModel.cs" />
     <Compile Include="ViewModels\DipolMainWindowViewModel.cs" />
+    <Compile Include="ViewModels\MainWindowTreeViewModel.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
-    <Compile Include="ViewModels\ConnectedCamerasTreeViewModel.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
     <Compile Include="ViewModels\ReactiveViewModel.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />

@@ -6,7 +6,7 @@
     <cnvrt:BoolToVisibilityValueConverter x:Key="BoolToVisibilityConverter"/>
     <cnvrt:CameraKeyToStringValueConverter x:Key="CameraKeyToStringConverter"/>
     <cnvrt:CameraStatsToStringMultiValueConverter x:Key="CameraStatsToStringMultiConverter"/>
-    <cnvrt:TemperatureToBrushMultiValueConverter x:Key="TemperatureToBrushMultiConverter"/>
+    <cnvrt:TemperatureToBrushValueConverter x:Key="TemperatureToBrushConverter"/>
     <cnvrt:TemperatureStatusToBrushMultiValueConverter x:Key="TemperatureStatusToBrushMultiConverter"/>
     <cnvrt:CameraToStringAliasValueConverter x:Key="CameraToStringAliasConverter"/>
     <cnvrt:CameraKeyToDictionaryValueMultiValueConverter x:Key="CameraKeyToValueMultiConverter"/>

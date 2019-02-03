@@ -23,7 +23,7 @@
     <DataTemplate x:Key="ListTreeViewItemTemplate">
         <!--For each group there is expander with sublist of all associated cameras-->
         <!--Name is group name (i.e. location)-->
-        <Expander Header="{Binding Name}" IsExpanded="True">
+        <Expander Header="{Binding GroupName}" IsExpanded="True">
             <!--List of cameras in a group-->
             <ListView ItemsSource="{Binding CameraList}" 
                       Style="{StaticResource ResourceKey=ListTreeViewStyle}"
@@ -62,49 +62,25 @@
                                         </MultiBinding>
                                     </CheckBox.IsChecked>
                                 </CheckBox>
-                                <Label Content="{Binding Value.Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}" VerticalAlignment="Center" Width="155"/>
+                                <Label Content="{Binding Name}" VerticalAlignment="Center" Width="155"/>
                             </StackPanel>
                             <!--Second horizontal panel contains temperature information-->
                             <StackPanel Orientation="Horizontal">
                                 <Label VerticalAlignment="Center" Width="70"  HorizontalAlignment="Right"
                                        HorizontalContentAlignment="Right"
                                        Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}"
+                                       Content="{Binding Temperature, StringFormat={}{0:#0.00}}"
+                                       Foreground="{Binding Temperature, 
+                                            Converter={StaticResource TemperatureToBrushConverter},
+                                            ConverterParameter={StaticResource TemperatureColorBrushCollection}}"
                                        x:Name="TemperatureLabel">
-                                    <!--Content is multi-bound to DipolWindow's Context collection of camera statuses and to the string ID of a current camera (Key)-->
-                                    <!--Converter parameter is used to retrieve specific parameter string from camera status dictionary-->
-                                    <Label.Content>
-                                        <MultiBinding
-                                        Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
-                                        ConverterParameter="Temp"
-                                        UpdateSourceTrigger="PropertyChanged"
-                                        StringFormat="\{0,6:#0.00\}">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
-                                            <Binding Path="Key"/>
-                                        </MultiBinding>
-                                    </Label.Content>
-                                    <!--Foreground is bound the same way to Temp value, but returned value is one of the StaticResource-->
-                                    <!--pre-defined brush collection.-->
-                                    <Label.Foreground>
-                                        <MultiBinding
-                                            Converter="{StaticResource ResourceKey=TemperatureToBrushMultiConverter}"
-                                            ConverterParameter="{StaticResource TemperatureColorBrushCollection}"
-                                            UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
-                                            <Binding Path="Key"/>
-                                        </MultiBinding>
-                                    </Label.Foreground>
+                                    
                                 </Label>
                                 <Label VerticalAlignment="Center" HorizontalAlignment="Right"
                                        x:Name="TemperatureStatusLabel">
                                     <!--Content comes from TempStatus TemperatureStatus enum-->
                                     <Label.Content>
-                                        <MultiBinding
-                                            Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
-                                            ConverterParameter="TempStatus"
-                                            UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
-                                            <Binding Path="Key"/>
-                                        </MultiBinding>
+                                        <Binding Path="TempStatus"/>
                                     </Label.Content>
                                     <!--Color comes from the same status in accordance to static dictionary-->
                                     <Label.Foreground>
@@ -112,13 +88,12 @@
                                             Converter="{StaticResource ResourceKey=TemperatureStatusToBrushMultiConverter}"
                                             ConverterParameter="{StaticResource TemperatureStatusColorBrushCollection}"
                                             UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
                                             <Binding Path="Key"/>                                            
                                         </MultiBinding>
                                     </Label.Foreground>
                                 </Label>
-                                <!--<Label VerticalAlignment="Center" HorizontalAlignment="Right">
-                                    --><!--Content comes from TempStatus TemperatureStatus enum--><!--
+                                <Label VerticalAlignment="Center" HorizontalAlignment="Right">
+                                    <!--Content comes from TempStatus TemperatureStatus enum-->
                                     <Label.Content>
                                         <MultiBinding
                                             Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
@@ -129,7 +104,7 @@
                                             <Binding Path="Key"/>
                                         </MultiBinding>
                                     </Label.Content>
-                                </Label>-->
+                                </Label>
                             </StackPanel>
                         </StackPanel>
                     </DataTemplate>

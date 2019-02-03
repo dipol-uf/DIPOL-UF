@@ -23,6 +23,7 @@
 //     SOFTWARE.
 
 using System.Collections.Generic;
+using System.Windows.Media;
 using System.Linq;
 using ANDOR_CS.Classes;
 using DynamicData.Kernel;
@@ -56,5 +57,19 @@ namespace DIPOL_UF.Converters
 
         public static string CameraKeyToHostConversion(string input)
             => Helper.GetCameraHostName(input);
+
+        public static Brush TemperatureToBrushConverter(float temp, Brush[] brushes)
+        {
+            if (brushes is null || brushes?.Length < 4)
+                return Brushes.Black;
+
+            if (temp > 20)
+                return brushes[0];
+            if (temp > 5)
+                return brushes[1] ;
+            if (temp > -15)
+                return brushes[2];
+            return brushes[3];
+        }
     }
 }

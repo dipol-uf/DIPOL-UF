@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.ComponentModel;
 using System.Windows.Data;
-using System.Windows;
 using System.Globalization;
 
 namespace DIPOL_UF.Converters
@@ -38,7 +36,7 @@ namespace DIPOL_UF.Converters
         {
             if (value is string desc)
             {
-                Type type; ;
+                Type type;
 
                 if (targetType.BaseType == typeof(Enum))
                     return Helper.GetEnumFromDescription(desc, targetType);

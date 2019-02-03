@@ -17,6 +17,8 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class DipolMainWindowViewModel : ReactiveViewModel<DipolMainWindow>
     {
+
+
         public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
         {
             //ConnectedCameras.CollectionChanged += (sender, e) => RaisePropertyChanged(nameof(AnyCameraConnected));
@@ -46,7 +48,19 @@ namespace DIPOL_UF.ViewModels
                       .ToPropertyEx(this, x => x.AllCamerasSelected)
                       .DisposeWith(_subscriptions);
 
+
+            Model.ConnectedCameras.Connect()
+                 .Group(x => Helper.GetCameraHostName(x.Id))
+                 .Transform(x => new MainWindowTreeViewModel(x.Key, x.Cache))
+                 .ObserveOnUi()
+                 .Bind(CameraPanel)
+                 .Subscribe()
+                 .DisposeWith(_subscriptions);
         }
+
+
+        public IObservableCollection<MainWindowTreeViewModel> CameraPanel { get; }
+            = new ObservableCollectionExtended<MainWindowTreeViewModel>();
 
         // ReSharper disable UnassignedGetOnlyAutoProperty
         public bool AnyCameraConnected { [ObservableAsProperty] get; }
