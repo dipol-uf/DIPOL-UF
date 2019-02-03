@@ -110,6 +110,9 @@ namespace DIPOL_UF
         }
 
         public void Dispose()
-            => Dispose(true);
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
 }
