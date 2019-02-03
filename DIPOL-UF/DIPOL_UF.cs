@@ -28,10 +28,12 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
+using DynamicData;
 using DynamicData.Binding;
 using Newtonsoft.Json.Linq;
 using SettingsManager;
@@ -44,6 +46,9 @@ namespace DIPOL_UF
         [STAThread]
         private static int Main(string[] args)
         {
+            Test();
+            return 0;
+
             System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
             System.Diagnostics.Debug.AutoFlush = true;
             System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
@@ -73,74 +78,27 @@ namespace DIPOL_UF
 
         private static void Test()
         {
-            var applicationInstance = new App();
-            applicationInstance.InitializeComponent();
-
-            var model = new ProgressBar
-            {
-                Maximum = 140,
-                Minimum = 30,
-                Value = 0,
-                BarTitle = "TestTitle",
-                BarComment = "TestComment"
-            };
-            var vm = new ProgressBarViewModel(model);
-
-            //model.WhenErrorsChanged
-            //  .Subscribe(x => Console.WriteLine(
-            //      $"\t\t\t\tModel: {x.PropertyName}: " +
-            //      $"{model.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
-            //model.WhenAnyPropertyChanged(nameof(model.HasErrors))
-            //  .Subscribe(x => Console.WriteLine($"\t\t\t\tHas errors {x.HasErrors}"));
-
-            //model.WhenErrorsChanged.Where(x => x.PropertyName == nameof(model.Minimum))
-            //     .Subscribe(x => Console.WriteLine(
-            //         $"\t\t\t\t\tModel: {x.PropertyName}: " +
-            //         $"{model.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
-
-            //vm.WhenErrorsChanged
-            //  .Subscribe(x =>
-            //  {
-            //      var msg = vm.GetTypedErrors(x.PropertyName).FirstOrDefault().Message;
-            //      Console.WriteLine(
-            //          $"VM: {x.PropertyName}: " +
-            //          $"{msg}");
-            //  });
-
-            //vm.WhenAnyPropertyChanged(nameof(vm.HasErrors))
-            //  .Subscribe(x => Console.WriteLine($"VM Has errors {x.HasErrors}"));
-
-            //vm.WhenErrorsChanged.Where(x => x.PropertyName == nameof(vm.Minimum))
-            //  .Subscribe(x => Console.WriteLine(
-            //      $"VM: {x.PropertyName}: " +
-            //      $"{vm.GetTypedErrors(x.PropertyName).FirstOrDefault().Message}"));
+            var list = new SourceList<int>();
+            var list2 =  new SourceList<int>();
+            list.Connect().Bind(out var coll1).Subscribe();
+            list2.Connect().Bind(out var coll2).Subscribe();
 
 
-            Task.Run(() =>
-            {
-                while (!model.IsIndeterminate && model.Value < 100)
-                {
-                    model.Value++;
-                    if(model.Value == model.Minimum)
-                        Console.WriteLine("Correct values");
-                    Task.Delay(TimeSpan.FromMilliseconds(100)).Wait();
-                }
-            });
+            //coll1.ObserveCollectionChanges().Subscribe(x => Console.WriteLine(x.EventArgs.Action));
+            //coll2.ObserveCollectionChanges().Subscribe(x => Console.WriteLine(x.EventArgs.Action));
+            
+            list.Connect().Except(list2.Connect()).Bind(out var test).Subscribe();
+            test.WhenPropertyChanged(x => x.Count).Select(x => x.Value != 0).Subscribe(Console.WriteLine);
 
-            Task.Run(() =>
-            {
-                Task.Delay(TimeSpan.FromSeconds(7)).Wait();
-                Console.WriteLine("\r\nTo indeterminate\r\n");
-                model.IsIndeterminate = true;
-                //model.Value = 55;
-                model.BarComment = "New comment";
-                Task.Delay(TimeSpan.FromSeconds(1)).Wait();
-                model.IsIndeterminate = false;
-                model.DisplayPercents = true;
-                model.CanAbort = true;
+            list.AddRange(new [] {1, 2, 3, 4, 5, 10, 99});
+            Console.WriteLine("-----------------");
+            list2.AddRange(new [] {1, 2, 3, 4, 5, 6});
+            list2.Add(99);
+            list.Add(-123);
+            //coll1.Except(coll2).Subscribe(new AnonymousObserver<int>(x => Console.WriteLine(x)));
+            //coll1.
 
-            });
-            applicationInstance.Run(new Views.ProgressWindow().WithDataContext(vm));
+            list.Dispose();
         }
     }
 }

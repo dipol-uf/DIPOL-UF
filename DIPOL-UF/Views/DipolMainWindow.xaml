@@ -33,7 +33,6 @@
         <Menu DockPanel.Dock="Top" x:Name="MenuBar" VerticalAlignment="Top" VerticalContentAlignment="Center"
               Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
               Style="{StaticResource ResourceKey=MenuBarStyle}"      
-              ItemsSource="{Binding MenuBarItems}"
               ItemTemplate="{StaticResource ResourceKey=MenuBarItemTemplate}"/>
 
         
@@ -92,7 +91,6 @@
                                 Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" 
                                 Content="{loc:Text Key=General_Connect}"
                                 Command="{Binding ConnectButtonCommand}"
-                                CommandParameter="{Binding ElementName=DipolWindow}" 
                                 />
                         <Button x:Name="ReleaseExistingCamerasButton" DockPanel.Dock="Right"
                                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
