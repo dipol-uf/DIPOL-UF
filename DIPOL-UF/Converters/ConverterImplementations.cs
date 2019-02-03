@@ -48,7 +48,8 @@ namespace DIPOL_UF.Converters
                                       .ToList();
             return _cachedAliases
                        .FirstOrOptional(x => x.Name == camString) is var result
-                   && result.HasValue
+                   && result.HasValue 
+                   && !string.IsNullOrWhiteSpace(result.Value.Alias)
                 ? result.Value.Alias
                 : camString;
         }
