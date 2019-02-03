@@ -23,7 +23,8 @@ namespace DIPOL_UF.ViewModels
         public ICommand ConnectButtonCommand => Model.ConnectButtonCommand;
         public ICommand ConnectAllButtonCommand => Model.ConnectAllButtonCommand;
         public ICommand WindowContentRenderedCommand => Model.WindowContentRenderedCommand;
-        
+        public ICommand CloseCrossCommand => Model.CloseCrossCommand;
+
         public ICommand SelectionChangedCommand { get; private set; }
 
         public AvailableCamerasViewModel(AvailableCamerasModel model) 

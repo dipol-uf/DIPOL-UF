@@ -21,8 +21,7 @@
         </behaviors:EventTrigger>
         <behaviors:EventTrigger EventName="Closing">
             <behaviors:InvokeCommandAction
-                Command="{Binding CancelButtonCommand}"
-                CommandParameter="{Binding ElementName=AvailableCamerasWindow}"/>
+                Command="{Binding CloseCrossCommand}"/>
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
     <DockPanel Margin="10, 5, 10, 5">

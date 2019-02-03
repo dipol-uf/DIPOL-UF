@@ -29,6 +29,9 @@ namespace DIPOL_UF.Models
 
         private readonly SourceCache<(string Id, CameraBase Camera), string> FoundDevices;
 
+        private bool _isClosed;
+        private bool _isSelected;
+
         [Reactive]
         public bool IsInteractive { get; private set; }
 
@@ -36,12 +39,13 @@ namespace DIPOL_UF.Models
         public SourceList<string> SelectedIds { get; }
 
         public ReactiveCommand<Window, Window> WindowContentRenderedCommand { get; private set; }
-        public ReactiveCommand<Window, Window> CancelButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> QueryCamerasCommand { get; private set; }
+        public ReactiveCommand<Window, Unit> CancelButtonCommand { get; private set; }
         public ReactiveCommand<Window, Unit> ConnectButtonCommand { get; private set; }
-        public ReactiveCommand<Window, Window> ConnectAllButtonCommand { get; private set; }
-        
-        
+        public ReactiveCommand<Window, Unit> ConnectAllButtonCommand { get; private set; }
+        public ReactiveCommand<Window, Unit> CloseCrossCommand { get; private set; }
+
+
         public AvailableCamerasModel(DipolClient[] remoteClients = null)
         {
             _remoteClients = remoteClients;
@@ -64,20 +68,27 @@ namespace DIPOL_UF.Models
                     .Select(x => x.IsInteractive)
                     .ObserveOnUi();
 
+
+            CloseCrossCommand =
+                ReactiveCommand.Create<Window>(
+                                   CloseWindow,
+                                   interactivitySrc)
+                               .DisposeWith(_subscriptions);
+
             CancelButtonCommand =
-                ReactiveCommand.Create<Window, Window>(CancelButtonCommandExecute,
+                ReactiveCommand.Create<Window>(CancelButtonCommandExecute,
                                    interactivitySrc)
                                .DisposeWith(_subscriptions);
 
             ConnectAllButtonCommand
-                = ReactiveCommand.Create<Window, Window>(ConnectAllButtonCommandExecute,
+                = ReactiveCommand.Create<Window>(ConnectAllButtonCommandExecute,
                                      interactivitySrc.CombineLatest(
                                          FoundDevices.CountChanged.ObserveOnUi().Select(x => x != 0),
                                          (x, y) => x && y))
                                  .DisposeWith(_subscriptions);
 
             ConnectButtonCommand
-                = ReactiveCommand.Create<Window>(CloseWindow,
+                = ReactiveCommand.Create<Window>(ConnectButtonCommandExecute,
                                      interactivitySrc.CombineLatest(SelectedIds.CountChanged.Select(x => x != 0),
                                          (x, y) => x && y))
                                  .DisposeWith(_subscriptions);
@@ -374,35 +385,44 @@ namespace DIPOL_UF.Models
             IsInteractive = true;
         }
 
-        private Window ConnectAllButtonCommandExecute(Window param)
+        
+        private void ConnectButtonCommandExecute(Window param)
+        {
+            _isSelected = true;
+            CloseWindow(param);
+        }
+        private void ConnectAllButtonCommandExecute(Window param)
         {
             SelectedIds.Edit(context =>
             {
                 context.Clear();
                 context.AddRange(FoundCameras.Keys);
             });
-            return param;
+            _isSelected = true;
+            CloseWindow(param);
         }
-        private Window CancelButtonCommandExecute(Window param)
+        private void CancelButtonCommandExecute(Window param)
         {
-            SelectedIds.Edit(context =>
-            {
-                context.Clear();
-            });
-            return param;
+            _isSelected = false;
+            CloseWindow(param);
         }
 
-        private static void CloseWindow(Window param)
-            => param?.Close();
-        
+        private void CloseWindow(Window param)
+        {
+            if (!_isClosed)
+            {
+                if (!_isSelected)
+                    SelectedIds.Clear();
+
+                _isClosed = true;
+                param?.Close();
+            }
+        }
+
         private void HookObservables()
         {
             // Binding source collection to the public read-only interface
             FoundCameras = FoundDevices.AsObservableCache().DisposeWith(_subscriptions);
-            // Invokes [CloseWindow] after selection is updated
-            ConnectAllButtonCommand.Subscribe(CloseWindow).DisposeWith(_subscriptions);
-            // Invokes [CloseWindow] after selection is updated
-            CancelButtonCommand.Subscribe(CloseWindow).DisposeWith(_subscriptions);
         }
 
         public override void Dispose(bool disposing)
