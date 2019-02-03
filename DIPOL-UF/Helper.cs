@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -300,4 +301,20 @@ namespace DIPOL_UF
                     }, null)
                     .ConfigureAwait(marshal);
     }
+
+#if DEBUG
+    internal static class DebugHelper
+    {
+        public static IObservable<T> LogObservable<T>(
+            this IObservable<T> source, 
+            string name, 
+            CompositeDisposable disposedWith)
+        {
+            source.Subscribe(x => Helper.WriteLog($"{name}: {x}"))
+                  .DisposeWith(disposedWith);
+
+            return source;
+        }
+    }
+#endif
 }
