@@ -16,8 +16,7 @@
     <behaviors:Interaction.Triggers>
         <behaviors:EventTrigger EventName="Loaded">
             <behaviors:InvokeCommandAction
-                Command="{Binding WindowLoadedCommand}"
-                CommandParameter="{Binding ElementName=DipolWindow}"/>
+                Command="{Binding WindowLoadedCommand}"/>
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
     <Grid x:Name="MainWindowGrid" DockPanel.Dock="Top">
@@ -65,8 +64,8 @@
                                     IsThreeState="True"
                                     IsEnabled="{Binding AnyCameraConnected}"
                                     x:Name="SelectAllCheckBox"
-                                    IsChecked="{Binding CameraPanelAreAllSelected, Mode=OneWay}"
-                                    Command="{Binding CameraPanelSelectedAllCommand}"
+                                    IsChecked="{Binding AllCamerasSelected, Mode=OneWay}"
+                                    Command="{Binding SelectAllCamerasCommand}"
                                     />
 
                         <Label x:Name="ConnectedCamerasLabel" 
