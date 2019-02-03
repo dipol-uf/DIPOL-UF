@@ -491,6 +491,7 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<Unit, Unit> WindowLoadedCommand { get; private set; }
         public ReactiveCommand<Window, Unit> ConnectButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> DisconnectButtonCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit> SelectAllCamerasCommand { get; private set; }
 
         private async Task InitializeRemoteSessionsAsync()
         {
@@ -651,6 +652,8 @@ namespace DIPOL_UF.Models
             InitializeCommands();
             HookObservables();
             HookValidators();
+
+
         }
 
         private void InitializeCommands()
@@ -688,6 +691,15 @@ namespace DIPOL_UF.Models
                                        DisconnectButtonCommandExecuteAsync),
                                    SelectedDevices.CountChanged.Select(x => x != 0))
                                .DisposeWith(_subscriptions);
+
+            SelectAllCamerasCommand =
+                ReactiveCommand.Create<Unit>(
+                    () =>
+                    {
+
+                        return Unit.Default;
+                    });
+
 
             #endregion
 
