@@ -77,20 +77,11 @@
                                     
                                 </Label>
                                 <Label VerticalAlignment="Center" HorizontalAlignment="Right"
-                                       x:Name="TemperatureStatusLabel">
-                                    <!--Content comes from TempStatus TemperatureStatus enum-->
-                                    <Label.Content>
-                                        <Binding Path="TempStatus"/>
-                                    </Label.Content>
-                                    <!--Color comes from the same status in accordance to static dictionary-->
-                                    <Label.Foreground>
-                                        <MultiBinding
-                                            Converter="{StaticResource ResourceKey=TemperatureStatusToBrushMultiConverter}"
-                                            ConverterParameter="{StaticResource TemperatureStatusColorBrushCollection}"
-                                            UpdateSourceTrigger="PropertyChanged">
-                                            <Binding Path="Key"/>                                            
-                                        </MultiBinding>
-                                    </Label.Foreground>
+                                       x:Name="TemperatureStatusLabel"
+                                       Content="{Binding TempStatus, Converter={StaticResource EnumToDescriptionConverter}}"
+                                       Foreground="{Binding TempStatus, 
+                                            Converter={StaticResource TemperatureStatusToBrushConverter},
+                                            ConverterParameter={StaticResource TemperatureStatusColorBrushCollection}}">
                                 </Label>
                                 <Label VerticalAlignment="Center" HorizontalAlignment="Right">
                                     <!--Content comes from TempStatus TemperatureStatus enum-->

@@ -1,8 +1,11 @@
-﻿using System.Reactive.Disposables;
+﻿using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Markup;
 using ANDOR_CS.Classes;
+using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
+using DynamicData.Binding;
 using ReactiveUI.Fody.Helpers;
 
 namespace DIPOL_UF.ViewModels
@@ -11,14 +14,16 @@ namespace DIPOL_UF.ViewModels
     {
         private readonly CameraBase _model;
         [Reactive]
+        // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
         public string Id { get; private set; }
 
         [Reactive]
         public string Name { get; private set; }
+        // ReSharper restore AutoPropertyCanBeMadeGetOnly.Local
 
         // ReSharper disable UnassignedGetOnlyAutoProperty
         public float Temperature { [ObservableAsProperty] get; }
-        public string TempStatus { [ObservableAsProperty] get; }
+        public TemperatureStatus TempStatus { [ObservableAsProperty] get; }
         // ReSharper restore UnassignedGetOnlyAutoProperty
 
         public MainWindowTreeItemViewModel(string id, CameraBase cam)
@@ -34,18 +39,19 @@ namespace DIPOL_UF.ViewModels
         {
             var tempObs =
                 Observable.FromEventPattern<TemperatureStatusEventHandler, TemperatureStatusEventArgs>(
-                    x => _model.TemperatureStatusChecked += x,
-                    x => _model.TemperatureStatusChecked -= x)
+                              x => _model.TemperatureStatusChecked += x,
+                              x => _model.TemperatureStatusChecked -= x)
                           .ObserveOnUi();
 
             tempObs.Select(x => x.EventArgs.Temperature)
                    .ToPropertyEx(this, x => x.Temperature)
                    .DisposeWith(_subscriptions);
 
-            tempObs.Select(x => x.EventArgs.Status.ToString())
-                   .ToPropertyEx(this, x => x.TempStatus)
+            tempObs.Select(x => x.EventArgs.Status)
+                   .ToPropertyEx(this, 
+                       x => x.TempStatus,
+                       TemperatureStatus.Off)
                    .DisposeWith(_subscriptions);
-
 
         }
     }
