@@ -22,7 +22,6 @@ using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using MenuCollection = System.Collections.ObjectModel.ObservableCollection<DIPOL_UF.ViewModels.MenuItemViewModel>;
 using DelegateCommand = DIPOL_UF.Commands.DelegateCommand;
 
 using static DIPOL_UF.DIPOL_UF_App;
@@ -298,7 +297,7 @@ namespace DIPOL_UF.Models
         //            var camModel = new ConnectedCamera(x.Value, x.Key);
         //            var ctxMenu = menus.Select(menu =>
         //                new MenuItemViewModel(
-        //                    new MenuItemModel()
+        //                    new MenuItemViewModel()
         //                    {
         //                        Header = menu,
         //                        Command = new DelegateCommand(
@@ -399,28 +398,7 @@ namespace DIPOL_UF.Models
 //            }
         }
 
-        /// <summary>
-        /// Attaches event handlers to each cam to monitor status and progress.
-        /// </summary>
-        /// <param name="key">CameraID.</param>
-        /// <param name="cam">Camera instance.</param>
-        private void HookCamera(string key, CameraBase cam)
-        {
-            //if (_camRealTimeStats.ContainsKey(key))
-            //    _camRealTimeStats.TryRemove(key, out _);
-
-            //_camRealTimeStats.TryAdd(key, new Dictionary<string, object>());
-
-            //// Hooks events of the current camera
-            //HookEvents(cam);
-
-            //if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
-            //{
-            //    cam.TemperatureMonitor(Switch.Enabled,
-            //        UiSettingsProvider.Settings.Get("UICamStatusUpdateDelay", 500));
-            //    Camera_PropertyChanged(cam, new System.ComponentModel.PropertyChangedEventArgs(nameof(cam.FanMode)));
-            //}
-        }
+        
 
         /// <summary>
         /// Handles <see cref="CameraBase.PropertyChanged"/> event of the <see cref="CameraBase"/>.
@@ -444,23 +422,7 @@ namespace DIPOL_UF.Models
             //    Helper.WriteLog($"[{key}]: {e.First} unclaimed images acquired.");
             //}
         }
-        /// <summary>
-        /// Handles <see cref="CameraBase.TemperatureStatusChecked"/> event of the <see cref="CameraBase"/>.
-        /// </summary>
-        /// <param name="sender"><see cref="CameraBase"/> sender.</param>
-        /// <param name="e">Event arguments.</param>
-        private void Camera_TemperatureStatusChecked(object sender, TemperatureStatusEventArgs e)
-        {
-            //if (sender is CameraBase cam)
-            //{
-            //    var key = GetCameraKey(cam);
-            //    if (key != null && CameraRealTimeStats.ContainsKey(key))
-            //    {
-            //        CameraRealTimeStats[key]["Temp"] = e.Temperature;
-            //        CameraRealTimeStats[key]["TempStatus"] = e.Status;
-            //    }
-            //}
-        }
+        
 
         //private string GetCameraKey(CameraBase instance)
         //    => ConnectedCameras.FirstOrDefault(item => Equals(item.Value.Camera, instance)).Key;
@@ -491,7 +453,7 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<Unit, Unit> DisconnectButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> SelectAllCamerasCommand { get; private set; }
         public ReactiveCommand<string, Unit> SelectCameraCommand { get; private set; }
-
+        public ReactiveCommand<string, Unit> ContextMenuCommand { get; private set; }
 
         public DipolMainWindow()
         {
@@ -514,13 +476,21 @@ namespace DIPOL_UF.Models
 
         private void InitializeCommands()
         {
-            
+
+            ContextMenuCommand =
+                ReactiveCommand.Create<string>(
+                                   ContextMenuCommandExecute,
+                                   ConnectedCameras.CountChanged.Select(x => x != 0)
+                                                   .DistinctUntilChanged()
+                                                   .ObserveOnUi())
+                               .DisposeWith(_subscriptions);
+
             SelectCameraCommand =
                 ReactiveCommand.Create<string>(
-                    SelectCameraCommandExecute,
-                    ConnectedCameras.CountChanged.Select(x => x != 0)
-                                    .DistinctUntilChanged()
-                                    .ObserveOnUi())
+                                   SelectCameraCommandExecute,
+                                   ConnectedCameras.CountChanged.Select(x => x != 0)
+                                                   .DistinctUntilChanged()
+                                                   .ObserveOnUi())
                                .DisposeWith(_subscriptions);
 
             WindowLoadedCommand =
@@ -605,6 +575,11 @@ namespace DIPOL_UF.Models
             });
         }
 
+        private void ContextMenuCommandExecute(string param)
+        {
+
+        }
+
         private async Task InitializeRemoteSessionsAsync()
         {
             var pb = await Task.Run(() =>
@@ -680,7 +655,8 @@ namespace DIPOL_UF.Models
             var wind = Helper.ExecuteOnUi(() =>
                 new Views.AvailableCameraView()
                 {
-                    Owner = param
+                    Owner = param,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
                 }.WithDataContext(viewModel));
 
             var tokenSrc = new CancellationTokenSource()

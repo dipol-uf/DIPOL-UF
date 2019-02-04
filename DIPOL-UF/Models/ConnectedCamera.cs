@@ -51,8 +51,8 @@ namespace DIPOL_UF.Models
             = new ConcurrentDictionary<string, ConnectedCamera>();
 
         // Used by TreeItemViewModel
-        private ObservableCollection<ViewModels.MenuItemViewModel> _contextMenu
-            = new ObservableCollection<ViewModels.MenuItemViewModel>();
+        //private ObservableCollection<ViewModels.MenuItemViewModel> _contextMenu
+        //    = new ObservableCollection<ViewModels.MenuItemViewModel>();
 
         private bool _autosave;
         private CameraBase _camera;
@@ -70,18 +70,18 @@ namespace DIPOL_UF.Models
         private ControlState _state = ControlState.Individual;
 
         // Used by TreeItemViewModel
-        public ObservableCollection<ViewModels.MenuItemViewModel> ContextMenu
-        {
-            get => _contextMenu;
-            set
-            {
-                if (value != _contextMenu)
-                {
-                    _contextMenu = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
+        //public ObservableCollection<ViewModels.MenuItemViewModel> ContextMenu
+        //{
+        //    get => _contextMenu;
+        //    set
+        //    {
+        //        if (value != _contextMenu)
+        //        {
+        //            _contextMenu = value;
+        //            RaisePropertyChanged();
+        //        }
+        //    }
+        //}
 
         public IReadOnlyDictionary<string, ConnectedCamera> ConnectedCameras
             => connectedCameras;

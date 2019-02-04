@@ -223,7 +223,7 @@
     <Compile Include="Models\ConnectedCamera.cs" />
     <Compile Include="Models\DipolImagePresenter.cs" />
     <Compile Include="Models\DipolMainWindow.cs" />
-    <Compile Include="Models\MenuItemModel.cs" />
+    <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="Models\ProgressBar.cs" />
     <Compile Include="Commands\WindowDragCommandProvider.cs" />
     <Compile Include="ObservableConcurrentDictionary.cs" />
@@ -251,7 +251,6 @@
     <Compile Include="ViewModels\DipolImagePresenterViewModel.cs" />
     <Compile Include="ViewModels\DipolMainWindowViewModel.cs" />
     <Compile Include="ViewModels\MainWindowTreeViewModel.cs" />
-    <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
     <Compile Include="ViewModels\ReactiveViewModel.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />
