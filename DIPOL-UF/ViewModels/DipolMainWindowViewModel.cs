@@ -52,8 +52,9 @@ namespace DIPOL_UF.ViewModels
             Model.ConnectedCameras.Connect()
                  .Group(x => Helper.GetCameraHostName(x.Id))
                  .ObserveOnUi()
-                 .Transform(x => new MainWindowTreeViewModel(x.Key, x.Cache, null))
+                 .Transform(x => new MainWindowTreeViewModel(x.Key, x.Cache, Model.SelectedDevices))
                  .Bind(CameraPanel)
+                 .DisposeMany()
                  .Subscribe()
                  .DisposeWith(_subscriptions);
 

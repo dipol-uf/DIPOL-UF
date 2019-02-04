@@ -28,9 +28,10 @@ namespace DIPOL_UF.ViewModels
         {
             GroupName = name;
             collection.Connect()
-                      .Transform(x => new MainWindowTreeItemViewModel(x.Id, x.Camera, selections))
                       .ObserveOnUi()
+                      .Transform(x => new MainWindowTreeItemViewModel(x.Id, x.Camera, selections))
                       .Bind(CameraList)
+                      .DisposeMany()
                       .Subscribe()
                       .DisposeWith(_subscriptions);
         }

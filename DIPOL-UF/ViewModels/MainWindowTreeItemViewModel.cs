@@ -7,7 +7,10 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DynamicData;
 using DynamicData.Binding;
+using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
+// ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace DIPOL_UF.ViewModels
 {
@@ -15,17 +18,14 @@ namespace DIPOL_UF.ViewModels
     {
         private readonly CameraBase _model;
         [Reactive]
-        // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
         public string Id { get; private set; }
 
         [Reactive]
         public string Name { get; private set; }
-        // ReSharper restore AutoPropertyCanBeMadeGetOnly.Local
 
-        // ReSharper disable UnassignedGetOnlyAutoProperty
         public float Temperature { [ObservableAsProperty] get; }
         public TemperatureStatus TempStatus { [ObservableAsProperty] get; }
-        // ReSharper restore UnassignedGetOnlyAutoProperty
+        public bool IsSelected { [ObservableAsProperty] get; }
 
         public MainWindowTreeItemViewModel(string id, CameraBase cam,
             ISourceList<string> selections)
@@ -36,7 +36,16 @@ namespace DIPOL_UF.ViewModels
 
             HookEvents();
 
-            
+
+            selections.Connect()
+                      .Filter(x => x == Id).AsObservableList()
+                      .CountChanged
+                      .Select(x => x != 0)
+                      .DistinctUntilChanged()
+                      .ObserveOnUi()
+                      .ToPropertyEx(this, x => x.IsSelected)
+                      .DisposeWith(_subscriptions);
+
         }
 
        

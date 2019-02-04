@@ -47,6 +47,7 @@ namespace DIPOL_UF.ViewModels
                           .Ascending(x => x.Item1).ThenByAscending(x => x.Item2))
                     .ObserveOnUi()
                     .Bind(ListedCameras)
+                    .DisposeMany()
                     .Subscribe()
                     .DisposeWith(_subscriptions);
 
