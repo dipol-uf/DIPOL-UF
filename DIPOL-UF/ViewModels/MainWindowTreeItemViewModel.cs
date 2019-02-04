@@ -28,6 +28,7 @@ namespace DIPOL_UF.ViewModels
         public float Temperature { [ObservableAsProperty] get; }
         public TemperatureStatus TempStatus { [ObservableAsProperty] get; }
         public bool IsSelected { [ObservableAsProperty] get; }
+        public FanMode FanMode { [ObservableAsProperty] get; }
 
         public ICommand SelectCommand { get; }
 
@@ -73,7 +74,13 @@ namespace DIPOL_UF.ViewModels
                        x => x.TempStatus,
                        TemperatureStatus.Off)
                    .DisposeWith(_subscriptions);
-
+            
+            _model.WhenPropertyChanged(x => x.FanMode).Select(x => x.Value)
+                  .ObserveOnUi()
+                  .ToPropertyEx(this, 
+                      x => x.FanMode, 
+                      FanMode.Off)
+                  .DisposeWith(_subscriptions);
         }
     }
 }

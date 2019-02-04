@@ -29,7 +29,7 @@ using static DIPOL_UF.DIPOL_UF_App;
 
 namespace DIPOL_UF.Models
 {
-    internal sealed class DipolMainWindow : ReactiveObjectEx, IDisposable
+    internal sealed class DipolMainWindow : ReactiveObjectEx
     {
         //private readonly DispatcherTimer _uiStatusUpdateTimer;
 
@@ -468,8 +468,6 @@ namespace DIPOL_UF.Models
         //    =>   this.RaisePropertyChanged(nameof(CameraRealTimeStats));
 
 
-        #region v2_0
-
         private readonly string[] _remoteLocations
             = UiSettingsProvider.Settings.GetArray<string>("RemoteLocations")
               ?? new string[0];
@@ -774,7 +772,5 @@ namespace DIPOL_UF.Models
                 }
             base.Dispose(disposing);
         }
-        
-        #endregion
     }
 }

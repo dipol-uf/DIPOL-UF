@@ -72,19 +72,8 @@
                                             Converter={StaticResource TemperatureStatusToBrushConverter},
                                             ConverterParameter={StaticResource TemperatureStatusColorBrushCollection}}">
                                 </Label>
-                                <Label VerticalAlignment="Center" HorizontalAlignment="Right">
-                                    <!--Content comes from TempStatus TemperatureStatus enum-->
-                                    <Label.Content>
-                                        <MultiBinding
-                                            Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
-                                            ConverterParameter="FanStr"
-                                            UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                                 UpdateSourceTrigger="PropertyChanged"/>
-                                            <Binding Path="Key"/>
-                                        </MultiBinding>
-                                    </Label.Content>
-                                </Label>
+                                <Label VerticalAlignment="Center" HorizontalAlignment="Right"
+                                       Content="{Binding FanMode, Converter={StaticResource EnumToDescriptionConverter}}"/>
                             </StackPanel>
                         </StackPanel>
                     </DataTemplate>
