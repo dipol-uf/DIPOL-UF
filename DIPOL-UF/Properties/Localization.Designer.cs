@@ -538,6 +538,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Operation [{0}] is not supported..
+        /// </summary>
+        public static string General_OperationNotSupported {
+            get {
+                return ResourceManager.GetString("General_OperationNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save.
         /// </summary>
         public static string General_Save {
