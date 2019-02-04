@@ -89,6 +89,7 @@
                                 Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" 
                                 Content="{loc:Text Key=General_Connect}"
                                 Command="{Binding ConnectButtonCommand}"
+                                CommandParameter="{Binding ElementName=DipolWindow}"
                                 />
                         <Button x:Name="ReleaseExistingCamerasButton" DockPanel.Dock="Right"
                                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
