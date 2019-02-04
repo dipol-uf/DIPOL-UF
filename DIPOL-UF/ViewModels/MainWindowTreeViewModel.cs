@@ -23,11 +23,12 @@ namespace DIPOL_UF.ViewModels
 
         public MainWindowTreeViewModel(
             string name, 
-            IConnectableCache<(string Id, CameraBase Camera), string> collection)
+            IConnectableCache<(string Id, CameraBase Camera), string> collection,
+            ISourceList<string> selections)
         {
             GroupName = name;
             collection.Connect()
-                      .Transform(x => new MainWindowTreeItemViewModel(x.Id, x.Camera))
+                      .Transform(x => new MainWindowTreeItemViewModel(x.Id, x.Camera, selections))
                       .ObserveOnUi()
                       .Bind(CameraList)
                       .Subscribe()

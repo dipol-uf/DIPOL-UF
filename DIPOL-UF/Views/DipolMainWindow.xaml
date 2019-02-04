@@ -74,14 +74,12 @@
                                 VerticalContentAlignment="Center"/>
                     </Grid>
                 </Border>
-                <ListView x:Name="CameraTreeListView" 
-                            TabIndex="0" 
-                            Grid.Row="1" 
-                            
+                <ScrollViewer TabIndex="0" Grid.Row="1" >
+                    <ItemsControl x:Name="CameraTreeListView" 
                             KeyboardNavigation.ControlTabNavigation="Cycle"
                             ItemsSource="{Binding CameraPanel}"
-                            Style="{StaticResource ResourceKey=ListTreeViewStyle}"
                             ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"/>
+                </ScrollViewer>
                 <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
                         Grid.Row="2" 
                         Style="{StaticResource ResourceKey=BorderStyle}"

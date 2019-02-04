@@ -25,10 +25,8 @@
         <!--Name is group name (i.e. location)-->
         <Expander Header="{Binding GroupName}" IsExpanded="True">
             <!--List of cameras in a group-->
-            <ListView ItemsSource="{Binding CameraList}" 
-                      Style="{StaticResource ResourceKey=ListTreeViewStyle}"
-                      KeyboardNavigation.TabNavigation="Continue">
-                <ListView.ItemTemplate>
+            <ItemsControl ItemsSource="{Binding CameraList}">
+                <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <!--Vertical StackPanel contains horizontal panels per each row-->
                         <StackPanel Orientation="Vertical" Background="Transparent">
@@ -99,8 +97,8 @@
                             </StackPanel>
                         </StackPanel>
                     </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </Expander>
     </DataTemplate>
     
