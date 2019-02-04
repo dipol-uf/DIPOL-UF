@@ -249,7 +249,7 @@ namespace DIPOL_UF.Models
         //                foreach (var camItem in node.CameraList.Where(item => item.Key == key))
         //                {
         //                    node.CameraList.TryRemove(camItem.Key, out _);
-        //                    workers.Add(DisposeCamera(camItem.Key, false));
+        //                    workers.Add(DisposeCameraAsync(camItem.Key, false));
         //                    if (node.CameraList.IsEmpty)
         //                        CameraPanel.Remove(node);
         //                }
@@ -493,6 +493,116 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<Unit, Unit> DisconnectButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> SelectAllCamerasCommand { get; private set; }
 
+
+        public DipolMainWindow()
+        {
+            _connectedCameras = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
+                .DisposeWith(_subscriptions);
+            SelectedDevices = new SourceList<string>()
+                .DisposeWith(_subscriptions);
+            ConnectedCameras = _connectedCameras
+                               .AsObservableCache()
+                               .DisposeWith(_subscriptions);
+
+            InitializeCommands();
+            HookObservables();
+            HookValidators();
+
+
+        }
+
+
+
+        private void InitializeCommands()
+        {
+            
+
+            
+            //CameraPanelSelectionChangedCommand = new DelegateCommand(
+            //    CameraPanelSelectionChangedCommandExecute,
+            //    DelegateCommand.CanExecuteAlways);
+
+
+            //CameraPanelSelectedAllCommand = new DelegateCommand(
+            //    CameraPanelSelectedAllCommandExecute,
+            //    DelegateCommand.CanExecuteAlways);
+            #region v2_0
+
+            WindowLoadedCommand =
+                ReactiveCommand.CreateFromObservable<Unit, Unit>(
+                                   _ => Observable.FromAsync(InitializeRemoteSessionsAsync))
+                               .DisposeWith(_subscriptions);
+
+            ConnectButtonCommand =
+                ReactiveCommand.CreateFromObservable<Window, Unit>(
+                                   x => Observable.FromAsync(_ => ConnectButtonCommandExecuteAsync(x)),
+                                   this.WhenAnyPropertyChanged(nameof(CanConnect))
+                                       .Select(x => x.CanConnect)
+                                       .DistinctUntilChanged()
+                                       .ObserveOnUi())
+                               .DisposeWith(_subscriptions);
+
+            DisconnectButtonCommand =
+                ReactiveCommand.CreateFromObservable<Unit, Unit>(
+                                   x => Observable.FromAsync(
+                                       DisconnectButtonCommandExecuteAsync),
+                                   SelectedDevices.CountChanged.Select(x => x != 0)
+                                                  .DistinctUntilChanged()
+                                                  .ObserveOnUi())
+                               .DisposeWith(_subscriptions);
+
+            SelectAllCamerasCommand =
+                ReactiveCommand.Create(
+                                   SelectAllCamerasCommandExecute,
+                                   ConnectedCameras.CountChanged.Select(x => x != 0)
+                                                   .DistinctUntilChanged()
+                                                   .ObserveOnUi())
+                               .DisposeWith(_subscriptions);
+
+
+            #endregion
+
+        }
+
+        private void HookObservables()
+        {
+            _uiTimerSource = Observable.Interval(
+                TimeSpan.FromMilliseconds(
+                    UiSettingsProvider.Settings.Get("UICamStatusUpdateDelay", 1000)));
+
+            new[]
+                {
+                    WindowLoadedCommand.IsExecuting,
+                    ConnectButtonCommand.IsExecuting
+                }
+                .Select(x => x.DistinctUntilChanged())
+                .CombineLatest(x => !x[0] && !x[1])
+                .ToPropertyEx(this, x => x.CanConnect)
+                .DisposeWith(_subscriptions);
+
+
+        }
+
+        private void HookCamera(CameraBase cam)
+        {
+            _uiTimerSource.Subscribe(_ =>
+            {
+             
+            });
+        }
+
+        private void SelectAllCamerasCommandExecute()
+        {
+            if(SelectedDevices.Count < ConnectedCameras.Count)
+                SelectedDevices.Edit(context =>
+                {
+                    context.Clear();
+                    context.AddRange(ConnectedCameras.Keys);
+                });
+            else
+                SelectedDevices.Clear();
+        }
+
         private async Task InitializeRemoteSessionsAsync()
         {
             var pb = await Task.Run(() =>
@@ -605,11 +715,11 @@ namespace DIPOL_UF.Models
 
         private async Task DisconnectButtonCommandExecuteAsync()
         {
-            await Task.WhenAll(SelectedDevices.Items.Select(async x => await DisposeCamera(x)))
+            await Task.WhenAll(SelectedDevices.Items.Select(async x => await DisposeCameraAsync(x)))
                       .ConfigureAwait(false);
         }
-
-        private async Task DisposeCamera(string camId)
+        
+        private async Task DisposeCameraAsync(string camId)
         {
 
             if (_connectedCameras.Lookup(camId) is var item && item.HasValue)
@@ -640,105 +750,13 @@ namespace DIPOL_UF.Models
 
         }
 
-        public DipolMainWindow()
-        {
-            _connectedCameras = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
-                .DisposeWith(_subscriptions);
-            SelectedDevices = new SourceList<string>().DisposeWith(_subscriptions);
-            ConnectedCameras = _connectedCameras
-                               .AsObservableCache()
-                               .DisposeWith(_subscriptions);
-
-            InitializeCommands();
-            HookObservables();
-            HookValidators();
-
-
-        }
-
-        private void InitializeCommands()
-        {
-            
-
-            
-            //CameraPanelSelectionChangedCommand = new DelegateCommand(
-            //    CameraPanelSelectionChangedCommandExecute,
-            //    DelegateCommand.CanExecuteAlways);
-
-
-            //CameraPanelSelectedAllCommand = new DelegateCommand(
-            //    CameraPanelSelectedAllCommandExecute,
-            //    DelegateCommand.CanExecuteAlways);
-            #region v2_0
-
-            WindowLoadedCommand =
-                ReactiveCommand.CreateFromObservable<Unit, Unit>(
-                                   _ => Observable.FromAsync(InitializeRemoteSessionsAsync))
-                               .DisposeWith(_subscriptions);
-
-            ConnectButtonCommand =
-                ReactiveCommand.CreateFromObservable<Window, Unit>(
-                                   x => Observable.FromAsync(_ => ConnectButtonCommandExecuteAsync(x)),
-                                   this.WhenAnyPropertyChanged(nameof(CanConnect))
-                                       .Select(x => x.CanConnect)
-                                       .DistinctUntilChanged()
-                                       .ObserveOnUi())
-                               .DisposeWith(_subscriptions);
-
-            DisconnectButtonCommand =
-                ReactiveCommand.CreateFromObservable<Unit, Unit>(
-                                   x => Observable.FromAsync(
-                                       DisconnectButtonCommandExecuteAsync),
-                                   SelectedDevices.CountChanged.Select(x => x != 0))
-                               .DisposeWith(_subscriptions);
-
-            SelectAllCamerasCommand =
-                ReactiveCommand.Create<Unit>(
-                    () =>
-                    {
-
-                        return Unit.Default;
-                    });
-
-
-            #endregion
-
-        }
-
-        private void HookObservables()
-        {
-            _uiTimerSource = Observable.Interval(
-                TimeSpan.FromMilliseconds(
-                    UiSettingsProvider.Settings.Get("UICamStatusUpdateDelay", 1000)));
-
-            new[]
-                {
-                    WindowLoadedCommand.IsExecuting,
-                    ConnectButtonCommand.IsExecuting
-                }
-                .Select(x => x.DistinctUntilChanged())
-                .CombineLatest(x => !x[0] && !x[1])
-                .ToPropertyEx(this, x => x.CanConnect)
-                .DisposeWith(_subscriptions);
-
-
-        }
-
-        private void HookCamera(CameraBase cam)
-        {
-            _uiTimerSource.Subscribe(_ =>
-            {
-             
-            });
-        }
-
         public override void Dispose(bool disposing)
         {
             if (!IsDisposed)
                 if (disposing)
                 {
                     var ids = _connectedCameras.Keys.ToList();
-                    Task.WhenAll(ids.Select(async x => await DisposeCamera(x).ConfigureAwait(false)).ToArray());
+                    Task.WhenAll(ids.Select(async x => await DisposeCameraAsync(x).ConfigureAwait(false)).ToArray());
                                      
 
                     if (!(_remoteClients is null))

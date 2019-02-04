@@ -5,6 +5,7 @@ using System.Windows.Markup;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
+using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI.Fody.Helpers;
 
@@ -26,14 +27,19 @@ namespace DIPOL_UF.ViewModels
         public TemperatureStatus TempStatus { [ObservableAsProperty] get; }
         // ReSharper restore UnassignedGetOnlyAutoProperty
 
-        public MainWindowTreeItemViewModel(string id, CameraBase cam)
+        public MainWindowTreeItemViewModel(string id, CameraBase cam,
+            ISourceList<string> selections)
         {
             _model = cam;
             Id = id;
             Name = Converters.ConverterImplementations.CameraToStringAliasConversion(cam);
 
             HookEvents();
+
+            
         }
+
+       
 
         private void HookEvents()
         {

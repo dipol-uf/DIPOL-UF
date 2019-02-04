@@ -103,19 +103,11 @@
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Background" Value="{StaticResource ResourceKey=ListContainerBackgroundColor}"/>
     </Style>
-
-    <Style x:Key="NonSelectableListViewItemStyle" TargetType="{x:Type ListViewItem}">
-        <Setter Property="Focusable" Value="False"/>
-    </Style>
+    
     <Style x:Key="SelectableListViewItemStyle" TargetType="{x:Type ListViewItem}">
         <Setter Property="Focusable" Value="True"/>
     </Style>
-
-    <Style x:Key="ListTreeViewStyle" TargetType="{x:Type ListView}" BasedOn="{StaticResource ListViewStyle}">
-        <Setter Property="Focusable" Value="False"/>
-        <Setter Property="ItemContainerStyle" Value="{StaticResource NonSelectableListViewItemStyle}"/>
-    </Style>
-
+   
 
     <!--TabItem style-->
     <Style x:Key="TabItemStyle" TargetType="{x:Type TabItem}">

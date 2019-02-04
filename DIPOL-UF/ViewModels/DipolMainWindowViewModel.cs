@@ -51,14 +51,17 @@ namespace DIPOL_UF.ViewModels
 
             Model.ConnectedCameras.Connect()
                  .Group(x => Helper.GetCameraHostName(x.Id))
-                 .Transform(x => new MainWindowTreeViewModel(x.Key, x.Cache))
                  .ObserveOnUi()
+                 .Transform(x => new MainWindowTreeViewModel(x.Key, x.Cache, null))
                  .Bind(CameraPanel)
                  .Subscribe()
                  .DisposeWith(_subscriptions);
+
+            
         }
 
 
+        
         public IObservableCollection<MainWindowTreeViewModel> CameraPanel { get; }
             = new ObservableCollectionExtended<MainWindowTreeViewModel>();
 
