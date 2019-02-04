@@ -517,18 +517,6 @@ namespace DIPOL_UF.Models
         private void InitializeCommands()
         {
             
-
-            
-            //CameraPanelSelectionChangedCommand = new DelegateCommand(
-            //    CameraPanelSelectionChangedCommandExecute,
-            //    DelegateCommand.CanExecuteAlways);
-
-
-            //CameraPanelSelectedAllCommand = new DelegateCommand(
-            //    CameraPanelSelectedAllCommandExecute,
-            //    DelegateCommand.CanExecuteAlways);
-            #region v2_0
-
             SelectCameraCommand =
                 ReactiveCommand.Create<string>(
                     SelectCameraCommandExecute,
@@ -567,10 +555,6 @@ namespace DIPOL_UF.Models
                                                    .DistinctUntilChanged()
                                                    .ObserveOnUi())
                                .DisposeWith(_subscriptions);
-
-
-            #endregion
-
         }
 
         private void HookObservables()
@@ -735,12 +719,14 @@ namespace DIPOL_UF.Models
 
         private async Task DisconnectButtonCommandExecuteAsync()
         {
-            await Task.WhenAll(SelectedDevices.Items.Select(async x => await DisposeCameraAsync(x)))
+            var ids = SelectedDevices.Items.ToList();
+            await Task.WhenAll(ids.Select(async id => await DisposeCameraAsync(id)))
                       .ConfigureAwait(false);
         }
         
         private async Task DisposeCameraAsync(string camId)
         {
+            SelectedDevices.Remove(camId);
 
             if (_connectedCameras.Lookup(camId) is var item && item.HasValue)
                 _connectedCameras.Edit(context => context.Remove(camId));
