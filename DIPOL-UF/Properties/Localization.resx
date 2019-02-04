@@ -276,6 +276,9 @@
   <data name="General_LocalHostName" xml:space="preserve">
     <value>Local</value>
   </data>
+  <data name="General_OperationNotSupported" xml:space="preserve">
+    <value>Operation [{0}] is not supported.</value>
+  </data>
   <data name="General_Save" xml:space="preserve">
     <value>Save</value>
   </data>
