@@ -2,13 +2,12 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
-using System.Windows.Markup;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
+using DIPOL_UF.Properties;
 using DynamicData;
 using DynamicData.Binding;
-using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 // ReSharper disable UnassignedGetOnlyAutoProperty
@@ -32,11 +31,16 @@ namespace DIPOL_UF.ViewModels
 
         public ICommand SelectCommand { get; }
 
+        public IObservableCollection<MenuItemViewModel> ContextMenu { get; }
+            = new ObservableCollectionExtended<MenuItemViewModel>();
+
         public MainWindowTreeItemViewModel(string id, CameraBase cam,
             IObservableList<string> selections,
-            ICommand selectCommand)
+            ICommand selectCommand,
+            ICommand contextMenuCommand)
         {
             SelectCommand = selectCommand;
+
             _model = cam;
             Id = id;
             Name = Converters.ConverterImplementations.CameraToStringAliasConversion(cam);
@@ -52,6 +56,14 @@ namespace DIPOL_UF.ViewModels
                       .ObserveOnUi()
                       .ToPropertyEx(this, x => x.IsSelected)
                       .DisposeWith(_subscriptions);
+
+            new[] {new MenuItemViewModel(
+                    Localization.Menu_MainWindow_CameraProperties, 
+                    contextMenuCommand)}
+                .AsObservableChangeSet()
+                .Bind(ContextMenu)
+                .Subscribe(new AnonymousObserver<IChangeSet<MenuItemViewModel>>(_ => { }))
+                .DisposeWith(_subscriptions);
 
         }
 

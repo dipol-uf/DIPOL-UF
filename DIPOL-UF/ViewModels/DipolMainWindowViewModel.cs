@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using DIPOL_UF.Models;
 using DynamicData;
-using DynamicData.Alias;
 using DynamicData.Binding;
-using DynamicData.Kernel;
-using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace DIPOL_UF.ViewModels
@@ -54,7 +48,9 @@ namespace DIPOL_UF.ViewModels
                  .ObserveOnUi()
                  .Transform(x => 
                      new MainWindowTreeViewModel(x.Key, x.Cache, 
-                         Model.SelectedDevices, Model.SelectCameraCommand))
+                         Model.SelectedDevices, 
+                         Model.SelectCameraCommand,
+                         Model.ContextMenuCommand))
                  .Bind(CameraPanel)
                  .DisposeMany()
                  .Subscribe()
