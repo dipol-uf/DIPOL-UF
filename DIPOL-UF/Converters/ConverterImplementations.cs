@@ -22,10 +22,12 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System;
 using System.Collections.Generic;
 using System.Windows.Media;
 using System.Linq;
 using ANDOR_CS.Classes;
+using ANDOR_CS.Enums;
 using DynamicData.Kernel;
 using Newtonsoft.Json.Linq;
 
@@ -58,9 +60,9 @@ namespace DIPOL_UF.Converters
         public static string CameraKeyToHostConversion(string input)
             => Helper.GetCameraHostName(input);
 
-        public static Brush TemperatureToBrushConverter(float temp, Brush[] brushes)
+        public static Brush TemperatureToBrushConversion(float temp, Brush[] brushes)
         {
-            if (brushes is null || brushes?.Length < 4)
+            if (brushes is null || brushes.Length < 4)
                 return Brushes.Black;
 
             if (temp > 20)
@@ -70,6 +72,48 @@ namespace DIPOL_UF.Converters
             if (temp > -15)
                 return brushes[2];
             return brushes[3];
+        }
+
+        public static string EnumToDescriptionConversion(Enum @enum)
+        {
+            var resourceName = $"General_{@enum.GetType().Name}_{@enum}";
+            var localizedText = Properties.Localization.ResourceManager.GetString(resourceName);
+            return localizedText ?? Helper.GetEnumDescription(@enum, @enum.GetType());
+        }
+
+        public static Enum DescriptionToEnumConversion(string desc, Type type)
+        {
+            if (type.BaseType == typeof(Enum))
+                return (Enum)Helper.GetEnumFromDescription(desc, type);
+
+            if(Nullable.GetUnderlyingType(type) is Type innerType &&
+               innerType.BaseType == typeof(Enum))
+                return (Enum)Helper.GetEnumFromDescription(desc, innerType);
+
+            return null;
+        }
+
+        public static Brush TemperatureStatusToBrushConversion(TemperatureStatus status, Brush[] brushes)
+        {
+            if (brushes.Length >= 5)
+
+                switch (status)
+                {
+                    case TemperatureStatus.Off:
+                        return brushes[0];
+                    case TemperatureStatus.Stabilized:
+                        return brushes[1];
+                    case TemperatureStatus.NotReached:
+                        return brushes[2];
+                    case TemperatureStatus.Drift:
+                        return brushes[3];
+                    case TemperatureStatus.NotStabilized:
+                        return brushes[4];
+                    default:
+                        return Brushes.Black;
+                }
+            else
+                return Brushes.Black;
         }
     }
 }

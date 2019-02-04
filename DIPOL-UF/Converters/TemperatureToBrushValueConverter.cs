@@ -10,7 +10,7 @@ namespace DIPOL_UF.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         =>
-            ConverterImplementations.TemperatureToBrushConverter(
+            ConverterImplementations.TemperatureToBrushConversion(
                 value is float temp ? temp : 0f,
                 parameter is Brush[] brushes ? brushes : null);
         

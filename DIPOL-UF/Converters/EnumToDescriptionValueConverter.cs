@@ -1,51 +1,31 @@
 ﻿using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Windows.Data;
 using System.Globalization;
+using System.Linq;
 
 namespace DIPOL_UF.Converters
 {
-    class EnumToDescriptionValueConverter : IValueConverter
+    internal class EnumToDescriptionValueConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (targetType == typeof(IEnumerable) && value is Array enumVals)
+            switch (value)
             {
-                if (enumVals.Length > 0)
-                {
-                    var enumType = enumVals.GetValue(0).GetType();
-
-                    string[] names = new string[enumVals.Length];
-
-                    for (int i = 0; i < names.Length; i++)
-                        names[i] = Helper.GetEnumDescription(enumVals.GetValue(i), enumType);
-
-                    return names;
-
-                }
-                else
-                    return new[] { "" };
+                case IEnumerable<Enum> enumVals:
+                    return enumVals.Select(ConverterImplementations.EnumToDescriptionConversion)
+                                   .ToList();
+                case Enum enumVal:
+                    return ConverterImplementations.EnumToDescriptionConversion(enumVal);
+                default:
+                    return null;
             }
-            else if (value is Enum enumVal)
-                return Helper.GetEnumDescription(enumVal, enumVal.GetType());
-           
-            return null;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is string desc)
-            {
-                Type type;
+            => value is string desc 
+                ? ConverterImplementations.DescriptionToEnumConversion(desc, targetType) 
+                : null;
 
-                if (targetType.BaseType == typeof(Enum))
-                    return Helper.GetEnumFromDescription(desc, targetType);
-                else if ((type = Nullable.GetUnderlyingType(targetType)) != null &&
-                    type.BaseType == typeof(Enum))
-                    return Helper.GetEnumFromDescription(desc, type);
-
-            }
-            return null;
-        }
     }
 }

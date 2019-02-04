@@ -208,8 +208,8 @@
     <Compile Include="Converters\EnumToDescriptionValueConverter.cs" />
     <Compile Include="Converters\MarginModifierValueConverter.cs" />
     <Compile Include="Converters\SingleDoubleToStringValueConverter.cs" />
-    <Compile Include="Converters\TemperatureStatusToBrushMultiValueConverter.cs" />
-    <Compile Include="Converters\TemperatureToBrushMultiValueConverter.cs" />
+    <Compile Include="Converters\TemperatureStatusToBrushValueConverter.cs" />
+    <Compile Include="Converters\TemperatureToBrushValueConverter.cs" />
     <Compile Include="Converters\ValueTupleToValueValueConverter.cs" />
     <Compile Include="Converters\TypeValueConverter.cs" />
     <Compile Include="DebugTracer.cs" />
