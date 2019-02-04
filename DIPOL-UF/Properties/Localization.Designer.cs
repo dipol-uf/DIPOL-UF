@@ -637,6 +637,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Properties.
+        /// </summary>
+        public static string Menu_MainWindow_CameraProperties {
+            get {
+                return ResourceManager.GetString("Menu_MainWindow_CameraProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {{0, {0:F0} }}/{{1, {0:F0} }}.
         /// </summary>
         public static string ProgressBar_DisplayCountFormatString {
