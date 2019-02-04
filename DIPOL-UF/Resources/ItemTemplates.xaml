@@ -48,10 +48,8 @@
                                 <CheckBox Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}" VerticalAlignment="Center"
                                           IsChecked="{Binding IsSelected, Mode=OneWay}"
                                           IsThreeState="False"
-                                          Command="{Binding Path=DataContext.CameraPanelSelectionChangedCommand, 
-                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" 
-                                          CommandParameter="{Binding Key}"
-                                          TabIndex="{Binding TabIndex, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListViewItem}}">
+                                          Command="{Binding SelectCommand}"
+                                          CommandParameter="{Binding Id}">
                                 </CheckBox>
                                 <Label Content="{Binding Name}" VerticalAlignment="Center" Width="155"/>
                             </StackPanel>

@@ -1,6 +1,7 @@
 ﻿using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Windows.Input;
 using System.Windows.Markup;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
@@ -17,6 +18,7 @@ namespace DIPOL_UF.ViewModels
     internal sealed class MainWindowTreeItemViewModel : ReactiveObjectEx
     {
         private readonly CameraBase _model;
+
         [Reactive]
         public string Id { get; private set; }
 
@@ -27,9 +29,13 @@ namespace DIPOL_UF.ViewModels
         public TemperatureStatus TempStatus { [ObservableAsProperty] get; }
         public bool IsSelected { [ObservableAsProperty] get; }
 
+        public ICommand SelectCommand { get; }
+
         public MainWindowTreeItemViewModel(string id, CameraBase cam,
-            ISourceList<string> selections)
+            IObservableList<string> selections,
+            ICommand selectCommand)
         {
+            SelectCommand = selectCommand;
             _model = cam;
             Id = id;
             Name = Converters.ConverterImplementations.CameraToStringAliasConversion(cam);

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ANDOR_CS.Classes;
 using DynamicData;
 using DynamicData.Binding;
@@ -24,12 +25,14 @@ namespace DIPOL_UF.ViewModels
         public MainWindowTreeViewModel(
             string name, 
             IConnectableCache<(string Id, CameraBase Camera), string> collection,
-            ISourceList<string> selections)
+            ISourceList<string> selections,
+            ICommand selectCommand)
         {
             GroupName = name;
             collection.Connect()
                       .ObserveOnUi()
-                      .Transform(x => new MainWindowTreeItemViewModel(x.Id, x.Camera, selections))
+                      .Transform(x =>
+                          new MainWindowTreeItemViewModel(x.Id, x.Camera, selections, selectCommand))
                       .Bind(CameraList)
                       .DisposeMany()
                       .Subscribe()
