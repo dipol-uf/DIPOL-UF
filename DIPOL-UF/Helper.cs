@@ -182,8 +182,10 @@ namespace DIPOL_UF
         public static string GetEnumDescription(object enumValue, Type enumType)
         {
             // Retrieves string representation of the enum value
-            string fieldName = Enum.GetName(enumType, enumValue);
+            var fieldName = Enum.GetName(enumType, enumValue);
 
+            if (fieldName is null)
+                return enumValue.ToString();
             // Which corresponds to field name of Enum-derived class
             var descriptionAttr = enumType
                                   .GetField(fieldName)
@@ -207,13 +209,13 @@ namespace DIPOL_UF
         public static object GetEnumFromDescription(string description, Type enumType)
         {
             // Gets all declared enum values
-            Array values = Enum.GetValues(enumType);
+            var values = Enum.GetValues(enumType);
 
             // If any present
             if (values.Length > 0)
             {
                 // Itereates through values, retrieves description for each
-                for (int i = 0; i < values.Length; i++)
+                for (var i = 0; i < values.Length; i++)
                 {
                     var local = values.GetValue(i);
                     // If retrieved description equals to passed argument, returns this value.
