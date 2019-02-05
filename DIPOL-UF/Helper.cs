@@ -141,7 +141,6 @@ namespace DIPOL_UF
                     ? item
                     : null;
 
-
         public static T GetValueOrNullSafe<T>(this Dictionary<string, object> settings, string key,
             T nullReplacement = default)
         {
@@ -164,7 +163,9 @@ namespace DIPOL_UF
             => array.EnumerableToString(separator);
 
         public static string EnumerableToString<T>(this IEnumerable<T> input, string separator = ", ")
-            => input.Select(x => x.ToString()).Aggregate((old, @new) => old + separator + @new);
+            =>  input.ToList() is var list && list.Count != 0
+                ? list.Select(x => x.ToString()).Aggregate((old, @new) => old + separator + @new)
+                : "";
 
         public static string EnumerableToString(this IEnumerable input, string separator = ", ")
         {
@@ -173,10 +174,10 @@ namespace DIPOL_UF
             var s = new StringBuilder();
 
             if (enumer.MoveNext())
-                s.Append(enumer.Current);
+                s.Append(enumer.Current.ToStringEx());
 
             while (enumer.MoveNext())
-                s.Append(separator + enumer.Current);
+                s.Append(separator + enumer.Current.ToStringEx());
 
             return s.ToString();
         }
@@ -284,29 +285,27 @@ namespace DIPOL_UF
             var list = new List<string>(tuple.Length);
             for (var i = 0; i < tuple.Length; i++)
             {
-                var value = tuple[i];
-
-                switch (value)
-                {
-                    case Enum @enum:
-                        list.Add($"[{@enum.GetEnumStringEx().EnumerableToString()}]");
-                        break;
-                    case ITuple innerTuple:
-                        list.Add($"({innerTuple.GetValueTupleString()})");
-                        break;
-                    case Array array:
-                        list.Add($"[{array.ArrayToString()}]");
-                        break;
-                    case IEnumerable enumerable:
-                        list.Add($"[{enumerable.EnumerableToString()}]");
-                        break;
-                    default:
-                        list.Add(value.ToString());
-                        break;
-                }
+                list.Add(tuple[i].ToStringEx());
             }
 
             return list.EnumerableToString();
+        }
+
+        public static string ToStringEx(this object @this)
+        {
+            switch (@this)
+            {
+                case null:
+                    throw new ArgumentNullException(nameof(@this));
+                case Enum @enum:
+                    return "[" + @enum.GetEnumStringEx().EnumerableToString() + "]";
+                case ITuple tuple:
+                    return "(" + tuple.GetValueTupleString() + ")";
+                case IEnumerable enumerable:
+                    return "[" + enumerable.EnumerableToString() + "]";
+                default:
+                    return @this.ToString();
+            }
         }
 
         public static double Clamp(this double val, double min, double max)
