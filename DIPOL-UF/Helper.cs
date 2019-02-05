@@ -8,7 +8,6 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -58,16 +57,17 @@ namespace DIPOL_UF
         {
             var parent = VisualTreeHelper.GetParent(element);
 
-            while ((parent as FrameworkElement)?.Name != name)
-                parent = VisualTreeHelper.GetParent(parent);
+            while (parent is FrameworkElement elem && elem.Name != name)
+                parent = VisualTreeHelper.GetParent(elem);
 
             return (parent is FrameworkElement e && e.Name == name) ? parent : null;
         }
 
         public static bool IsDialogWindow(Window window)
         {
-            var showingAsDialogField = typeof(Window).GetField("_showingAsDialog",
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var showingAsDialogField = typeof(Window).GetField(
+                @"_showingAsDialog",
+                BindingFlags.Instance | BindingFlags.NonPublic);
 
             return (bool) (showingAsDialogField?.GetValue(window) ?? false);
         }
@@ -149,13 +149,13 @@ namespace DIPOL_UF
 
             object value;
 
-            if (tempValue is System.Collections.ArrayList list)
+            if (tempValue is ArrayList list)
                 value = list.ToArray();
             else
                 value = tempValue;
 
-            if (value is T)
-                return (T) value;
+            if (value is T safe)
+                return safe;
             else
                 return nullReplacement;
         }
@@ -204,7 +204,7 @@ namespace DIPOL_UF
 
             // Casts result to DescriptionAttribute. 
             // If attribute is not found or value is of wrong type, cast gives null and method returns fieldName
-            return (descriptionAttr as DescriptionAttribute)?.Description ?? (fieldName ?? "");
+            return (descriptionAttr as DescriptionAttribute)?.Description ?? fieldName;
 
         }
 
@@ -266,8 +266,6 @@ namespace DIPOL_UF
                         DescriptionAttribute attr
                         ? attr.Description
                         : key);
-
-            var test = type.GetCustomAttribute(typeof(FlagsAttribute)) is null;
 
             return
                 type.GetCustomAttribute(typeof(FlagsAttribute)) is null
