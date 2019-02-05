@@ -26,19 +26,34 @@ namespace DIPOL_UF.ViewModels
 
         public CameraPropertiesViewModel(CameraBase model)
         {
+            string GetStringRep(object value)
+            {
+                switch (value)
+                {
+                    case Enum @enum:
+                        return Helper.GetEnumDescription(@enum, @enum.GetType());
+                    case Array array:
+                        return array.ArrayToString();
+                    case null:
+                        return Properties.Localization.CameraProperties_UnknownValue;
+                    default:
+                        return value.ToString();
+                }
+            }
+            
             var capabilities = capabilitiesAccessors.Select(x => new Tuple<string, string>(
                 x.Name,
-                x.GetValue(model.Capabilities)?.ToString() ?? "Unknown"));
+                GetStringRep(x.GetValue(model.Capabilities))));
 
             var properties = propertiesAccessors.Select(x => new Tuple<string, string>(
                 x.Name,
-                x.GetValue(model.Properties)?.ToString() ?? "Unknown"));
+                GetStringRep(x.GetValue(model.Properties))));
 
             var additionalInfo = new[]
             {
                 new Tuple<string, string>(
                     Properties.Localization.CameraProperties_Alias, 
-                    Converters.ConverterImplementations.CameraToStringAliasConversion(model)),
+                    ConverterImplementations.CameraToStringAliasConversion(model)),
                 new Tuple<string, string>(Properties.Localization.CameraProperties_CamModel, model.CameraModel),
                 new Tuple<string, string>(Properties.Localization.CameraProperties_SerialNumber, model.SerialNumber),
                 new Tuple<string, string>(Properties.Localization.CameraProperties_SoftwareVers, model.Software.ToString()),
