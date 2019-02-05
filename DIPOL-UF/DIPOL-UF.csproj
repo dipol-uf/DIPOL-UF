@@ -207,6 +207,7 @@
     <Compile Include="Converters\CameraToStringAliasValueConverter.cs" />
     <Compile Include="Converters\EnumToDescriptionValueConverter.cs" />
     <Compile Include="Converters\MarginModifierValueConverter.cs" />
+    <Compile Include="Converters\NotValueConverter.cs" />
     <Compile Include="Converters\SingleDoubleToStringValueConverter.cs" />
     <Compile Include="Converters\TemperatureStatusToBrushValueConverter.cs" />
     <Compile Include="Converters\TemperatureToBrushValueConverter.cs" />

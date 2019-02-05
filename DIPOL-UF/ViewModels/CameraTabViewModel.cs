@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DIPOL_UF.Models;
 using DynamicData.Binding;
 using ReactiveUI.Fody.Helpers;
+// ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace DIPOL_UF.ViewModels
 {
@@ -14,9 +16,12 @@ namespace DIPOL_UF.ViewModels
     {
         public float MinimumAllowedTemperature => 0; // Model.TemperatureRange.Minimum;
         public float MaximumAllowedTemperature => 100; //Model.TemperatureRange.Maximum;
+        public bool CanControlTemperature => Model.CanControlTemperature;
 
         [Reactive]
         public float TargetTemperature { get; set; }
+
+        public bool IsAcquiring { [ObservableAsProperty]get; }
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
@@ -26,7 +31,11 @@ namespace DIPOL_UF.ViewModels
 
         private void HookObservables()
         {
-
+            Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.IsAcquiring))
+                 .Select(x => x.IsAcquiring)
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.IsAcquiring)
+                 .DisposeWith(_subscriptions);
         }
 
         protected override void HookValidators()

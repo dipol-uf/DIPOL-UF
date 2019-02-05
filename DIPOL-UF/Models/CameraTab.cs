@@ -10,8 +10,9 @@ namespace DIPOL_UF.Models
 {
     internal sealed class CameraTab: ReactiveObjectEx
     {
-        private readonly CameraBase Camera;
+        public CameraBase Camera { get; }
         public (float Minimum, float Maximum) TemperatureRange { get; }
+        public bool CanControlTemperature { get; }
 
         public CameraTab(CameraBase camera)
         {
@@ -20,6 +21,7 @@ namespace DIPOL_UF.Models
             TemperatureRange = camera.Capabilities.GetFunctions.HasFlag(GetFunction.TemperatureRange)
                 ? camera.Properties.AllowedTemperatures
                 : default;
+            CanControlTemperature = camera.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature);
         }
 
         public override void Dispose(bool disposing)
