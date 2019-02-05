@@ -113,13 +113,13 @@
                                 UpdateSourceTrigger=PropertyChanged,
                                 Converter={StaticResource ResourceKey=TypeConverter},
                                 ValidatesOnNotifyDataErrors=True}">
-                       
-                        <!--<Slider.IsEnabled>
-                            <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                <Binding Path="IsNotAcquiring" Mode="OneWay"/>
-                                <Binding Path="CanControlTemperature" Mode="OneWay"/>
+                        <Slider.IsEnabled>
+                            <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}">
+                                <Binding Path="IsAcquiring" Converter="{StaticResource NotConverter}"/>
+                                <Binding Path="CanControlTemperature"/>
                             </MultiBinding>
-                        </Slider.IsEnabled>-->
+                        </Slider.IsEnabled>
+                       
                     </Slider>
 
                     <!--<ProgressBar Grid.Column="2" Grid.Row="1" Grid.RowSpan="3"

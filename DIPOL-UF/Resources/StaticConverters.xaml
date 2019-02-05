@@ -20,6 +20,7 @@
     <cnvrt:MarginModifierValueConverter x:Key="MarginModifierConverter"/>
     <cnvrt:DefaultValueConverter x:Key="DefaultConverter"/>
     <cnvrt:ValidationErrorsToStringValueConverter x:Key="ErrorsToStringConverter"/>
+    <cnvrt:NotValueConverter x:Key="NotConverter"></cnvrt:NotValueConverter>
     <!-- Debug converter -->
     <cnvrt:DebugConverter x:Key="Debug"/>
 </ResourceDictionary>
