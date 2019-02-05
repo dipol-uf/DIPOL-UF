@@ -116,6 +116,7 @@
     <Compile Include="DipolImageTests.cs" />
     <Compile Include="CameraTests.cs" />
     <Compile Include="FitsTests.cs" />
+    <Compile Include="HelperTests.cs" />
     <Compile Include="JsonSettingsTests.cs" />
     <Compile Include="ObservableCollectionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -173,6 +174,9 @@ namespace DIPOL_UF
             return s.ToString();
         }
 
+        public static string EnumerableToString<T>(this IEnumerable<T> input, string separator = ", ")
+            => input.Select(x => x.ToString()).Aggregate((old, @new) => old + separator + @new);
+
         /// <summary>
         /// Gets value of <see cref="DescriptionAttribute"/> for an item from a given enum.
         /// </summary>
@@ -236,18 +240,37 @@ namespace DIPOL_UF
         /// <param name="enm">Flags to convert to array.</param>
         /// <exception cref="ArgumentException"/>
         /// <returns>An array of flags found in input parameter, one flag per each aray item.</returns>
-        public static T[] EnumFlagsToArray<T>(T enm)
+        public static List<T> EnumFlagsToArray<T>(T enm) where T: Enum
         {
-            if (typeof(T).BaseType != typeof(Enum))
-                throw new ArgumentException($"Provided type {typeof(T)} should be {typeof(Enum)}-based ");
+            return Enum
+                   .GetValues(typeof(T))
+                   .Cast<T>()
+                   .Where(item => enm.HasFlag(item))
+                   .ToList();
+        }
 
-            if (enm is Enum castEnm)
-                return Enum
-                       .GetValues(typeof(T))
-                       .OfType<T>()
-                       .Where(item => item is Enum enumItem && castEnm.HasFlag(enumItem))
-                       .ToArray();
-            return new T[0];
+        public static List<string> GetEnumStringEx<T>(T @enum) where T : Enum
+        {
+            string GetString(string key)
+                => Properties.Localization.ResourceManager
+                              .GetString($"General_{typeof(T).Name}_{key}")
+                    ?? (typeof(T).GetField(key).GetCustomAttribute(
+                            typeof(DescriptionAttribute)) is
+                        DescriptionAttribute attr
+                        ? attr.Description
+                        : key);
+
+
+            return
+                typeof(T).GetCustomAttribute(typeof(FlagsAttribute)) is null
+                    ? new List<string>()
+                        {Enum.IsDefined(typeof(T), @enum) ? GetString(typeof(T).GetEnumName(@enum)) : @enum.ToString()}
+                    : typeof(T).GetEnumValues()
+                               .Cast<T>()
+                               .Where(x => @enum.HasFlag(x))
+                               .Select(x => x.ToString())
+                               .Select(GetString)
+                               .ToList();
         }
 
         public static double Clamp(this double val, double min, double max)
