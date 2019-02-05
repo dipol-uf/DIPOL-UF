@@ -169,11 +169,56 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Alias.
+        /// </summary>
+        public static string CameraProperties_Alias {
+            get {
+                return ResourceManager.GetString("CameraProperties_Alias", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Camera Model.
+        /// </summary>
+        public static string CameraProperties_CamModel {
+            get {
+                return ResourceManager.GetString("CameraProperties_CamModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hardware Version.
+        /// </summary>
+        public static string CameraProperties_HardwareVers {
+            get {
+                return ResourceManager.GetString("CameraProperties_HardwareVers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Property.
         /// </summary>
         public static string CameraProperties_Property {
             get {
                 return ResourceManager.GetString("CameraProperties_Property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Serial Number.
+        /// </summary>
+        public static string CameraProperties_SerialNumber {
+            get {
+                return ResourceManager.GetString("CameraProperties_SerialNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Software Version.
+        /// </summary>
+        public static string CameraProperties_SoftwareVers {
+            get {
+                return ResourceManager.GetString("CameraProperties_SoftwareVers", resourceCulture);
             }
         }
         
