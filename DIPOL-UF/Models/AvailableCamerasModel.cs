@@ -423,8 +423,12 @@ namespace DIPOL_UF.Models
         {
             // Binding source collection to the public read-only interface
             FoundCameras = FoundDevices.AsObservableCache().DisposeWith(_subscriptions);
-            FoundDevices.Connect().DisposeManyEx(x => x.Camera?.Dispose()).Subscribe().DisposeWith(_subscriptions);
-            SelectedIds.Connect().LogObservable("SelectedIds", _subscriptions);
+
+            FoundDevices.Connect().DisposeManyEx(x =>
+            {
+                if(!SelectedIds.Items.Contains(x.Id))
+                    x.Camera?.Dispose();
+            }).Subscribe().DisposeWith(_subscriptions);
         }
 
         public List<(string Id, CameraBase Camera)> RetrieveSelectedDevices()
