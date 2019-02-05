@@ -63,18 +63,18 @@ namespace DIPOL_UF.ViewModels
         /// Supported acquisition modes.
         /// </summary>
         public AcquisitionMode[] AllowedAcquisitionModes =>
-           Helper.EnumFlagsToArray(Camera.Capabilities.AcquisitionModes)
+           Helper.EnumFlagsToArray<AcquisitionMode>(Camera.Capabilities.AcquisitionModes)
             .Where(item => item != AcquisitionMode.FrameTransfer)
             .Where(ANDOR_CS.Classes.EnumConverter.IsAcquisitionModeSupported)
             .ToArray();
 
         public ReadMode[] AllowedReadoutModes =>
-            Helper.EnumFlagsToArray(Camera.Capabilities.ReadModes)
+            Helper.EnumFlagsToArray<ReadMode>(Camera.Capabilities.ReadModes)
             .Where(ANDOR_CS.Classes.EnumConverter.IsReadModeSupported)
             .ToArray();
 
         public TriggerMode[] AllowedTriggerModes =>
-            Helper.EnumFlagsToArray(Camera.Capabilities.TriggerModes)
+            Helper.EnumFlagsToArray<TriggerMode>(Camera.Capabilities.TriggerModes)
             .Where(ANDOR_CS.Classes.EnumConverter.IsTriggerModeSupported)
             .ToArray();
 

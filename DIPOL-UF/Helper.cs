@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
@@ -159,9 +160,15 @@ namespace DIPOL_UF
                 return nullReplacement;
         }
 
-        public static string ArrayToString(this Array array)
+        public static string ArrayToString(this Array array, string separator = ", ")
+            => array.EnumerableToString(separator);
+
+        public static string EnumerableToString<T>(this IEnumerable<T> input, string separator = ", ")
+            => input.Select(x => x.ToString()).Aggregate((old, @new) => old + separator + @new);
+
+        public static string EnumerableToString(this IEnumerable input, string separator = ", ")
         {
-            var enumer = array.GetEnumerator();
+            var enumer = input.GetEnumerator();
 
             var s = new StringBuilder();
 
@@ -169,13 +176,10 @@ namespace DIPOL_UF
                 s.Append(enumer.Current);
 
             while (enumer.MoveNext())
-                s.Append(", " + enumer.Current);
+                s.Append(separator + enumer.Current);
 
             return s.ToString();
         }
-
-        public static string EnumerableToString<T>(this IEnumerable<T> input, string separator = ", ")
-            => input.Select(x => x.ToString()).Aggregate((old, @new) => old + separator + @new);
 
         /// <summary>
         /// Gets value of <see cref="DescriptionAttribute"/> for an item from a given enum.
@@ -237,40 +241,74 @@ namespace DIPOL_UF
         /// Useful for combobox-like representations.
         /// </summary>
         /// <typeparam name="T"><see cref="Enum"/> type. If not, throws <see cref="ArgumentException"/></typeparam>
-        /// <param name="enm">Flags to convert to array.</param>
+        /// <param name="enum">Flags to convert to array.</param>
         /// <exception cref="ArgumentException"/>
         /// <returns>An array of flags found in input parameter, one flag per each aray item.</returns>
-        public static List<T> EnumFlagsToArray<T>(T enm) where T: Enum
+        public static List<T> EnumFlagsToArray<T>(Enum @enum) where T :Enum
         {
             return Enum
-                   .GetValues(typeof(T))
+                   .GetValues(@enum.GetType())
+                   .Cast<Enum>()
+                   .Where(@enum.HasFlag)
                    .Cast<T>()
-                   .Where(item => enm.HasFlag(item))
                    .ToList();
         }
 
-        public static List<string> GetEnumStringEx<T>(T @enum) where T : Enum
+        public static List<string> GetEnumStringEx(this Enum @enum)
         {
+            var type = @enum.GetType();
+
             string GetString(string key)
                 => Properties.Localization.ResourceManager
-                              .GetString($"General_{typeof(T).Name}_{key}")
-                    ?? (typeof(T).GetField(key).GetCustomAttribute(
+                              .GetString($"General_{type.Name}_{key}")
+                    ?? (type.GetField(key).GetCustomAttribute(
                             typeof(DescriptionAttribute)) is
                         DescriptionAttribute attr
                         ? attr.Description
                         : key);
 
+            var test = type.GetCustomAttribute(typeof(FlagsAttribute)) is null;
 
             return
-                typeof(T).GetCustomAttribute(typeof(FlagsAttribute)) is null
+                type.GetCustomAttribute(typeof(FlagsAttribute)) is null
                     ? new List<string>()
-                        {Enum.IsDefined(typeof(T), @enum) ? GetString(typeof(T).GetEnumName(@enum)) : @enum.ToString()}
-                    : typeof(T).GetEnumValues()
-                               .Cast<T>()
-                               .Where(x => @enum.HasFlag(x))
+                        {Enum.IsDefined(type, @enum) ? GetString(type.GetEnumName(@enum)) : @enum.ToString()}
+                    : type.GetEnumValues()
+                               .Cast<Enum>()
+                               .Where(@enum.HasFlag)
                                .Select(x => x.ToString())
                                .Select(GetString)
                                .ToList();
+        }
+
+        public static string GetValueTupleString(this ITuple tuple)
+        {
+            var list = new List<string>(tuple.Length);
+            for (var i = 0; i < tuple.Length; i++)
+            {
+                var value = tuple[i];
+
+                switch (value)
+                {
+                    case Enum @enum:
+                        list.Add($"[{@enum.GetEnumStringEx().EnumerableToString()}]");
+                        break;
+                    case ITuple innerTuple:
+                        list.Add($"({innerTuple.GetValueTupleString()})");
+                        break;
+                    case Array array:
+                        list.Add($"[{array.ArrayToString()}]");
+                        break;
+                    case IEnumerable enumerable:
+                        list.Add($"[{enumerable.EnumerableToString()}]");
+                        break;
+                    default:
+                        list.Add(value.ToString());
+                        break;
+                }
+            }
+
+            return list.EnumerableToString();
         }
 
         public static double Clamp(this double val, double min, double max)
