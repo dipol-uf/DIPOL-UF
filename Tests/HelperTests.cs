@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ANDOR_CS.Enums;
@@ -13,6 +15,7 @@ namespace Tests
     [TestFixture()]
     public class HelperTests
     {
+        [Flags]
         public enum Test : uint
         {
             [System.ComponentModel.Description("1st")]
@@ -26,8 +29,17 @@ namespace Tests
         public void Test_EnumDescriptors()
         {
             var mode = TemperatureStatus.NotReached;
-            
-           var res = Helper.GetEnumStringEx(mode).EnumerableToString();
+
+            var res = mode.GetEnumStringEx().EnumerableToString();
+        }
+
+        [Test]
+        public void Test_TupleDescriptors()
+        {
+            var x = (A: Test.First | Test.Third, B: new[]{6, 10}, C: (true, false));
+
+
+            var str = x.GetValueTupleString();
         }
     }
 }
