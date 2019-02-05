@@ -210,6 +210,7 @@
     <Compile Include="Converters\SingleDoubleToStringValueConverter.cs" />
     <Compile Include="Converters\TemperatureStatusToBrushValueConverter.cs" />
     <Compile Include="Converters\TemperatureToBrushValueConverter.cs" />
+    <Compile Include="Converters\ValidationErrorsToStringValueConverter.cs" />
     <Compile Include="Converters\ValueTupleToValueValueConverter.cs" />
     <Compile Include="Converters\TypeValueConverter.cs" />
     <Compile Include="DebugTracer.cs" />

@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData;
 using ReactiveUI;
 
 using ValidationErrorsCache = DynamicData.SourceCache<(string Property, string Type, string Message), (string Property, string Type)>;
@@ -76,6 +77,7 @@ namespace DIPOL_UF
             WhenErrorsChanged
                 .Subscribe(OnErrorsChanged)
                 .DisposeWith(_subscriptions);
+            
         }
 
         public virtual List<(string Type, string Message)> GetTypedErrors(string propertyName)
@@ -92,7 +94,7 @@ namespace DIPOL_UF
                                     .Where(x => x.Property == propertyName && !(x.Message is null))
                                     .Select(x => x.Message);
         }
-        
+
         public virtual void Dispose(bool disposing)
         {
             if (!IsDisposed)
