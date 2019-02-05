@@ -1,17 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Runtime.Remoting.Channels;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Markup;
-using System.Windows.Threading;
 
 namespace DIPOL_UF
 {
@@ -61,6 +51,10 @@ namespace DIPOL_UF
                     new Tuple<CultureInfo, CultureInfo>(old, newCulture)));
         }
 
+        internal static string GetText(string key)
+            => Properties.Localization.ResourceManager.GetString(key);
+        
+
         public override object ProvideValue(IServiceProvider serviceProvider)
         {
           
@@ -98,7 +92,7 @@ namespace DIPOL_UF
             
             if (Key != null)
             {
-                var value = Properties.Localization.ResourceManager.GetString(Key) ?? Key;
+                var value = GetText(Key) ?? Key;
 
                 return string.Format(GetFormat(), value);
             }
