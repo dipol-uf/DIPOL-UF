@@ -38,7 +38,7 @@
         <TabControl x:Name="CameraTabs" Margin="2"
                     Grid.Row="1" Grid.Column="0"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                    ItemsSource="{Binding ConnectedCameras, UpdateSourceTrigger=PropertyChanged}"
+                    ItemsSource="{Binding CameraTabs}"
                     ContentTemplate="{StaticResource ResourceKey=TabControlItemTemplate}"
                     ItemContainerStyle="{StaticResource ResourceKey=TabItemStyle}">
          </TabControl>

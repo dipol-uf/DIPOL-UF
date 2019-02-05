@@ -29,5 +29,12 @@ namespace DIPOL_UF.Validators
                 ? string.Format(Properties.Localization.Validation_ValueShouldFallWithinRange, lower, upper)
                 : null;
         }
+
+        public static string ShouldFallWithinRange(float x, float lower, float upper)
+        {
+            return x < lower || x > upper
+                ? string.Format(Properties.Localization.Validation_ValueShouldFallWithinRange, lower, upper)
+                : null;
+        }
     }
 }

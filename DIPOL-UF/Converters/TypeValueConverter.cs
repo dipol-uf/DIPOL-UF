@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows.Data;
-using System.Windows;
 using System.Globalization;
 
 namespace DIPOL_UF.Converters
@@ -15,10 +14,9 @@ namespace DIPOL_UF.Converters
         {
             if (value != null)
                 return System.Convert.ChangeType(value, targetType);
-            else if (targetType.IsValueType)
+            if (targetType.IsValueType)
                 return Activator.CreateInstance(targetType);
-            else return null;
-
+            return null;
         }
 
         /// <summary>
@@ -32,15 +30,5 @@ namespace DIPOL_UF.Converters
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => Convert(value, targetType, parameter, culture);
 
-        //{
-        //// If val is nor null
-        //if (value != null)
-        //    return System.Convert.ChangeType(value, targetType);
-        //// If it is null and it is a value type, create a default(targetType)
-        //else if (targetType.IsValueType)
-        //    return Activator.CreateInstance(targetType);
-        //// Otherwise it is a ref type and simply return null
-        //else return null; 
-        //}
     }
 }
