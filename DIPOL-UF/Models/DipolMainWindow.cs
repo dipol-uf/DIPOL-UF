@@ -453,7 +453,7 @@ namespace DIPOL_UF.Models
         public IObservableCache<(string Id, CameraBase Camera), string> ConnectedCameras { get; private set; }
         public IObservableCache<(string Id, CameraTab Tab), string> CameraTabs { get; private set; }
 
-    public ReactiveCommand<Unit, Unit> WindowLoadedCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit> WindowLoadedCommand { get; private set; }
         public ReactiveCommand<Window, Unit> ConnectButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> DisconnectButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> SelectAllCamerasCommand { get; private set; }
@@ -536,13 +536,7 @@ namespace DIPOL_UF.Models
                 .DisposeWith(_subscriptions);
 
            _connectedCameras.Connect()
-                            .DisposeManyEx(async x =>
-                                await Helper.RunNoMarshall(() =>
-                                {
-                                    x.Camera?.CoolerControl(Switch.Disabled);
-                                    x.Camera?.TemperatureMonitor(Switch.Disabled);
-                                    x.Camera?.Dispose();
-                                }))
+                            .DisposeManyEx(async x => await DisposeCamera(x.Camera))
                             .Subscribe()
                             .DisposeWith(_subscriptions);
 
@@ -553,7 +547,7 @@ namespace DIPOL_UF.Models
 
 
            CameraTabs = _connectedCameras.Connect()
-                                         .Transform(x => (x.Id, Tab: new CameraTab()))
+                                         .Transform(x => (x.Id, Tab: new CameraTab(x.Camera)))
                                          .DisposeManyEx(x => x.Tab?.Dispose())
                                          .AsObservableCache()
                                          .DisposeWith(_subscriptions);
@@ -713,7 +707,7 @@ namespace DIPOL_UF.Models
                 _connectedCameras.RemoveKey(id);
             }
         }
-        
+
         public override void Dispose(bool disposing)
         {
             if (!IsDisposed)
@@ -730,5 +724,13 @@ namespace DIPOL_UF.Models
                 }
             base.Dispose(disposing);
         }
+
+        private static async Task DisposeCamera(CameraBase cam)
+            => await Helper.RunNoMarshall(() =>
+            {
+                cam?.CoolerControl(Switch.Disabled);
+                cam?.TemperatureMonitor(Switch.Disabled);
+                cam?.Dispose();
+            });
     }
 }

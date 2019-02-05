@@ -6,6 +6,7 @@ using DIPOL_UF.Models;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI.Fody.Helpers;
+// ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace DIPOL_UF.ViewModels
 {
@@ -31,16 +32,15 @@ namespace DIPOL_UF.ViewModels
             Model.SelectedDevices.CountChanged
                  .CombineLatest(
                      Model.ConnectedCameras.CountChanged,
-                          (x, y) =>
-                          {
-                              if (x == 0)
-                                  return false;
-
-                              return x < y ? null : new bool?(true);
-                          })
-                      .ObserveOnUi()
-                      .ToPropertyEx(this, x => x.AllCamerasSelected)
-                      .DisposeWith(_subscriptions);
+                     (x, y) => 
+                         x == 0 
+                             ? false 
+                             : x < y 
+                                 ? null 
+                                 : new bool?(true))
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.AllCamerasSelected)
+                 .DisposeWith(_subscriptions);
 
 
             Model.ConnectedCameras.Connect()
@@ -56,30 +56,32 @@ namespace DIPOL_UF.ViewModels
                  .Subscribe()
                  .DisposeWith(_subscriptions);
 
-            
-        }
+            Model.CameraTabs.Connect()
+                 .ObserveOnUi()
+                 .Transform(x => new CameraTabViewModel(x.Tab))
+                 .Bind(CameraTabs)
+                 .DisposeMany()
+                 .Subscribe()
+                 .DisposeWith(_subscriptions);
 
+        }
 
         
         public IObservableCollection<MainWindowTreeViewModel> CameraPanel { get; }
             = new ObservableCollectionExtended<MainWindowTreeViewModel>();
 
-        // ReSharper disable UnassignedGetOnlyAutoProperty
+        public IObservableCollection<CameraTabViewModel> CameraTabs { get; }
+            = new ObservableCollectionExtended<CameraTabViewModel>();
+
         public bool AnyCameraConnected { [ObservableAsProperty] get; }
         public bool? AllCamerasSelected { [ObservableAsProperty] get; }
-        // ReSharper restore UnassignedGetOnlyAutoProperty
-
         public ICommand SelectAllCamerasCommand => Model.SelectAllCamerasCommand;
         public ICommand ConnectButtonCommand => Model.ConnectButtonCommand;
         public ICommand DisconnectButtonCommand => Model.DisconnectButtonCommand;
-        //public ICommand CameraPanelSelectionChangedCommand => model.CameraPanelSelectionChangedCommand;
-
         public ICommand WindowLoadedCommand => Model.WindowLoadedCommand;
 
         //public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
 
-        //public ObservableCollection<ConnectedCamerasTreeViewModel> CameraPanel => 
-        //    model.CameraPanel;
 
     }
 }
