@@ -479,8 +479,8 @@ namespace DIPOL_UF.Models
         {
 
             ContextMenuCommand =
-                ReactiveCommand.Create<string>(
-                                   ContextMenuCommandExecute,
+                ReactiveCommand.CreateFromObservable<string, Unit>(
+                                   x => Observable.FromAsync(_ => ContextMenuCommandExecuteAsync(x)),
                                    ConnectedCameras.CountChanged.Select(x => x != 0)
                                                    .DistinctUntilChanged()
                                                    .ObserveOnUi())
@@ -576,20 +576,22 @@ namespace DIPOL_UF.Models
             });
         }
 
-        private void ContextMenuCommandExecute(string param)
+        private async Task ContextMenuCommandExecuteAsync(string param)
         {
-            if (ConnectedCameras.Lookup(param) is var result &&
-                result.HasValue)
-                using (var vm = new CameraPropertiesViewModel(result.Value.Camera))
-                {
-                    var view = new CameraPropertiesView()
-                    {
-                        WindowStartupLocation = WindowStartupLocation.CenterScreen
-                    }.WithDataContext(vm);
+            var result = await Helper.RunNoMarshall(() => ConnectedCameras.Lookup(param));
+            if (result.HasValue)
+            {
+                var vm = await Helper.RunNoMarshall(() => new CameraPropertiesViewModel(result.Value.Camera));
+                var view = Helper.ExecuteOnUi(() => new CameraPropertiesView()
+                        {WindowStartupLocation = WindowStartupLocation.CenterScreen}
+                    .WithDataContext(vm));
 
-                    Helper.ExecuteOnUi(view.ShowDialog);
-                }
+                Helper.ExecuteOnUi(view.ShowDialog);
+
+                await Helper.RunNoMarshall(vm.Dispose);
+            }
         }
+
 
         private async Task InitializeRemoteSessionsAsync()
         {
@@ -664,7 +666,7 @@ namespace DIPOL_UF.Models
                     .DisposeWith(disposables));
 
             var wind = Helper.ExecuteOnUi(() =>
-                new Views.AvailableCameraView()
+                new AvailableCameraView()
                 {
                     Owner = param,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner
