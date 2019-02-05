@@ -15,8 +15,8 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class AvailableCamerasViewModel : ReactiveViewModel<AvailableCamerasModel>
     {
-        public IObservableCollection<Tuple<string, string>> ListedCameras { get; }
-         = new ObservableCollectionExtended<Tuple<string, string>>();
+        public IObservableCollection<Tuple<string, string, string>> ListedCameras { get; }
+         = new ObservableCollectionExtended<Tuple<string, string, string>>();
 
         
         public ICommand CancelButtonCommand => Model.CancelButtonCommand;
@@ -40,10 +40,11 @@ namespace DIPOL_UF.ViewModels
         private void HookObservables()
         {
             var observer = Model.FoundCameras.Connect();
-            observer.Select(x => new Tuple<string, string>(
+            observer.Select(x => new Tuple<string, string, string>(
                         ConverterImplementations.CameraKeyToHostConversion(x.Id),
-                         ConverterImplementations.CameraToStringAliasConversion(x.Camera)))
-                    .Sort(SortExpressionComparer<Tuple<string, string>>
+                        ConverterImplementations.CameraToStringAliasConversion(x.Camera),
+                        x.Id))
+                    .Sort(SortExpressionComparer<Tuple<string, string, string>>
                           .Ascending(x => x.Item1).ThenByAscending(x => x.Item2))
                     .ObserveOnUi()
                     .Bind(ListedCameras)
@@ -54,7 +55,7 @@ namespace DIPOL_UF.ViewModels
 
             (SelectionChangedCommand as ReactiveCommand<IList, IList>)
                 ?.ObserveOnUi()
-                .Select(x => x.Cast<Tuple<string, string>>().Select(y => y.Item1).ToList())
+                .Select(x => x.Cast<Tuple<string, string, string>>().Select(y => y.Item3).ToList())
                 .Subscribe(x =>
                 {
                     Model.SelectedIds.Edit(context =>

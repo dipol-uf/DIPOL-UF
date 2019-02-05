@@ -330,6 +330,11 @@ namespace DIPOL_UF
             Action<TEntry> disposeAction)
             => @this.SubscribeMany(x => Disposable.Create(() => disposeAction(x)));
 
+        public static IObservable<IChangeSet<TEntry>> DisposeManyEx<TEntry>(
+            this IObservable<IChangeSet<TEntry>> @this,
+            Action<TEntry> disposeAction)
+            => @this.SubscribeMany(x => Disposable.Create(() => disposeAction(x)));
+
         public static T WithDataContext<T>(this T control, ReactiveObjectEx dataContext)
             where T : FrameworkElement
         {

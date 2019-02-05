@@ -61,6 +61,7 @@ namespace DIPOL_UF.ViewModels
                     Localization.Menu_MainWindow_CameraProperties, 
                     contextMenuCommand)}
                 .AsObservableChangeSet()
+                .DisposeMany()
                 .Bind(ContextMenu)
                 .Subscribe(new AnonymousObserver<IChangeSet<MenuItemViewModel>>(_ => { }))
                 .DisposeWith(_subscriptions);
