@@ -115,5 +115,24 @@ namespace DIPOL_UF.Converters
             else
                 return Brushes.Black;
         }
+
+        public static bool BoolToBoolConversion(List<bool> values, string parameter = null)
+        {
+            if (parameter is string strPar)
+            {
+                var key = strPar.Trim().ToLowerInvariant();
+                switch (key)
+                {
+                    case "any":
+                        return values.Any();
+                    case "notall":
+                        return !values.All(x => x);
+                    case "notany":
+                        return !values.Any();
+                }
+            }
+
+            return values.All(x => x);
+        }
     }
 }
