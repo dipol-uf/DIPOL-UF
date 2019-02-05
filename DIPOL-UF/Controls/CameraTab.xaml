@@ -10,7 +10,7 @@
              xmlns:loc="clr-namespace:DIPOL_UF"
              mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
              d:DesignHeight="900" d:DesignWidth="1200"
-             d:DataContext="{d:DesignInstance Type=dvms:ConnectedCameraViewModel}">
+             d:DataContext="{d:DesignInstance Type=dvms:CameraTabViewModel}">
     <ScrollViewer
         HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Auto"
         VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto">
@@ -43,7 +43,7 @@
                     <ColumnDefinition Width="1*"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Row="0" 
-                           Text="{Binding Model}" 
+                           Text="{Binding Name}" 
                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                            TextAlignment="Left"/>
                 <Slider Grid.Row="1" VerticalAlignment="Center"
