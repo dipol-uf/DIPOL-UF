@@ -57,12 +57,9 @@ namespace DIPOL_UF
 
 
             using (var mainModel = new Models.DipolMainWindow())
-            {
-                var view = new ViewModels.DipolMainWindowViewModel(mainModel);
+                using (var view = new ViewModels.DipolMainWindowViewModel(mainModel))
+                    applicationInstance.Run(new Views.DipolMainWindow().WithDataContext(view));
 
-                applicationInstance.Run(new Views.DipolMainWindow(view));
-
-            }
 
             //Test();
 
