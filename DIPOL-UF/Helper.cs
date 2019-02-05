@@ -13,6 +13,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using DynamicData;
 
 namespace DIPOL_UF
 {
@@ -323,6 +324,11 @@ namespace DIPOL_UF
             bool condition,
             Func<IObservable<T>, IObservable<T>> modifier) =>
             condition ? modifier(input) : input;
+
+        public static IObservable<IChangeSet<TEntry, TKey>> DisposeManyEx<TEntry, TKey>(
+            this IObservable<IChangeSet<TEntry, TKey>> @this,
+            Action<TEntry> disposeAction)
+            => @this.SubscribeMany(x => Disposable.Create(() => disposeAction(x)));
 
         public static T WithDataContext<T>(this T control, ReactiveObjectEx dataContext)
             where T : FrameworkElement

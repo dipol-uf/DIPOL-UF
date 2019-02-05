@@ -16,6 +16,7 @@ namespace DIPOL_UF.ViewModels
 
         public IObservableCollection<Tuple<string, string>> AllProperties { get; }
         [Reactive]
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
         public string CameraAlias { get; private set; }
 
     static CameraPropertiesViewModel()

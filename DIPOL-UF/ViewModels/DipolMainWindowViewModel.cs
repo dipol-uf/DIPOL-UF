@@ -77,16 +77,9 @@ namespace DIPOL_UF.ViewModels
         public ICommand WindowLoadedCommand => Model.WindowLoadedCommand;
 
         //public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
-        //public ObservableConcurrentDictionary<string, ConnectedCameraViewModel> ConnectedCameras => model.ConnectedCameras;
-        //public ObservableConcurrentDictionary<string, ConnectedCameraViewModel>.ObservableValueCollection
-        //    ConnectedCameras => model.ConnectedCameras.ObservableValues();
-        //public ObservableConcurrentDictionary<string, bool> CameraPanelSelectedItems =>
-        //    model.CameraPanelSelectedItems;
 
         //public ObservableCollection<ConnectedCamerasTreeViewModel> CameraPanel => 
         //    model.CameraPanel;
-        //public ObservableConcurrentDictionary<string, Dictionary<string, object>> CameraRealTimeStats => 
-        //    model.CameraRealTimeStats;
 
     }
 }

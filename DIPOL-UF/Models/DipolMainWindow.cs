@@ -20,6 +20,7 @@ using ANDOR_CS.Events;
 using DIPOL_Remote.Classes;
 using DIPOL_UF.Views;
 using DynamicData;
+using DynamicData.Alias;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -34,7 +35,7 @@ namespace DIPOL_UF.Models
         //private readonly DispatcherTimer _uiStatusUpdateTimer;
 
         //private bool? _camPanelAreAllSelected = false;
-      
+
 
         ///// <summary>
         ///// Disconnect button command
@@ -226,7 +227,7 @@ namespace DIPOL_UF.Models
 
         //        }
         //    }
-            
+
         //}
         //private bool CanDisconnectButtonCommandExecute(object parameter)
         //    => CameraPanelSelectedItems.Any(item => item.Value);
@@ -288,7 +289,7 @@ namespace DIPOL_UF.Models
 
         //private void CameraSelectionsMade(object e)
         //{
-           
+
         //    var menus = new[] { "Properties" };
         //    if (e is IEnumerable<KeyValuePair<string, CameraBase>> providedCameras)
         //    {
@@ -326,7 +327,7 @@ namespace DIPOL_UF.Models
 
         //            //lock(_connectedCams)
         //            //    ConnectedCameras = new ObservableConcurrentDictionary<string, ConnectedCameraViewModel>(_connectedCams.OrderByDescending(item => item.Value.Camera.ToString()));
-                    
+
         //        }
 
         //        foreach (var x in inst)
@@ -341,7 +342,7 @@ namespace DIPOL_UF.Models
 
         //        foreach (var cat in categories)
         //        {
-                
+
         //            List<KeyValuePair<string, ConnectedCameraTreeItemViewModel>> vms =
         //                new List<KeyValuePair<string, ConnectedCameraTreeItemViewModel>>(ConnectedCameras.Count);
 
@@ -388,18 +389,18 @@ namespace DIPOL_UF.Models
         /// <param name="cam">Camera instance.</param>
         private void HookEvents(CameraBase cam)
         {
-//            if (cam != null)
-//            {
-//                cam.PropertyChanged += Camera_PropertyChanged;
-//                cam.TemperatureStatusChecked += Camera_TemperatureStatusChecked;
-//                cam.NewImageReceived += Cam_NewImageReceived;
-//#if DEBUG
-//                DebugTracer.AddTarget(cam, cam.ToString());
-//#endif
-//            }
+            //            if (cam != null)
+            //            {
+            //                cam.PropertyChanged += Camera_PropertyChanged;
+            //                cam.TemperatureStatusChecked += Camera_TemperatureStatusChecked;
+            //                cam.NewImageReceived += Cam_NewImageReceived;
+            //#if DEBUG
+            //                DebugTracer.AddTarget(cam, cam.ToString());
+            //#endif
+            //            }
         }
 
-        
+
 
         /// <summary>
         /// Handles <see cref="CameraBase.PropertyChanged"/> event of the <see cref="CameraBase"/>.
@@ -412,9 +413,10 @@ namespace DIPOL_UF.Models
             //{
             //    var key = GetCameraKey(cam);
             //    //Helper.WriteLog($"[{key}]: {e.PropertyName}");
-                             
+
             //}
         }
+
         private void Cam_NewImageReceived(object sender, NewImageReceivedEventArgs e)
         {
             //if (sender is CameraBase cam)
@@ -423,7 +425,7 @@ namespace DIPOL_UF.Models
             //    Helper.WriteLog($"[{key}]: {e.First} unclaimed images acquired.");
             //}
         }
-        
+
 
         //private string GetCameraKey(CameraBase instance)
         //    => ConnectedCameras.FirstOrDefault(item => Equals(item.Value.Camera, instance)).Key;
@@ -434,22 +436,24 @@ namespace DIPOL_UF.Models
         private readonly string[] _remoteLocations
             = UiSettingsProvider.Settings.GetArray<string>("RemoteLocations")
               ?? new string[0];
+
         private DipolClient[] _remoteClients;
 
         private readonly SourceCache<(string Id, CameraBase Camera), string> _connectedCameras;
-           
+
 
         private IObservable<long> _uiTimerSource;
 
         [ObservableAsProperty]
         // ReSharper disable UnassignedGetOnlyAutoProperty
-        public bool CanConnect { get;}
+        public bool CanConnect { get; }
         // ReSharper restore UnassignedGetOnlyAutoProperty
 
         public SourceList<string> SelectedDevices { get; }
-        public IObservableCache<(string Id, CameraBase Camera), string> ConnectedCameras { get; }
+        public IObservableCache<(string Id, CameraBase Camera), string> ConnectedCameras { get; private set; }
+        public IObservableCache<(string Id, CameraTab Tab), string> CameraTabs { get; private set; }
 
-        public ReactiveCommand<Unit, Unit> WindowLoadedCommand { get; private set; }
+    public ReactiveCommand<Unit, Unit> WindowLoadedCommand { get; private set; }
         public ReactiveCommand<Window, Unit> ConnectButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> DisconnectButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> SelectAllCamerasCommand { get; private set; }
@@ -460,20 +464,14 @@ namespace DIPOL_UF.Models
         {
             _connectedCameras = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
                 .DisposeWith(_subscriptions);
+
             SelectedDevices = new SourceList<string>()
                 .DisposeWith(_subscriptions);
-            ConnectedCameras = _connectedCameras
-                               .AsObservableCache()
-                               .DisposeWith(_subscriptions);
 
             InitializeCommands();
             HookObservables();
             HookValidators();
-
-
         }
-
-
 
         private void InitializeCommands()
         {
@@ -481,7 +479,7 @@ namespace DIPOL_UF.Models
             ContextMenuCommand =
                 ReactiveCommand.CreateFromObservable<string, Unit>(
                                    x => Observable.FromAsync(_ => ContextMenuCommandExecuteAsync(x)),
-                                   ConnectedCameras.CountChanged.Select(x => x != 0)
+                                   _connectedCameras.CountChanged.Select(x => x != 0)
                                                    .DistinctUntilChanged()
                                                    .ObserveOnUi())
                                .DisposeWith(_subscriptions);
@@ -489,7 +487,7 @@ namespace DIPOL_UF.Models
             SelectCameraCommand =
                 ReactiveCommand.Create<string>(
                                    SelectCameraCommandExecute,
-                                   ConnectedCameras.CountChanged.Select(x => x != 0)
+                                   _connectedCameras.CountChanged.Select(x => x != 0)
                                                    .DistinctUntilChanged()
                                                    .ObserveOnUi())
                                .DisposeWith(_subscriptions);
@@ -509,9 +507,8 @@ namespace DIPOL_UF.Models
                                .DisposeWith(_subscriptions);
 
             DisconnectButtonCommand =
-                ReactiveCommand.CreateFromObservable<Unit, Unit>(
-                                   x => Observable.FromAsync(
-                                       DisconnectButtonCommandExecuteAsync),
+                ReactiveCommand.Create(
+                                   DisconnectButtonCommandExecute,
                                    SelectedDevices.CountChanged.Select(x => x != 0)
                                                   .DistinctUntilChanged()
                                                   .ObserveOnUi())
@@ -520,7 +517,7 @@ namespace DIPOL_UF.Models
             SelectAllCamerasCommand =
                 ReactiveCommand.Create(
                                    SelectAllCamerasCommandExecute,
-                                   ConnectedCameras.CountChanged.Select(x => x != 0)
+                                   _connectedCameras.CountChanged.Select(x => x != 0)
                                                    .DistinctUntilChanged()
                                                    .ObserveOnUi())
                                .DisposeWith(_subscriptions);
@@ -528,11 +525,7 @@ namespace DIPOL_UF.Models
 
         private void HookObservables()
         {
-            _uiTimerSource = Observable.Interval(
-                TimeSpan.FromMilliseconds(
-                    UiSettingsProvider.Settings.Get("UICamStatusUpdateDelay", 1000)));
-
-            new[]
+           new[]
                 {
                     WindowLoadedCommand.IsExecuting,
                     ConnectButtonCommand.IsExecuting
@@ -542,15 +535,28 @@ namespace DIPOL_UF.Models
                 .ToPropertyEx(this, x => x.CanConnect)
                 .DisposeWith(_subscriptions);
 
+           _connectedCameras.Connect()
+                            .DisposeManyEx(async x =>
+                                await Helper.RunNoMarshall(() =>
+                                {
+                                    x.Camera?.CoolerControl(Switch.Disabled);
+                                    x.Camera?.TemperatureMonitor(Switch.Disabled);
+                                    x.Camera?.Dispose();
+                                }))
+                            .Subscribe()
+                            .DisposeWith(_subscriptions);
 
-        }
+           ConnectedCameras = _connectedCameras
+                              .AsObservableCache()
+                              .DisposeWith(_subscriptions);
 
-        private void HookCamera(CameraBase cam)
-        {
-            _uiTimerSource.Subscribe(_ =>
-            {
-             
-            });
+
+
+           CameraTabs = _connectedCameras.Connect()
+                                         .Transform(x => (x.Id, Tab: new CameraTab()))
+                                         .DisposeManyEx(x => x.Tab?.Dispose())
+                                         .AsObservableCache()
+                                         .DisposeWith(_subscriptions);
         }
 
         private void SelectAllCamerasCommandExecute()
@@ -592,10 +598,9 @@ namespace DIPOL_UF.Models
             }
         }
 
-
         private async Task InitializeRemoteSessionsAsync()
         {
-            var pb = await Task.Run(() =>
+            var pb = await Helper.RunNoMarshall(() =>
                 new ProgressBar()
                 {
                     Minimum = 0,
@@ -604,11 +609,11 @@ namespace DIPOL_UF.Models
                     IsIndeterminate = true,
                     CanAbort = false,
                     BarTitle = "Connecting to remote locations..."
-                }).ConfigureAwait(false);
+                });
 
             var pbViewModel = await Task.Run(() => new ProgressBarViewModel(pb)).ConfigureAwait(false);
 
-            var pbWindow = Helper.ExecuteOnUi(() => new Views.ProgressWindow().WithDataContext(pbViewModel));
+            var pbWindow = Helper.ExecuteOnUi(() => new ProgressWindow().WithDataContext(pbViewModel));
 
             var connectedClients = new List<DipolClient>(_remoteLocations.Length);
 
@@ -687,11 +692,7 @@ namespace DIPOL_UF.Models
             if(cams.Count > 0)
                 _connectedCameras.Edit(context =>
                 {
-                    foreach (var cam in cams)
-                    {
-                        HookCamera(cam.Camera);
-                        context.AddOrUpdate(cam);
-                    }
+                    context.AddOrUpdate(cams);
                 });
 
 
@@ -704,53 +705,21 @@ namespace DIPOL_UF.Models
 
         }
 
-        private async Task DisconnectButtonCommandExecuteAsync()
+        private void DisconnectButtonCommandExecute()
         {
-            var ids = SelectedDevices.Items.ToList();
-            await Task.WhenAll(ids.Select(async id => await DisposeCameraAsync(id)))
-                      .ConfigureAwait(false);
+            foreach (var id in SelectedDevices.Items.ToList())
+            {
+                SelectedDevices.Remove(id);
+                _connectedCameras.RemoveKey(id);
+            }
         }
         
-        private async Task DisposeCameraAsync(string camId)
-        {
-            SelectedDevices.Remove(camId);
-
-            if (_connectedCameras.Lookup(camId) is var item && item.HasValue)
-                _connectedCameras.Edit(context => context.Remove(camId));
-
-            await Helper.RunNoMarshall(() =>
-            {
-                item.Value.Camera?.CoolerControl(Switch.Disabled);
-                item.Value.Camera?.TemperatureMonitor(Switch.Disabled);
-                item.Value.Camera?.Dispose();
-            });
-
-            //_connectedCams.TryRemove(camId, out var camInstance);
-            //if (removeSelection)
-            //    _camPanelSelectedItems.TryRemove(camId, out _);
-            //CameraRealTimeStats.TryRemove(camId, out _);
-
-            //await Task.Run(() =>
-            //    {
-            //        if (camInstance?.Model?.Camera != null)
-            //        {
-            //            camInstance.Model.Camera.CoolerControl(Switch.Disabled);
-            //            camInstance.Model.Camera.TemperatureMonitor(Switch.Disabled);
-            //            camInstance.Model.Camera.Dispose();
-            //            camInstance.Model.Dispose();
-            //        }
-            //    });
-
-        }
-
         public override void Dispose(bool disposing)
         {
             if (!IsDisposed)
                 if (disposing)
                 {
-                    var ids = _connectedCameras.Keys.ToList();
-                    Task.WhenAll(ids.Select(async x => await DisposeCameraAsync(x).ConfigureAwait(false)).ToArray());
-                                     
+                    _connectedCameras.Clear();
 
                     if (!(_remoteClients is null))
                         Parallel.ForEach(_remoteClients, (client) =>
