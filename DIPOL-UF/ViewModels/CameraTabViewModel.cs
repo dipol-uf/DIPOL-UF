@@ -17,6 +17,7 @@ namespace DIPOL_UF.ViewModels
         public float MinimumAllowedTemperature => 0; // Model.TemperatureRange.Minimum;
         public float MaximumAllowedTemperature => 100; //Model.TemperatureRange.Maximum;
         public bool CanControlTemperature => Model.CanControlTemperature;
+        public string TabHeader => Model.Alias;
 
         [Reactive]
         public float TargetTemperature { get; set; }

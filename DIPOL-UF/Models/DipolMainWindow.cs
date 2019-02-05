@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using DIPOL_UF.ViewModels;
 
@@ -20,13 +16,9 @@ using ANDOR_CS.Events;
 using DIPOL_Remote.Classes;
 using DIPOL_UF.Views;
 using DynamicData;
-using DynamicData.Alias;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using DelegateCommand = DIPOL_UF.Commands.DelegateCommand;
-
-using static DIPOL_UF.DIPOL_UF_App;
 
 namespace DIPOL_UF.Models
 {
@@ -441,8 +433,6 @@ namespace DIPOL_UF.Models
 
         private readonly SourceCache<(string Id, CameraBase Camera), string> _connectedCameras;
 
-
-        private IObservable<long> _uiTimerSource;
 
         [ObservableAsProperty]
         // ReSharper disable UnassignedGetOnlyAutoProperty

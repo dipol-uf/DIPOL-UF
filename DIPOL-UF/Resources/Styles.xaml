@@ -111,10 +111,7 @@
 
     <!--TabItem style-->
     <Style x:Key="TabItemStyle" TargetType="{x:Type TabItem}">
-        <Setter Property="Header" Value="{Binding 
-            Camera, 
-            Mode=OneWay,
-            Converter={StaticResource CameraToStringAliasConverter}}"/>
+        <Setter Property="Header" Value="{Binding TabHeader}"/>
         <Setter Property="Border.CornerRadius" Value="{DynamicResource TabItemTopCornerRadius}"/>
         <Setter Property="Margin" Value="{DynamicResource TabItemMargin}"/>
         <Setter Property="Foreground" Value="{DynamicResource TabItemForegroundBrush}"/>
