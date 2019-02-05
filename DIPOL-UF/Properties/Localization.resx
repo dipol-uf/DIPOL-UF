@@ -153,8 +153,23 @@
   <data name="AvailableCameras_NoNewCameras" xml:space="preserve">
     <value>No cameras available. Check connections and try again.</value>
   </data>
+  <data name="CameraProperties_Alias" xml:space="preserve">
+    <value>Alias</value>
+  </data>
+  <data name="CameraProperties_CamModel" xml:space="preserve">
+    <value>Camera Model</value>
+  </data>
+  <data name="CameraProperties_HardwareVers" xml:space="preserve">
+    <value>Hardware Version</value>
+  </data>
   <data name="CameraProperties_Property" xml:space="preserve">
     <value>Property</value>
+  </data>
+  <data name="CameraProperties_SerialNumber" xml:space="preserve">
+    <value>Serial Number</value>
+  </data>
+  <data name="CameraProperties_SoftwareVers" xml:space="preserve">
+    <value>Software Version</value>
   </data>
   <data name="CameraProperties_Value" xml:space="preserve">
     <value>Value</value>

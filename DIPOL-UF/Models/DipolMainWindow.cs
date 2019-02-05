@@ -18,6 +18,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 
 using DIPOL_Remote.Classes;
+using DIPOL_UF.Views;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -577,7 +578,17 @@ namespace DIPOL_UF.Models
 
         private void ContextMenuCommandExecute(string param)
         {
+            if (ConnectedCameras.Lookup(param) is var result &&
+                result.HasValue)
+                using (var vm = new CameraPropertiesViewModel(result.Value.Camera))
+                {
+                    var view = new CameraPropertiesView()
+                    {
+                        WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    }.WithDataContext(vm);
 
+                    Helper.ExecuteOnUi(view.ShowDialog);
+                }
         }
 
         private async Task InitializeRemoteSessionsAsync()

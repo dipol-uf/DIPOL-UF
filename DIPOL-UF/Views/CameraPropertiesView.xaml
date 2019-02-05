@@ -8,26 +8,26 @@
         mc:Ignorable="d" 
         
         Style="{StaticResource ResourceKey=ContentFont}"
-        Title="{Binding Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}" Height="600" Width="800"  ResizeMode="CanResizeWithGrip" 
-        MinWidth="600" MinHeight="200">
-    <DataGrid ItemsSource="{Binding AllProperties, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
-              AutoGenerateColumns="False" SelectionMode="Single" SelectionUnit="FullRow" 
-              CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserResizeColumns="False" 
+        Title="{Binding CameraAlias}" Height="600" Width="800"  ResizeMode="CanResizeWithGrip" 
+        MinWidth="600" MinHeight="200" d:DataContext="{d:DesignInstance vms:CameraPropertiesViewModel}">
+    <DataGrid ItemsSource="{Binding AllProperties}" 
+              AutoGenerateColumns="False" SelectionMode="Single" SelectionUnit="Cell"
+              CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False"
+              CanUserResizeColumns="True" 
               CanUserResizeRows="False" CanUserSortColumns="False"
               IsReadOnly="True" HeadersVisibility="Column"
               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="{loc:Text Key=CameraProperties_Property}" 
-                                    Binding="{Binding Item1, Mode=OneWay}" Width="*" />
+                                    Binding="{Binding Item1}" Width="*" />
             <DataGridTextColumn Header="{loc:Text Key=CameraProperties_Value}" 
-                                Binding="{Binding Item2, Mode=OneWay}" Width="3*">
+                                Binding="{Binding Item2}" Width="3*">
                 <DataGridTextColumn.ElementStyle>
                     <Style>
                         <Setter Property="TextBlock.TextWrapping" Value="WrapWithOverflow"/>
                     </Style>
                 </DataGridTextColumn.ElementStyle>
             </DataGridTextColumn>
-
         </DataGrid.Columns>
-        </DataGrid>
+    </DataGrid>
 </Window>

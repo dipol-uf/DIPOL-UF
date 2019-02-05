@@ -1,61 +1,52 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using ANDOR_CS.Classes;
-using ANDOR_CS.Enums;
+using ANDOR_CS.DataStructures;
+using DIPOL_UF.Converters;
+using DynamicData.Binding;
+using ReactiveUI.Fody.Helpers;
 
 namespace DIPOL_UF.ViewModels
 {
-    class CameraPropertiesViewModel : ViewModel<CameraBase>
+    internal sealed class CameraPropertiesViewModel : ReactiveObjectEx
     {
-        private ObservableCollection<Tuple<string, string>> deviceCapabilities = new ObservableCollection<Tuple<string, string>>();
-        private ObservableCollection<Tuple<string, string>> deviceProperties = new ObservableCollection<Tuple<string, string>>();
-        private ObservableCollection<Tuple<string, string>> allProperties;
+        private static readonly PropertyInfo[] capabilitiesAccessors;
+        private static readonly PropertyInfo[] propertiesAccessors;
 
-        public CameraBase Camera => model;
+        public IObservableCollection<Tuple<string, string>> AllProperties { get; }
+        [Reactive]
+        public string CameraAlias { get; private set; }
 
-        public ObservableCollection<Tuple<string, string>> AllProperties => allProperties;
-
+    static CameraPropertiesViewModel()
+        {
+            capabilitiesAccessors = typeof(DeviceCapabilities).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            propertiesAccessors = typeof(CameraProperties).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        }
 
         public CameraPropertiesViewModel(CameraBase model)
-            : base(model)
         {
-            var type = model.Capabilities.GetType();
-            var propertyList = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            var capabilities = capabilitiesAccessors.Select(x => new Tuple<string, string>(
+                x.Name,
+                x.GetValue(model.Capabilities)?.ToString() ?? "Unknown"));
 
-            foreach (var item in propertyList)
-                deviceCapabilities.Add(new Tuple<string, string>(
-                    item.Name,
-                    item.GetValue(model.Capabilities)?.ToString() ?? "Unknown"));
+            var properties = propertiesAccessors.Select(x => new Tuple<string, string>(
+                x.Name,
+                x.GetValue(model.Properties)?.ToString() ?? "Unknown"));
 
-            type = model.Properties.GetType();
-            propertyList = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-
-            foreach (var item in propertyList)
+            var additionalInfo = new[]
             {
-                var value = item.GetValue(model.Properties);
-                if (value is Array a)
-                    deviceProperties.Add(new Tuple<string, string>(item.Name, a.ArrayToString()));
-                else
-                    deviceProperties.Add(new Tuple<string, string>(item.Name, value.ToString()));
-            }
+                new Tuple<string, string>(
+                    Properties.Localization.CameraProperties_Alias, 
+                    Converters.ConverterImplementations.CameraToStringAliasConversion(model)),
+                new Tuple<string, string>(Properties.Localization.CameraProperties_CamModel, model.CameraModel),
+                new Tuple<string, string>(Properties.Localization.CameraProperties_SerialNumber, model.SerialNumber),
+                new Tuple<string, string>(Properties.Localization.CameraProperties_SoftwareVers, model.Software.ToString()),
+                new Tuple<string, string>(Properties.Localization.CameraProperties_HardwareVers, model.Hardware.ToString())
+            };
 
-
-            allProperties = new ObservableCollection<Tuple<string, string>>(
-                (new[] {
-                    new Tuple<string, string>("Alias", new Converters.CameraToStringAliasValueConverter()
-                        .Convert(model, typeof(String), null, System.Globalization.CultureInfo.CurrentUICulture).ToString()),
-                    new Tuple<string, string>("Camera Model", model.CameraModel) ,
-                    new Tuple<string, string>("Serial Number", model.SerialNumber),
-                    new Tuple<string, string>("Software Version", model.Software.ToString()),
-                    new Tuple<string, string>("Hardware Version", model.Hardware.ToString())})
-                .Concat(deviceCapabilities).Concat(deviceProperties));
-
+            AllProperties = new ObservableCollectionExtended<Tuple<string, string>>(additionalInfo.Concat(capabilities).Concat(properties));
+            CameraAlias = ConverterImplementations.CameraToStringAliasConversion(model);
         }
     }
 }
