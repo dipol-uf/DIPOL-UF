@@ -318,10 +318,11 @@ namespace DIPOL_UF.Models
                 {
                     case "Properties":
                         var propVM = new ViewModels.CameraPropertiesViewModel(Camera);
-                        var window = new Views.CameraPropertiesView(propVM)
+                        var window = new Views.CameraPropertiesView()
                         {
                             WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                            Topmost = true
+                            Topmost = true,
+                            DataContext = propVM
                         };
                         window.Show();
                         return;

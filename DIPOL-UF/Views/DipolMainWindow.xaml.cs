@@ -23,10 +23,9 @@ namespace DIPOL_UF.Views
     public partial class DipolMainWindow : Window
     {
       
-        public DipolMainWindow(object context)
+        public DipolMainWindow()
         {
             InitializeComponent();
-            DataContext = context;
         }
     }
 }
