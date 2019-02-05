@@ -28,7 +28,6 @@ using SDK = ATMCD64CS.AndorSDK;
 
 namespace ANDOR_CS.Enums
 {
-    [Flags]
     [DataContract]
     public enum TemperatureStatus : uint
     {
