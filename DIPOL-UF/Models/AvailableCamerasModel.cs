@@ -427,17 +427,6 @@ namespace DIPOL_UF.Models
             SelectedIds.Connect().LogObservable("SelectedIds", _subscriptions);
         }
 
-        //public override void Dispose(bool disposing)
-        //{
-        //    if (!IsDisposed)
-        //    {
-        //        if(disposing)
-        //            foreach(var (_, cam) in FoundDevices.Items)
-        //                cam?.Dispose();
-        //    }
-        //    base.Dispose(disposing);
-        //}
-
         public List<(string Id, CameraBase Camera)> RetrieveSelectedDevices()
         {
             var result = new List<(string Id, CameraBase Camera)>();
