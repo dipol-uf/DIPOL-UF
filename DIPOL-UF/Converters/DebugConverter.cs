@@ -4,7 +4,7 @@ using System.Windows.Data;
 
 namespace DIPOL_UF.Converters
 {
-    class DebugConverter : IValueConverter
+    internal class DebugConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

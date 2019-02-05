@@ -44,5 +44,6 @@ namespace DIPOL_UF.ViewModels
         }
 
         public string Name => Model.ToString();
+
     }
 }

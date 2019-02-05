@@ -222,4 +222,21 @@
         <Setter Property="Height" Value="15"/>
         <Setter Property="Width" Value="auto"/>
     </Style>
+
+   <Style x:Key="ErrorToolTipStyle" TargetType="FrameworkElement">
+       <Style.Triggers>
+           <DataTrigger  
+               Binding="{Binding 
+                    RelativeSource={RelativeSource Self}, 
+                    Path=(Validation.HasError)}"
+               Value="True">
+               <Setter
+                   Property="ToolTip"
+                   Value="{Binding 
+                        RelativeSource={RelativeSource Self},
+                        Path=(Validation.Errors),
+                        Converter={StaticResource ErrorsToStringConverter}}"/>
+           </DataTrigger>
+       </Style.Triggers>
+    </Style>
 </ResourceDictionary>

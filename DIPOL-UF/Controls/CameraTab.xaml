@@ -4,6 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS"
              xmlns:cntr="clr-namespace:DIPOL_UF.Controls"
              xmlns:dvms="clr-namespace:DIPOL_UF.ViewModels"
@@ -98,10 +99,12 @@
                                VerticalAlignment="Bottom" HorizontalAlignment="Right"
                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                Text="{Binding MinimumAllowedTemperature, StringFormat='\{0:F0} C'}"/>
-                    <Slider Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" 
+                    <Slider Name="TempSetSlider"
+                            Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" 
                             HorizontalAlignment="Center"
                             Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
-                            Orientation="Vertical" Name="TempSetSlider"
+                            Orientation="Vertical"
+                            Style="{StaticResource ErrorToolTipStyle}"
                             Minimum="{Binding MinimumAllowedTemperature}"
                             Maximum="{Binding MaximumAllowedTemperature}"
                             Value="{Binding
@@ -109,7 +112,8 @@
                                 Mode=TwoWay,
                                 UpdateSourceTrigger=PropertyChanged,
                                 Converter={StaticResource ResourceKey=TypeConverter},
-                                NotifyOnValidationError=True}">
+                                ValidatesOnNotifyDataErrors=True}">
+                       
                         <!--<Slider.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                                 <Binding Path="IsNotAcquiring" Mode="OneWay"/>
