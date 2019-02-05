@@ -171,6 +171,9 @@
   <data name="CameraProperties_SoftwareVers" xml:space="preserve">
     <value>Software Version</value>
   </data>
+  <data name="CameraProperties_UnknownValue" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
   <data name="CameraProperties_Value" xml:space="preserve">
     <value>Value</value>
   </data>

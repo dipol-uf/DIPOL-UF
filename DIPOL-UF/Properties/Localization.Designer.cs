@@ -223,6 +223,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string CameraProperties_UnknownValue {
+            get {
+                return ResourceManager.GetString("CameraProperties_UnknownValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value.
         /// </summary>
         public static string CameraProperties_Value {
