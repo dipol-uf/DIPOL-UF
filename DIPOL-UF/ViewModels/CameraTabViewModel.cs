@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Configuration;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Security.RightsManagement;
 using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,8 @@ namespace DIPOL_UF.ViewModels
         public float MaximumAllowedTemperature => Model.TemperatureRange.Maximum;
         public bool CanControlTemperature => Model.CanControlTemperature;
         public bool CanQueryTemperature => Model.CanQueryTemperature;
+        public bool CanControlFan => Model.CanControlFan;
+        public int FanTickFrequency => Model.IsThreeStateFan ? 1 : 2;
         public string TabHeader => Model.Alias;
 
 
@@ -36,6 +39,8 @@ namespace DIPOL_UF.ViewModels
         public float TargetTemperature { get; set; }
         [Reactive]
         public string TargetTemperatureText { get; set; }
+        [Reactive]
+        public int FanMode { get; set; }
 
         public bool IsAcquiring { [ObservableAsProperty]get; }
         public float CurrentTemperature { [ObservableAsProperty] get; }
@@ -97,6 +102,18 @@ namespace DIPOL_UF.ViewModels
                           CultureInfo.CurrentUICulture))
                       .BindTo(this, x => x.TargetTemperatureText)
                       .DisposeWith(_subscriptions);
+
+            Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.FanMode))
+                 .Select(x => 2 - (uint) x.FanMode)
+                 .DistinctUntilChanged()
+                 .ObserveOnUi()
+                 .BindTo(this, x => x.FanMode)
+                 .DisposeWith(_subscriptions);
+
+            this.WhenPropertyChanged(x => x.FanMode)
+                .Select(x => (FanMode) (2 - x.Value))
+                .InvokeCommand(Model.FanCommand)
+                .DisposeWith(_subscriptions);
 
         }
 

@@ -244,15 +244,13 @@
                                Text="{loc:Text Key=CameraTab_Fan}"/>
                     <Slider Grid.Column="0" Grid.Row="1" Grid.RowSpan="3"
                             Orientation="Vertical" Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
-                            TickFrequency="{Binding 
-                                Path=LowFanModeTickStep, 
-                                Converter={StaticResource ResourceKey=TypeConverter}}" 
+                            TickFrequency="{Binding Path=FanTickFrequency}" 
                             IsSnapToTickEnabled="True"
                             Minimum="0" Maximum="2"
-                            Value="{Binding FanMode, Mode=TwoWay, Converter={StaticResource ResourceKey=TypeConverter}, UpdateSourceTrigger=PropertyChanged}">
+                            Value="{Binding FanMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                         <Slider.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                <Binding Path="IsNotAcquiring" Mode="OneWay"/>
+                                <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
                                 <Binding Path="CanControlFan" Mode="OneWay"/>
                             </MultiBinding>
                         </Slider.IsEnabled>

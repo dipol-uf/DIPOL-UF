@@ -77,7 +77,8 @@ namespace ANDOR_CS.Classes
             {
                 CameraType = CameraType.IXonUltra,
                 GetFunctions = GetFunction.Temperature | GetFunction.TemperatureRange,
-                SetFunctions = SetFunction.Temperature
+                SetFunctions = SetFunction.Temperature,
+                Features = SdkFeatures.FanControl | SdkFeatures.LowFanMode
             };
             Properties = new CameraProperties()
             {
