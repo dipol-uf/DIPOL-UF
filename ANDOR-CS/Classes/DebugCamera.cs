@@ -38,42 +38,8 @@ namespace ANDOR_CS.Classes
         private const ConsoleColor Red = ConsoleColor.Red;
         private const ConsoleColor Blue = ConsoleColor.Blue;
 
-        private Timer _temperatureMonitorTimer;
-        private Task _temperatureMonitorWorker;
-        private readonly CancellationTokenSource _temperatureMonitorCancellationSource
-            = new CancellationTokenSource();
-
         public override ConcurrentQueue<Image> AcquiredImages => throw new NotImplementedException();
 
-        private void TemperatureMonitorCycler(CancellationToken token, int delay)
-        {
-            while (true)
-            {
-                if (token.IsCancellationRequested)
-                    return;
-
-                var (status, temp) = GetCurrentTemperature();
-
-                OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
-
-                Task.Delay(delay, token).ContinueWith((task, param) =>
-                    {
-                        if (!(task.Exception is null))
-                            WriteMessage(task.Exception.Message, Red);
-                        return task.Status;
-                    }, null, token)
-                    .ConfigureAwait(false).GetAwaiter().GetResult();
-            }
-
-        }
-
-        private void TemperatureMonitorCycler()
-        {
-            var (status, temp) = GetCurrentTemperature();
-            OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
-        }
-
-        public override bool IsTemperatureMonitored => _temperatureMonitorTimer?.Enabled ?? false;
         public override CameraStatus GetStatus()
         {
             WriteMessage("Status checked.", Blue);
@@ -102,60 +68,7 @@ namespace ANDOR_CS.Classes
         public override void ShutterControl(int clTime, int opTime, ShutterMode inter, ShutterMode extrn = ShutterMode.FullyAuto, TtlShutterSignal type = TtlShutterSignal.Low) 
             => WriteMessage("Shutter settings were changed.", Blue);
 
-        public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs)
-        {
-            // If monitor should be enabled
-            if (mode == Switch.Enabled)
-            {
-                if (_temperatureMonitorTimer is null)
-                {
-                    _temperatureMonitorTimer = new Timer()
-                    {
-                         Interval = timeout,
-                         AutoReset = true,
-                         Enabled = false
-                    };
-                    _temperatureMonitorTimer.Elapsed += (sender, e) => TemperatureMonitorCycler();
-                    _temperatureMonitorTimer.Start();
-                }
-                else
-                {
-                    _temperatureMonitorTimer.Stop();
-                    _temperatureMonitorTimer.Interval = timeout;
-                    _temperatureMonitorTimer.Start();
-                }
-                //// If background task has not been started yet
-                //if (_temperatureMonitorWorker == null ||
-                //    _temperatureMonitorWorker.Status == TaskStatus.Canceled ||
-                //    _temperatureMonitorWorker.Status == TaskStatus.RanToCompletion ||
-                //    _temperatureMonitorWorker.Status == TaskStatus.Faulted)
-                //    // Starts new with a cancellation token
-                //    _temperatureMonitorWorker = Task.Factory.StartNew(
-                //        () => TemperatureMonitorCycler(_temperatureMonitorCancellationSource.Token, timeout),
-                //        _temperatureMonitorCancellationSource.Token);
-
-                //// If task was created, but has not started, start it
-                //if (_temperatureMonitorWorker.Status == TaskStatus.Created)
-                //    _temperatureMonitorWorker.Start();
-
-                WriteMessage("Temperature monitor enabled.", Green);
-            }
-            else if (mode == Switch.Disabled)
-            {
-                //// if there is a working background monitor
-                //if (_temperatureMonitorWorker?.Status == TaskStatus.Running ||
-                //    _temperatureMonitorWorker?.Status == TaskStatus.WaitingForActivation ||
-                //    _temperatureMonitorWorker?.Status == TaskStatus.WaitingToRun)
-                //    // Stops it via cancellation token
-                //    _temperatureMonitorCancellationSource.Cancel();
-
-                _temperatureMonitorTimer?.Stop();
-
-                WriteMessage("Temperature monitor disabled.", Red);
-            }
-
-            // If monitor should be disabled
-        }
+       
         public DebugCamera(int camIndex)
         {
             CameraIndex = camIndex;
@@ -191,11 +104,16 @@ namespace ANDOR_CS.Classes
         }
 
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            if(IsTemperatureMonitored)
-                TemperatureMonitor(Switch.Disabled);
-
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    IsDisposing = true;
+                }
+            }
+            base.Dispose(disposing);
             WriteMessage("Camera disposed.", Red);
         }
 

@@ -58,11 +58,6 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public sealed class Camera : CameraBase
     {
-        private Timer _temperatureMonitorTimer;
-        //private Task TemperatureMonitorWorker = null;
-        //private CancellationTokenSource TemperatureMonitorCancellationSource
-        //    = new CancellationTokenSource();
-
         private static readonly ConcurrentDictionary<int, CameraBase> CreatedCameras
             = new ConcurrentDictionary<int, CameraBase>();
         
@@ -505,22 +500,6 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <param name="sender">Timer</param>
         /// <param name="e">Timer event arguments</param>
-        private void TemperatureMonitorCycler(object sender, ElapsedEventArgs e)
-        {
-            // Checks if temperature can be queried
-            if (!IsDisposed && // camera is not disposed
-                (   !IsAcquiring ||  // either it is not acquiring or it supports run-time queries
-                    Capabilities.Features.HasFlag(SdkFeatures.ReadTemperatureDuringAcquisition)) &&
-                sender is Timer t && // sender is Timer
-                t.Enabled) // and Timer is enabled (not stopped and not in process of disposal)
-            {
-                // Gets temperature and status
-                var (status, temp) = GetCurrentTemperature();
-
-                // Fires event
-                OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
-            }
-        }
         /// <summary>
         /// Retrieves new image from camera buffer and pushes it to queue.
         /// </summary>
@@ -845,49 +824,6 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
-        /// Enables or disables background temperature monitor
-        /// </summary>
-        /// <exception cref="NotSupportedException"/>
-        /// <param name="mode">Regime</param>
-        /// <param name="timeout">Time interval between checks</param>
-        public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs)
-        {
-            CheckIsDisposed();
-
-            // Throws if temperature monitoring is not supported
-            if (!Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
-                throw new NotSupportedException("Camera dose not support temperature queries.");
-
-            // If monitor should be enabled
-            if (mode == Switch.Enabled)
-            {
-
-                if (_temperatureMonitorTimer == null)
-                    _temperatureMonitorTimer = new Timer();
-
-                if (_temperatureMonitorTimer.Enabled)
-                    _temperatureMonitorTimer.Stop();
-
-                _temperatureMonitorTimer.AutoReset = true;
-
-                _temperatureMonitorTimer.Interval = timeout;
-
-                _temperatureMonitorTimer.Elapsed += TemperatureMonitorCycler;
-
-                _temperatureMonitorTimer.Start();
-
-                IsTemperatureMonitored = true;
-
-            }
-            else
-            {
-                _temperatureMonitorTimer?.Stop();
-                IsTemperatureMonitored = false;
-            }
-
-        }
-
-        /// <summary>
         /// Generates an instance of <see cref="AcquisitionSettings"/> that can be used to select proper settings for image
         /// acquisition in the context of this camera
         /// </summary>
@@ -909,12 +845,11 @@ namespace ANDOR_CS.Classes
         /// </summary>
         protected override void Dispose(bool disposing)
         {
-
             if (!IsDisposed)
             {
-                base.Dispose(disposing);
                 if (disposing)
                 {
+                    IsDisposing = true;
                     // If camera has valid SDK pointer and is initialized
                     if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
                     {
@@ -960,14 +895,7 @@ namespace ANDOR_CS.Classes
                             }
                         }
 
-                            if (_temperatureMonitorTimer != null)
-                        {
-                            if (_temperatureMonitorTimer.Enabled)
-                                _temperatureMonitorTimer.Stop();
-
-                            _temperatureMonitorTimer.Close();
-                        }
-
+                       
                         foreach (var key in _runningTasks.Keys)
                         {
                             _runningTasks.TryRemove(key, out var item);
@@ -983,6 +911,7 @@ namespace ANDOR_CS.Classes
                     CameraHandle.Dispose();
                 }
             }
+            base.Dispose(disposing);
         }
 
         /// <summary>
