@@ -196,14 +196,12 @@
     </Compile>
     <Compile Include="Converters\BoolToBoolMultiValueConverter.cs" />
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
+    <Compile Include="Converters\CombineMultiValueConverter.cs" />
     <Compile Include="Converters\ConverterImplementations.cs" />
     <Compile Include="Converters\DebugConverter.cs" />
     <Compile Include="Converters\DefaultValueConverter.cs" />
     <Compile Include="Converters\GeometryRulesToStreamGeometryValueConverter.cs" />
-    <Compile Include="Converters\CameraKeyToDictionaryValueMultiValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToStringValueConverter.cs" />
-    <Compile Include="Converters\CameraStatsToStringMultiValueConverter.cs" />
-    <Compile Include="Converters\CameraStatsToValueMultiValueConverter.cs" />
     <Compile Include="Converters\CameraToStringAliasValueConverter.cs" />
     <Compile Include="Converters\EnumToDescriptionValueConverter.cs" />
     <Compile Include="Converters\MarginModifierValueConverter.cs" />

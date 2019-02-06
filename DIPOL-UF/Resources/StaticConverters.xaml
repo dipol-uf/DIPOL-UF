@@ -5,12 +5,9 @@
                     xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters">
     <cnvrt:BoolToVisibilityValueConverter x:Key="BoolToVisibilityConverter"/>
     <cnvrt:CameraKeyToStringValueConverter x:Key="CameraKeyToStringConverter"/>
-    <cnvrt:CameraStatsToStringMultiValueConverter x:Key="CameraStatsToStringMultiConverter"/>
     <cnvrt:TemperatureToBrushValueConverter x:Key="TemperatureToBrushConverter"/>
     <cnvrt:TemperatureStatusToBrushValueConverter x:Key="TemperatureStatusToBrushConverter"/>
     <cnvrt:CameraToStringAliasValueConverter x:Key="CameraToStringAliasConverter"/>
-    <cnvrt:CameraKeyToDictionaryValueMultiValueConverter x:Key="CameraKeyToValueMultiConverter"/>
-    <cnvrt:CameraStatsToValueMultiValueConverter x:Key="CameraStatsToValueMultiConverter"/>
     <cnvrt:SingleDoubleToStringValueConverter x:Key="SingleDoubleToStringConverter"/>
     <cnvrt:TypeValueConverter x:Key="TypeConverter"/>
     <cnvrt:EnumToDescriptionValueConverter x:Key="EnumToDescriptionConverter"/>
@@ -20,8 +17,9 @@
     <cnvrt:MarginModifierValueConverter x:Key="MarginModifierConverter"/>
     <cnvrt:DefaultValueConverter x:Key="DefaultConverter"/>
     <cnvrt:ValidationErrorsToStringValueConverter x:Key="ErrorsToStringConverter"/>
-    <cnvrt:NotValueConverter x:Key="NotConverter"></cnvrt:NotValueConverter>
-    <cnvrt:TextAsConverter x:Key="GetText"></cnvrt:TextAsConverter>
+    <cnvrt:NotValueConverter x:Key="NotConverter"/>
+    <cnvrt:TextAsConverter x:Key="GetText"/>
+    <cnvrt:CombineMultiValueConverter x:Key="CombineConverter"/>
     <!-- Debug converter -->
     <cnvrt:DebugConverter x:Key="Debug"/>
 </ResourceDictionary>
