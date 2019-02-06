@@ -679,6 +679,7 @@ namespace DIPOL_UF.Models
                     context.AddOrUpdate(cams);
                 });
 
+            await PrepareCamerasAsync(cams.Select(x => x.Camera));
 
             await Helper.RunNoMarshall(() =>
             {
@@ -688,6 +689,7 @@ namespace DIPOL_UF.Models
 
 
         }
+
 
         private void DisconnectButtonCommandExecute()
         {
@@ -715,6 +717,17 @@ namespace DIPOL_UF.Models
             base.Dispose(disposing);
         }
 
+        private static async Task PrepareCamerasAsync(IEnumerable<CameraBase> cams)
+        {
+            await Helper.RunNoMarshall(() =>
+            {
+                foreach (var cam in cams)
+                {
+                    if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
+                        cam.TemperatureMonitor(Switch.Enabled, 500);
+                }
+            });
+        }
         private static async Task DisposeCamera(CameraBase cam)
             => await Helper.RunNoMarshall(() =>
             {
