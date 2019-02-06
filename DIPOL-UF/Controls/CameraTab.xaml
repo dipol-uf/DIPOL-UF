@@ -126,15 +126,13 @@
                                  Width="13" HorizontalAlignment="Center"
                                  Margin="{StaticResource ResourceKey=VerticalPBMargin}"
                                  Orientation="Vertical" IsIndeterminate="False"
+                                 IsEnabled="{Binding CanQueryTemperature}"
                                  Minimum="{Binding MinimumAllowedTemperature, Mode=OneTime}"
                                  Maximum="{Binding MaximumAllowedTemperature, Mode=OneTime}"
-                                 Value="{Binding CurrentTemperature}"
+                                 Value="{Binding CurrentTemperature, Mode=OneWay}"
                                  Foreground="{Binding CurrentTemperature,
                                     Converter={StaticResource TemperatureToBrushConverter},
                                     ConverterParameter={StaticResource TemperatureColorBrushCollection}}">
-                        <ProgressBar.IsEnabled>
-                            <Binding Path="CanQueryTemperature" Mode="OneTime"/>
-                        </ProgressBar.IsEnabled>
                     </ProgressBar>
                 </Grid>
                 <!--Cooler textbox/button-->
