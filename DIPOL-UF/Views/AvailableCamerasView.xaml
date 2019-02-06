@@ -44,7 +44,7 @@
                     <behaviors:InvokeCommandAction
                         Command ="{Binding SelectionChangedCommand}"
                         CommandParameter="{Binding SelectedItems, 
-                        RelativeSource={RelativeSource FindAncestor, AncestorType=ListView}}"/>
+                            RelativeSource={RelativeSource FindAncestor, AncestorType=ListView}}"/>
                 </behaviors:EventTrigger>
             </behaviors:Interaction.Triggers>
         </ListView>

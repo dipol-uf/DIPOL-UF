@@ -16,26 +16,26 @@ namespace DIPOL_UF.ViewModels
     internal sealed class AvailableCamerasViewModel : ReactiveViewModel<AvailableCamerasModel>
     {
         public IObservableCollection<Tuple<string, string, string>> ListedCameras { get; }
-         = new ObservableCollectionExtended<Tuple<string, string, string>>();
+            = new ObservableCollectionExtended<Tuple<string, string, string>>();
 
-        
+
         public ICommand CancelButtonCommand => Model.CancelButtonCommand;
         public ICommand ConnectButtonCommand => Model.ConnectButtonCommand;
         public ICommand ConnectAllButtonCommand => Model.ConnectAllButtonCommand;
         public ICommand WindowContentRenderedCommand => Model.WindowContentRenderedCommand;
         public ICommand CloseCrossCommand => Model.CloseCrossCommand;
+        public ICommand ClickCommand => Model.ClickCommand;
 
         public ICommand SelectionChangedCommand { get; private set; }
 
-        public AvailableCamerasViewModel(AvailableCamerasModel model) 
+        public AvailableCamerasViewModel(AvailableCamerasModel model)
             : base(model)
         {
 
-          HookValidators();
-          HookCommands();
-          HookObservables();
+            HookValidators();
+            HookCommands();
+            HookObservables();
         }
-
 
         private void HookObservables()
         {
@@ -73,6 +73,6 @@ namespace DIPOL_UF.ViewModels
                 ReactiveCommand.Create<IList, IList>(x => x)
                                .DisposeWith(_subscriptions);
         }
-     
+
     }
 }

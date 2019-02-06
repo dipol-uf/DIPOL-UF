@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:DIPOL_UF.ViewModels"
-                    xmlns:cntrl="clr-namespace:DIPOL_UF.Controls">
+                    xmlns:cntrl="clr-namespace:DIPOL_UF.Controls"
+                    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors">
     <HierarchicalDataTemplate x:Key="MenuBarItemTemplate"
                               DataType="{x:Type vm:MenuItemViewModel}"
                               ItemsSource="{Binding SubMenu}">
@@ -12,6 +13,25 @@
         <StackPanel Orientation="Horizontal">
             <Label Width="80" Content="{Binding Item1}" HorizontalContentAlignment="Right"/>
             <Label Content="{Binding Item2}" HorizontalContentAlignment="Right"/>
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger
+                    EventName="MouseDoubleClick"
+                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}}">
+                    <behaviors:InvokeCommandAction
+                        Command="{Binding 
+                            RelativeSource={RelativeSource FindAncestor, AncestorType=Window},
+                            Path=DataContext.ClickCommand}">
+                        <behaviors:InvokeCommandAction.CommandParameter>
+                            <MultiBinding Converter="{StaticResource CombineConverter}">
+                                <Binding Path="DataContext.Item3" 
+                                         RelativeSource="{RelativeSource FindAncestor, AncestorType=StackPanel}"/>
+                                <Binding 
+                                    RelativeSource="{RelativeSource FindAncestor, AncestorType=Window}"/>
+                            </MultiBinding>
+                        </behaviors:InvokeCommandAction.CommandParameter>
+                    </behaviors:InvokeCommandAction>    
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
         </StackPanel>
     </DataTemplate>
     

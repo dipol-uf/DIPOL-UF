@@ -1,20 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net.Configuration;
+﻿using System.Globalization;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Security.RightsManagement;
-using System.ServiceModel.Channels;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Input;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Models;
 using DynamicData.Binding;
-using MathNet.Numerics;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 // ReSharper disable UnassignedGetOnlyAutoProperty
