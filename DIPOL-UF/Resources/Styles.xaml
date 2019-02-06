@@ -2,6 +2,23 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:enum="clr-namespace:DIPOL_UF.Enums">
 
+    <!--Validation style-->
+    <!--<Style x:Key="ErrorToolTipStyle" TargetType="Control">
+        <Style.Triggers>
+            <EventTrigger>
+                <EventTrigger.Actions>
+                <Setter
+                    Property="ToolTip"
+                    Value="{Binding 
+                        RelativeSource={RelativeSource Self},
+                        Path=(Validation.Errors),
+                        Converter={StaticResource ErrorsToStringConverter},
+                        UpdateSourceTrigger=PropertyChanged}"/>
+                </EventTrigger.Actions>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>-->
+
     <!--Basic font styles-->
     <Style x:Key="TitleFont"  TargetType="{x:Type Control}">
         <Setter Property="FontSize" Value="20"/>
@@ -220,20 +237,4 @@
         <Setter Property="Width" Value="auto"/>
     </Style>
 
-   <Style x:Key="ErrorToolTipStyle" TargetType="FrameworkElement">
-       <Style.Triggers>
-           <DataTrigger  
-               Binding="{Binding 
-                    RelativeSource={RelativeSource Self}, 
-                    Path=(Validation.HasError)}"
-               Value="True">
-               <Setter
-                   Property="ToolTip"
-                   Value="{Binding 
-                        RelativeSource={RelativeSource Self},
-                        Path=(Validation.Errors),
-                        Converter={StaticResource ErrorsToStringConverter}}"/>
-           </DataTrigger>
-       </Style.Triggers>
-    </Style>
 </ResourceDictionary>

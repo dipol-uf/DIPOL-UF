@@ -104,7 +104,6 @@
                             HorizontalAlignment="Center"
                             Margin="{StaticResource ResourceKey=VerticalSliderMargin}"
                             Orientation="Vertical"
-                            Style="{StaticResource ErrorToolTipStyle}"
                             Minimum="{Binding MinimumAllowedTemperature}"
                             Maximum="{Binding MaximumAllowedTemperature}"
                             Value="{Binding
@@ -140,30 +139,29 @@
                     <TextBox 
                             Name="TempControlTextBox" 
                             HorizontalContentAlignment="Right">
-                        <TextBox.IsEnabled>
+                        <!--<TextBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                                 <Binding Path="IsNotAcquiring" Mode="OneWay"/>
                                 <Binding Path="CanControlTemperature" Mode="OneWay"/>
                             </MultiBinding>
-                        </TextBox.IsEnabled>
+                        </TextBox.IsEnabled>-->
                         <TextBox.Text>
                             <Binding Path="TargetTemperatureText" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged"
-                                     NotifyOnValidationError="True">
+                                     ValidatesOnNotifyDataErrors="True">
                             </Binding>
                         </TextBox.Text>
-                        <TextBox.Style>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource ResourceKey=TextBoxStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasErrorsOfProperties[TargetTemperatureText], Mode=OneWay}" 
-                                                 Value="true">
-                                        <Setter Property="ToolTip" 
-                                                Value="{Binding 
-                                                    LatestErrors[TargetTemperatureText],
-                                                    UpdateSourceTrigger=PropertyChanged}"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBox.Style>
+                        <behaviors:Interaction.Triggers>
+                            <behaviors:PropertyChangedTrigger 
+                                Binding="{Binding ElementName=TempControlTextBox, Path=(Validation.Errors).Count}">
+                                <behaviors:ChangePropertyAction 
+                                    TargetName="TempControlTextBox"
+                                    PropertyName="ToolTip"
+                                    Value="{Binding 
+                                        ElementName=TempControlTextBox, 
+                                        Path=(Validation.Errors),
+                                        Converter={StaticResource ErrorsToStringConverter}}"/>
+                            </behaviors:PropertyChangedTrigger>
+                        </behaviors:Interaction.Triggers>
                     </TextBox>
                     <Button Command="{Binding ControlCoolerCommand}">
                         <Button.Content>
