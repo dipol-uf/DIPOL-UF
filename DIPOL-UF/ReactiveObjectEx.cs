@@ -95,6 +95,9 @@ namespace DIPOL_UF
                                     .Select(x => x.Message);
         }
 
+        public virtual bool HasSpecificErrors(string propertyName)
+            => _validationErrors.Items.Any(x => x.Property == propertyName);
+
         public virtual void Dispose(bool disposing)
         {
             if (!IsDisposed)

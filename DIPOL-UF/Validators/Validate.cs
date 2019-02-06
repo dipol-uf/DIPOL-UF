@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace DIPOL_UF.Validators
 {
@@ -48,7 +43,7 @@ namespace DIPOL_UF.Validators
 
             return !_regexCache[pattern].IsMatch(input)
                 ? string.Format(Properties.Localization.Validation_ValueMatchesRegex,
-                    disallowed is null ? "" : $" [{disallowed}]")
+                    string.IsNullOrWhiteSpace(disallowed) ? "" : $" [{disallowed}]")
                 : null;
         }
     }

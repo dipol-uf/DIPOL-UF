@@ -25,6 +25,20 @@ namespace DIPOL_UF.ViewModels
                 targetName);
         }
 
+        protected void PropagateErrors<TSource>(
+            TSource source, string sourceName,
+            string targetName)
+            where TSource : ReactiveObjectEx
+        {
+            CreateValidator(
+                source.WhenErrorsChangedTyped
+                      .Where(x => x.Property == sourceName)
+                      .Select(x => (x.Type, x.Message))
+                      .ObserveOnUi(),
+                targetName);
+        }
+
+
         protected static void PropagateReadOnlyProperty<TTarget, TProperty>(
             TTarget @this,
             Expression<Func<TModel, TProperty>> sourceProperty,

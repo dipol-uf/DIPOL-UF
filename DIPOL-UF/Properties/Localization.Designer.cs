@@ -619,6 +619,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to F2.
+        /// </summary>
+        public static string General_TemperatureFloatFormat {
+            get {
+                return ResourceManager.GetString("General_TemperatureFloatFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Drifting.
         /// </summary>
         public static string General_TemperatureStatus_Drift {
