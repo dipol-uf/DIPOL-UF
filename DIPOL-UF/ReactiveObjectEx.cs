@@ -29,7 +29,7 @@ namespace DIPOL_UF
 
         public IObservable<DataErrorsChangedEventArgs> WhenErrorsChanged { get; private set; }
         public bool IsDisposed { get; private set; }
-        public bool HasErrors => _validationErrors.Items.Any(x => !(x.Message is null));
+        public bool HasErrors => _validationErrors?.Items.Any(x => !(x.Message is null)) ?? false;
 
         private void UpdateErrors(string error, string propertyName, string validatorName)
         {
@@ -96,7 +96,7 @@ namespace DIPOL_UF
         }
 
         public virtual bool HasSpecificErrors(string propertyName)
-            => _validationErrors.Items.Any(x => x.Property == propertyName);
+            => _validationErrors?.Items.Any(x => x.Property == propertyName && !(x.Message is null)) ?? false;
 
         public virtual void Dispose(bool disposing)
         {

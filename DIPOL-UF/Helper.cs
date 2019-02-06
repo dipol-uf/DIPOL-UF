@@ -3,6 +3,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -371,6 +372,11 @@ namespace DIPOL_UF
                         return task.Status == TaskStatus.RanToCompletion ? task.Result : default;
                     }, null)
                     .ConfigureAwait(marshal);
+
+        public static void Defer<T>(this IObservable<T> @this, int by)
+        {
+            
+        }
     }
 
 #if DEBUG
