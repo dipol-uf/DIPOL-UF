@@ -790,6 +790,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Input contains disallowed symbols{0}..
+        /// </summary>
+        public static string Validation_ValueMatchesRegex {
+            get {
+                return ResourceManager.GetString("Validation_ValueMatchesRegex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value cannot be outside of the [{0}, {1}] range..
         /// </summary>
         public static string Validation_ValueShouldFallWithinRange {
