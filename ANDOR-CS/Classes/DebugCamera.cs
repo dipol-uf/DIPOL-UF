@@ -48,7 +48,7 @@ namespace ANDOR_CS.Classes
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
         {
             WriteMessage("Current temperature returned.", Blue);
-            return (Status: TemperatureStatus.Stabilized, Temperature: R.Next(-10, 10));
+            return (Status: TemperatureStatus.Stabilized, Temperature: R.Next(-40, 25));
         }
         public override void SetActive()
             => WriteMessage("Camera is manually set active.", Green);
@@ -81,7 +81,8 @@ namespace ANDOR_CS.Classes
             };
             Properties = new CameraProperties()
             {
-                DetectorSize = new Size(256, 512)
+                DetectorSize = new Size(256, 512),
+                AllowedTemperatures = (Minimum:-50, Maximum: 30)
             };
             IsActive = true;
             IsInitialized = true;

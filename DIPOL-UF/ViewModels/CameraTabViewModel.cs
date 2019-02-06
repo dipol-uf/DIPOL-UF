@@ -14,8 +14,8 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class CameraTabViewModel : ReactiveViewModel<CameraTab>
     {
-        public float MinimumAllowedTemperature => 0; // Model.TemperatureRange.Minimum;
-        public float MaximumAllowedTemperature => 100; //Model.TemperatureRange.Maximum;
+        public float MinimumAllowedTemperature => Model.TemperatureRange.Minimum;
+        public float MaximumAllowedTemperature => Model.TemperatureRange.Maximum;
         public bool CanControlTemperature => Model.CanControlTemperature;
         public bool CanQueryTemperature => Model.CanQueryTemperature;
         public string TabHeader => Model.Alias;
@@ -54,8 +54,8 @@ namespace DIPOL_UF.ViewModels
                     .Select(x => (Type: nameof(Validators.Validate.ShouldFallWithinRange),
                         Message: Validators.Validate.ShouldFallWithinRange(
                             x.TargetTemperature,
-                            20 /*x.MinimumAllowedTemperature*/,
-                            50 /*x.MaximumAllowedTemperature*/))),
+                            x.MinimumAllowedTemperature,
+                            x.MaximumAllowedTemperature))),
                 nameof(TargetTemperature));
 
             base.HookValidators();
