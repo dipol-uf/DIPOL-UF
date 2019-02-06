@@ -7,7 +7,7 @@ namespace DIPOL_UF
 {
     
     //[MarkupExtensionReturnType(typeof(string))]
-    public class TextExtension : MarkupExtension
+    public class TextExtension : DynamicResourceExtension
     {
         private Tuple<DependencyObject, DependencyProperty> _dependencyObjectInfo;
         /// <summary>
@@ -20,8 +20,8 @@ namespace DIPOL_UF
         /// </summary>
         public string Key
         {
-            get;
-            set;
+            get => ResourceKey as string;
+            set => ResourceKey = value;
         }
         public object Format
         {
