@@ -17,12 +17,14 @@ namespace DIPOL_UF.ViewModels
         public float MinimumAllowedTemperature => 0; // Model.TemperatureRange.Minimum;
         public float MaximumAllowedTemperature => 100; //Model.TemperatureRange.Maximum;
         public bool CanControlTemperature => Model.CanControlTemperature;
+        public bool CanQueryTemperature => Model.CanQueryTemperature;
         public string TabHeader => Model.Alias;
 
+        
         [Reactive]
         public float TargetTemperature { get; set; }
-
         public bool IsAcquiring { [ObservableAsProperty]get; }
+        public float CurrentTemperature { [ObservableAsProperty] get; }
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
@@ -36,6 +38,12 @@ namespace DIPOL_UF.ViewModels
                  .Select(x => x.IsAcquiring)
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.IsAcquiring)
+                 .DisposeWith(_subscriptions);
+
+            Model.WhenTemperatureChecked
+                 .Select(x => x.Temperature)
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.CurrentTemperature)
                  .DisposeWith(_subscriptions);
         }
 
