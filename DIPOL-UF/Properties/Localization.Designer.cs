@@ -781,7 +781,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Value cannot be greater than {0}..
+        ///   Looks up a localized string similar to Value cannot be greater than {0}.
         /// </summary>
         public static string Validation_ValueCannotBeGreaterThan {
             get {
@@ -790,7 +790,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Value cannot be less than {0}..
+        ///   Looks up a localized string similar to Value cannot be less than {0}.
         /// </summary>
         public static string Validation_ValueCannotBeLessThan {
             get {
@@ -799,7 +799,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Input contains disallowed symbols{0}..
+        ///   Looks up a localized string similar to Input contains disallowed symbols{0}.
         /// </summary>
         public static string Validation_ValueMatchesRegex {
             get {
@@ -808,7 +808,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Value cannot be outside of the [{0}, {1}] range..
+        ///   Looks up a localized string similar to Value cannot be outside of the [{0}, {1}] range.
         /// </summary>
         public static string Validation_ValueShouldFallWithinRange {
             get {

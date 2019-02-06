@@ -13,7 +13,7 @@ namespace DIPOL_UF.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             return value is IReadOnlyCollection<ValidationError> collection
-                ? collection.Select(x => x.ErrorContent).EnumerableToString(";\r\n")
+                ? collection.Select(x => x.ErrorContent).EnumerableToString(";\r\n") + "."
                 : null;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

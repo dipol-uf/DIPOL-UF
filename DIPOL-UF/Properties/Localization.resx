@@ -360,15 +360,15 @@
     <comment>Nonlocalized general resource</comment>
   </data>
   <data name="Validation_ValueCannotBeGreaterThan" xml:space="preserve">
-    <value>Value cannot be greater than {0}.</value>
+    <value>Value cannot be greater than {0}</value>
   </data>
   <data name="Validation_ValueCannotBeLessThan" xml:space="preserve">
-    <value>Value cannot be less than {0}.</value>
+    <value>Value cannot be less than {0}</value>
   </data>
   <data name="Validation_ValueMatchesRegex" xml:space="preserve">
-    <value>Input contains disallowed symbols{0}.</value>
+    <value>Input contains disallowed symbols{0}</value>
   </data>
   <data name="Validation_ValueShouldFallWithinRange" xml:space="preserve">
-    <value>Value cannot be outside of the [{0}, {1}] range.</value>
+    <value>Value cannot be outside of the [{0}, {1}] range</value>
   </data>
 </root>

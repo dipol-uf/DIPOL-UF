@@ -7,6 +7,7 @@ using System.Reactive.Linq;
 using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using DIPOL_UF.Models;
 using DynamicData.Binding;
 using MathNet.Numerics;
@@ -18,6 +19,9 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class CameraTabViewModel : ReactiveViewModel<CameraTab>
     {
+        [Reactive]
+        private float ActualTemperature { get; set; }
+
         public float MinimumAllowedTemperature => Model.TemperatureRange.Minimum;
         public float MaximumAllowedTemperature => Model.TemperatureRange.Maximum;
         public bool CanControlTemperature => Model.CanControlTemperature;
@@ -28,16 +32,14 @@ namespace DIPOL_UF.ViewModels
         [Reactive]
         public float TargetTemperature { get; set; }
         [Reactive]
-        public string TargetTemperatureText { get; set; } =
-            0f.ToString(
-                Properties.Localization.General_TemperatureFloatFormat,
-                CultureInfo.CurrentUICulture);
+        public string TargetTemperatureText { get; set; }
 
         public bool IsAcquiring { [ObservableAsProperty]get; }
         public float CurrentTemperature { [ObservableAsProperty] get; }
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
+            TargetTemperatureText = "0";
             HookValidators();
             HookObservables();
         }
@@ -56,35 +58,34 @@ namespace DIPOL_UF.ViewModels
                  .ToPropertyEx(this, x => x.CurrentTemperature)
                  .DisposeWith(_subscriptions);
 
+            // Handles temperature changes
             this.WhenPropertyChanged(x => x.TargetTemperature)
-                .CombineLatest(
-                    this.WhenPropertyChanged(y => y.TargetTemperatureText),
-                    (x, y) => (Temp: x.Value, Text: y.Value))
+                .Select(x => x.Value)
                 .DistinctUntilChanged()
-                .Buffer(2)
-                .Subscribe(x =>
-                {
-                    if (x.Count == 2)
-                    {
-                        var (temp, text) = x[0];
-                        var (temp2, text2) = x[1];
-
-                        if (!temp2.AlmostEqualRelative(temp, Precision.MachineEpsilon))
-                            TargetTemperatureText =
-                                temp2.ToString(
-                                    Properties.Localization.General_TemperatureFloatFormat,
-                                    CultureInfo.CurrentUICulture);
-
-                        if (text2.Trim() != text.Trim()
-                            && float.TryParse(text2, 
-                                NumberStyles.Any,
-                                CultureInfo.CurrentUICulture, 
-                                out var var))
-                            TargetTemperature = var;
-                    }
-
-                })
+                .ObserveOnUi()
+                .BindTo(this, x => x.ActualTemperature)
                 .DisposeWith(_subscriptions);
+
+            this.WhenPropertyChanged(x => x.TargetTemperatureText)
+                .DistinctUntilChanged()
+                .Where(x => !HasSpecificErrors(nameof(TargetTemperatureText)))
+                .Select(x => float.Parse(x.Value, NumberStyles.Any, CultureInfo.CurrentUICulture))
+                .ObserveOnUi()
+                .BindTo(this, x => x.ActualTemperature)
+                .DisposeWith(_subscriptions);
+
+            var actTempObs =
+                this.WhenPropertyChanged(x => x.ActualTemperature)
+                    .Select(x => x.Value)
+                    .ObserveOnUi();
+
+            actTempObs.BindTo(this, x => x.TargetTemperature).DisposeWith(_subscriptions);
+            actTempObs.Select(x => x.ToString(
+                          Properties.Localization.General_TemperatureFloatFormat,
+                          CultureInfo.CurrentUICulture))
+                      .BindTo(this, x => x.TargetTemperatureText)
+                      .DisposeWith(_subscriptions);
+
         }
 
         protected override void HookValidators()

@@ -138,18 +138,18 @@
                 <StackPanel Grid.Column="0" Grid.Row="1" Margin="2">
                     <TextBox 
                             Name="TempControlTextBox" 
-                            HorizontalContentAlignment="Right">
-                        <!--<TextBox.IsEnabled>
+                            HorizontalContentAlignment="Right"
+                            Text="{Binding 
+                                Path=TargetTemperatureText,
+                                Mode=TwoWay,
+                                ValidatesOnNotifyDataErrors=True,
+                                UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                <Binding Path="IsNotAcquiring" Mode="OneWay"/>
+                                <Binding Path="IsAcquiring" Mode="OneWay" ConverterParameter="{StaticResource NotConverter}"/>
                                 <Binding Path="CanControlTemperature" Mode="OneWay"/>
                             </MultiBinding>
-                        </TextBox.IsEnabled>-->
-                        <TextBox.Text>
-                            <Binding Path="TargetTemperatureText" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged"
-                                     ValidatesOnNotifyDataErrors="True">
-                            </Binding>
-                        </TextBox.Text>
+                        </TextBox.IsEnabled>
                         <behaviors:Interaction.Triggers>
                             <behaviors:PropertyChangedTrigger 
                                 Binding="{Binding ElementName=TempControlTextBox, Path=(Validation.Errors).Count}">
@@ -174,16 +174,14 @@
                                             <DataTrigger 
                                                         Binding="{Binding
                                                             Path = Camera.CoolerMode,
-                                                            Mode=OneWay,
-                                                            UpdateSourceTrigger=PropertyChanged}" 
+                                                            Mode=OneWay}" 
                                                         Value="{x:Static enm:Switch.Enabled}">
                                                 <Setter Property="TextBlock.Text" Value="Stop Cooling"/>
                                             </DataTrigger>
                                             <DataTrigger 
                                                         Binding="{Binding
                                                             Path = Camera.CoolerMode,
-                                                            Mode=OneWay,
-                                                            UpdateSourceTrigger=PropertyChanged}" 
+                                                            Mode=OneWay}" 
                                                         Value="{x:Static enm:Switch.Disabled}">
                                                 <Setter Property="TextBlock.Text" Value="Start Cooling"/>
                                             </DataTrigger>
@@ -196,14 +194,11 @@
                             <Style 
                                     BasedOn="{StaticResource ResourceKey=BasicButtonStyle}"
                                     TargetType="{x:Type Button}">
-                                <!--<Setter Property="Width" Value="auto"/>
-                    <Setter Property="Height" Value="auto"/>-->
                                 <Style.Triggers>
                                     <DataTrigger 
                                                 Binding="{Binding
                                                     Path = Camera.CoolerMode,
-                                                    Mode=OneWay,
-                                                    UpdateSourceTrigger=PropertyChanged}" 
+                                                    Mode=OneWay}" 
                                                 Value="{x:Static enm:Switch.Disabled}">
                                         <Setter Property="Button.Background" 
                                                 Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>
@@ -213,8 +208,7 @@
                                     <DataTrigger 
                                                 Binding="{Binding
                                                     Path = Camera.CoolerMode,
-                                                    Mode=OneWay,
-                                                    UpdateSourceTrigger=PropertyChanged}" 
+                                                    Mode=OneWay}" 
                                                 Value="{x:Static enm:Switch.Enabled}">
                                         <Setter Property="Button.Background" 
                                                 Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
