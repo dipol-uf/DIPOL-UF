@@ -122,36 +122,20 @@
                        
                     </Slider>
 
-                    <!--<ProgressBar Grid.Column="2" Grid.Row="1" Grid.RowSpan="3"
+                    <ProgressBar Grid.Column="2" Grid.Row="1" Grid.RowSpan="3"
                                  Width="13" HorizontalAlignment="Center"
                                  Margin="{StaticResource ResourceKey=VerticalPBMargin}"
                                  Orientation="Vertical" IsIndeterminate="False"
                                  Minimum="{Binding MinimumAllowedTemperature, Mode=OneTime}"
-                                 Maximum="{Binding MaximumAllowedTemperature, Mode=OneTime}">
+                                 Maximum="{Binding MaximumAllowedTemperature, Mode=OneTime}"
+                                 Value="{Binding CurrentTemperature}"
+                                 Foreground="{Binding CurrentTemperature,
+                                    Converter={StaticResource TemperatureToBrushConverter},
+                                    ConverterParameter={StaticResource TemperatureColorBrushCollection}}">
                         <ProgressBar.IsEnabled>
                             <Binding Path="CanQueryTemperature" Mode="OneTime"/>
                         </ProgressBar.IsEnabled>
-                        <ProgressBar.Value>
-                            <MultiBinding Mode="OneWay"
-                                          Converter="{StaticResource ResourceKey=CameraStatsToValueMultiConverter}"
-                                          ConverterParameter="Temp"
-                                          UpdateSourceTrigger="PropertyChanged">
-                                <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                         Mode="OneWay" UpdateSourceTrigger="PropertyChanged" />
-                                <Binding Path="Key"/>
-                            </MultiBinding>
-                        </ProgressBar.Value>
-                        --><!--<ProgressBar.Foreground>
-                            <MultiBinding Mode="OneWay"
-                                          Converter="{StaticResource ResourceKey=TemperatureToBrushConverter}"
-                                          ConverterParameter="{StaticResource TemperatureColorBrushCollection}"
-                                          UpdateSourceTrigger="PropertyChanged">
-                                <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                         Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
-                                <Binding Path="Key"/>
-                            </MultiBinding>
-                        </ProgressBar.Foreground>--><!--
-                    </ProgressBar>-->
+                    </ProgressBar>
                 </Grid>
                 <!--Cooler textbox/button-->
                 <StackPanel Grid.Column="0" Grid.Row="1" Margin="2">
