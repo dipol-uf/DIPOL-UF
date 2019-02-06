@@ -25,6 +25,7 @@ using ANDOR_CS.Events;
 
 using DipolImage;
 using System.Collections.Concurrent;
+using Timer = System.Timers.Timer;
 
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
@@ -37,6 +38,7 @@ namespace ANDOR_CS.Classes
         private const ConsoleColor Red = ConsoleColor.Red;
         private const ConsoleColor Blue = ConsoleColor.Blue;
 
+        private Timer _temperatureMonitorTimer;
         private Task _temperatureMonitorWorker;
         private readonly CancellationTokenSource _temperatureMonitorCancellationSource
             = new CancellationTokenSource();
@@ -54,12 +56,24 @@ namespace ANDOR_CS.Classes
 
                 OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
 
-                Task.Delay(delay, token).Wait(token);
+                Task.Delay(delay, token).ContinueWith((task, param) =>
+                    {
+                        if (!(task.Exception is null))
+                            WriteMessage(task.Exception.Message, Red);
+                        return task.Status;
+                    }, null, token)
+                    .ConfigureAwait(false).GetAwaiter().GetResult();
             }
 
         }
 
-        public override bool IsTemperatureMonitored => false;
+        private void TemperatureMonitorCycler()
+        {
+            var (status, temp) = GetCurrentTemperature();
+            OnTemperatureStatusChecked(new TemperatureStatusEventArgs(status, temp));
+        }
+
+        public override bool IsTemperatureMonitored => _temperatureMonitorTimer?.Enabled ?? false;
         public override CameraStatus GetStatus()
         {
             WriteMessage("Status checked.", Blue);
@@ -68,7 +82,7 @@ namespace ANDOR_CS.Classes
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
         {
             WriteMessage("Current temperature returned.", Blue);
-            return (Status: TemperatureStatus.Stabilized, Temperature: 10.0f);
+            return (Status: TemperatureStatus.Stabilized, Temperature: R.Next(-10, 10));
         }
         public override void SetActive()
             => WriteMessage("Camera is manually set active.", Green);
@@ -93,30 +107,49 @@ namespace ANDOR_CS.Classes
             // If monitor should be enabled
             if (mode == Switch.Enabled)
             {
-                // If background task has not been started yet
-                if (_temperatureMonitorWorker == null ||
-                    _temperatureMonitorWorker.Status == TaskStatus.Canceled ||
-                    _temperatureMonitorWorker.Status == TaskStatus.RanToCompletion ||
-                    _temperatureMonitorWorker.Status == TaskStatus.Faulted)
-                    // Starts new with a cancellation token
-                    _temperatureMonitorWorker = Task.Factory.StartNew(
-                        () => TemperatureMonitorCycler(_temperatureMonitorCancellationSource.Token, timeout),
-                        _temperatureMonitorCancellationSource.Token);
+                if (_temperatureMonitorTimer is null)
+                {
+                    _temperatureMonitorTimer = new Timer()
+                    {
+                         Interval = timeout,
+                         AutoReset = true,
+                         Enabled = false
+                    };
+                    _temperatureMonitorTimer.Elapsed += (sender, e) => TemperatureMonitorCycler();
+                    _temperatureMonitorTimer.Start();
+                }
+                else
+                {
+                    _temperatureMonitorTimer.Stop();
+                    _temperatureMonitorTimer.Interval = timeout;
+                    _temperatureMonitorTimer.Start();
+                }
+                //// If background task has not been started yet
+                //if (_temperatureMonitorWorker == null ||
+                //    _temperatureMonitorWorker.Status == TaskStatus.Canceled ||
+                //    _temperatureMonitorWorker.Status == TaskStatus.RanToCompletion ||
+                //    _temperatureMonitorWorker.Status == TaskStatus.Faulted)
+                //    // Starts new with a cancellation token
+                //    _temperatureMonitorWorker = Task.Factory.StartNew(
+                //        () => TemperatureMonitorCycler(_temperatureMonitorCancellationSource.Token, timeout),
+                //        _temperatureMonitorCancellationSource.Token);
 
-                // If task was created, but has not started, start it
-                if (_temperatureMonitorWorker.Status == TaskStatus.Created)
-                    _temperatureMonitorWorker.Start();
+                //// If task was created, but has not started, start it
+                //if (_temperatureMonitorWorker.Status == TaskStatus.Created)
+                //    _temperatureMonitorWorker.Start();
 
                 WriteMessage("Temperature monitor enabled.", Green);
             }
             else if (mode == Switch.Disabled)
             {
-                // if there is a working background monitor
-                if (_temperatureMonitorWorker?.Status == TaskStatus.Running ||
-                    _temperatureMonitorWorker?.Status == TaskStatus.WaitingForActivation ||
-                    _temperatureMonitorWorker?.Status == TaskStatus.WaitingToRun)
-                    // Stops it via cancellation token
-                    _temperatureMonitorCancellationSource.Cancel();
+                //// if there is a working background monitor
+                //if (_temperatureMonitorWorker?.Status == TaskStatus.Running ||
+                //    _temperatureMonitorWorker?.Status == TaskStatus.WaitingForActivation ||
+                //    _temperatureMonitorWorker?.Status == TaskStatus.WaitingToRun)
+                //    // Stops it via cancellation token
+                //    _temperatureMonitorCancellationSource.Cancel();
+
+                _temperatureMonitorTimer?.Stop();
 
                 WriteMessage("Temperature monitor disabled.", Red);
             }
@@ -129,7 +162,9 @@ namespace ANDOR_CS.Classes
             SerialNumber = $"XYZ-{R.Next(9999):0000}";
             Capabilities = new DeviceCapabilities()
             {
-                CameraType = CameraType.IXonUltra
+                CameraType = CameraType.IXonUltra,
+                GetFunctions = GetFunction.Temperature | GetFunction.TemperatureRange,
+                SetFunctions = SetFunction.Temperature
             };
             Properties = new CameraProperties()
             {
@@ -157,7 +192,12 @@ namespace ANDOR_CS.Classes
 
 
         public override void Dispose()
-            => WriteMessage("Camera disposed.", Red);
+        {
+            if(IsTemperatureMonitored)
+                TemperatureMonitor(Switch.Disabled);
+
+            WriteMessage("Camera disposed.", Red);
+        }
 
 
         private void WriteMessage(string message, ConsoleColor col)
