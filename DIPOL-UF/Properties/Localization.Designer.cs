@@ -277,6 +277,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Start cooling.
+        /// </summary>
+        public static string CameraTab_Cooler_Start {
+            get {
+                return ResourceManager.GetString("CameraTab_Cooler_Start", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop cooling.
+        /// </summary>
+        public static string CameraTab_Cooler_Stop {
+            get {
+                return ResourceManager.GetString("CameraTab_Cooler_Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fan.
         /// </summary>
         public static string CameraTab_Fan {

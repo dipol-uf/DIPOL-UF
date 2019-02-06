@@ -163,7 +163,7 @@
                             </behaviors:PropertyChangedTrigger>
                         </behaviors:Interaction.Triggers>
                     </TextBox>
-                    <Button Command="{Binding ControlCoolerCommand}">
+                    <Button Command="{Binding CoolerCommand}">
                         <Button.Content>
                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock.Style>
@@ -173,17 +173,23 @@
                                         <Style.Triggers>
                                             <DataTrigger 
                                                         Binding="{Binding
-                                                            Path = Camera.CoolerMode,
+                                                            Path = CoolerMode,
                                                             Mode=OneWay}" 
                                                         Value="{x:Static enm:Switch.Enabled}">
-                                                <Setter Property="TextBlock.Text" Value="Stop Cooling"/>
+                                                <Setter Property="TextBlock.Text" 
+                                                        Value="{Binding 
+                                                            Converter={StaticResource GetText}, 
+                                                            ConverterParameter=CameraTab_Cooler_Stop}"/>
                                             </DataTrigger>
                                             <DataTrigger 
                                                         Binding="{Binding
-                                                            Path = Camera.CoolerMode,
+                                                            Path = CoolerMode,
                                                             Mode=OneWay}" 
                                                         Value="{x:Static enm:Switch.Disabled}">
-                                                <Setter Property="TextBlock.Text" Value="Start Cooling"/>
+                                                <Setter Property="TextBlock.Text" 
+                                                        Value="{Binding 
+                                                            Converter={StaticResource GetText}, 
+                                                            ConverterParameter=CameraTab_Cooler_Start}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -197,7 +203,7 @@
                                 <Style.Triggers>
                                     <DataTrigger 
                                                 Binding="{Binding
-                                                    Path = Camera.CoolerMode,
+                                                    Path = CoolerMode,
                                                     Mode=OneWay}" 
                                                 Value="{x:Static enm:Switch.Disabled}">
                                         <Setter Property="Button.Background" 
@@ -207,7 +213,7 @@
                                     </DataTrigger>
                                     <DataTrigger 
                                                 Binding="{Binding
-                                                    Path = Camera.CoolerMode,
+                                                    Path = CoolerMode,
                                                     Mode=OneWay}" 
                                                 Value="{x:Static enm:Switch.Enabled}">
                                         <Setter Property="Button.Background" 

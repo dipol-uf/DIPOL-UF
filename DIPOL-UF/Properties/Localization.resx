@@ -189,6 +189,12 @@
   <data name="CameraTab_Cooler" xml:space="preserve">
     <value>Cooler</value>
   </data>
+  <data name="CameraTab_Cooler_Start" xml:space="preserve">
+    <value>Start cooling</value>
+  </data>
+  <data name="CameraTab_Cooler_Stop" xml:space="preserve">
+    <value>Stop cooling</value>
+  </data>
   <data name="CameraTab_Fan" xml:space="preserve">
     <value>Fan</value>
   </data>
