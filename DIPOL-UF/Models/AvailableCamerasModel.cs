@@ -44,7 +44,7 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<Window, Unit> ConnectButtonCommand { get; private set; }
         public ReactiveCommand<Window, Unit> ConnectAllButtonCommand { get; private set; }
         public ReactiveCommand<Window, Unit> CloseCrossCommand { get; private set; }
-
+        public ReactiveCommand<object, Unit> ClickCommand { get; private set; }
 
         public AvailableCamerasModel(DipolClient[] remoteClients = null)
         {
@@ -68,6 +68,14 @@ namespace DIPOL_UF.Models
                     .Select(x => x.IsInteractive)
                     .ObserveOnUi();
 
+            ClickCommand =
+                ReactiveCommand.Create<object>(
+                                   ClickCommandExecute,
+                                   interactivitySrc.CombineLatest(
+                                                       FoundDevices.CountChanged.Select(x => x != 0),
+                                                       (x, y) => x && y)
+                                                   .ObserveOnUi())
+                               .DisposeWith(_subscriptions);
 
             CloseCrossCommand =
                 ReactiveCommand.Create<Window>(
@@ -83,14 +91,16 @@ namespace DIPOL_UF.Models
             ConnectAllButtonCommand
                 = ReactiveCommand.Create<Window>(ConnectAllButtonCommandExecute,
                                      interactivitySrc.CombineLatest(
-                                         FoundDevices.CountChanged.ObserveOnUi().Select(x => x != 0),
-                                         (x, y) => x && y))
+                                                         FoundDevices.CountChanged.Select(x => x != 0),
+                                                         (x, y) => x && y)
+                                                     .ObserveOnUi())
                                  .DisposeWith(_subscriptions);
 
             ConnectButtonCommand
                 = ReactiveCommand.Create<Window>(ConnectButtonCommandExecute,
                                      interactivitySrc.CombineLatest(SelectedIds.CountChanged.Select(x => x != 0),
-                                         (x, y) => x && y))
+                                                         (x, y) => x && y)
+                                                     .ObserveOnUi())
                                  .DisposeWith(_subscriptions);
             
 
@@ -407,6 +417,23 @@ namespace DIPOL_UF.Models
             CloseWindow(param);
         }
 
+        private void ClickCommandExecute(object param)
+        {
+            if (param is List<object> @params
+                && @params.Count == 2
+                && @params[0] is string id
+                && @params[1] is Window window)
+            {
+                SelectedIds.Edit(context =>
+                {
+                    context.Clear();
+                    context.Add(id);
+                });
+                _isSelected = true;
+                CloseWindow(window);
+            }
+        }
+
         private void CloseWindow(Window param)
         {
             if (!_isClosed)
@@ -426,8 +453,9 @@ namespace DIPOL_UF.Models
 
             FoundDevices.Connect().DisposeManyEx(x =>
             {
-                if(!SelectedIds.Items.Contains(x.Id))
-                    x.Camera?.Dispose();
+                var (id, camera) = x;
+                if(!SelectedIds.Items.Contains(id))
+                    camera?.Dispose();
             }).Subscribe().DisposeWith(_subscriptions);
         }
 
