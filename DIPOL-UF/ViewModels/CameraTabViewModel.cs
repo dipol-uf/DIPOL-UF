@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Configuration;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Input;
+using ANDOR_CS.Enums;
 using DIPOL_UF.Models;
 using DynamicData.Binding;
 using MathNet.Numerics;
@@ -36,6 +39,9 @@ namespace DIPOL_UF.ViewModels
 
         public bool IsAcquiring { [ObservableAsProperty]get; }
         public float CurrentTemperature { [ObservableAsProperty] get; }
+        public Switch CoolerMode { [ObservableAsProperty] get; }
+
+        public ICommand CoolerCommand => Model.CoolerCommand;
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
@@ -50,6 +56,12 @@ namespace DIPOL_UF.ViewModels
                  .Select(x => x.IsAcquiring)
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.IsAcquiring)
+                 .DisposeWith(_subscriptions);
+
+            Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.CoolerMode))
+                 .Select(x => x.CoolerMode)
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.CoolerMode)
                  .DisposeWith(_subscriptions);
 
             Model.WhenTemperatureChecked

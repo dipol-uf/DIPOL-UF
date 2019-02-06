@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DIPOL_UF.Converters;
-using DynamicData.Binding;
+using ReactiveUI;
 
 namespace DIPOL_UF.Models
 {
@@ -22,6 +20,8 @@ namespace DIPOL_UF.Models
 
         public IObservable<TemperatureStatusEventArgs> WhenTemperatureChecked { get; private set; }
 
+        public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
+
         public CameraTab(CameraBase camera)
         {
             Camera = camera;
@@ -34,6 +34,7 @@ namespace DIPOL_UF.Models
             Alias = ConverterImplementations.CameraToStringAliasConversion(camera);
 
             HookObservables();
+            InitializeCommands();
         }
 
         private void HookObservables()
@@ -44,6 +45,20 @@ namespace DIPOL_UF.Models
                               x => Camera.TemperatureStatusChecked -= x)
                           .Select(x => x.EventArgs)
                           .DistinctUntilChanged();
+        }
+
+        private void InitializeCommands()
+        {
+            CoolerCommand =
+                ReactiveCommand.Create(
+                                   () => Camera.CoolerControl(Camera.CoolerMode == Switch.Disabled
+                                       ? Switch.Enabled
+                                       : Switch.Disabled),
+                                   Observable.Return(
+                                       Camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature)))
+                               .DisposeWith(_subscriptions);
+
+
         }
 
         public override void Dispose(bool disposing)

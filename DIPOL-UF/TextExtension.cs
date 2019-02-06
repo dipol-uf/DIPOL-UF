@@ -7,7 +7,7 @@ namespace DIPOL_UF
 {
     
     //[MarkupExtensionReturnType(typeof(string))]
-    public class TextExtension : DynamicResourceExtension
+    public class TextExtension : MarkupExtension
     {
         private Tuple<DependencyObject, DependencyProperty> _dependencyObjectInfo;
         /// <summary>
@@ -20,8 +20,8 @@ namespace DIPOL_UF
         /// </summary>
         public string Key
         {
-            get => ResourceKey as string;
-            set => ResourceKey = value;
+            get;
+            set;
         }
         public object Format
         {
@@ -52,7 +52,7 @@ namespace DIPOL_UF
         }
 
         internal static string GetText(string key)
-            => Properties.Localization.ResourceManager.GetString(key);
+            => Properties.Localization.ResourceManager.GetString(key, CultureInfo.CurrentUICulture);
         
 
         public override object ProvideValue(IServiceProvider serviceProvider)
@@ -60,7 +60,7 @@ namespace DIPOL_UF
           
             if (_dependencyObjectInfo == null)
             {
-                var ipvt = (IProvideValueTarget) serviceProvider.GetService(typeof(IProvideValueTarget));
+                var ipvt = serviceProvider.GetService(typeof(IProvideValueTarget)) as IProvideValueTarget;
                 if (ipvt?.TargetObject is DependencyObject depObj &&
                     ipvt.TargetProperty is DependencyProperty depProp)
                 {

@@ -21,6 +21,7 @@
     <cnvrt:DefaultValueConverter x:Key="DefaultConverter"/>
     <cnvrt:ValidationErrorsToStringValueConverter x:Key="ErrorsToStringConverter"/>
     <cnvrt:NotValueConverter x:Key="NotConverter"></cnvrt:NotValueConverter>
+    <cnvrt:TextAsConverter x:Key="GetText"></cnvrt:TextAsConverter>
     <!-- Debug converter -->
     <cnvrt:DebugConverter x:Key="Debug"/>
 </ResourceDictionary>
