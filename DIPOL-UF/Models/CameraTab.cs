@@ -15,12 +15,15 @@ namespace DIPOL_UF.Models
         public CameraBase Camera { get; }
         public (float Minimum, float Maximum) TemperatureRange { get; }
         public bool CanControlTemperature { get; }
+        public bool CanControlFan { get; }
+        public bool IsThreeStateFan { get; }
         public bool CanQueryTemperature { get; }
         public string Alias { get; }
 
         public IObservable<TemperatureStatusEventArgs> WhenTemperatureChecked { get; private set; }
 
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
+        public ReactiveCommand<FanMode, Unit> FanCommand { get; private set; }
 
         public CameraTab(CameraBase camera)
         {
@@ -31,6 +34,8 @@ namespace DIPOL_UF.Models
                 : default;
             CanControlTemperature = camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature);
             CanQueryTemperature = camera.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature);
+            CanControlFan = camera.Capabilities.Features.HasFlag(SdkFeatures.FanControl);
+            IsThreeStateFan = camera.Capabilities.Features.HasFlag(SdkFeatures.LowFanMode);
             Alias = ConverterImplementations.CameraToStringAliasConversion(camera);
 
             HookObservables();
@@ -58,7 +63,12 @@ namespace DIPOL_UF.Models
                                        Camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature)))
                                .DisposeWith(_subscriptions);
 
-
+            FanCommand =
+                ReactiveCommand.Create<FanMode>(
+                                   Camera.FanControl,
+                                   Observable.Return(
+                                       Camera.Capabilities.Features.HasFlag(SdkFeatures.FanControl)))
+                               .DisposeWith(_subscriptions);
         }
 
         public override void Dispose(bool disposing)
