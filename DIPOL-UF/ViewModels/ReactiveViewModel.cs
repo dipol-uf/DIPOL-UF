@@ -97,5 +97,20 @@ namespace DIPOL_UF.ViewModels
                              .ObserveOnUi(),
                          targetProperty.Body.GetMemberInfo().Name);
         }
+
+        protected static ReactiveCommand<ReactiveViewModel<TSource>, TSource> 
+            DisposeFromViewCallbackCommand<TSource>(CompositeDisposable disposesWith)
+            where TSource : ReactiveObjectEx
+        {
+            var cmd = ReactiveCommand.Create<ReactiveViewModel<TSource>, TSource>(
+                x =>
+                {
+                    var mdl = x.Model;
+                    x.Dispose();
+                    return mdl;
+                });
+
+            return disposesWith is null ? cmd : cmd.DisposeWith(disposesWith);
+        }
     }
 }

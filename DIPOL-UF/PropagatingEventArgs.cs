@@ -2,10 +2,11 @@
 
 namespace DIPOL_UF
 {
-    internal class PropagatingEventArgs<T> : EventArgs where T : ReactiveObjectEx
+    internal class PropagatingEventArgs : EventArgs
     {
-        public T Content { get; }
+        public ReactiveObjectEx Content { get; }
 
-        public PropagatingEventArgs(T content) => Content = content;
+        public PropagatingEventArgs(ReactiveObjectEx content) 
+            => Content = content ?? throw new NullReferenceException(nameof(content));
     }
 }

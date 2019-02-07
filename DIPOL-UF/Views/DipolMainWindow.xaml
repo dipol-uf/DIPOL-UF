@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:vs="clr-namespace:DIPOL_UF.Views"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
         xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
         Title="{extensions:Text Key=ApplicationName}" 
@@ -17,6 +18,14 @@
         <behaviors:EventTrigger EventName="Loaded">
             <behaviors:InvokeCommandAction
                 Command="{Binding WindowLoadedCommand}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="CameraConnectionWindowRequested"
+            SourceObject="{Binding}">
+            <extensions:ShowViewAction 
+                Type="{x:Type vs:AvailableCameraView}"
+                Owner="{Binding RelativeSource={RelativeSource Self}}"
+                CallbackCommand="{Binding ConnectionWindowCallbackCommand}"/>
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
     <Grid x:Name="MainWindowGrid" DockPanel.Dock="Top">

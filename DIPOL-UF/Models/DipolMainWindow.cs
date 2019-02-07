@@ -444,11 +444,13 @@ namespace DIPOL_UF.Models
         public IObservableCache<(string Id, CameraTab Tab), string> CameraTabs { get; private set; }
 
         public ReactiveCommand<Unit, Unit> WindowLoadedCommand { get; private set; }
-        public ReactiveCommand<Window, Unit> ConnectButtonCommand { get; private set; }
+        public ReactiveCommand<Window, AvailableCamerasModel> ConnectButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> DisconnectButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> SelectAllCamerasCommand { get; private set; }
         public ReactiveCommand<string, Unit> SelectCameraCommand { get; private set; }
         public ReactiveCommand<string, Unit> ContextMenuCommand { get; private set; }
+
+        public ReactiveCommand<AvailableCamerasModel, Unit> CameraConnectionCallbackCommand { get; private set; }
 
         public DipolMainWindow()
         {
@@ -487,9 +489,16 @@ namespace DIPOL_UF.Models
                                    _ => Observable.FromAsync(InitializeRemoteSessionsAsync))
                                .DisposeWith(_subscriptions);
 
-            ConnectButtonCommand =
-                ReactiveCommand.CreateFromObservable<Window, Unit>(
-                                   x => Observable.FromAsync(_ => ConnectButtonCommandExecuteAsync(x)),
+           ConnectButtonCommand =
+                ReactiveCommand.Create<Window, AvailableCamerasModel>(
+                                   _ =>
+                                   {
+                                       var camQueryModel = new AvailableCamerasModel(
+                                           new CancellationTokenSource(),
+                                           _remoteClients);
+
+                                       return camQueryModel;
+                                   },
                                    this.WhenAnyPropertyChanged(nameof(CanConnect))
                                        .Select(x => x.CanConnect)
                                        .DistinctUntilChanged()
@@ -510,6 +519,12 @@ namespace DIPOL_UF.Models
                                    _connectedCameras.CountChanged.Select(x => x != 0)
                                                    .DistinctUntilChanged()
                                                    .ObserveOnUi())
+                               .DisposeWith(_subscriptions);
+
+            CameraConnectionCallbackCommand =
+                ReactiveCommand.CreateFromObservable<AvailableCamerasModel, Unit>(
+                                   x => Observable.FromAsync(async _ =>
+                                       await CameraConnectionCallbackCommandExecuteAsync(x)))
                                .DisposeWith(_subscriptions);
         }
 
@@ -541,6 +556,10 @@ namespace DIPOL_UF.Models
                                          .DisposeManyEx(x => x.Tab?.Dispose())
                                          .AsObservableCache()
                                          .DisposeWith(_subscriptions);
+
+           ConnectButtonCommand
+               .Subscribe(async x => await ConnectButtonCommandExecuteAsync(x).ExpectCancellation())
+               .DisposeWith(_subscriptions);
         }
 
         private void SelectAllCamerasCommandExecute()
@@ -642,36 +661,22 @@ namespace DIPOL_UF.Models
 
         }
 
-        private async Task ConnectButtonCommandExecuteAsync(Window param)
+        private async Task<AvailableCamerasModel> ConnectButtonCommandExecuteAsync(AvailableCamerasModel model)
         {
-            var disposables = new CompositeDisposable();
+            if (model.CancellationSource.Token.IsCancellationRequested)
+                model.CancellationSource.Token.ThrowIfCancellationRequested();
 
-            var camQueryModel = await Helper.RunNoMarshall(
-                () => new AvailableCamerasModel(_remoteClients)
-                    .DisposeWith(disposables));
+            (await Helper.RunNoMarshall(() => model
+                                             .QueryCamerasCommand.Execute()))
+                    .Subscribe(_ => { }, () => { }, model.CancellationSource.Token);
 
-            var viewModel = await Helper.RunNoMarshall(
-                () => new AvailableCamerasViewModel(camQueryModel)
-                    .DisposeWith(disposables));
+            return model;
+        }
 
-            var wind = Helper.ExecuteOnUi(() =>
-                new AvailableCameraView()
-                {
-                    Owner = param,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                }.WithDataContext(viewModel));
-
-            var tokenSrc = new CancellationTokenSource()
-                .DisposeWith(disposables);
-
-
-            (await Helper.RunNoMarshall(() => camQueryModel
-                .QueryCamerasCommand.Execute()))
-                .Subscribe(_ => { }, () => { }, tokenSrc.Token);
-
-            Helper.ExecuteOnUi(wind.ShowDialog);
-
-            var cams = camQueryModel.RetrieveSelectedDevices();
+        private async Task CameraConnectionCallbackCommandExecuteAsync(AvailableCamerasModel model)
+        {
+            model.CancellationSource.Cancel();
+            var cams = model.RetrieveSelectedDevices();
 
             if (cams.Count > 0)
                 _connectedCameras.Edit(context =>
@@ -680,16 +685,8 @@ namespace DIPOL_UF.Models
                 });
 
             await PrepareCamerasAsync(cams.Select(x => x.Camera));
-
-            await Helper.RunNoMarshall(() =>
-            {
-                tokenSrc.Cancel();
-                disposables.Dispose();
-            });
-
-
+            model.Dispose();
         }
-
 
         private void DisconnectButtonCommandExecute()
         {
