@@ -7,6 +7,7 @@
              xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
              xmlns:locl="clr-namespace:DIPOL_UF"
              xmlns:p="clr-namespace:DIPOL_UF.Properties"
+             xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
              Style="{StaticResource ResourceKey=SmallFont}"
              MinWidth="420" Background="Transparent"
              mc:Ignorable="d" 
@@ -113,88 +114,88 @@
             <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Aperture, Format='{}{0}:'}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Aperture, Format='{}{0}:'}"/>
             <!-- Labels -->
             <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Median}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Median}"/>
             <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Minimum}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Minimum}"/>
             <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Maximum}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Maximum}"/>
             <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Average}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Average}"/>
             <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Intensity}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Intensity}"/>
             <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
 
             <!-- Right labels -->
             <!-- Header -->
             <TextBlock Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2"
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterPixel, Format='{}{0}:'}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_CenterPixel, Format='{}{0}:'}"/>
             <!-- Labels -->
             <TextBlock Grid.Row="1" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterPosition}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_CenterPosition}"/>
             <TextBlock Grid.Row="2" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterValue}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_CenterValue}"/>
             <!-- Header -->
             <TextBlock Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2"
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Annulus, Format='{}{0}:'}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Annulus, Format='{}{0}:'}"/>
             <!-- Labels -->
             <TextBlock Grid.Row="4" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Average}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Average}"/>
             <TextBlock Grid.Row="5" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_SignalToNoise}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_SignalToNoise}"/>
             <TextBlock Grid.Row="6" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
 
             <!-- Aperture control labels -->
             <!-- Header -->
             <TextBlock Grid.Row="0" Grid.Column="4" Grid.ColumnSpan="2"
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text 
+                       Text="{extensions:Text 
                             Key=DipolImagePresenter_ApertureControlGroup, 
                             Format='{}{0}:'}"/>
             <TextBlock Grid.Row="1" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Aperture}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Aperture}"/>
             <TextBlock Grid.Row="2" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Gap}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Geometry_Gap}"/>
             <TextBlock Grid.Row="3" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Annulus}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Annulus}"/>
             <TextBlock Grid.Row="4" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=General_Color}"/>
+                       Text="{extensions:Text Key=General_Color}"/>
             <TextBlock Grid.Row="5" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Type}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Geometry_Type}"/>
             <TextBlock Grid.Row="6" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Thickness}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Geometry_Thickness}"/>
             <!-- Left data -->
             <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"

@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Markup;
 
-namespace DIPOL_UF
+namespace DIPOL_UF.Extensions
 {
     
     //[MarkupExtensionReturnType(typeof(string))]

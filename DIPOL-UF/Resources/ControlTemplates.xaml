@@ -2,7 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:loc="clr-namespace:DIPOL_UF"
                     xmlns:cntr="clr-namespace:DIPOL_UF.Controls"
-                    xmlns:enum="clr-namespace:DIPOL_UF.Enums">
+                    xmlns:enum="clr-namespace:DIPOL_UF.Enums"
+                    xmlns:extensions="clr-namespace:DIPOL_UF.Extensions">
     <Style x:Key="ThumbWithValueToolTip" TargetType="Thumb">
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="OverridesDefaultStyle" Value="True"/>
@@ -46,7 +47,7 @@
                                         <Binding Path="Value"
                                                      RelativeSource="{RelativeSource FindAncestor,
                                                         AncestorType=Slider}"
-                                                     StringFormat="{loc:Text Key=Slider_PixelToolTipFormat}"/>
+                                                     StringFormat="{extensions:Text Key=Slider_PixelToolTipFormat}"/>
                                     </TextBlock.Text>
                                 </TextBlock>
                             </Border>

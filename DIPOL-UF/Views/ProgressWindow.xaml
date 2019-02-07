@@ -4,8 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
-        xmlns:loc="clr-namespace:DIPOL_UF"
         xmlns:viewModels="clr-namespace:DIPOL_UF.ViewModels"
+        xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
         x:Name="ProgressWindowInstance"
         Title="ProgressWindow" Height="150" Width="500" WindowStyle="None" ResizeMode="NoResize"
         Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" 
@@ -69,7 +69,7 @@
             HorizontalAlignment="Right" 
             Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}"
             IsCancel="True"
-            Content="{loc:Text Key=General_Abort}"
+            Content="{extensions:Text Key=General_Abort}"
             Command="{Binding CancelCommand}" 
             CommandParameter="{Binding ElementName=ProgressWindowInstance}"/>
 

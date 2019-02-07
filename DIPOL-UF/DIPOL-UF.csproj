@@ -218,6 +218,7 @@
       <DependentUpon>DebugWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Enums\ControlStateEnum.cs" />
+    <Compile Include="Extensions\ShowViewAction.cs" />
     <Compile Include="GeometryDescriptor.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
@@ -242,7 +243,7 @@
       <DependentUpon>Localization.ru-RU.resx</DependentUpon>
     </Compile>
     <Compile Include="ReactiveObjectEx.cs" />
-    <Compile Include="TextExtension.cs" />
+    <Compile Include="Extensions\TextExtension.cs" />
     <Compile Include="UiSettingsProvider.cs" />
     <Compile Include="ValidationErrorInstance.cs" />
     <Compile Include="Validators\Validate.cs" />
