@@ -15,27 +15,11 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class DipolMainWindowViewModel : ReactiveViewModel<DipolMainWindow>
     {
-        public class ViewModelEventArgs<T> : EventArgs where T : ReactiveObjectEx
-        {
-            public T ViewModel { get; }
-
-            public ViewModelEventArgs(T viewModel)
-            {
-                ViewModel = viewModel;
-            }
-        }
-
         public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
         {
             //ConnectedCameras.CollectionChanged += (sender, e) => RaisePropertyChanged(nameof(AnyCameraConnected));
             HookObservables();
             HookValidators();
-            
-            ShowThingsCommand = ReactiveCommand.Create(() =>
-            {
-                var vm = new ProgressBarViewModel(new ProgressBar());
-                CustomEvent?.Invoke(this, new ViewModelEventArgs<ProgressBarViewModel>(vm));
-            });
         }
 
         private void HookObservables()
@@ -98,14 +82,6 @@ namespace DIPOL_UF.ViewModels
         public ICommand WindowLoadedCommand => Model.WindowLoadedCommand;
 
         //public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
-
-        #region DEBUG
-
-        public event EventHandler CustomEvent;
-
-        public ReactiveCommand<Unit, Unit> ShowThingsCommand { get; set; }
-
-        #endregion
 
     }
 }
