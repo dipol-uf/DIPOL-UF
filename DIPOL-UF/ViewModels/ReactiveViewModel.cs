@@ -2,14 +2,17 @@
 using System.Linq.Expressions;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Windows.Input;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace DIPOL_UF.ViewModels
 {
-    public abstract class ReactiveViewModel<TModel> : ReactiveObjectEx where TModel : ReactiveObjectEx
+    internal abstract class ReactiveViewModel<TModel> : ReactiveViewModelBase
+        where TModel : ReactiveObjectEx
     {
+        public override ReactiveObjectEx ReactiveModel => Model;
         protected TModel Model { get; }
         protected ReactiveViewModel(TModel model)
         {
@@ -98,19 +101,5 @@ namespace DIPOL_UF.ViewModels
                          targetProperty.Body.GetMemberInfo().Name);
         }
 
-        protected static ReactiveCommand<ReactiveViewModel<TSource>, TSource> 
-            DisposeFromViewCallbackCommand<TSource>(CompositeDisposable disposesWith)
-            where TSource : ReactiveObjectEx
-        {
-            var cmd = ReactiveCommand.Create<ReactiveViewModel<TSource>, TSource>(
-                x =>
-                {
-                    var mdl = x.Model;
-                    x.Dispose();
-                    return mdl;
-                });
-
-            return disposesWith is null ? cmd : cmd.DisposeWith(disposesWith);
-        }
     }
 }

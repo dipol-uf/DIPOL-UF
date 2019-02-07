@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Resources;
 using System.Threading;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using DIPOL_UF.ViewModels;
 
 using ANDOR_CS.Classes;
@@ -434,6 +438,9 @@ namespace DIPOL_UF.Models
         private readonly SourceCache<(string Id, CameraBase Camera), string> _connectedCameras;
 
 
+        public DescendantProvider ProgressBarProvider { get; private set; }
+        public DescendantProvider AvailableCamerasProvider { get; private set; }
+
         [ObservableAsProperty]
         // ReSharper disable UnassignedGetOnlyAutoProperty
         public bool CanConnect { get; }
@@ -444,13 +451,12 @@ namespace DIPOL_UF.Models
         public IObservableCache<(string Id, CameraTab Tab), string> CameraTabs { get; private set; }
 
         public ReactiveCommand<Unit, Unit> WindowLoadedCommand { get; private set; }
-        public ReactiveCommand<Window, AvailableCamerasModel> ConnectButtonCommand { get; private set; }
+
+        public ReactiveCommand<object, AvailableCamerasModel> ConnectButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> DisconnectButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> SelectAllCamerasCommand { get; private set; }
         public ReactiveCommand<string, Unit> SelectCameraCommand { get; private set; }
         public ReactiveCommand<string, Unit> ContextMenuCommand { get; private set; }
-
-        public ReactiveCommand<AvailableCamerasModel, Unit> CameraConnectionCallbackCommand { get; private set; }
 
         public DipolMainWindow()
         {
@@ -485,12 +491,11 @@ namespace DIPOL_UF.Models
                                .DisposeWith(_subscriptions);
 
             WindowLoadedCommand =
-                ReactiveCommand.CreateFromObservable<Unit, Unit>(
-                                   _ => Observable.FromAsync(InitializeRemoteSessionsAsync))
+                ReactiveCommand.Create<Unit, Unit>(_ => Unit.Default)
                                .DisposeWith(_subscriptions);
 
-           ConnectButtonCommand =
-                ReactiveCommand.Create<Window, AvailableCamerasModel>(
+            ConnectButtonCommand =
+                ReactiveCommand.Create<object, AvailableCamerasModel>(
                                    _ =>
                                    {
                                        var camQueryModel = new AvailableCamerasModel(
@@ -521,11 +526,39 @@ namespace DIPOL_UF.Models
                                                    .ObserveOnUi())
                                .DisposeWith(_subscriptions);
 
-            CameraConnectionCallbackCommand =
-                ReactiveCommand.CreateFromObservable<AvailableCamerasModel, Unit>(
-                                   x => Observable.FromAsync(async _ =>
-                                       await CameraConnectionCallbackCommandExecuteAsync(x)))
-                               .DisposeWith(_subscriptions);
+            //CameraConnectionCallbackCommand =
+            //    ReactiveCommand.CreateFromObservable<AvailableCamerasModel, Unit>(
+            //                       x => Observable.FromAsync(async _ =>
+            //                           await ReceiveConnectedCameras(x)))
+            //                   .DisposeWith(_subscriptions);
+
+            ProgressBarProvider = new DescendantProvider(
+                    ReactiveCommand.CreateFromTask<object, ReactiveObjectEx>(
+                        _ => Task.Run<ReactiveObjectEx>(() =>
+                            new ProgressBar()
+                            {
+                                Minimum = 0,
+                                Maximum = 1,
+                                Value = 0,
+                                IsIndeterminate = true,
+                                CanAbort = false,
+                                BarTitle = "Connecting to remote locations..."
+                            })),
+                    ReactiveCommand.Create<Unit>(_ => { }),
+                    ReactiveCommand.Create<Unit>(_ => { }),
+                    ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
+                .DisposeWith(_subscriptions);
+
+            AvailableCamerasProvider = new DescendantProvider(
+                ReactiveCommand.Create<object, ReactiveObjectEx>(x => (ReactiveObjectEx)x), 
+                ReactiveCommand.Create<Unit>(_ => { }),
+                null, 
+                ReactiveCommand.CreateFromTask<ReactiveObjectEx>(async x =>
+                    {
+                        await ReceiveConnectedCameras((AvailableCamerasModel) x).ExpectCancellation();
+                        x.Dispose();
+                    }))
+                .DisposeWith(_subscriptions);
         }
 
         private void HookObservables()
@@ -557,9 +590,36 @@ namespace DIPOL_UF.Models
                                          .AsObservableCache()
                                          .DisposeWith(_subscriptions);
 
-           ConnectButtonCommand
-               .Subscribe(async x => await ConnectButtonCommandExecuteAsync(x).ExpectCancellation())
+            //ConnectButtonCommand
+            //     .Subscribe(async x => await QueryCamerasAsync(x).ExpectCancellation())
+            //     .DisposeWith(_subscriptions);
+
+            WindowLoadedCommand
+               .InvokeCommand(ProgressBarProvider.ViewRequested)
                .DisposeWith(_subscriptions);
+
+           ProgressBarProvider.ViewRequested.Select(async x =>
+                              {
+                                  await InitializeRemoteSessionsAsync((ProgressBar) x);
+                                  return Unit.Default;
+                              })
+                              .CombineLatest(ProgressBarProvider.WindowShown,
+                                  (x, y) => Unit.Default)
+                              .Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")))
+                              .InvokeCommand(ProgressBarProvider.ClosingRequested)
+                              .DisposeWith(_subscriptions);
+
+           ConnectButtonCommand.InvokeCommand(AvailableCamerasProvider.ViewRequested as ICommand)
+                               .DisposeWith(_subscriptions);
+
+           AvailableCamerasProvider.WindowShown.WithLatestFrom(
+                                       AvailableCamerasProvider.ViewRequested,
+                                       (x, y) => y)
+                                   .Subscribe(async x =>
+                                       await QueryCamerasAsync((AvailableCamerasModel) x)
+                                           .ExpectCancellation())
+                                   .DisposeWith(_subscriptions);
+
         }
 
         private void SelectAllCamerasCommandExecute()
@@ -601,23 +661,8 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private async Task InitializeRemoteSessionsAsync()
+        private async Task InitializeRemoteSessionsAsync(ProgressBar pb)
         {
-            var pb = await Helper.RunNoMarshall(() =>
-                new ProgressBar()
-                {
-                    Minimum = 0,
-                    Maximum = 1,
-                    Value = 0,
-                    IsIndeterminate = true,
-                    CanAbort = false,
-                    BarTitle = "Connecting to remote locations..."
-                });
-
-            var pbViewModel = await Task.Run(() => new ProgressBarViewModel(pb)).ConfigureAwait(false);
-
-            var pbWindow = Helper.ExecuteOnUi(() => new ProgressWindow().WithDataContext(pbViewModel));
-
             var connectedClients = new List<DipolClient>(_remoteLocations.Length);
 
             void ConnectToClient() => Parallel.For(0, _remoteLocations.Length, (i) =>
@@ -630,50 +675,26 @@ namespace DIPOL_UF.Models
                         TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOperationTimeout", "00:00:30")),
                         TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
                     client.Connect();
-                    connectedClients.Add(client);
+                    lock(connectedClients)
+                        connectedClients.Add(client);
                 }
                 catch (System.ServiceModel.EndpointNotFoundException endpointException)
                 {
                     Helper.WriteLog(endpointException.Message);
-                    Helper.ExecuteOnUi(() => MessageBox.Show(pbWindow,
+                    Helper.ExecuteOnUi(() => MessageBox.Show(
                         endpointException.Message,
                         Properties.Localization.RemoteConnection_UnreachableHostTitle,
                         MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
                 }
             });
 
-
-            Helper.ExecuteOnUi(pbWindow.Show);
             await Task.Factory.StartNew(ConnectToClient).ConfigureAwait(false);
 
             _remoteClients = connectedClients.ToArray();
             pb.BarComment = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
-
-            await Task.Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")));
-
-            Helper.ExecuteOnUi(pbWindow.Close);
-
-            await Helper.RunNoMarshall(() =>
-            {
-                pbViewModel.Dispose();
-                pb.Dispose();
-            });
-
         }
-
-        private async Task<AvailableCamerasModel> ConnectButtonCommandExecuteAsync(AvailableCamerasModel model)
-        {
-            if (model.CancellationSource.Token.IsCancellationRequested)
-                model.CancellationSource.Token.ThrowIfCancellationRequested();
-
-            (await Helper.RunNoMarshall(() => model
-                                             .QueryCamerasCommand.Execute()))
-                    .Subscribe(_ => { }, () => { }, model.CancellationSource.Token);
-
-            return model;
-        }
-
-        private async Task CameraConnectionCallbackCommandExecuteAsync(AvailableCamerasModel model)
+        
+        private async Task ReceiveConnectedCameras(AvailableCamerasModel model)
         {
             model.CancellationSource.Cancel();
             var cams = model.RetrieveSelectedDevices();
@@ -685,7 +706,6 @@ namespace DIPOL_UF.Models
                 });
 
             await PrepareCamerasAsync(cams.Select(x => x.Camera));
-            model.Dispose();
         }
 
         private void DisconnectButtonCommandExecute()
@@ -714,6 +734,17 @@ namespace DIPOL_UF.Models
             base.Dispose(disposing);
         }
 
+        private static async Task<AvailableCamerasModel> QueryCamerasAsync(AvailableCamerasModel model)
+        {
+            if (model.CancellationSource.Token.IsCancellationRequested)
+                model.CancellationSource.Token.ThrowIfCancellationRequested();
+
+            (await Helper.RunNoMarshall(() => model
+                                             .QueryCamerasCommand.Execute()))
+                    .Subscribe(_ => { }, () => { }, model.CancellationSource.Token);
+
+            return model;
+        }
         private static async Task PrepareCamerasAsync(IEnumerable<CameraBase> cams)
         {
             await Helper.RunNoMarshall(() =>

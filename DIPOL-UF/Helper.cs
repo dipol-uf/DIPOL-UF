@@ -372,10 +372,9 @@ namespace DIPOL_UF
                     }, null)
                     .ConfigureAwait(marshal);
 
-        public static void Defer<T>(this IObservable<T> @this, int by)
-        {
-            
-        }
+        public static void SubscribeDispose<T>(this IObservable<T> @this, CompositeDisposable disposedWith)
+            => @this.Subscribe().DisposeWith(disposedWith);
+
     }
 
 #if DEBUG

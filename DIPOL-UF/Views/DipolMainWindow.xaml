@@ -20,12 +20,20 @@
                 Command="{Binding WindowLoadedCommand}"/>
         </behaviors:EventTrigger>
         <behaviors:EventTrigger
-            EventName="CameraConnectionWindowRequested"
-            SourceObject="{Binding}">
+            EventName="ViewRequested"
+            SourceObject="{Binding ProgressBarProxy}">
             <extensions:ShowViewAction 
-                Type="{x:Type vs:AvailableCameraView}"
-                Owner="{Binding RelativeSource={RelativeSource Self}}"
-                CallbackCommand="{Binding ConnectionWindowCallbackCommand}"/>
+                Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                Proxy="{Binding ProgressBarProxy}"
+                Type="{x:Type vs:ProgressWindow}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="ViewRequested"
+            SourceObject="{Binding AvailableCamerasProxy}">
+            <extensions:ShowViewAction
+                Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                Proxy="{Binding AvailableCamerasProxy}"
+                Type ="{x:Type vs:AvailableCameraView}"/>
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
     <Grid x:Name="MainWindowGrid" DockPanel.Dock="Top">
