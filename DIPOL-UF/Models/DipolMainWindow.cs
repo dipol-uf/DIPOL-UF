@@ -672,8 +672,8 @@ namespace DIPOL_UF.Models
             Helper.ExecuteOnUi(wind.ShowDialog);
 
             var cams = camQueryModel.RetrieveSelectedDevices();
-            
-            if(cams.Count > 0)
+
+            if (cams.Count > 0)
                 _connectedCameras.Edit(context =>
                 {
                     context.AddOrUpdate(cams);
