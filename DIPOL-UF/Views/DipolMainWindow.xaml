@@ -4,9 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
-        xmlns:loc="clr-namespace:DIPOL_UF"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
-        Title="{loc:Text Key=ApplicationName}" 
+        xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
+        Title="{extensions:Text Key=ApplicationName}" 
         Height="960" Width="1280" HorizontalContentAlignment="Stretch" 
         MinWidth="768" MinHeight="576" WindowStartupLocation="CenterScreen"
         Style="{StaticResource ResourceKey=ContentFont}"
@@ -17,6 +17,9 @@
         <behaviors:EventTrigger EventName="Loaded">
             <behaviors:InvokeCommandAction
                 Command="{Binding WindowLoadedCommand}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger EventName="CustomEvent" SourceObject="{Binding}">
+            <extensions:ShowViewAction/>
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
     <Grid x:Name="MainWindowGrid" DockPanel.Dock="Top">
@@ -69,7 +72,7 @@
                                     />
 
                         <Label x:Name="ConnectedCamerasLabel" 
-                                Content="{loc:Text Key=MainWindow_CameraManager}" 
+                                Content="{extensions:Text Key=MainWindow_CameraManager}" 
                                 HorizontalAlignment="Center" VerticalAlignment="Stretch" 
                                 VerticalContentAlignment="Center"/>
                     </Grid>
@@ -87,13 +90,13 @@
                     <DockPanel>
                         <Button x:Name="ConnectNewCamerasButton" DockPanel.Dock="Left"
                                 Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" 
-                                Content="{loc:Text Key=General_Connect}"
+                                Content="{extensions:Text Key=General_Connect}"
                                 Command="{Binding ConnectButtonCommand}"
                                 CommandParameter="{Binding ElementName=DipolWindow}"
                                 />
                         <Button x:Name="ReleaseExistingCamerasButton" DockPanel.Dock="Right"
                                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
-                                Content="{loc:Text Key=General_Disconnect}"
+                                Content="{extensions:Text Key=General_Disconnect}"
                                 Command="{Binding DisconnectButtonCommand}" 
                                 />
                     </DockPanel>
@@ -105,7 +108,8 @@
                     <Button 
                         Style="{StaticResource ResourceKey=BasicButtonStyle}"
                         Content="Remote Sessions"
-                        Width="auto" HorizontalAlignment="Center" IsEnabled="False"/>
+                        Width="auto" HorizontalAlignment="Center" IsEnabled="True"
+                        Command="{Binding ShowThingsCommand}"/>
                 </Border>
             </Grid>
         </Border>

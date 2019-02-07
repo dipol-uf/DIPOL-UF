@@ -6,11 +6,12 @@
         xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:loc="clr-namespace:DIPOL_UF"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
+        xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
         x:Name="AvailableCamerasWindow"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vms:AvailableCamerasViewModel}"
         Style="{StaticResource ResourceKey=ContentFont}"
-        Title="{loc:Text Key=AvailableCameras}" Height="auto" Width="auto" 
+        Title="{extensions:Text Key=AvailableCameras}" Height="auto" Width="auto" 
         WindowStyle="ThreeDBorderWindow" SizeToContent="WidthAndHeight" Topmost="True" 
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <behaviors:Interaction.Triggers>
@@ -26,7 +27,7 @@
     </behaviors:Interaction.Triggers>
     <DockPanel Margin="10, 5, 10, 5">
         <Label DockPanel.Dock="Top" 
-               Content="{loc:Text Key=AvailableCameras_Found,Format='\{0\}:'}" 
+               Content="{extensions:Text Key=AvailableCameras_Found,Format='\{0\}:'}" 
                BorderBrush="{StaticResource ResourceKey=BorderColor}"
                BorderThickness="{StaticResource ResourceKey=BottomOnlyBorderThickness}"/>
 
@@ -53,13 +54,13 @@
                 BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
             
             <DockPanel>
-                <Button Content="{loc:Text Key=General_Connect}" IsDefault="True"
+                <Button Content="{extensions:Text Key=General_Connect}" IsDefault="True"
                         Command="{Binding ConnectButtonCommand}" CommandParameter="{Binding ElementName=AvailableCamerasWindow}"
                         Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" HorizontalAlignment="Left"/>
-                <Button Content="{loc:Text Key=General_ConnectAll}"
+                <Button Content="{extensions:Text Key=General_ConnectAll}"
                         Command="{Binding ConnectAllButtonCommand}" CommandParameter="{Binding ElementName=AvailableCamerasWindow}"
                         Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}"/>
-                <Button Content="{loc:Text Key=General_Cancel}" IsCancel="True" 
+                <Button Content="{extensions:Text Key=General_Cancel}" IsCancel="True" 
                         Command="{Binding CancelButtonCommand}" CommandParameter="{Binding ElementName=AvailableCamerasWindow}"
                         Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" HorizontalAlignment="Right"/>
             </DockPanel>
