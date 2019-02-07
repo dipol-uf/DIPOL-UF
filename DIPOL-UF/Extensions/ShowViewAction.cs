@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Reactive;
 using System.Windows;
 using System.Windows.Input;
+using DIPOL_UF.ViewModels;
 using Microsoft.Xaml.Behaviors;
 
 namespace DIPOL_UF.Extensions
@@ -29,6 +31,10 @@ namespace DIPOL_UF.Extensions
             DependencyProperty.Register(nameof(CallbackCommand),
                 typeof(ICommand), typeof(ShowViewAction));
 
+        private static readonly DependencyProperty ProxyProperty =
+            DependencyProperty.Register(nameof(Proxy),
+                typeof(DescendantProxy), typeof(ShowViewAction));
+
         public Type Type
         {
             get => GetValue(TypeProperty) as Type;
@@ -55,6 +61,13 @@ namespace DIPOL_UF.Extensions
             set => SetValue(CallbackCommandProperty, value);
         }
 
+        public DescendantProxy Proxy
+        {
+            get => GetValue(ProxyProperty) as DescendantProxy;
+            set => SetValue(ProxyProperty, value);
+        }
+
+
         protected override void Invoke(object parameter)
         {
             if (parameter is PropagatingEventArgs args)
@@ -76,6 +89,24 @@ namespace DIPOL_UF.Extensions
                             if (CallbackCommand.CanExecute(args.Content))
                                 CallbackCommand.Execute(args.Content);
                         };
+                    else if (!(Proxy is null))
+                    {
+                        view.Closed += (sender, e) =>
+                        {
+                            if (Proxy.ViewFinished?.CanExecute(null) ?? false)
+                                Proxy.ViewFinished.Execute(args.Content);
+                        };
+
+                        view.ContentRendered += (sender, e) =>
+                        {
+                            if (Proxy.WindowShown?.CanExecute(null) ?? false)
+                                Proxy.WindowShown.Execute(Unit.Default);
+                        };
+
+                        Proxy.ClosingRequested += (sender, e) =>
+                            view.Close();
+                    }
+
 
                     if (IsDialog)
                         view.ShowDialog();

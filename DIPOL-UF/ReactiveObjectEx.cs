@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData;
 using ReactiveUI;
 
 using ValidationErrorsCache = DynamicData.SourceCache<(string Property, string Type, string Message), (string Property, string Type)>;
@@ -108,6 +107,10 @@ namespace DIPOL_UF
                         _subscriptions.Dispose();
 
                     _validationErrors.Dispose();
+
+#if DEBUG
+                    Helper.WriteLog($"Disposing {GetType()}");
+#endif
                 }
 
                 IsDisposed = true;

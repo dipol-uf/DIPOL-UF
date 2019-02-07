@@ -29,13 +29,17 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
 using DynamicData;
 using DynamicData.Binding;
 using Newtonsoft.Json.Linq;
+using ReactiveUI;
 using SettingsManager;
 
 
@@ -46,11 +50,13 @@ namespace DIPOL_UF
         [STAThread]
         private static int Main(string[] args)
         {
-          
             System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
             System.Diagnostics.Debug.AutoFlush = true;
             System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+            //Test();
+            //return 0;
+          
 
             var applicationInstance = new App();
             applicationInstance.InitializeComponent();
@@ -68,30 +74,29 @@ namespace DIPOL_UF
 
         private static void Test()
         {
-            var list = new SourceList<int>();
-            var list2 = new SourceCache<int, int>(x => x);
-            list.Connect().Bind(out var coll1).Subscribe();
-            list2.Connect().Bind(out var coll2).Subscribe();
+            var disp = new CompositeDisposable();
+            var command = ReactiveCommand
+                .Create<int, int>(x => x)
+                .DisposeWith(disp);
+
+            var s = new Subject<bool>();
+            var obs = command.AsObservable().Buffer(s);
+            obs.Select(x => x.ToStringEx()).LogObservable("Second", disp);
+           
+            //obs.Select(x => x.EnumerableToString()).LogObservable("First", disp);
 
 
-            //coll1.ObserveCollectionChanges().Subscribe(x => Console.WriteLine(x.EventArgs.Action));
-            //coll2.ObserveCollectionChanges().Subscribe(x => Console.WriteLine(x.EventArgs.Action));
+            command.Execute(5).Subscribe().DisposeWith(disp);
+            command.Execute(6).Subscribe().DisposeWith(disp);
+            command.Execute(115).Subscribe().DisposeWith(disp);
 
-            list.Connect().Except(list2.Connect().RemoveKey()).Bind(out var coll).Subscribe();
-            coll.WhenValueChanged(x => x.Count).Select(x => x != 0).Subscribe(Console.WriteLine);
+            command.Execute(-5).Subscribe().DisposeWith(disp);
+            s.OnNext(false);
+            command.Execute(-1235).Subscribe().DisposeWith(disp);
 
+            //s.OnNext(true);
 
-            list.AddRange(new [] {1, 2, 3, 4, 5, 10, 99});
-            Console.WriteLine("-----------------");
-            list2.AddOrUpdate(new [] {1, 2, 3, 4, 5, 6});
-            list2.AddOrUpdate(99);
-            list.Add(-123);
-            list2.Edit(context => context.Remove(6));
-            list2.AddOrUpdate(new[]{-123, 10});
-
-
-
-            list.Dispose();
+            Console.ReadKey();
         }
     }
 }

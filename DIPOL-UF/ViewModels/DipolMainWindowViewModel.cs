@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Windows;
 using System.Windows.Input;
 using DIPOL_UF.Models;
 using DynamicData;
@@ -15,9 +13,37 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class DipolMainWindowViewModel : ReactiveViewModel<DipolMainWindow>
     {
+        
+        public IObservableCollection<MainWindowTreeViewModel> CameraPanel { get; }
+            = new ObservableCollectionExtended<MainWindowTreeViewModel>();
+
+        public IObservableCollection<CameraTabViewModel> CameraTabs { get; }
+            = new ObservableCollectionExtended<CameraTabViewModel>();
+
+        public bool AnyCameraConnected { [ObservableAsProperty] get; }
+        public bool? AllCamerasSelected { [ObservableAsProperty] get; }
+        public ICommand SelectAllCamerasCommand => Model.SelectAllCamerasCommand;
+        public ICommand ConnectButtonCommand => Model.ConnectButtonCommand;
+        public ICommand DisconnectButtonCommand => Model.DisconnectButtonCommand;
+        public ICommand WindowLoadedCommand => Model.WindowLoadedCommand;
+
+        public DescendantProxy ProgressBarProxy { get; }
+        public DescendantProxy AvailableCamerasProxy { get; }
+        //public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
+
+
         public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
         {
-            //ConnectedCameras.CollectionChanged += (sender, e) => RaisePropertyChanged(nameof(AnyCameraConnected));
+            ProgressBarProxy = new DescendantProxy(
+                Model.ProgressBarProvider,
+                x => new ProgressBarViewModel((ProgressBar)x))
+                .DisposeWith(_subscriptions);
+                
+            AvailableCamerasProxy = new DescendantProxy(
+                Model.AvailableCamerasProvider,
+                x => new AvailableCamerasViewModel((AvailableCamerasModel)x))
+                .DisposeWith(_subscriptions);
+
             HookObservables();
             HookValidators();
         }
@@ -65,41 +91,6 @@ namespace DIPOL_UF.ViewModels
                  .Subscribe()
                  .DisposeWith(_subscriptions);
 
-            ConnectionWindowCallbackCommand =
-                DisposeFromViewCallbackCommand<AvailableCamerasModel>(_subscriptions);
-
-            Model.ConnectButtonCommand.ToEvent().OnNext +=
-                (x) =>
-                    CameraConnectionWindowRequested
-                        ?.Invoke(this,
-                            new PropagatingEventArgs(
-                                new AvailableCamerasViewModel(x)));
-
-            ConnectionWindowCallbackCommand
-                .Subscribe(x => Model.CameraConnectionCallbackCommand
-                                     .Execute(x)
-                                     .Subscribe()
-                                     .DisposeWith(_subscriptions))
-                .DisposeWith(_subscriptions);
-
         }
-
-
-        public IObservableCollection<MainWindowTreeViewModel> CameraPanel { get; }
-            = new ObservableCollectionExtended<MainWindowTreeViewModel>();
-
-        public IObservableCollection<CameraTabViewModel> CameraTabs { get; }
-            = new ObservableCollectionExtended<CameraTabViewModel>();
-
-        public bool AnyCameraConnected { [ObservableAsProperty] get; }
-        public bool? AllCamerasSelected { [ObservableAsProperty] get; }
-        public ICommand SelectAllCamerasCommand => Model.SelectAllCamerasCommand;
-        public ICommand ConnectButtonCommand => Model.ConnectButtonCommand;
-        public ICommand DisconnectButtonCommand => Model.DisconnectButtonCommand;
-        public ICommand WindowLoadedCommand => Model.WindowLoadedCommand;
-
-        //public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
-        public event EventHandler CameraConnectionWindowRequested;
-        public ReactiveCommand<ReactiveViewModel<AvailableCamerasModel>, AvailableCamerasModel> ConnectionWindowCallbackCommand { get; set; }
-}
+    }
 }

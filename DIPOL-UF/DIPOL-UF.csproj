@@ -224,10 +224,13 @@
     <Compile Include="Models\AvailableCamerasModel.cs" />
     <Compile Include="Models\CameraTab.cs" />
     <Compile Include="Models\ConnectedCamera.cs" />
+    <Compile Include="Models\DescendantProvider.cs" />
     <Compile Include="Models\DipolImagePresenter.cs" />
     <Compile Include="Models\DipolMainWindow.cs" />
     <Compile Include="PropagatingEventArgs.cs" />
     <Compile Include="ViewModels\CameraTabViewModel.cs" />
+    <Compile Include="ViewModels\DescendantProxy.cs" />
+    <Compile Include="ViewModels\ReactiveViewModelBase.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="Models\ProgressBar.cs" />
     <Compile Include="Commands\WindowDragCommandProvider.cs" />
