@@ -33,11 +33,11 @@ namespace DIPOL_UF.ViewModels
             Model.SelectedDevices.CountChanged
                  .CombineLatest(
                      Model.ConnectedCameras.CountChanged,
-                     (x, y) => 
-                         x == 0 
-                             ? false 
-                             : x < y 
-                                 ? null 
+                     (x, y) =>
+                         x == 0
+                             ? false
+                             : x < y
+                                 ? null
                                  : new bool?(true))
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.AllCamerasSelected)
@@ -47,9 +47,9 @@ namespace DIPOL_UF.ViewModels
             Model.ConnectedCameras.Connect()
                  .Group(x => Helper.GetCameraHostName(x.Id))
                  .ObserveOnUi()
-                 .Transform(x => 
-                     new MainWindowTreeViewModel(x.Key, x.Cache, 
-                         Model.SelectedDevices, 
+                 .Transform(x =>
+                     new MainWindowTreeViewModel(x.Key, x.Cache,
+                         Model.SelectedDevices,
                          Model.SelectCameraCommand,
                          Model.ContextMenuCommand))
                  .Bind(CameraPanel)
@@ -65,9 +65,26 @@ namespace DIPOL_UF.ViewModels
                  .Subscribe()
                  .DisposeWith(_subscriptions);
 
+            ConnectionWindowCallbackCommand =
+                DisposeFromViewCallbackCommand<AvailableCamerasModel>(_subscriptions);
+
+            Model.ConnectButtonCommand.ToEvent().OnNext +=
+                (x) =>
+                    CameraConnectionWindowRequested
+                        ?.Invoke(this,
+                            new PropagatingEventArgs(
+                                new AvailableCamerasViewModel(x)));
+
+            ConnectionWindowCallbackCommand
+                .Subscribe(x => Model.CameraConnectionCallbackCommand
+                                     .Execute(x)
+                                     .Subscribe()
+                                     .DisposeWith(_subscriptions))
+                .DisposeWith(_subscriptions);
+
         }
 
-        
+
         public IObservableCollection<MainWindowTreeViewModel> CameraPanel { get; }
             = new ObservableCollectionExtended<MainWindowTreeViewModel>();
 
@@ -82,6 +99,7 @@ namespace DIPOL_UF.ViewModels
         public ICommand WindowLoadedCommand => Model.WindowLoadedCommand;
 
         //public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
-
-    }
+        public event EventHandler CameraConnectionWindowRequested;
+        public ReactiveCommand<ReactiveViewModel<AvailableCamerasModel>, AvailableCamerasModel> ConnectionWindowCallbackCommand { get; set; }
+}
 }

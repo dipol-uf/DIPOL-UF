@@ -32,6 +32,7 @@ namespace DIPOL_UF.Models
         private bool _isClosed;
         private bool _isSelected;
 
+        internal CancellationTokenSource CancellationSource { get; }
         [Reactive]
         public bool IsInteractive { get; private set; }
 
@@ -46,8 +47,13 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<Window, Unit> CloseCrossCommand { get; private set; }
         public ReactiveCommand<object, Unit> ClickCommand { get; private set; }
 
-        public AvailableCamerasModel(DipolClient[] remoteClients = null)
+        public AvailableCamerasModel(
+            CancellationTokenSource src,
+            DipolClient[] remoteClients = null)
         {
+            CancellationSource = src;
+            CancellationSource.DisposeWith(_subscriptions);
+
             _remoteClients = remoteClients;
             IsInteractive = true;
             SelectedIds = new SourceList<string>().DisposeWith(_subscriptions);

@@ -1,33 +1,88 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Input;
 using Microsoft.Xaml.Behaviors;
 
 namespace DIPOL_UF.Extensions
 {
-    internal class ShowViewAction : TargetedTriggerAction<object>
+    internal class ShowViewAction : TriggerAction<DependencyObject>
     {
-        private static readonly DependencyProperty BindingProperty =
-            DependencyProperty.Register(nameof(Binding), typeof(object), typeof(ShowViewAction));
-
         private static readonly  DependencyProperty TypeProperty =
-            DependencyProperty.Register(nameof(Type), typeof(object), typeof(ShowViewAction));
+            DependencyProperty.Register(nameof(Type), 
+                typeof(Type), typeof(ShowViewAction));
 
-        public object Binding
-        {
-            get => GetValue(BindingProperty);
-            set => SetValue(BindingProperty, value);
-        }
+        private static readonly DependencyProperty OwnerProperty =
+            DependencyProperty.Register(nameof(Owner), 
+                typeof(Window), typeof(ShowViewAction));
 
-        public object Type
+        private static readonly DependencyProperty IsDialogProperty =
+            DependencyProperty.Register(nameof(IsDialog), 
+                typeof(bool), typeof(ShowViewAction),
+                new PropertyMetadata(false));
+
+        private static readonly DependencyProperty StartupLocationProperty =
+            DependencyProperty.Register(nameof(StartupLocation), 
+                typeof(WindowStartupLocation), typeof(ShowViewAction),
+                new PropertyMetadata(WindowStartupLocation.CenterScreen));
+        
+        private static readonly DependencyProperty CallbackCommandProperty =
+            DependencyProperty.Register(nameof(CallbackCommand),
+                typeof(ICommand), typeof(ShowViewAction));
+
+        public Type Type
         {
-            get => GetValue(TypeProperty);
+            get => GetValue(TypeProperty) as Type;
             set => SetValue(TypeProperty, value);
         }
+        public Window Owner
+        {
+            get => GetValue(OwnerProperty) as Window;
+            set => SetValue(OwnerProperty, value);
+        }
+        public bool IsDialog
+        {
+            get => (bool)GetValue(IsDialogProperty);
+            set => SetValue(IsDialogProperty, value); }
+        public WindowStartupLocation StartupLocation
+        {
+            get => (WindowStartupLocation)GetValue(StartupLocationProperty);
+            set => SetValue(StartupLocationProperty, value);
+        }
 
+        public ICommand CallbackCommand
+        {
+            get => GetValue(CallbackCommandProperty) as ICommand;
+            set => SetValue(CallbackCommandProperty, value);
+        }
 
         protected override void Invoke(object parameter)
         {
-            //throw new NotImplementedException();
+            if (parameter is PropagatingEventArgs args)
+            {
+                if(Type is null)
+                    throw new NullReferenceException(nameof(Type));
+
+                if (Type.IsClass && Type.IsSubclassOf(typeof(Window)))
+                {
+                    var view = (Activator.CreateInstance(Type) as Window)
+                        .WithDataContext(args.Content);
+
+                    view.WindowStartupLocation = StartupLocation;
+                    view.Owner = Owner;
+
+                    if (!(CallbackCommand is null))
+                        view.Closed += (sender, e) =>
+                        {
+                            if (CallbackCommand.CanExecute(args.Content))
+                                CallbackCommand.Execute(args.Content);
+                        };
+
+                    if (IsDialog)
+                        view.ShowDialog();
+                    else
+                        view.Show();
+                }
+            }
         }
     }
 }
