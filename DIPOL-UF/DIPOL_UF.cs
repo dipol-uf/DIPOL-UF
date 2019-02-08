@@ -23,24 +23,11 @@
 //     SOFTWARE.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using DIPOL_UF.Models;
-using DIPOL_UF.ViewModels;
-using DynamicData;
-using DynamicData.Binding;
-using Newtonsoft.Json.Linq;
 using ReactiveUI;
-using SettingsManager;
 
 
 namespace DIPOL_UF
@@ -50,7 +37,7 @@ namespace DIPOL_UF
         [STAThread]
         private static int Main(string[] args)
         {
-            System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
+            //System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
             System.Diagnostics.Debug.AutoFlush = true;
             System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
