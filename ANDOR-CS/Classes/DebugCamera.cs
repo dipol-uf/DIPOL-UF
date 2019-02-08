@@ -21,11 +21,8 @@ using System.Threading.Tasks;
 using System.Threading;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
-using ANDOR_CS.Events;
-
 using DipolImage;
 using System.Collections.Concurrent;
-using Timer = System.Timers.Timer;
 
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
@@ -37,6 +34,7 @@ namespace ANDOR_CS.Classes
         private const ConsoleColor Green = ConsoleColor.DarkGreen;
         private const ConsoleColor Red = ConsoleColor.Red;
         private const ConsoleColor Blue = ConsoleColor.Blue;
+        private const ConsoleColor Yellow = ConsoleColor.DarkYellow;
 
         public override ConcurrentQueue<Image> AcquiredImages => throw new NotImplementedException();
 
@@ -65,10 +63,14 @@ namespace ANDOR_CS.Classes
         public override void SetTemperature(int temperature) 
             => WriteMessage($"Temperature was set to {temperature}.", Blue);
 
-        public override void ShutterControl(int clTime, int opTime, ShutterMode inter, ShutterMode extrn = ShutterMode.FullyAuto, TtlShutterSignal type = TtlShutterSignal.Low) 
-            => WriteMessage("Shutter settings were changed.", Blue);
+        public override void ShutterControl(int clTime, int opTime, ShutterMode inter,
+            ShutterMode extrn = ShutterMode.FullyAuto, TtlShutterSignal type = TtlShutterSignal.Low)
+        {
+            Shutter = (Internal: inter, External: extrn, Type: type, OpenTime: opTime, CloseTime: clTime);
+            WriteMessage("Shutter settings were changed.", Blue);
+        }
 
-       
+
         public DebugCamera(int camIndex)
         {
             CameraIndex = camIndex;
@@ -78,12 +80,16 @@ namespace ANDOR_CS.Classes
                 CameraType = CameraType.IXonUltra,
                 GetFunctions = GetFunction.Temperature | GetFunction.TemperatureRange,
                 SetFunctions = SetFunction.Temperature,
-                Features = SdkFeatures.FanControl | SdkFeatures.LowFanMode
+                Features = SdkFeatures.FanControl 
+                           | SdkFeatures.LowFanMode
+                           | SdkFeatures.Shutter
+                           | SdkFeatures.ShutterEx
             };
             Properties = new CameraProperties()
             {
                 DetectorSize = new Size(256, 512),
-                AllowedTemperatures = (Minimum:-50, Maximum: 30)
+                AllowedTemperatures = (Minimum:-50, Maximum: 30),
+                HasInternalMechanicalShutter = true
             };
             IsActive = true;
             IsInitialized = true;
@@ -91,7 +97,9 @@ namespace ANDOR_CS.Classes
             FanMode = FanMode.Off;
             CoolerMode = Switch.Disabled;
 
-            PropertyChanged += (sender, prop) => WriteMessage($"{prop.PropertyName} was changed.", Blue);
+            PropertyChanged += (sender, prop) =>
+                WriteMessage($"{prop.PropertyName} was changed to " +
+                             $"{GetType().GetProperty(prop.PropertyName)?.GetValue(this)}.", Yellow);
             TemperatureStatusChecked += (sender, args) => WriteMessage($"Temperature: {args.Temperature}\tStatus: {args.Status}", Blue);
             WriteMessage("Camera created.", Green);
         }
