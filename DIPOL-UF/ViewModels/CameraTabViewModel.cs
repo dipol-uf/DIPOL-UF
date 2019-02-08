@@ -1,4 +1,7 @@
-﻿using System.Globalization;
+﻿using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
@@ -22,6 +25,10 @@ namespace DIPOL_UF.ViewModels
         public bool CanControlTemperature => Model.CanControlTemperature;
         public bool CanQueryTemperature => Model.CanQueryTemperature;
         public bool CanControlFan => Model.CanControlFan;
+        public bool CanControlInternalShutter => Model.CanControlShutter.Internal;
+        public bool CanControlExternalShutter => Model.CanControlShutter.External;
+        public bool HasIndependentShutters => !Model.CanControlShutter.IsJoined;
+
         public int FanTickFrequency => Model.IsThreeStateFan ? 1 : 2;
         // ReSharper disable once UnusedMember.Global
         public string TabHeader => Model.Alias;
@@ -33,6 +40,10 @@ namespace DIPOL_UF.ViewModels
         public string TargetTemperatureText { get; set; }
         [Reactive]
         public int FanMode { get; set; }
+        [Reactive]
+        public ShutterMode InternalShutterState { get; set; }
+        [Reactive]
+        public ShutterMode? ExternalShutterMode { get; set; }
 
         public bool IsAcquiring { [ObservableAsProperty]get; }
         public float CurrentTemperature { [ObservableAsProperty] get; }
@@ -43,12 +54,18 @@ namespace DIPOL_UF.ViewModels
         public CameraTabViewModel(CameraTab model) : base(model)
         {
             TargetTemperatureText = "0";
+            InternalShutterState = Model.Camera.Shutter.Internal;
+            ExternalShutterMode = Model.Camera.Shutter.External;
             HookValidators();
             HookObservables();
         }
 
         private void HookObservables()
         {
+
+            Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.IsAcquiring)).Select(x => x.IsAcquiring)
+                 .LogObservable("Acquiring", _subscriptions);
+
             Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.IsAcquiring))
                  .Select(x => x.IsAcquiring)
                  .ObserveOnUi()
@@ -106,6 +123,48 @@ namespace DIPOL_UF.ViewModels
                 .Select(x => (FanMode) (2 - x.Value))
                 .InvokeCommand(Model.FanCommand)
                 .DisposeWith(_subscriptions);
+
+
+            var shutterSrc =
+                Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.Shutter))
+                     .Select(x => x.Shutter)
+                     .DistinctUntilChanged()
+                     .ObserveOnUi();
+
+            shutterSrc.Select(x => x.Internal)
+                      .DistinctUntilChanged()
+                      .Subscribe(new AnonymousObserver<ShutterMode>(x => InternalShutterState = x))
+                      .DisposeWith(_subscriptions);
+
+            this.WhenPropertyChanged(x => x.InternalShutterState)
+                .Select(x => x.Value)
+                .DistinctUntilChanged()
+                .InvokeCommand(Model.InternalShutterCommand)
+                .DisposeWith(_subscriptions);
+
+            //if(CanControlExternalShutter)
+            //    shutterSrc.Select(x => x.External.ToStringEx())
+            //              .BindTo(this, x => x.)
+
+
+
+            //var shutterObs = Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.Shutter))
+            //                      .Select(x => x.Shutter)
+            //                      .Subscribe(A)
+            //                      .DistinctUntilChanged();
+
+            //if (CanControlInternalShutter)
+            //    shutterObs.Select(x => x.Internal).DistinctUntilChanged()
+            //              .Select(x => Converters.ConverterImplementations.EnumToDescriptionConversion(x))
+            //              .ObserveOnUi()
+            //              .DisposeWith(_subscriptions);
+
+            //if(CanControlExternalShutter && HasIndependentShutters)
+            //    shutterObs.Select(x => x.External).Where(x => x.HasValue)
+            //              // ReSharper disable once PossibleInvalidOperationException
+            //              .Select(x => x.Value)
+            //              .DistinctUntilChanged()
+
 
         }
 

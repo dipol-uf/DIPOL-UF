@@ -260,26 +260,22 @@ namespace DIPOL_UF
         {
             var type = @enum.GetType();
 
-            string GetString(string key)
-                => Properties.Localization.ResourceManager
-                              .GetString($"General_{type.Name}_{key}")
-                    ?? (type.GetField(key).GetCustomAttribute(
-                            typeof(DescriptionAttribute)) is
-                        DescriptionAttribute attr
-                        ? attr.Description
-                        : key);
-
             return
                 type.GetCustomAttribute(typeof(FlagsAttribute)) is null
                     ? new List<string>()
-                        {Enum.IsDefined(type, @enum) ? GetString(type.GetEnumName(@enum)) : @enum.ToString()}
+                        {Enum.IsDefined(type, @enum) ? GetEnumString(type.GetEnumName(@enum), type) : @enum.ToString()}
                     : type.GetEnumValues()
                                .Cast<Enum>()
                                .Where(@enum.HasFlag)
                                .Select(x => x.ToString())
-                               .Select(GetString)
+                               .Select(x => GetEnumString(x, type))
                                .ToList();
         }
+
+        public static Dictionary<T, string> GetEnumNames<T>() where T : Enum
+            => Enum.GetValues(typeof(T)).Cast<T>().Zip(Enum.GetNames(typeof(T)),
+                       (x, y) => (x, y: GetEnumString(y, typeof(T))))
+                   .ToDictionary(x => x.x, x => x.y);
 
         public static string GetValueTupleString(this ITuple tuple)
         {
@@ -299,7 +295,18 @@ namespace DIPOL_UF
                 case null:
                     throw new ArgumentNullException(nameof(@this));
                 case Enum @enum:
-                    return "[" + @enum.GetEnumStringEx().EnumerableToString() + "]";
+                {
+                    var coll = @enum.GetEnumStringEx();
+                    switch (coll.Count)
+                    {
+                        case 0:
+                            return "";
+                        case 1:
+                            return coll[0];
+                        default:
+                            return  '[' + coll.EnumerableToString() + ']';
+                    }
+                }
                 case ITuple tuple:
                     return "(" + tuple.GetValueTupleString() + ")";
                 case IEnumerable enumerable:
@@ -374,6 +381,15 @@ namespace DIPOL_UF
 
         public static void SubscribeDispose<T>(this IObservable<T> @this, CompositeDisposable disposedWith)
             => @this.Subscribe().DisposeWith(disposedWith);
+
+        private static string GetEnumString(string key, Type type)
+            => Properties.Localization.ResourceManager
+                         .GetString($"General_{type.Name}_{key}")
+               ?? (type.GetField(key).GetCustomAttribute(
+                       typeof(DescriptionAttribute)) is
+                   DescriptionAttribute attr
+                   ? attr.Description
+                   : key);
 
     }
 

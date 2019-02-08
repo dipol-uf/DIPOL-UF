@@ -147,7 +147,7 @@
                                 UpdateSourceTrigger=PropertyChanged}">
                         <TextBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                <Binding Path="IsAcquiring" Mode="OneWay" ConverterParameter="{StaticResource NotConverter}"/>
+                                <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
                                 <Binding Path="CanControlTemperature" Mode="OneWay"/>
                             </MultiBinding>
                         </TextBox.IsEnabled>
@@ -303,18 +303,13 @@
                                Text="{extensions:Text Key=CameraTab_Shutter_External}"/>
                     <ComboBox Grid.Column="1" Grid.Row="0"
                               Style="{StaticResource ResourceKey=ComboBoxStyle}"
-                              ItemsSource="{Binding 
-                                  Source={StaticResource ResourceKey=ShutterModeEnumProvider},
-                                  Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
-                              SelectedValue="{Binding 
-                                  InternalShutterState, 
-                                  Mode=TwoWay, 
-                                  UpdateSourceTrigger=PropertyChanged,
-                                  Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}">
+                              ItemsSource="{Binding Source={StaticResource ResourceKey=ShutterModeEnumProvider}}"
+                              ItemTemplate="{StaticResource ShutterComboBoxItem}"
+                              SelectedItem="{Binding InternalShutterState, Mode=TwoWay}">
                         <ComboBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                <Binding Path="IsNotAcquiring" Mode="OneWay"/>
-                                <Binding Path="CanControlShutter" Mode="OneWay"/>
+                                <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
+                                <Binding Path="CanControlInternalShutter" Mode="OneWay"/>
                             </MultiBinding>
                         </ComboBox.IsEnabled>
                     </ComboBox>
@@ -326,12 +321,12 @@
                                   UpdateSourceTrigger=PropertyChanged,
                                   Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
                               ItemsSource="{Binding 
-                                  Source={StaticResource ResourceKey=ShutterModeEnumProvider},
-                                  Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}">
+                                  Source={StaticResource ResourceKey=ShutterModeEnumProvider}}"
+                              ItemTemplate="{StaticResource ShutterComboBoxItem}">
                         <ComboBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                <Binding Path="IsNotAcquiring" Mode="OneWay"/>
-                                <Binding Path="CanControlInternalExternalShutter" Mode="OneWay"/>
+                                <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
+                                <Binding Path="CanControlExternalShutter" Mode="OneWay"/>
                             </MultiBinding>
                         </ComboBox.IsEnabled>
                     </ComboBox>

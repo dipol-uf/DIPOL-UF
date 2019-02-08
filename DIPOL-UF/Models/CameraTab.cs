@@ -18,12 +18,15 @@ namespace DIPOL_UF.Models
         public bool CanControlFan { get; }
         public bool IsThreeStateFan { get; }
         public bool CanQueryTemperature { get; }
+        public (bool Internal, bool External, bool IsJoined) CanControlShutter { get; }
         public string Alias { get; }
+
 
         public IObservable<TemperatureStatusEventArgs> WhenTemperatureChecked { get; private set; }
 
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
         public ReactiveCommand<FanMode, Unit> FanCommand { get; private set; }
+        public ReactiveCommand<ShutterMode, Unit> InternalShutterCommand { get; private set; }
 
         public CameraTab(CameraBase camera)
         {
@@ -36,7 +39,13 @@ namespace DIPOL_UF.Models
             CanQueryTemperature = camera.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature);
             CanControlFan = camera.Capabilities.Features.HasFlag(SdkFeatures.FanControl);
             IsThreeStateFan = camera.Capabilities.Features.HasFlag(SdkFeatures.LowFanMode);
+            CanControlShutter = (
+                Internal: camera.Capabilities.Features.HasFlag(SdkFeatures.Shutter),
+                External: camera.Capabilities.Features.HasFlag(SdkFeatures.ShutterEx),
+                IsJoined: camera.Properties.HasInternalMechanicalShutter);
+
             Alias = ConverterImplementations.CameraToStringAliasConversion(camera);
+
 
             HookObservables();
             InitializeCommands();
@@ -69,6 +78,17 @@ namespace DIPOL_UF.Models
                                    Observable.Return(
                                        Camera.Capabilities.Features.HasFlag(SdkFeatures.FanControl)))
                                .DisposeWith(_subscriptions);
+
+            InternalShutterCommand =
+                ReactiveCommand.Create<ShutterMode>(
+                                   x => Camera.ShutterControl(
+                                       SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27),
+                                       SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
+                                       x, Camera.Shutter.External ?? ShutterMode.FullyAuto,
+                                       (TtlShutterSignal) SettingsProvider.Settings.Get("TTLShutterSignal", 1)),
+                                   Observable.Return(CanControlShutter.Internal))
+                               .DisposeWith(_subscriptions);
+
         }
 
     }
