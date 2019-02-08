@@ -97,7 +97,7 @@ namespace DIPOL_UF
         public virtual bool HasSpecificErrors(string propertyName)
             => _validationErrors?.Items.Any(x => x.Property == propertyName && !(x.Message is null)) ?? false;
 
-        public virtual void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (!IsDisposed)
             {
@@ -109,7 +109,7 @@ namespace DIPOL_UF
                     _validationErrors.Dispose();
 
 #if DEBUG
-                    Helper.WriteLog($"Disposing {GetType()}");
+                    Helper.WriteLog($"{GetType()}: Disposed");
 #endif
                 }
 
@@ -122,5 +122,19 @@ namespace DIPOL_UF
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
+
+
+#if DEBUG
+        internal ReactiveObjectEx()
+        {
+            Helper.WriteLog($"{GetType()}: Created");
+
+            Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+                          x => PropertyChanged += x, x => PropertyChanged -= x)
+                      .Subscribe(x => Helper.WriteLog($"{GetType()}: {x.EventArgs.PropertyName}"))
+                      .DisposeWith(_subscriptions);
+        }
+#endif
     }
 }

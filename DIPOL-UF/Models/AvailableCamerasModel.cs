@@ -12,9 +12,8 @@ using DIPOL_Remote.Classes;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Windows.Input;
 using DIPOL_UF.Converters;
-using DIPOL_UF.ViewModels;
-using DIPOL_UF.Views;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -32,7 +31,7 @@ namespace DIPOL_UF.Models
         private bool _isClosed;
         private bool _isSelected;
 
-        internal CancellationTokenSource CancellationSource { get; }
+        public DescendantProvider ProgressBarProvider { get; private set; }
         [Reactive]
         public bool IsInteractive { get; private set; }
 
@@ -48,11 +47,8 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<object, Unit> ClickCommand { get; private set; }
 
         public AvailableCamerasModel(
-            CancellationTokenSource src,
             DipolClient[] remoteClients = null)
         {
-            CancellationSource = src;
-            CancellationSource.DisposeWith(_subscriptions);
 
             _remoteClients = remoteClients;
             IsInteractive = true;
@@ -62,9 +58,9 @@ namespace DIPOL_UF.Models
                 new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
                     .DisposeWith(_subscriptions);
 
-            HookValidators();
             InitializeCommands();
             HookObservables();
+            HookValidators();
         }
 
         private void InitializeCommands()
@@ -108,16 +104,52 @@ namespace DIPOL_UF.Models
                                                          (x, y) => x && y)
                                                      .ObserveOnUi())
                                  .DisposeWith(_subscriptions);
-            
+
 
             QueryCamerasCommand =
-                ReactiveCommand.CreateFromObservable<Unit, Unit>(
-                                  _ => Observable.FromAsync(QueryCamerasCommandExecuteAsync))
+                ReactiveCommand.Create<Unit>(_ => { })
                                .DisposeWith(_subscriptions);
 
-           WindowContentRenderedCommand =
-                ReactiveCommand.Create<Window, Window>(x => x)
-                               .DisposeWith(_subscriptions);
+            WindowContentRenderedCommand =
+                 ReactiveCommand.Create<Window, Window>(x => x)
+                                .DisposeWith(_subscriptions);
+
+            ProgressBarProvider = new DescendantProvider(
+                ReactiveCommand.CreateFromTask<object, ReactiveObjectEx>(async x =>
+                {
+                    var pb = await Task.Run(() =>
+                        new ProgressBar()
+                        {
+                            IsIndeterminate = true,
+                            CanAbort = true,
+                            DisplayPercents = false,
+                            BarTitle = Properties.Localization.AvailableCameras_CheckingConnection_BarTitle
+                        });
+                    return pb;
+                }),
+                null, null,
+                ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
+                .DisposeWith(_subscriptions);
+
+            QueryCamerasCommand.InvokeCommand(ProgressBarProvider.ViewRequested)
+                                        .DisposeWith(_subscriptions);
+        }
+        private void HookObservables()
+        {
+            // Binding source collection to the public read-only interface
+            FoundCameras = FoundDevices.AsObservableCache().DisposeWith(_subscriptions);
+
+            FoundDevices.Connect().DisposeManyEx(x =>
+            {
+                var (id, camera) = x;
+                if (!SelectedIds.Items.Contains(id))
+                    camera?.Dispose();
+            }).Subscribe().DisposeWith(_subscriptions);
+
+            ProgressBarProvider.ViewRequested.Subscribe(async x =>
+            {
+                await QueryCamerasCommandExecuteAsync((ProgressBar) x);
+            }).DisposeWith(_subscriptions);
         }
 
         private async Task<int> QueryAvailableCamerasAsync(CancellationToken cancelToken, ProgressBar pb)
@@ -317,7 +349,7 @@ namespace DIPOL_UF.Models
                                     ? Properties.Localization.AvailableCameras_CameraIsUnavailable
                                     : string.Format(Properties.Localization.AvailableCameras_AcquiredRemoteCamera,
                                         ConverterImplementations.CameraToStringAliasConversion(cam));
-                            
+
                         }
                     }
                     catch (Exception e)
@@ -332,76 +364,43 @@ namespace DIPOL_UF.Models
             return counter;
         }
 
-        private async Task QueryCamerasCommandExecuteAsync(CancellationToken token)
+        private async Task QueryCamerasCommandExecuteAsync(ProgressBar model)
         {
-            var disposables = new CompositeDisposable();
-
-            var pb = await Helper.RunNoMarshall(() =>
-                new ProgressBar()
-                {
-                    IsIndeterminate = true,
-                    CanAbort = true,
-                    DisplayPercents = false,
-                    BarTitle = Properties.Localization.AvailableCameras_CheckingConnection_BarTitle
-                }.DisposeWith(disposables));
-
-            var viewModel = await Helper.RunNoMarshall(() =>
-                new ProgressBarViewModel(pb).DisposeWith(disposables));
-
-
-            var linkedSrc = CancellationTokenSource
-                .CreateLinkedTokenSource(token)
-                .DisposeWith(disposables);
-
-            await Helper.RunNoMarshall(() =>
-                pb.CancelCommand
-                  .Subscribe(_ =>
-                  {
-                      if(!disposables.IsDisposed)
-                         linkedSrc.Cancel();
-                  })
-                  .DisposeWith(disposables));
-
+            var disposable = new CompositeDisposable();
             IsInteractive = false;
-            var view = Helper.ExecuteOnUi(() => new ProgressWindow()
-            {
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            }.WithDataContext(viewModel));
 
+            var src = new CancellationTokenSource().DisposeWith(disposable);
 
-            WindowContentRenderedCommand.Subscribe(x =>
-            {
-                view.Owner = x;
-                Helper.ExecuteOnUI(() => view.ShowDialog());
-            }).DisposeWith(disposables);
+            ProgressBarProvider.ViewFinished.Subscribe(_ => src.Cancel()).DisposeWith(disposable);
 
-            var nNewCams = await QueryAvailableCamerasAsync(linkedSrc.Token, pb)
+            var nNewCams = await QueryAvailableCamerasAsync(src.Token, model)
                .ExpectCancellation();
 
             if (nNewCams == 0)
             {
-                pb.IsIndeterminate = true;
-                pb.BarComment = Properties.Localization.AvailableCameras_NoNewCameras;
+                model.IsIndeterminate = true;
+                model.BarComment = Properties.Localization.AvailableCameras_NoNewCameras;
                 await Task.Delay(
                               TimeSpan.Parse(
                                   UiSettingsProvider.Settings.Get("NoCamerasPopUpDelay", "00:00:01.5")),
-                              linkedSrc.Token)
+                              src.Token)
                           .ExpectCancellation();
             }
             else
                 await Task.Delay(
                               TimeSpan.Parse(
                                   UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.75")),
-                              linkedSrc.Token)
+                              src.Token)
                           .ExpectCancellation();
 
-            Helper.ExecuteOnUi(view.Close);
+            if(!ProgressBarProvider.IsDisposed)
+                (ProgressBarProvider.ClosingRequested as ICommand).Execute(Unit.Default);
 
-            await Helper.RunNoMarshall(disposables.Dispose);
             IsInteractive = true;
+            disposable.Dispose();
         }
 
-        
+
         private void ConnectButtonCommandExecute(Window param)
         {
             _isSelected = true;
@@ -452,18 +451,6 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private void HookObservables()
-        {
-            // Binding source collection to the public read-only interface
-            FoundCameras = FoundDevices.AsObservableCache().DisposeWith(_subscriptions);
-
-            FoundDevices.Connect().DisposeManyEx(x =>
-            {
-                var (id, camera) = x;
-                if(!SelectedIds.Items.Contains(id))
-                    camera?.Dispose();
-            }).Subscribe().DisposeWith(_subscriptions);
-        }
 
         public List<(string Id, CameraBase Camera)> RetrieveSelectedDevices()
         {

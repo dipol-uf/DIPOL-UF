@@ -71,10 +71,5 @@ namespace DIPOL_UF.Models
                                .DisposeWith(_subscriptions);
         }
 
-        public override void Dispose(bool disposing)
-        {
-            Helper.WriteLog("Disposing Tab model");
-            base.Dispose(disposing);
-        }
     }
 }
