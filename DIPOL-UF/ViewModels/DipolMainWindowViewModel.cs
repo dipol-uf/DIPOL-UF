@@ -5,7 +5,6 @@ using System.Windows.Input;
 using DIPOL_UF.Models;
 using DynamicData;
 using DynamicData.Binding;
-using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 // ReSharper disable UnassignedGetOnlyAutoProperty
 
@@ -29,7 +28,6 @@ namespace DIPOL_UF.ViewModels
 
         public DescendantProxy ProgressBarProxy { get; }
         public DescendantProxy AvailableCamerasProxy { get; }
-        //public ObservableCollection<MenuItemViewModel> MenuBarItems => model.MenuBarItems;
 
 
         public DipolMainWindowViewModel(DipolMainWindow model) : base(model)

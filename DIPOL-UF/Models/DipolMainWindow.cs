@@ -441,9 +441,9 @@ namespace DIPOL_UF.Models
         public DescendantProvider ProgressBarProvider { get; private set; }
         public DescendantProvider AvailableCamerasProvider { get; private set; }
 
-        [ObservableAsProperty]
+        
         // ReSharper disable UnassignedGetOnlyAutoProperty
-        public bool CanConnect { get; }
+        public bool CanConnect { [ObservableAsProperty] get; }
         // ReSharper restore UnassignedGetOnlyAutoProperty
 
         public SourceList<string> SelectedDevices { get; }
@@ -526,12 +526,6 @@ namespace DIPOL_UF.Models
                                                    .ObserveOnUi())
                                .DisposeWith(_subscriptions);
 
-            //CameraConnectionCallbackCommand =
-            //    ReactiveCommand.CreateFromObservable<AvailableCamerasModel, Unit>(
-            //                       x => Observable.FromAsync(async _ =>
-            //                           await ReceiveConnectedCameras(x)))
-            //                   .DisposeWith(_subscriptions);
-
             ProgressBarProvider = new DescendantProvider(
                     ReactiveCommand.CreateFromTask<object, ReactiveObjectEx>(
                         _ => Task.Run<ReactiveObjectEx>(() =>
@@ -590,11 +584,7 @@ namespace DIPOL_UF.Models
                                          .AsObservableCache()
                                          .DisposeWith(_subscriptions);
 
-            //ConnectButtonCommand
-            //     .Subscribe(async x => await QueryCamerasAsync(x).ExpectCancellation())
-            //     .DisposeWith(_subscriptions);
-
-            WindowLoadedCommand
+           WindowLoadedCommand
                .InvokeCommand(ProgressBarProvider.ViewRequested)
                .DisposeWith(_subscriptions);
 
