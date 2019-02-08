@@ -2,7 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:DIPOL_UF.ViewModels"
                     xmlns:cntrl="clr-namespace:DIPOL_UF.Controls"
-                    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors">
+                    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+                    xmlns:enums="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS">
     <HierarchicalDataTemplate x:Key="MenuBarItemTemplate"
                               DataType="{x:Type vm:MenuItemViewModel}"
                               ItemsSource="{Binding SubMenu}">
@@ -116,5 +117,9 @@
         <TextBlock
             Text="{Binding Camera, Mode=OneWay, Converter={StaticResource CameraToStringAliasConverter}}">
         </TextBlock>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ShutterComboBoxItem" DataType="enums:ShutterMode">
+        <TextBlock Text="{Binding Converter={StaticResource EnumToDescriptionConverter}}"/>
     </DataTemplate>
 </ResourceDictionary>
