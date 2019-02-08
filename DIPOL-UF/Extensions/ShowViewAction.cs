@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reactive;
 using System.Windows;
-using System.Windows.Input;
 using DIPOL_UF.ViewModels;
 using Microsoft.Xaml.Behaviors;
 
