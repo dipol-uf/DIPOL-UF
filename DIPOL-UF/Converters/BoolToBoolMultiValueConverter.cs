@@ -17,7 +17,7 @@ namespace DIPOL_UF.Converters
                 => val is bool b && b;
 
             if (targetType == typeof(bool))
-                ConverterImplementations.BoolToBoolConversion(
+                return ConverterImplementations.BoolToBoolConversion(
                     values.Select(GetBool).ToList(),
                     parameter as string);
            

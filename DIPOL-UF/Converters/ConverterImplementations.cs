@@ -75,11 +75,15 @@ namespace DIPOL_UF.Converters
         }
 
         public static string EnumToDescriptionConversion(Enum @enum)
-        {
-            var resourceName = $"General_{@enum.GetType().Name}_{@enum}";
-            var localizedText = Properties.Localization.ResourceManager.GetString(resourceName);
-            return localizedText ?? Helper.GetEnumDescription(@enum, @enum.GetType());
-        }
+            => @enum.GetEnumStringEx().EnumerableToString();
+
+        public static List<string> EnumToDescriptionConversion(IEnumerable<Enum> enums)
+            => enums.Select(x => x.GetEnumStringEx().EnumerableToString())
+                    .ToList();
+        //    var resourceName = $"General_{@enum.GetType().Name}_{@enum}";
+        //    var localizedText = Properties.Localization.ResourceManager.GetString(resourceName);
+        //    return localizedText ?? Helper.GetEnumDescription(@enum, @enum.GetType());
+        //}
 
         public static Enum DescriptionToEnumConversion(string desc, Type type)
         {
@@ -123,6 +127,8 @@ namespace DIPOL_UF.Converters
                 var key = strPar.Trim().ToLowerInvariant();
                 switch (key)
                 {
+                    case "all":
+                        return values.All(x => x);
                     case "any":
                         return values.Any();
                     case "notall":
