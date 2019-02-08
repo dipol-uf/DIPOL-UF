@@ -101,6 +101,8 @@ namespace ANDOR_CS.Classes
                 WriteMessage($"{prop.PropertyName} was changed to " +
                              $"{GetType().GetProperty(prop.PropertyName)?.GetValue(this)}.", Yellow);
             TemperatureStatusChecked += (sender, args) => WriteMessage($"Temperature: {args.Temperature}\tStatus: {args.Status}", Blue);
+
+            ShutterControl(27, 27, ShutterMode.PermanentlyClosed, ShutterMode.PermanentlyClosed);
             WriteMessage("Camera created.", Green);
         }
         public override SettingsBase GetAcquisitionSettingsTemplate()

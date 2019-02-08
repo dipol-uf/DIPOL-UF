@@ -27,7 +27,6 @@ namespace DIPOL_UF.ViewModels
         public bool CanControlFan => Model.CanControlFan;
         public bool CanControlInternalShutter => Model.CanControlShutter.Internal;
         public bool CanControlExternalShutter => Model.CanControlShutter.External;
-        public bool HasIndependentShutters => !Model.CanControlShutter.IsJoined;
 
         public int FanTickFrequency => Model.IsThreeStateFan ? 1 : 2;
         // ReSharper disable once UnusedMember.Global
@@ -55,7 +54,7 @@ namespace DIPOL_UF.ViewModels
         {
             TargetTemperatureText = "0";
             InternalShutterState = Model.Camera.Shutter.Internal;
-            ExternalShutterMode = Model.Camera.Shutter.External;
+            ExternalShutterMode = CanControlExternalShutter ? Model.Camera.Shutter.External : null;
             HookValidators();
             HookObservables();
         }
@@ -133,7 +132,7 @@ namespace DIPOL_UF.ViewModels
 
             shutterSrc.Select(x => x.Internal)
                       .DistinctUntilChanged()
-                      .Subscribe(new AnonymousObserver<ShutterMode>(x => InternalShutterState = x))
+                      .BindTo(this, x => x.InternalShutterState)
                       .DisposeWith(_subscriptions);
 
             this.WhenPropertyChanged(x => x.InternalShutterState)
@@ -142,11 +141,21 @@ namespace DIPOL_UF.ViewModels
                 .InvokeCommand(Model.InternalShutterCommand)
                 .DisposeWith(_subscriptions);
 
-            //if(CanControlExternalShutter)
-            //    shutterSrc.Select(x => x.External.ToStringEx())
-            //              .BindTo(this, x => x.)
+            if (CanControlExternalShutter)
+            {
+                shutterSrc.Select(x => x.External.ToStringEx())
+                          .DistinctUntilChanged()
+                          .BindTo(this, x => x.ExternalShutterMode)
+                          .DisposeWith(_subscriptions);
 
+                this.WhenPropertyChanged(x => x.ExternalShutterMode)
+                    .Select(x => x.Value)
+                    .DistinctUntilChanged()
+                    .InvokeCommand(Model.ExternalShutterCommand)
+                    .DisposeWith(_subscriptions);
 
+            }
+            
 
             //var shutterObs = Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.Shutter))
             //                      .Select(x => x.Shutter)

@@ -315,13 +315,8 @@
                     </ComboBox>
                     <ComboBox Grid.Column="1" Grid.Row="1"
                               Style="{StaticResource ResourceKey=ComboBoxStyle}"
-                              SelectedValue="{Binding
-                                  ExternalShutterState,
-                                  Mode=TwoWay,
-                                  UpdateSourceTrigger=PropertyChanged,
-                                  Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
-                              ItemsSource="{Binding 
-                                  Source={StaticResource ResourceKey=ShutterModeEnumProvider}}"
+                              SelectedValue="{Binding ExternalShutterMode, Mode=TwoWay}"
+                              ItemsSource="{Binding Source={StaticResource ResourceKey=ShutterModeEnumProvider}}"
                               ItemTemplate="{StaticResource ShutterComboBoxItem}">
                         <ComboBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
