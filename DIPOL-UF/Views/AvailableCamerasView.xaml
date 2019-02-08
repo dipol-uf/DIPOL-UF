@@ -31,6 +31,7 @@
                 Proxy="{Binding ProgressBarProxy}"
                 Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
                 StartupLocation="CenterOwner"
+                IsDialog="True"
                 Type="{x:Type vs:ProgressWindow}"/>
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
