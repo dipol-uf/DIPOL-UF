@@ -27,10 +27,6 @@ namespace DIPOL_UF.Extensions
                 typeof(WindowStartupLocation), typeof(ShowViewAction),
                 new PropertyMetadata(WindowStartupLocation.CenterScreen));
         
-        private static readonly DependencyProperty CallbackCommandProperty =
-            DependencyProperty.Register(nameof(CallbackCommand),
-                typeof(ICommand), typeof(ShowViewAction));
-
         private static readonly DependencyProperty ProxyProperty =
             DependencyProperty.Register(nameof(Proxy),
                 typeof(DescendantProxy), typeof(ShowViewAction));
@@ -55,12 +51,6 @@ namespace DIPOL_UF.Extensions
             set => SetValue(StartupLocationProperty, value);
         }
 
-        public ICommand CallbackCommand
-        {
-            get => GetValue(CallbackCommandProperty) as ICommand;
-            set => SetValue(CallbackCommandProperty, value);
-        }
-
         public DescendantProxy Proxy
         {
             get => GetValue(ProxyProperty) as DescendantProxy;
@@ -73,7 +63,10 @@ namespace DIPOL_UF.Extensions
             if (parameter is PropagatingEventArgs args)
             {
                 if(Type is null)
-                    throw new NullReferenceException(nameof(Type));
+                    throw new ArgumentNullException(nameof(Type));
+
+                if(Proxy is null)
+                    throw new ArgumentNullException(nameof(Proxy));
 
                 if (Type.IsClass && Type.IsSubclassOf(typeof(Window)))
                 {
@@ -82,30 +75,21 @@ namespace DIPOL_UF.Extensions
 
                     view.WindowStartupLocation = StartupLocation;
                     view.Owner = Owner;
-
-                    if (!(CallbackCommand is null))
-                        view.Closed += (sender, e) =>
-                        {
-                            if (CallbackCommand.CanExecute(args.Content))
-                                CallbackCommand.Execute(args.Content);
-                        };
-                    else if (!(Proxy is null))
+                    
+                    view.Closed += (sender, e) =>
                     {
-                        view.Closed += (sender, e) =>
-                        {
-                            if (Proxy.ViewFinished?.CanExecute(null) ?? false)
-                                Proxy.ViewFinished.Execute(args.Content);
-                        };
+                        if (Proxy.ViewFinished?.CanExecute(null) ?? false)
+                            Proxy.ViewFinished.Execute(args.Content);
+                    };
 
-                        view.ContentRendered += (sender, e) =>
-                        {
-                            if (Proxy.WindowShown?.CanExecute(null) ?? false)
-                                Proxy.WindowShown.Execute(Unit.Default);
-                        };
+                    view.ContentRendered += (sender, e) =>
+                    {
+                        if (Proxy.WindowShown?.CanExecute(null) ?? false)
+                            Proxy.WindowShown.Execute(Unit.Default);
+                    };
 
-                        Proxy.ClosingRequested += (sender, e) =>
-                            view.Close();
-                    }
+                    Proxy.ClosingRequested += (sender, e) =>
+                        view.Close();
 
 
                     if (IsDialog)
