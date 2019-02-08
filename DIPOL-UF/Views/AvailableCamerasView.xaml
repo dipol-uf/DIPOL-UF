@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
-        xmlns:loc="clr-namespace:DIPOL_UF"
+        xmlns:vs="clr-namespace:DIPOL_UF.Views"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
         xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
         x:Name="AvailableCamerasWindow"
@@ -23,6 +23,15 @@
         <behaviors:EventTrigger EventName="Closing">
             <behaviors:InvokeCommandAction
                 Command="{Binding CloseCrossCommand}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="ViewRequested"
+            SourceObject="{Binding ProgressBarProxy}">
+            <extensions:ShowViewAction
+                Proxy="{Binding ProgressBarProxy}"
+                Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                StartupLocation="CenterOwner"
+                Type="{x:Type vs:ProgressWindow}"/>
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
     <DockPanel Margin="10, 5, 10, 5">

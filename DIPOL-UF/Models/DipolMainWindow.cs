@@ -442,9 +442,7 @@ namespace DIPOL_UF.Models
         public DescendantProvider AvailableCamerasProvider { get; private set; }
 
         
-        // ReSharper disable UnassignedGetOnlyAutoProperty
         public bool CanConnect { [ObservableAsProperty] get; }
-        // ReSharper restore UnassignedGetOnlyAutoProperty
 
         public SourceList<string> SelectedDevices { get; }
         public IObservableCache<(string Id, CameraBase Camera), string> ConnectedCameras { get; private set; }
@@ -499,7 +497,6 @@ namespace DIPOL_UF.Models
                                    _ =>
                                    {
                                        var camQueryModel = new AvailableCamerasModel(
-                                           new CancellationTokenSource(),
                                            _remoteClients);
 
                                        return camQueryModel;
@@ -557,15 +554,14 @@ namespace DIPOL_UF.Models
 
         private void HookObservables()
         {
-           new[]
-                {
-                    WindowLoadedCommand.IsExecuting,
-                    ConnectButtonCommand.IsExecuting
-                }
-                .Select(x => x.DistinctUntilChanged())
-                .CombineLatest(x => !x[0] && !x[1])
-                .ToPropertyEx(this, x => x.CanConnect)
-                .DisposeWith(_subscriptions);
+            Observable.Merge(
+                          ProgressBarProvider.ViewRequested.Select(_ => false),
+                          ProgressBarProvider.ViewFinished.Select(_ => true),
+                          AvailableCamerasProvider.ViewRequested.Select(_ => false),
+                          AvailableCamerasProvider.ViewFinished.Select(_ => true))
+                      .ToPropertyEx(this, x => x.CanConnect)
+                      .DisposeWith(_subscriptions);
+
 
            _connectedCameras.Connect()
                             .DisposeManyEx(async x => await DisposeCamera(x.Camera))
@@ -686,7 +682,6 @@ namespace DIPOL_UF.Models
         
         private async Task ReceiveConnectedCameras(AvailableCamerasModel model)
         {
-            model.CancellationSource.Cancel();
             var cams = model.RetrieveSelectedDevices();
 
             if (cams.Count > 0)
@@ -707,7 +702,7 @@ namespace DIPOL_UF.Models
             }
         }
 
-        public override void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!IsDisposed)
                 if (disposing)
@@ -726,12 +721,9 @@ namespace DIPOL_UF.Models
 
         private static async Task<AvailableCamerasModel> QueryCamerasAsync(AvailableCamerasModel model)
         {
-            if (model.CancellationSource.Token.IsCancellationRequested)
-                model.CancellationSource.Token.ThrowIfCancellationRequested();
-
             (await Helper.RunNoMarshall(() => model
                                              .QueryCamerasCommand.Execute()))
-                    .Subscribe(_ => { }, () => { }, model.CancellationSource.Token);
+                    .Subscribe(_ => { }, () => { });
 
             return model;
         }

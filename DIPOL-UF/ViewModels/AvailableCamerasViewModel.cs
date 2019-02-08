@@ -15,9 +15,11 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class AvailableCamerasViewModel : ReactiveViewModel<AvailableCamerasModel>
     {
+
+        public DescendantProxy ProgressBarProxy { get; private set; }
+
         public IObservableCollection<Tuple<string, string, string>> ListedCameras { get; }
             = new ObservableCollectionExtended<Tuple<string, string, string>>();
-
 
         public ICommand CancelButtonCommand => Model.CancelButtonCommand;
         public ICommand ConnectButtonCommand => Model.ConnectButtonCommand;
@@ -64,6 +66,10 @@ namespace DIPOL_UF.ViewModels
                         context.AddRange(x);
                     });
                 })
+                .DisposeWith(_subscriptions);
+
+            ProgressBarProxy = new DescendantProxy(Model.ProgressBarProvider,
+                    x => new ProgressBarViewModel((ProgressBar) x))
                 .DisposeWith(_subscriptions);
         }
 

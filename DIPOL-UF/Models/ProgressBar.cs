@@ -119,7 +119,7 @@ namespace DIPOL_UF.Models
             base.HookValidators();
         }
 
-        public override void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!IsDisposed && disposing)
             {

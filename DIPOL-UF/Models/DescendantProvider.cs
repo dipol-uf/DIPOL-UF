@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing.Design;
 using System.Reactive;
 using System.Reactive.Disposables;
 using ReactiveUI;
@@ -23,9 +22,18 @@ namespace DIPOL_UF.Models
             if(requestView is null)
                 throw new ArgumentNullException(nameof(requestView));
             ViewRequested = requestView.DisposeWith(_subscriptions);
-            ClosingRequested = requestClosing?.DisposeWith(_subscriptions); ;
-            ViewFinished = finalize?.DisposeWith(_subscriptions);
-            WindowShown = windowShown?.DisposeWith(_subscriptions);
+
+            ClosingRequested = (requestClosing ??
+                                ReactiveCommand.Create<Unit>(_ => { }))
+                .DisposeWith(_subscriptions);
+
+            ViewFinished = (finalize ??
+                            ReactiveCommand.Create<ReactiveObjectEx, Unit>(_ => Unit.Default))
+                .DisposeWith(_subscriptions);
+
+            WindowShown = (windowShown ?? 
+                           ReactiveCommand.Create<Unit>(_ => { }))
+                .DisposeWith(_subscriptions);
         }
     }
 }
