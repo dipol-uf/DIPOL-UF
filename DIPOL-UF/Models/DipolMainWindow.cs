@@ -442,7 +442,9 @@ namespace DIPOL_UF.Models
         public DescendantProvider AvailableCamerasProvider { get; private set; }
 
         
+        // ReSharper disable UnassignedGetOnlyAutoProperty
         public bool CanConnect { [ObservableAsProperty] get; }
+        // ReSharper restore UnassignedGetOnlyAutoProperty
 
         public SourceList<string> SelectedDevices { get; }
         public IObservableCache<(string Id, CameraBase Camera), string> ConnectedCameras { get; private set; }
@@ -734,7 +736,8 @@ namespace DIPOL_UF.Models
                 foreach (var cam in cams)
                 {
                     if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
-                        cam.TemperatureMonitor(Switch.Enabled, 500);
+                        cam.TemperatureMonitor(Switch.Enabled, 
+                            (int)(TimeSpan.Parse(UiSettingsProvider.Settings.Get("UICamStatusUpdateDelay", "00:00:01")).TotalMilliseconds));
                 }
             });
         }

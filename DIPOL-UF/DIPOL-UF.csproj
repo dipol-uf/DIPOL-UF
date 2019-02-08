@@ -358,6 +358,9 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="ui-config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
