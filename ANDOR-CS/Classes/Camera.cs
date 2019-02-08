@@ -113,10 +113,6 @@ namespace ANDOR_CS.Classes
 
             // Using manual locker controls to call SDk function task-safely
 
-            //LockManually();
-            //var result = SDKInstance.GetCapabilities(ref caps);
-            //ReleaseManually();
-
             //var result = Call(CameraHandle, () => SdkInstance.GetCapabilities(ref caps));
             if (FailIfError(
                 Call(CameraHandle, () => SdkInstance.GetCapabilities(ref caps)),
@@ -183,8 +179,6 @@ namespace ANDOR_CS.Classes
             // To call SDK methods, current camera should be active (this.IsActive == true).
             // If it is not the case, then either it was not set active (wrong design of program) or an error happened 
             // while switching control to this camera (and thus behaviour is undefined)
-            //if (!IsActive)
-            //    throw new AndorSdkException("Camera is not active. Cannot perform this operation.", null);
 
             // Variables used to retrieve minimum and maximum temperature range (if applicable)
             var min = 0;
@@ -709,7 +703,8 @@ namespace ANDOR_CS.Classes
                 var result = Call(CameraHandle, () => SdkInstance.SetShutterEx((int)type, (int)inter, clTime, opTime, (int)extrn));
 
 
-                ThrowIfError(result, nameof(SdkInstance.SetShutterEx));
+                if(FailIfError(result, nameof(SdkInstance.SetShutterEx), out var except))
+                    throw except;
 
                 Shutter = (Internal: inter, External: extrn, Type: type, OpenTime: opTime, CloseTime: clTime);
             }
@@ -719,7 +714,8 @@ namespace ANDOR_CS.Classes
                 var result = Call(CameraHandle, () => SdkInstance.SetShutter((int)type, (int)inter, clTime, opTime));
 
 
-                ThrowIfError(result, nameof(SdkInstance.SetShutter));
+                if(FailIfError(result, nameof(SdkInstance.SetShutter), out var except))
+                    throw except;
 
                 Shutter = (Internal: inter, External: null, Type: type, OpenTime: opTime, CloseTime: clTime);
             }
@@ -941,7 +937,8 @@ namespace ANDOR_CS.Classes
 
             // Stores the handle (SDK private pointer) to the camera. A unique identifier
             var result = CallWithoutHandle(SdkInstance.GetCameraHandle, camIndex, out int handle);
-            ThrowIfError(result, nameof(SdkInstance.GetCameraHandle));
+            if (FailIfError(result, nameof(SdkInstance.GetCameraHandle), out var except))
+                throw except;
 
             // If succeed, assigns handle to Camera property
             CameraHandle = new SafeSdkCameraHandle(handle);
@@ -953,7 +950,8 @@ namespace ANDOR_CS.Classes
             // SetActive();
             // Initializes current camera
             result = Call(CameraHandle, SdkInstance.Initialize, ".\\");
-            ThrowIfError(result, nameof(SdkInstance.Initialize));
+            if(FailIfError(result, nameof(SdkInstance.Initialize), out except))
+	            throw except;
 
             // If succeeded, sets IsInitialized flag to true and adds current camera to the list of initialized cameras
             IsInitialized = true;
