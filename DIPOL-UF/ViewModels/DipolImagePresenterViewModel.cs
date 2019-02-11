@@ -15,6 +15,7 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Brush = System.Windows.Media.Brush;
 using Point = System.Windows.Point;
+// ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace DIPOL_UF.ViewModels
 { 
@@ -80,9 +81,9 @@ namespace DIPOL_UF.ViewModels
 
         public ICommand MouseHoverCommand => Model.MouseHoverCommand;
         public ICommand SizeChangedCommand => Model.SizeChangedCommand;
-        public ICommand ImageDoubleClickCommand => Model.ImageDoubleClickCommand;
+        public ICommand ImageClickCommand => Model.ImageClickCommand;
         public ICommand UnloadImageCommand => Model.UnloadImageCommand;
-
+        
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
         public GeometryDescriptor ApertureGeometry => Model.ApertureGeometry;
@@ -104,12 +105,12 @@ namespace DIPOL_UF.ViewModels
         public double MinGeometryThickness => Model.MinGeometryThickness;
         public double MaxGeometryThickness => Model.MaxGeometryThickness;
 
-        public bool IsImageLoaded => true;//Model.DisplayedImage != null;
-        public bool IsMouseOverUIControl => Model.IsMouseOverUiControl;
+        public bool IsImageLoaded { [ObservableAsProperty] get; }
+        public bool IsMouseOverUiControl => Model.IsMouseOverUiControl;
         public bool IsSamplerFixed => Model.IsSamplerFixed;
         public bool IsGeometryDisplayed => 
             IsImageLoaded && 
-            (IsMouseOverUIControl || IsSamplerFixed);
+            (IsMouseOverUiControl || IsSamplerFixed);
 
         public DipolImagePresenterViewModel(DipolImagePresenter model) : base(model)
         {
@@ -152,6 +153,16 @@ namespace DIPOL_UF.ViewModels
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.BitmapSource)
                  .DisposeWith(_subscriptions);
+
+            Model.WhenPropertyChanged(x => x.DisplayedImage)
+                 .Select(x => !(x.Value is null))
+                 .ToPropertyEx(this, x => x.IsImageLoaded)
+                 .DisposeWith(_subscriptions);
+
+            //Model.WhenAnyPropertyChanged(nameof(SamplerCenterPosInPix), nameof(ApertureGeometry))
+            //     .Select(x => new Point(
+            //         Model.SamplerCenterPos.X - ApertureGeometry.Center.X,
+            //         Model.SamplerCenterPos.Y - ApertureGeometry.Center.Y))
         }
 
         //protected override async void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)

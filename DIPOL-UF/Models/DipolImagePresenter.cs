@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,6 +17,8 @@ using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Image = DipolImage.Image;
+// ReSharper disable UnusedAutoPropertyAccessor.Local
+// ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace DIPOL_UF.Models
 {
@@ -31,11 +34,6 @@ namespace DIPOL_UF.Models
         private static List<Func<double, double, GeometryDescriptor>>  AvailableGeometries { get; }
         public static List<string> GeometriesAliases { get; }
 
-        //private readonly DispatcherTimer _thumbValueChangedTimer = new DispatcherTimer()
-        //{
-        //    Interval = TimeSpan.FromMilliseconds(250),
-        //    IsEnabled = false
-        //};
         private readonly DispatcherTimer _imageSamplerTimer = new DispatcherTimer()
         {
             Interval = TimeSpan.FromMilliseconds(100),
@@ -172,18 +170,10 @@ namespace DIPOL_UF.Models
             set;
         }
 
-        [Reactive]
-        public bool IsMouseOverImage
-        {
-            get;
-            set;
-        }
-        [Reactive]
-        public bool IsMouseOverUiControl
-        {
-            get;
-            set;
-        }
+        public bool IsMouseOverImage { [ObservableAsProperty] get; }
+
+        public bool IsMouseOverUiControl { [ObservableAsProperty] get; }
+
         [Reactive]
         public bool IsSamplerFixed
         {
@@ -194,21 +184,13 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<Image, Image> LoadImageCommand { get; private set; }
         public ReactiveCommand<int, int> LeftThumbChangedCommand { get; private set; }
         public ReactiveCommand<int, int> RightThumbChangedCommand { get; private set; }
-        public DelegateCommand MouseHoverCommand
-        {
-            get;
-            set;
-        }
+        public ReactiveCommand<MouseEventArgs, MouseEventArgs> MouseHoverCommand { get; private set; }
         public DelegateCommand SizeChangedCommand
         {
             get;
             set;
         }
-        public DelegateCommand ImageDoubleClickCommand
-        {
-            get;
-            set;
-        }
+        public ReactiveCommand<MouseButtonEventArgs, MouseButtonEventArgs> ImageClickCommand { get; private set; }
         public DelegateCommand UnloadImageCommand
         {
             get;
@@ -285,17 +267,26 @@ namespace DIPOL_UF.Models
                                    })
                                .DisposeWith(_subscriptions);
 
-            MouseHoverCommand = new DelegateCommand(
-                MouseHoverCommandExecute,
-                DelegateCommand.CanExecuteAlways);
+            ImageClickCommand =
+                ReactiveCommand.Create<MouseButtonEventArgs, MouseButtonEventArgs>(
+                                   x => x,
+                                   this.WhenPropertyChanged(x => x.DisplayedImage)
+                                       .Select(x => !(x.Value is null)))
+                               .DisposeWith(_subscriptions);
+
+            MouseHoverCommand =
+                ReactiveCommand.Create<MouseEventArgs, MouseEventArgs>(
+                                   x => x, 
+                                   this.WhenPropertyChanged(x => x.DisplayedImage)
+                                               .Select(x => !(x.Value is null)))
+                               .DisposeWith(_subscriptions);
+
 
             SizeChangedCommand = new DelegateCommand(
                 SizeChangedCommandExecute,
                 DelegateCommand.CanExecuteAlways);
 
-            ImageDoubleClickCommand = new DelegateCommand(
-                ImageDoubleClickCommandExecute,
-                DelegateCommand.CanExecuteAlways);
+           
 
             UnloadImageCommand = new DelegateCommand(
                 UnloadImageCommandExecute,
@@ -338,10 +329,11 @@ namespace DIPOL_UF.Models
                                     .DistinctUntilChanged();
 
             var thumbObs = leftThumbObs.CombineLatest(rightThumbObs, (x, y) => (Left: x, Right: y))
-                                       .Sample(TimeSpan.FromMilliseconds(650));
+                                       .Sample(TimeSpan.Parse(
+                                           UiSettingsProvider.Settings.Get("ImageRedrawDelay", "00:00:00.5")));
 
-            thumbObs.Select(x => 1.0 * (x.Left - ThumbScaleMin) / 
-                                 (ThumbScaleMax - ThumbScaleMin) * 
+            thumbObs.Select(x => 1.0 * (x.Left - ThumbScaleMin) /
+                                 (ThumbScaleMax - ThumbScaleMin) *
                                  (ImageScaleMax - ImageScaleMin))
                     .BindTo(this, x => x.LeftScale).DisposeWith(_subscriptions);
 
@@ -350,6 +342,28 @@ namespace DIPOL_UF.Models
                                  (ImageScaleMax - ImageScaleMin))
                     .BindTo(this, x => x.RightScale).DisposeWith(_subscriptions);
 
+            ImageClickCommand
+                .Where(x => x.LeftButton == MouseButtonState.Pressed && x.ClickCount == 2)
+                .Subscribe(ImageDoubleClickCommandExecute)
+                .DisposeWith(_subscriptions);
+
+            MouseHoverCommand.Where(x =>
+                                 !(DisplayedImage is null)
+                                 && !IsSamplerFixed
+                                 && x.Source is UserControl)
+                             .Select(x => x.RoutedEvent.Name == nameof(UserControl.MouseEnter))
+                             .ToPropertyEx(this, x => x.IsMouseOverUiControl)
+                             .DisposeWith(_subscriptions);
+
+            MouseHoverCommand.Where(x =>
+                                 !(DisplayedImage is null)
+                                 && !IsSamplerFixed
+                                 && x.Source is System.Windows.Controls.Image)
+                             .Select(x => x.RoutedEvent.Name == nameof(UserControl.MouseEnter))
+                             .ToPropertyEx(this, x => x.IsMouseOverImage)
+                             .DisposeWith(_subscriptions);
+
+            MouseHoverCommand.Subscribe(MouseHoverCommandExecute).DisposeWith(_subscriptions);
         }
 
 
@@ -418,9 +432,11 @@ namespace DIPOL_UF.Models
                 ? new Point(temp.Width / 2, temp.Height / 2)
                 // ReSharper restore PossibleLossOfFraction
                 : SamplerCenterPosInPix;
-
+            
             DisplayedImage = temp;
+
         }
+
         private async Task CalculateStatisticsAsync()
         {
             if (!IsMouseOverImage)
@@ -687,64 +703,25 @@ namespace DIPOL_UF.Models
             return new List<(int X, int Y)> {(0, 0)};
         }
 
-        //private void OnThumbValueChangedTimer_TickAsync(object sender, object e)
-        //{
-        //    _thumbValueChangedTimer.Stop();
-        //    //RaisePropertyChanged(nameof(LeftScale));
-        //    //RaisePropertyChanged(nameof(RightScale));
-        //}
         private async void OnImageSamplerTimer_TickAsync(object sender, object e)
         {
             await CalculateStatisticsAsync();
             _imageSamplerTimer.Stop();
         }
 
-        private void MouseHoverCommandExecute(object parameter)
+        private void MouseHoverCommandExecute(MouseEventArgs parameter)
         {
             if (DisplayedImage == null ||
                 IsSamplerFixed)
                 return;
-            if (parameter is CommandEventArgs<MouseEventArgs> eUI &&
-                eUI.Sender is UserControl)
-            {
-                if (eUI.EventArgs.RoutedEvent.Name == nameof(UserControl.MouseEnter))
-                    IsMouseOverUiControl = true;
-                else if (eUI.EventArgs.RoutedEvent.Name == nameof(UserControl.MouseLeave))
-                    IsMouseOverUiControl = false;
-            }
-            else if (parameter is CommandEventArgs<MouseEventArgs> e &&
-                     e.Sender is FrameworkElement elem)
-            {
 
-                if (e.EventArgs.RoutedEvent.Name == nameof(FrameworkElement.MouseEnter))
-                    IsMouseOverImage = true;
-                if (e.EventArgs.RoutedEvent.Name == nameof(FrameworkElement.MouseLeave))
-                {
-                    IsMouseOverImage = false;
-                    return;
-                }
-
-                if (e.EventArgs.RoutedEvent.Name == nameof(FrameworkElement.MouseMove) &&
-                    !IsMouseOverImage)
-                    IsMouseOverImage = true;
-
-                if (!IsMouseOverUiControl)
-                    IsMouseOverUiControl = true;
-
+            if (parameter.Source is System.Windows.Controls.Image image)
                 UpdateSamplerPosition(
-                    new Size(elem.ActualWidth, elem.ActualHeight), 
-                    e.EventArgs.GetPosition(elem));
+                    new Size(image.ActualWidth, image.ActualHeight),
+                    parameter.GetPosition(image));
 
-            }
         }
-        //private void ThumbValueChangedCommandExecute(object parameter)
-        //{
-        //    if (parameter is
-        //        CommandEventArgs<RoutedPropertyChangedEventArgs<double>>)
-        //    {
-        //        _thumbValueChangedTimer.Start();
-        //    }
-        //}
+        
         private void SizeChangedCommandExecute(object parameter)
         {
             if (DisplayedImage != null &&
@@ -755,20 +732,21 @@ namespace DIPOL_UF.Models
                                               args.EventArgs.NewSize.Height / DisplayedImage.Height); 
             }
         }
-        private void ImageDoubleClickCommandExecute(object parameter)
+
+        private void ImageDoubleClickCommandExecute(MouseEventArgs args)
         {
-            if (parameter is CommandEventArgs<MouseButtonEventArgs> args &&
-                args.EventArgs.LeftButton == MouseButtonState.Pressed &&
-                args.EventArgs.ClickCount == 2)
+            if (args.Source is FrameworkElement elem)
             {
                 IsSamplerFixed = !IsSamplerFixed;
+                
                 if (!IsSamplerFixed)
                 {
-                    var pos = args.EventArgs.GetPosition(args.Sender as FrameworkElement);
-                    UpdateSamplerPosition(LastKnownImageControlSize, pos);
+                    var pos = args.GetPosition(elem);
+                    UpdateSamplerPosition(new Size(elem.ActualWidth, elem.ActualHeight), pos);
                 }
             }
         }
+
         private void UnloadImageCommandExecute(object parameter)
         {
             _sourceImage = null;

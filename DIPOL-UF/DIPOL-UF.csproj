@@ -218,6 +218,7 @@
       <DependentUpon>DebugWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Enums\ControlStateEnum.cs" />
+    <Compile Include="Extensions\EventToCommandAction.cs" />
     <Compile Include="Extensions\ShowViewAction.cs" />
     <Compile Include="GeometryDescriptor.cs" />
     <Compile Include="Helper.cs" />
