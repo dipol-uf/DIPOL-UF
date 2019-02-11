@@ -45,6 +45,10 @@ namespace DIPOL_UF.ViewModels
         public double ImageSamplerThickness { get; set; }
         [Reactive]
         public double ImageApertureSize { get; set; }
+        [Reactive]
+        public double ImageGap { get; set; }
+        [Reactive]
+        public double ImageAnnulus { get; set; }
 
         public Point AperturePos { [ObservableAsProperty] get; }
         public Point GapPos { [ObservableAsProperty] get; }
@@ -54,24 +58,14 @@ namespace DIPOL_UF.ViewModels
         public GeometryDescriptor ApertureGeometry { [ObservableAsProperty] get; }
         public GeometryDescriptor GapGeometry { [ObservableAsProperty] get; }
         public GeometryDescriptor SamplerGeometry { [ObservableAsProperty] get; }
+        //public double ImageGapSize { [ObservableAsProperty] get; }
+        //public double ImageSamplerSize { [ObservableAsProperty] get; }
 
         public bool IsImageLoaded { [ObservableAsProperty] get; }
         public bool IsGeometryDisplayed { [ObservableAsProperty] get; }
         public bool IsMouseOverImage { [ObservableAsProperty] get; }
         public bool IsSamplerFixed { [ObservableAsProperty] get; }
 
-        public double ImageGapSize => Model.ImageGapSize;
-        public double ImageSamplerSize => Model.ImageSamplerSize;
-        public double ImageGap
-        {
-            get => Model.ImageGap;
-            set => Model.ImageGap = value;
-        }
-        public double ImageAnnulus
-        {
-            get => Model.ImageAnnulus;
-            set => Model.ImageAnnulus = value;
-        }
         public double PixValue => Model.PixValue;
 
         public ReactiveCommand<MouseEventArgs, MouseEventArgs> MouseHoverCommand { get; private set; }
@@ -95,6 +89,11 @@ namespace DIPOL_UF.ViewModels
         public DipolImagePresenterViewModel(DipolImagePresenter model) : base(model)
         {
             ThumbRight = Model.ThumbScaleMax;
+            SelectedGeometryIndex = 1;
+            ImageApertureSize = 10.0;
+            ImageGap = 10.0;
+            ImageAnnulus = 10.0;
+            ImageSamplerThickness = 2;
             InitializeCommands();
             HookObservables();
         }
@@ -139,7 +138,10 @@ namespace DIPOL_UF.ViewModels
                 Model, y => y.ImageSamplerThickness);
             BindTo(this, x => x.ImageApertureSize,
                 Model, y => y.ImageApertureSize);
-            
+            BindTo(this, x => x.ImageGap,
+                Model, y => y.ImageGap);
+            BindTo(this, x => x.ImageAnnulus,
+                Model, y => y.ImageAnnulus);
 
             MouseHoverCommand
                 .Where(x =>
@@ -240,6 +242,9 @@ namespace DIPOL_UF.ViewModels
             PropagateReadOnlyProperty(this, x => x.ApertureGeometry, y => y.ApertureGeometry);
             PropagateReadOnlyProperty(this, x => x.GapGeometry, y => y.GapGeometry);
             PropagateReadOnlyProperty(this, x => x.SamplerGeometry, y => y.SamplerGeometry);
+            //PropagateReadOnlyProperty(this, x => x.ImageGapSize, y => y.ImageGapSize);
+            //PropagateReadOnlyProperty(this, x => x.ImageSamplerSize, y => y.ImageSamplerSize);
+
 
         }
 

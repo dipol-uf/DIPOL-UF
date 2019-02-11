@@ -194,10 +194,6 @@ namespace DIPOL_UF.Models
             ThumbRight = ThumbScaleMax;
             SelectedGeometryIndex = 1;
             ImageSamplerScaleFactor = 1.0;
-            ImageAnnulus = 25;
-            ImageApertureSize = 30;
-            ImageGap = 15;
-            ImageSamplerThickness = 5.0;
             MaxApertureWidth = 100;
             MaxGapWidth = 100;
             MaxAnnulusWidth = 100;
