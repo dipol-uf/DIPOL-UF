@@ -118,8 +118,10 @@ namespace DIPOL_UF.Models
             get;
             set;
         }
-        public double ImageGapSize => ImageApertureSize + ImageGap;
-        public double ImageSamplerSize => ImageApertureSize + ImageGap + ImageAnnulus;
+
+        public double ImageGapSize { [ObservableAsProperty] get; }
+        public double ImageSamplerSize { [ObservableAsProperty] get; }
+
         [Reactive]
         public double ImageGap
         {
@@ -346,6 +348,50 @@ namespace DIPOL_UF.Models
                              .Where(x => !IsSamplerFixed)
                              .Subscribe(x => UpdateSamplerPosition(x.Size, x.Pos))
                              .DisposeWith(_subscriptions);
+
+
+            // Geometry updates
+            this.WhenAnyPropertyChanged(nameof(ImageApertureSize), nameof(ImageGap))
+                .Select(x => x.ImageGap + x.ImageApertureSize)
+                .ToPropertyEx(this, x => x.ImageGapSize)
+                .DisposeWith(_subscriptions);
+            this.WhenAnyPropertyChanged(nameof(ImageApertureSize), nameof(ImageGap), nameof(ImageAnnulus))
+                .Select(x => x.ImageGap + x.ImageApertureSize + x.ImageAnnulus)
+                .ToPropertyEx(this, x => x.ImageSamplerSize)
+                .DisposeWith(_subscriptions);
+
+            this.WhenAnyPropertyChanged(
+                    nameof(SelectedGeometryIndex),
+                    nameof(ImageSamplerScaleFactor),
+                    nameof(ImageApertureSize),
+                    nameof(ImageSamplerThickness))
+                .Select(x => AvailableGeometries[x.SelectedGeometryIndex](
+                    x.ImageSamplerScaleFactor * x.ImageApertureSize,
+                    x.ImageSamplerScaleFactor * x.ImageSamplerThickness))
+                .BindTo(this, x => x.ApertureGeometry)
+                .DisposeWith(_subscriptions);
+
+            this.WhenAnyPropertyChanged(
+                    nameof(SelectedGeometryIndex),
+                    nameof(ImageSamplerScaleFactor),
+                    nameof(ImageGapSize),
+                    nameof(ImageSamplerThickness))
+                .Select(x => AvailableGeometries[x.SelectedGeometryIndex](
+                    x.ImageSamplerScaleFactor * x.ImageGapSize,
+                    x.ImageSamplerScaleFactor * x.ImageSamplerThickness))
+                .BindTo(this, x => x.GapGeometry)
+                .DisposeWith(_subscriptions);
+
+            this.WhenAnyPropertyChanged(
+                    nameof(SelectedGeometryIndex),
+                    nameof(ImageSamplerScaleFactor),
+                    nameof(ImageSamplerSize),
+                    nameof(ImageSamplerThickness))
+                .Select(x => AvailableGeometries[x.SelectedGeometryIndex](
+                    x.ImageSamplerScaleFactor * x.ImageSamplerSize,
+                    x.ImageSamplerScaleFactor * x.ImageSamplerThickness))
+                .BindTo(this, x => x.SamplerGeometry)
+                .DisposeWith(_subscriptions);
         }
 
 
@@ -494,39 +540,17 @@ namespace DIPOL_UF.Models
         }
         private void UpdateGeometry()
         {
-            ApertureGeometry = AvailableGeometries[SelectedGeometryIndex](
-                ImageSamplerScaleFactor * ImageApertureSize,
-                ImageSamplerThickness * ImageSamplerScaleFactor);
+            //ApertureGeometry = AvailableGeometries[SelectedGeometryIndex](
+            //    ImageSamplerScaleFactor * ImageApertureSize,
+            //    ImageSamplerThickness * ImageSamplerScaleFactor);
 
-            GapGeometry = AvailableGeometries[SelectedGeometryIndex](
-                ImageSamplerScaleFactor * ImageGapSize,
-                ImageSamplerThickness * ImageSamplerScaleFactor);
+            //GapGeometry = AvailableGeometries[SelectedGeometryIndex](
+            //    ImageSamplerScaleFactor * ImageGapSize,
+            //    ImageSamplerThickness * ImageSamplerScaleFactor);
 
-            SamplerGeometry = AvailableGeometries[SelectedGeometryIndex](
-                ImageSamplerScaleFactor * ImageSamplerSize,
-                ImageSamplerThickness * ImageSamplerScaleFactor);
-
-            //if (!LastKnownImageControlSize.IsEmpty)
-            //    SamplerCenterPosInPix =  new Point(
-            //        Math.Round(
-            //            GetPixelScale(
-            //                SamplerCenterPos.X.Clamp(
-            //                    SamplerGeometry.HalfSize.Width,
-            //                    LastKnownImageControlSize.Width - SamplerGeometry.HalfSize.Width))),
-            //        Math.Round(
-            //            GetPixelScale(
-            //                SamplerCenterPos.Y.Clamp(
-            //                    SamplerGeometry.HalfSize.Height,
-            //                    LastKnownImageControlSize.Height - SamplerGeometry.HalfSize.Height)))
-            //    );
-            //else
-            //    SamplerCenterPosInPix = DisplayedImage != null
-            //        ? new Point(
-            //            DisplayedImage.Width / 2, 
-            //            DisplayedImage.Height / 2)
-            //        : new Point(0, 0);
-
-            //await CalculateStatisticsAsync();
+            //SamplerGeometry = AvailableGeometries[SelectedGeometryIndex](
+            //    ImageSamplerScaleFactor * ImageSamplerSize,
+            //    ImageSamplerThickness * ImageSamplerScaleFactor);
         }
         private void UpdateGeometrySizeRanges()
         {

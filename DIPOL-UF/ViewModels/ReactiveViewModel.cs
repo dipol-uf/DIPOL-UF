@@ -46,7 +46,7 @@ namespace DIPOL_UF.ViewModels
             TTarget @this,
             Expression<Func<TModel, TProperty>> sourceProperty,
             Expression<Func<TTarget, TProperty>> targetProperty,
-            bool withErrors = true) where TTarget : ReactiveViewModel<TModel>
+            bool withErrors = false) where TTarget : ReactiveViewModel<TModel>
         {
             @this.Model.WhenPropertyChanged(sourceProperty)
                  .Select(x => x.Value)
@@ -54,30 +54,12 @@ namespace DIPOL_UF.ViewModels
                  .ToPropertyEx(@this, targetProperty)
                  .DisposeWith(@this._subscriptions);
 
-            var sourceName = sourceProperty?.Body.GetMemberInfo().Name;
-            var targetName = targetProperty?.Body.GetMemberInfo().Name;
-            if(withErrors)
+            if (withErrors)
+            {
+                var sourceName = sourceProperty?.Body.GetMemberInfo().Name;
+                var targetName = targetProperty?.Body.GetMemberInfo().Name;
                 @this.PropagateErrors(sourceName, targetName);
-
-        }
-
-        protected static void PropagateReadOnlyProperty<TTarget, TSource, TProperty>(
-            TTarget @this,
-            Expression<Func<TModel, TSource>> sourceProperty,
-            Expression<Func<TTarget, TProperty>> targetProperty,
-            Func<TSource, TProperty> converter,
-            bool withErrors = true) where TTarget : ReactiveViewModel<TModel>
-        {
-            @this.Model.WhenPropertyChanged(sourceProperty)
-                 .Select(x => converter(x.Value))
-                 .ObserveOnUi()
-                 .ToPropertyEx(@this, targetProperty)
-                 .DisposeWith(@this._subscriptions);
-
-            var sourceName = sourceProperty?.Body.GetMemberInfo().Name;
-            var targetName = targetProperty?.Body.GetMemberInfo().Name;
-            if(withErrors)
-                @this.PropagateErrors(sourceName, targetName);
+            }
 
         }
 

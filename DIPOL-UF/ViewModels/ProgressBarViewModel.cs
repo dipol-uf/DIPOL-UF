@@ -38,13 +38,13 @@ namespace DIPOL_UF.ViewModels
 
         private void MapProperties()
         {
-            PropagateReadOnlyProperty(this, x => x.Value, y => y.Value);
-            PropagateReadOnlyProperty(this, x => x.Minimum, y => y.Minimum);
-            PropagateReadOnlyProperty(this, x => x.Maximum, y => y.Maximum);
-            PropagateReadOnlyProperty(this, x => x.IsIndeterminate, y => y.IsIndeterminate);
-            PropagateReadOnlyProperty(this, x => x.BarTitle, y => y.BarTitle);
-            PropagateReadOnlyProperty(this, x => x.BarComment, y => y.BarComment);
-            PropagateReadOnlyProperty(this, x => x.DisplayPercents, y => y.DisplayPercent);
+            PropagateReadOnlyProperty(this, x => x.Value, y => y.Value, true);
+            PropagateReadOnlyProperty(this, x => x.Minimum, y => y.Minimum, true);
+            PropagateReadOnlyProperty(this, x => x.Maximum, y => y.Maximum, true);
+            PropagateReadOnlyProperty(this, x => x.IsIndeterminate, y => y.IsIndeterminate, true);
+            PropagateReadOnlyProperty(this, x => x.BarTitle, y => y.BarTitle, true);
+            PropagateReadOnlyProperty(this, x => x.BarComment, y => y.BarComment, true);
+            PropagateReadOnlyProperty(this, x => x.DisplayPercents, y => y.DisplayPercent, true);
 
             PropagateReadOnlyProperty(
                 this,

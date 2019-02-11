@@ -39,28 +39,27 @@ namespace DIPOL_UF.ViewModels
         public int ThumbRight { get; set; }
         [Reactive]
         public int SamplerColorBrushIndex { get; set; }
+        [Reactive]
+        public int SelectedGeometryIndex { get; set; }
+        [Reactive]
+        public double ImageSamplerThickness { get; set; }
+        [Reactive]
+        public double ImageApertureSize { get; set; }
 
         public Point AperturePos { [ObservableAsProperty] get; }
         public Point GapPos { [ObservableAsProperty] get; }
         public Point SamplerPos { [ObservableAsProperty] get; }
         public Point SamplerCenterPosInPix { [ObservableAsProperty] get; }
         public Brush SamplerColor { [ObservableAsProperty] get; }
-        
-        public int SelectedGeometryIndex
-        {
-            get => Model.SelectedGeometryIndex;
-            set => Model.SelectedGeometryIndex = value;
-        }
-        public double ImageSamplerThickness
-        {
-            get => Model.ImageSamplerThickness;
-            set => Model.ImageSamplerThickness = value;
-        }
-        public double ImageApertureSize
-        {
-            get => Model.ImageApertureSize;
-            set => Model.ImageApertureSize = value;
-        }
+        public GeometryDescriptor ApertureGeometry { [ObservableAsProperty] get; }
+        public GeometryDescriptor GapGeometry { [ObservableAsProperty] get; }
+        public GeometryDescriptor SamplerGeometry { [ObservableAsProperty] get; }
+
+        public bool IsImageLoaded { [ObservableAsProperty] get; }
+        public bool IsGeometryDisplayed { [ObservableAsProperty] get; }
+        public bool IsMouseOverImage { [ObservableAsProperty] get; }
+        public bool IsSamplerFixed { [ObservableAsProperty] get; }
+
         public double ImageGapSize => Model.ImageGapSize;
         public double ImageSamplerSize => Model.ImageSamplerSize;
         public double ImageGap
@@ -82,9 +81,6 @@ namespace DIPOL_UF.ViewModels
         
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
-        public GeometryDescriptor ApertureGeometry { [ObservableAsProperty] get; }
-        public GeometryDescriptor GapGeometry => Model.GapGeometry;
-        public GeometryDescriptor SamplerGeometry => Model.SamplerGeometry;
         public IDictionary<string, double> ImageStats => Model.ImageStats;
         public double MaxApertureWidth => Model.MaxApertureWidth;
         public double MaxGapWidth => Model.MaxGapWidth;
@@ -95,10 +91,6 @@ namespace DIPOL_UF.ViewModels
         public double MinGeometryThickness => Model.MinGeometryThickness;
         public double MaxGeometryThickness => Model.MaxGeometryThickness;
 
-        public bool IsImageLoaded { [ObservableAsProperty] get; }
-        public bool IsGeometryDisplayed { [ObservableAsProperty] get; }
-        public bool IsMouseOverImage { [ObservableAsProperty] get; }
-        public bool IsSamplerFixed { [ObservableAsProperty] get; }
 
         public DipolImagePresenterViewModel(DipolImagePresenter model) : base(model)
         {
@@ -140,6 +132,14 @@ namespace DIPOL_UF.ViewModels
                 .Select(x => ColorPickerColor[x.Value])
                 .ToPropertyEx(this, x => x.SamplerColor)
                 .DisposeWith(_subscriptions);
+
+            BindTo(this, x => x.SelectedGeometryIndex,
+                Model, y => y.SelectedGeometryIndex);
+            BindTo(this, x => x.ImageSamplerThickness,
+                Model, y => y.ImageSamplerThickness);
+            BindTo(this, x => x.ImageApertureSize,
+                Model, y => y.ImageApertureSize);
+            
 
             MouseHoverCommand
                 .Where(x =>
@@ -236,15 +236,11 @@ namespace DIPOL_UF.ViewModels
                  .ToPropertyEx(this, x => x.SamplerCenterPosInPix)
                  .DisposeWith(_subscriptions);
 
-            Model.WhenPropertyChanged(x => x.IsSamplerFixed)
-                 .Select(x => x.Value)
-                 .ToPropertyEx(this, x => x.IsSamplerFixed)
-                 .DisposeWith(_subscriptions);
+            PropagateReadOnlyProperty(this, x => x.IsSamplerFixed, y => y.IsSamplerFixed);
+            PropagateReadOnlyProperty(this, x => x.ApertureGeometry, y => y.ApertureGeometry);
+            PropagateReadOnlyProperty(this, x => x.GapGeometry, y => y.GapGeometry);
+            PropagateReadOnlyProperty(this, x => x.SamplerGeometry, y => y.SamplerGeometry);
 
-            Model.WhenPropertyChanged(x => x.ApertureGeometry)
-                 .Select(x => x.Value)
-                 .ToPropertyEx(this, x => x.ApertureGeometry)
-                 .DisposeWith(_subscriptions);
         }
 
         //protected override async void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
