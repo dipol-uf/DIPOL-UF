@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
              xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
              xmlns:p="clr-namespace:DIPOL_UF.Properties"
              xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
@@ -37,7 +36,6 @@
             <Image x:Name="Im" MinWidth="200" MinHeight="100"
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                 Source="{Binding BitmapSource, Mode=OneWay}"
-                SizeChanged="{cmnds:EventToCommand SizeChangedCommand}"
                 Cursor="Cross">
                 <behaviors:Interaction.Triggers>
                     <behaviors:EventTrigger
@@ -59,6 +57,11 @@
                     EventName="MouseMove"
                     SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
                         <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger
+                        EventName="SizeChanged"
+                        SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
+                        <extensions:EventToCommandAction Command="{Binding SizeChangedCommand}"/>
                     </behaviors:EventTrigger>
                 </behaviors:Interaction.Triggers>
             </Image>
