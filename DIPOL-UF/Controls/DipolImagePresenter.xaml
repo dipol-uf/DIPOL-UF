@@ -5,7 +5,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
              xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
-             xmlns:locl="clr-namespace:DIPOL_UF"
              xmlns:p="clr-namespace:DIPOL_UF.Properties"
              xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
              Style="{StaticResource ResourceKey=SmallFont}"

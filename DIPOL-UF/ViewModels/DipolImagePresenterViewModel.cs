@@ -11,11 +11,10 @@ namespace DIPOL_UF.ViewModels
 { 
     public class DipolImagePresenterViewModel :ViewModel<DipolImagePresenter>
     {
-        private WriteableBitmap _bitmapSource;
-
         public static Brush[] ColorPickerColor { get; } = Application.Current?.Resources["ColorPickerColors"] as Brush[];
 
-        public WriteableBitmap BitmapSource => _bitmapSource;
+        public WriteableBitmap BitmapSource { get; private set; }
+
         public double ImgScaleMin => model.ImgScaleMin;
         public double ImgScaleMax => model.ImgScaleMax;
 
@@ -102,7 +101,7 @@ namespace DIPOL_UF.ViewModels
         public double MaxGeometryThickness => model.MaxGeometryThickness;
 
         public bool IsImageLoaded => model.DisplayedImage != null;
-        public bool IsMouseOverUIControl => model.IsMouseOverUIControl;
+        public bool IsMouseOverUIControl => model.IsMouseOverUiControl;
         public bool IsSamplerFixed => model.IsSamplerFixed;
         public bool IsGeometryDisplayed => 
             IsImageLoaded && 
@@ -142,7 +141,7 @@ namespace DIPOL_UF.ViewModels
             if (e.PropertyName == nameof(model.SamplerGeometry))
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
 
-            if (e.PropertyName == nameof(model.IsMouseOverUIControl) ||
+            if (e.PropertyName == nameof(model.IsMouseOverUiControl) ||
                 e.PropertyName == nameof(model.IsSamplerFixed) ||
                 e.PropertyName == nameof(model.DisplayedImage))
                 Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsGeometryDisplayed)));
@@ -157,13 +156,13 @@ namespace DIPOL_UF.ViewModels
 
             if (model.DisplayedImage == null)
             {
-                if (_bitmapSource == null)
+                if (BitmapSource == null)
                 {
                     RaisePropertyChanged(nameof(BitmapSource));
                     return;
                 }
 
-                bytes = new byte[_bitmapSource.PixelWidth * _bitmapSource.PixelHeight * 4];
+                bytes = new byte[BitmapSource.PixelWidth * BitmapSource.PixelHeight * 4];
             }
             else
             {
@@ -177,12 +176,12 @@ namespace DIPOL_UF.ViewModels
                 });
 
 
-                if (_bitmapSource == null ||
-                    _bitmapSource.PixelWidth != model.DisplayedImage.Width ||
-                    _bitmapSource.PixelHeight != model.DisplayedImage.Height)
+                if (BitmapSource == null ||
+                    BitmapSource.PixelWidth != model.DisplayedImage.Width ||
+                    BitmapSource.PixelHeight != model.DisplayedImage.Height)
                 {
 
-                    _bitmapSource = new WriteableBitmap(model.DisplayedImage.Width,
+                    BitmapSource = new WriteableBitmap(model.DisplayedImage.Width,
                         model.DisplayedImage.Height,
                         96, 96, PixelFormats.Gray32Float, null);
 
@@ -192,17 +191,17 @@ namespace DIPOL_UF.ViewModels
 
             try
             { 
-                _bitmapSource.Lock();
+                BitmapSource.Lock();
                 System.Runtime.InteropServices.Marshal.Copy(
-                    bytes, 0, _bitmapSource.BackBuffer, bytes.Length);
+                    bytes, 0, BitmapSource.BackBuffer, bytes.Length);
             }
             finally
             {
-                _bitmapSource.AddDirtyRect(
+                BitmapSource.AddDirtyRect(
                     new Int32Rect(0, 0,
-                        _bitmapSource.PixelWidth,
-                        _bitmapSource.PixelHeight));
-                _bitmapSource.Unlock();
+                        BitmapSource.PixelWidth,
+                        BitmapSource.PixelHeight));
+                BitmapSource.Unlock();
                 RaisePropertyChanged(nameof(BitmapSource));
             }
 
