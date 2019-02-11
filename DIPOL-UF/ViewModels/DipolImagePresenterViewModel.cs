@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -21,10 +19,10 @@ using Size = System.Windows.Size;
 // ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace DIPOL_UF.ViewModels
-{ 
-    internal  sealed class DipolImagePresenterViewModel : ReactiveViewModel<DipolImagePresenter>
+{
+    internal sealed class DipolImagePresenterViewModel : ReactiveViewModel<DipolImagePresenter>
     {
-        public static Brush[] ColorPickerColor { get; } 
+        public static Brush[] ColorPickerColor { get; }
             = Application.Current?.Resources["ColorPickerColors"] as Brush[];
 
         public WriteableBitmap BitmapSource { [ObservableAsProperty] get; }
@@ -35,18 +33,25 @@ namespace DIPOL_UF.ViewModels
 
         [Reactive]
         public int ThumbLeft { get; set; }
+
         [Reactive]
         public int ThumbRight { get; set; }
+
         [Reactive]
         public int SamplerColorBrushIndex { get; set; }
+
         [Reactive]
         public int SelectedGeometryIndex { get; set; }
+
         [Reactive]
         public double ImageSamplerThickness { get; set; }
+
         [Reactive]
         public double ImageApertureSize { get; set; }
+
         [Reactive]
         public double ImageGap { get; set; }
+
         [Reactive]
         public double ImageAnnulus { get; set; }
 
@@ -58,8 +63,6 @@ namespace DIPOL_UF.ViewModels
         public GeometryDescriptor ApertureGeometry { [ObservableAsProperty] get; }
         public GeometryDescriptor GapGeometry { [ObservableAsProperty] get; }
         public GeometryDescriptor SamplerGeometry { [ObservableAsProperty] get; }
-        //public double ImageGapSize { [ObservableAsProperty] get; }
-        //public double ImageSamplerSize { [ObservableAsProperty] get; }
 
         public bool IsImageLoaded { [ObservableAsProperty] get; }
         public bool IsGeometryDisplayed { [ObservableAsProperty] get; }
@@ -75,7 +78,7 @@ namespace DIPOL_UF.ViewModels
         public ReactiveCommand<MouseEventArgs, MouseEventArgs> MouseHoverCommand { get; private set; }
         public ICommand SizeChangedCommand => Model.SizeChangedCommand;
         public ICommand ImageClickCommand => Model.ImageClickCommand;
-        
+
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
         public double GeometrySliderTickFrequency => Model.GeometrySliderTickFrequency;
@@ -171,7 +174,8 @@ namespace DIPOL_UF.ViewModels
             HookModelObservables();
         }
 
-        private void HookModelObservables() { 
+        private void HookModelObservables()
+        {
 
             Model.WhenPropertyChanged(x => x.ThumbRight)
                  .Select(x => x.Value)
@@ -187,8 +191,8 @@ namespace DIPOL_UF.ViewModels
 
 
             Model.WhenAnyPropertyChanged(
-                     nameof(Model.DisplayedImage), 
-                     nameof(Model.LeftScale), 
+                     nameof(Model.DisplayedImage),
+                     nameof(Model.LeftScale),
                      nameof(Model.RightScale))
                  .Where(x => !(x.DisplayedImage is null))
                  .Select(x => Observable.FromAsync(async () => await UpdateBitmapAsync(x.DisplayedImage)))
@@ -204,7 +208,7 @@ namespace DIPOL_UF.ViewModels
                  .DisposeWith(_subscriptions);
 
             Model.WhenAnyPropertyChanged(
-                     nameof(Model.SamplerCenterPos), 
+                     nameof(Model.SamplerCenterPos),
                      nameof(Model.ApertureGeometry))
                  .Select(x => new Point(
                      x.SamplerCenterPos.X - x.ApertureGeometry.Center.X,
@@ -243,52 +247,13 @@ namespace DIPOL_UF.ViewModels
             PropagateReadOnlyProperty(this, x => x.ApertureGeometry, y => y.ApertureGeometry);
             PropagateReadOnlyProperty(this, x => x.GapGeometry, y => y.GapGeometry);
             PropagateReadOnlyProperty(this, x => x.SamplerGeometry, y => y.SamplerGeometry);
-            PropagateReadOnlyProperty(this, x=>x.MaxApertureWidth, y => y.MaxApertureWidth);
+            PropagateReadOnlyProperty(this, x => x.MaxApertureWidth, y => y.MaxApertureWidth);
             PropagateReadOnlyProperty(this, x => x.MaxGapWidth, y => y.MaxGapWidth);
             PropagateReadOnlyProperty(this, x => x.MaxAnnulusWidth, y => y.MaxAnnulusWidth);
             PropagateReadOnlyProperty(this, x => x.PixValue, y => y.PixValue);
             PropagateReadOnlyProperty(this, x => x.ImageStats, y => y.ImageStats);
 
         }
-
-        //protected override async void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        //{
-        //    base.OnModelPropertyChanged(sender, e);
-
-        //    if (e.PropertyName == nameof(Model.DisplayedImage))
-        //    {
-        //        await Helper.ExecuteOnUI(async () => await UpdateBitmapAsync());
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsImageLoaded)));
-        //    }
-
-        //    if (e.PropertyName == nameof(Model.LeftScale) ||
-        //        e.PropertyName == nameof(Model.RightScale))
-        //        await Helper.ExecuteOnUI(async () => await UpdateBitmapAsync());
-
-        //    if (e.PropertyName == nameof(Model.SamplerCenterPos))
-        //    {
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
-        //    }
-
-        //    if (e.PropertyName == nameof(Model.ApertureGeometry))
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AperturePos)));
-
-        //    if (e.PropertyName == nameof(Model.GapGeometry))
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(GapPos)));
-
-        //    if (e.PropertyName == nameof(Model.SamplerGeometry))
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerPos)));
-
-        //    if (e.PropertyName == nameof(Model.IsMouseOverUiControl) ||
-        //        e.PropertyName == nameof(Model.IsSamplerFixed) ||
-        //        e.PropertyName == nameof(Model.DisplayedImage))
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(IsGeometryDisplayed)));
-
-        //    if (e.PropertyName == nameof(Model.SamplerColorBrushIndex))
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerColor)));
-        //}
 
         private async Task<WriteableBitmap> UpdateBitmapAsync(DipolImage.Image image)
         {

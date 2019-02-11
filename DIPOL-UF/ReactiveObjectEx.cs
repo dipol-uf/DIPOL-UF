@@ -3,10 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Windows;
+using DynamicData.Binding;
 using ReactiveUI;
-
+using ReactiveUI.Fody.Helpers;
 using ValidationErrorsCache = DynamicData.SourceCache<(string Property, string Type, string Message), (string Property, string Type)>;
 
 namespace DIPOL_UF
@@ -79,6 +82,27 @@ namespace DIPOL_UF
             
         }
 
+        protected virtual void BindTo<TSource, TTarget, TProperty>(
+            TSource source, Expression<Func<TSource, TProperty>> srcSelector,
+            TTarget target, Expression<Func<TTarget, TProperty>> trgtSelector)
+            where TSource : ReactiveObjectEx
+            where TTarget : ReactiveObjectEx
+            => source.WhenPropertyChanged(srcSelector)
+                     .Select(x => x.Value)
+                     .BindTo(target, trgtSelector)
+                     .DisposeWith(_subscriptions);
+
+        protected virtual void ToPropertyEx<TSource, TTarget, TProperty>(
+            TSource source, Expression<Func<TSource, TProperty>> srcSelector,
+            TTarget target, Expression<Func<TTarget, TProperty>> trgtSelector,
+            TProperty initialValue = default)
+            where TSource : ReactiveObjectEx
+            where TTarget : ReactiveObjectEx
+            => source.WhenPropertyChanged(srcSelector)
+                     .Select(x => x.Value)
+                     .ToPropertyEx(target, trgtSelector, initialValue)
+                     .DisposeWith(_subscriptions);
+
         public virtual List<(string Type, string Message)> GetTypedErrors(string propertyName)
         {
             return _validationErrors.Items
@@ -130,10 +154,10 @@ namespace DIPOL_UF
         {
             Helper.WriteLog($"{GetType()}: Created");
 
-            Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
-                          x => PropertyChanged += x, x => PropertyChanged -= x)
-                      .Subscribe(x => Helper.WriteLog($"{GetType()}: {x.EventArgs.PropertyName}"))
-                      .DisposeWith(_subscriptions);
+            //Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+            //              x => PropertyChanged += x, x => PropertyChanged -= x)
+            //          .Subscribe(x => Helper.WriteLog($"{GetType()}: {x.EventArgs.PropertyName}"))
+            //          .DisposeWith(_subscriptions);
         }
 #endif
     }
