@@ -42,28 +42,26 @@ namespace DIPOL_UF.Models
             IsEnabled = false
         };
         private Image _sourceImage;
-        private double _thumbLeft;
-        private double _thumbRight = 1000;
 
-        public double LeftScale => (ThumbLeft - ImgScaleMin) / (ImgScaleMax - ImgScaleMin);
-        public double RightScale => (ThumbRight - ImgScaleMin) / (ImgScaleMax - ImgScaleMin);
+        private readonly int ThumbDelta = 1;
+        public int ThumbScaleMin => 0;
+        public int ThumbScaleMax => 1000;
+        
+
+        public double ImageScaleMin { get; } = 0.0;
+        public double ImageScaleMax { get; } = 1.0;
 
         [Reactive]
         public Image DisplayedImage { get; set; }
+        [Reactive]
+        public double LeftScale { get; private set; }
+        [Reactive]
+        public double RightScale {  get; private set; }
 
         [Reactive]
-        public double ImgScaleMax { get; set; }
+        public int ThumbLeft { get; set; }
         [Reactive]
-        public double ImgScaleMin
-        {
-            get;
-            set;
-        }
-
-        [Reactive]
-        public double ThumbLeft { get; set; }
-        [Reactive]
-        public double ThumbRight
+        public int ThumbRight
         {
             get;
             set;
@@ -193,9 +191,9 @@ namespace DIPOL_UF.Models
             set;
         }
 
-        public ReactiveCommand<Image, Unit> LoadImageCommand { get; private set; }
-        public ReactiveCommand<double, double> LeftThumbChangedCommand { get; private set; }
-        public ReactiveCommand<double, double> RightThumbChangedCommand { get; private set; }
+        public ReactiveCommand<Image, Image> LoadImageCommand { get; private set; }
+        public ReactiveCommand<int, int> LeftThumbChangedCommand { get; private set; }
+        public ReactiveCommand<int, int> RightThumbChangedCommand { get; private set; }
         public DelegateCommand MouseHoverCommand
         {
             get;
@@ -220,8 +218,7 @@ namespace DIPOL_UF.Models
         public DipolImagePresenter()
         {
 
-            ImgScaleMax = 1000;
-            ThumbRight = 1000;
+            ThumbRight = ThumbScaleMax;
             SelectedGeometryIndex = 1;
             ImageSamplerScaleFactor = 1.0;
             ImageAnnulus = 25;
@@ -256,35 +253,35 @@ namespace DIPOL_UF.Models
         private void InitializeCommands()
         {
             LeftThumbChangedCommand =
-                ReactiveCommand.Create<double, double>(
+                ReactiveCommand.Create<int, int>(
                                    x =>
                                    {
-                                       if (x < ImgScaleMin)
-                                           return ImgScaleMin;
-                                       if (x >= ImgScaleMax)
-                                           return ImgScaleMax - 1;
+                                       if (x < ThumbScaleMin)
+                                           return ThumbScaleMin;
+                                       if (x >= ThumbScaleMax)
+                                           return ThumbScaleMax - ThumbDelta;
                                        return x;
                                    })
                                .DisposeWith(_subscriptions);
 
             RightThumbChangedCommand =
-                ReactiveCommand.Create<double, double>(
+                ReactiveCommand.Create<int, int>(
                                    x =>
                                    {
-                                       if (x <= ImgScaleMin)
-                                           return ImgScaleMin + 1;
-                                       if (x > ImgScaleMax)
-                                           return ImgScaleMax;
+                                       if (x <= ThumbScaleMin)
+                                           return ThumbScaleMin + ThumbDelta;
+                                       if (x > ThumbScaleMax)
+                                           return ThumbScaleMax;
                                        return x;
                                    })
                                .DisposeWith(_subscriptions);
 
             LoadImageCommand =
-                ReactiveCommand.CreateFromTask<Image, Unit>(
+                ReactiveCommand.CreateFromTask<Image, Image>(
                                    async x =>
                                    {
                                        await LoadImageAsync(x);
-                                       return Unit.Default;
+                                       return DisplayedImage;
                                    })
                                .DisposeWith(_subscriptions);
 
@@ -323,14 +320,35 @@ namespace DIPOL_UF.Models
 
             LeftThumbChangedCommand
                 .Where(x => x >= ThumbRight)
-                .Select(x => x + 1)
+                .Select(x => x + ThumbDelta)
                 .BindTo(this, x => x.ThumbRight)
                 .DisposeWith(_subscriptions);
             RightThumbChangedCommand
                 .Where(x => x <= ThumbLeft)
-                .Select(x => x - 1)
+                .Select(x => x - ThumbDelta)
                 .BindTo(this, x => x.ThumbLeft)
                 .DisposeWith(_subscriptions);
+
+            var leftThumbObs = this.WhenPropertyChanged(x => x.ThumbLeft)
+                                   .Select(x => x.Value)
+                                   .DistinctUntilChanged();
+
+            var rightThumbObs = this.WhenPropertyChanged(x => x.ThumbRight)
+                                    .Select(x => x.Value)
+                                    .DistinctUntilChanged();
+
+            var thumbObs = leftThumbObs.CombineLatest(rightThumbObs, (x, y) => (Left: x, Right: y))
+                                       .Sample(TimeSpan.FromMilliseconds(650));
+
+            thumbObs.Select(x => 1.0 * (x.Left - ThumbScaleMin) / 
+                                 (ThumbScaleMax - ThumbScaleMin) * 
+                                 (ImageScaleMax - ImageScaleMin))
+                    .BindTo(this, x => x.LeftScale).DisposeWith(_subscriptions);
+
+            thumbObs.Select(x => 1.0 * (x.Right - ThumbScaleMin) /
+                                 (ThumbScaleMax - ThumbScaleMin) *
+                                 (ImageScaleMax - ImageScaleMin))
+                    .BindTo(this, x => x.RightScale).DisposeWith(_subscriptions);
 
         }
 
@@ -369,21 +387,21 @@ namespace DIPOL_UF.Models
         private async Task CopyImageAsync(Image image)
         {
             var isFirstLoad = DisplayedImage == null;
-
+            Image temp = null;
             switch (image.UnderlyingType)
             {
                 case TypeCode.UInt16:
                     await Helper.RunNoMarshall(() =>
                     {
                          _sourceImage = image.CastTo<ushort, float>(x => x);
-                        DisplayedImage = _sourceImage.Copy();
+                        temp = _sourceImage.Copy();
                     });
                     break;
                 case TypeCode.Single:
                     await Helper.RunNoMarshall(() =>
                     {
                         _sourceImage = image.Copy();
-                        DisplayedImage = _sourceImage.Copy();
+                        temp = _sourceImage.Copy();
                     });
                     break;
                 default:
@@ -391,16 +409,17 @@ namespace DIPOL_UF.Models
                     throw new NotSupportedException($"Image type {image.UnderlyingType} is not supported.");
             }
 
-            if (DisplayedImage is null)
+            if (temp is null)
                 throw new NullReferenceException("Image cannot be null.");
 
-            DisplayedImage.Scale(0, 1);
+            temp.Scale(ImageScaleMin, ImageScaleMax);
             SamplerCenterPosInPix = isFirstLoad
                 // ReSharper disable PossibleLossOfFraction
-                ? new Point(DisplayedImage.Width / 2, DisplayedImage.Height / 2)
+                ? new Point(temp.Width / 2, temp.Height / 2)
                 // ReSharper restore PossibleLossOfFraction
                 : SamplerCenterPosInPix;
 
+            DisplayedImage = temp;
         }
         private async Task CalculateStatisticsAsync()
         {

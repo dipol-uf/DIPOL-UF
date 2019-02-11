@@ -70,16 +70,16 @@
             </Grid.RowDefinitions>
             <Slider Grid.Row="0" Grid.Column="0" 
                     HorizontalAlignment="Stretch" MaxWidth="400"
-                    Minimum="{Binding ImgScaleMin}"
-                    Maximum="{Binding ImgScaleMax}"
-                    Value="{Binding ThumbLeft, UpdateSourceTrigger=PropertyChanged}"
+                    Minimum="{Binding ThumbScaleMin}"
+                    Maximum="{Binding ThumbScaleMax}"
+                    Value="{Binding ThumbRight, UpdateSourceTrigger=PropertyChanged}"
                     Margin="20, 3, 20, 3"
                     />
             <Slider Grid.Row="1" Grid.Column="0" 
                     HorizontalAlignment="Stretch" MaxWidth="400"
-                    Minimum="{Binding ImgScaleMin}"
-                    Maximum="{Binding ImgScaleMax}"
-                    Value="{Binding ThumbRight, UpdateSourceTrigger=PropertyChanged}"
+                    Minimum="{Binding ThumbScaleMin}"
+                    Maximum="{Binding ThumbScaleMax}"
+                    Value="{Binding ThumbLeft, UpdateSourceTrigger=PropertyChanged}"
                     Margin="20, 3, 20, 3"
                     />
         </Grid>

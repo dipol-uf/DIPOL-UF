@@ -24,13 +24,15 @@ namespace DIPOL_UF.ViewModels
 
         public WriteableBitmap BitmapSource { [ObservableAsProperty] get; }
 
-        public double ImgScaleMin => Model.ImgScaleMin;
-        public double ImgScaleMax => Model.ImgScaleMax;
+        public int ThumbScaleMin => Model.ThumbScaleMin;
+        public int ThumbScaleMax => Model.ThumbScaleMax;
+
 
         [Reactive]
-        public double ThumbLeft { get; set; }
+        public int ThumbLeft { get; set; }
+
         [Reactive]
-        public double ThumbRight { get; set; }
+        public int ThumbRight { get; set; }
 
         public Point AperturePos =>
             new Point(
@@ -110,7 +112,8 @@ namespace DIPOL_UF.ViewModels
             (IsMouseOverUIControl || IsSamplerFixed);
 
         public DipolImagePresenterViewModel(DipolImagePresenter model) : base(model)
-        { 
+        {
+            ThumbRight = Model.ThumbScaleMax;
             HookObservables();
         }
 
@@ -138,14 +141,17 @@ namespace DIPOL_UF.ViewModels
                  .BindTo(this, x => x.ThumbLeft)
                  .DisposeWith(_subscriptions);
 
-            Model.WhenPropertyChanged(x => x.DisplayedImage)
-                 .Where(x => !(x.Value is null))
-                 .ObserveOnUi()
-                 .Select(x => Observable.FromAsync(async () => await UpdateBitmapAsync(x.Value)))
+
+            Model.WhenAnyPropertyChanged(
+                     nameof(Model.DisplayedImage), 
+                     nameof(Model.LeftScale), 
+                     nameof(Model.RightScale))
+                 .Where(x => !(x.DisplayedImage is null))
+                 .Select(x => Observable.FromAsync(async () => await UpdateBitmapAsync(x.DisplayedImage)))
                  .Merge()
+                 .ObserveOnUi()
                  .ToPropertyEx(this, x => x.BitmapSource)
                  .DisposeWith(_subscriptions);
-
         }
 
         //protected override async void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -189,42 +195,42 @@ namespace DIPOL_UF.ViewModels
 
         private async Task<WriteableBitmap> UpdateBitmapAsync(DipolImage.Image image)
         {
-            var bitmap = BitmapSource;
-            var bytes = await Task.Run(() =>
+            var bytes = await Helper.RunNoMarshall(() =>
             {
-                var temp = Model.DisplayedImage.Copy();
+                var temp = image.Copy();
                 temp.Clamp(Model.LeftScale, Model.RightScale);
-                temp.Scale(0, 1);
+                temp.Scale(Model.ImageScaleMin, Model.ImageScaleMax);
 
                 return temp.GetBytes();
             });
 
-
-            if (bitmap is null ||
-                bitmap.PixelWidth != Model.DisplayedImage.Width ||
-                bitmap.PixelHeight != Model.DisplayedImage.Height)
+            var bitmap = BitmapSource;
+            Helper.ExecuteOnUi(() =>
             {
+                if (bitmap is null ||
+                    bitmap.PixelWidth != Model.DisplayedImage.Width ||
+                    bitmap.PixelHeight != Model.DisplayedImage.Height)
+                    bitmap = new WriteableBitmap(image.Width,
+                        image.Height,
+                        96, 96, PixelFormats.Gray32Float, null);
 
-                bitmap = new WriteableBitmap(Model.DisplayedImage.Width,
-                    Model.DisplayedImage.Height,
-                    96, 96, PixelFormats.Gray32Float, null);
-            }
 
 
-            try
-            { 
-                bitmap.Lock();
-                System.Runtime.InteropServices.Marshal.Copy(
-                    bytes, 0, bitmap.BackBuffer, bytes.Length);
-            }
-            finally
-            {
-                bitmap.AddDirtyRect(
-                    new Int32Rect(0, 0,
-                        bitmap.PixelWidth,
-                        bitmap.PixelHeight));
-                bitmap.Unlock();
-            }
+                try
+                {
+                    bitmap.Lock();
+                    System.Runtime.InteropServices.Marshal.Copy(
+                        bytes, 0, bitmap.BackBuffer, bytes.Length);
+                }
+                finally
+                {
+                    bitmap.AddDirtyRect(
+                        new Int32Rect(0, 0,
+                            bitmap.PixelWidth,
+                            bitmap.PixelHeight));
+                    bitmap.Unlock();
+                }
+            });
 
             return bitmap;
         }
