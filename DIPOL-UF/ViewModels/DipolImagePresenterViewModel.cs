@@ -14,14 +14,18 @@ using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Brush = System.Windows.Media.Brush;
+using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
+using Size = System.Windows.Size;
+
 // ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace DIPOL_UF.ViewModels
 { 
     internal  sealed class DipolImagePresenterViewModel : ReactiveViewModel<DipolImagePresenter>
     {
-        public static Brush[] ColorPickerColor { get; } = Application.Current?.Resources["ColorPickerColors"] as Brush[];
+        public static Brush[] ColorPickerColor { get; } 
+            = Application.Current?.Resources["ColorPickerColors"] as Brush[];
 
         public WriteableBitmap BitmapSource { [ObservableAsProperty] get; }
 
@@ -31,24 +35,16 @@ namespace DIPOL_UF.ViewModels
 
         [Reactive]
         public int ThumbLeft { get; set; }
-
         [Reactive]
         public int ThumbRight { get; set; }
+        [Reactive]
+        public int SamplerColorBrushIndex { get; set; }
 
-        public Point AperturePos =>
-            new Point(
-                Model.SamplerCenterPos.X - ApertureGeometry.Center.X,
-                Model.SamplerCenterPos.Y - ApertureGeometry.Center.Y);
-        public Point GapPos =>
-            new Point(
-                Model.SamplerCenterPos.X - GapGeometry.Center.X,
-                Model.SamplerCenterPos.Y - GapGeometry.Center.Y);
-        public Point SamplerPos => 
-            new Point(
-                Model.SamplerCenterPos.X - SamplerGeometry.Center.X,
-                Model.SamplerCenterPos.Y - SamplerGeometry.Center.Y);
-
-        public Point SamplerCenterPosInPix => Model.SamplerCenterPosInPix;
+        public Point AperturePos { [ObservableAsProperty] get; }
+        public Point GapPos { [ObservableAsProperty] get; }
+        public Point SamplerPos { [ObservableAsProperty] get; }
+        public Point SamplerCenterPosInPix { [ObservableAsProperty] get; }
+        public Brush SamplerColor { [ObservableAsProperty] get; }
         
         public int SelectedGeometryIndex
         {
@@ -79,23 +75,17 @@ namespace DIPOL_UF.ViewModels
         }
         public double PixValue => Model.PixValue;
 
-        public ICommand MouseHoverCommand => Model.MouseHoverCommand;
+        public ReactiveCommand<MouseEventArgs, MouseEventArgs> MouseHoverCommand { get; private set; }
         public ICommand SizeChangedCommand => Model.SizeChangedCommand;
         public ICommand ImageClickCommand => Model.ImageClickCommand;
         public ICommand UnloadImageCommand => Model.UnloadImageCommand;
         
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
-        public GeometryDescriptor ApertureGeometry => Model.ApertureGeometry;
+        public GeometryDescriptor ApertureGeometry { [ObservableAsProperty] get; }
         public GeometryDescriptor GapGeometry => Model.GapGeometry;
         public GeometryDescriptor SamplerGeometry => Model.SamplerGeometry;
         public IDictionary<string, double> ImageStats => Model.ImageStats;
-        public int SamplerColorBrushIndex
-        {
-            get => Model.SamplerColorBrushIndex;
-            set => Model.SamplerColorBrushIndex = value;
-        }
-        public Brush SamplerColor => ColorPickerColor[SamplerColorBrushIndex];
         public double MaxApertureWidth => Model.MaxApertureWidth;
         public double MaxGapWidth => Model.MaxGapWidth;
         public double MaxAnnulusWidth => Model.MaxAnnulusWidth;
@@ -106,16 +96,24 @@ namespace DIPOL_UF.ViewModels
         public double MaxGeometryThickness => Model.MaxGeometryThickness;
 
         public bool IsImageLoaded { [ObservableAsProperty] get; }
-        public bool IsMouseOverUiControl => Model.IsMouseOverUiControl;
-        public bool IsSamplerFixed => Model.IsSamplerFixed;
-        public bool IsGeometryDisplayed => 
-            IsImageLoaded && 
-            (IsMouseOverUiControl || IsSamplerFixed);
+        public bool IsGeometryDisplayed { [ObservableAsProperty] get; }
+        public bool IsMouseOverImage { [ObservableAsProperty] get; }
+        public bool IsSamplerFixed { [ObservableAsProperty] get; }
 
         public DipolImagePresenterViewModel(DipolImagePresenter model) : base(model)
         {
             ThumbRight = Model.ThumbScaleMax;
+            InitializeCommands();
             HookObservables();
+        }
+
+        private void InitializeCommands()
+        {
+            MouseHoverCommand =
+                ReactiveCommand.Create<MouseEventArgs, MouseEventArgs>(
+                                   x => x,
+                                   this.WhenPropertyChanged(x => x.IsImageLoaded).Select(x => x.Value))
+                               .DisposeWith(_subscriptions);
         }
 
         private void HookObservables()
@@ -129,6 +127,48 @@ namespace DIPOL_UF.ViewModels
                 .Select(x => x.Value)
                 .InvokeCommand(Model.RightThumbChangedCommand)
                 .DisposeWith(_subscriptions);
+
+            this.WhenAnyPropertyChanged(
+                    nameof(IsImageLoaded),
+                    nameof(IsMouseOverImage),
+                    nameof(IsSamplerFixed))
+                .Select(x => x.IsImageLoaded && (x.IsMouseOverImage || x.IsSamplerFixed))
+                .ToPropertyEx(this, x => x.IsGeometryDisplayed)
+                .DisposeWith(_subscriptions);
+
+            this.WhenPropertyChanged(x => x.SamplerColorBrushIndex)
+                .Select(x => ColorPickerColor[x.Value])
+                .ToPropertyEx(this, x => x.SamplerColor)
+                .DisposeWith(_subscriptions);
+
+            MouseHoverCommand
+                .Where(x =>
+                    x.Source is Image
+                    && x.RoutedEvent.Name != nameof(Image.MouseMove))
+                .Sample(TimeSpan.Parse(
+                    UiSettingsProvider.Settings.Get("ImageSampleDelay", "00:00:00.050")))
+                .Select(x => x.RoutedEvent.Name == nameof(Image.MouseEnter))
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.IsMouseOverImage)
+                .DisposeWith(_subscriptions);
+
+            MouseHoverCommand.Where(x => x.Source is Image)
+                             .Sample(TimeSpan.Parse(
+                                 UiSettingsProvider.Settings.Get("ImageSampleDelay", "00:00:00.050")))
+                             .ObserveOnUi()
+                             .Select(x =>
+                             {
+                                 var src = x.Source as FrameworkElement;
+                                 // ReSharper disable once PossibleNullReferenceException
+                                 return (Size: new Size(src.ActualWidth, src.ActualHeight),
+                                     SamplerCenterPosInPix: x.GetPosition(src));
+                             }).InvokeCommand(Model.MouseHoverCommand)
+                             .DisposeWith(_subscriptions);
+
+            HookModelObservables();
+        }
+
+        private void HookModelObservables() { 
 
             Model.WhenPropertyChanged(x => x.ThumbRight)
                  .Select(x => x.Value)
@@ -156,13 +196,55 @@ namespace DIPOL_UF.ViewModels
 
             Model.WhenPropertyChanged(x => x.DisplayedImage)
                  .Select(x => !(x.Value is null))
+                 .ObserveOnUi()
                  .ToPropertyEx(this, x => x.IsImageLoaded)
                  .DisposeWith(_subscriptions);
 
-            //Model.WhenAnyPropertyChanged(nameof(SamplerCenterPosInPix), nameof(ApertureGeometry))
-            //     .Select(x => new Point(
-            //         Model.SamplerCenterPos.X - ApertureGeometry.Center.X,
-            //         Model.SamplerCenterPos.Y - ApertureGeometry.Center.Y))
+            Model.WhenAnyPropertyChanged(
+                     nameof(Model.SamplerCenterPos), 
+                     nameof(Model.ApertureGeometry))
+                 .Select(x => new Point(
+                     x.SamplerCenterPos.X - x.ApertureGeometry.Center.X,
+                     x.SamplerCenterPos.Y - x.ApertureGeometry.Center.Y))
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.AperturePos)
+                 .DisposeWith(_subscriptions);
+
+            Model.WhenAnyPropertyChanged(
+                     nameof(Model.SamplerCenterPos),
+                     nameof(Model.GapGeometry))
+                 .Select(x => new Point(
+                     x.SamplerCenterPos.X - x.GapGeometry.Center.X,
+                     x.SamplerCenterPos.Y - x.GapGeometry.Center.Y))
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.GapPos)
+                 .DisposeWith(_subscriptions);
+
+            Model.WhenAnyPropertyChanged(
+                     nameof(Model.SamplerCenterPos),
+                     nameof(Model.SamplerGeometry))
+                 .Select(x => new Point(
+                     x.SamplerCenterPos.X - x.SamplerGeometry.Center.X,
+                     x.SamplerCenterPos.Y - x.SamplerGeometry.Center.Y))
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.SamplerPos)
+                 .DisposeWith(_subscriptions);
+
+            Model.WhenPropertyChanged(x => x.SamplerCenterPosInPix)
+                 .Select(x => x.Value)
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.SamplerCenterPosInPix)
+                 .DisposeWith(_subscriptions);
+
+            Model.WhenPropertyChanged(x => x.IsSamplerFixed)
+                 .Select(x => x.Value)
+                 .ToPropertyEx(this, x => x.IsSamplerFixed)
+                 .DisposeWith(_subscriptions);
+
+            Model.WhenPropertyChanged(x => x.ApertureGeometry)
+                 .Select(x => x.Value)
+                 .ToPropertyEx(this, x => x.ApertureGeometry)
+                 .DisposeWith(_subscriptions);
         }
 
         //protected override async void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)

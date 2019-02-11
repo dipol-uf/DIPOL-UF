@@ -34,40 +34,44 @@
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"
               Background="Transparent" Margin="10">
-            <behaviors:Interaction.Triggers>
-                <behaviors:EventTrigger
-                     EventName="MouseLeftButtonDown"
-                     SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}">
-                    <extensions:EventToCommandAction Command="{Binding ImageClickCommand}"/>
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger
-                    EventName="MouseEnter"
-                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}">
-                    <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger
-                    EventName="MouseLeave"
-                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}">
-                    <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
-                </behaviors:EventTrigger>
-                <behaviors:EventTrigger
-                    EventName="MouseMove"
-                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}">
-                    <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
-                </behaviors:EventTrigger>
-            </behaviors:Interaction.Triggers>
             <Image x:Name="Im" MinWidth="200" MinHeight="100"
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                 Source="{Binding BitmapSource, Mode=OneWay}"
                 SizeChanged="{cmnds:EventToCommand SizeChangedCommand}"
-                Cursor="Cross"
-               />
+                Cursor="Cross">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger
+                     EventName="MouseLeftButtonDown"
+                     SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
+                        <extensions:EventToCommandAction Command="{Binding ImageClickCommand}"/>
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger
+                    EventName="MouseEnter"
+                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
+                        <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger
+                    EventName="MouseLeave"
+                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
+                        <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger
+                    EventName="MouseMove"
+                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
+                        <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </Image>
             <Canvas Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top"
                     Width="{Binding ElementName=Im, Path=ActualWidth}"
-                    Height="{Binding ElementName=Im, Path=ActualHeight}">
+                    Height="{Binding ElementName=Im, Path=ActualHeight}"
+                    IsHitTestVisible="False">
                 <Path 
-                    Data="{Binding ApertureGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
-                    StrokeThickness="{Binding ApertureGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
+                    Data="{Binding 
+                        ApertureGeometry.PathDescription, 
+                        Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
+                    StrokeThickness="{Binding ApertureGeometry.Thickness, Mode=OneWay}" 
+                    Stroke="{Binding SamplerColor, Mode=OneWay}" 
                     Visibility="{Binding IsGeometryDisplayed, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path.RenderTransform>
                         <TranslateTransform X="{Binding AperturePos.X}" Y ="{Binding AperturePos.Y}"/>
@@ -264,7 +268,7 @@
             <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Center" HorizontalContentAlignment="Center">
                 <TextBox.Text>
-                    <MultiBinding StringFormat="{}{0,6:####0}:{1,-6:####0}" Mode="OneWay">
+                    <MultiBinding StringFormat="{}{0,6:000}:{1,-6:000}" Mode="OneWay">
                         <Binding Path="SamplerCenterPosInPix.X" Mode="OneWay"/>
                         <Binding Path="SamplerCenterPosInPix.Y" Mode="OneWay"/>
                     </MultiBinding>

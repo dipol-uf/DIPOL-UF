@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -76,7 +73,9 @@ namespace DIPOL_UF.Models
             get;
             set;
         }
-        public Point SamplerCenterPos => GetImageScale(SamplerCenterPosInPix);
+
+        public Point SamplerCenterPos { [ObservableAsProperty] get; }
+
         [Reactive]
         public GeometryDescriptor SamplerGeometry
         {
@@ -164,17 +163,6 @@ namespace DIPOL_UF.Models
         public double MaxGeometryThickness => 10;
 
         [Reactive]
-        public int SamplerColorBrushIndex
-        {
-            get;
-            set;
-        }
-
-        public bool IsMouseOverImage { [ObservableAsProperty] get; }
-
-        public bool IsMouseOverUiControl { [ObservableAsProperty] get; }
-
-        [Reactive]
         public bool IsSamplerFixed
         {
             get;
@@ -184,7 +172,7 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<Image, Image> LoadImageCommand { get; private set; }
         public ReactiveCommand<int, int> LeftThumbChangedCommand { get; private set; }
         public ReactiveCommand<int, int> RightThumbChangedCommand { get; private set; }
-        public ReactiveCommand<MouseEventArgs, MouseEventArgs> MouseHoverCommand { get; private set; }
+        public ReactiveCommand<(Size Size, Point Pos), (Size Size, Point Pos)> MouseHoverCommand { get; private set; }
         public DelegateCommand SizeChangedCommand
         {
             get;
@@ -196,6 +184,7 @@ namespace DIPOL_UF.Models
             get;
             set;
         }
+
 
         public DipolImagePresenter()
         {
@@ -275,7 +264,7 @@ namespace DIPOL_UF.Models
                                .DisposeWith(_subscriptions);
 
             MouseHoverCommand =
-                ReactiveCommand.Create<MouseEventArgs, MouseEventArgs>(
+                ReactiveCommand.Create<(Size Size, Point Pos), (Size Size, Point Pos)>(
                                    x => x, 
                                    this.WhenPropertyChanged(x => x.DisplayedImage)
                                                .Select(x => !(x.Value is null)))
@@ -295,9 +284,9 @@ namespace DIPOL_UF.Models
 
         private void InitializeSamplerGeometry()
         {
-            ApertureGeometry = AvailableGeometries[0](1, 1);
-            GapGeometry = AvailableGeometries[0](1, 1);
-            SamplerGeometry = AvailableGeometries[0](1, 1);
+            ApertureGeometry = AvailableGeometries[0](20, 3);
+            GapGeometry = AvailableGeometries[0](40, 3);
+            SamplerGeometry = AvailableGeometries[0](60, 3);
             SamplerCenterPosInPix = new Point(0, 0);
             LastKnownImageControlSize = Size.Empty;
         }
@@ -342,35 +331,24 @@ namespace DIPOL_UF.Models
                                  (ImageScaleMax - ImageScaleMin))
                     .BindTo(this, x => x.RightScale).DisposeWith(_subscriptions);
 
+            this.WhenPropertyChanged(x => x.SamplerCenterPosInPix)
+                .Select(x => GetImageScale(x.Value))
+                .ToPropertyEx(this, x => x.SamplerCenterPos)
+                .DisposeWith(_subscriptions);
+
             ImageClickCommand
                 .Where(x => x.LeftButton == MouseButtonState.Pressed && x.ClickCount == 2)
                 .Subscribe(ImageDoubleClickCommandExecute)
                 .DisposeWith(_subscriptions);
 
-            MouseHoverCommand.Where(x =>
-                                 !(DisplayedImage is null)
-                                 && !IsSamplerFixed
-                                 && x.Source is UserControl)
-                             .Select(x => x.RoutedEvent.Name == nameof(UserControl.MouseEnter))
-                             .ToPropertyEx(this, x => x.IsMouseOverUiControl)
-                             .DisposeWith(_subscriptions);
 
-            MouseHoverCommand.Where(x =>
-                                 !(DisplayedImage is null)
-                                 && !IsSamplerFixed
-                                 && x.Source is System.Windows.Controls.Image)
-                             .Select(x => x.RoutedEvent.Name == nameof(UserControl.MouseEnter))
-                             .ToPropertyEx(this, x => x.IsMouseOverImage)
+            MouseHoverCommand
+                             .Where(x => !IsSamplerFixed)
+                             .Subscribe(x => UpdateSamplerPosition(x.Size, x.Pos))
                              .DisposeWith(_subscriptions);
-
-            MouseHoverCommand.Subscribe(MouseHoverCommandExecute).DisposeWith(_subscriptions);
         }
 
 
-        static DipolImagePresenter()
-        {
-            (AvailableGeometries, GeometriesAliases) = InitializeAvailableGeometries();
-        }
 
         public void LoadImage(Image image)
         {
@@ -439,8 +417,8 @@ namespace DIPOL_UF.Models
 
         private async Task CalculateStatisticsAsync()
         {
-            if (!IsMouseOverImage)
-                return;
+            //if (!IsMouseOverImage)
+            //    return;
 
             var annAvg = 0.0;
             var apAvg = 0.0;
@@ -709,19 +687,6 @@ namespace DIPOL_UF.Models
             _imageSamplerTimer.Stop();
         }
 
-        private void MouseHoverCommandExecute(MouseEventArgs parameter)
-        {
-            if (DisplayedImage == null ||
-                IsSamplerFixed)
-                return;
-
-            if (parameter.Source is System.Windows.Controls.Image image)
-                UpdateSamplerPosition(
-                    new Size(image.ActualWidth, image.ActualHeight),
-                    parameter.GetPosition(image));
-
-        }
-        
         private void SizeChangedCommandExecute(object parameter)
         {
             if (DisplayedImage != null &&
@@ -802,6 +767,11 @@ namespace DIPOL_UF.Models
 
         }
 
+
+        static DipolImagePresenter()
+        {
+            (AvailableGeometries, GeometriesAliases) = InitializeAvailableGeometries();
+        }
         private static (List<Func<double, double, GeometryDescriptor>>, List<string>) InitializeAvailableGeometries()
         {
             GeometryDescriptor CommonRectangle(double size, double thickness)
