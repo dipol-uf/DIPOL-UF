@@ -7,13 +7,24 @@
              xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
              xmlns:p="clr-namespace:DIPOL_UF.Properties"
              xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
+             xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
              Style="{StaticResource ResourceKey=SmallFont}"
              MinWidth="420" Background="Transparent"
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="420" 
-             d:DataContext="{d:DesignInstance Type=vms:DipolImagePresenterViewModel}"
-             MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
-             MouseLeave="{cmnds:EventToCommand MouseHoverCommand}">
+             d:DataContext="{d:DesignInstance Type=vms:DipolImagePresenterViewModel}">
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger
+            EventName="MouseEnter"
+            SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}">
+            <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="MouseLeave"
+            SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}">
+            <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
             
     <Grid>
         <Grid.RowDefinitions>
@@ -22,11 +33,29 @@
             <RowDefinition Height="Auto" MinHeight="50"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"
-              Background="Transparent" Margin="10"
-              MouseMove="{cmnds:EventToCommand MouseHoverCommand}"
-              MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
-              MouseLeave="{cmnds:EventToCommand MouseHoverCommand}"
-              MouseLeftButtonDown="{cmnds:EventToCommand ImageDoubleClickCommand}">
+              Background="Transparent" Margin="10">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger
+                     EventName="MouseLeftButtonDown"
+                     SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}">
+                    <extensions:EventToCommandAction Command="{Binding ImageClickCommand}"/>
+                </behaviors:EventTrigger>
+                <behaviors:EventTrigger
+                    EventName="MouseEnter"
+                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}">
+                    <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+                </behaviors:EventTrigger>
+                <behaviors:EventTrigger
+                    EventName="MouseLeave"
+                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}">
+                    <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+                </behaviors:EventTrigger>
+                <behaviors:EventTrigger
+                    EventName="MouseMove"
+                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}">
+                    <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
             <Image x:Name="Im" MinWidth="200" MinHeight="100"
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                 Source="{Binding BitmapSource, Mode=OneWay}"
