@@ -103,9 +103,9 @@ namespace DipolImage
                 throw new ArgumentException($"Provided array's base type {val.GetType()} is not allowed.");
             
             _typeCode = Type.GetTypeCode(val.GetType());
-          
+
             _baseArray = Array.CreateInstance(val.GetType(), width * height);
-            Array.Copy(initialArray, _baseArray, width * height);
+            Buffer.BlockCopy(initialArray, 0, _baseArray, 0, width * height * Marshal.SizeOf(val));
             Width = width;
             Height = height;
         }
@@ -154,16 +154,6 @@ namespace DipolImage
         {
             var size = Marshal.SizeOf(_baseArray.GetValue(0));
             var byteArray = new byte[Width * Height * size];
-            //GCHandle handle = default;
-            //try
-            //{
-            //    handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
-            //    Marshal.Copy(handle.AddrOfPinnedObject(), byteArray, 0, byteArray.Length);
-            //}
-            //finally
-            //{
-            //    handle.Free();
-            //}
 
             Buffer.BlockCopy(_baseArray, 0, byteArray, 0, byteArray.Length);
 
