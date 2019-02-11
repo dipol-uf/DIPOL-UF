@@ -69,6 +69,7 @@ namespace DIPOL_UF.ViewModels
         public double MaxGapWidth { [ObservableAsProperty] get; }
         public double MaxAnnulusWidth { [ObservableAsProperty] get; }
 
+        public DipolImagePresenter.ImageStatsCollection ImageStats { [ObservableAsProperty] get; }
         public double PixValue { [ObservableAsProperty] get; }
 
         public ReactiveCommand<MouseEventArgs, MouseEventArgs> MouseHoverCommand { get; private set; }
@@ -78,7 +79,6 @@ namespace DIPOL_UF.ViewModels
         
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
-        //public IDictionary<string, double> ImageStats => Model.ImageStats;
         public double GeometrySliderTickFrequency => Model.GeometrySliderTickFrequency;
         public double MinGeometryWidth => Model.MinGeometryWidth;
         public double GeometryThicknessSliderTickFrequency => Model.GeometryThicknessSliderTickFrequency;
@@ -142,6 +142,8 @@ namespace DIPOL_UF.ViewModels
                 Model, y => y.ImageGap);
             BindTo(this, x => x.ImageAnnulus,
                 Model, y => y.ImageAnnulus);
+            BindTo(this, x => x.IsMouseOverImage,
+                Model, y => y.IsMouseOverImage);
 
             MouseHoverCommand
                 .Where(x =>
@@ -246,6 +248,7 @@ namespace DIPOL_UF.ViewModels
             PropagateReadOnlyProperty(this, x => x.MaxGapWidth, y => y.MaxGapWidth);
             PropagateReadOnlyProperty(this, x => x.MaxAnnulusWidth, y => y.MaxAnnulusWidth);
             PropagateReadOnlyProperty(this, x => x.PixValue, y => y.PixValue);
+            PropagateReadOnlyProperty(this, x => x.ImageStats, y => y.ImageStats);
 
         }
 
