@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
+using DipolImage;
 using DIPOL_UF.Converters;
 using ReactiveUI;
 
@@ -21,6 +22,9 @@ namespace DIPOL_UF.Models
         public (bool Internal, bool External) CanControlShutter { get; }
         public string Alias { get; }
 
+
+        public DipolImagePresenter ImagePresenter { get; private set; }
+        public DescendantProvider AcquisitionSettingsWindow { get; private set; }
 
         public IObservable<TemperatureStatusEventArgs> WhenTemperatureChecked { get; private set; }
 
@@ -46,6 +50,21 @@ namespace DIPOL_UF.Models
 
             Alias = ConverterImplementations.CameraToStringAliasConversion(camera);
 
+
+            ImagePresenter = new DipolImagePresenter();
+
+#if DEBUG
+            var imageArr = new int[256 * 512];
+            var byteImg = new byte[256 * 512 * sizeof(int)];
+            var r = new Random();
+            r.NextBytes(byteImg);
+
+            Buffer.BlockCopy(byteImg, 0, imageArr, 0, byteImg.Length);
+
+            var img = new Image(imageArr, 512, 256);
+
+            ImagePresenter.LoadImage(img);
+#endif
 
             HookObservables();
             InitializeCommands();
@@ -99,6 +118,14 @@ namespace DIPOL_UF.Models
                                    Observable.Return(CanControlShutter.External))
                                .DisposeWith(_subscriptions);
 
+
+            //AcquisitionSettingsWindow = new DescendantProvider(
+            //    ReactiveCommand.Create<object, ReactiveObjectEx>(
+            //        _ => new ReactiveWrapper<SettingsBase>(Camera.GetAcquisitionSettingsTemplate())),
+            //    null,
+            //    null,
+            //    null
+            //    );
         }
 
     }

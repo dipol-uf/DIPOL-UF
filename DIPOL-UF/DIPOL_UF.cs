@@ -27,7 +27,11 @@ using System.Globalization;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading.Tasks;
+using DIPOL_UF.Models;
+using DIPOL_UF.ViewModels;
 using ReactiveUI;
+using Tests;
 
 
 namespace DIPOL_UF
@@ -37,13 +41,15 @@ namespace DIPOL_UF
         [STAThread]
         private static int Main(string[] args)
         {
+
             //System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
             System.Diagnostics.Debug.AutoFlush = true;
             System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
-            //Test();
-            //return 0;
-          
+            Test();
+            return 0;
+
+
 
             var applicationInstance = new App();
             applicationInstance.InitializeComponent();
@@ -61,29 +67,25 @@ namespace DIPOL_UF
 
         private static void Test()
         {
-            var disp = new CompositeDisposable();
-            var command = ReactiveCommand
-                .Create<int, int>(x => x)
-                .DisposeWith(disp);
 
-            var s = new Subject<bool>();
-            var obs = command.AsObservable().Buffer(s);
-            obs.Select(x => x.ToStringEx()).LogObservable("Second", disp);
-           
-            //obs.Select(x => x.EnumerableToString()).LogObservable("First", disp);
+            var arr = new byte[256 * 512 * sizeof(ushort)];
+            var r = new Random();
+            r.NextBytes(arr);
+
+            var img = new DipolImage.Image(arr, 512, 256, TypeCode.UInt16);
 
 
-            command.Execute(5).Subscribe().DisposeWith(disp);
-            command.Execute(6).Subscribe().DisposeWith(disp);
-            command.Execute(115).Subscribe().DisposeWith(disp);
+            var app = new App();
+            app.InitializeComponent();
 
-            command.Execute(-5).Subscribe().DisposeWith(disp);
-            s.OnNext(false);
-            command.Execute(-1235).Subscribe().DisposeWith(disp);
+            var model = new DipolImagePresenter();
+            var vm = new DipolImagePresenterViewModel(model);
+            Task.Run(async () => await model.LoadImageAsync(img));
 
-            //s.OnNext(true);
+            var view = new DebugWindow() {DataContext = vm};
 
-            Console.ReadKey();
+            app.Run(view);
+
         }
     }
 }
