@@ -103,6 +103,8 @@
             </Grid.RowDefinitions>
             <Slider Grid.Row="0" Grid.Column="0" 
                     HorizontalAlignment="Stretch" MaxWidth="400"
+                    TickFrequency="100"
+                    SmallChange="25"
                     Minimum="{Binding ThumbScaleMin}"
                     Maximum="{Binding ThumbScaleMax}"
                     Value="{Binding ThumbRight, UpdateSourceTrigger=PropertyChanged}"
@@ -110,6 +112,8 @@
                     />
             <Slider Grid.Row="1" Grid.Column="0" 
                     HorizontalAlignment="Stretch" MaxWidth="400"
+                    TickFrequency="100"
+                    SmallChange="25"
                     Minimum="{Binding ThumbScaleMin}"
                     Maximum="{Binding ThumbScaleMax}"
                     Value="{Binding ThumbLeft, UpdateSourceTrigger=PropertyChanged}"

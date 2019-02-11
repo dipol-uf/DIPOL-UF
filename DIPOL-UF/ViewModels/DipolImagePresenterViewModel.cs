@@ -65,8 +65,11 @@ namespace DIPOL_UF.ViewModels
         public bool IsGeometryDisplayed { [ObservableAsProperty] get; }
         public bool IsMouseOverImage { [ObservableAsProperty] get; }
         public bool IsSamplerFixed { [ObservableAsProperty] get; }
+        public double MaxApertureWidth { [ObservableAsProperty] get; }
+        public double MaxGapWidth { [ObservableAsProperty] get; }
+        public double MaxAnnulusWidth { [ObservableAsProperty] get; }
 
-        public double PixValue => Model.PixValue;
+        public double PixValue { [ObservableAsProperty] get; }
 
         public ReactiveCommand<MouseEventArgs, MouseEventArgs> MouseHoverCommand { get; private set; }
         public ICommand SizeChangedCommand => Model.SizeChangedCommand;
@@ -75,12 +78,9 @@ namespace DIPOL_UF.ViewModels
         
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
-        public IDictionary<string, double> ImageStats => Model.ImageStats;
-        public double MaxApertureWidth => Model.MaxApertureWidth;
-        public double MaxGapWidth => Model.MaxGapWidth;
-        public double MaxAnnulusWidth => Model.MaxAnnulusWidth;
-        public double MinGeometryWidth => Model.MinGeometryWidth;
+        //public IDictionary<string, double> ImageStats => Model.ImageStats;
         public double GeometrySliderTickFrequency => Model.GeometrySliderTickFrequency;
+        public double MinGeometryWidth => Model.MinGeometryWidth;
         public double GeometryThicknessSliderTickFrequency => Model.GeometryThicknessSliderTickFrequency;
         public double MinGeometryThickness => Model.MinGeometryThickness;
         public double MaxGeometryThickness => Model.MaxGeometryThickness;
@@ -242,9 +242,10 @@ namespace DIPOL_UF.ViewModels
             PropagateReadOnlyProperty(this, x => x.ApertureGeometry, y => y.ApertureGeometry);
             PropagateReadOnlyProperty(this, x => x.GapGeometry, y => y.GapGeometry);
             PropagateReadOnlyProperty(this, x => x.SamplerGeometry, y => y.SamplerGeometry);
-            //PropagateReadOnlyProperty(this, x => x.ImageGapSize, y => y.ImageGapSize);
-            //PropagateReadOnlyProperty(this, x => x.ImageSamplerSize, y => y.ImageSamplerSize);
-
+            PropagateReadOnlyProperty(this, x=>x.MaxApertureWidth, y => y.MaxApertureWidth);
+            PropagateReadOnlyProperty(this, x => x.MaxGapWidth, y => y.MaxGapWidth);
+            PropagateReadOnlyProperty(this, x => x.MaxAnnulusWidth, y => y.MaxAnnulusWidth);
+            PropagateReadOnlyProperty(this, x => x.PixValue, y => y.PixValue);
 
         }
 
