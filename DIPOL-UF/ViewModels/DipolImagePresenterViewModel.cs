@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ using DIPOL_UF.Models;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using Brush = System.Windows.Media.Brush;
+using Point = System.Windows.Point;
 
 namespace DIPOL_UF.ViewModels
 { 
@@ -19,7 +22,7 @@ namespace DIPOL_UF.ViewModels
     {
         public static Brush[] ColorPickerColor { get; } = Application.Current?.Resources["ColorPickerColors"] as Brush[];
 
-        public WriteableBitmap BitmapSource { get; private set; }
+        public WriteableBitmap BitmapSource { [ObservableAsProperty] get; }
 
         public double ImgScaleMin => Model.ImgScaleMin;
         public double ImgScaleMax => Model.ImgScaleMax;
@@ -125,13 +128,24 @@ namespace DIPOL_UF.ViewModels
 
             Model.WhenPropertyChanged(x => x.ThumbRight)
                  .Select(x => x.Value)
+                 .ObserveOnUi()
                  .BindTo(this, x => x.ThumbRight)
                  .DisposeWith(_subscriptions);
 
             Model.WhenPropertyChanged(x => x.ThumbLeft)
                  .Select(x => x.Value)
+                 .ObserveOnUi()
                  .BindTo(this, x => x.ThumbLeft)
                  .DisposeWith(_subscriptions);
+
+            Model.WhenPropertyChanged(x => x.DisplayedImage)
+                 .Where(x => !(x.Value is null))
+                 .ObserveOnUi()
+                 .Select(x => Observable.FromAsync(async () => await UpdateBitmapAsync(x.Value)))
+                 .Merge()
+                 .ToPropertyEx(this, x => x.BitmapSource)
+                 .DisposeWith(_subscriptions);
+
         }
 
         //protected override async void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -173,61 +187,46 @@ namespace DIPOL_UF.ViewModels
         //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(SamplerColor)));
         //}
 
-        private async Task UpdateBitmapAsync()
+        private async Task<WriteableBitmap> UpdateBitmapAsync(DipolImage.Image image)
         {
-            //byte[] bytes;
+            var bitmap = BitmapSource;
+            var bytes = await Task.Run(() =>
+            {
+                var temp = Model.DisplayedImage.Copy();
+                temp.Clamp(Model.LeftScale, Model.RightScale);
+                temp.Scale(0, 1);
 
-            //if (Model.DisplayedImage == null)
-            //{
-            //    if (BitmapSource == null)
-            //    {
-            //        RaisePropertyChanged(nameof(BitmapSource));
-            //        return;
-            //    }
-
-            //    bytes = new byte[BitmapSource.PixelWidth * BitmapSource.PixelHeight * 4];
-            //}
-            //else
-            //{
-            //    bytes = await Task.Run(() =>
-            //    {
-            //        var temp = Model.DisplayedImage.Copy();
-            //        temp.Clamp(Model.LeftScale, Model.RightScale);
-            //        temp.Scale(0, 1);
-
-            //        return temp.GetBytes();
-            //    });
+                return temp.GetBytes();
+            });
 
 
-            //    if (BitmapSource == null ||
-            //        BitmapSource.PixelWidth != Model.DisplayedImage.Width ||
-            //        BitmapSource.PixelHeight != Model.DisplayedImage.Height)
-            //    {
+            if (bitmap is null ||
+                bitmap.PixelWidth != Model.DisplayedImage.Width ||
+                bitmap.PixelHeight != Model.DisplayedImage.Height)
+            {
 
-            //        BitmapSource = new WriteableBitmap(Model.DisplayedImage.Width,
-            //            Model.DisplayedImage.Height,
-            //            96, 96, PixelFormats.Gray32Float, null);
-
-            //    }
-            //}
+                bitmap = new WriteableBitmap(Model.DisplayedImage.Width,
+                    Model.DisplayedImage.Height,
+                    96, 96, PixelFormats.Gray32Float, null);
+            }
 
 
-            //try
-            //{ 
-            //    BitmapSource.Lock();
-            //    System.Runtime.InteropServices.Marshal.Copy(
-            //        bytes, 0, BitmapSource.BackBuffer, bytes.Length);
-            //}
-            //finally
-            //{
-            //    BitmapSource.AddDirtyRect(
-            //        new Int32Rect(0, 0,
-            //            BitmapSource.PixelWidth,
-            //            BitmapSource.PixelHeight));
-            //    BitmapSource.Unlock();
-            //    RaisePropertyChanged(nameof(BitmapSource));
-            //}
+            try
+            { 
+                bitmap.Lock();
+                System.Runtime.InteropServices.Marshal.Copy(
+                    bytes, 0, bitmap.BackBuffer, bytes.Length);
+            }
+            finally
+            {
+                bitmap.AddDirtyRect(
+                    new Int32Rect(0, 0,
+                        bitmap.PixelWidth,
+                        bitmap.PixelHeight));
+                bitmap.Unlock();
+            }
 
+            return bitmap;
         }
     }
 }
