@@ -24,18 +24,20 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.ComponentModel;
-using System.Web.Script.Serialization;
-
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
 using ANDOR_CS.Attributes;
+// ReSharper disable InconsistentNaming
+#pragma warning disable 1591
 
 namespace ANDOR_CS.Classes
 {
+    /// <summary>
+    /// Base class for all the settings profiles
+    /// </summary>
     public abstract class SettingsBase : IDisposable, IXmlSerializable, INotifyPropertyChanged
     {
         private static readonly PropertyInfo[] SerializedProperties =
@@ -54,7 +56,7 @@ namespace ANDOR_CS.Classes
             .Where(mi => mi.Name.Contains("Set") && mi.ReturnType == typeof(void))
             .ToArray();
 
-        private static readonly Regex SetFnctionNameParser = new Regex(@"Set(.+)$");
+        private static readonly Regex SetFunctionNameParser = new Regex(@"Set(.+)$");
 
         private (int Index, float Speed)? _VSSpeed;
         private (int Index, float Speed)? _HSSpeed;
@@ -69,7 +71,7 @@ namespace ANDOR_CS.Classes
         private Rectangle? _ImageArea;
         private (int Frames, float Time)? _AccumulateCycle;
         private (int Frames, float Time)? _KineticCycle;
-        private int? _EMCCDGain;
+        private int? _EmCcdGain;
 
         public  event PropertyChangedEventHandler PropertyChanged;
 
@@ -137,7 +139,7 @@ namespace ANDOR_CS.Classes
         } 
 
         /// <summary>
-        /// Stores type of currentlt set OutputAmplifier
+        /// Stores type of currently set OutputAmplifier
         /// </summary>
         [SerializationOrder(4)]
         public (OutputAmplification OutputAmplifier, string Name, int Index)? OutputAmplifier
@@ -221,7 +223,7 @@ namespace ANDOR_CS.Classes
         } 
 
         /// <summary>
-        /// Stoers seleced image area - part of the CCD from where data should be collected
+        /// Stores selected image area - part of the CCD from where data should be collected
         /// </summary>
         [SerializationOrder(11)]
         public Rectangle? ImageArea
@@ -259,10 +261,10 @@ namespace ANDOR_CS.Classes
         [SerializationOrder(10)]
         public int? EMCCDGain
         {
-            get => _EMCCDGain;
+            get => _EmCcdGain;
             protected set
             {
-                _EMCCDGain = value;
+                _EmCcdGain = value;
                 RaisePropertyChanged();
             }
         }
@@ -289,7 +291,8 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSdkException"/>
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <exception cref="NotSupportedException"/>
-        /// <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in <see cref="Camera.Properties"/>.VSSpeeds</param>
+        /// <param name="speedIndex">Index of available speed that corresponds to VSpeed listed in
+        /// <see cref="CameraProperties"/>.VSSpeeds</param>
         public virtual void SetVSSpeed(int speedIndex)
         {
             // Checks if Camera is OK
@@ -359,29 +362,29 @@ namespace ANDOR_CS.Classes
             // Checks Camera object
             CheckCamera();
 
-            // Queries available amplifiers, looking for the one, which type mathces input parameter
+            // Queries available amplifiers, looking for the one, which type matches input parameter
             var query = (from amp
                         in Camera.Properties.OutputAmplifiers
                         where amp.OutputAmplifier == amplifier
                         select amp)
                 .ToList();
 
-            // If no mathces found, throws an exception
+            // If no matches found, throws an exception
             if (query.Count == 0)
-                throw new ArgumentOutOfRangeException($"Provided amplifier i sout of range " +
+                throw new ArgumentOutOfRangeException("Provided amplifier i sout of range " +
                     $"{(Enum.IsDefined(typeof(OutputAmplification), amplifier) ? Enum.GetName(typeof(OutputAmplification), amplifier) : "Unknown")}.");
 
             // Otherwise, assigns name and type of the amplifier 
             var element = query[0];
 
-            OutputAmplifier = (OutputAmplifier: element.OutputAmplifier, Name: element.Name,Index: Camera.Properties.OutputAmplifiers.IndexOf(element));
+            OutputAmplifier = (element.OutputAmplifier, element.Name,Index: Camera.Properties.OutputAmplifiers.IndexOf(element));
             HSSpeed = null;
             PreAmpGain = null;
             EMCCDGain = null;
         }
 
         /// <summary>
-        /// Returns a collection of available Horizonal Readout Speeds for currently selected OutputAmplifier and AD Converter.
+        /// Returns a collection of available Horizontal Readout Speeds for currently selected OutputAmplifier and AD Converter.
         /// Requires Camera to be active.
         /// Note: <see cref="ADConverter"/> and <see cref="SettingsBase.OutputAmplifier"/> should be set
         /// via <see cref="SetADConverter"/> and <see cref="SettingsBase.SetOutputAmplifier(OutputAmplification)"/>
@@ -443,9 +446,9 @@ namespace ANDOR_CS.Classes
         /// Returns a collection of available PreAmp gains for currently selected HSSpeed, OutputAmplifier, Converter.
         /// Requires Camera to be active.
         /// Note: <see cref="ADConverter"/>, <see cref="HSSpeed"/>
-        /// and <see cref="AcquisitionSettings.OutputAmplifier"/> should be set
+        /// and <see cref="SettingsBase"/> should be set
         /// via <see cref="SetADConverter"/>, <see cref="SetHSSpeed"/>
-        /// and <see cref="AcquisitionSettings.SetOutputOutputAmplifier(OutputAmplification)"/>.
+        /// and <see cref="SettingsBase"/>.
         /// </summary>
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="NotSupportedException"/>
@@ -519,7 +522,7 @@ namespace ANDOR_CS.Classes
             CheckCamera();
 
 
-            // Checks if Camera supports specifed mode
+            // Checks if Camera supports specified mode
             if (!Camera.Capabilities.AcquisitionModes.HasFlag(mode))
                 throw new NotSupportedException($"Camera does not support specified regime ({mode})");
 
@@ -543,7 +546,7 @@ namespace ANDOR_CS.Classes
             // Checks if Camera is OK
             CheckCamera();
 
-            // Checks if Camera supports specifed mode
+            // Checks if Camera supports specified mode
             if (!Camera.Capabilities.TriggerModes.HasFlag(mode))
                 throw new NotSupportedException($"Camera does not support specified regime ({mode})");
 
@@ -570,7 +573,7 @@ namespace ANDOR_CS.Classes
             if (!Camera.Capabilities.ReadModes.HasFlag(mode))
                 throw new NotSupportedException($"Camera does not support specified regime ({mode})");
 
-            // If there are no matches in the pre-defiend table, then this mode cannot be set explicitly
+            // If there are no matches in the pre-defined table, then this mode cannot be set explicitly
             if (!EnumConverter.ReadModeTable.ContainsKey(mode))
                 throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({mode})");
 
@@ -762,7 +765,7 @@ namespace ANDOR_CS.Classes
 
             if (result.Any(x => 
                 x.Key == @"CompatibleDevice" &&
-                (Enums.CameraType)x.Value != Camera.Capabilities.CameraType))
+                (CameraType)x.Value != Camera.Capabilities.CameraType))
                 throw new AndorSdkException("Failed to deserialize acquisition settings: " +
                     "device type mismatch. Check attribute \"CompatibleDevice\" of Settings node", null);
 
@@ -770,7 +773,7 @@ namespace ANDOR_CS.Classes
                     from r in SerializedProperties
                         .Join(result, x => x.Name, y => y.Key, (x, y) => y)
                     from m in DeserializationSetMethods
-                    let regexName = new {Method = m, Regex = SetFnctionNameParser.Match(m.Name)}
+                    let regexName = new {Method = m, Regex = SetFunctionNameParser.Match(m.Name)}
                     where regexName.Regex.Success && regexName.Regex.Groups.Count == 2
                     where r.Key == regexName.Regex.Groups[1].Value
                     select new {regexName.Method, r.Key, r.Value})
@@ -785,7 +788,7 @@ namespace ANDOR_CS.Classes
                         var tupleVals = new object[pars.Length];
 
                         if (pars.Where((t, i) => (tupleVals[i] = tuple[i]).GetType() != t.ParameterType).Any())
-                            throw new TargetParameterCountException(@"Setter method argumetn type does not match type of provided item.");
+                            throw new TargetParameterCountException(@"Setter method argument type does not match type of provided item.");
 
                         item.Method.Invoke(this, tupleVals);
 
@@ -827,7 +830,7 @@ namespace ANDOR_CS.Classes
                 from r in SerializedProperties
                     .Join(result, x => x.Name, y => y.Key, (x, y) => y)
                 from m in DeserializationSetMethods
-                let regexName = new {Method = m, Regex = SetFnctionNameParser.Match(m.Name)}
+                let regexName = new {Method = m, Regex = SetFunctionNameParser.Match(m.Name)}
                 where regexName.Regex.Success && regexName.Regex.Groups.Count == 2
                 where r.Key == regexName.Regex.Groups[1].Value
                 select new {regexName.Method, r.Key, r.Value})
