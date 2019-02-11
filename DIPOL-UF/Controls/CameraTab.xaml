@@ -29,10 +29,10 @@
                 <ColumnDefinition Width="auto" MinWidth="230"/>
             </Grid.ColumnDefinitions>
             <!--Custom Image Presenter-->
-            <!--<cntr:DipolImagePresenter Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
+            <cntr:DipolImagePresenter Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
                                        Height="700"
                                        VerticalAlignment="Top" HorizontalAlignment="Stretch" 
-                                       DataContext="{Binding ImagePresenterViewModel}"/>-->
+                                       DataContext="{Binding DipolImagePresenter}"/>
             <!--Placeholder for Camera Name-->
             <!--<Grid Grid.Row="0" Grid.Column="1">
                 <Grid.RowDefinitions>

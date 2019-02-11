@@ -50,11 +50,17 @@ namespace DIPOL_UF.ViewModels
 
         public ICommand CoolerCommand => Model.CoolerCommand;
 
+        public DipolImagePresenterViewModel DipolImagePresenter { get; private set; }
+
         public CameraTabViewModel(CameraTab model) : base(model)
         {
             TargetTemperatureText = "0";
             InternalShutterState = Model.Camera.Shutter.Internal;
             ExternalShutterMode = CanControlExternalShutter ? Model.Camera.Shutter.External : null;
+
+            DipolImagePresenter = new DipolImagePresenterViewModel(Model.ImagePresenter);
+            
+
             HookValidators();
             HookObservables();
         }
@@ -155,25 +161,6 @@ namespace DIPOL_UF.ViewModels
                     .DisposeWith(_subscriptions);
 
             }
-            
-
-            //var shutterObs = Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.Shutter))
-            //                      .Select(x => x.Shutter)
-            //                      .Subscribe(A)
-            //                      .DistinctUntilChanged();
-
-            //if (CanControlInternalShutter)
-            //    shutterObs.Select(x => x.Internal).DistinctUntilChanged()
-            //              .Select(x => Converters.ConverterImplementations.EnumToDescriptionConversion(x))
-            //              .ObserveOnUi()
-            //              .DisposeWith(_subscriptions);
-
-            //if(CanControlExternalShutter && HasIndependentShutters)
-            //    shutterObs.Select(x => x.External).Where(x => x.HasValue)
-            //              // ReSharper disable once PossibleInvalidOperationException
-            //              .Select(x => x.Value)
-            //              .DistinctUntilChanged()
-
 
         }
 

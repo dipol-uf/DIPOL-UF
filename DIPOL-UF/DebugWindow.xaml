@@ -7,9 +7,6 @@
         mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="700">
     <Grid Margin="20">
-        <!--<controls:DipolImagePresenter x:Name="TestPresenter" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>-->
-        <Slider Style="{StaticResource SlaveMasterSlider}" 
-                VerticalAlignment="Center" 
-                Value="1" FontSize="30"/>
+        <controls:DipolImagePresenter x:Name="TestPresenter" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
     </Grid>
 </Window>
