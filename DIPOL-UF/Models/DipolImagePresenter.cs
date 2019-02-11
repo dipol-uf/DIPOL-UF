@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -25,35 +27,41 @@ namespace DIPOL_UF.Models
 {
     public class DipolImagePresenter : ReactiveObjectEx
     {
-        private enum GeometryLayer
+         enum GeometryLayer
         {
             Aperture,
             Gap,
             Annulus
         }
-        //public Dictionary<string, double> ImageStats
-        //{
-        //    get;
-        //} = new Dictionary<string, double>
-        //{
-        //    {"Median", 0},
-        //    {"Minimum", 0},
-        //    {"Maximum", 0},
-        //    {"ApertureAvg", 0},
-        //    {"ApertureSd", 0},
-        //    {"AnnulusAvg", 0},
-        //    {"AnnulusSd", 0},
-        //    {"SNR", 0},
-        //    {"Intensity", 0}
-        //};
-        private static List<Func<double, double, GeometryDescriptor>>  AvailableGeometries { get; }
+        public class ImageStatsCollection : ReactiveObjectEx
+        {
+            [Reactive]
+            public double Median { get;  set; }
+            [Reactive]
+            public double Minimum { get;  set; }
+            [Reactive]
+            public double Maximum { get;  set; }
+            [Reactive]
+            public double ApertureAvg { get;  set; }
+            [Reactive]
+            public double Intensity { get;  set; }
+            [Reactive]
+            public double ApertureSd { get;  set; }
+            [Reactive]
+            public double AnnulusAvg { get;  set; }
+            [Reactive]
+            public double Snr { get;  set; }
+            [Reactive]
+            public double AnnulusSd { get;  set; }
+
+        }
+
+         static List<Func<double, double, GeometryDescriptor>>  AvailableGeometries { get; }
         public static List<string> GeometriesAliases { get; }
-        private SourceCache<(string Key, double Value), string> _imageStats =
-            new SourceCache<(string Key, double Value), string>(x => x.Key);
 
-        private Image _sourceImage;
+         Image _sourceImage;
 
-        private readonly int ThumbDelta = 1;
+         readonly int ThumbDelta = 1;
         public int ThumbScaleMin => 0;
         public int ThumbScaleMax => 1000;
         public double ImageScaleMin => 0.0;
@@ -67,9 +75,9 @@ namespace DIPOL_UF.Models
         [Reactive]
         public Image DisplayedImage { get; set; }
         [Reactive]
-        public double LeftScale { get; private set; }
+        public double LeftScale { get;  set; }
         [Reactive]
-        public double RightScale {  get; private set; }
+        public double RightScale {  get;  set; }
         [Reactive]
         public int ThumbLeft { get; set; }
         [Reactive]
@@ -168,22 +176,26 @@ namespace DIPOL_UF.Models
             get;
             set;
         }
+        [Reactive]
+        public ImageStatsCollection ImageStats { get; set; }
+        [Reactive]
+        public bool IsMouseOverImage { get; set; }
 
         public Point SamplerCenterPos { [ObservableAsProperty] get; }
         public double ImageGapSize { [ObservableAsProperty] get; }
         public double ImageSamplerSize { [ObservableAsProperty] get; }
         public double PixValue { [ObservableAsProperty] get; }
 
-        public ReactiveCommand<Image, Image> LoadImageCommand { get; private set; }
-        public ReactiveCommand<int, int> LeftThumbChangedCommand { get; private set; }
-        public ReactiveCommand<int, int> RightThumbChangedCommand { get; private set; }
-        public ReactiveCommand<(Size Size, Point Pos), (Size Size, Point Pos)> MouseHoverCommand { get; private set; }
+        public ReactiveCommand<Image, Image> LoadImageCommand { get;  set; }
+        public ReactiveCommand<int, int> LeftThumbChangedCommand { get;  set; }
+        public ReactiveCommand<int, int> RightThumbChangedCommand { get;  set; }
+        public ReactiveCommand<(Size Size, Point Pos), (Size Size, Point Pos)> MouseHoverCommand { get;  set; }
         public DelegateCommand SizeChangedCommand
         {
             get;
             set;
         }
-        public ReactiveCommand<MouseButtonEventArgs, MouseButtonEventArgs> ImageClickCommand { get; private set; }
+        public ReactiveCommand<MouseButtonEventArgs, MouseButtonEventArgs> ImageClickCommand { get;  set; }
         public DelegateCommand UnloadImageCommand
         {
             get;
@@ -200,7 +212,7 @@ namespace DIPOL_UF.Models
             MaxApertureWidth = 100;
             MaxGapWidth = 100;
             MaxAnnulusWidth = 100;
-
+            ImageStats = new ImageStatsCollection();
           
 
             InitializeCommands();
@@ -209,7 +221,7 @@ namespace DIPOL_UF.Models
          
         }
 
-        private void InitializeCommands()
+         void InitializeCommands()
         {
             LeftThumbChangedCommand =
                 ReactiveCommand.Create<int, int>(
@@ -270,7 +282,7 @@ namespace DIPOL_UF.Models
                 (param) => DisplayedImage != null);
         }
 
-        private void InitializeSamplerGeometry()
+         void InitializeSamplerGeometry()
         {
             ApertureGeometry = AvailableGeometries[0](20, 3);
             GapGeometry = AvailableGeometries[0](40, 3);
@@ -279,7 +291,7 @@ namespace DIPOL_UF.Models
             LastKnownImageControlSize = Size.Empty;
         }
 
-        private void HookObservables()
+         void HookObservables()
         {
             LeftThumbChangedCommand.BindTo(this, x => x.ThumbLeft)
                                    .DisposeWith(_subscriptions);
@@ -391,12 +403,33 @@ namespace DIPOL_UF.Models
                 .DisposeWith(_subscriptions);
 
             this.WhenPropertyChanged(x => x.SamplerCenterPosInPix)
-                .Where(x => !LastKnownImageControlSize.IsEmpty)
+                .Where(x => 
+                    !LastKnownImageControlSize.IsEmpty 
+                    && !(_sourceImage is null))
                 .Select(x => 1.0 * _sourceImage.Get<float>(
                                  Convert.ToInt32(x.Value.Y),
                                  Convert.ToInt32(x.Value.X)))
                 .ToPropertyEx(this, x => x.PixValue)
                 .DisposeWith(_subscriptions);
+
+            var statsObservable =
+                this.WhenAnyPropertyChanged(
+                        nameof(SamplerCenterPosInPix),
+                        nameof(DisplayedImage),
+                        nameof(ApertureGeometry), nameof(GapGeometry), nameof(SamplerGeometry))
+                    .Where(x =>
+                        !(x.DisplayedImage is null))
+                    .Sample(TimeSpan.Parse(
+                        UiSettingsProvider.Settings.Get("ImageStatsDelay", "00:00:00.250")));
+
+            statsObservable.Where(x => !x.IsMouseOverImage && !IsSamplerFixed)
+                           .Select<DipolImagePresenter, ImageStatsCollection>(x => null)
+                           .BindTo(this, x => x.ImageStats)
+                           .DisposeWith(_subscriptions);
+            statsObservable.Where(x => x.IsSamplerFixed || x.IsMouseOverImage)
+                           .Select(_ => Observable.FromAsync(async () => await CalculateStatisticsAsync()))
+                           .Merge()
+                           .SubscribeDispose(_subscriptions);
         }
 
 
@@ -413,7 +446,7 @@ namespace DIPOL_UF.Models
 
         
 
-        private async Task CopyImageAsync(Image image)
+         async Task CopyImageAsync(Image image)
         {
             var isFirstLoad = DisplayedImage == null;
             Image temp = null;
@@ -452,23 +485,14 @@ namespace DIPOL_UF.Models
 
         }
 
-        private async Task CalculateStatisticsAsync()
+         async Task CalculateStatisticsAsync()
         {
-            
-            var annAvg = 0.0;
-            var apAvg = 0.0;
-            var min = 0.0;
-            var max = 0.0;
-            var med = 0.0;
-            var annSd = 0.0;
-            var apSd = 0.0;
-            var snr = 1.0;
-            var intens = 0.0;
-            var n = 1;
+         
+            var stats = new ImageStatsCollection();
 
             await Helper.RunNoMarshall(() =>
             {
-
+                var n = 0;
                 
                 var aperture = GetPixelsInArea(GeometryLayer.Aperture);
 
@@ -483,44 +507,30 @@ namespace DIPOL_UF.Models
 
                 if (annData.Count > 0)
                 {
-                    annAvg = annData.Average();
-                    annSd = Math.Sqrt(annData.Select(x => Math.Pow(x - annAvg, 2)).Sum() / annData.Count);
+                    stats.AnnulusAvg = annData.Average();
+                    stats.AnnulusSd = Math.Sqrt(annData.Select(x => Math.Pow(x - stats.AnnulusAvg, 2)).Sum() / annData.Count);
                 }
                 if (apData.Count > 0)
                 {
-                    apAvg = apData.Average();
-                    min = apData.First();
-                    max = apData.Last();
-                    med = apData[apData.Count / 2];
-                    var posPixels = apData.Where(x => x > annAvg).ToList();
+                    stats.ApertureAvg = apData.Average();
+                    stats.Minimum = apData.First();
+                    stats.Maximum = apData.Last();
+                    stats.Median = apData[apData.Count / 2];
+                    var posPixels = apData.Where(x => x > stats.AnnulusAvg).ToList();
                     n = posPixels.Count;
-                    intens = posPixels.Sum() - n * annAvg;
-                    apSd = Math.Sqrt(apData.Select(x => Math.Pow(x - apAvg, 2)).Sum() / apData.Count);
+                    stats.Intensity = posPixels.Sum() - n * stats.AnnulusAvg;
+                    stats.ApertureSd = Math.Sqrt(apData.Select(x => Math.Pow(x - stats.ApertureAvg, 2)).Sum() / apData.Count);
                 }
 
-                if (intens > 0 && n > 0 && annSd > 0)
-                    snr = intens / annSd / Math.Sqrt(n);
+                if (stats.Intensity > 0 && n > 0 && stats.AnnulusSd > 0)
+                    stats.Snr = stats.Intensity / stats.AnnulusSd / Math.Sqrt(n);
                 
             });
 
-            _imageStats.Edit(context =>
-            {
-                context.AddOrUpdate(("ApertureAvg", apAvg));
-                context.AddOrUpdate(("Minimum", min));
-                context.AddOrUpdate(("Maximum", max));
-                context.AddOrUpdate(("Median", med));
-                context.AddOrUpdate(("Intensity", intens));
-                context.AddOrUpdate(("ApertureSd", apSd));
-                context.AddOrUpdate(("SNR", snr));
-                context.AddOrUpdate(("AnnulusAvg", annAvg));
-                context.AddOrUpdate(("AnnulusSd", annSd));
-            });
-
-            var test = _imageStats.Connect();
-            //test.
+            ImageStats = stats;
 
         }
-        private void UpdateGeometrySizeRanges()
+         void UpdateGeometrySizeRanges()
         {
             if (DisplayedImage == null)
                 return;
@@ -532,7 +542,7 @@ namespace DIPOL_UF.Models
             MaxGapWidth = sizeFr;
             MaxAnnulusWidth = 2 * sizeFr;
         }
-        private void UpdateSamplerPosition(Size elemSize, Point pos)
+         void UpdateSamplerPosition(Size elemSize, Point pos)
         {
             if (elemSize.IsEmpty)
                 return;
@@ -547,38 +557,38 @@ namespace DIPOL_UF.Models
             SamplerCenterPosInPix = GetPixelScale(new Point(posX, posY));
         }
         // Presenter to pixel scale transformations
-        private double GetPixelScale(double x, bool horizontal = false)
+         double GetPixelScale(double x, bool horizontal = false)
             => x * (DisplayedImage != null && !LastKnownImageControlSize.IsEmpty
                    ? (horizontal
                        ? (DisplayedImage.Width / LastKnownImageControlSize.Width)
                        : (DisplayedImage.Height / LastKnownImageControlSize.Height))
                    : 1.0);
-        private Point GetPixelScale(Point p)
+         Point GetPixelScale(Point p)
             => DisplayedImage != null
                 ? new Point(
                     GetPixelScale(p.X, true),
                     GetPixelScale(p.Y))
                 : p;
-        private Size GetPixelScale(Size s)
+         Size GetPixelScale(Size s)
             => DisplayedImage != null
                 ? new Size(
                     GetPixelScale(s.Width, true),
                     GetPixelScale(s.Height))
                 : s;
-        private double GetImageScale(double x, bool horizontal = false)
+         double GetImageScale(double x, bool horizontal = false)
             =>  x * (DisplayedImage != null && !LastKnownImageControlSize.IsEmpty
                     ? (horizontal
                         ? (LastKnownImageControlSize.Width / DisplayedImage.Width)
                         : (LastKnownImageControlSize.Height / DisplayedImage.Height))
                     : 1.0);
-        private Point GetImageScale(Point p)
+         Point GetImageScale(Point p)
             => DisplayedImage != null
                 ? new Point(
                     GetImageScale(p.X, true),
                     GetImageScale(p.Y))
                 : p;
 
-        private List<(int X, int Y)> GetPixelsInArea(GeometryLayer layer)
+         List<(int X, int Y)> GetPixelsInArea(GeometryLayer layer)
         {
             if (!LastKnownImageControlSize.IsEmpty && DisplayedImage != null)
             {
@@ -668,7 +678,7 @@ namespace DIPOL_UF.Models
             return new List<(int X, int Y)> {(0, 0)};
         }
 
-        private void SizeChangedCommandExecute(object parameter)
+         void SizeChangedCommandExecute(object parameter)
         {
             if (DisplayedImage != null &&
                 parameter is CommandEventArgs<SizeChangedEventArgs> args )
@@ -679,7 +689,7 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private void ImageDoubleClickCommandExecute(MouseEventArgs args)
+         void ImageDoubleClickCommandExecute(MouseEventArgs args)
         {
             if (args.Source is FrameworkElement elem)
             {
@@ -693,7 +703,7 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private void UnloadImageCommandExecute(object parameter)
+         void UnloadImageCommandExecute(object parameter)
         {
             _sourceImage = null;
             DisplayedImage = null;
@@ -750,7 +760,7 @@ namespace DIPOL_UF.Models
         {
             (AvailableGeometries, GeometriesAliases) = InitializeAvailableGeometries();
         }
-        private static (List<Func<double, double, GeometryDescriptor>>, List<string>) InitializeAvailableGeometries()
+         static (List<Func<double, double, GeometryDescriptor>>, List<string>) InitializeAvailableGeometries()
         {
             GeometryDescriptor CommonRectangle(double size, double thickness)
             {

@@ -234,37 +234,37 @@
             <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[Median], 
+                        ImageStats.Median, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[Minimum], 
+                        ImageStats.Minimum, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[Maximum], 
+                        ImageStats.Maximum, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[ApertureAvg], 
+                        ImageStats.ApertureAvg, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[Intensity], 
+                        ImageStats.Intensity, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[ApertureSd], 
+                        ImageStats.ApertureSd, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
 
@@ -288,19 +288,19 @@
             <TextBox Grid.Row="4" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[AnnulusAvg], 
+                        ImageStats.AnnulusAvg, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="5" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[SNR], 
+                        ImageStats.Snr, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="6" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[AnnulusSd], 
+                        ImageStats.AnnulusSd, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
 
