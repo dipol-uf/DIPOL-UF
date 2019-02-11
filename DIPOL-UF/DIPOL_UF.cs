@@ -80,7 +80,11 @@ namespace DIPOL_UF
 
             var model = new DipolImagePresenter();
             var vm = new DipolImagePresenterViewModel(model);
-            Task.Run(async () => await model.LoadImageAsync(img));
+            Task.Run(async () =>
+            {
+                await Task.Delay(1000);
+                await model.LoadImageCommand.Execute(img);
+            });
 
             var view = new DebugWindow() {DataContext = vm};
 

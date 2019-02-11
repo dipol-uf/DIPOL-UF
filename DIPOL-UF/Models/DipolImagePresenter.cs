@@ -42,7 +42,6 @@ namespace DIPOL_UF.Models
             IsEnabled = false
         };
         private Image _sourceImage;
-        private Image _displayedImage;
         private double _thumbLeft;
         private double _thumbRight = 1000;
 
@@ -194,6 +193,7 @@ namespace DIPOL_UF.Models
             set;
         }
 
+        public ReactiveCommand<Image, Unit> LoadImageCommand { get; private set; }
         public ReactiveCommand<double, double> LeftThumbChangedCommand { get; private set; }
         public ReactiveCommand<double, double> RightThumbChangedCommand { get; private set; }
         public DelegateCommand MouseHoverCommand
@@ -279,6 +279,15 @@ namespace DIPOL_UF.Models
                                    })
                                .DisposeWith(_subscriptions);
 
+            LoadImageCommand =
+                ReactiveCommand.CreateFromTask<Image, Unit>(
+                                   async x =>
+                                   {
+                                       await LoadImageAsync(x);
+                                       return Unit.Default;
+                                   })
+                               .DisposeWith(_subscriptions);
+
             MouseHoverCommand = new DelegateCommand(
                 MouseHoverCommandExecute,
                 DelegateCommand.CanExecuteAlways);
@@ -295,6 +304,7 @@ namespace DIPOL_UF.Models
                 UnloadImageCommandExecute,
                 (param) => DisplayedImage != null);
         }
+
         private void InitializeSamplerGeometry()
         {
             ApertureGeometry = AvailableGeometries[0](1, 1);
@@ -321,14 +331,7 @@ namespace DIPOL_UF.Models
                 .Select(x => x - 1)
                 .BindTo(this, x => x.ThumbLeft)
                 .DisposeWith(_subscriptions);
-#if DEBUG
 
-            this.WhenAnyPropertyChanged(nameof(ThumbRight), nameof(ThumbLeft))
-                .Select(x => (ThumbLeft, ThumbRight))
-                .LogObservable("Thumbs", _subscriptions);
-
-
-#endif
         }
 
 
@@ -339,7 +342,7 @@ namespace DIPOL_UF.Models
 
         public void LoadImage(Image image)
         {
-            Task.Run(async () => await CopyImageAsync(image));
+            Helper.RunNoMarshall(async () => await CopyImageAsync(image));
         }
         public async Task LoadImageAsync(Image image)
         {
@@ -365,22 +368,22 @@ namespace DIPOL_UF.Models
 
         private async Task CopyImageAsync(Image image)
         {
-            bool isFirstLoad = DisplayedImage == null;
+            var isFirstLoad = DisplayedImage == null;
 
             switch (image.UnderlyingType)
             {
                 case TypeCode.UInt16:
-                    await Task.Run(() =>
+                    await Helper.RunNoMarshall(() =>
                     {
                          _sourceImage = image.CastTo<ushort, float>(x => x);
-                        _displayedImage = _sourceImage.Copy();
+                        DisplayedImage = _sourceImage.Copy();
                     });
                     break;
                 case TypeCode.Single:
-                    await Task.Run(() =>
+                    await Helper.RunNoMarshall(() =>
                     {
                         _sourceImage = image.Copy();
-                        _displayedImage = _sourceImage.Copy();
+                        DisplayedImage = _sourceImage.Copy();
                     });
                     break;
                 default:
@@ -388,12 +391,16 @@ namespace DIPOL_UF.Models
                     throw new NotSupportedException($"Image type {image.UnderlyingType} is not supported.");
             }
 
-            _displayedImage.Scale(0, 1);
-            this.RaisePropertyChanged(nameof(DisplayedImage));
+            if (DisplayedImage is null)
+                throw new NullReferenceException("Image cannot be null.");
+
+            DisplayedImage.Scale(0, 1);
             SamplerCenterPosInPix = isFirstLoad
+                // ReSharper disable PossibleLossOfFraction
                 ? new Point(DisplayedImage.Width / 2, DisplayedImage.Height / 2)
+                // ReSharper restore PossibleLossOfFraction
                 : SamplerCenterPosInPix;
-                
+
         }
         private async Task CalculateStatisticsAsync()
         {
@@ -510,10 +517,10 @@ namespace DIPOL_UF.Models
         }
         private void UpdateGeometrySizeRanges()
         {
-            if (_displayedImage == null)
+            if (DisplayedImage == null)
                 return;
 
-            var size = Math.Min(_displayedImage.Width, _displayedImage.Height) - 3 * MaxGeometryThickness;
+            var size = Math.Min(DisplayedImage.Width, DisplayedImage.Height) - 3 * MaxGeometryThickness;
             var sizeFr = Math.Floor(size / 5.0);
 
             MaxApertureWidth = 2 * sizeFr;
