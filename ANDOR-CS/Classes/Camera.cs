@@ -550,7 +550,7 @@ namespace ANDOR_CS.Classes
                 var result = Call(CameraHandle,
                     () => SdkInstance.GetNumberNewImages(ref indices.First, ref indices.Last));
                 // TODO: Exception
-                var images = new Dictionary<int, Image>();
+                var images = new Dictionary<int, Image>(indices.Last - indices.First + 1);
 
                 if (indices.First <= indices.Last)
                 {
@@ -560,7 +560,7 @@ namespace ANDOR_CS.Classes
 
 
                     var buffer = new ushort[matrixSize * MaxImagesPerCall];
-                    var imgBuffer = new ushort[matrixSize];
+                    var imgBuffer = new byte[matrixSize * size];
                     var validIndex = (First: 0, Last: 0);
                     for (var i = 0; i < nBlocks; i++)
                     {
@@ -577,7 +577,7 @@ namespace ANDOR_CS.Classes
                         for (var j = currentIndex.First; j <= currentIndex.Last; j++)
                         {
                             Buffer.BlockCopy(buffer, (j - 1) % MaxImagesPerCall* size * matrixSize, imgBuffer, 0, matrixSize * size);
-                            images.Add(j, new Image(imgBuffer, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height));
+                            images.Add(j, new Image(imgBuffer, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height, TypeCode.UInt16));
                         }
 
                     }
