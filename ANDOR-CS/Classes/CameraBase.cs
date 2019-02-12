@@ -49,6 +49,7 @@ namespace ANDOR_CS.Classes
         protected const int PreAmpGainDescriptorMaxLength = 30;
         protected const int StatusCheckTimeOutMs = 100;
         protected const int TempCheckTimeOutMs = 5000;
+        protected const int MaxImagesPerCall = 32;
 
         protected string _imgDir = SettingsProvider.Settings.Get<string>("ImageDir");
 
