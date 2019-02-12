@@ -508,9 +508,14 @@ namespace ANDOR_CS.Classes
             if (CurrentSettings.ImageArea != null)
             {
                 var array = new ushort[CurrentSettings.ImageArea.Value.Height * CurrentSettings.ImageArea.Value.Width];
+
                 var (first, last) = (0, 0);
-                ThrowIfError(Call(CameraHandle, () =>
-                    SdkInstance.GetImages16(e.Last, e.Last, array, (uint)(array.Length), ref first, ref last)), nameof(SdkInstance.GetImages16));
+
+                if (FailIfError(Call(CameraHandle, () =>
+                        SdkInstance.GetImages16(e.Last, e.Last, array, (uint) (array.Length), ref first, ref last)),
+                    nameof(SdkInstance.GetImages16), out var except))
+                    throw except;
+
                 var im = new Image(array, CurrentSettings.ImageArea.Value.Width,
                     CurrentSettings.ImageArea.Value.Height);
                 _acquiredImages.Enqueue(im);
@@ -1020,7 +1025,8 @@ namespace ANDOR_CS.Classes
                 try
                 {
                     // Checks if acquisition is in progress; throws exception
-                    ThrowIfAcquiring(this);
+                    if (FailIfAcquiring(this, out var except))
+                        throw except;
 
                     // If camera is not idle, cannot start acquisition
                     if (GetStatus() != CameraStatus.Idle)
@@ -1047,10 +1053,12 @@ namespace ANDOR_CS.Classes
                         // Gets indexes of first and last available new images
                         var temp = (0, 0);
                         // ReSharper disable once AccessToModifiedClosure
-                        ThrowIfError(Call(CameraHandle, () => SdkInstance.GetNumberNewImages(
-                                ref temp.Item1, 
+                        if (FailIfError(Call(CameraHandle, () => SdkInstance.GetNumberNewImages(
+                                ref temp.Item1,
                                 ref temp.Item2)),
-                            nameof(SdkInstance.GetNumberNewImages));
+                            nameof(SdkInstance.GetNumberNewImages), out except))
+                            throw except;
+
                         acquiredImagesIndex = temp;
 
                         // If there is new image, updates indexes of previous available images and fires an event.
@@ -1079,9 +1087,10 @@ namespace ANDOR_CS.Classes
                     // Gets indexes of first and last available new images
 
 
-                    ThrowIfError(Call(CameraHandle, (ref (int, int) output) =>
-                        SdkInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
-                        out acquiredImagesIndex), nameof(SdkInstance.GetNumberNewImages));
+                    if (FailIfError(Call(CameraHandle, (ref (int, int) output) =>
+                            SdkInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
+                        out acquiredImagesIndex), nameof(SdkInstance.GetNumberNewImages), out except))
+                        throw except;
 
                     // If there is new image, updates indexes of previous available images and fires an event.
                     if (acquiredImagesIndex.Last != previousImages.Last
