@@ -539,7 +539,7 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        private List<(int Key, Image Image)> PullNewImages<T>() where T : unmanaged
+        private List<(int Key, int Index, Image Image)> PullNewImages<T>() where T : unmanaged
         {
             TypeCode imageType;
 
@@ -566,7 +566,7 @@ namespace ANDOR_CS.Classes
                 nameof(SdkInstance.GetNumberNewImages), out var except))
                 throw except;
 
-            var images = new List<(int Key, Image Image)>(indices.Last - indices.First + 1);
+            var images = new List<(int Key, int Index, Image Image)>(indices.Last - indices.First + 1);
 
             if (indices.First > 0 && indices.First <= indices.Last)
             {
@@ -608,12 +608,14 @@ namespace ANDOR_CS.Classes
                         
                         var fromStart = 0f;
 
+                        // ReSharper disable once AccessToModifiedClosure
                         if(_isMetadataAvailable 
-                            && Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref fromStart, j)) == SDK.DRV_SUCCESS)
-                            Console.WriteLine($"{j}\t{time}\t{fromStart}");
+                           && Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref fromStart, j)) == SDK.DRV_SUCCESS)
+                            Console.WriteLine($"{j}\t{(time.ToDateTime().AddMilliseconds(fromStart)):hh:mm:ss.fff}\t{fromStart}");
 
                         images.Add((
                             Key: DateTime.UtcNow.GetHashCode() + j,
+                            Index: j,
                             Image: new Image(imgBuffer, CurrentSettings.ImageArea.Value.Width,
                                 CurrentSettings.ImageArea.Value.Height, imageType)));
                     }
@@ -888,16 +890,16 @@ namespace ANDOR_CS.Classes
             if (FailIfAcquiring(this, out var except))
                 throw except;
 
+            // Marks camera as in process of acquiring
+            IsAcquiring = true;
+ 
+            // Fires event
+            OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus()));
+
             // Starts acquisition
             if (FailIfError(Call(CameraHandle, SdkInstance.StartAcquisition), nameof(SdkInstance.StartAcquisition),
                 out except))
                 throw except;
-
-            // Fires event
-            OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus()));
-
-            // Marks camera as in process of acquiring
-            IsAcquiring = true;
         }
 
         /// <inheritdoc />
@@ -1182,13 +1184,11 @@ namespace ANDOR_CS.Classes
 
                         foreach (var item in PullNewImages<ushort>())
                         {
-                            counter++;
+                            var offset = TimeSpan.FromSeconds(timings.Accumulation * (item.Index - 1) + readout + keepClean);
                             _images.TryAdd(item.Key, (item.Image, default));
+                            Console.WriteLine($"{item.Index}\t{start + offset:hh:mm:ss.fff}\r\n");
                         }
-                        var offset = TimeSpan.FromSeconds((timings.Exposure + readout + keepClean) * counter);
-                        Console.WriteLine(progress);
-                        Console.WriteLine($"{e.SignalTime:hh:mm:ss.fff}\t{start + offset:hh:mm:ss.fff}");
-                        Console.WriteLine($"{(e.SignalTime - (start + offset)).TotalMilliseconds}");
+                        //Console.WriteLine(progress);
 
 
                         if (status != CameraStatus.Acquiring)
@@ -1210,8 +1210,8 @@ namespace ANDOR_CS.Classes
 
                 acquisitionPollingTimer.Interval = timeout;
                 acquisitionPollingTimer.Elapsed += StatusUpdater;
-                start = DateTime.Now;
                 StartAcquisition();
+                start = DateTime.Now.AddMilliseconds(SettingsProvider.Settings.Get("AcquisitionTimerOffsetMS", 0.0));
 
                 acquisitionPollingTimer.Start();
 
