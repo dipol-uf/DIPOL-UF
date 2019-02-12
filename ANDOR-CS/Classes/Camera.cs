@@ -536,55 +536,79 @@ namespace ANDOR_CS.Classes
 
         private void PullNewImages<T>() where T : unmanaged
         {
-            if (CurrentSettings?.ImageArea is null)
-                throw new NullReferenceException("Cannot pull images without acquisition settings applied and known image area.");
-
-            var MaxImagesPerCall = 4;
+            TypeCode imageType;
 
             if (typeof(T) == typeof(ushort))
+                imageType = TypeCode.UInt16;
+            else if (typeof(T) == typeof(int))
+                imageType = TypeCode.Int32;
+            else
+                throw new ArgumentException("Cannot pull images in the unsupported type.", nameof(T));
+
+            if (CurrentSettings?.ImageArea is null)
+                throw new NullReferenceException(
+                    "Cannot pull images without acquisition settings applied and known image area.");
+
+            var MaxImagesPerCall = 4;
+            
+
+            var size = Marshal.SizeOf<T>();
+            var matrixSize = CurrentSettings.ImageArea.Value.Width *
+                             CurrentSettings.ImageArea.Value.Height;
+            var indices = (First: 0, Last: 0);
+
+            if (FailIfError(Call(CameraHandle,
+                    () => SdkInstance.GetNumberNewImages(ref indices.First, ref indices.Last)),
+                nameof(SdkInstance.GetNumberNewImages), out var except))
+                throw except;
+
+            var images = new Dictionary<int, Image>(indices.Last - indices.First + 1);
+
+            if (indices.First <= indices.Last)
             {
-                var size = sizeof(ushort);
-                var matrixSize = CurrentSettings.ImageArea.Value.Width *
-                                 CurrentSettings.ImageArea.Value.Height;
-                var indices = (First: 0, Last: 0);
-                var result = Call(CameraHandle,
-                    () => SdkInstance.GetNumberNewImages(ref indices.First, ref indices.Last));
-                // TODO: Exception
-                var images = new Dictionary<int, Image>(indices.Last - indices.First + 1);
+                var nImage = indices.Last - indices.First + 1;
+                var nBlocks = nImage / MaxImagesPerCall;
+                nBlocks = nBlocks * MaxImagesPerCall < nImage ? nBlocks + 1 : nBlocks;
 
-                if (indices.First <= indices.Last)
+                
+                Array buffer = new T[MaxImagesPerCall * matrixSize];
+                var imgBuffer = new byte[matrixSize * size];
+                var validIndex = (First: 0, Last: 0);
+
+                for (var i = 0; i < nBlocks; i++)
                 {
-                    var nImage = indices.Last - indices.First + 1;
-                    var nBlocks = nImage / MaxImagesPerCall;
-                    nBlocks = nBlocks * MaxImagesPerCall < nImage ? nBlocks + 1 : nBlocks;
+                    var currentIndex = (First: indices.First + MaxImagesPerCall * i,
+                        Last: Math.Min(indices.First + MaxImagesPerCall * (i + 1) - 1, indices.Last));
 
-
-                    var buffer = new ushort[matrixSize * MaxImagesPerCall];
-                    var imgBuffer = new byte[matrixSize * size];
-                    var validIndex = (First: 0, Last: 0);
-                    for (var i = 0; i < nBlocks; i++)
-                    {
-                        var currentIndex = (First: indices.First + MaxImagesPerCall * i,
-                            Last: Math.Min(indices.First + MaxImagesPerCall * (i + 1) - 1, indices.Last));
-
-                        result = Call(CameraHandle, () => SdkInstance.GetImages16(
+                    if(typeof(T) == typeof(ushort))
+                        if (FailIfError(Call(CameraHandle, () => SdkInstance.GetImages16(
                             currentIndex.First, currentIndex.Last,
-                            buffer,
+                            (ushort[]) buffer,
                             (uint) ((currentIndex.Last - currentIndex.First + 1) * matrixSize),
-                            ref validIndex.First, ref validIndex.Last));
-                        // TODO: Exception
+                            ref validIndex.First, ref validIndex.Last)), nameof(SdkInstance.GetImages16), out except))
+                            throw except;
 
-                        for (var j = currentIndex.First; j <= currentIndex.Last; j++)
-                        {
-                            Buffer.BlockCopy(buffer, (j - 1) % MaxImagesPerCall* size * matrixSize, imgBuffer, 0, matrixSize * size);
-                            images.Add(j, new Image(imgBuffer, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height, TypeCode.UInt16));
-                        }
+                    else if (typeof(T) == typeof(int))
+                        if (FailIfError(Call(CameraHandle, () => SdkInstance.GetImages(
+                            currentIndex.First, currentIndex.Last,
+                            (int[]) buffer,
+                            (uint) ((currentIndex.Last - currentIndex.First + 1) * matrixSize),
+                            ref validIndex.First, ref validIndex.Last)), nameof(SdkInstance.GetImages), out except))
+                            throw except;
 
+                    for (var j = currentIndex.First; j <= currentIndex.Last; j++)
+                    {
+                        Buffer.BlockCopy(buffer, (j - 1) % MaxImagesPerCall * size * matrixSize, imgBuffer, 0,
+                            matrixSize * size);
+                        images.Add(j,
+                            new Image(imgBuffer, CurrentSettings.ImageArea.Value.Width,
+                                CurrentSettings.ImageArea.Value.Height, imageType));
                     }
 
                 }
 
             }
+
         }
 
         /// <summary>
