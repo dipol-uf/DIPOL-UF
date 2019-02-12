@@ -28,6 +28,9 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+using ANDOR_CS.Classes;
+using ANDOR_CS.DataStructures;
+using ANDOR_CS.Enums;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
 using ReactiveUI;
@@ -42,11 +45,11 @@ namespace DIPOL_UF
         private static int Main(string[] args)
         {
 
-            //System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
+            System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
             System.Diagnostics.Debug.AutoFlush = true;
             System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
-            Test();
+            Test2();
             return 0;
 
 
@@ -90,6 +93,29 @@ namespace DIPOL_UF
 
             app.Run(view);
 
+        }
+
+        private static void Test2()
+        {
+            using (var cam = new Camera())
+            {
+                using (var setts = cam.GetAcquisitionSettingsTemplate())
+                {
+                    setts.SetExposureTime(0.01f);
+                    setts.SetImageArea(new Rectangle(1, 1, 512, 512));
+                    setts.SetAcquisitionMode(AcquisitionMode.Kinetic);
+                    setts.SetKineticCycle(128, 0.5f);
+                    setts.SetAccumulationCycle(1, 0f);
+                    setts.SetReadoutMode(ReadMode.FullImage);
+                    setts.SetTriggerMode(TriggerMode.Internal);
+                    setts.ApplySettings(out var timing);
+                    Helper.WriteLog(timing);
+
+                    cam.StartAcquisitionAsync(null).Wait();
+
+                    Console.ReadKey();
+                }
+            }
         }
     }
 }

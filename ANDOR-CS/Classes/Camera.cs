@@ -64,9 +64,6 @@ namespace ANDOR_CS.Classes
         private readonly ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> _runningTasks = 
             new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
-        private System.Timers.Timer _acquisitionPollingTimer;
-
-
         /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
@@ -534,7 +531,6 @@ namespace ANDOR_CS.Classes
                 }
             }
         }
-
 
         /// <summary>
         /// Sets current camera active
@@ -1042,12 +1038,17 @@ namespace ANDOR_CS.Classes
 
                 // Marks acquisition asynchronous
                 IsAsyncAcquisition = true;
-
+                var acquisitionPollingTimer = new System.Timers.Timer()
+                {
+                    Enabled = false,
+                    AutoReset = true
+                };
                 // Start acquisition
-                var completionSrc = new TaskCompletionSource<bool>(TaskCreationOptions.LongRunning);
+                var completionSrc = new TaskCompletionSource<bool>();
 
                 void StatusUpdater(object sender, ElapsedEventArgs e)
                 {
+                    if (!(sender is System.Timers.Timer timer) || !timer.Enabled) return;
                     try
                     {
                         var status = GetStatus();
@@ -1067,35 +1068,41 @@ namespace ANDOR_CS.Classes
 
                         Console.WriteLine($"{DateTime.Now}\t{(first, last)}");
 
+                        if (first > 0 && first < last)
+                        {
+                            var valid = (first: 0, last: 0);
+                            var array = new int[512 * 512];
+                            var result = Call(CameraHandle,
+                                () => SdkInstance.GetImages(first, first, array, (uint)array.Length, ref valid.first, ref valid.last));
+
+                            Console.WriteLine($"Valid {valid} and {result == SDK.DRV_SUCCESS}");
+                        }
                         if (status != CameraStatus.Acquiring)
                         {
-                            _acquisitionPollingTimer.Stop();
-                            completionSrc.SetResult(true);
+                            acquisitionPollingTimer.Stop();
+                            if(!completionSrc.Task.IsCompleted)
+                                completionSrc.SetResult(true);
                         }
                     }
                     catch (Exception innerEx)
                     {
-                        _acquisitionPollingTimer.Stop();
-                        completionSrc.SetException(innerEx);
+                        acquisitionPollingTimer.Stop();
+                        if (!completionSrc.Task.IsCompleted)
+                            completionSrc.SetException(innerEx);
                     }
                 }
 
 
-                if (_acquisitionPollingTimer is null)
-                    _acquisitionPollingTimer = new System.Timers.Timer()
-                    {
-                        AutoReset = true,
-                        Enabled = false
-                    };
 
-                _acquisitionPollingTimer.Interval = timeout;
-                _acquisitionPollingTimer.Elapsed += StatusUpdater;
+                acquisitionPollingTimer.Interval = timeout;
+                acquisitionPollingTimer.Elapsed += StatusUpdater;
 
                 StartAcquisition();
-
+                acquisitionPollingTimer.Start();
 
                 await completionSrc.Task;
-
+    
+                acquisitionPollingTimer.Stop();
                 // Gets indexes of first and last available new images
 
 
