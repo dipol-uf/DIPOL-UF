@@ -23,10 +23,12 @@
 //     SOFTWARE.
 
 using System;
+using System.CodeDom;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -529,6 +531,59 @@ namespace ANDOR_CS.Classes
                     using (var str = new FileStream(path, FileMode.OpenOrCreate))
                         FitsStream.WriteImage(im, FitsImageType.Int16, str, keys);
                 }
+            }
+        }
+
+        private void PullNewImages<T>() where T : unmanaged
+        {
+            if (CurrentSettings?.ImageArea is null)
+                throw new NullReferenceException("Cannot pull images without acquisition settings applied and known image area.");
+
+            var MaxImagesPerCall = 4;
+
+            if (typeof(T) == typeof(ushort))
+            {
+                var size = sizeof(ushort);
+                var matrixSize = CurrentSettings.ImageArea.Value.Width *
+                                 CurrentSettings.ImageArea.Value.Height;
+                var indices = (First: 0, Last: 0);
+                var result = Call(CameraHandle,
+                    () => SdkInstance.GetNumberNewImages(ref indices.First, ref indices.Last));
+                // TODO: Exception
+                var images = new Dictionary<int, Image>();
+
+                if (indices.First <= indices.Last)
+                {
+                    var nImage = indices.Last - indices.First + 1;
+                    var nBlocks = nImage / MaxImagesPerCall;
+                    nBlocks = nBlocks * MaxImagesPerCall < nImage ? nBlocks + 1 : nBlocks;
+
+
+                    var buffer = new ushort[matrixSize * MaxImagesPerCall];
+                    var imgBuffer = new ushort[matrixSize];
+                    var validIndex = (First: 0, Last: 0);
+                    for (var i = 0; i < nBlocks; i++)
+                    {
+                        var currentIndex = (First: indices.First + MaxImagesPerCall * i,
+                            Last: Math.Min(indices.First + MaxImagesPerCall * (i + 1) - 1, indices.Last));
+
+                        result = Call(CameraHandle, () => SdkInstance.GetImages16(
+                            currentIndex.First, currentIndex.Last,
+                            buffer,
+                            (uint) ((currentIndex.Last - currentIndex.First + 1) * matrixSize),
+                            ref validIndex.First, ref validIndex.Last));
+                        // TODO: Exception
+
+                        for (var j = currentIndex.First; j <= currentIndex.Last; j++)
+                        {
+                            Buffer.BlockCopy(buffer, (j - 1) % MaxImagesPerCall* size * matrixSize, imgBuffer, 0, matrixSize * size);
+                            images.Add(j, new Image(imgBuffer, CurrentSettings.ImageArea.Value.Width, CurrentSettings.ImageArea.Value.Height));
+                        }
+
+                    }
+
+                }
+
             }
         }
 
@@ -1066,17 +1121,8 @@ namespace ANDOR_CS.Classes
                             nameof(SdkInstance.GetNumberNewImages), out except))
                             throw except;
 
-                        Console.WriteLine($"{DateTime.Now}\t{(first, last)}");
+                        Console.WriteLine((first, last));
 
-                        if (first > 0 && first < last)
-                        {
-                            var valid = (first: 0, last: 0);
-                            var array = new int[512 * 512];
-                            var result = Call(CameraHandle,
-                                () => SdkInstance.GetImages(first, first, array, (uint)array.Length, ref valid.first, ref valid.last));
-
-                            Console.WriteLine($"Valid {valid} and {result == SDK.DRV_SUCCESS}");
-                        }
                         if (status != CameraStatus.Acquiring)
                         {
                             acquisitionPollingTimer.Stop();
@@ -1101,7 +1147,9 @@ namespace ANDOR_CS.Classes
                 acquisitionPollingTimer.Start();
 
                 await completionSrc.Task;
-    
+                
+                PullNewImages<ushort>();
+
                 acquisitionPollingTimer.Stop();
                 // Gets indexes of first and last available new images
 
