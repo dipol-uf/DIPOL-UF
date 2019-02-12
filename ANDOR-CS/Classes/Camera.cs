@@ -30,6 +30,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
@@ -62,6 +63,9 @@ namespace ANDOR_CS.Classes
         
         private readonly ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> _runningTasks = 
             new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
+
+        private System.Timers.Timer _acquisitionPollingTimer;
+
 
         /// <summary>
         /// Indicates if this camera is currently active
@@ -1021,121 +1025,112 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSdkException"/>
         /// <returns>Task that can be queried for execution status.</returns>
-        public override async Task StartAcquisitionAsync(CancellationTokenSource source, int timeout = StatusCheckTimeOutMs)
+        public override async Task StartAcquisitionAsync(CancellationTokenSource source,
+            int timeout = StatusCheckTimeOutMs)
         {
             CheckIsDisposed();
 
-            var task = Task.Run(() =>
+            try
             {
-                var status = CameraStatus.Idle;
-                try
+                // Checks if acquisition is in progress; throws exception
+                if (FailIfAcquiring(this, out var except))
+                    throw except;
+
+                // If camera is not idle, cannot start acquisition
+                if (GetStatus() != CameraStatus.Idle)
+                    throw new AndorSdkException("Camera is not in the idle mode.", null);
+
+                // Marks acquisition asynchronous
+                IsAsyncAcquisition = true;
+
+                // Start acquisition
+                var completionSrc = new TaskCompletionSource<bool>(TaskCreationOptions.LongRunning);
+
+                void StatusUpdater(object sender, ElapsedEventArgs e)
                 {
-                    // Checks if acquisition is in progress; throws exception
-                    if (FailIfAcquiring(this, out var except))
-                        throw except;
-
-                    // If camera is not idle, cannot start acquisition
-                    if (GetStatus() != CameraStatus.Idle)
-                        throw new AndorSdkException("Camera is not in the idle mode.", null);
-
-                    // Marks acquisition asynchronous
-                    IsAsyncAcquisition = true;
-
-                    // Start acquisition
-                    StartAcquisition();
-
-                    status = GetStatus();
-
-                    (int First, int Last) previousImages = (0, 0);
-                    (int First, int Last) acquiredImagesIndex;
-                    // While status is acquiring
-                    while ((status = GetStatus()) == CameraStatus.Acquiring)
+                    try
                     {
+                        var status = GetStatus();
                         // Fires AcquisitionStatusChecked event
                         OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, true));
 
                         // Checks if new image is already acquired and is available in camera memory
 
                         // Gets indexes of first and last available new images
-                        var temp = (0, 0);
+                        var (first, last) = (0, 0);
                         // ReSharper disable once AccessToModifiedClosure
                         if (FailIfError(Call(CameraHandle, () => SdkInstance.GetNumberNewImages(
-                                ref temp.Item1,
-                                ref temp.Item2)),
+                                ref first,
+                                ref last)),
                             nameof(SdkInstance.GetNumberNewImages), out except))
                             throw except;
 
-                        acquiredImagesIndex = temp;
+                        Console.WriteLine($"{DateTime.Now}\t{(first, last)}");
 
-                        // If there is new image, updates indexes of previous available images and fires an event.
-                        if (acquiredImagesIndex.Last != previousImages.Last
-                            || acquiredImagesIndex.First != previousImages.First)
+                        if (status != CameraStatus.Acquiring)
                         {
-                            previousImages = acquiredImagesIndex;
-
-                            OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
+                            _acquisitionPollingTimer.Stop();
+                            completionSrc.SetResult(true);
                         }
-
-                        // If task is aborted
-                        if (source.Token.IsCancellationRequested)
-                        {
-                            // Aborts
-                            AbortAcquisition();
-                            // Exits wait loop
-                            break;
-                        }
-
-                        // Waits for specified amount of time before checking status again
-
-                        Thread.Sleep(timeout);
                     }
-
-                    // Gets indexes of first and last available new images
-
-
-                    if (FailIfError(Call(CameraHandle, (ref (int, int) output) =>
-                            SdkInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
-                        out acquiredImagesIndex), nameof(SdkInstance.GetNumberNewImages), out except))
-                        throw except;
-
-                    // If there is new image, updates indexes of previous available images and fires an event.
-                    if (acquiredImagesIndex.Last != previousImages.Last
-                        || acquiredImagesIndex.First != previousImages.First)
+                    catch (Exception innerEx)
                     {
-                        OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
+                        _acquisitionPollingTimer.Stop();
+                        completionSrc.SetException(innerEx);
                     }
-
-                    // If after end of acquisition camera status is not idle, throws exception
-                    if (!source.Token.IsCancellationRequested && status != CameraStatus.Idle)
-                        throw new AndorSdkException($"Acquisition finished with non-Idle status ({status}).", null);
-
                 }
-                // If there were exceptions during status checking loop
-                catch
-                {
-                    // Fire event
-                    OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(status, true));
-                    // re-throw received exception
-                    throw;
-                }
-                // Ensures that acquisition is properly finished and event is fired
-                finally
-                {
-                    IsAcquiring = false;
-                    IsAsyncAcquisition = false;
-                    OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus(), true));
-                }
-            });
 
-            var id = task.Id;
 
-            _runningTasks.TryAdd(id, (Task: task, Source: source));
+                if (_acquisitionPollingTimer is null)
+                    _acquisitionPollingTimer = new System.Timers.Timer()
+                    {
+                        AutoReset = true,
+                        Enabled = false
+                    };
 
-            await task;
+                _acquisitionPollingTimer.Interval = timeout;
+                _acquisitionPollingTimer.Elapsed += StatusUpdater;
 
-            if (!_runningTasks.TryRemove(id, out _))
-                throw new InvalidOperationException("Failed to remove finished task from queue.");
+                StartAcquisition();
 
+
+                await completionSrc.Task;
+
+                // Gets indexes of first and last available new images
+
+
+                //if (FailIfError(Call(CameraHandle, (ref (int, int) output) =>
+                //        SdkInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
+                //    out acquiredImagesIndex), nameof(SdkInstance.GetNumberNewImages), out except))
+                //    throw except;
+
+                // If there is new image, updates indexes of previous available images and fires an event.
+                //if (acquiredImagesIndex.Last != previousImages.Last
+                //    || acquiredImagesIndex.First != previousImages.First)
+                //{
+                //    OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
+                //}
+
+                // If after end of acquisition camera status is not idle, throws exception
+                //if (!source.Token.IsCancellationRequested && status != CameraStatus.Idle)
+                //    throw new AndorSdkException($"Acquisition finished with non-Idle status ({status}).", null);
+
+            }
+            // If there were exceptions during status checking loop
+            catch
+            {
+                // Fire event
+                OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(default, true));
+                // re-throw received exception
+                throw;
+            }
+            // Ensures that acquisition is properly finished and event is fired
+            finally
+            {
+                IsAcquiring = false;
+                IsAsyncAcquisition = false;
+                OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus(), true));
+            }
         }
 
         /// <summary>
