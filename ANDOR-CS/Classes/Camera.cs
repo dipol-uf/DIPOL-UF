@@ -566,7 +566,7 @@ namespace ANDOR_CS.Classes
 
             var images = new List<(int Key, Image Image)>(indices.Last - indices.First + 1);
 
-            if (indices.First <= indices.Last)
+            if (indices.First > 0 && indices.First <= indices.Last)
             {
                 var nImage = indices.Last - indices.First + 1;
                 var nBlocks = nImage / MaxImagesPerCall;
@@ -665,7 +665,7 @@ namespace ANDOR_CS.Classes
             if (!IsAcquiring || IsAsyncAcquisition || camStatus == CameraStatus.Acquiring)
                 return camStatus;
             IsAcquiring = false;
-            OnAcquisitionFinished(new AcquisitionStatusEventArgs(camStatus, false));
+            OnAcquisitionFinished(new AcquisitionStatusEventArgs(camStatus));
             return camStatus;
 
         }
@@ -876,7 +876,7 @@ namespace ANDOR_CS.Classes
                 throw except;
 
             // Fires event
-            OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
+            OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus()));
 
             // Marks camera as in process of acquiring
             IsAcquiring = true;
@@ -908,7 +908,7 @@ namespace ANDOR_CS.Classes
                 throw except;
 
             // Fires AcquisitionAborted event
-            OnAcquisitionAborted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
+            OnAcquisitionAborted(new AcquisitionStatusEventArgs(GetStatus()));
 
             // Marks the end of acquisition
             IsAcquiring = false;
@@ -1119,6 +1119,15 @@ namespace ANDOR_CS.Classes
                 if (GetStatus() != CameraStatus.Idle)
                     throw new AndorSdkException("Camera is not in the idle mode.", null);
 
+                var timings = (Exposure: 0f, Accumulation: 0f, Kinetic: 0f);
+                Call(CameraHandle,
+                    () => SdkInstance.GetAcquisitionTimings(ref timings.Exposure, ref timings.Accumulation,
+                        ref timings.Kinetic));
+
+                Call<float>(CameraHandle, SdkInstance.GetReadOutTime, out var readout);
+                Call<float>(CameraHandle, SdkInstance.GetKeepCleanTime, out var keepClean);
+
+
                 // Marks acquisition asynchronous
                 IsAsyncAcquisition = true;
                 var acquisitionPollingTimer = new System.Timers.Timer()
@@ -1129,17 +1138,34 @@ namespace ANDOR_CS.Classes
                 // Start acquisition
                 var completionSrc = new TaskCompletionSource<bool>();
 
+                var counter = 0;
+                var start = DateTime.Now;
                 void StatusUpdater(object sender, ElapsedEventArgs e)
                 {
                     if (!(sender is System.Timers.Timer timer) || !timer.Enabled) return;
                     try
                     {
                         var status = GetStatus();
-                        OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, true));
+                        var progress = (Accumulation: 0, Kinetic: 0);
+                        if (FailIfError(Call(CameraHandle,
+                                () => SdkInstance.GetAcquisitionProgress(ref progress.Accumulation,
+                                    ref progress.Kinetic)),
+                            nameof(SdkInstance.GetAcquisitionProgress), out var innerExcept))
+                            throw innerExcept;
+
+                        OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status));
 
 
                         foreach (var item in PullNewImages<ushort>())
+                        {
+                            counter++;
                             _images.TryAdd(item.Key, (item.Image, default));
+                        }
+                        var offset = TimeSpan.FromSeconds((timings.Exposure + readout + keepClean) * counter);
+                        Console.WriteLine(progress);
+                        Console.WriteLine($"{e.SignalTime:hh:mm:ss.fff}\t{start + offset:hh:mm:ss.fff}");
+                        Console.WriteLine($"{(e.SignalTime - (start + offset)).TotalMilliseconds}");
+
 
                         if (status != CameraStatus.Acquiring)
                         {
@@ -1160,7 +1186,7 @@ namespace ANDOR_CS.Classes
 
                 acquisitionPollingTimer.Interval = timeout;
                 acquisitionPollingTimer.Elapsed += StatusUpdater;
-
+                start = DateTime.Now;
                 StartAcquisition();
 
                 acquisitionPollingTimer.Start();
@@ -1175,7 +1201,7 @@ namespace ANDOR_CS.Classes
             catch
             {
                 // Fire event
-                OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(default, true));
+                OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(default));
                 // re-throw received exception
                 throw;
             }
@@ -1184,7 +1210,7 @@ namespace ANDOR_CS.Classes
             {
                 IsAcquiring = false;
                 IsAsyncAcquisition = false;
-                OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus(), true));
+                OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus()));
             }
         }
 

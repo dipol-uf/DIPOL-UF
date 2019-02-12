@@ -104,14 +104,14 @@ namespace DIPOL_UF
                     setts.SetExposureTime(0.01f);
                     setts.SetImageArea(new Rectangle(1, 1, 512, 512));
                     setts.SetAcquisitionMode(AcquisitionMode.Kinetic);
-                    setts.SetKineticCycle(497, 0.02f);
-                    setts.SetAccumulationCycle(1, 0f);
+                    setts.SetKineticCycle(40, 0.02f);
+                    setts.SetAccumulationCycle(5, 0.1f);
                     setts.SetReadoutMode(ReadMode.FullImage);
                     setts.SetTriggerMode(TriggerMode.Internal);
                     setts.ApplySettings(out var timing);
                     Helper.WriteLog(timing);
 
-                    cam.StartAcquisitionAsync(null).Wait();
+                    cam.StartAcquisitionAsync(null, 25).Wait();
 
                     Console.ReadKey();
                 }
