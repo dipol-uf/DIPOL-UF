@@ -492,11 +492,6 @@ namespace ANDOR_CS.Classes
 
         }
         /// <summary>
-        /// Represents a worker that runs infinite loop until cancellation is requested.
-        /// </summary>
-        /// <param name="sender">Timer</param>
-        /// <param name="e">Timer event arguments</param>
-        /// <summary>
         /// Retrieves new image from camera buffer and pushes it to queue.
         /// </summary>
         /// <param name="e">Parameters obtained from <see cref="CameraBase.NewImageReceived"/> event.</param>
@@ -554,7 +549,8 @@ namespace ANDOR_CS.Classes
                 // Tries to make this camera active
                 var result = Call(CameraHandle, SdkInstance.SetCurrentCamera, CameraHandle.SdkPtr);
                 // If it fails, throw an exception
-                ThrowIfError(result, nameof(SdkInstance.SetCurrentCamera));
+                if (FailIfError(result, nameof(SdkInstance.SetCurrentCamera), out var except))
+                    throw except;
 
             }
         }
@@ -570,7 +566,9 @@ namespace ANDOR_CS.Classes
             CheckIsDisposed();
 
             // Queries status, throws exception if error happened
-            ThrowIfError(Call(CameraHandle, SdkInstance.GetStatus, out int status), nameof(SdkInstance.GetStatus));
+            if (FailIfError(Call(CameraHandle, SdkInstance.GetStatus, out int status), nameof(SdkInstance.GetStatus),
+                out var except))
+                throw except;
 
             // Converts status to enum
             var camStatus = (CameraStatus)status;
@@ -601,7 +599,8 @@ namespace ANDOR_CS.Classes
             CheckIsDisposed();
 
             // Checks if acquisition is in progress; throws exception
-            ThrowIfAcquiring(this);
+            if (FailIfAcquiring(this, out var except))
+                throw except;
 
             // Checks if Fan Control is supported
             if (!Capabilities.Features.HasFlag(SdkFeatures.FanControl))
@@ -615,7 +614,8 @@ namespace ANDOR_CS.Classes
 
             var result = Call(CameraHandle, SdkInstance.SetFanMode, (int)mode);
 
-            ThrowIfError(result, nameof(SdkInstance.SetFanMode));
+            if (FailIfError(result, nameof(SdkInstance.SetFanMode), out except))
+                throw except;
 
             FanMode = mode;
 
@@ -634,12 +634,7 @@ namespace ANDOR_CS.Classes
             if (!Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
                 throw new AndorSdkException("Camera does not support cooler controls.", new ArgumentException());
 
-            //if (IsInTemperatureCycle &&
-            //    IsAsyncTemperatureCycle &&
-            //    mode == Switch.Disabled)
-            //    throw new TaskCanceledException("Camera is in process of async cooling. Cannot control cooler synchronously.");
-
-            uint result = SDK.DRV_SUCCESS;
+            var result = SDK.DRV_SUCCESS;
 
             // Switches cooler mode
             if (mode == Switch.Enabled)
@@ -647,7 +642,10 @@ namespace ANDOR_CS.Classes
             else if (mode == Switch.Disabled)
                 result = Call(CameraHandle, SdkInstance.CoolerOFF);
 
-            ThrowIfError(result, nameof(SdkInstance.CoolerON) + " or " + nameof(SdkInstance.CoolerOFF));
+            if (FailIfError(result, nameof(SdkInstance.CoolerON) + " or " + nameof(SdkInstance.CoolerOFF),
+                out var except))
+                throw except;
+
             CoolerMode = mode;
 
         }
@@ -663,7 +661,8 @@ namespace ANDOR_CS.Classes
         {
             CheckIsDisposed();
             // Checks if acquisition is in progress; throws exception
-            ThrowIfAcquiring(this);
+            if (FailIfAcquiring(this, out var except))
+                throw except;
 
             // Checks if temperature can be controlled
             if (!Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
@@ -681,7 +680,8 @@ namespace ANDOR_CS.Classes
                      $"{Properties.AllowedTemperatures.Maximum }).");
 
             var result = Call(CameraHandle, SdkInstance.SetTemperature, temperature);
-            ThrowIfError(result, nameof(SdkInstance.SetTemperature));
+            if (FailIfError(result, nameof(SdkInstance.SetTemperature), out except))
+                throw except;
 
         }
 
@@ -780,13 +780,17 @@ namespace ANDOR_CS.Classes
         {
             CheckIsDisposed();
 
+            // TODO: Fix Images here
             _acquiredImages = new ConcurrentQueue<Image>();
 
             // If acquisition is already in progress, throw exception
-            ThrowIfAcquiring(this);
+            if (FailIfAcquiring(this, out var except))
+                throw except;
 
             // Starts acquisition
-            ThrowIfError(Call(CameraHandle, SdkInstance.StartAcquisition), nameof(SdkInstance.StartAcquisition));
+            if (FailIfError(Call(CameraHandle, SdkInstance.StartAcquisition), nameof(SdkInstance.StartAcquisition),
+                out except))
+                throw except;
 
             // Fires event
             OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
@@ -816,7 +820,9 @@ namespace ANDOR_CS.Classes
             //    throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
 
             // Tries to abort acquisition
-            ThrowIfError(Call(CameraHandle, SdkInstance.AbortAcquisition), nameof(SdkInstance.AbortAcquisition));
+            if (FailIfError(Call(CameraHandle, SdkInstance.AbortAcquisition), nameof(SdkInstance.AbortAcquisition),
+                out var except))
+                throw except;
 
             // Fires AcquisitionAborted event
             OnAcquisitionAborted(new AcquisitionStatusEventArgs(GetStatus(), IsAsyncAcquisition));
@@ -1142,7 +1148,8 @@ namespace ANDOR_CS.Classes
             // Variable is passed to SDK function
 
             var result = CallWithoutHandle(SdkInstance.GetAvailableCameras, out int cameraCount);
-            ThrowIfError(result, nameof(SdkInstance.GetAvailableCameras));
+            if (FailIfError(result, nameof(SdkInstance.GetAvailableCameras), out var except))
+                throw except;
 
             return cameraCount;
         }
