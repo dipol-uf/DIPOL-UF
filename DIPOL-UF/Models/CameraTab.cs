@@ -101,20 +101,14 @@ namespace DIPOL_UF.Models
             InternalShutterCommand =
                 ReactiveCommand.Create<ShutterMode>(
                                    x => Camera.ShutterControl(
-                                       SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27),
-                                       SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
-                                       x, Camera.Shutter.External ?? ShutterMode.FullyAuto,
-                                       (TtlShutterSignal) SettingsProvider.Settings.Get("TTLShutterSignal", 1)),
+                                       x, Camera.Shutter.External ?? ShutterMode.FullyAuto),
                                    Observable.Return(CanControlShutter.Internal))
                                .DisposeWith(_subscriptions);
 
            ExternalShutterCommand =
                 ReactiveCommand.Create<ShutterMode>(
                                    x => Camera.ShutterControl(
-                                       SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27),
-                                       SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
-                                       Camera.Shutter.Internal, x,
-                                       (TtlShutterSignal)SettingsProvider.Settings.Get("TTLShutterSignal", 1)),
+                                       Camera.Shutter.Internal, x),
                                    Observable.Return(CanControlShutter.External))
                                .DisposeWith(_subscriptions);
 

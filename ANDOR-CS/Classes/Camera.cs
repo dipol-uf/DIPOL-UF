@@ -69,6 +69,8 @@ namespace ANDOR_CS.Classes
         private ConcurrentDictionary<int, (Image Image, NewImageReceivedEventArgs args)> _images = 
             new ConcurrentDictionary<int, (Image Image, NewImageReceivedEventArgs args)>();
 
+        private bool _isMetadataAvailable;
+
             /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
@@ -602,6 +604,14 @@ namespace ANDOR_CS.Classes
                     {
                         Buffer.BlockCopy(buffer, (j - 1) % MaxImagesPerCall * size * matrixSize, imgBuffer, 0,
                             matrixSize * size);
+                        SDK.SYSTEMTIME time = default;
+                        
+                        var fromStart = 0f;
+
+                        if(_isMetadataAvailable 
+                            && Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref fromStart, j)) == SDK.DRV_SUCCESS)
+                            Console.WriteLine($"{j}\t{time}\t{fromStart}");
+
                         images.Add((
                             Key: DateTime.UtcNow.GetHashCode() + j,
                             Image: new Image(imgBuffer, CurrentSettings.ImageArea.Value.Width,
@@ -769,11 +779,11 @@ namespace ANDOR_CS.Classes
         }
 
         public override void ShutterControl(
-            int clTime,
-            int opTime,
             ShutterMode inter,
-            ShutterMode extrn = ShutterMode.FullyAuto,
-            TtlShutterSignal type = TtlShutterSignal.Low)
+            ShutterMode extrn,
+            int opTime,
+            int clTime,
+            TtlShutterSignal type)
         {
             if (clTime < 0)
                 throw new ArgumentOutOfRangeException($"Closing time cannot be less than 0 (should be {clTime} > {0}).");
@@ -809,6 +819,14 @@ namespace ANDOR_CS.Classes
 
                 Shutter = (Internal: inter, External: null, Type: type, OpenTime: opTime, CloseTime: clTime);
             }
+        }
+
+        public override void ShutterControl(ShutterMode inter, ShutterMode extrn)
+        {
+            ShutterControl(inter, extrn,
+                SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
+                SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27),
+                (TtlShutterSignal)SettingsProvider.Settings.Get("TTLShutterSignal", 1));
         }
 
         /// <inheritdoc />
@@ -1091,7 +1109,13 @@ namespace ANDOR_CS.Classes
 
             // Default state of shutter(s) - Closed
             if (Capabilities.Features.HasFlag(SdkFeatures.Shutter))
-                ShutterControl(27, 27, ShutterMode.PermanentlyClosed, ShutterMode.PermanentlyClosed, TtlShutterSignal.High);
+                ShutterControl(ShutterMode.PermanentlyClosed, ShutterMode.PermanentlyClosed,
+                    SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
+                    SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27),
+                    (TtlShutterSignal)SettingsProvider.Settings.Get("TTLShutterSignal", 1));
+
+            _isMetadataAvailable = Call(CameraHandle, SdkInstance.SetMetaData, 1) == SDK.DRV_SUCCESS;
+
         }
 
         /// <summary>

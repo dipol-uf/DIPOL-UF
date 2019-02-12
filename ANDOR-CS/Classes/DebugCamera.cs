@@ -63,13 +63,25 @@ namespace ANDOR_CS.Classes
         public override void SetTemperature(int temperature) 
             => WriteMessage($"Temperature was set to {temperature}.", Blue);
 
-        public override void ShutterControl(int clTime, int opTime, ShutterMode inter,
-            ShutterMode extrn = ShutterMode.FullyAuto, TtlShutterSignal type = TtlShutterSignal.Low)
+        public override void ShutterControl(
+            ShutterMode inter,
+            ShutterMode extrn, 
+            int opTime, int clTime,
+            TtlShutterSignal type)
         {
             Shutter = (Internal: inter, External: extrn, Type: type, OpenTime: opTime, CloseTime: clTime);
             WriteMessage("Shutter settings were changed.", Blue);
         }
 
+        public override void ShutterControl(
+            ShutterMode inter,
+            ShutterMode extrn)
+        {
+            ShutterControl(inter, extrn,
+                SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
+                SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27),
+                (TtlShutterSignal)SettingsProvider.Settings.Get("TTLShutterSignal", 1));
+        }
 
         public DebugCamera(int camIndex)
         {
@@ -102,7 +114,10 @@ namespace ANDOR_CS.Classes
                              $"{GetType().GetProperty(prop.PropertyName)?.GetValue(this)}.", Yellow);
             TemperatureStatusChecked += (sender, args) => WriteMessage($"Temperature: {args.Temperature}\tStatus: {args.Status}", Blue);
 
-            ShutterControl(27, 27, ShutterMode.PermanentlyClosed, ShutterMode.PermanentlyClosed);
+            ShutterControl(ShutterMode.PermanentlyClosed, ShutterMode.PermanentlyClosed,
+                SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
+                SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27),
+                (TtlShutterSignal)SettingsProvider.Settings.Get("TTLShutterSignal", 1));
             WriteMessage("Camera created.", Green);
         }
         public override SettingsBase GetAcquisitionSettingsTemplate()
