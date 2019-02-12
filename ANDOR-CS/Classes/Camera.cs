@@ -534,7 +534,7 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        private void PullNewImages<T>() where T : unmanaged
+        private Dictionary<int, Image> PullNewImages<T>() where T : unmanaged
         {
             TypeCode imageType;
 
@@ -549,7 +549,6 @@ namespace ANDOR_CS.Classes
                 throw new NullReferenceException(
                     "Cannot pull images without acquisition settings applied and known image area.");
 
-            var MaxImagesPerCall = 4;
             
 
             var size = Marshal.SizeOf<T>();
@@ -580,21 +579,21 @@ namespace ANDOR_CS.Classes
                     var currentIndex = (First: indices.First + MaxImagesPerCall * i,
                         Last: Math.Min(indices.First + MaxImagesPerCall * (i + 1) - 1, indices.Last));
 
-                    if(typeof(T) == typeof(ushort))
-                        if (FailIfError(Call(CameraHandle, () => SdkInstance.GetImages16(
+                    if (typeof(T) == typeof(ushort)
+                        && FailIfError(Call(CameraHandle, () => SdkInstance.GetImages16(
                             currentIndex.First, currentIndex.Last,
                             (ushort[]) buffer,
                             (uint) ((currentIndex.Last - currentIndex.First + 1) * matrixSize),
                             ref validIndex.First, ref validIndex.Last)), nameof(SdkInstance.GetImages16), out except))
-                            throw except;
+                        throw except;
 
-                    else if (typeof(T) == typeof(int))
-                        if (FailIfError(Call(CameraHandle, () => SdkInstance.GetImages(
+                    if (typeof(T) == typeof(int)
+                        && FailIfError(Call(CameraHandle, () => SdkInstance.GetImages(
                             currentIndex.First, currentIndex.Last,
                             (int[]) buffer,
                             (uint) ((currentIndex.Last - currentIndex.First + 1) * matrixSize),
                             ref validIndex.First, ref validIndex.Last)), nameof(SdkInstance.GetImages), out except))
-                            throw except;
+                        throw except;
 
                     for (var j = currentIndex.First; j <= currentIndex.Last; j++)
                     {
@@ -609,6 +608,7 @@ namespace ANDOR_CS.Classes
 
             }
 
+            return images;
         }
 
         /// <summary>
@@ -1171,9 +1171,8 @@ namespace ANDOR_CS.Classes
                 acquisitionPollingTimer.Start();
 
                 await completionSrc.Task;
-                
-                PullNewImages<ushort>();
 
+                var imgs = PullNewImages<int>();
                 acquisitionPollingTimer.Stop();
                 // Gets indexes of first and last available new images
 
