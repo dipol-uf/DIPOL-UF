@@ -33,7 +33,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// 
     /// </summary>
-    public class SettingsProvider
+    internal class SettingsProvider
     {
         /// <summary>
         /// 

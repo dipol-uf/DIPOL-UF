@@ -398,11 +398,13 @@ namespace ANDOR_CS.Classes
         public abstract void SetTemperature(int temperature);
 
         public abstract void ShutterControl(
-            int clTime,
-            int opTime,
             ShutterMode inter,
-            ShutterMode extrn = ShutterMode.FullyAuto,
-            TtlShutterSignal type = TtlShutterSignal.Low);
+            ShutterMode extrn,
+            int opTime,
+            int clTime,
+            TtlShutterSignal type);
+
+        public abstract void ShutterControl(ShutterMode inter, ShutterMode extrn);
 
 
 
