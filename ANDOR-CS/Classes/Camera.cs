@@ -30,7 +30,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
@@ -47,8 +46,8 @@ using static ANDOR_CS.Exceptions.AndorSdkException;
 using static ANDOR_CS.Exceptions.AcquisitionInProgressException;
 
 using static ANDOR_CS.Classes.AndorSdkInitialization;
-using Timer = System.Timers.Timer;
 using Image= DipolImage.Image;
+#pragma warning disable 1591
 
 namespace ANDOR_CS.Classes
 {
@@ -443,7 +442,8 @@ namespace ANDOR_CS.Classes
             CheckIsDisposed();
 
             // Checks if acquisition is in progress; throws exception
-            ThrowIfAcquiring(this);
+            if (FailIfAcquiring(this, out var except))
+                throw except;
 
             // Stores return codes of SDK functions
 
@@ -458,7 +458,8 @@ namespace ANDOR_CS.Classes
 
             var result = Call(CameraHandle, () => SdkInstance.GetSoftwareVersion(ref eprom, ref cof, ref driverRev, ref driverVer, ref dllRev, ref dllVer));
 
-            ThrowIfError(result, nameof(SdkInstance.GetSoftwareVersion));
+            if (FailIfError(result, nameof(SdkInstance.GetSoftwareVersion), out except))
+                throw except;
 
             // Assigns obtained version information to the class field
             Software = (
@@ -479,7 +480,8 @@ namespace ANDOR_CS.Classes
 
             result = Call(CameraHandle, () => SdkInstance.GetHardwareVersion(ref pcb, ref decode, ref dummy, ref dummy, ref firmwareVer, ref firmwareRev));
 
-            ThrowIfError(result, nameof(SdkInstance.GetHardwareVersion));
+            if (FailIfError(result, nameof(SdkInstance.GetHardwareVersion), out except))
+                throw except;
 
             // Assigns obtained hardware versions to the class field
             Hardware = (
