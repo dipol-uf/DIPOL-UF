@@ -66,7 +66,10 @@ namespace ANDOR_CS.Classes
         private readonly ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)> _runningTasks = 
             new ConcurrentDictionary<int, (Task Task, CancellationTokenSource Source)>();
 
-        /// <summary>
+        private ConcurrentDictionary<int, (Image Image, NewImageReceivedEventArgs args)> _images = 
+            new ConcurrentDictionary<int, (Image Image, NewImageReceivedEventArgs args)>();
+
+            /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
         public override bool IsActive
@@ -534,7 +537,7 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        private Dictionary<int, Image> PullNewImages<T>() where T : unmanaged
+        private List<(int Key, Image Image)> PullNewImages<T>() where T : unmanaged
         {
             TypeCode imageType;
 
@@ -561,7 +564,7 @@ namespace ANDOR_CS.Classes
                 nameof(SdkInstance.GetNumberNewImages), out var except))
                 throw except;
 
-            var images = new Dictionary<int, Image>(indices.Last - indices.First + 1);
+            var images = new List<(int Key, Image Image)>(indices.Last - indices.First + 1);
 
             if (indices.First <= indices.Last)
             {
@@ -599,9 +602,10 @@ namespace ANDOR_CS.Classes
                     {
                         Buffer.BlockCopy(buffer, (j - 1) % MaxImagesPerCall * size * matrixSize, imgBuffer, 0,
                             matrixSize * size);
-                        images.Add(j,
-                            new Image(imgBuffer, CurrentSettings.ImageArea.Value.Width,
-                                CurrentSettings.ImageArea.Value.Height, imageType));
+                        images.Add((
+                            Key: DateTime.UtcNow.GetHashCode() + j,
+                            Image: new Image(imgBuffer, CurrentSettings.ImageArea.Value.Width,
+                                CurrentSettings.ImageArea.Value.Height, imageType)));
                     }
 
                 }
@@ -1104,7 +1108,7 @@ namespace ANDOR_CS.Classes
             int timeout = StatusCheckTimeOutMs)
         {
             CheckIsDisposed();
-
+            _images.Clear();
             try
             {
                 // Checks if acquisition is in progress; throws exception
@@ -1131,21 +1135,11 @@ namespace ANDOR_CS.Classes
                     try
                     {
                         var status = GetStatus();
-                        // Fires AcquisitionStatusChecked event
                         OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, true));
 
-                        // Checks if new image is already acquired and is available in camera memory
 
-                        // Gets indexes of first and last available new images
-                        var (first, last) = (0, 0);
-                        // ReSharper disable once AccessToModifiedClosure
-                        if (FailIfError(Call(CameraHandle, () => SdkInstance.GetNumberNewImages(
-                                ref first,
-                                ref last)),
-                            nameof(SdkInstance.GetNumberNewImages), out except))
-                            throw except;
-
-                        Console.WriteLine((first, last));
+                        foreach (var item in PullNewImages<ushort>())
+                            _images.TryAdd(item.Key, (item.Image, default));
 
                         if (status != CameraStatus.Acquiring)
                         {
@@ -1168,30 +1162,13 @@ namespace ANDOR_CS.Classes
                 acquisitionPollingTimer.Elapsed += StatusUpdater;
 
                 StartAcquisition();
+
                 acquisitionPollingTimer.Start();
 
                 await completionSrc.Task;
 
-                var imgs = PullNewImages<int>();
                 acquisitionPollingTimer.Stop();
-                // Gets indexes of first and last available new images
 
-
-                //if (FailIfError(Call(CameraHandle, (ref (int, int) output) =>
-                //        SdkInstance.GetNumberNewImages(ref output.Item1, ref output.Item2),
-                //    out acquiredImagesIndex), nameof(SdkInstance.GetNumberNewImages), out except))
-                //    throw except;
-
-                // If there is new image, updates indexes of previous available images and fires an event.
-                //if (acquiredImagesIndex.Last != previousImages.Last
-                //    || acquiredImagesIndex.First != previousImages.First)
-                //{
-                //    OnNewImageReceived(new NewImageReceivedEventArgs(acquiredImagesIndex.First, acquiredImagesIndex.Last));
-                //}
-
-                // If after end of acquisition camera status is not idle, throws exception
-                //if (!source.Token.IsCancellationRequested && status != CameraStatus.Idle)
-                //    throw new AndorSdkException($"Acquisition finished with non-Idle status ({status}).", null);
 
             }
             // If there were exceptions during status checking loop
