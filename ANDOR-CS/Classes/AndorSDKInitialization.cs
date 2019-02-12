@@ -56,8 +56,7 @@ namespace ANDOR_CS.Classes
         {
             get;
         } = new AndorSDK();
-
-
+        
         /// <inheritdoc />
         public delegate uint AndorSdk<T1>(ref T1 p1);
 
@@ -281,7 +280,9 @@ namespace ANDOR_CS.Classes
             if (SdkInstance.SetCurrentCamera(handle.SdkPtr) != AndorSDK.DRV_SUCCESS)
                 throw new Exception();
         }
-        
 
+        public static DateTime ToDateTime(this AndorSDK.SYSTEMTIME @this)
+            => new DateTime(@this.Year, @this.Month, @this.Day, @this.Hour, @this.Minute, @this.Second,
+                    @this.Milliseconds).ToLocalTime();
     }
 }
