@@ -565,6 +565,7 @@ namespace ANDOR_CS.Classes
         public abstract void AbortAcquisition();
 
         public abstract Task StartAcquisitionAsync(CancellationTokenSource token, int timeout = StatusCheckTimeOutMs);
+        
 
         /// <summary>
         /// String representation of the camera instance.
