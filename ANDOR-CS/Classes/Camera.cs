@@ -882,13 +882,6 @@ namespace ANDOR_CS.Classes
                     OnNewImageReceived(new NewImageReceivedEventArgs(totalImg.Last, startTime.AddSeconds(_frameDelaySec * totalImg.Last)));
             }
 
-            var timings = (Exposure: 0f, Accumulation: 0f, Kinetic: 0f);
-            Call(CameraHandle,
-                () => SdkInstance.GetAcquisitionTimings(ref timings.Exposure, ref timings.Accumulation,
-                    ref timings.Kinetic));
-
-            Console.WriteLine(timings);
-
             SdkEventFired += ListenSdkEvent;
             SdkEventFired += WatchImages;
             try
@@ -1314,7 +1307,6 @@ namespace ANDOR_CS.Classes
                 if (GetStatus() != CameraStatus.Idle)
                     throw new AndorSdkException("Camera is not in the idle mode.", null);
 
-                //if (_useSdkEvents)
 
                 var timings = (Exposure: 0f, Accumulation: 0f, Kinetic: 0f);
                 if (FailIfError(
@@ -1325,9 +1317,8 @@ namespace ANDOR_CS.Classes
                     throw except;
                 _frameDelaySec = timings.Kinetic;
 
-                {
+                if (_useSdkEvents)
                     await EventBasedAcquisitionAsync();
-                }
 
 
                 if (_isMetadataAvailable)
