@@ -158,7 +158,7 @@ namespace ANDOR_CS.Classes
 
         }
 
-        public override async Task StartAcquisitionAsync(CancellationTokenSource token, int timeout = StatusCheckTimeOutMs)
+        public override async Task StartAcquisitionAsync(CancellationToken token)
         {
             await Task.Delay(TimeSpan.FromMilliseconds(1));
             throw new NotImplementedException();

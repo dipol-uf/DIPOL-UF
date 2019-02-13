@@ -547,7 +547,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="TaskCanceledException"/>
         protected abstract void AbortAcquisition();
 
-        public abstract Task StartAcquisitionAsync(CancellationTokenSource token, int timeout = StatusCheckTimeOutMs);
+        public abstract Task StartAcquisitionAsync(CancellationToken token);
         
 
         /// <summary>
