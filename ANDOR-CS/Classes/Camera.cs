@@ -523,22 +523,123 @@ namespace ANDOR_CS.Classes
                     CurrentSettings.ImageArea.Value.Height);
                 _acquiredImages.Enqueue(im);
 
-                if (!(FilePattern is null))
-                {
-                    var path = Path.Combine(_imgDir, 
-                        string.Format(FilePattern, CameraModel, last, e.EventTime));
-                    // ReSharper disable once AssignNullToNotNullAttribute
-                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+                //if (!(FilePattern is null))
+                //{
+                //    var path = Path.Combine(_imgDir, 
+                //        string.Format(FilePattern, CameraModel, last, e.EventTime));
+                //    // ReSharper disable once AssignNullToNotNullAttribute
+                //    Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                    var keys = new FitsKey[SettingsProvider.MetaFitsKeys.Count + 1];
-                    SettingsProvider.MetaFitsKeys.CopyTo(0, keys, 1, SettingsProvider.MetaFitsKeys.Count);
-                    keys[0] = FitsKey.CreateDate("OBSTIME", e.EventTime);
-                    using (var str = new FileStream(path, FileMode.OpenOrCreate))
-                        FitsStream.WriteImage(im, FitsImageType.Int16, str, keys);
-                }
+                //    var keys = new FitsKey[SettingsProvider.MetaFitsKeys.Count + 1];
+                //    SettingsProvider.MetaFitsKeys.CopyTo(0, keys, 1, SettingsProvider.MetaFitsKeys.Count);
+                //    keys[0] = FitsKey.CreateDate("OBSTIME", e.EventTime);
+                //    using (var str = new FileStream(path, FileMode.OpenOrCreate))
+                //        FitsStream.WriteImage(im, FitsImageType.Int16, str, keys);
+                //}
             }
         }
+        private void Temp()
+        {
+              var timings = (Exposure: 0f, Accumulation: 0f, Kinetic: 0f);
+                Call(CameraHandle,
+                    () => SdkInstance.GetAcquisitionTimings(ref timings.Exposure, ref timings.Accumulation,
+                        ref timings.Kinetic));
 
+                Call<float>(CameraHandle, SdkInstance.GetReadOutTime, out var readout);
+                Call<float>(CameraHandle, SdkInstance.GetKeepCleanTime, out var keepClean);
+
+                Console.WriteLine((timings, readout, keepClean));
+
+                // Marks acquisition asynchronous
+                var acquisitionPollingTimer = new System.Timers.Timer()
+                {
+                    Enabled = false,
+                    AutoReset = true
+                };
+                // Start acquisition
+                var completionSrc = new TaskCompletionSource<bool>();
+
+                var start = DateTime.Now;
+
+                void StatusUpdaterKinetic(object sender, ElapsedEventArgs e)
+                {
+                    if (!(sender is System.Timers.Timer timer) || !timer.Enabled) return;
+                    try
+                    {
+                        var status = GetStatus();
+                        var progress = (Accumulation: 0, Kinetic: 0);
+                        if (FailIfError(Call(CameraHandle,
+                                () => SdkInstance.GetAcquisitionProgress(ref progress.Accumulation,
+                                    ref progress.Kinetic)),
+                            nameof(SdkInstance.GetAcquisitionProgress), out var innerExcept))
+                            throw innerExcept;
+
+                        OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status));
+
+
+                        foreach (var item in PullNewImages<ushort>())
+                        {
+                            var offset = TimeSpan.FromSeconds(item.Index * timings.Accumulation);
+                            //_images.TryAdd(item.Key, (item.Image, default));
+                            Console.WriteLine($"{item.Index}\t{start + offset:ss.ffffff}\r\n");
+                        }
+                        //Console.WriteLine(progress);
+
+
+                        if (status != CameraStatus.Acquiring)
+                        {
+                            acquisitionPollingTimer.Stop();
+                            if(!completionSrc.Task.IsCompleted)
+                                completionSrc.SetResult(true);
+                        }
+                    }
+                    catch (Exception innerEx)
+                    {
+                        acquisitionPollingTimer.Stop();
+                        if (!completionSrc.Task.IsCompleted)
+                            completionSrc.SetException(innerEx);
+                    }
+                }
+
+                void StatusUpdaterNormal(object sender, ElapsedEventArgs e)
+                {
+                    if (!(sender is System.Timers.Timer timer) || !timer.Enabled) return;
+                    try
+                    {
+                        var status = GetStatus();
+                        OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, e.SignalTime, 0, 0));
+                        
+                        if (status != CameraStatus.Acquiring)
+                        {
+                            acquisitionPollingTimer.Stop();
+                            if (!completionSrc.Task.IsCompleted)
+                                completionSrc.SetResult(true);
+                        }
+                    }
+                    catch (Exception innerEx)
+                    {
+                        acquisitionPollingTimer.Stop();
+                        if (!completionSrc.Task.IsCompleted)
+                            completionSrc.SetException(innerEx);
+                    }
+                }
+
+
+                //acquisitionPollingTimer.Interval = timeout;
+
+                if (CurrentSettings.KineticCycle.HasValue)
+                    acquisitionPollingTimer.Elapsed += StatusUpdaterKinetic;
+                else
+                    acquisitionPollingTimer.Elapsed += StatusUpdaterNormal;
+
+                start = DateTime.Now.AddMilliseconds(SettingsProvider.Settings.Get("AcquisitionTimerOffsetMS", 0.0));
+
+                StartAcquisition();
+                acquisitionPollingTimer.Start();
+
+                //await completionSrc.Task;
+                acquisitionPollingTimer.Stop();
+        }
         private List<(int Key, int Index, Image Image)> PullNewImages<T>() where T : unmanaged
         {
             TypeCode imageType;
@@ -632,6 +733,77 @@ namespace ANDOR_CS.Classes
 
             return images;
         }
+        
+        /// <summary>
+        /// Starts acquisition of the image. Does not block current thread.
+        /// To monitor acquisition progress, use <see cref="GetStatus"/>.
+        /// Fires <see cref="CameraBase.OnAcquisitionStarted"/> 
+        /// with <see cref="AcquisitionStatusEventArgs.IsAsync"/> = false.
+        /// NOTE: this method is not recommended. Consider using async version
+        /// <see cref="StartAcquisitionAsync(CancellationTokenSource,int)"/>.
+        /// Async version allows <see cref="Camera"/> to properly monitor acquisition progress.
+        /// </summary>
+        /// <exception cref="AcquisitionInProgressException"/>
+        /// <exception cref="AndorSdkException"/>
+        protected override void StartAcquisition()
+        {
+            CheckIsDisposed();
+
+            // TODO: Fix Images here
+            _acquiredImages = new ConcurrentQueue<Image>();
+
+            // If acquisition is already in progress, throw exception
+            if (FailIfAcquiring(this, out var except))
+                throw except;
+
+            // Marks camera as in process of acquiring
+
+            // Fires event
+            if (FailIfError(Call(CameraHandle, SdkInstance.PrepareAcquisition), nameof(SdkInstance.PrepareAcquisition),
+                out except))
+                throw except;
+
+            // Starts acquisition
+            if (FailIfError(Call(CameraHandle, SdkInstance.StartAcquisition), nameof(SdkInstance.StartAcquisition),
+                out except))
+                throw except;
+
+            IsAcquiring = true;
+            OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus()));
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// A synchronous way to manually abort acquisition.
+        /// NOTE: if called while async acquisition is in progress, throws
+        /// <see cref="T:System.Threading.Tasks.TaskCanceledException" />. To cancel async acquisition, use 
+        /// <see cref="T:System.Threading.CancellationToken" />.
+        /// </summary>
+        /// <exception cref="T:ANDOR_CS.Exceptions.AndorSdkException" />
+        /// <exception cref="T:System.Threading.Tasks.TaskCanceledException" />
+        protected override void AbortAcquisition()
+        {
+            CheckIsDisposed();
+
+            // If there is no acquisition, throws exception
+            if (!IsAcquiring)
+                throw new AndorSdkException("Acquisition abort attempted while there is no acquisition in progress.", null);
+
+            //if (IsAsyncAcquisition)
+            //    throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
+
+            // Tries to abort acquisition
+            if (FailIfError(Call(CameraHandle, SdkInstance.AbortAcquisition), nameof(SdkInstance.AbortAcquisition),
+                out var except))
+                throw except;
+
+            // Fires AcquisitionAborted event
+            OnAcquisitionAborted(new AcquisitionStatusEventArgs(GetStatus()));
+
+            // Marks the end of acquisition
+            IsAcquiring = false;
+        }
+
+
 
         /// <summary>
         /// Sets current camera active
@@ -674,18 +846,7 @@ namespace ANDOR_CS.Classes
             // Converts status to enum
             var camStatus = (CameraStatus)status;
 
-            // If acquisition is started without background task, camera instance 
-            // is in acquisition state, but actual camera returns status that is different
-            // from "Acquiring", then updates status, acknowledging end of acquisition 
-            // end firing AcquisitionFinished event.
-            // Without this call there is no way to synchronously update instance of camera class
-            // when real acquisition on camera finished.
-            if (!IsAcquiring || IsAsyncAcquisition || camStatus == CameraStatus.Acquiring)
-                return camStatus;
-            IsAcquiring = false;
-            OnAcquisitionFinished(new AcquisitionStatusEventArgs(camStatus));
             return camStatus;
-
         }
 
         /// <summary>
@@ -872,77 +1033,6 @@ namespace ANDOR_CS.Classes
         public override void EnableAutosave(in string pattern)
         {
             FilePattern = pattern;
-        }
-
-        /// <summary>
-        /// Starts acquisition of the image. Does not block current thread.
-        /// To monitor acquisition progress, use <see cref="GetStatus"/>.
-        /// Fires <see cref="CameraBase.OnAcquisitionStarted"/> 
-        /// with <see cref="AcquisitionStatusEventArgs.IsAsync"/> = false.
-        /// NOTE: this method is not recommended. Consider using async version
-        /// <see cref="StartAcquisitionAsync(CancellationTokenSource,int)"/>.
-        /// Async version allows <see cref="Camera"/> to properly monitor acquisition progress.
-        /// </summary>
-        /// <exception cref="AcquisitionInProgressException"/>
-        /// <exception cref="AndorSdkException"/>
-        public override void StartAcquisition()
-        {
-            CheckIsDisposed();
-
-            // TODO: Fix Images here
-            _acquiredImages = new ConcurrentQueue<Image>();
-
-            // If acquisition is already in progress, throw exception
-            if (FailIfAcquiring(this, out var except))
-                throw except;
-
-            // Marks camera as in process of acquiring
- 
-            // Fires event
-            if (FailIfError(Call(CameraHandle, SdkInstance.PrepareAcquisition), nameof(SdkInstance.PrepareAcquisition),
-                out except))
-                throw except;
-
-            // Starts acquisition
-            if (FailIfError(Call(CameraHandle, SdkInstance.StartAcquisition), nameof(SdkInstance.StartAcquisition),
-                out except))
-                throw except;
-
-            IsAcquiring = true;
-            OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus()));
-        }
-
-        /// <inheritdoc />
-        /// <summary>
-        /// A synchronous way to manually abort acquisition.
-        /// NOTE: if called while async acquisition is in progress, throws
-        /// <see cref="T:System.Threading.Tasks.TaskCanceledException" />. To cancel async acquisition, use 
-        /// <see cref="T:System.Threading.CancellationToken" />.
-        /// </summary>
-        /// <exception cref="T:ANDOR_CS.Exceptions.AndorSdkException" />
-        /// <exception cref="T:System.Threading.Tasks.TaskCanceledException" />
-        public override void AbortAcquisition()
-        {
-            CheckIsDisposed();
-
-            // If there is no acquisition, throws exception
-            if (!IsAcquiring)
-                throw new AndorSdkException("Acquisition abort attempted while there is no acquisition in progress.", null);
-
-            //if (IsAsyncAcquisition)
-            //    throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
-
-            // Tries to abort acquisition
-            if (FailIfError(Call(CameraHandle, SdkInstance.AbortAcquisition), nameof(SdkInstance.AbortAcquisition),
-                out var except))
-                throw except;
-
-            // Fires AcquisitionAborted event
-            OnAcquisitionAborted(new AcquisitionStatusEventArgs(GetStatus()));
-
-            // Marks the end of acquisition
-            IsAcquiring = false;
-            IsAsyncAcquisition = false;
         }
 
         /// <summary>
@@ -1183,106 +1273,7 @@ namespace ANDOR_CS.Classes
                 if (GetStatus() != CameraStatus.Idle)
                     throw new AndorSdkException("Camera is not in the idle mode.", null);
 
-                var timings = (Exposure: 0f, Accumulation: 0f, Kinetic: 0f);
-                Call(CameraHandle,
-                    () => SdkInstance.GetAcquisitionTimings(ref timings.Exposure, ref timings.Accumulation,
-                        ref timings.Kinetic));
-
-                Call<float>(CameraHandle, SdkInstance.GetReadOutTime, out var readout);
-                Call<float>(CameraHandle, SdkInstance.GetKeepCleanTime, out var keepClean);
-
-                Console.WriteLine((timings, readout, keepClean));
-
-                // Marks acquisition asynchronous
-                IsAsyncAcquisition = true;
-                var acquisitionPollingTimer = new System.Timers.Timer()
-                {
-                    Enabled = false,
-                    AutoReset = true
-                };
-                // Start acquisition
-                var completionSrc = new TaskCompletionSource<bool>();
-
-                var start = DateTime.Now;
-
-                void StatusUpdaterKinetic(object sender, ElapsedEventArgs e)
-                {
-                    if (!(sender is System.Timers.Timer timer) || !timer.Enabled) return;
-                    try
-                    {
-                        var status = GetStatus();
-                        var progress = (Accumulation: 0, Kinetic: 0);
-                        if (FailIfError(Call(CameraHandle,
-                                () => SdkInstance.GetAcquisitionProgress(ref progress.Accumulation,
-                                    ref progress.Kinetic)),
-                            nameof(SdkInstance.GetAcquisitionProgress), out var innerExcept))
-                            throw innerExcept;
-
-                        OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status));
-
-
-                        foreach (var item in PullNewImages<ushort>())
-                        {
-                            var offset = TimeSpan.FromSeconds(item.Index * timings.Accumulation);
-                            //_images.TryAdd(item.Key, (item.Image, default));
-                            Console.WriteLine($"{item.Index}\t{start + offset:ss.ffffff}\r\n");
-                        }
-                        //Console.WriteLine(progress);
-
-
-                        if (status != CameraStatus.Acquiring)
-                        {
-                            acquisitionPollingTimer.Stop();
-                            if(!completionSrc.Task.IsCompleted)
-                                completionSrc.SetResult(true);
-                        }
-                    }
-                    catch (Exception innerEx)
-                    {
-                        acquisitionPollingTimer.Stop();
-                        if (!completionSrc.Task.IsCompleted)
-                            completionSrc.SetException(innerEx);
-                    }
-                }
-
-                void StatusUpdaterNormal(object sender, ElapsedEventArgs e)
-                {
-                    if (!(sender is System.Timers.Timer timer) || !timer.Enabled) return;
-                    try
-                    {
-                        var status = GetStatus();
-                        OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, e.SignalTime, 0, 0));
-                        
-                        if (status != CameraStatus.Acquiring)
-                        {
-                            acquisitionPollingTimer.Stop();
-                            if (!completionSrc.Task.IsCompleted)
-                                completionSrc.SetResult(true);
-                        }
-                    }
-                    catch (Exception innerEx)
-                    {
-                        acquisitionPollingTimer.Stop();
-                        if (!completionSrc.Task.IsCompleted)
-                            completionSrc.SetException(innerEx);
-                    }
-                }
-
-
-                acquisitionPollingTimer.Interval = timeout;
-
-                if (CurrentSettings.KineticCycle.HasValue)
-                    acquisitionPollingTimer.Elapsed += StatusUpdaterKinetic;
-                else
-                    acquisitionPollingTimer.Elapsed += StatusUpdaterNormal;
-
-                start = DateTime.Now.AddMilliseconds(SettingsProvider.Settings.Get("AcquisitionTimerOffsetMS", 0.0));
-
-                StartAcquisition();
-                acquisitionPollingTimer.Start();
-
-                await completionSrc.Task;
-                acquisitionPollingTimer.Stop();
+              
 
                 if (_isMetadataAvailable)
                 {
@@ -1295,8 +1286,6 @@ namespace ANDOR_CS.Classes
 
                 }
 
-                Console.WriteLine((timings, readout, keepClean));
-                Console.WriteLine(_images.Count);
             }
             // If there were exceptions during status checking loop
             catch
@@ -1310,7 +1299,6 @@ namespace ANDOR_CS.Classes
             finally
             {
                 IsAcquiring = false;
-                IsAsyncAcquisition = false;
                 OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus()));
             }
         }
