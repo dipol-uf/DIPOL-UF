@@ -548,7 +548,9 @@ namespace ANDOR_CS.Classes
         protected abstract void AbortAcquisition();
 
         public abstract Task StartAcquisitionAsync(CancellationToken token);
-        
+
+        public abstract Image PullPreviewImage<T>(int index) where T : unmanaged;
+
 
         /// <summary>
         /// String representation of the camera instance.
