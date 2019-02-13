@@ -449,13 +449,13 @@ namespace DIPOL_UF.Models
         {
             base.OnPropertyChanged(sender, e);
 
-            if (e.PropertyName == nameof(Autosave))
-            {
-                if(Autosave)
-                    Camera.EnableAutosave("Autosave/{0}_{2:yyyy.MM.dd_HH-mm-ss.ffffff}.fits");
-                else
-                    Camera.EnableAutosave("");
-            }   
+            //if (e.PropertyName == nameof(Autosave))
+            //{
+            //    if(Autosave)
+            //        Camera.EnableAutosave("Autosave/{0}_{2:yyyy.MM.dd_HH-mm-ss.ffffff}.fits");
+            //    else
+            //        Camera.EnableAutosave("");
+            //}   
         }
     }
 }

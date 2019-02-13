@@ -36,8 +36,6 @@ namespace ANDOR_CS.Classes
         private const ConsoleColor Blue = ConsoleColor.Blue;
         private const ConsoleColor Yellow = ConsoleColor.DarkYellow;
 
-        public override ConcurrentQueue<Image> AcquiredImages => throw new NotImplementedException();
-
         public override CameraStatus GetStatus()
         {
             WriteMessage("Status checked.", Blue);
@@ -125,12 +123,6 @@ namespace ANDOR_CS.Classes
             throw new NotImplementedException();
         }
 
-        public override void EnableAutosave(in string pattern)
-        {
-            throw new NotImplementedException();
-        }
-
-
         protected override void Dispose(bool disposing)
         {
             if (!IsDisposed)
@@ -165,6 +157,11 @@ namespace ANDOR_CS.Classes
         }
 
         public override Image PullPreviewImage<T>(int index)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Image PullPreviewImage(int index, ImageFormat format)
         {
             throw new NotImplementedException();
         }
