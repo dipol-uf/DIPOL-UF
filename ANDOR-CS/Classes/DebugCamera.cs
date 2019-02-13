@@ -160,7 +160,12 @@ namespace ANDOR_CS.Classes
 
         public override async Task StartAcquisitionAsync(CancellationToken token)
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(1));
+            await Task.Delay(TimeSpan.FromMilliseconds(1), token);
+            throw new NotImplementedException();
+        }
+
+        public override Image PullPreviewImage<T>(int index)
+        {
             throw new NotImplementedException();
         }
 

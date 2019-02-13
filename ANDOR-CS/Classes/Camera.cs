@@ -34,6 +34,7 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
+using DipolImage;
 #if X86
 using SDK = ATMCD32CS.AndorSDK;
 #endif
@@ -632,8 +633,6 @@ namespace ANDOR_CS.Classes
         /// Starts acquisition of the image. Does not block current thread.
         /// To monitor acquisition progress, use <see cref="GetStatus"/>.
         /// Fires <see cref="CameraBase.OnAcquisitionStarted"/> 
-        /// NOTE: this method is not recommended. Consider using async version
-        /// <see cref="StartAcquisitionAsync(CancellationTokenSource,int)"/>.
         /// Async version allows <see cref="Camera"/> to properly monitor acquisition progress.
         /// </summary>
         /// <exception cref="AcquisitionInProgressException"/>
@@ -751,7 +750,6 @@ namespace ANDOR_CS.Classes
             return camStatus;
         }
 
-     
         /// <summary>
         /// Sets fan mode
         /// </summary>
@@ -814,7 +812,6 @@ namespace ANDOR_CS.Classes
             CoolerMode = mode;
 
         }
-
 
         /// <summary>
         /// Sets target cooling temperature
@@ -1162,6 +1159,52 @@ namespace ANDOR_CS.Classes
                 IsAcquiring = false;
                 OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus()));
             }
+        }
+
+        public override Image PullPreviewImage<T>(int index)
+        {
+            if(!(typeof(T) == typeof(ushort) || typeof(T) == typeof(int)))
+                throw new ArgumentException($"Current SDK only supports {typeof(ushort)} and {typeof(int)} images.");
+
+            if(!(CurrentSettings?.ImageArea.HasValue ?? false))
+                throw new NullReferenceException(
+                    "Pulling image requires acquisition settings with specified image area applied to the current camera.");
+
+            var indices = (First: 0, Last: 0);
+            if (FailIfError(
+                Call(CameraHandle, () => SdkInstance.GetNumberAvailableImages(ref indices.First, ref indices.Last)),
+                nameof(SdkInstance.GetNumberAvailableImages),
+                out var except))
+                throw except;
+
+            if (indices.First <= index && indices.Last <= index)
+            {
+                var size = CurrentSettings.ImageArea.Value;
+                var matrixSize = size.Width * size.Height;
+                Array data = new T[matrixSize];
+                var validInds = (First: 0, Last: 0);
+
+                if (typeof(T) == typeof(ushort))
+                {
+                    if (FailIfError(Call(CameraHandle,
+                        () => SdkInstance.GetImages16(index, index, (ushort[]) data, (uint) matrixSize,
+                            ref validInds.First,
+                            ref validInds.Last)), nameof(SdkInstance.GetImages16), out except))
+                        throw except;
+                }
+                else if (typeof(T) == typeof(int))
+                {
+                    if (FailIfError(Call(CameraHandle,
+                        () => SdkInstance.GetImages(index, index, (int[])data, (uint)matrixSize,
+                            ref validInds.First,
+                            ref validInds.Last)), nameof(SdkInstance.GetImages16), out except))
+                        throw except;
+                }
+
+                return new Image(data, size.Width, size.Height);
+            }
+
+            return null;
         }
 
         /// <summary>
