@@ -164,12 +164,12 @@ namespace ANDOR_CS.Classes
             throw new NotImplementedException();
         }
 
-        public override void StartAcquisition()
+        protected override void StartAcquisition()
         {
             throw new NotImplementedException();
         }
 
-        public override void AbortAcquisition()
+        protected override void AbortAcquisition()
         {
             throw new NotImplementedException();
         }

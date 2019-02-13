@@ -733,6 +733,31 @@ namespace ANDOR_CS.Classes
 
             return images;
         }
+
+        private async Task EventBasedAcquisitionAsync()
+        {
+            var completionSrc = new TaskCompletionSource<bool>();
+
+            void ListenSdkEvent(object sender, EventArgs e)
+            {
+                var status = GetStatus();
+                Console.WriteLine(status);
+                if (status != CameraStatus.Acquiring 
+                    && !completionSrc.Task.IsCompleted)
+                    completionSrc.SetResult(true);
+            }
+
+            SdkEventFired += ListenSdkEvent;
+            try
+            {
+                StartAcquisition();
+                await completionSrc.Task;
+            }
+            finally
+            {
+                SdkEventFired -= ListenSdkEvent;
+            }
+        }
         
         /// <summary>
         /// Starts acquisition of the image. Does not block current thread.
@@ -1273,7 +1298,11 @@ namespace ANDOR_CS.Classes
                 if (GetStatus() != CameraStatus.Idle)
                     throw new AndorSdkException("Camera is not in the idle mode.", null);
 
-              
+                //if (_useSdkEvents)
+                {
+                    await EventBasedAcquisitionAsync();
+                }
+
 
                 if (_isMetadataAvailable)
                 {
