@@ -662,6 +662,7 @@ namespace ANDOR_CS.Classes
             IsAcquiring = true;
             OnAcquisitionStarted(new AcquisitionStatusEventArgs(GetStatus()));
         }
+
         /// <inheritdoc />
         /// <summary>
         /// A synchronous way to manually abort acquisition.
@@ -677,21 +678,32 @@ namespace ANDOR_CS.Classes
 
             // If there is no acquisition, throws exception
             if (!IsAcquiring)
-                throw new AndorSdkException("Acquisition abort attempted while there is no acquisition in progress.", null);
+                throw new AndorSdkException("Acquisition abort attempted while there is no acquisition in progress.",
+                    null);
 
             //if (IsAsyncAcquisition)
             //    throw new TaskCanceledException("Camera is in process of async acquisition. Cannot call synchronous abort.");
 
             // Tries to abort acquisition
-            if (FailIfError(Call(CameraHandle, SdkInstance.AbortAcquisition), nameof(SdkInstance.AbortAcquisition),
-                out var except))
-                throw except;
+            var result = Call(CameraHandle, SdkInstance.AbortAcquisition);
 
-            // Fires AcquisitionAborted event
-            OnAcquisitionAborted(new AcquisitionStatusEventArgs(GetStatus()));
+            switch (result)
+            {
+                case SDK.DRV_SUCCESS:
+                    // Fires AcquisitionAborted event
+                    OnAcquisitionAborted(new AcquisitionStatusEventArgs(GetStatus()));
 
-            // Marks the end of acquisition
-            IsAcquiring = false;
+                    // Marks the end of acquisition
+                    IsAcquiring = false;
+                    break;
+                case SDK.DRV_IDLE:
+                    break;
+                default:
+                    if (FailIfError(result, nameof(SdkInstance.AbortAcquisition), out var except))
+                        throw except;
+                    break;
+            }
+
         }
         
 
@@ -1024,8 +1036,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSdkException"/>
         /// <returns>Task that can be queried for execution status.</returns>
-        public override async Task StartAcquisitionAsync(CancellationTokenSource source,
-            int timeout = StatusCheckTimeOutMs)
+        public override async Task StartAcquisitionAsync(CancellationToken token)
         {
             CheckIsDisposed();
             try
@@ -1057,6 +1068,10 @@ namespace ANDOR_CS.Classes
                     Call(CameraHandle, () => SdkInstance.GetAcquisitionProgress(ref acc, ref kin));
                     OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, DateTime.UtcNow, kin, acc));
 
+                    if (token.IsCancellationRequested
+                        && !completionSrc.Task.IsCompleted)
+                        completionSrc.SetCanceled();
+
                     if (status != CameraStatus.Acquiring
                         && !completionSrc.Task.IsCompleted)
                         completionSrc.SetResult(true);
@@ -1065,7 +1080,8 @@ namespace ANDOR_CS.Classes
                 void WatchImages(object sender, EventArgs e)
                 {
                     var totalImg = (First: 0, Last: 0);
-                    Call(CameraHandle, () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
+                    Call(CameraHandle,
+                        () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
 
                     if (totalImg.First > 0)
                     {
@@ -1126,15 +1142,17 @@ namespace ANDOR_CS.Classes
                     }
                 }
 
-                
+
             }
             // If there were exceptions during status checking loop
+            catch (TaskCanceledException)
+            {
+                AbortAcquisition();
+            }
             catch
             {
                 // Fire event
                 OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(default));
-                // re-throw received exception
-                throw;
             }
             // Ensures that acquisition is properly finished and event is fired
             finally
