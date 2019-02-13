@@ -38,7 +38,8 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// 
         /// </summary>
-        private static readonly string Path = "config.json";
+        private const string Path = "config.json";
+
         /// <summary>
         /// 
         /// </summary>
