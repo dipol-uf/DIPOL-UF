@@ -68,8 +68,12 @@ namespace ANDOR_CS.Classes
 
         private readonly EventWaitHandle _eventHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
         private readonly bool _isMetadataAvailable;
+        private readonly bool _useSdkEvents;
+        private readonly CancellationTokenSource _sdkEventCancellation;
 
-            /// <summary>
+        private event EventHandler SdkEventFired;
+
+        /// <summary>
         /// Indicates if this camera is currently active
         /// </summary>
         public override bool IsActive
@@ -91,15 +95,13 @@ namespace ANDOR_CS.Classes
         {
             get;
         }
-
-
+        
         /// <summary>
         /// Read-only collection of all local cameras in use.
         /// </summary>
         public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
             => CreatedCameras;
-
-
+        
         /// <summary>
         /// Retrieves camera's capabilities
         /// </summary>
@@ -973,6 +975,9 @@ namespace ANDOR_CS.Classes
                     // If camera has valid SDK pointer and is initialized
                     if (IsInitialized && !CameraHandle.IsClosed && !CameraHandle.IsInvalid)
                     {
+                        if (IsAcquiring)
+                           AbortAcquisition();
+
                         if (Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
                         {
                             Call(CameraHandle, SdkInstance.CoolerOFF);
@@ -1015,6 +1020,8 @@ namespace ANDOR_CS.Classes
                             }
                         }
 
+                        if (_useSdkEvents)
+                            _sdkEventCancellation.Cancel();
                     }
 
                     // If succeeded, removes camera instance from the list of cameras
@@ -1126,17 +1133,27 @@ namespace ANDOR_CS.Classes
                 Call(CameraHandle, () => SdkInstance.SetSpool(1, 0, spoolPath + "\\", 128));
             }
 
+            // If events are supported, use events to control acquisition
             if (Capabilities.Features.HasFlag(SdkFeatures.Events))
             {
-                Call(CameraHandle, SdkInstance.SetDriverEvent, _eventHandle.SafeWaitHandle.DangerousGetHandle());
-                Task.Run(() =>
+                if (Call(CameraHandle, SdkInstance.SetDriverEvent, _eventHandle.SafeWaitHandle.DangerousGetHandle()) ==
+                    SDK.DRV_SUCCESS)
                 {
-                    while (true)
+                    _sdkEventCancellation = new CancellationTokenSource();
+                    var timeoutMs = SettingsProvider.Settings.Get("PollingIntervalMS", 100);
+                    var interval = TimeSpan.FromMilliseconds(timeoutMs > 1000 ? 1000 : timeoutMs);
+
+                    Task.Run(() =>
                     {
-                        _eventHandle.WaitOne();
-                        Console.WriteLine("Event");
-                    }
-                }).ConfigureAwait(false);
+                        while (!_sdkEventCancellation.IsCancellationRequested)
+                        {
+                            if (_eventHandle.WaitOne(interval))
+                                SdkEventFired?.Invoke(this, EventArgs.Empty);
+                        }
+                    }, _sdkEventCancellation.Token).ConfigureAwait(false);
+
+                    _useSdkEvents = true;
+                }
             }
 
         }
