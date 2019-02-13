@@ -33,7 +33,7 @@ namespace ANDOR_CS.Events
         /// Time stamp of the event
         /// </summary>
         [DataMember]
-        public DateTime EventTime
+        public DateTimeOffset EventTime
         {
             get;
             private set;
@@ -65,7 +65,7 @@ namespace ANDOR_CS.Events
         public TemperatureStatusEventArgs(TemperatureStatus status, float temp)
             : base()
         {
-            EventTime = DateTime.Now;
+            EventTime = DateTimeOffset.UtcNow;
 
             Status = status;
             Temperature = temp;

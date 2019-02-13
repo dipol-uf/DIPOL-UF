@@ -63,13 +63,13 @@ namespace ANDOR_CS.Classes
         private static readonly ConcurrentDictionary<int, CameraBase> CreatedCameras
             = new ConcurrentDictionary<int, CameraBase>();
         
-        private ConcurrentDictionary<int, (Image Image, NewImageReceivedEventArgs args)> _images = 
-            new ConcurrentDictionary<int, (Image Image, NewImageReceivedEventArgs args)>();
-
         private readonly EventWaitHandle _eventHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
         private readonly bool _isMetadataAvailable;
         private readonly bool _useSdkEvents;
         private readonly CancellationTokenSource _sdkEventCancellation;
+
+        private DateTimeOffset _acquisitionStart;
+        private double _frameDelaySec;
 
         private event EventHandler SdkEventFired;
 
@@ -101,7 +101,153 @@ namespace ANDOR_CS.Classes
         /// </summary>
         public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
             => CreatedCameras;
-        
+
+        /// <summary>
+        /// Creates a new instance of Camera class to represent a connected Andor device.
+        /// Maximum 8 cameras can be controlled at the same time
+        /// </summary>
+        /// <exception cref="AndorSdkException"/>
+        /// <exception cref="ArgumentException"/>
+        /// <exception cref="InvalidOperationException"/>
+        /// <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="Camera.GetNumberOfCameras()"/></param>
+        public Camera(int camIndex = 0)
+        {
+            // Stores return codes from SDK functions
+            var n = GetNumberOfCameras();
+            if (n == 0)
+                throw new AndorSdkException("No ANDOR-compatible cameras found.", null);
+
+            // If cameraIndex is less than 0, it is out of range
+            if (camIndex < 0)
+                throw new ArgumentException(
+                    $"Camera index is out of range; Cannot be less than 0 (provided {camIndex}).");
+            // If cameraIndex equals to or exceeds the number of available cameras, it is also out of range
+            if (camIndex > n)
+                throw new ArgumentException(
+                    $"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
+            // If camera with such index is already in use, throws exception
+            if (CreatedCameras.Count(cam => cam.Value.CameraIndex == camIndex) != 0)
+                throw new ArgumentException($"Camera with index {camIndex} is already created.");
+
+            // Stores the handle (SDK private pointer) to the camera. A unique identifier
+            var result = CallWithoutHandle(SdkInstance.GetCameraHandle, camIndex, out int handle);
+            if (FailIfError(result, nameof(SdkInstance.GetCameraHandle), out var except))
+                throw except;
+
+            // If succeed, assigns handle to Camera property
+            CameraHandle = new SafeSdkCameraHandle(handle);
+
+
+            // Initializes current camera
+            result = Call(CameraHandle, SdkInstance.Initialize, ".\\");
+            if (FailIfError(result, nameof(SdkInstance.Initialize), out except))
+                throw except;
+
+            // If succeeded, sets IsInitialized flag to true and adds current camera to the list of initialized cameras
+            IsInitialized = true;
+            if (!CreatedCameras.TryAdd(CameraHandle.SdkPtr, this))
+                throw new InvalidOperationException("Failed to add camera to the concurrent dictionary");
+
+            CameraIndex = camIndex;
+
+            CreatedCameras.TryAdd(CameraHandle.SdkPtr, this);
+            // Gets information about software and hardware used in this system
+            GetSoftwareHardwareVersion();
+
+            // Queries capabilities of created camera. Result of this method is used later on to control 
+            // available camera settings and regimes
+            GetCapabilities();
+
+            // Queries camera properties that contain information about physical regimes of camera
+            GetCameraProperties();
+
+            // Gets camera serial number
+            GetCameraSerialNumber();
+
+            // And model type
+            GetHeadModel();
+
+            if (!Capabilities.Features.HasFlag(SdkFeatures.Polling) &&
+                !Capabilities.Features.HasFlag(SdkFeatures.Events))
+            {
+                Dispose();
+                throw new NotSupportedException(
+                    "Connected camera is incompatible with the software. Status polling or events are required.");
+            }
+
+            // Default state of fan - FullSpeed
+            if (Capabilities.Features.HasFlag(SdkFeatures.FanControl))
+                FanControl(FanMode.FullSpeed);
+
+            // Default state of cooler - Off
+            if (Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
+                CoolerControl(Switch.Disabled);
+
+            // Default state of shutter(s) - Closed
+            if (Capabilities.Features.HasFlag(SdkFeatures.Shutter))
+                ShutterControl(ShutterMode.PermanentlyClosed, ShutterMode.PermanentlyClosed);
+
+            // If available, enables metadata for precise image timing
+            if (Capabilities.Features.HasFlag(SdkFeatures.MetaData))
+                _isMetadataAvailable = Call(CameraHandle, SdkInstance.SetMetaData, 1) == SDK.DRV_SUCCESS;
+
+            // If available, temporary saves all acquired over one acquisition session images to the folder
+            // Really useful when using cycles/series and producing more than 1 image per run.
+            if (Capabilities.Features.HasFlag(SdkFeatures.Spooling)
+                && SettingsProvider.Settings.TryGet("RootDirectory", out string rootPath))
+            {
+                var spoolPath = Path.Combine(rootPath, "Temp");
+                if (SettingsProvider.Settings.Get("CleanTempOnStartup", true)
+                    && Directory.Exists(spoolPath))
+                    Directory.Delete(spoolPath, true);
+                Directory.CreateDirectory(spoolPath);
+                Call(CameraHandle, () => SdkInstance.SetSpool(1, 0, spoolPath + "\\", 128));
+            }
+
+            // If events are supported, use events to control acquisition
+            if (Capabilities.Features.HasFlag(SdkFeatures.Events))
+            {
+                if (Call(CameraHandle, SdkInstance.SetDriverEvent, _eventHandle.SafeWaitHandle.DangerousGetHandle()) ==
+                    SDK.DRV_SUCCESS)
+                {
+                    _sdkEventCancellation = new CancellationTokenSource();
+                    var timeoutMs = SettingsProvider.Settings.Get("PollingIntervalMS", 100);
+                    timeoutMs = timeoutMs > 1000 || timeoutMs < 10 ? 100 : timeoutMs;
+                    var interval = TimeSpan.FromMilliseconds(timeoutMs);
+
+                    Task.Run(() =>
+                    {
+                        while (!_sdkEventCancellation.IsCancellationRequested)
+                        {
+                            if (_eventHandle.WaitOne(interval))
+                                SdkEventFired?.Invoke(this, EventArgs.Empty);
+                        }
+                    }, _sdkEventCancellation.Token).ConfigureAwait(false);
+
+                    _useSdkEvents = true;
+                }
+            }
+
+            NewImageReceived += (sender, e) =>
+            {
+                var startTime = _acquisitionStart;
+                if (_isMetadataAvailable)
+                {
+                    SDK.SYSTEMTIME time = default;
+                    float offset = default;
+                    Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, e.Index));
+                    startTime = time.ToDateTimeOffset();
+                }
+
+
+                Console.WriteLine(
+                    $"{e.Index}\t{e.EventTime:hh:mm:ss.fff}\t{e.EventTime.LocalDateTime:hh:mm:ss.fff}\t" +
+                    $"{startTime.AddSeconds(e.Index * _frameDelaySec):hh:mm:ss.fff}\t" +
+                    $"{_acquisitionStart.AddSeconds(e.Index * _frameDelaySec):hh:mm:ss.fff}");
+            };
+        }
+
+
         /// <summary>
         /// Retrieves camera's capabilities
         /// </summary>
@@ -503,41 +649,7 @@ namespace ANDOR_CS.Classes
         /// Retrieves new image from camera buffer and pushes it to queue.
         /// </summary>
         /// <param name="e">Parameters obtained from <see cref="CameraBase.NewImageReceived"/> event.</param>
-        private void PushNewImage(NewImageReceivedEventArgs e)
-        {
 
-            CheckIsDisposed();
-
-            if (CurrentSettings.ImageArea != null)
-            {
-                var array = new ushort[CurrentSettings.ImageArea.Value.Height * CurrentSettings.ImageArea.Value.Width];
-
-                var (first, last) = (0, 0);
-
-                if (FailIfError(Call(CameraHandle, () =>
-                        SdkInstance.GetImages16(e.Last, e.Last, array, (uint) (array.Length), ref first, ref last)),
-                    nameof(SdkInstance.GetImages16), out var except))
-                    throw except;
-
-                var im = new Image(array, CurrentSettings.ImageArea.Value.Width,
-                    CurrentSettings.ImageArea.Value.Height);
-                _acquiredImages.Enqueue(im);
-
-                //if (!(FilePattern is null))
-                //{
-                //    var path = Path.Combine(_imgDir, 
-                //        string.Format(FilePattern, CameraModel, last, e.EventTime));
-                //    // ReSharper disable once AssignNullToNotNullAttribute
-                //    Directory.CreateDirectory(Path.GetDirectoryName(path));
-
-                //    var keys = new FitsKey[SettingsProvider.MetaFitsKeys.Count + 1];
-                //    SettingsProvider.MetaFitsKeys.CopyTo(0, keys, 1, SettingsProvider.MetaFitsKeys.Count);
-                //    keys[0] = FitsKey.CreateDate("OBSTIME", e.EventTime);
-                //    using (var str = new FileStream(path, FileMode.OpenOrCreate))
-                //        FitsStream.WriteImage(im, FitsImageType.Int16, str, keys);
-                //}
-            }
-        }
         private void Temp()
         {
               var timings = (Exposure: 0f, Accumulation: 0f, Kinetic: 0f);
@@ -640,6 +752,7 @@ namespace ANDOR_CS.Classes
                 //await completionSrc.Task;
                 acquisitionPollingTimer.Stop();
         }
+
         private List<(int Key, int Index, Image Image)> PullNewImages<T>() where T : unmanaged
         {
             TypeCode imageType;
@@ -718,7 +831,7 @@ namespace ANDOR_CS.Classes
                         // ReSharper disable once AccessToModifiedClosure
                         if(_isMetadataAvailable 
                            && Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref fromStart, j)) is var result)
-                            Console.WriteLine($"{j}\t{(time.ToDateTime().AddMilliseconds(fromStart)):ss.ffffff}\t{fromStart,10}\t{result == SDK.DRV_SUCCESS}\t{result == SDK.DRV_MSTIMINGS_ERROR}");
+                            Console.WriteLine($"{j}\t{(time.ToDateTimeOffset().AddMilliseconds(fromStart)):ss.ffffff}\t{fromStart,10}\t{result == SDK.DRV_SUCCESS}\t{result == SDK.DRV_MSTIMINGS_ERROR}");
 
                         images.Add((
                             Key: DateTime.UtcNow.GetHashCode() + j,
@@ -741,13 +854,43 @@ namespace ANDOR_CS.Classes
             void ListenSdkEvent(object sender, EventArgs e)
             {
                 var status = GetStatus();
-                Console.WriteLine(status);
+                var acc = 0;
+                var kin = 0;
+                Call(CameraHandle, () => SdkInstance.GetAcquisitionProgress(ref acc, ref kin));
+                OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, DateTime.UtcNow, kin, acc));
+
                 if (status != CameraStatus.Acquiring 
                     && !completionSrc.Task.IsCompleted)
                     completionSrc.SetResult(true);
             }
 
+            void WatchImages(object sender, EventArgs e)
+            {
+                var totalImg = (First: 0, Last: 0);
+                Call(CameraHandle, () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
+
+                var startTime = _acquisitionStart;
+                if (_isMetadataAvailable)
+                {
+                    SDK.SYSTEMTIME time = default;
+                    float offset = default;
+                    Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, totalImg.Last));
+                    startTime = time.ToDateTimeOffset();
+                }
+
+                if (totalImg.First > 0)
+                    OnNewImageReceived(new NewImageReceivedEventArgs(totalImg.Last, startTime.AddSeconds(_frameDelaySec * totalImg.Last)));
+            }
+
+            var timings = (Exposure: 0f, Accumulation: 0f, Kinetic: 0f);
+            Call(CameraHandle,
+                () => SdkInstance.GetAcquisitionTimings(ref timings.Exposure, ref timings.Accumulation,
+                    ref timings.Kinetic));
+
+            Console.WriteLine(timings);
+
             SdkEventFired += ListenSdkEvent;
+            SdkEventFired += WatchImages;
             try
             {
                 StartAcquisition();
@@ -756,6 +899,7 @@ namespace ANDOR_CS.Classes
             finally
             {
                 SdkEventFired -= ListenSdkEvent;
+                SdkEventFired -= WatchImages;
             }
         }
         
@@ -774,9 +918,6 @@ namespace ANDOR_CS.Classes
         {
             CheckIsDisposed();
 
-            // TODO: Fix Images here
-            _acquiredImages = new ConcurrentQueue<Image>();
-
             // If acquisition is already in progress, throw exception
             if (FailIfAcquiring(this, out var except))
                 throw except;
@@ -788,6 +929,7 @@ namespace ANDOR_CS.Classes
                 out except))
                 throw except;
 
+            _acquisitionStart = DateTimeOffset.UtcNow;
             // Starts acquisition
             if (FailIfError(Call(CameraHandle, SdkInstance.StartAcquisition), nameof(SdkInstance.StartAcquisition),
                 out except))
@@ -827,8 +969,7 @@ namespace ANDOR_CS.Classes
             // Marks the end of acquisition
             IsAcquiring = false;
         }
-
-
+        
 
         /// <summary>
         /// Sets current camera active
@@ -874,6 +1015,7 @@ namespace ANDOR_CS.Classes
             return camStatus;
         }
 
+     
         /// <summary>
         /// Sets fan mode
         /// </summary>
@@ -1149,131 +1291,6 @@ namespace ANDOR_CS.Classes
         }
 
         /// <summary>
-        /// Creates a new instance of Camera class to represent a connected Andor device.
-        /// Maximum 8 cameras can be controlled at the same time
-        /// </summary>
-        /// <exception cref="AndorSdkException"/>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="InvalidOperationException"/>
-        /// <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="Camera.GetNumberOfCameras()"/></param>
-        public Camera(int camIndex = 0)
-        {
-            // Stores return codes from SDK functions
-            var n = GetNumberOfCameras();
-            if (n == 0)
-                throw new AndorSdkException("No ANDOR-compatible cameras found.", null);
-
-            // If cameraIndex is less than 0, it is out of range
-            if (camIndex < 0)
-                throw new ArgumentException($"Camera index is out of range; Cannot be less than 0 (provided {camIndex}).");
-            // If cameraIndex equals to or exceeds the number of available cameras, it is also out of range
-            if (camIndex > n)
-                throw new ArgumentException($"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
-            // If camera with such index is already in use, throws exception
-            if (CreatedCameras.Count(cam => cam.Value.CameraIndex == camIndex) != 0)
-                throw new ArgumentException($"Camera with index {camIndex} is already created.");
-
-            // Stores the handle (SDK private pointer) to the camera. A unique identifier
-            var result = CallWithoutHandle(SdkInstance.GetCameraHandle, camIndex, out int handle);
-            if (FailIfError(result, nameof(SdkInstance.GetCameraHandle), out var except))
-                throw except;
-
-            // If succeed, assigns handle to Camera property
-            CameraHandle = new SafeSdkCameraHandle(handle);
-
-            
-            // Initializes current camera
-            result = Call(CameraHandle, SdkInstance.Initialize, ".\\");
-            if(FailIfError(result, nameof(SdkInstance.Initialize), out except))
-	            throw except;
-
-            // If succeeded, sets IsInitialized flag to true and adds current camera to the list of initialized cameras
-            IsInitialized = true;
-            if (!CreatedCameras.TryAdd(CameraHandle.SdkPtr, this))
-                throw new InvalidOperationException("Failed to add camera to the concurrent dictionary");
-
-            CameraIndex = camIndex;
-
-            CreatedCameras.TryAdd(CameraHandle.SdkPtr, this);
-            // Gets information about software and hardware used in this system
-            GetSoftwareHardwareVersion();
-
-            // Queries capabilities of created camera. Result of this method is used later on to control 
-            // available camera settings and regimes
-            GetCapabilities();
-
-            // Queries camera properties that contain information about physical regimes of camera
-            GetCameraProperties();
-
-            // Gets camera serial number
-            GetCameraSerialNumber();
-
-            // And model type
-            GetHeadModel();
-
-            if (!Capabilities.Features.HasFlag(SdkFeatures.Polling) &&
-                !Capabilities.Features.HasFlag(SdkFeatures.Events))
-            {
-                Dispose();
-                throw new NotSupportedException("Connected camera is incompatible with the software. Status polling or events are required.");
-            }
-
-            NewImageReceived += (sender, e) => PushNewImage(e);
-
-            // Default state of fan - FullSpeed
-            if (Capabilities.Features.HasFlag(SdkFeatures.FanControl))
-                FanControl(FanMode.FullSpeed);
-
-            // Default state of cooler - Off
-            if (Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
-                CoolerControl(Switch.Disabled);
-
-            // Default state of shutter(s) - Closed
-            if (Capabilities.Features.HasFlag(SdkFeatures.Shutter))
-                ShutterControl(ShutterMode.PermanentlyClosed, ShutterMode.PermanentlyClosed);
-
-            // If available, enables metadata for precise image timing
-            if(Capabilities.Features.HasFlag(SdkFeatures.MetaData))
-                _isMetadataAvailable = Call(CameraHandle, SdkInstance.SetMetaData, 1) == SDK.DRV_SUCCESS;
-
-            // If available, temporary saves all acquired over one acquisition session images to the folder
-            // Really useful when using cycles/series and producing more than 1 image per run.
-            if (Capabilities.Features.HasFlag(SdkFeatures.Spooling)
-                && SettingsProvider.Settings.TryGet("RootDirectory", out string rootPath))
-            {
-                var spoolPath = Path.Combine(rootPath, "Temp");
-                if(SettingsProvider.Settings.Get("CleanTempOnStartup", true))
-                    Directory.Delete(spoolPath, true);
-                Directory.CreateDirectory(spoolPath);
-                Call(CameraHandle, () => SdkInstance.SetSpool(1, 0, spoolPath + "\\", 128));
-            }
-
-            // If events are supported, use events to control acquisition
-            if (Capabilities.Features.HasFlag(SdkFeatures.Events))
-            {
-                if (Call(CameraHandle, SdkInstance.SetDriverEvent, _eventHandle.SafeWaitHandle.DangerousGetHandle()) ==
-                    SDK.DRV_SUCCESS)
-                {
-                    _sdkEventCancellation = new CancellationTokenSource();
-                    var timeoutMs = SettingsProvider.Settings.Get("PollingIntervalMS", 100);
-                    var interval = TimeSpan.FromMilliseconds(timeoutMs > 1000 ? 1000 : timeoutMs);
-
-                    Task.Run(() =>
-                    {
-                        while (!_sdkEventCancellation.IsCancellationRequested)
-                        {
-                            if (_eventHandle.WaitOne(interval))
-                                SdkEventFired?.Invoke(this, EventArgs.Empty);
-                        }
-                    }, _sdkEventCancellation.Token).ConfigureAwait(false);
-
-                    _useSdkEvents = true;
-                }
-            }
-
-        }
-
-        /// <summary>
         /// Starts process of acquisition asynchronously.
         /// This is the preferred way to acquire images from camera.
         /// To run synchronously, call i.e. <see cref="Task.Wait()"/> on the returned task.
@@ -1287,7 +1304,6 @@ namespace ANDOR_CS.Classes
             int timeout = StatusCheckTimeOutMs)
         {
             CheckIsDisposed();
-            _images.Clear();
             try
             {
                 // Checks if acquisition is in progress; throws exception
@@ -1299,6 +1315,16 @@ namespace ANDOR_CS.Classes
                     throw new AndorSdkException("Camera is not in the idle mode.", null);
 
                 //if (_useSdkEvents)
+
+                var timings = (Exposure: 0f, Accumulation: 0f, Kinetic: 0f);
+                if (FailIfError(
+                    Call(CameraHandle,
+                        () => SdkInstance.GetAcquisitionTimings(ref timings.Exposure, ref timings.Accumulation,
+                            ref timings.Kinetic)),
+                    nameof(SdkInstance.GetAcquisitionTimings), out except))
+                    throw except;
+                _frameDelaySec = timings.Kinetic;
+
                 {
                     await EventBasedAcquisitionAsync();
                 }

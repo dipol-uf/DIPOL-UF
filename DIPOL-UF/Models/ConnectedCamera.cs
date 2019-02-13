@@ -429,9 +429,9 @@ namespace DIPOL_UF.Models
         }
         private void Camera_NewImageReceived(object sender, ANDOR_CS.Events.NewImageReceivedEventArgs e)
         {
-            CurrentImageIndex = e.First;
-            if (Camera.AcquiredImages.TryDequeue(out var im))
-                ImagePresenterModel.LoadImage(im);
+            //CurrentImageIndex = e.First;
+            //if (Camera.AcquiredImages.TryDequeue(out var im))
+            //    ImagePresenterModel.LoadImage(im);
         }
 
         private void ChangeState(ControlState newState)
