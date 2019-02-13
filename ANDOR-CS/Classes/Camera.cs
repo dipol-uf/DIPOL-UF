@@ -1031,8 +1031,7 @@ namespace ANDOR_CS.Classes
         /// This is the preferred way to acquire images from camera.
         /// To run synchronously, call i.e. <see cref="Task.Wait()"/> on the returned task.
         /// </summary>
-        /// <param name="source">Cancellation token source that can be used to abort process.</param>
-        /// <param name="timeout">Time interval in ms between subsequent camera status queries.</param>
+        /// <param name="token">Cancellation token that can be used to abort process.</param>
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSdkException"/>
         /// <returns>Task that can be queried for execution status.</returns>
