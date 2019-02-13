@@ -652,9 +652,9 @@ namespace ANDOR_CS.Classes
             CheckCamera();
 
             if (!AcquisitionMode.HasValue ||
-                AcquisitionMode.Value != Enums.AcquisitionMode.Accumulation &&
-                AcquisitionMode.Value != Enums.AcquisitionMode.Kinetic &&
-                AcquisitionMode.Value != Enums.AcquisitionMode.FastKinetics)
+                !AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Accumulation) &&
+                !AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Kinetic) &&
+                !AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.FastKinetics))
                 throw new ArgumentException($"Current {nameof(AcquisitionMode)} ({AcquisitionMode}) does not support accumulation.");
 
             AccumulateCycle = (Frames: number, Time: time);
@@ -665,9 +665,9 @@ namespace ANDOR_CS.Classes
             CheckCamera();
 
             if (!AcquisitionMode.HasValue ||
-                AcquisitionMode.Value != Enums.AcquisitionMode.RunTillAbort &&
-                AcquisitionMode.Value != Enums.AcquisitionMode.Kinetic &&
-                AcquisitionMode.Value != Enums.AcquisitionMode.FastKinetics)
+                !AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.RunTillAbort) &&
+                !AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Kinetic) &&
+                !AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.FastKinetics))
                 throw new ArgumentException($"Current {nameof(AcquisitionMode)} ({AcquisitionMode}) does not support kinetic cycle.");
 
 
