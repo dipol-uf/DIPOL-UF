@@ -45,11 +45,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         public static JsonSettings Settings;
 
-        public static readonly List<FitsKey> MetaFitsKeys = new List<FitsKey>()
-        {
-            FitsKey.CreateComment("Created using Dipol-UF software."), 
-            FitsKey.CreateComment("STATUS_DEBUG"), 
-        };
+        public static List<FitsKey> MetaFitsKeys = new List<FitsKey>();
 
         static SettingsProvider()
         {
@@ -58,6 +54,14 @@ namespace ANDOR_CS.Classes
                     Settings = new JsonSettings(str.ReadToEnd());
             else
                 Settings = new JsonSettings();
+
+            if (Settings.HasKey("FitsAutosaveComments")
+                && Settings.GetArray<string>("FitsAutosaveComments") is var array
+                && !(array is null))
+            {
+                foreach(var key in array)
+                    MetaFitsKeys.Add(FitsKey.CreateComment(key));
+            }
         }
     }
 }

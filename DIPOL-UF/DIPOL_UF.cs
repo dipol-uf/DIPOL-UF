@@ -102,11 +102,11 @@ namespace DIPOL_UF
             {
                 using (var setts = cam.GetAcquisitionSettingsTemplate())
                 {
-                    setts.SetExposureTime(0.50f);
+                    setts.SetExposureTime(0.1f);
                     setts.SetImageArea(new Rectangle(1, 1, 512, 512));
-                    setts.SetAcquisitionMode(AcquisitionMode.Kinetic);
-                    setts.SetKineticCycle(15, 0.2f);
-                    setts.SetAccumulationCycle(5, 0.1f);
+                    setts.SetAcquisitionMode(AcquisitionMode.Kinetic | AcquisitionMode.FrameTransfer);
+                    setts.SetKineticCycle(15, 0.0f);
+                    setts.SetAccumulationCycle(1, 0.0f);
                     setts.SetReadoutMode(ReadMode.FullImage);
                     setts.SetTriggerMode(TriggerMode.Internal);
                     setts.ApplySettings(out _);

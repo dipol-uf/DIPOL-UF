@@ -229,8 +229,7 @@ namespace ANDOR_CS.Classes
             {
                 Console.WriteLine(
                     $"{e.Index}\t{e.EventTime:hh:mm:ss.fff}\t{e.EventTime.LocalDateTime:hh:mm:ss.fff}\t");
-
-                Console.WriteLine(PullPreviewImage<ushort>(e.Index)?.Percentile(0.5));
+                var img = PullPreviewImage<int>(e.Index);
             };
         }
 
@@ -651,8 +650,17 @@ namespace ANDOR_CS.Classes
                     }
 
                     var image = PullPreviewImage(e.Index, AutosaveFormat);
-                    var path = Path.Combine(_autosavePath, $"{e.EventTime:yyyy-MM-ddThh.mm.ss.fffzz}.fits");
-                    FitsStream.WriteImage(image, type, path);
+                    if (!(image is null))
+                    {
+                        var path = Path.Combine(_autosavePath, $"{e.EventTime:yyyy.MM.ddThh-mm-ss.fffzz}.fits");
+                        var keys = new List<FitsKey>(SettingsProvider.MetaFitsKeys)
+                        {
+                            FitsKey.CreateDate("DATE", e.EventTime.UtcDateTime),
+                            new FitsKey("CAMERA", FitsKeywordType.String, ToString())
+                        };
+
+                        FitsStream.WriteImage(image, type, path, keys);
+                    }
                 });
             }
         }
@@ -1228,7 +1236,7 @@ namespace ANDOR_CS.Classes
                 nameof(SdkInstance.GetNumberAvailableImages),
                 out var except))
                 throw except;
-
+            Console.WriteLine($"Before {indices} {index}");
             if (indices.First <= index && indices.Last <= index)
             {
                 var size = CurrentSettings.ImageArea.Value;
@@ -1252,7 +1260,7 @@ namespace ANDOR_CS.Classes
                             ref validInds.Last)), nameof(SdkInstance.GetImages16), out except))
                         throw except;
                 }
-
+                Console.WriteLine($"Inside {validInds} {index}");
                 return new Image(data, size.Width, size.Height);
             }
 
