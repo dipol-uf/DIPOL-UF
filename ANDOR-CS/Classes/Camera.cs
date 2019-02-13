@@ -227,6 +227,8 @@ namespace ANDOR_CS.Classes
             {
                 Console.WriteLine(
                     $"{e.Index}\t{e.EventTime:hh:mm:ss.fff}\t{e.EventTime.LocalDateTime:hh:mm:ss.fff}\t");
+
+                Console.WriteLine(PullPreviewImage<ushort>(e.Index)?.Percentile(0.5));
             };
         }
 
