@@ -423,7 +423,7 @@ namespace ANDOR_CS.Classes
         /// <param name="property">Compiler-filled name of the property that fires event.</param>
         protected virtual void OnPropertyChanged([CallerMemberName] string property = "")
         {
-            if (!IsDisposed)
+            if (!IsDisposed && !IsDisposing)
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
@@ -433,7 +433,7 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Status of camera at the beginning of acquisition</param>
         protected virtual void OnAcquisitionStarted(AcquisitionStatusEventArgs e)
         {
-            if (!IsDisposed)
+            if (!IsDisposed && !IsDisposing)
                 AcquisitionStarted?.Invoke(this, e);
         }
 
@@ -443,7 +443,7 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Status of camera during acquisition</param>
         protected virtual void OnAcquisitionStatusChecked(AcquisitionStatusEventArgs e)
         {
-            if (!IsDisposed)
+            if (!IsDisposed && !IsDisposing)
                 AcquisitionStatusChecked?.Invoke(this, e);
         }
 
@@ -453,7 +453,7 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Status of camera at the end of acquisition</param>
         protected virtual void OnAcquisitionFinished(AcquisitionStatusEventArgs e)
         {
-            if (!IsDisposed)
+            if (!IsDisposed && !IsDisposing)
                 AcquisitionFinished?.Invoke(this, e);
         }
 
@@ -463,7 +463,7 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Status of camera when exception was thrown</param>
         protected virtual void OnAcquisitionErrorReturned(AcquisitionStatusEventArgs e)
         {
-            if (!IsDisposed)
+            if (!IsDisposed && !IsDisposing)
                 AcquisitionErrorReturned?.Invoke(this, e);
         }
 
@@ -473,7 +473,7 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Status of camera when abortion happened</param>
         protected virtual void OnAcquisitionAborted(AcquisitionStatusEventArgs e)
         {
-            if (!IsDisposed)
+            if (!IsDisposed && !IsDisposing)
                 AcquisitionAborted?.Invoke(this, e);
         }
 
@@ -483,13 +483,13 @@ namespace ANDOR_CS.Classes
         /// <param name="e">Status of the camera when temperature was checked.</param>
         protected virtual void OnTemperatureStatusChecked(TemperatureStatusEventArgs e)
         {
-            if (!IsDisposed)
+            if (!IsDisposed && !IsDisposing)
                 TemperatureStatusChecked?.Invoke(this, e);
         }
 
         protected virtual void OnNewImageReceived(NewImageReceivedEventArgs e)
         {
-            if (!IsDisposed)
+            if (!IsDisposed && !IsDisposing)
                 NewImageReceived?.Invoke(this, e);
         }
 

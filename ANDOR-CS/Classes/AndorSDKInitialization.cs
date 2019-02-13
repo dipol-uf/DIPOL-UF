@@ -281,8 +281,7 @@ namespace ANDOR_CS.Classes
                 throw new Exception();
         }
 
-        public static DateTime ToDateTime(this AndorSDK.SYSTEMTIME @this)
-            => new DateTime(@this.Year, @this.Month, @this.Day, @this.Hour, @this.Minute, @this.Second,
-                    @this.Milliseconds).ToLocalTime();
+        public static DateTimeOffset ToDateTimeOffset(this AndorSDK.SYSTEMTIME @this)
+            => new DateTimeOffset(@this.Year, @this.Month, @this.Day, @this.Hour, @this.Minute, @this.Second, @this.Milliseconds, TimeSpan.Zero);
     }
 }

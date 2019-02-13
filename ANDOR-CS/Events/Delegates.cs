@@ -16,6 +16,9 @@
 //    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
 
 
+using System;
+using ANDOR_CS.Classes;
+
 namespace ANDOR_CS.Events
 {
     /// <summary>

@@ -33,7 +33,7 @@ namespace ANDOR_CS.Events
         /// Time stamp of the event
         /// </summary>
         [DataMember]
-        public DateTime EventTime
+        public DateTimeOffset EventTime
         {
             get;
             private set;
@@ -60,14 +60,14 @@ namespace ANDOR_CS.Events
         /// </summary>
         public AcquisitionStatusEventArgs(CameraStatus status)
         {
-            EventTime = DateTime.Now;
+            EventTime = DateTimeOffset.UtcNow;
             Status = status;
             KineticId = 0;
             AccumulationId = 0;
         }
 
         public AcquisitionStatusEventArgs(
-            CameraStatus status, DateTime eventTime,
+            CameraStatus status, DateTimeOffset eventTime,
             int kineticId, int accumulationId)
         {
             EventTime = eventTime;

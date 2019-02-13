@@ -27,31 +27,14 @@ namespace ANDOR_CS.Events
         /// Time stamp of the event
         /// </summary>
         [DataMember]
-        public DateTime EventTime
-        {
-            get;
-            private set;
-        }
+        public DateTimeOffset EventTime { get; private set; }
 
-        [DataMember]
-        public int First
-        {
-            get;
-            private set;
-        }
+        [DataMember] public int Index { get; private set; }
 
-        [DataMember]
-        public int Last
+        public NewImageReceivedEventArgs(int index, DateTimeOffset time)
         {
-            get;
-            private set;
-        }
-
-        public NewImageReceivedEventArgs(int first, int last)
-        {
-            First = first;
-            Last = last;
-            EventTime = DateTime.Now;
+            EventTime = time;
+            Index = index;
         }
 
     }
