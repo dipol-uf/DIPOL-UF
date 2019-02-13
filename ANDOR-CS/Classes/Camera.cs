@@ -1146,11 +1146,14 @@ namespace ANDOR_CS.Classes
             // If there were exceptions during status checking loop
             catch (TaskCanceledException)
             {
+                // If awaited task is canceled through token,
+                // signal AcquisitionAborted without throwing an exception
                 AbortAcquisition();
             }
             catch
             {
                 // Fire event
+                // Quietly consume fatal error and fire event
                 OnAcquisitionErrorReturned(new AcquisitionStatusEventArgs(default));
             }
             // Ensures that acquisition is properly finished and event is fired
