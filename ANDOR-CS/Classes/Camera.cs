@@ -846,55 +846,6 @@ namespace ANDOR_CS.Classes
 
             return images;
         }
-
-        private async Task EventBasedAcquisitionAsync()
-        {
-            var completionSrc = new TaskCompletionSource<bool>();
-
-            void ListenSdkEvent(object sender, EventArgs e)
-            {
-                var status = GetStatus();
-                var acc = 0;
-                var kin = 0;
-                Call(CameraHandle, () => SdkInstance.GetAcquisitionProgress(ref acc, ref kin));
-                OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, DateTime.UtcNow, kin, acc));
-
-                if (status != CameraStatus.Acquiring 
-                    && !completionSrc.Task.IsCompleted)
-                    completionSrc.SetResult(true);
-            }
-
-            void WatchImages(object sender, EventArgs e)
-            {
-                var totalImg = (First: 0, Last: 0);
-                Call(CameraHandle, () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
-
-                var startTime = _acquisitionStart;
-                if (_isMetadataAvailable)
-                {
-                    SDK.SYSTEMTIME time = default;
-                    float offset = default;
-                    Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, totalImg.Last));
-                    startTime = time.ToDateTimeOffset();
-                }
-
-                if (totalImg.First > 0)
-                    OnNewImageReceived(new NewImageReceivedEventArgs(totalImg.Last, startTime.AddSeconds(_frameDelaySec * totalImg.Last)));
-            }
-
-            SdkEventFired += ListenSdkEvent;
-            SdkEventFired += WatchImages;
-            try
-            {
-                StartAcquisition();
-                await completionSrc.Task;
-            }
-            finally
-            {
-                SdkEventFired -= ListenSdkEvent;
-                SdkEventFired -= WatchImages;
-            }
-        }
         
         /// <summary>
         /// Starts acquisition of the image. Does not block current thread.
@@ -1317,9 +1268,54 @@ namespace ANDOR_CS.Classes
                     throw except;
                 _frameDelaySec = timings.Kinetic;
 
-                if (_useSdkEvents)
-                    await EventBasedAcquisitionAsync();
+                var completionSrc = new TaskCompletionSource<bool>();
 
+                void ListenSdkEvent(object sender, EventArgs e)
+                {
+                    var status = GetStatus();
+                    var acc = 0;
+                    var kin = 0;
+                    Call(CameraHandle, () => SdkInstance.GetAcquisitionProgress(ref acc, ref kin));
+                    OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, DateTime.UtcNow, kin, acc));
+
+                    if (status != CameraStatus.Acquiring
+                        && !completionSrc.Task.IsCompleted)
+                        completionSrc.SetResult(true);
+                }
+
+                void WatchImages(object sender, EventArgs e)
+                {
+                    var totalImg = (First: 0, Last: 0);
+                    Call(CameraHandle, () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
+
+                    var startTime = _acquisitionStart;
+                    if (_isMetadataAvailable)
+                    {
+                        SDK.SYSTEMTIME time = default;
+                        float offset = default;
+                        Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, totalImg.Last));
+                        startTime = time.ToDateTimeOffset();
+                    }
+
+                    if (totalImg.First > 0)
+                        OnNewImageReceived(new NewImageReceivedEventArgs(totalImg.Last, startTime.AddSeconds(_frameDelaySec * totalImg.Last)));
+                }
+
+                if (_useSdkEvents)
+                {
+                    SdkEventFired += ListenSdkEvent;
+                    SdkEventFired += WatchImages;
+                    try
+                    {
+                        StartAcquisition();
+                        await completionSrc.Task;
+                    }
+                    finally
+                    {
+                        SdkEventFired -= ListenSdkEvent;
+                        SdkEventFired -= WatchImages;
+                    }
+                }
 
                 if (_isMetadataAvailable)
                 {
