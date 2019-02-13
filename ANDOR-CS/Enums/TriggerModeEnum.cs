@@ -75,7 +75,7 @@ namespace ANDOR_CS.Enums
 
         [Description("External charge shifting")]
         [EnumMember]
-        ExternalChargeshifting = SDK.AC_TRIGGERMODE_EXTERNAL_CHARGESHIFTING
+        ExternalChargeShifting = SDK.AC_TRIGGERMODE_EXTERNAL_CHARGESHIFTING
     }
 
     
