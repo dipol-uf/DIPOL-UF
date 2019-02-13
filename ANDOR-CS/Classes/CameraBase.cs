@@ -51,8 +51,6 @@ namespace ANDOR_CS.Classes
         protected const int TempCheckTimeOutMs = 5000;
         protected const int MaxImagesPerCall = 32;
 
-        protected string _imgDir = SettingsProvider.Settings.Get<string>("ImageDir");
-
         private bool _isDisposed;
         private bool _isDisposing;
 
@@ -80,7 +78,6 @@ namespace ANDOR_CS.Classes
         private (Version PCB, Version Decode, Version CameraFirmware) _hardware;
         private bool _isTemperatureMonitored;
         private volatile bool _isAcquiring;
-        private volatile bool _isAsyncAcquisition;
 
         // ReSharper disable once InconsistentNaming
         protected ConcurrentQueue<Image> _acquiredImages = new ConcurrentQueue<Image>();
@@ -274,24 +271,7 @@ namespace ANDOR_CS.Classes
                 }
             }
         }
-
-        /// <summary>
-        /// Indicates if acquisition is launched from async method and
-        /// camera is able to properly fire all events.
-        /// </summary>
-        public virtual bool IsAsyncAcquisition
-        {
-            get => _isAsyncAcquisition;
-            protected set
-            {
-                if (value != _isAsyncAcquisition)
-                {
-                    _isAsyncAcquisition = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
+        
         public virtual (
             ShutterMode Internal,
             ShutterMode? External,
@@ -555,7 +535,7 @@ namespace ANDOR_CS.Classes
 
         public abstract void EnableAutosave(in string pattern);
 
-        public abstract void StartAcquisition();
+        protected abstract void StartAcquisition();
 
         /// <summary>
         /// A synchronous way to manually abort acquisition.
@@ -565,7 +545,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AndorSdkException"/>
         /// <exception cref="TaskCanceledException"/>
-        public abstract void AbortAcquisition();
+        protected abstract void AbortAcquisition();
 
         public abstract Task StartAcquisitionAsync(CancellationTokenSource token, int timeout = StatusCheckTimeOutMs);
         
