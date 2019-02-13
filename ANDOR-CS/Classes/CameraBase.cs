@@ -28,7 +28,6 @@ using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
 using DipolImage;
 using System;
-using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -49,13 +48,11 @@ namespace ANDOR_CS.Classes
         protected const int PreAmpGainDescriptorMaxLength = 30;
         protected const int StatusCheckTimeOutMs = 100;
         protected const int TempCheckTimeOutMs = 5000;
-        protected const int MaxImagesPerCall = 32;
 
         private bool _isDisposed;
         private bool _isDisposing;
 
         private Timer _temperatureMonitorTimer;
-        private string _filePattern;
         private bool _isActive;
         private bool _isInitialized;
         private DeviceCapabilities _capabilities;
@@ -79,9 +76,13 @@ namespace ANDOR_CS.Classes
         private bool _isTemperatureMonitored;
         private volatile bool _isAcquiring;
 
-        // ReSharper disable once InconsistentNaming
-        protected ConcurrentQueue<Image> _acquiredImages = new ConcurrentQueue<Image>();
+        protected Switch Autosave
+        {
+            get;
+            private set;
+        }
 
+        protected ImageFormat AutosaveFormat { get; private set; }
 
         public virtual bool IsTemperatureMonitored
         {
@@ -117,19 +118,6 @@ namespace ANDOR_CS.Classes
                 if (value != _isDisposing)
                 {
                     _isDisposing = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public virtual string FilePattern
-        {
-            get => _filePattern;
-            protected set
-            {
-                if (value != _filePattern)
-                {
-                    _filePattern = value;
                     OnPropertyChanged();
                 }
             }
@@ -318,10 +306,8 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        public virtual ConcurrentQueue<Image> AcquiredImages => _acquiredImages;
         public virtual SettingsBase CurrentSettings { get; internal set; } = null;
-
-
+        
         /// <inheritdoc />
         /// <summary>
         /// Fires when one of the properties was changed
@@ -531,9 +517,13 @@ namespace ANDOR_CS.Classes
 
         }
 
-        public abstract SettingsBase GetAcquisitionSettingsTemplate();
+        public virtual void SetAutosave(Switch mode, ImageFormat format = ImageFormat.SignedInt32)
+        {
+            Autosave = mode;
+            AutosaveFormat = format;
+        }
 
-        public abstract void EnableAutosave(in string pattern);
+        public abstract SettingsBase GetAcquisitionSettingsTemplate();
 
         protected abstract void StartAcquisition();
 
@@ -551,6 +541,7 @@ namespace ANDOR_CS.Classes
 
         public abstract Image PullPreviewImage<T>(int index) where T : unmanaged;
 
+        public abstract Image PullPreviewImage(int index, ImageFormat format);
 
         /// <summary>
         /// String representation of the camera instance.

@@ -35,6 +35,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
 using DipolImage;
+using FITS_CS;
 #if X86
 using SDK = ATMCD32CS.AndorSDK;
 #endif
@@ -65,6 +66,7 @@ namespace ANDOR_CS.Classes
         private readonly CancellationTokenSource _sdkEventCancellation;
 
         private DateTimeOffset _acquisitionStart;
+        private string _autosavePath;
 
         private event EventHandler SdkEventFired;
 
@@ -630,7 +632,31 @@ namespace ANDOR_CS.Classes
             );
 
         }
-       
+
+        private async void AutosaveWriter(object sender, NewImageReceivedEventArgs e)
+        {
+            if (Autosave == Switch.Enabled)
+            {
+                await Task.Run(() =>
+                {
+                    FitsImageType type;
+                    switch (AutosaveFormat)
+                    {
+                        case ImageFormat.UnsignedInt16:
+                            type = FitsImageType.Int16;
+                            break;
+                        default:
+                            type = FitsImageType.Int32;
+                            break;
+                    }
+
+                    var image = PullPreviewImage(e.Index, AutosaveFormat);
+                    var path = Path.Combine(_autosavePath, $"{e.EventTime:yyyy-MM-ddThh.mm.ss.fffzz}.fits");
+                    FitsStream.WriteImage(image, type, path);
+                });
+            }
+        }
+
         /// <summary>
         /// Starts acquisition of the image. Does not block current thread.
         /// To monitor acquisition progress, use <see cref="GetStatus"/>.
@@ -932,9 +958,31 @@ namespace ANDOR_CS.Classes
 
         }
 
-        public override void EnableAutosave(in string pattern)
+        public override void SetAutosave(Switch mode, ImageFormat format = ImageFormat.SignedInt32)
         {
-            FilePattern = pattern;
+            if (Autosave == Switch.Disabled
+                && mode == Switch.Enabled)
+            {
+                if (SettingsProvider.Settings.TryGet("RootDirectory", out string root))
+                {
+                    _autosavePath = Path.Combine(root, "Autosave");
+
+                    if (!Directory.Exists(_autosavePath))
+                        Directory.CreateDirectory(_autosavePath);
+
+                    NewImageReceived += AutosaveWriter;
+                    base.SetAutosave(mode, format);
+                }
+                else throw new InvalidOperationException(
+                    "Configuration file does not contain required key \"RootDirectory\".");
+            }
+
+            if (Autosave == Switch.Enabled
+                && mode == Switch.Disabled)
+            {
+                NewImageReceived -= AutosaveWriter;
+                base.SetAutosave(mode);
+            }
         }
 
         /// <summary>
@@ -969,6 +1017,8 @@ namespace ANDOR_CS.Classes
                     {
                         if (IsAcquiring)
                            AbortAcquisition();
+
+                        SetAutosave(Switch.Disabled);
 
                         if (Capabilities.SetFunctions.HasFlag(SetFunction.Temperature))
                         {
@@ -1207,6 +1257,19 @@ namespace ANDOR_CS.Classes
             }
 
             return null;
+        }
+
+        public override Image PullPreviewImage(int index, ImageFormat format)
+        {
+            switch (format)
+            {
+                case ImageFormat.UnsignedInt16:
+                    return PullPreviewImage<ushort>(index);
+                case ImageFormat.SignedInt32:
+                    return PullPreviewImage<int>(index);
+                default:
+                    throw new ArgumentException("Unsupported image type.", nameof(format));
+            }
         }
 
         /// <summary>

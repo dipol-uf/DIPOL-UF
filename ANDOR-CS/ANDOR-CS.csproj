@@ -129,6 +129,7 @@
     <Compile Include="DataStructures\DeviceCapabilities.cs" />
     <Compile Include="DataStructures\Point2D.cs" />
     <Compile Include="DataStructures\Rectangle.cs" />
+    <Compile Include="Enums\ImageFormatEnum.cs" />
     <Compile Include="Enums\AcquisitionModeEnum.cs" />
     <Compile Include="Enums\CameraStatusEnum.cs" />
     <Compile Include="Enums\ShutterModeEnum.cs" />

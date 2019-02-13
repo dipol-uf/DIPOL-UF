@@ -111,6 +111,7 @@ namespace DIPOL_UF
                     setts.SetTriggerMode(TriggerMode.Internal);
                     setts.ApplySettings(out _);
 
+                    cam.SetAutosave(Switch.Enabled, ImageFormat.UnsignedInt16);
                     cam.StartAcquisitionAsync(CancellationToken.None).Wait();
 
                     Console.ReadKey();
