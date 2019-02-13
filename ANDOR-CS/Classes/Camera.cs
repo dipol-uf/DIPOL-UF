@@ -23,21 +23,17 @@
 //     SOFTWARE.
 
 using System;
-using System.CodeDom;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
-using FITS_CS;
 #if X86
 using SDK = ATMCD32CS.AndorSDK;
 #endif
@@ -49,7 +45,6 @@ using static ANDOR_CS.Exceptions.AndorSdkException;
 using static ANDOR_CS.Exceptions.AcquisitionInProgressException;
 
 using static ANDOR_CS.Classes.AndorSdkInitialization;
-using Image= DipolImage.Image;
 #pragma warning disable 1591
 
 namespace ANDOR_CS.Classes
@@ -69,7 +64,6 @@ namespace ANDOR_CS.Classes
         private readonly CancellationTokenSource _sdkEventCancellation;
 
         private DateTimeOffset _acquisitionStart;
-        private double _frameDelaySec;
 
         private event EventHandler SdkEventFired;
 
@@ -230,20 +224,8 @@ namespace ANDOR_CS.Classes
 
             NewImageReceived += (sender, e) =>
             {
-                var startTime = _acquisitionStart;
-                if (_isMetadataAvailable)
-                {
-                    SDK.SYSTEMTIME time = default;
-                    float offset = default;
-                    Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, e.Index));
-                    startTime = time.ToDateTimeOffset();
-                }
-
-
                 Console.WriteLine(
-                    $"{e.Index}\t{e.EventTime:hh:mm:ss.fff}\t{e.EventTime.LocalDateTime:hh:mm:ss.fff}\t" +
-                    $"{startTime.AddSeconds(e.Index * _frameDelaySec):hh:mm:ss.fff}\t" +
-                    $"{_acquisitionStart.AddSeconds(e.Index * _frameDelaySec):hh:mm:ss.fff}");
+                    $"{e.Index}\t{e.EventTime:hh:mm:ss.fff}\t{e.EventTime.LocalDateTime:hh:mm:ss.fff}\t");
             };
         }
 
@@ -645,213 +627,11 @@ namespace ANDOR_CS.Classes
             );
 
         }
-        /// <summary>
-        /// Retrieves new image from camera buffer and pushes it to queue.
-        /// </summary>
-        /// <param name="e">Parameters obtained from <see cref="CameraBase.NewImageReceived"/> event.</param>
-
-        private void Temp()
-        {
-              var timings = (Exposure: 0f, Accumulation: 0f, Kinetic: 0f);
-                Call(CameraHandle,
-                    () => SdkInstance.GetAcquisitionTimings(ref timings.Exposure, ref timings.Accumulation,
-                        ref timings.Kinetic));
-
-                Call<float>(CameraHandle, SdkInstance.GetReadOutTime, out var readout);
-                Call<float>(CameraHandle, SdkInstance.GetKeepCleanTime, out var keepClean);
-
-                Console.WriteLine((timings, readout, keepClean));
-
-                // Marks acquisition asynchronous
-                var acquisitionPollingTimer = new System.Timers.Timer()
-                {
-                    Enabled = false,
-                    AutoReset = true
-                };
-                // Start acquisition
-                var completionSrc = new TaskCompletionSource<bool>();
-
-                var start = DateTime.Now;
-
-                void StatusUpdaterKinetic(object sender, ElapsedEventArgs e)
-                {
-                    if (!(sender is System.Timers.Timer timer) || !timer.Enabled) return;
-                    try
-                    {
-                        var status = GetStatus();
-                        var progress = (Accumulation: 0, Kinetic: 0);
-                        if (FailIfError(Call(CameraHandle,
-                                () => SdkInstance.GetAcquisitionProgress(ref progress.Accumulation,
-                                    ref progress.Kinetic)),
-                            nameof(SdkInstance.GetAcquisitionProgress), out var innerExcept))
-                            throw innerExcept;
-
-                        OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status));
-
-
-                        foreach (var item in PullNewImages<ushort>())
-                        {
-                            var offset = TimeSpan.FromSeconds(item.Index * timings.Accumulation);
-                            //_images.TryAdd(item.Key, (item.Image, default));
-                            Console.WriteLine($"{item.Index}\t{start + offset:ss.ffffff}\r\n");
-                        }
-                        //Console.WriteLine(progress);
-
-
-                        if (status != CameraStatus.Acquiring)
-                        {
-                            acquisitionPollingTimer.Stop();
-                            if(!completionSrc.Task.IsCompleted)
-                                completionSrc.SetResult(true);
-                        }
-                    }
-                    catch (Exception innerEx)
-                    {
-                        acquisitionPollingTimer.Stop();
-                        if (!completionSrc.Task.IsCompleted)
-                            completionSrc.SetException(innerEx);
-                    }
-                }
-
-                void StatusUpdaterNormal(object sender, ElapsedEventArgs e)
-                {
-                    if (!(sender is System.Timers.Timer timer) || !timer.Enabled) return;
-                    try
-                    {
-                        var status = GetStatus();
-                        OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, e.SignalTime, 0, 0));
-                        
-                        if (status != CameraStatus.Acquiring)
-                        {
-                            acquisitionPollingTimer.Stop();
-                            if (!completionSrc.Task.IsCompleted)
-                                completionSrc.SetResult(true);
-                        }
-                    }
-                    catch (Exception innerEx)
-                    {
-                        acquisitionPollingTimer.Stop();
-                        if (!completionSrc.Task.IsCompleted)
-                            completionSrc.SetException(innerEx);
-                    }
-                }
-
-
-                //acquisitionPollingTimer.Interval = timeout;
-
-                if (CurrentSettings.KineticCycle.HasValue)
-                    acquisitionPollingTimer.Elapsed += StatusUpdaterKinetic;
-                else
-                    acquisitionPollingTimer.Elapsed += StatusUpdaterNormal;
-
-                start = DateTime.Now.AddMilliseconds(SettingsProvider.Settings.Get("AcquisitionTimerOffsetMS", 0.0));
-
-                StartAcquisition();
-                acquisitionPollingTimer.Start();
-
-                //await completionSrc.Task;
-                acquisitionPollingTimer.Stop();
-        }
-
-        private List<(int Key, int Index, Image Image)> PullNewImages<T>() where T : unmanaged
-        {
-            TypeCode imageType;
-
-            if (typeof(T) == typeof(ushort))
-                imageType = TypeCode.UInt16;
-            else if (typeof(T) == typeof(int))
-                imageType = TypeCode.Int32;
-            else
-                throw new ArgumentException("Cannot pull images in the unsupported type.", nameof(T));
-
-            if (CurrentSettings?.ImageArea is null)
-                throw new NullReferenceException(
-                    "Cannot pull images without acquisition settings applied and known image area.");
-
-            
-
-            var size = Marshal.SizeOf<T>();
-            var matrixSize = CurrentSettings.ImageArea.Value.Width *
-                             CurrentSettings.ImageArea.Value.Height;
-            var indices = (First: 0, Last: 0);
-            var all = (First: 0, Last: 0);
-
-            if (FailIfError(Call(CameraHandle,
-                    () => SdkInstance.GetNumberNewImages(ref indices.First, ref indices.Last)),
-                nameof(SdkInstance.GetNumberNewImages), out var except))
-                throw except;
-            if (FailIfError(Call(CameraHandle,
-                    () => SdkInstance.GetNumberAvailableImages(ref all.First, ref all.Last)),
-                nameof(SdkInstance.GetNumberNewImages), out except))
-                throw except;
-            Console.WriteLine($"{indices}\t{all}");
-
-            var images =  new List<(int Key, int Index, Image Image)>();
-
-            if (indices.First > 0 && indices.First <= indices.Last)
-            {
-                var nImage = indices.Last - indices.First + 1;
-                var nBlocks = nImage / MaxImagesPerCall;
-                nBlocks = nBlocks * MaxImagesPerCall < nImage ? nBlocks + 1 : nBlocks;
-
-                
-                Array buffer = new T[MaxImagesPerCall * matrixSize];
-                var imgBuffer = new byte[matrixSize * size];
-                var validIndex = (First: 0, Last: 0);
-
-                for (var i = 0; i < nBlocks; i++)
-                {
-                    var currentIndex = (First: indices.First + MaxImagesPerCall * i,
-                        Last: Math.Min(indices.First + MaxImagesPerCall * (i + 1) - 1, indices.Last));
-
-                    //if (typeof(T) == typeof(ushort)
-                    //    && FailIfError(Call(CameraHandle, () => SdkInstance.GetImages16(
-                    //        currentIndex.First, currentIndex.Last,
-                    //        (ushort[]) buffer,
-                    //        (uint) ((currentIndex.Last - currentIndex.First + 1) * matrixSize),
-                    //        ref validIndex.First, ref validIndex.Last)), nameof(SdkInstance.GetImages16), out except))
-                    //    throw except;
-
-                    //if (typeof(T) == typeof(int)
-                    //    && FailIfError(Call(CameraHandle, () => SdkInstance.GetImages(
-                    //        currentIndex.First, currentIndex.Last,
-                    //        (int[]) buffer,
-                    //        (uint) ((currentIndex.Last - currentIndex.First + 1) * matrixSize),
-                    //        ref validIndex.First, ref validIndex.Last)), nameof(SdkInstance.GetImages), out except))
-                    //    throw except;
-
-                    for (var j = currentIndex.First; j <= currentIndex.Last; j++)
-                    {
-                        Buffer.BlockCopy(buffer, (j - 1) % MaxImagesPerCall * size * matrixSize, imgBuffer, 0,
-                            matrixSize * size);
-                        SDK.SYSTEMTIME time = default;
-                        
-                        var fromStart = 0f;
-
-                        // ReSharper disable once AccessToModifiedClosure
-                        if(_isMetadataAvailable 
-                           && Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref fromStart, j)) is var result)
-                            Console.WriteLine($"{j}\t{(time.ToDateTimeOffset().AddMilliseconds(fromStart)):ss.ffffff}\t{fromStart,10}\t{result == SDK.DRV_SUCCESS}\t{result == SDK.DRV_MSTIMINGS_ERROR}");
-
-                        images.Add((
-                            Key: DateTime.UtcNow.GetHashCode() + j,
-                            Index: j,
-                            Image: new Image(imgBuffer, CurrentSettings.ImageArea.Value.Width,
-                                CurrentSettings.ImageArea.Value.Height, imageType)));
-                    }
-
-                }
-
-            }
-
-            return images;
-        }
-        
+       
         /// <summary>
         /// Starts acquisition of the image. Does not block current thread.
         /// To monitor acquisition progress, use <see cref="GetStatus"/>.
         /// Fires <see cref="CameraBase.OnAcquisitionStarted"/> 
-        /// with <see cref="AcquisitionStatusEventArgs.IsAsync"/> = false.
         /// NOTE: this method is not recommended. Consider using async version
         /// <see cref="StartAcquisitionAsync(CancellationTokenSource,int)"/>.
         /// Async version allows <see cref="Camera"/> to properly monitor acquisition progress.
@@ -1258,7 +1038,6 @@ namespace ANDOR_CS.Classes
                 if (GetStatus() != CameraStatus.Idle)
                     throw new AndorSdkException("Camera is not in the idle mode.", null);
 
-
                 var timings = (Exposure: 0f, Accumulation: 0f, Kinetic: 0f);
                 if (FailIfError(
                     Call(CameraHandle,
@@ -1266,11 +1045,11 @@ namespace ANDOR_CS.Classes
                             ref timings.Kinetic)),
                     nameof(SdkInstance.GetAcquisitionTimings), out except))
                     throw except;
-                _frameDelaySec = timings.Kinetic;
 
+                var imageIndex = 1;
                 var completionSrc = new TaskCompletionSource<bool>();
 
-                void ListenSdkEvent(object sender, EventArgs e)
+                void ListenToStatusUpdates(object sender, EventArgs e)
                 {
                     var status = GetStatus();
                     var acc = 0;
@@ -1288,22 +1067,26 @@ namespace ANDOR_CS.Classes
                     var totalImg = (First: 0, Last: 0);
                     Call(CameraHandle, () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
 
-                    var startTime = _acquisitionStart;
-                    if (_isMetadataAvailable)
-                    {
-                        SDK.SYSTEMTIME time = default;
-                        float offset = default;
-                        Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, totalImg.Last));
-                        startTime = time.ToDateTimeOffset();
-                    }
-
                     if (totalImg.First > 0)
-                        OnNewImageReceived(new NewImageReceivedEventArgs(totalImg.Last, startTime.AddSeconds(_frameDelaySec * totalImg.Last)));
+                    {
+                        var startTime = _acquisitionStart;
+                        if (_isMetadataAvailable)
+                        {
+                            SDK.SYSTEMTIME time = default;
+                            float offset = default;
+                            Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, totalImg.Last));
+                            startTime = time.ToDateTimeOffset();
+                        }
+
+                        for (; imageIndex <= totalImg.Last; imageIndex++)
+                            OnNewImageReceived(new NewImageReceivedEventArgs(imageIndex,
+                                startTime.AddSeconds(timings.Kinetic * imageIndex)));
+                    }
                 }
 
                 if (_useSdkEvents)
                 {
-                    SdkEventFired += ListenSdkEvent;
+                    SdkEventFired += ListenToStatusUpdates;
                     SdkEventFired += WatchImages;
                     try
                     {
@@ -1312,22 +1095,38 @@ namespace ANDOR_CS.Classes
                     }
                     finally
                     {
-                        SdkEventFired -= ListenSdkEvent;
+                        SdkEventFired -= ListenToStatusUpdates;
                         SdkEventFired -= WatchImages;
                     }
                 }
-
-                if (_isMetadataAvailable)
+                else
                 {
-                    SDK.SYSTEMTIME time = default;
-                    float offset = default;
+                    var timer = new System.Timers.Timer
+                    {
+                        AutoReset = true,
+                        Enabled = false
+                    };
+                    var intervalMs = SettingsProvider.Settings.Get("PollingIntervalMS", 100);
+                    intervalMs = intervalMs > 1000 || intervalMs < 10 ? 100 : intervalMs;
+                    timer.Interval = intervalMs;
 
-                    var result = Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, 0));
-                    result = Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, 1));
-                    result = Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, 2));
-
+                    timer.Elapsed += ListenToStatusUpdates;
+                    timer.Elapsed += WatchImages;
+                    try
+                    {
+                        timer.Start();
+                        StartAcquisition();
+                        await completionSrc.Task;
+                    }
+                    finally
+                    {
+                        timer.Stop();
+                        timer.Elapsed -= ListenToStatusUpdates;
+                        timer.Elapsed -= WatchImages;
+                    }
                 }
 
+                
             }
             // If there were exceptions during status checking loop
             catch
