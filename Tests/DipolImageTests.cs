@@ -391,7 +391,7 @@ namespace Tests
             Assert.Multiple(() =>
             {
                 Assert.That(image.Equals(image.CastTo<int, int>(x => x)), Is.True);
-                Assert.That(() => image.CastTo<int, string>(x => x.ToString()),
+                Assert.That(() => image.CastTo<int, char>(x => x.ToString()[0]),
                     Throws.InstanceOf<ArgumentException>());
             });
             var otherArray = TestArray.Select(x => (double) x).ToArray();

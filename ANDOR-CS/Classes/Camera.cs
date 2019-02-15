@@ -1237,6 +1237,7 @@ namespace ANDOR_CS.Classes
 
                 var size = CurrentSettings.ImageArea.Value;
                 var matrixSize = size.Width * size.Height;
+               
                 Array data = new T[matrixSize];
                 var validInds = (First: 0, Last: 0);
 
@@ -1257,7 +1258,7 @@ namespace ANDOR_CS.Classes
                         throw except;
                 }
                 Console.WriteLine($"Inside 2 {validInds} {index}\r\n");
-                return new Image(data, size.Width, size.Height);
+                return new Image(data, size.Width, size.Height, false);
             }
             Console.WriteLine($"\r\nReturning null {indices} {index}\r\n");
             return null;

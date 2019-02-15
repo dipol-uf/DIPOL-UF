@@ -28,6 +28,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using MathNet.Numerics;
 
 namespace DipolImage
 {
@@ -35,8 +36,6 @@ namespace DipolImage
     [DataContract]
     public class Image : IEqualityComparer<Image>, IEquatable<Image>
     {
-        private const int MaxImageSingleThreadSize = 512 * 768;
-
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly TypeCode[] AllowedTypes =
          {
@@ -49,34 +48,28 @@ namespace DipolImage
             TypeCode.Byte
         };
 
-        [DataMember] private volatile bool _isParallelEnabled;
-
         [DataMember]
         private readonly Array _baseArray;
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        [DataMember]
-        private readonly TypeCode _typeCode;
 
         public static IReadOnlyCollection<TypeCode> AllowedPixelTypes
             => Array.AsReadOnly(AllowedTypes);
 
-        public TypeCode UnderlyingType => _typeCode;
+        [field: DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        [field: DataMember]
+        public TypeCode UnderlyingType { get; }
 
-        [DataMember]
+        [field: DataMember]
         public int Width
         {
             get;
-            private set;
         }
-        [DataMember]
+        [field: DataMember]
         public int Height
         {
             get;
-            private set;
         }
 
-        public Type Type => Type.GetType("System." + _typeCode);
+        public Type Type => Type.GetType("System." + UnderlyingType);
 
         public object this[int i, int j]
         {
@@ -84,28 +77,33 @@ namespace DipolImage
             set => _baseArray.SetValue(value, i * Width + j);
         }
 
-        public T Get<T>(int i, int j)
+        public T Get<T>(int i, int j) where T : unmanaged
             => ((T[])_baseArray)[i * Width + j];
-        public void Set<T>(T value, int i, int j)
+
+        public void Set<T>(T value, int i, int j) where T : unmanaged
             => ((T[])_baseArray)[i * Width + j] = value;
 
-        public Image(Array initialArray, int width, int height)
+        public Image(Array initialArray, int width, int height, bool copy = true)
         {
             if (initialArray == null)
                 throw new ArgumentNullException("Argument is null: " + nameof(initialArray));
 
-            if(width < 1 || height < 1)
+            if (width < 1 || height < 1)
                 throw new ArgumentOutOfRangeException($"Image size is incorrect [{width}, {height}].");
 
             var val = initialArray.GetValue(0);
 
             if (!AllowedTypes.Contains(Type.GetTypeCode(val.GetType())))
                 throw new ArgumentException($"Provided array's base type {val.GetType()} is not allowed.");
-            
-            _typeCode = Type.GetTypeCode(val.GetType());
 
-            _baseArray = Array.CreateInstance(val.GetType(), width * height);
-            Buffer.BlockCopy(initialArray, 0, _baseArray, 0, width * height * Marshal.SizeOf(val));
+            UnderlyingType = Type.GetTypeCode(val.GetType());
+            if (copy)
+            {
+                _baseArray = Array.CreateInstance(val.GetType(), width * height);
+                Buffer.BlockCopy(initialArray, 0, _baseArray, 0, width * height * Marshal.SizeOf(val));
+            }
+            else _baseArray = initialArray;
+
             Width = width;
             Height = height;
         }
@@ -114,7 +112,6 @@ namespace DipolImage
         {
             if (initialArray == null)
                 throw new ArgumentNullException("Argument is null: " + nameof(initialArray));
-
             if (width < 1 || height < 1)
                 throw new ArgumentOutOfRangeException($"Image size is incorrect [{width}, {height}].");
 
@@ -126,28 +123,13 @@ namespace DipolImage
 
             Width = width;
             Height = height;
-            _typeCode = type;
-            var tp = Type.GetType("System." + _typeCode, true, true);
+            UnderlyingType = type;
+            var tp = Type.GetType("System." + UnderlyingType, true, true);
             var size = Marshal.SizeOf(tp);
             _baseArray = Array.CreateInstance(tp, width * height);
 
-
-            //GCHandle handle = default;
-
-            //try
-            //{
-            //    handle = GCHandle.Alloc(_baseArray, GCHandleType.Pinned);
-            //    Marshal.Copy(initialArray, 0, handle.AddrOfPinnedObject(), 
-            //        Math.Min(initialArray.Length, width * height * size));
-            //}
-            //finally
-            //{
-            //    handle.Free();
-            //}
             Buffer.BlockCopy(initialArray, 0, _baseArray, 0,
                 Math.Min(initialArray.Length, width * height * size));
-
-
         }
 
         public byte[] GetBytes()
@@ -164,7 +146,7 @@ namespace DipolImage
         {
             double max;
 
-            switch (_typeCode)
+            switch (UnderlyingType)
             {
                 case TypeCode.Byte:
                 {
@@ -253,7 +235,7 @@ namespace DipolImage
         {
             double min;
 
-            switch (_typeCode)
+            switch (UnderlyingType)
             {
                 case TypeCode.Byte:
                 {
@@ -344,69 +326,69 @@ namespace DipolImage
 
         public void Clamp(double low, double high)
         {
-            if(high <= low)
+            if (high <= low)
                 throw new ArgumentException(@"[high] should be greater than [low]");
 
-            switch (_typeCode)
+            switch (UnderlyingType)
             {
                 case TypeCode.Byte:
                 {
-                    var locLow = (byte)(Math.Floor(low));
-                    var locHigh = (byte)(Math.Ceiling(high));
-                    var arr = (byte[])_baseArray;
+                    var locLow = (byte) (Math.Floor(low));
+                    var locHigh = (byte) (Math.Ceiling(high));
+                    var arr = (byte[]) _baseArray;
 
                     for (var i = 0; i < arr.Length; i++)
                         if (arr[i] < locLow)
                             arr[i] = locLow;
                         else if (arr[i] > locHigh)
                             arr[i] = locHigh;
-                        break;
+                    break;
                 }
 
                 case TypeCode.UInt16:
                 {
-                    var locLow = (ushort)(Math.Floor(low));
-                    var locHigh = (ushort)(Math.Ceiling(high));
-                    var arr = (ushort[])_baseArray;
+                    var locLow = (ushort) (Math.Floor(low));
+                    var locHigh = (ushort) (Math.Ceiling(high));
+                    var arr = (ushort[]) _baseArray;
 
                     for (var i = 0; i < arr.Length; i++)
                         if (arr[i] < locLow)
                             arr[i] = locLow;
                         else if (arr[i] > locHigh)
                             arr[i] = locHigh;
-                        break;
+                    break;
                 }
                 case TypeCode.Int16:
                 {
-                    var locLow = (short)(Math.Floor(low));
-                    var locHigh = (short)(Math.Ceiling(high));
-                    var arr = (short[])_baseArray;
+                    var locLow = (short) (Math.Floor(low));
+                    var locHigh = (short) (Math.Ceiling(high));
+                    var arr = (short[]) _baseArray;
 
                     for (var i = 0; i < arr.Length; i++)
                         if (arr[i] < locLow)
                             arr[i] = locLow;
                         else if (arr[i] > locHigh)
                             arr[i] = locHigh;
-                        break;
+                    break;
                 }
                 case TypeCode.UInt32:
                 {
-                    var locLow = (uint)(Math.Floor(low));
-                    var locHigh = (uint)(Math.Ceiling(high));
-                    var arr = (uint[])_baseArray;
+                    var locLow = (uint) (Math.Floor(low));
+                    var locHigh = (uint) (Math.Ceiling(high));
+                    var arr = (uint[]) _baseArray;
 
                     for (var i = 0; i < arr.Length; i++)
                         if (arr[i] < locLow)
                             arr[i] = locLow;
                         else if (arr[i] > locHigh)
                             arr[i] = locHigh;
-                        break;
+                    break;
                 }
                 case TypeCode.Int32:
                 {
-                    var locLow = (int)(Math.Floor(low));
-                    var locHigh = (int)(Math.Ceiling(high));
-                    var arr = (int[])_baseArray;
+                    var locLow = (int) (Math.Floor(low));
+                    var locHigh = (int) (Math.Ceiling(high));
+                    var arr = (int[]) _baseArray;
 
                     for (var i = 0; i < arr.Length; i++)
                         if (arr[i] < locLow)
@@ -417,20 +399,20 @@ namespace DipolImage
                 }
                 case TypeCode.Single:
                 {
-                    var locLow = (float)(low);
-                    var locHigh = (float)(high);
-                    var arr = (float[])_baseArray;
+                    var locLow = (float) (low);
+                    var locHigh = (float) (high);
+                    var arr = (float[]) _baseArray;
 
                     for (var i = 0; i < arr.Length; i++)
                         if (arr[i] < locLow)
                             arr[i] = locLow;
                         else if (arr[i] > locHigh)
                             arr[i] = locHigh;
-                        break;
+                    break;
                 }
                 default:
                 {
-                    var arr = (double[])_baseArray;
+                    var arr = (double[]) _baseArray;
 
                     for (var i = 0; i < arr.Length; i++)
                         if (arr[i] < low)
@@ -439,7 +421,7 @@ namespace DipolImage
                             arr[i] = high;
                     break;
                 }
-               
+
             }
         }
 
@@ -454,97 +436,98 @@ namespace DipolImage
             var factor = 1.0 * (gMax - gMin) / (max - min);
 
 
-            switch (_typeCode)
+            switch (UnderlyingType)
             {
                 case TypeCode.Byte:
                 {
-                    var arr = (byte[])_baseArray;
+                    var arr = (byte[]) _baseArray;
 
-                    if (AlmostEqual(min, max))
+                    if (min.AlmostEqual(max))
                     {
-                        var val = (byte)(0.5 * (gMin + gMax));
+                        var val = (byte) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
                             arr[i] = val;
                     }
                     else
 
                         for (var i = 0; i < arr.Length; i++)
-                            arr[i] = (byte)(gMin + factor * (arr[i] - min));
+                            arr[i] = (byte) (gMin + factor * (arr[i] - min));
 
-                        break;
+                    break;
                 }
                 case TypeCode.UInt16:
                 {
-                    var arr = (ushort[])_baseArray;
+                    var arr = (ushort[]) _baseArray;
 
-                    if (AlmostEqual(min, max))
+                    if (min.AlmostEqual(max))
                     {
-                        var val = (ushort)(0.5 * (gMin + gMax));
+                        var val = (ushort) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
                             arr[i] = val;
                     }
                     else
 
                         for (var i = 0; i < arr.Length; i++)
-                            arr[i] = (ushort)(gMin + factor * (arr[i] - min));
+                            arr[i] = (ushort) (gMin + factor * (arr[i] - min));
 
-                        break;
+                    break;
                 }
                 case TypeCode.Int16:
                 {
-                    var arr = (short[])_baseArray;
+                    var arr = (short[]) _baseArray;
 
-                    if (AlmostEqual(min, max))
+                    if (min.AlmostEqual(max))
                     {
-                        var val = (short)(0.5 * (gMin + gMax));
+                        var val = (short) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
                             arr[i] = val;
                     }
                     else
 
                         for (var i = 0; i < arr.Length; i++)
-                            arr[i] = (short)(gMin + factor * (arr[i] - min));
+                            arr[i] = (short) (gMin + factor * (arr[i] - min));
 
-                        break;
+                    break;
                 }
                 case TypeCode.UInt32:
                 {
-                    var arr = (uint[])_baseArray;
+                    var arr = (uint[]) _baseArray;
 
-                    if (AlmostEqual(min, max))
+                    if (min.AlmostEqual(max))
                     {
-                        var val = (uint)(0.5 * (gMin + gMax));
+                        var val = (uint) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
                             arr[i] = val;
                     }
                     else
 
                         for (var i = 0; i < arr.Length; i++)
-                            arr[i] = (uint)(gMin + factor * (arr[i] - min));
-                        break;
+                            arr[i] = (uint) (gMin + factor * (arr[i] - min));
+
+                    break;
                 }
                 case TypeCode.Int32:
                 {
-                    var arr = (int[])_baseArray;
+                    var arr = (int[]) _baseArray;
 
-                    if (AlmostEqual(min, max))
+                    if (min.AlmostEqual(max))
                     {
-                        var val = (int)(0.5 * (gMin + gMax));
+                        var val = (int) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
                             arr[i] = val;
                     }
                     else
 
                         for (var i = 0; i < arr.Length; i++)
-                            arr[i] = (int)(gMin + factor * (arr[i] - min));
+                            arr[i] = (int) (gMin + factor * (arr[i] - min));
 
-                        break;
+                    break;
                 }
                 case TypeCode.Single:
                 {
                     var arr = (float[]) _baseArray;
 
-                    if (AlmostEqual(min, max))
+                    if (min.AlmostEqual(max))
                     {
                         var val = (float) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
@@ -561,7 +544,7 @@ namespace DipolImage
                 {
                     var arr = (double[]) _baseArray;
 
-                    if (AlmostEqual(min, max))
+                    if (min.AlmostEqual(max))
                     {
                         var val = 0.5 * (gMin + gMax);
                         for (var i = 0; i < arr.Length; i++)
@@ -582,7 +565,7 @@ namespace DipolImage
             if (lvl < 0 | lvl > 1.0)
                 throw new ArgumentOutOfRangeException($"{nameof(lvl)} parameter is out of range ({lvl} should be in [0, 1]).");
 
-            switch (_typeCode)
+            switch (UnderlyingType)
             {
                 case TypeCode.Byte:
                 {
@@ -671,9 +654,9 @@ namespace DipolImage
                 default:
                 {
                     if (Math.Abs(lvl) < double.Epsilon)
-                        return (double)Min();
+                        return Min();
                     if (Math.Abs(lvl - 1) < double.Epsilon)
-                        return (double)Max();
+                        return Max();
                     var query = ((double[])_baseArray).OrderBy(x => x);
 
                     var length = (int)Math.Ceiling(lvl * Width * Height);
@@ -802,21 +785,24 @@ namespace DipolImage
         }
 
         public Image CastTo<TS, TD>(Func<TS, TD> cast)
-           =>  (typeof(TS) == Type)                       
-            ? new Image(((TS[])_baseArray)
-                .AsParallel()
-                .Select(cast)
-                .ToArray(),
-                Width, Height)
-            : throw new TypeAccessException($"Source type {typeof(TS)} differs from underlying type with code {UnderlyingType}.");
+            where TS : unmanaged
+            where TD : unmanaged
+            => (typeof(TS) == Type)
+                ? new Image(((TS[]) _baseArray)
+                    .AsParallel()
+                    .Select(cast)
+                    .ToArray(),
+                    Width, Height)
+                : throw new TypeAccessException(
+                    $"Source type {typeof(TS)} differs from underlying type with code {UnderlyingType}.");
 
         public Image Transpose()
         {
-            var type = Type.GetType("System." + _typeCode, true, true);
+            var type = Type.GetType("System." + UnderlyingType, true, true);
 
             var newArray = Array.CreateInstance(type, Width * Height);
 
-            switch (_typeCode)
+            switch (UnderlyingType)
             {
 
                 case TypeCode.Byte:
@@ -893,12 +879,12 @@ namespace DipolImage
 
         public bool Equals(Image other)
         {
-            if (_typeCode != other?._typeCode ||
+            if (UnderlyingType != other?.UnderlyingType ||
                 Width != other.Width ||
                 Height != other.Height)
                 return false;
 
-            switch (_typeCode)
+            switch (UnderlyingType)
             {
 
                 case TypeCode.Byte:
@@ -951,16 +937,16 @@ namespace DipolImage
                     var thisArr = (float[])_baseArray;
                     var otherArr = (float[])other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
-                        if (!AlmostEqual(thisArr[i], otherArr[i]))
+                        if (!thisArr[i].AlmostEqual(otherArr[i]))
                             return false;
-                        return true;
+                    return true;
                 }
                 default:
                 {
                     var thisArr = (double[])_baseArray;
                     var otherArr = (double[])other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
-                        if(!AlmostEqual(thisArr[i], otherArr[i]))
+                        if(!thisArr[i].AlmostEqual(otherArr[i]))
                             return false;
                     return true;
                 }
@@ -975,7 +961,7 @@ namespace DipolImage
 
         public override int GetHashCode()
         {
-            switch (_typeCode)
+            switch (UnderlyingType)
             {
                 case TypeCode.Byte:
                     return ((byte[])_baseArray).Aggregate(0, (sum, pix) => sum ^ (7 * pix % int.MaxValue));
@@ -991,38 +977,8 @@ namespace DipolImage
                     return ((float[]) _baseArray).Aggregate(0, (sum, pix) => sum ^ pix.GetHashCode());
                 default:
                     return ((double[])_baseArray).Aggregate(0, (sum, pix) => sum ^ pix.GetHashCode());
-                
             }
         }
 
-        private static bool AlmostEqual(double a, double b, double eps = double.Epsilon)
-        {
-            var mA = Math.Abs(a);
-            var mB = Math.Abs(b);
-            var diff = Math.Abs(a - b);
-
-            if (mA > 0)
-                return diff / mA < eps;
-            if (mB > 0)
-                return diff / mB < eps;
-
-            return diff < eps;
-           
-        }
-
-        private static bool AlmostEqual(float a, float b, float eps = float.Epsilon)
-        {
-            var mA = Math.Abs(a);
-            var mB = Math.Abs(b);
-            var diff = Math.Abs(a - b);
-
-            if (mA > 0f)
-                return diff / mA < eps;
-            if (mB > 0f)
-                return diff / mB < eps;
-
-            return diff < eps;
-
-        }
     }
 }
