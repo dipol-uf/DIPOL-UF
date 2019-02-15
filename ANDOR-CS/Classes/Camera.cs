@@ -225,12 +225,6 @@ namespace ANDOR_CS.Classes
                 }
             }
 
-            NewImageReceived += (sender, e) =>
-            {
-                Console.WriteLine(
-                    $"{e.Index}\t{e.EventTime:hh:mm:ss.fff}\t{e.EventTime.LocalDateTime:hh:mm:ss.fff}\t");
-                var img = PullPreviewImage<int>(e.Index);
-            };
         }
 
 
@@ -989,7 +983,7 @@ namespace ANDOR_CS.Classes
                 && mode == Switch.Disabled)
             {
                 NewImageReceived -= AutosaveWriter;
-                base.SetAutosave(mode);
+                base.SetAutosave(mode, format);
             }
         }
 
@@ -1226,7 +1220,7 @@ namespace ANDOR_CS.Classes
             if(!(typeof(T) == typeof(ushort) || typeof(T) == typeof(int)))
                 throw new ArgumentException($"Current SDK only supports {typeof(ushort)} and {typeof(int)} images.");
 
-            if(!(CurrentSettings?.ImageArea.HasValue ?? false))
+            if(CurrentSettings?.ImageArea is null)
                 throw new NullReferenceException(
                     "Pulling image requires acquisition settings with specified image area applied to the current camera.");
 
@@ -1239,6 +1233,8 @@ namespace ANDOR_CS.Classes
             Console.WriteLine($"Before {indices} {index}");
             if (indices.First <= index && indices.Last <= index)
             {
+                Console.WriteLine($"Inside 1 {indices} {index}");
+
                 var size = CurrentSettings.ImageArea.Value;
                 var matrixSize = size.Width * size.Height;
                 Array data = new T[matrixSize];
@@ -1260,10 +1256,10 @@ namespace ANDOR_CS.Classes
                             ref validInds.Last)), nameof(SdkInstance.GetImages16), out except))
                         throw except;
                 }
-                Console.WriteLine($"Inside {validInds} {index}");
+                Console.WriteLine($"Inside 2 {validInds} {index}\r\n");
                 return new Image(data, size.Width, size.Height);
             }
-
+            Console.WriteLine($"\r\nReturning null {indices} {index}\r\n");
             return null;
         }
 
