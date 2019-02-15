@@ -23,6 +23,8 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using DipolImage;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using FITS_CS;
 
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
@@ -162,6 +164,11 @@ namespace ANDOR_CS.Classes
         }
 
         public override Image PullPreviewImage(int index, ImageFormat format)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SaveNextAcquisitionAs(string folderPath, string imagePattern, FitsKey[] fitsKeys = null)
         {
             throw new NotImplementedException();
         }

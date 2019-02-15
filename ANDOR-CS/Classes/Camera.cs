@@ -193,7 +193,8 @@ namespace ANDOR_CS.Classes
             if (Capabilities.Features.HasFlag(SdkFeatures.Spooling)
                 && SettingsProvider.Settings.TryGet("RootDirectory", out string rootPath))
             {
-                var spoolPath = Path.Combine(rootPath, "Temp");
+                var spoolPath = Path.GetFullPath(Path.Combine(rootPath, "Temp"));
+
                 if (SettingsProvider.Settings.Get("CleanTempOnStartup", true)
                     && Directory.Exists(spoolPath))
                     Directory.Delete(spoolPath, true);
@@ -646,7 +647,7 @@ namespace ANDOR_CS.Classes
                     var image = PullPreviewImage(e.Index, AutosaveFormat);
                     if (!(image is null))
                     {
-                        var path = Path.Combine(_autosavePath, $"{e.EventTime:yyyy.MM.ddThh-mm-ss.fffzz}.fits");
+                        var path = Path.GetFullPath(Path.Combine(_autosavePath, $"{e.EventTime:yyyy.MM.ddThh-mm-ss.fffzz}.fits"));
                         var keys = new List<FitsKey>(SettingsProvider.MetaFitsKeys)
                         {
                             FitsKey.CreateDate("DATE", e.EventTime.UtcDateTime),
@@ -967,7 +968,7 @@ namespace ANDOR_CS.Classes
             {
                 if (SettingsProvider.Settings.TryGet("RootDirectory", out string root))
                 {
-                    _autosavePath = Path.Combine(root, "Autosave");
+                    _autosavePath = Path.GetFullPath(Path.Combine(root, "Autosave"));
 
                     if (!Directory.Exists(_autosavePath))
                         Directory.CreateDirectory(_autosavePath);
@@ -1230,10 +1231,9 @@ namespace ANDOR_CS.Classes
                 nameof(SdkInstance.GetNumberAvailableImages),
                 out var except))
                 throw except;
-            Console.WriteLine($"Before {indices} {index}");
+
             if (indices.First <= index && indices.Last <= index)
             {
-                Console.WriteLine($"Inside 1 {indices} {index}");
 
                 var size = CurrentSettings.ImageArea.Value;
                 var matrixSize = size.Width * size.Height;
@@ -1257,10 +1257,8 @@ namespace ANDOR_CS.Classes
                             ref validInds.Last)), nameof(SdkInstance.GetImages16), out except))
                         throw except;
                 }
-                Console.WriteLine($"Inside 2 {validInds} {index}\r\n");
                 return new Image(data, size.Width, size.Height, false);
             }
-            Console.WriteLine($"\r\nReturning null {indices} {index}\r\n");
             return null;
         }
 
@@ -1275,6 +1273,32 @@ namespace ANDOR_CS.Classes
                 default:
                     throw new ArgumentException("Unsupported image type.", nameof(format));
             }
+        }
+
+        public override void SaveNextAcquisitionAs(
+            string folderPath, string imagePattern, FitsKey[] fitsKeys = null)
+        {
+            if (!SettingsProvider.Settings.TryGet("RootDirectory", out string root))
+                throw new InvalidOperationException(
+                    "Configuration file does not contain required key \"RootDirectory\".");
+
+            var path = Path.GetFullPath(Path.Combine(root, folderPath));
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            void Saver(object sender, AcquisitionStatusEventArgs e)
+            {
+                try
+                {
+                    Console.WriteLine(WasLastAcquisitionOk);
+                }
+                finally
+                {
+                    AcquisitionFinished -= Saver;
+                }
+            }
+
+            AcquisitionFinished += Saver;
         }
 
         /// <summary>
