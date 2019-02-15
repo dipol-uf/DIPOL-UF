@@ -119,7 +119,8 @@ namespace ANDOR_CS.Classes
         /// Stores the index of currently set Analogue-Digital Converter and its bit depth.
         /// </summary>
         [SerializationOrder(3)]
-        [FitsKey("ADCONV", "id; bits")]
+        [FitsKey("ADCONV", index: 0)]
+        [FitsKey("BITDEP", "bits", 1)]
         public (int Index, int BitDepth)? ADConverter
         {
             get => _ADConverter;
@@ -300,6 +301,8 @@ namespace ANDOR_CS.Classes
         {
             Camera.CurrentSettings = this;
             timing = default((float, float, float, int));
+            Camera.Timings = (timing.ExposureTime, timing.AccumulationCycleTime, timing.KineticCycleTime);
+
             return null;
         }
 
@@ -916,7 +919,7 @@ namespace ANDOR_CS.Classes
             return props;
         }
 
-        public void ConvertToFitsKeys()
+        public List<FitsKey> ConvertToFitsKeys()
         {
             List<FitsKey> GetValue(string name, object value, List<FitsKeyAttribute> attrs)
             {
@@ -969,6 +972,7 @@ namespace ANDOR_CS.Classes
                     return old;
                 });
 
+            return values;
         }
 
         void IXmlSerializable.ReadXml(XmlReader reader)

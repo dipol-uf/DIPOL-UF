@@ -68,7 +68,7 @@ namespace ANDOR_CS.Classes
         private readonly CancellationTokenSource _sdkEventCancellation;
 
         private DateTimeOffset _acquisitionStart;
-        private float _exopsureTime;
+        private float _exposureTime;
         private string _autosavePath;
 
         private event EventHandler SdkEventFired;
@@ -673,7 +673,7 @@ namespace ANDOR_CS.Classes
                 && result == SDK.DRV_SUCCESS)
                 startTime = time.ToDateTimeOffset();
 
-            return startTime.AddSeconds(_exopsureTime * index);
+            return startTime.AddSeconds(_exposureTime * index);
         }
 
         /// <summary>
@@ -1213,7 +1213,7 @@ namespace ANDOR_CS.Classes
                 if (FailIfError(
                     Call(CameraHandle,
                         () => SdkInstance.GetAcquisitionTimings(ref placeholder, ref placeholder,
-                            ref _exopsureTime)),
+                            ref _exposureTime)),
                     nameof(SdkInstance.GetAcquisitionTimings), out except))
                     throw except;
 
@@ -1415,8 +1415,10 @@ namespace ANDOR_CS.Classes
                             keys.AddRange(extraKeys);
 
                         keys.Add(new FitsKey("CAMERA", FitsKeywordType.String, ToString()));
-                        keys.AddRange(SettingsProvider.MetaFitsKeys);
                         keys.Add(FitsKey.CreateDate("DATE", GetImageTiming((int)i).UtcDateTime));
+                        if(!(CurrentSettings is null))
+                            keys.AddRange(CurrentSettings.ConvertToFitsKeys());
+                        keys.AddRange(SettingsProvider.MetaFitsKeys);
 
                         var imgPath = Path.Combine(path,
                             string.Format(imagePattern, index + i));

@@ -36,6 +36,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using FITS_CS;
 using Timer = System.Timers.Timer;
+using System.Collections.Generic;
 
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
@@ -77,6 +78,7 @@ namespace ANDOR_CS.Classes
         private bool _isTemperatureMonitored;
         private volatile bool _isAcquiring;
 
+
         protected Switch Autosave
         {
             get;
@@ -109,6 +111,8 @@ namespace ANDOR_CS.Classes
                 }
             }
         }
+
+        internal List<FitsKey> SettingsFitsKeys { get; set; }
 
         public virtual bool IsTemperatureMonitored
         {
@@ -307,7 +311,8 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        public virtual SettingsBase CurrentSettings { get; internal set; } = null;
+        public SettingsBase CurrentSettings { get; internal set; } = null;
+        public (float Exposure, float Accumulation, float Kinetic) Timings { get; internal set; }
         
         /// <inheritdoc />
         /// <summary>
