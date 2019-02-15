@@ -118,13 +118,13 @@ namespace DIPOL_UF
                     setts.SetVSSpeed(vsSpeed);
                     setts.ApplySettings(out var timings);
                     Console.WriteLine(timings);
-                    setts.ConvertToFitsKeys();
-                    //cam.SetAutosave(Switch.Enabled, ImageFormat.UnsignedInt16);
-                    //cam.SaveNextAcquisitionAs("TestSeries", "test_i32_{0:0000}_F.fits", ImageFormat.SignedInt32);
-                    //var src = new CancellationTokenSource();
-                    //cam.StartAcquisitionAsync(src.Token).Wait();
-                    //cam.StartAcquisitionAsync(CancellationToken.None).Wait();
-                    //Console.WriteLine("Done");
+
+                    cam.SetAutosave(Switch.Enabled, ImageFormat.UnsignedInt16);
+                    cam.SaveNextAcquisitionAs("TestSeries", "test_i32_{0:0000}_F.fits", ImageFormat.SignedInt32);
+                    var src = new CancellationTokenSource();
+                    cam.StartAcquisitionAsync(src.Token).Wait();
+                    cam.StartAcquisitionAsync(CancellationToken.None).Wait();
+                    Console.WriteLine("Done");
 
                     Console.ReadKey();
                 }
