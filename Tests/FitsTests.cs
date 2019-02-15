@@ -30,19 +30,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Resources;
 using System.Runtime;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
-using System.Windows;
 using DipolImage;
 using FITS_CS;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NUnit.Framework;
-using NUnit.Framework.Internal.Commands;
 using Assert = NUnit.Framework.Assert;
-using CollectionAssert = Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
 using TestContext = NUnit.Framework.TestContext;
 
 namespace Tests
@@ -166,7 +160,7 @@ namespace Tests
                 new FitsKey("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
                 new FitsKey("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
                 new FitsKey("FLOAT", FitsKeywordType.Float, -100e50),
-                new FitsKey("CMPLX", FitsKeywordType.Complex, new Complex(-1.14151645e30, -1e45), ""),
+                new FitsKey("CMPLX", FitsKeywordType.Complex, new Complex(-1.14151645e30, -1e45)),
                 new FitsKey("HISTORY", FitsKeywordType.Comment, "First history entry")
             };
     }
@@ -206,7 +200,7 @@ namespace Tests
             {
                 using (var str = new FitsStream(new FileStream(GetPath(path), FileMode.Open)))
                 {
-                    var bSize = System.Runtime.InteropServices.Marshal.SizeOf<T>();
+                    var bSize = Marshal.SizeOf<T>();
                     var propSize = (int)(Math.Ceiling(1.0 * width * height * bSize / FitsUnit.UnitSizeInBytes)
                                    * FitsUnit.UnitSizeInBytes
                                    / bSize);
@@ -365,7 +359,6 @@ namespace Tests
             {
                 Assert.That(() => key = new FitsKey(data, offset), Throws.Nothing);
                 Assert.That(key.Header, Is.EqualTo(header.Trim()));
-                Assert.That(key.RawValue, Is.EqualTo(value));
             });
         }
 
@@ -406,8 +399,6 @@ namespace Tests
                 Assert.That(() => key = new FitsKey(header, type, value, comment), Throws.Nothing,
                     $"Fails for {header}");
                 Assert.That(key.Header, Is.EqualTo(header.Trim()),
-                    $"Fails for {header}");
-                Assert.That(key.RawValue, Is.EqualTo(value),
                     $"Fails for {header}");
                 Assert.That(comment.StartsWith(key.Comment) || key.Comment.Length == 0, Is.True,
                     $"Fails for {header}");
@@ -514,8 +505,8 @@ namespace Tests
 
             Assert.Multiple(() =>
             {
-                Test(float.MaxValue, FitsKeywordType.Float);
-                Test(1.0 * float.MaxValue, FitsKeywordType.Float);
+                //Test(float.MaxValue, FitsKeywordType.Float);
+                //Test(1.0 * float.MaxValue, FitsKeywordType.Float);
                 Test("String", FitsKeywordType.String);
                 Test(true, FitsKeywordType.Logical);
                 Test(false, FitsKeywordType.Logical);
@@ -542,13 +533,13 @@ namespace Tests
 
             Assert.That(comment.Header == "COMMENT" && 
                         comment.Type == FitsKeywordType.Comment && 
-                        comment.RawValue is string s1 && 
+                        comment.GetValue<string>() is string s1 && 
                         s1 == cStr &&
                         comment.GetValue<string>() == cStr);
 
             Assert.That(history.Header == "HISTORY" &&
                         history.Type == FitsKeywordType.Comment &&
-                        history.RawValue is string s2 &&
+                        history.GetValue<string>() is string s2 &&
                         s2 == hStr &&
                         history.GetValue<string>() == hStr);
         }

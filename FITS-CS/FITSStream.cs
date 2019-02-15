@@ -182,13 +182,13 @@ namespace FITS_CS
 
             keywords = keywords.Where(k => !k.IsEmpty).ToList();
 
-            var type = (FitsImageType)(int)(keywords.FirstOrDefault(k => k.Header == "BITPIX")?.RawValue
+            var type = (FitsImageType)(keywords.FirstOrDefault(k => k.Header == "BITPIX")?.GetValue<int>()
                                         ?? throw new FormatException(
                                                 "Fits data has no required keyword \"BITPIX\"."));
-            var width = (int)(keywords.FirstOrDefault(k => k.Header == "NAXIS1")?.RawValue
+            var width = (keywords.FirstOrDefault(k => k.Header == "NAXIS1")?.GetValue<int>()
                               ?? throw new FormatException(
                                   "Fits data has no required keyword \"NAXIS1\"."));
-            var height = (int)(keywords.FirstOrDefault(k => k.Header == "NAXIS2")?.RawValue
+            var height = (keywords.FirstOrDefault(k => k.Header == "NAXIS2")?.GetValue<int>()
                                ?? throw new FormatException(
                                    "Fits data has no required keyword \"NAXIS2\"."));
 

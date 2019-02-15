@@ -24,10 +24,14 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Complex = System.Numerics.Complex;
+
+using static System.BitConverter;
+using static FITS_CS.ExtendedBitConverter;
 
 namespace FITS_CS
 {
@@ -43,14 +47,13 @@ namespace FITS_CS
         public static readonly int KeySize = 80;
         public static readonly int KeyHeaderSize = 8;
         public static readonly int ReservedSize = 2;
-        //public static readonly int LastValueColumnFixed = 29;
         public static readonly int StringQuotePos = 20;
         public static readonly int NumericValueMaxLengthFixed = 20;
 
         public static FitsKey End => new FitsKey("END", FitsKeywordType.Comment, "");
         public static FitsKey Empty => new FitsKey();
 
-        public object RawValue { get;}
+        private byte[] RawValue { get;}
 
         public byte[] Data => Encoding.ASCII.GetBytes(KeyString.ToArray());
 
@@ -124,41 +127,43 @@ namespace FITS_CS
                 if (string.IsNullOrWhiteSpace(trimVal))
                 {
                     Type = FitsKeywordType.Blank;
-                    RawValue = null;
+                    RawValue = new byte[0];
                 }
                 else if (trimVal == "F" || trimVal == "T")
                 {
                     Type = FitsKeywordType.Logical;
-                    RawValue = trimVal == "T";
+                    RawValue = GetBytes(trimVal == "T");
                 }
                 else if (trimVal.Contains('\''))
                 {
                     Type = FitsKeywordType.String;
-                    RawValue = Regex.Match(trimVal, "'(.*)'").Groups[1].Value.Replace("''", "'");
+                    RawValue = GetBytes(Regex.Match(trimVal, "'(.*)'").Groups[1].Value.Replace("''", "'"));
                 }
                 else if (Value.Length > maxPos + 1 && 
-                         double.TryParse(Value.Substring(0, maxPos), out var real) &&
-                         double.TryParse(Value.Substring(maxPos), out var img))
+                         double.TryParse(Value.Substring(0, maxPos), 
+                             NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var real) &&
+                         double.TryParse(Value.Substring(maxPos), 
+                             NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var img))
                 {
                     Type = FitsKeywordType.Complex;
-                    RawValue = new Complex(real, img);
+                    RawValue = GetBytes(new Complex(real, img));
                 }
-                else if (int.TryParse(trimVal, out var intVal))
+                else if (int.TryParse(trimVal, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var intVal))
                 {
                     Type = FitsKeywordType.Integer;
-                    RawValue = intVal;
+                    RawValue = GetBytes(intVal);
                 }
-                else if (double.TryParse(trimVal, out var dVal))
+                else if (double.TryParse(trimVal, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var dVal))
                 {
                     Type = FitsKeywordType.Float;
-                    RawValue = dVal;
+                    RawValue = GetBytes((float)dVal);
                 }
                 else throw new ArgumentException("Keyword value is of unknown format.");
             }
             else
             {
                 Value = keyString.Substring(KeyHeaderSize).Trim();
-                RawValue = Value;
+                RawValue = GetBytes(Value);
                 Type = FitsKeywordType.Comment;
             }
         }
@@ -176,7 +181,6 @@ namespace FITS_CS
 
 
             Header = header.Trim();
-            RawValue = value;
             Type = type;
 
             var maxValuePos = NumericValueMaxLengthFixed;
@@ -188,17 +192,26 @@ namespace FITS_CS
             {
                 case FitsKeywordType.Logical:
                     if (value is bool bVal)
+                    {
                         Value = string.Format($"{{0, {maxValuePos}}}", bVal ? 'T' : 'F');
+                        RawValue = GetBytes(bVal);
+                    }
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(bool)}.");
                     break;
                 case FitsKeywordType.Integer:
                     if (value is int iVal)
+                    {
                         Value = string.Format($"{{0, {maxValuePos}}}", iVal);
+                        RawValue = GetBytes(iVal);
+                    }
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(int)}.");
                     break;
                 case FitsKeywordType.Float:
                     if (value is float fVal)
+                    {
                         Value = string.Format($"{{0, {maxValuePos}}}", fVal.ToString("E8"));
+                        RawValue = GetBytes(fVal);
+                    }
                     else if (value is double dVal)
                     {
                         if (Math.Abs(dVal) >= 1e100 || Math.Abs(dVal) <= 1e-100)
@@ -206,6 +219,7 @@ namespace FITS_CS
                                                         " greater than 99 or smaller than -99 " +
                                                         "cannot be represented in fixed mode.");
                         Value = string.Format($"{{0, {maxValuePos}}}", FormatDouble(dVal, dblDecPrecision));
+                        RawValue = GetBytes((float)dVal);
                     }
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type" +
                                                      $" {typeof(float)} or {typeof(double)}.");
@@ -223,6 +237,8 @@ namespace FITS_CS
                         Value = string.Format($"{{0, {maxValuePos}}}{complexSep}{{1, {maxValuePos}}}",
                             FormatDouble(cVal.Real, dblDecPrecision),
                             FormatDouble(cVal.Imaginary, dblDecPrecision));
+                        RawValue = GetBytes(cVal);
+
                     }
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type" +
                                                      $" {typeof(Complex)}.");
@@ -231,12 +247,16 @@ namespace FITS_CS
                 case FitsKeywordType.String:
                     if (value is string sVal)
                     {
+                        var srcVal = sVal;
                         sVal = sVal.Replace("\'", "''").TrimEnd();
                         if (sVal.Length > KeySize - KeyHeaderSize - ReservedSize - 2)
                             throw new ArgumentException($"String \"{nameof(value)}\" is too long.");
                         Value = string.Format($"'{{0, {-strQuotePos}}}'", sVal);
                         if (Value.Length < maxValuePos)
                             Value += new string(' ', maxValuePos - Value.Length);
+
+                        RawValue = GetBytes(srcVal);
+
                     }
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type" +
                                                      $" {typeof(string)}.");
@@ -247,6 +267,7 @@ namespace FITS_CS
                     if (value is string commVal)
                         Value = commVal.Substring(0, Math.Min(commVal.Length, KeySize - KeyHeaderSize));
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(string)}.");
+                    RawValue = GetBytes(Value);
                     break;
                 case FitsKeywordType.Blank:
                     if (value is string blankVal)
@@ -254,6 +275,7 @@ namespace FITS_CS
                     else if (value is null)
                         Value = "";
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(string)}.");
+                    RawValue = GetBytes(Value);
                     break;
                 default:
                     throw new NotSupportedException($"Unsupported \"{nameof(type)}\".");
@@ -274,12 +296,38 @@ namespace FITS_CS
         private FitsKey()
         { }
 
+        /// <summary>
+        /// Inefficient way to access strongly typed raw value.
+        /// Relies on <code>dynamic</code>.
+        /// </summary>
+        /// <typeparam name="T">Type of the contained value</typeparam>
+        /// <returns>Raw value cast to the type.</returns>
         public T GetValue<T>()
-            => RawValue is T tVal
-                ? tVal
-                : throw new ArgumentException(
-                    $"Cannot convert {nameof(RawValue)} of type {RawValue?.GetType()} to type {typeof(T)}.");
-        
+        {
+            dynamic result;
+
+            if (typeof(T) == typeof(bool) 
+                && Type == FitsKeywordType.Logical)
+                result = ToBoolean(RawValue, 0);
+            else if (typeof(T) == typeof(int)
+                     && Type == FitsKeywordType.Integer)
+                result = ToInt32(RawValue, 0);
+            else if ((typeof(T) == typeof(float) || typeof(T) == typeof(double))
+                     && Type == FitsKeywordType.Float)
+                result = ToSingle(RawValue, 0);
+            else if (typeof(T) == typeof(Complex)
+                     && Type == FitsKeywordType.Complex)
+                result = ToComplex(RawValue, 0);
+            else if (typeof(T) == typeof(string)
+                     && (Type == FitsKeywordType.String || Type == FitsKeywordType.Comment))
+                result = ExtendedBitConverter.ToString(RawValue, 0);
+
+            else
+                throw new ArgumentException(
+                    "Generic type does not match the keyword type and conversion is impossible.");
+
+            return (T)result;
+        }
 
         public override string ToString() => KeyString;
         public override bool Equals(object obj)
@@ -311,10 +359,10 @@ namespace FITS_CS
 
             var strRep = new string(Encoding.ASCII.GetChars(data, offset, KeySize));
 
-            var isKey = strRep.StartsWith("HISTORY ") || 
+            var isKey = string.IsNullOrWhiteSpace(strRep) ||
+                        strRep.StartsWith("HISTORY ") || 
                         strRep.StartsWith("COMMENT ") ||
-                        strRep.StartsWith("END") ||
-                        string.IsNullOrWhiteSpace(strRep);
+                        strRep.StartsWith("END");
 
             isKey |= Regex.IsMatch(strRep, $@"^[A-Za-z\ \-_0-9]{{{KeyHeaderSize}}}=\ ");
 
@@ -355,5 +403,7 @@ namespace FITS_CS
             var str = input.ToString(format);
             return Regex.Replace(str, "([+-])[0-9]([0-9]{2})$", "$1$2");
         }
+
+       
     }
 }
