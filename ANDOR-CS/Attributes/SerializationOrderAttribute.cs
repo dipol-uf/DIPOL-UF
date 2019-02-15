@@ -9,15 +9,9 @@ namespace ANDOR_CS.Attributes
         /// <summary>
         /// Serialization index.
         /// </summary>
-        public int Index
-        {
-            get;
-        }
+        public int Index { get; }
 
-        public bool All
-        {
-            get;
-        }
+        public bool All { get; }
 
         /// <inheritdoc />
         /// <summary>
