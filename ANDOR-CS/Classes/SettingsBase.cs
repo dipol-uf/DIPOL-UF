@@ -26,10 +26,13 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 using System.ComponentModel;
+using System.Runtime.Remoting.Messaging;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
 using ANDOR_CS.Attributes;
+using FITS_CS;
+
 // ReSharper disable InconsistentNaming
 #pragma warning disable 1591
 
@@ -86,6 +89,7 @@ namespace ANDOR_CS.Classes
         /// Stores the value of currently set vertical speed
         /// </summary>
         [SerializationOrder(1)]
+        [FitsKey("VSPEED", "usec", new [] {1})]
         public (int Index, float Speed)? VSSpeed
         {
             get => _VSSpeed;
@@ -100,6 +104,7 @@ namespace ANDOR_CS.Classes
         /// Stores the value of currently set horizontal speed
         /// </summary>
         [SerializationOrder(5)]
+        [FitsKey("HSPEED", "MHz", new [] {1})]
         public (int Index, float Speed)? HSSpeed
         {
             get => _HSSpeed;
@@ -114,6 +119,7 @@ namespace ANDOR_CS.Classes
         /// Stores the index of currently set Analogue-Digital Converter and its bit depth.
         /// </summary>
         [SerializationOrder(3)]
+        [FitsKey("ADCONV", "id; bits")]
         public (int Index, int BitDepth)? ADConverter
         {
             get => _ADConverter;
@@ -128,6 +134,7 @@ namespace ANDOR_CS.Classes
         /// Stores the value of currently set vertical clock voltage amplitude
         /// </summary>
         [SerializationOrder(2)]
+        [FitsKey("CLOCKAMP")]
         public VSAmplitude? VSAmplitude
         {
             get => _VSAmplitude;
@@ -142,6 +149,7 @@ namespace ANDOR_CS.Classes
         /// Stores type of currently set OutputAmplifier
         /// </summary>
         [SerializationOrder(4)]
+        [FitsKey("AMPLIF", index: new [] {2})]
         public (OutputAmplification OutputAmplifier, string Name, int Index)? OutputAmplifier
         {
             get => _OutputAmplifier;
@@ -156,6 +164,7 @@ namespace ANDOR_CS.Classes
         /// Stores type of currently set PreAmp Gain
         /// </summary>
         [SerializationOrder(6)]
+        [FitsKey("AMPGAIN", index:new[] {1} )]
         public (int Index, string Name)? PreAmpGain
         {
             get => _PreAmpGain;
@@ -170,6 +179,7 @@ namespace ANDOR_CS.Classes
         /// Stores currently set acquisition mode
         /// </summary>
         [SerializationOrder(7)]
+        [FitsKey("MODE")]
         public AcquisitionMode? AcquisitionMode
         {
             get => _AcquisitionMode;
@@ -184,6 +194,7 @@ namespace ANDOR_CS.Classes
         /// Stores currently set read mode
         /// </summary>
         [SerializationOrder(8)]
+        [FitsKey("READOUT")]
         public ReadMode? ReadoutMode
         {
             get => _ReadoutMode;
@@ -198,6 +209,7 @@ namespace ANDOR_CS.Classes
         /// Stores currently set trigger mode
         /// </summary>
         [SerializationOrder(9)]
+        [FitsKey("TRIGGER")]
         public TriggerMode? TriggerMode
         {
             get => _TriggerMode;
@@ -212,6 +224,7 @@ namespace ANDOR_CS.Classes
         /// Stores exposure time
         /// </summary>
         [SerializationOrder(0)]
+        [FitsKey("EXPTIME")]
         public float? ExposureTime
         {
             get => _ExposureTime;
@@ -226,6 +239,7 @@ namespace ANDOR_CS.Classes
         /// Stores selected image area - part of the CCD from where data should be collected
         /// </summary>
         [SerializationOrder(11)]
+        [FitsKey("CCDAREA", "x1; y1; x2; y2")]
         public Rectangle? ImageArea
         {
             get => _ImageArea;
@@ -237,6 +251,8 @@ namespace ANDOR_CS.Classes
         } 
 
         [SerializationOrder(12, true)]
+        [FitsKey("ACCUMN", index: new [] {0})]
+        [FitsKey("ACCUMT", "sec", new[] {1})]
         public (int Frames, float Time)? AccumulateCycle
         {
             get => _AccumulateCycle;
@@ -248,6 +264,8 @@ namespace ANDOR_CS.Classes
         } 
 
         [SerializationOrder(13, true)]
+        [FitsKey("KINETN", index: new[] { 0 })]
+        [FitsKey("KINETT", "sec", new[] { 1 })]
         public (int Frames, float Time)? KineticCycle
         {
             get => _KineticCycle;
@@ -259,6 +277,7 @@ namespace ANDOR_CS.Classes
         } 
 
         [SerializationOrder(10)]
+        [FitsKey("CCDGAIN")]
         public int? EMCCDGain
         {
             get => _EmCcdGain;
@@ -895,6 +914,67 @@ namespace ANDOR_CS.Classes
             }
 
             return props;
+        }
+
+        public void ConvertToFitsKeys()
+        {
+            List<FitsKey> GetValue(string name, object value, List<FitsKeyAttribute> attrs)
+            {
+                var result = new List<FitsKey>();
+
+                if (attrs is null)
+                    attrs = new List<FitsKeyAttribute>() {null};
+
+                foreach (var attr in attrs)
+                {
+                    var header = string.IsNullOrWhiteSpace(attr?.Header) ? name : attr.Header;
+                    header = header.Length > FitsKey.KeyHeaderSize
+                        ? header.Substring(0, FitsKey.KeyHeaderSize)
+                        : header;
+
+                    var val = value;
+
+                    if (val is ITuple tuple && attr?.Index is int[] index)
+                    {
+                        if (index.Length == 1)
+                            val = tuple[index[0]];
+                        else
+                            val = index.Select(x => tuple[x]).ToList();
+                    }
+                  
+
+                    if(val is int)
+                        result.Add(new FitsKey(header.ToUpperInvariant(), FitsKeywordType.Integer, val, attr?.Comment ?? ""));
+                    else if (val is float || val is double)
+                        result.Add(new FitsKey(header.ToUpperInvariant(), FitsKeywordType.Float, val, attr?.Comment ?? ""));
+                    else
+                    {
+                        var str = val.ToString();
+                        str = str.Length < 60 ? str : str.Substring(0, 60);
+
+                        result.Add(new FitsKey(header.ToUpperInvariant(), FitsKeywordType.String, str,
+                            attr?.Comment ?? ""));
+                    }
+                }
+
+                return result;
+            }
+
+            var values = SerializedProperties
+                .Select(x => new
+                {
+                    Name = x.Name.Substring(0, Math.Min(x.Name.Length, FitsKey.KeyHeaderSize)),
+                    Value = x.GetValue(this),
+                    FitsDesc = x.GetCustomAttributes<FitsKeyAttribute>().ToList()
+                })
+                .Where(x => !(x.Value is null))
+                .Select(x => GetValue(x.Name, x.Value, x.FitsDesc))
+                .Aggregate(new List<FitsKey>(), (old, @new) =>
+                {
+                    old.AddRange(@new);
+                    return old;
+                });
+
         }
 
         void IXmlSerializable.ReadXml(XmlReader reader)
