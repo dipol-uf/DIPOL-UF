@@ -46,6 +46,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExtendedBitConverter.cs" />
     <Compile Include="FitsImageTypeEnum.cs" />
     <Compile Include="FitsKey.cs" />
     <Compile Include="FitsKeywordTypeEnum.cs" />
