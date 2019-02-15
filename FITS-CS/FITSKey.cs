@@ -26,6 +26,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Complex = System.Numerics.Complex;
@@ -36,6 +37,7 @@ using static FITS_CS.ExtendedBitConverter;
 namespace FITS_CS
 {
     [DebuggerDisplay(@"\{Header: {Header}, Value: {Value}, Comment: {Comment}\}")]
+    [DataContract]
     public class FitsKey
     {
         public enum FitsKeyLayout : byte
@@ -53,19 +55,30 @@ namespace FITS_CS
         public static FitsKey End => new FitsKey("END", FitsKeywordType.Comment, "");
         public static FitsKey Empty => new FitsKey();
 
+        [field: DataMember]
         private byte[] RawValue { get;}
 
-        public byte[] Data => Encoding.ASCII.GetBytes(KeyString.ToArray());
-
-        public string KeyString => $"{Header, -8}{Body}";
-
-        public bool IsEmpty => string.IsNullOrWhiteSpace(Header) &&
-                               string.IsNullOrWhiteSpace(Value) &&
-                               string.IsNullOrWhiteSpace(Comment);
+        [field: DataMember]
         public string Header
         {
             get;
         }
+        [field: DataMember]
+        public string Comment { get;  } = "";
+        [field: DataMember]
+        public string Value { get; } = "";
+        [field: DataMember]
+        public FitsKeywordType Type
+        {
+            get;
+        }
+
+
+        public byte[] Data => Encoding.ASCII.GetBytes(KeyString.ToArray());
+        public string KeyString => $"{Header, -8}{Body}";
+        public bool IsEmpty => string.IsNullOrWhiteSpace(Header) &&
+                               string.IsNullOrWhiteSpace(Value) &&
+                               string.IsNullOrWhiteSpace(Comment);
         public string Body
         {
             get
@@ -86,12 +99,6 @@ namespace FITS_CS
                                  .Substring(0, KeySize - KeyHeaderSize);
                 return body;
             }
-        }
-        public string Comment { get;  } = "";
-        public string Value { get; } = "";
-        public FitsKeywordType Type
-        {
-            get;
         }
         
         public FitsKey(byte[] data, int offset = 0)
