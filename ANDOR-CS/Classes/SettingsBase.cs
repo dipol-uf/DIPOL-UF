@@ -89,7 +89,7 @@ namespace ANDOR_CS.Classes
         /// Stores the value of currently set vertical speed
         /// </summary>
         [SerializationOrder(1)]
-        [FitsKey("VSPEED", "usec", new [] {1})]
+        [FitsKey("VSPEED", "usec", 1)]
         public (int Index, float Speed)? VSSpeed
         {
             get => _VSSpeed;
@@ -104,7 +104,7 @@ namespace ANDOR_CS.Classes
         /// Stores the value of currently set horizontal speed
         /// </summary>
         [SerializationOrder(5)]
-        [FitsKey("HSPEED", "MHz", new [] {1})]
+        [FitsKey("HSPEED", "MHz", 1)]
         public (int Index, float Speed)? HSSpeed
         {
             get => _HSSpeed;
@@ -149,7 +149,7 @@ namespace ANDOR_CS.Classes
         /// Stores type of currently set OutputAmplifier
         /// </summary>
         [SerializationOrder(4)]
-        [FitsKey("AMPLIF", index: new [] {2})]
+        [FitsKey("AMPLIF", index: 2)]
         public (OutputAmplification OutputAmplifier, string Name, int Index)? OutputAmplifier
         {
             get => _OutputAmplifier;
@@ -164,7 +164,7 @@ namespace ANDOR_CS.Classes
         /// Stores type of currently set PreAmp Gain
         /// </summary>
         [SerializationOrder(6)]
-        [FitsKey("AMPGAIN", index:new[] {1} )]
+        [FitsKey("AMPGAIN", index: 2)]
         public (int Index, string Name)? PreAmpGain
         {
             get => _PreAmpGain;
@@ -251,8 +251,8 @@ namespace ANDOR_CS.Classes
         } 
 
         [SerializationOrder(12, true)]
-        [FitsKey("ACCUMN", index: new [] {0})]
-        [FitsKey("ACCUMT", "sec", new[] {1})]
+        [FitsKey("ACCUMN", index: 0)]
+        [FitsKey("ACCUMT", "sec", 1)]
         public (int Frames, float Time)? AccumulateCycle
         {
             get => _AccumulateCycle;
@@ -264,8 +264,8 @@ namespace ANDOR_CS.Classes
         } 
 
         [SerializationOrder(13, true)]
-        [FitsKey("KINETN", index: new[] { 0 })]
-        [FitsKey("KINETT", "sec", new[] { 1 })]
+        [FitsKey("KINETN", index: 0)]
+        [FitsKey("KINETT", "sec", 1)]
         public (int Frames, float Time)? KineticCycle
         {
             get => _KineticCycle;
@@ -934,14 +934,8 @@ namespace ANDOR_CS.Classes
 
                     var val = value;
 
-                    if (val is ITuple tuple && attr?.Index is int[] index)
-                    {
-                        if (index.Length == 1)
-                            val = tuple[index[0]];
-                        else
-                            val = index.Select(x => tuple[x]).ToList();
-                    }
-                  
+                    if (val is ITuple tuple && attr?.Index is int index)
+                        val = tuple[index];
 
                     if(val is int)
                         result.Add(new FitsKey(header.ToUpperInvariant(), FitsKeywordType.Integer, val, attr?.Comment ?? ""));
