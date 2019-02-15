@@ -28,12 +28,14 @@ using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
 using DipolImage;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using FITS_CS;
 using Timer = System.Timers.Timer;
 
 #pragma warning disable 1591
@@ -81,22 +83,8 @@ namespace ANDOR_CS.Classes
             get;
             private set;
         }
-
         protected ImageFormat AutosaveFormat { get; private set; }
-
-        public virtual bool IsTemperatureMonitored
-        {
-            get => _isTemperatureMonitored;
-            set
-            {
-                if (value != _isTemperatureMonitored)
-                {
-                    _isTemperatureMonitored = value;
-                    OnPropertyChanged();
-                }
-            }
-
-        }
+        protected bool WasLastAcquisitionOk { get; private set; }
 
         public bool IsDisposed
         {
@@ -121,6 +109,20 @@ namespace ANDOR_CS.Classes
                     OnPropertyChanged();
                 }
             }
+        }
+
+        public virtual bool IsTemperatureMonitored
+        {
+            get => _isTemperatureMonitored;
+            set
+            {
+                if (value != _isTemperatureMonitored)
+                {
+                    _isTemperatureMonitored = value;
+                    OnPropertyChanged();
+                }
+            }
+
         }
 
         public virtual DeviceCapabilities Capabilities
@@ -346,6 +348,13 @@ namespace ANDOR_CS.Classes
 
         public event NewImageReceivedHandler NewImageReceived;
 
+        protected CameraBase()
+        {
+            AcquisitionStarted += (sender, e) => WasLastAcquisitionOk = true;
+            AcquisitionErrorReturned += (sender, e) => WasLastAcquisitionOk = false;
+            AcquisitionAborted += (sender, e) => WasLastAcquisitionOk = false;
+        }
+
         /// <summary>
         /// When overriden in a derived class, returns current status of the camera
         /// </summary>
@@ -372,8 +381,7 @@ namespace ANDOR_CS.Classes
 
         public abstract void ShutterControl(ShutterMode inter, ShutterMode extrn);
 
-
-
+        
         protected virtual void TemperatureMonitorWorker(object sender, ElapsedEventArgs e)
         {
             if (sender is Timer timer && timer.Enabled && !IsDisposed)
@@ -543,6 +551,10 @@ namespace ANDOR_CS.Classes
 
         public abstract Image PullPreviewImage(int index, ImageFormat format);
 
+        public abstract void SaveNextAcquisitionAs(
+            string folderPath, string imagePattern,
+            FitsKey[] extraKeys = null);
+
         /// <summary>
         /// String representation of the camera instance.
         /// </summary>
@@ -597,7 +609,6 @@ namespace ANDOR_CS.Classes
 
         public static async Task<CameraBase> CreateAsync(int camIndex = 0, object otherParams = null)
             => await Task.Run(() => Create(camIndex, otherParams));
-
 
         ~CameraBase()
         {
