@@ -171,7 +171,7 @@ namespace ANDOR_CS.Classes
             throw new NotImplementedException();
         }
 
-        public override void SaveNextAcquisitionAs(string folderPath, string imagePattern, FitsKey[] fitsKeys = null)
+        public override void SaveNextAcquisitionAs(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
         {
             throw new NotImplementedException();
         }

@@ -537,6 +537,12 @@ namespace ANDOR_CS.Classes
             return null;
         }
 
+        public virtual async Task<Image[]> PullAllImagesAsync(ImageFormat format, CancellationToken token)
+        {
+            await Task.FromException(new NotSupportedException("Operation is not supported in the base class."));
+            return null;
+        }
+
 
         public abstract SettingsBase GetAcquisitionSettingsTemplate();
 
@@ -562,6 +568,7 @@ namespace ANDOR_CS.Classes
 
         public abstract void SaveNextAcquisitionAs(
             string folderPath, string imagePattern,
+            ImageFormat format,
             FitsKey[] extraKeys = null);
 
         /// <summary>
