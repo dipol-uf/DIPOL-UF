@@ -73,7 +73,9 @@ namespace SettingsManager
 
             if (HasKey(name))
             {
-                if (Get(name) is T result)
+                //if (Get(name) is T result)
+                //    value = result;
+                if(_rawObject.TryGetValue(name, out var token) && token.Value<T>() is T result)
                     value = result;
 
                 if (Get(name) == null &&
