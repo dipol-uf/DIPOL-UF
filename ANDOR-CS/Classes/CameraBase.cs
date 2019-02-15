@@ -530,7 +530,7 @@ namespace ANDOR_CS.Classes
             AutosaveFormat = format;
         }
 
-        public virtual async Task<Image[]> PullAllImagesAsync<T>()
+        public virtual async Task<Image[]> PullAllImagesAsync<T>(CancellationToken token)
             where T : unmanaged
         {
             await Task.FromException(new NotSupportedException("Operation is not supported in the base class."));

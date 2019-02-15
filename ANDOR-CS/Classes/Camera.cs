@@ -25,9 +25,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
@@ -66,6 +68,7 @@ namespace ANDOR_CS.Classes
         private readonly CancellationTokenSource _sdkEventCancellation;
 
         private DateTimeOffset _acquisitionStart;
+        private float _exopsureTime;
         private string _autosavePath;
 
         private event EventHandler SdkEventFired;
@@ -660,6 +663,19 @@ namespace ANDOR_CS.Classes
             }
         }
 
+        private DateTimeOffset GetImageTiming(int index)
+        {
+            var startTime = _acquisitionStart;
+            SDK.SYSTEMTIME time = default;
+            float offset = default;
+            if (_isMetadataAvailable
+                && Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, index)) is var result
+                && result == SDK.DRV_SUCCESS)
+                startTime = time.ToDateTimeOffset();
+
+            return startTime.AddSeconds(_exopsureTime * index);
+        }
+
         /// <summary>
         /// Starts acquisition of the image. Does not block current thread.
         /// To monitor acquisition progress, use <see cref="GetStatus"/>.
@@ -988,7 +1004,7 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        public override async Task<Image[]> PullAllImagesAsync<T>()
+        public override async Task<Image[]> PullAllImagesAsync<T>(CancellationToken token)
         {
             if (!(typeof(T) == typeof(ushort) || typeof(T) == typeof(int)))
                 throw new ArgumentException($"Current SDK only supports {typeof(ushort)} and {typeof(int)} images.");
@@ -1020,49 +1036,52 @@ namespace ANDOR_CS.Classes
                 (int) Math.Floor(1.0 * chunkSizeMiB / imageSizeInBytes * 1024 * 1024),
                 n);
 
-            var images = new Image[n];
             Array buffer = new T[nImgPerBlock * matrixSize];
             var nBlocks = (int) Math.Ceiling(1.0 * n / nImgPerBlock);
             var validIndices = (First: 0, Last: 0);
-            for (var i = 0; i < nBlocks; i++)
+
+            return await Task.Run(() =>
             {
-                var imgStart = i * nImgPerBlock;
-                var imgEnd = Math.Min(imgStart +  nImgPerBlock, n);
-
-                if (typeof(T) == typeof(ushort))
+                var images = new Image[n];
+                for (var i = 0; i < nBlocks; i++)
                 {
-                    if (FailIfError(Call(CameraHandle,
-                            () => SdkInstance.GetImages16(imgStart + 1, imgEnd, (ushort[]) buffer, (uint) buffer.Length,
-                                ref validIndices.First, ref validIndices.Last)),
-                        nameof(SdkInstance.GetImages16),
-                        out var except))
-                        throw except;
+                    token.ThrowIfCancellationRequested();
+                    var imgStart = i * nImgPerBlock;
+                    var imgEnd = Math.Min(imgStart + nImgPerBlock, n);
+
+                    if (typeof(T) == typeof(ushort))
+                    {
+                        if (FailIfError(Call(CameraHandle,
+                                () => SdkInstance.GetImages16(imgStart + 1, imgEnd, (ushort[]) buffer,
+                                    (uint) buffer.Length,
+                                    ref validIndices.First, ref validIndices.Last)),
+                            nameof(SdkInstance.GetImages16),
+                            out var except))
+                            throw except;
+                    }
+                    else if (typeof(T) == typeof(int))
+                    {
+                        if (FailIfError(Call(CameraHandle,
+                                () => SdkInstance.GetImages(imgStart + 1, imgEnd, (int[]) buffer, (uint) buffer.Length,
+                                    ref validIndices.First, ref validIndices.Last)),
+                            nameof(SdkInstance.GetImages16),
+                            out var except))
+                            throw except;
+                    }
+
+                    for (var j = 0; j < imgEnd - imgStart; j++)
+                    {
+                        var imgArr = new T[matrixSize];
+                        Buffer.BlockCopy(
+                            buffer, j * matrixSize * typeSizeBytes,
+                            imgArr, 0,
+                            matrixSize * typeSizeBytes);
+                        images[j] = new Image(imgArr, matrixDims.Horizontal, matrixDims.Vertical, false);
+                    }
                 }
-                else if (typeof(T) == typeof(int))
-                {
-                    if (FailIfError(Call(CameraHandle,
-                            () => SdkInstance.GetImages(imgStart + 1, imgEnd, (int[])buffer, (uint)buffer.Length,
-                                ref validIndices.First, ref validIndices.Last)),
-                        nameof(SdkInstance.GetImages16),
-                        out var except))
-                        throw except;
-                }
 
-                for (var j = 0; j < imgEnd - imgStart; j++)
-                {
-                    var imgArr = new T[matrixSize];
-                    Buffer.BlockCopy(
-                        buffer, j * matrixSize * typeSizeBytes, 
-                        imgArr, 0, 
-                        matrixSize * typeSizeBytes);
-                    images[j] = new Image(imgArr, matrixDims.Horizontal, matrixDims.Vertical, false);
-                }
-            }
-
-
-
-
-            return await Task.FromResult(images);
+                return images;
+            }, token);
         }
 
         /// <summary>
@@ -1177,11 +1196,11 @@ namespace ANDOR_CS.Classes
                 if (GetStatus() != CameraStatus.Idle)
                     throw new AndorSdkException("Camera is not in the idle mode.", null);
 
-                var timings = (Exposure: 0f, Accumulation: 0f, Kinetic: 0f);
+                var placeholder = 0f;
                 if (FailIfError(
                     Call(CameraHandle,
-                        () => SdkInstance.GetAcquisitionTimings(ref timings.Exposure, ref timings.Accumulation,
-                            ref timings.Kinetic)),
+                        () => SdkInstance.GetAcquisitionTimings(ref placeholder, ref placeholder,
+                            ref _exopsureTime)),
                     nameof(SdkInstance.GetAcquisitionTimings), out except))
                     throw except;
 
@@ -1213,18 +1232,8 @@ namespace ANDOR_CS.Classes
 
                     if (totalImg.First > 0)
                     {
-                        var startTime = _acquisitionStart;
-                        if (_isMetadataAvailable)
-                        {
-                            SDK.SYSTEMTIME time = default;
-                            float offset = default;
-                            Call(CameraHandle, () => SdkInstance.GetMetaDataInfo(ref time, ref offset, totalImg.Last));
-                            startTime = time.ToDateTimeOffset();
-                        }
-
                         for (; imageIndex <= totalImg.Last; imageIndex++)
-                            OnNewImageReceived(new NewImageReceivedEventArgs(imageIndex,
-                                startTime.AddSeconds(timings.Kinetic * imageIndex)));
+                            OnNewImageReceived(new NewImageReceivedEventArgs(imageIndex,GetImageTiming(imageIndex)));
                     }
                 }
 
@@ -1373,12 +1382,34 @@ namespace ANDOR_CS.Classes
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
+            var index = Directory.EnumerateFiles(path).Count() + 1;
+
+
             async void SaverAsync(object sender, AcquisitionStatusEventArgs e)
             {
                 try
                 {
-                    var images = await PullAllImagesAsync<ushort>();
-                    Console.WriteLine($"Pulled {images.Length} images.\t\nTotal {GetTotalNumberOfAcquiredImages()}");
+                    var images = await PullAllImagesAsync<ushort>(CancellationToken.None);
+
+                    Parallel.ForEach(images, (im, state, i) =>
+                    {
+                        if (state.ShouldExitCurrentIteration)
+                            return;
+                        var keys = new List<FitsKey>(fitsKeys?.Length ?? 10);
+                        if(!(fitsKeys is null))
+                            keys.AddRange(fitsKeys);
+
+                        keys.Add(new FitsKey("CAMERA", FitsKeywordType.String, ToString()));
+                        keys.AddRange(SettingsProvider.MetaFitsKeys);
+                        keys.Add(FitsKey.CreateDate("DATE", GetImageTiming((int)i).UtcDateTime));
+
+                        var imgPath = Path.Combine(path,
+                            string.Format(imagePattern, index + i));
+                        
+
+                        FitsStream.WriteImage(im, FitsImageType.Int16, imgPath, keys);
+                    });
+
                 }
                 finally
                 {
