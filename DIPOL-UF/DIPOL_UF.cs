@@ -120,7 +120,7 @@ namespace DIPOL_UF
                     Console.WriteLine(timings);
 
                     cam.SetAutosave(Switch.Enabled, ImageFormat.UnsignedInt16);
-                    cam.SaveNextAcquisitionAs(null, null);
+                    cam.SaveNextAcquisitionAs("", null);
                     var src = new CancellationTokenSource();
                     cam.StartAcquisitionAsync(src.Token).Wait();
                     cam.StartAcquisitionAsync(CancellationToken.None).Wait();

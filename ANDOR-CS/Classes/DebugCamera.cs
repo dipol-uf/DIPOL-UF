@@ -22,8 +22,6 @@ using System.Threading;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using DipolImage;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using FITS_CS;
 
 #pragma warning disable 1591
@@ -164,6 +162,11 @@ namespace ANDOR_CS.Classes
         }
 
         public override Image PullPreviewImage(int index, ImageFormat format)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int GetTotalNumberOfAcquiredImages()
         {
             throw new NotImplementedException();
         }
