@@ -24,6 +24,7 @@
 
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -102,14 +103,21 @@ namespace DIPOL_UF
             {
                 using (var setts = cam.GetAcquisitionSettingsTemplate())
                 {
-                    setts.SetExposureTime(0.1f);
+                    setts.SetExposureTime(1e-3f);
                     setts.SetImageArea(new Rectangle(1, 1, 512, 512));
                     setts.SetAcquisitionMode(AcquisitionMode.Kinetic | AcquisitionMode.FrameTransfer);
                     setts.SetKineticCycle(15, 0.0f);
-                    setts.SetAccumulationCycle(1, 0.0f);
+                    setts.SetAccumulationCycle(3, 0.0f);
                     setts.SetReadoutMode(ReadMode.FullImage);
                     setts.SetTriggerMode(TriggerMode.Internal);
-                    setts.ApplySettings(out _);
+                    setts.SetOutputAmplifier(OutputAmplification.Conventional);
+                    setts.SetADConverter(0);
+                    var speed = setts.GetAvailableHSSpeeds().OrderByDescending(x => x.Speed).First();
+                    setts.SetHSSpeed(speed.Index);
+                    var vsSpeed = Array.IndexOf(cam.Properties.VSSpeeds, cam.Properties.VSSpeeds.Max());
+                    setts.SetVSSpeed(vsSpeed);
+                    setts.ApplySettings(out var timings);
+                    Console.WriteLine(timings);
 
                     cam.SetAutosave(Switch.Enabled, ImageFormat.UnsignedInt16);
                     cam.StartAcquisitionAsync(CancellationToken.None).Wait();
