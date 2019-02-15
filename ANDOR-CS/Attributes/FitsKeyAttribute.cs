@@ -11,12 +11,12 @@ namespace ANDOR_CS.Attributes
     {
         public string Header { get; }
         public string Comment { get; }
-        public int[] Index { get; }
+        public int? Index { get; }
 
-        public FitsKeyAttribute(string header, string comment = "", int[] index = null)
+        public FitsKeyAttribute(string header, string comment = "", int index = -1)
         {
             Header = header;
-            Index = index;
+            Index = index == -1 ? null : (int?)index;
             Comment = comment;
         }
     }
