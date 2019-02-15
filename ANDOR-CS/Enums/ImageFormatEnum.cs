@@ -38,7 +38,9 @@ namespace ANDOR_CS.Enums
     [DataContract]
     public enum ImageFormat
     {
+        [EnumMember]
         UnsignedInt16 = TypeCode.UInt16,
+        [EnumMember]
         SignedInt32 = TypeCode.Int32
     }
 }

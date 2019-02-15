@@ -28,7 +28,6 @@ using ANDOR_CS.Events;
 using ANDOR_CS.Exceptions;
 using DipolImage;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -531,6 +530,14 @@ namespace ANDOR_CS.Classes
             AutosaveFormat = format;
         }
 
+        public virtual async Task<Image[]> PullAllImagesAsync<T>()
+            where T : unmanaged
+        {
+            await Task.FromException(new NotSupportedException("Operation is not supported in the base class."));
+            return null;
+        }
+
+
         public abstract SettingsBase GetAcquisitionSettingsTemplate();
 
         protected abstract void StartAcquisition();
@@ -550,6 +557,8 @@ namespace ANDOR_CS.Classes
         public abstract Image PullPreviewImage<T>(int index) where T : unmanaged;
 
         public abstract Image PullPreviewImage(int index, ImageFormat format);
+
+        public abstract int GetTotalNumberOfAcquiredImages();
 
         public abstract void SaveNextAcquisitionAs(
             string folderPath, string imagePattern,

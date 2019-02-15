@@ -988,6 +988,83 @@ namespace ANDOR_CS.Classes
             }
         }
 
+        public override async Task<Image[]> PullAllImagesAsync<T>()
+        {
+            if (!(typeof(T) == typeof(ushort) || typeof(T) == typeof(int)))
+                throw new ArgumentException($"Current SDK only supports {typeof(ushort)} and {typeof(int)} images.");
+            var matrixDims = CurrentSettings?.ImageArea?.Size
+                ?? throw new NullReferenceException(
+                    "Pulling image requires acquisition settings with specified image area applied to the current camera.");
+
+            var n = GetTotalNumberOfAcquiredImages();
+            var typeSizeBytes = Marshal.SizeOf<T>();
+
+
+            var matrixSize = matrixDims.Horizontal * matrixDims.Vertical;
+            var imageSizeInBytes = matrixSize * typeSizeBytes;
+
+            if (!SettingsProvider.Settings.TryGet("ImageChunkMiB", out long chunkSizeMiB)
+                || chunkSizeMiB < 2
+#if X86
+                || chunkSizeMiB > 768
+#elif X64
+                || chunkSizeMiB > 2048
+#else
+                || chunkSizeMiB > 64
+#endif
+                )
+                chunkSizeMiB = 16;
+
+            // Not sure if it can overflow
+            var nImgPerBlock = Math.Min(
+                (int) Math.Floor(1.0 * chunkSizeMiB / imageSizeInBytes * 1024 * 1024),
+                n);
+
+            var images = new Image[n];
+            Array buffer = new T[nImgPerBlock * matrixSize];
+            var nBlocks = (int) Math.Ceiling(1.0 * n / nImgPerBlock);
+            var validIndices = (First: 0, Last: 0);
+            for (var i = 0; i < nBlocks; i++)
+            {
+                var imgStart = i * nImgPerBlock;
+                var imgEnd = Math.Min(imgStart +  nImgPerBlock, n);
+
+                if (typeof(T) == typeof(ushort))
+                {
+                    if (FailIfError(Call(CameraHandle,
+                            () => SdkInstance.GetImages16(imgStart + 1, imgEnd, (ushort[]) buffer, (uint) buffer.Length,
+                                ref validIndices.First, ref validIndices.Last)),
+                        nameof(SdkInstance.GetImages16),
+                        out var except))
+                        throw except;
+                }
+                else if (typeof(T) == typeof(int))
+                {
+                    if (FailIfError(Call(CameraHandle,
+                            () => SdkInstance.GetImages(imgStart + 1, imgEnd, (int[])buffer, (uint)buffer.Length,
+                                ref validIndices.First, ref validIndices.Last)),
+                        nameof(SdkInstance.GetImages16),
+                        out var except))
+                        throw except;
+                }
+
+                for (var j = 0; j < imgEnd - imgStart; j++)
+                {
+                    var imgArr = new T[matrixSize];
+                    Buffer.BlockCopy(
+                        buffer, j * matrixSize * typeSizeBytes, 
+                        imgArr, 0, 
+                        matrixSize * typeSizeBytes);
+                    images[j] = new Image(imgArr, matrixDims.Horizontal, matrixDims.Vertical, false);
+                }
+            }
+
+
+
+
+            return await Task.FromResult(images);
+        }
+
         /// <summary>
         /// Generates an instance of <see cref="AcquisitionSettings"/> that can be used to select proper settings for image
         /// acquisition in the context of this camera
@@ -1235,7 +1312,7 @@ namespace ANDOR_CS.Classes
             if (indices.First <= index && indices.Last <= index)
             {
 
-                var size = CurrentSettings.ImageArea.Value;
+                var size = CurrentSettings.ImageArea.Value; // -V3125
                 var matrixSize = size.Width * size.Height;
                
                 Array data = new T[matrixSize];
@@ -1275,6 +1352,16 @@ namespace ANDOR_CS.Classes
             }
         }
 
+        public override int GetTotalNumberOfAcquiredImages()
+        {
+            if (FailIfError(Call(CameraHandle, SdkInstance.GetTotalNumberImagesAcquired, out int nImages),
+                nameof(SdkInstance.GetTotalNumberImagesAcquired),
+                out var except))
+                throw except;
+
+            return nImages;
+        }
+
         public override void SaveNextAcquisitionAs(
             string folderPath, string imagePattern, FitsKey[] fitsKeys = null)
         {
@@ -1286,19 +1373,20 @@ namespace ANDOR_CS.Classes
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
-            void Saver(object sender, AcquisitionStatusEventArgs e)
+            async void SaverAsync(object sender, AcquisitionStatusEventArgs e)
             {
                 try
                 {
-                    Console.WriteLine(WasLastAcquisitionOk);
+                    var images = await PullAllImagesAsync<ushort>();
+                    Console.WriteLine($"Pulled {images.Length} images.\t\nTotal {GetTotalNumberOfAcquiredImages()}");
                 }
                 finally
                 {
-                    AcquisitionFinished -= Saver;
+                    AcquisitionFinished -= SaverAsync;
                 }
             }
 
-            AcquisitionFinished += Saver;
+            AcquisitionFinished += SaverAsync;
         }
 
         /// <summary>
