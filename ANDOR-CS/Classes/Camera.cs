@@ -1084,6 +1084,19 @@ namespace ANDOR_CS.Classes
             }, token);
         }
 
+        public override async Task<Image[]> PullAllImagesAsync(ImageFormat format, CancellationToken token)
+        {
+            switch (format)
+            {
+                case ImageFormat.UnsignedInt16:
+                    return await PullAllImagesAsync<ushort>(token);
+                case ImageFormat.SignedInt32:
+                    return await PullAllImagesAsync<int>(token);
+                default:
+                    throw new ArgumentException("Unsupported image type.", nameof(format));
+            }
+        }
+
         /// <summary>
         /// Generates an instance of <see cref="AcquisitionSettings"/> that can be used to select proper settings for image
         /// acquisition in the context of this camera
@@ -1372,7 +1385,8 @@ namespace ANDOR_CS.Classes
         }
 
         public override void SaveNextAcquisitionAs(
-            string folderPath, string imagePattern, FitsKey[] fitsKeys = null)
+            string folderPath, string imagePattern, ImageFormat format, 
+            FitsKey[] extraKeys = null)
         {
             if (!SettingsProvider.Settings.TryGet("RootDirectory", out string root))
                 throw new InvalidOperationException(
@@ -1384,20 +1398,21 @@ namespace ANDOR_CS.Classes
 
             var index = Directory.EnumerateFiles(path).Count() + 1;
 
+            var fitsType = format == ImageFormat.UnsignedInt16 ? FitsImageType.Int16 : FitsImageType.Int32;
 
             async void SaverAsync(object sender, AcquisitionStatusEventArgs e)
             {
                 try
                 {
-                    var images = await PullAllImagesAsync<ushort>(CancellationToken.None);
+                    var images = await PullAllImagesAsync(format, CancellationToken.None);
 
                     Parallel.ForEach(images, (im, state, i) =>
                     {
                         if (state.ShouldExitCurrentIteration)
                             return;
-                        var keys = new List<FitsKey>(fitsKeys?.Length ?? 10);
-                        if(!(fitsKeys is null))
-                            keys.AddRange(fitsKeys);
+                        var keys = new List<FitsKey>(extraKeys?.Length ?? 10);
+                        if(!(extraKeys is null))
+                            keys.AddRange(extraKeys);
 
                         keys.Add(new FitsKey("CAMERA", FitsKeywordType.String, ToString()));
                         keys.AddRange(SettingsProvider.MetaFitsKeys);
@@ -1407,7 +1422,7 @@ namespace ANDOR_CS.Classes
                             string.Format(imagePattern, index + i));
                         
 
-                        FitsStream.WriteImage(im, FitsImageType.Int16, imgPath, keys);
+                        FitsStream.WriteImage(im, fitsType, imgPath, keys);
                     });
 
                 }
