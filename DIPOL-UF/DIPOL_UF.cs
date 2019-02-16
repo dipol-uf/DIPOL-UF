@@ -116,8 +116,8 @@ namespace DIPOL_UF
                     setts.SetHSSpeed(speed.Index);
                     var vsSpeed = Array.IndexOf(cam.Properties.VSSpeeds, cam.Properties.VSSpeeds.Max());
                     setts.SetVSSpeed(vsSpeed);
-                    setts.ApplySettings(out var timings);
-                    Console.WriteLine(timings);
+                    cam.ApplySettings(setts);
+                    Console.WriteLine(cam.Timings);
 
                     cam.SetAutosave(Switch.Enabled, ImageFormat.UnsignedInt16);
                     cam.SaveNextAcquisitionAs("TestSeries", "test_i32_{0:0000}_F.fits", ImageFormat.SignedInt32);
