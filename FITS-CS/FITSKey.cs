@@ -101,7 +101,7 @@ namespace FITS_CS
             }
         }
         
-        public FitsKey(byte[] data, int offset = 0)
+        public FitsKey(string data, int offset = 0)
         {
             if (data == null)
                 throw new ArgumentNullException($"{nameof(data)} is null");

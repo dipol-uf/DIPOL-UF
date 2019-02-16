@@ -26,7 +26,6 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 using System.ComponentModel;
-using System.Runtime.Remoting.Messaging;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
@@ -296,15 +295,15 @@ namespace ANDOR_CS.Classes
             [CallerMemberName] string name = "")
             => OnPropertyChanged(this, new PropertyChangedEventArgs(name));
 
-        public virtual List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
-            out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
-        {
-            Camera.CurrentSettings = this;
-            timing = default((float, float, float, int));
-            Camera.Timings = (timing.ExposureTime, timing.AccumulationCycleTime, timing.KineticCycleTime);
-
-            return null;
-        }
+        //public virtual List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
+        //    out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
+        //{
+        //    Camera.CurrentSettings = this;
+        //    timing = default((float, float, float, int));
+        //    Camera.Timings = (timing.ExposureTime, timing.AccumulationCycleTime, timing.KineticCycleTime);
+        //    //Camera.SettingsFitsKeys 
+        //    return null;
+        //}
 
         /// <summary>
         /// Tries to set vertical speed. 

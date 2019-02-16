@@ -25,11 +25,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
@@ -653,9 +651,16 @@ namespace ANDOR_CS.Classes
                         var path = Path.GetFullPath(Path.Combine(_autosavePath, $"{e.EventTime:yyyy.MM.ddThh-mm-ss.fffzz}.fits"));
                         var keys = new List<FitsKey>(SettingsProvider.MetaFitsKeys)
                         {
+                            new FitsKey("CAMERA", FitsKeywordType.String, ToString()),
                             FitsKey.CreateDate("DATE", e.EventTime.UtcDateTime),
-                            new FitsKey("CAMERA", FitsKeywordType.String, ToString())
+                            new FitsKey("ACTEXPT", FitsKeywordType.Float, Timings.Exposure, "sec"),
+                            new FitsKey("ACTACCT", FitsKeywordType.Float, Timings.Accumulation, "sec"),
+                            new FitsKey("ACTKINT", FitsKeywordType.Float, Timings.Kinetic, "sec")
                         };
+
+                        if (!(CurrentSettings is null) &&
+                            SettingsFitsKeys?.Count > 0)
+                            keys.AddRange(SettingsFitsKeys);
 
                         FitsStream.WriteImage(image, type, path, keys);
                     }
@@ -1410,14 +1415,22 @@ namespace ANDOR_CS.Classes
                     {
                         if (state.ShouldExitCurrentIteration)
                             return;
-                        var keys = new List<FitsKey>(extraKeys?.Length ?? 10);
+                        var keys = new List<FitsKey>(extraKeys?.Length ?? 10)
+                        {
+                            new FitsKey("CAMERA", FitsKeywordType.String, ToString()),
+                            FitsKey.CreateDate("DATE", GetImageTiming((int) i).UtcDateTime),
+                            new FitsKey("ACTEXPT", FitsKeywordType.Float, Timings.Exposure, "sec"),
+                            new FitsKey("ACTACCT", FitsKeywordType.Float, Timings.Accumulation, "sec"),
+                            new FitsKey("ACTKINT", FitsKeywordType.Float, Timings.Kinetic, "sec")
+                        };
+
                         if(!(extraKeys is null))
                             keys.AddRange(extraKeys);
 
-                        keys.Add(new FitsKey("CAMERA", FitsKeywordType.String, ToString()));
-                        keys.Add(FitsKey.CreateDate("DATE", GetImageTiming((int)i).UtcDateTime));
-                        if(!(CurrentSettings is null))
-                            keys.AddRange(CurrentSettings.ConvertToFitsKeys());
+                        if(!(CurrentSettings is null) && 
+                           SettingsFitsKeys?.Count > 0)
+                            keys.AddRange(SettingsFitsKeys);
+
                         keys.AddRange(SettingsProvider.MetaFitsKeys);
 
                         var imgPath = Path.Combine(path,
@@ -1435,6 +1448,218 @@ namespace ANDOR_CS.Classes
             }
 
             AcquisitionFinished += SaverAsync;
+        }
+
+        public override void ApplySettings(SettingsBase settings)
+        {
+
+            CheckIsDisposed();
+
+
+            if (settings.VSSpeed?.Index is int vsIndex
+                && FailIfError(
+                    Call(CameraHandle, SdkInstance.SetVSSpeed, vsIndex),
+                    nameof(SdkInstance.SetVSSpeed),
+                    out var except))
+                throw except;
+
+            if (settings.VSAmplitude is VSAmplitude ampl
+                && FailIfError(
+                    Call(CameraHandle, SdkInstance.SetVSAmplitude, (int) ampl),
+                    nameof(SdkInstance.SetVSAmplitude),
+                    out except))
+                throw except;
+
+            if (settings.ADConverter?.Index is int adIndex
+                && FailIfError(
+                    Call(CameraHandle, SdkInstance.SetADChannel, adIndex),
+                    nameof(SdkInstance.SetADChannel),
+                    out except))
+                throw except;
+
+            if (settings.OutputAmplifier?.Index is int oAmpIndex
+                && FailIfError(
+                    Call(CameraHandle, SdkInstance.SetOutputAmplifier, oAmpIndex),
+                    nameof(SdkInstance.SetOutputAmplifier),
+                    out except))
+                throw except;
+
+            if (settings.HSSpeed?.Index is int hsIndex
+                && FailIfError(
+                    Call(CameraHandle,
+                        () => SdkInstance.SetHSSpeed(settings.OutputAmplifier?.Item3 ?? 0, hsIndex)),
+                    nameof(SdkInstance.SetHSSpeed),
+                    out except))
+                throw except;
+
+
+
+            if (settings.PreAmpGain?.Index is int ampIndex
+                && FailIfError(
+                    Call(CameraHandle, SdkInstance.SetPreAmpGain, ampIndex),
+                    nameof(SdkInstance.SetPreAmpGain),
+                    out except))
+                throw except;
+
+
+            if (settings.ImageArea is Rectangle image
+                && FailIfError(
+                    Call(CameraHandle,
+                        () => SdkInstance.SetImage(1, 1, image.X1, image.X2, image.Y1, image.Y2)),
+                    nameof(SdkInstance.SetImage),
+                    out except))
+                throw except;
+
+
+            if (settings.AcquisitionMode is AcquisitionMode acqMode)
+            {
+                if (acqMode.HasFlag(AcquisitionMode.FrameTransfer))
+                {
+                    if (FailIfError(Call(CameraHandle, SdkInstance.SetFrameTransferMode, 1),
+                        nameof(SdkInstance.SetFrameTransferMode),
+                        out except))
+                        throw except;
+
+                    acqMode ^= AcquisitionMode.FrameTransfer;
+                }
+                else
+                {
+                    if (FailIfError(Call(CameraHandle, SdkInstance.SetFrameTransferMode, 0),
+                        nameof(SdkInstance.SetFrameTransferMode),
+                        out except))
+                        throw except;
+                }
+
+
+                if (FailIfError(
+                    Call(CameraHandle, SdkInstance.SetAcquisitionMode, EnumConverter.AcquisitionModeTable[acqMode]),
+                    nameof(SdkInstance.SetAcquisitionMode),
+                    out except))
+                    throw except;
+            }
+            else
+                throw new NullReferenceException("Acquisition mode should be set before applying settings.");
+
+
+            if (settings.ReadoutMode is ReadMode roMode)
+            {
+                if (FailIfError(
+                    Call(CameraHandle, SdkInstance.SetReadMode, EnumConverter.ReadModeTable[roMode]),
+                    nameof(SdkInstance.SetReadMode),
+                    out except))
+                    throw except;
+            }
+            else
+                throw new NullReferenceException("Read mode should be set before applying settings.");
+
+
+            if (settings.TriggerMode is TriggerMode trMode)
+            {
+                if (FailIfError(
+                    Call(CameraHandle, SdkInstance.SetTriggerMode,
+                        EnumConverter.TriggerModeTable[trMode]),
+                    nameof(SdkInstance.SetTriggerMode),
+                    out except))
+                    throw except;
+            }
+            else
+                throw new NullReferenceException("Trigger mode should be set before applying settings.");
+
+            if (settings.ExposureTime is float expTime)
+            {
+                if (FailIfError(
+                    Call(CameraHandle, SdkInstance.SetExposureTime, expTime),
+                    nameof(SdkInstance.SetExposureTime),
+                    out except))
+                    throw except;
+            }
+            else
+                throw new NullReferenceException("Exposure time should be set before applying settings.");
+
+            if (settings.AcquisitionMode?.HasFlag(AcquisitionMode.Accumulation) == true)
+            {
+                if (settings.AccumulateCycle?.Frames is int nAccFrames
+                    && settings.AccumulateCycle?.Time is float accExpTime)
+                {
+                    if (FailIfError(
+                        Call(CameraHandle, SdkInstance.SetNumberAccumulations, nAccFrames),
+                        nameof(SdkInstance.SetNumberAccumulations),
+                        out except))
+                        throw except;
+
+                    if (FailIfError(
+                        Call(CameraHandle, SdkInstance.SetAccumulationCycleTime, accExpTime),
+                        nameof(SdkInstance.SetAccumulationCycleTime),
+                        out except))
+                        throw except;
+                }
+                else
+                    throw new NullReferenceException(
+                        $"Accumulation cycle should be set if acquisition mode is {settings.AcquisitionMode.Value}.");
+            }
+
+
+            if (settings.AcquisitionMode?.HasFlag(AcquisitionMode.Kinetic) == true)
+            {
+                if (settings.AccumulateCycle?.Frames is int nAccFrames
+                    && settings.AccumulateCycle?.Time is float accExpTime)
+                {
+                    if (FailIfError(
+                        Call(CameraHandle, SdkInstance.SetNumberAccumulations, nAccFrames),
+                        nameof(SdkInstance.SetNumberAccumulations),
+                        out except))
+                        throw except;
+
+                    if (FailIfError(
+                        Call(CameraHandle, SdkInstance.SetAccumulationCycleTime, accExpTime),
+                        nameof(SdkInstance.SetAccumulationCycleTime),
+                        out except))
+                        throw except;
+                }
+                else
+                    throw new NullReferenceException(
+                        $"Accumulation cycle should be set if acquisition mode is {settings.AcquisitionMode.Value}.");
+
+                if (settings.KineticCycle?.Frames is int nKinFrames
+                    && settings.KineticCycle?.Time is float kinExpTime)
+                {
+                    if (FailIfError(Call(CameraHandle, SdkInstance.SetNumberKinetics, nKinFrames),
+                        nameof(SdkInstance.SetNumberKinetics),
+                        out except))
+                        throw except;
+
+                    if (FailIfError(Call(CameraHandle, SdkInstance.SetKineticCycleTime, kinExpTime),
+                        nameof(SdkInstance.SetKineticCycleTime), out except))
+                        throw except;
+                }
+                else
+                    throw new NullReferenceException(
+                        $"Kinetic cycle should be set if acquisition mode is {settings.AcquisitionMode.Value}.");
+            }
+
+            if (settings.EMCCDGain is int gain)
+            {
+                if (settings.OutputAmplifier?.OutputAmplifier != OutputAmplification.Conventional)
+                    throw new NullReferenceException(
+                        $"OutputAmplifier should be set to {OutputAmplification.Conventional}");
+
+                if (FailIfError(
+                    Call(CameraHandle, SdkInstance.SetEMCCDGain, gain),
+                    nameof(SdkInstance.SetEMCCDGain),
+                    out except))
+                    throw except;
+            }
+
+            var timings = (Exposure: 0f, Accumulate: 0f, Kinetic: 0f);
+
+            if (FailIfError(Call(CameraHandle, () => SdkInstance.GetAcquisitionTimings(
+                    ref timings.Exposure, ref timings.Accumulate, ref timings.Kinetic)),
+                nameof(SdkInstance.GetAcquisitionTimings),
+                out except))
+                throw except;
+
+            Timings = timings;
+            base.ApplySettings(settings);
         }
 
         /// <summary>

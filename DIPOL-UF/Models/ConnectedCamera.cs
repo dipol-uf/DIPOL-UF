@@ -61,7 +61,7 @@ namespace DIPOL_UF.Models
         private float _targetTemperature;
         private string _targetTemperatureText = "0";
         private bool _canControlTemperature;
-        private Tuple<float, float, float, int> _timing;
+        private Tuple<float, float, float> _timing;
         private DelegateCommand _controlCoolerCommand;
         //private DelegateCommand verifyTextInputCommand = null;
         private DelegateCommand _setUpAcquisitionCommand;
@@ -210,7 +210,7 @@ namespace DIPOL_UF.Models
                 }
             }
         }
-        public Tuple<float, float, float, int> Timing
+        public Tuple<float, float, float> Timing
         {
             get => _timing;
             set

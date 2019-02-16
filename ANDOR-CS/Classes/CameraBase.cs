@@ -86,7 +86,10 @@ namespace ANDOR_CS.Classes
         }
         protected ImageFormat AutosaveFormat { get; private set; }
         protected bool WasLastAcquisitionOk { get; private set; }
+        protected List<FitsKey> SettingsFitsKeys { get; private set; }
 
+        public SettingsBase CurrentSettings { get; private set; }
+        public (float Exposure, float Accumulation, float Kinetic) Timings { get; protected set; }
         public bool IsDisposed
         {
             get => _isDisposed;
@@ -112,7 +115,6 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        internal List<FitsKey> SettingsFitsKeys { get; set; }
 
         public virtual bool IsTemperatureMonitored
         {
@@ -310,9 +312,7 @@ namespace ANDOR_CS.Classes
                 }
             }
         }
-
-        public SettingsBase CurrentSettings { get; internal set; } = null;
-        public (float Exposure, float Accumulation, float Kinetic) Timings { get; internal set; }
+        
         
         /// <inheritdoc />
         /// <summary>
@@ -533,6 +533,12 @@ namespace ANDOR_CS.Classes
         {
             Autosave = mode;
             AutosaveFormat = format;
+        }
+
+        public virtual void ApplySettings(SettingsBase settings)
+        {
+            CurrentSettings = settings;
+            SettingsFitsKeys = settings.ConvertToFitsKeys();
         }
 
         public virtual async Task<Image[]> PullAllImagesAsync<T>(CancellationToken token)

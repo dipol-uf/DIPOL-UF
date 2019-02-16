@@ -91,214 +91,214 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="ArgumentNullException" />
         /// <returns>Result of application of each non-null setting</returns>
-        public override List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
-            out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
-        {
-            var output = new List<(string Option, bool Success, uint ReturnCode)>();
+        //public override List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
+        //    out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
+        //{
+        //    var output = new List<(string Option, bool Success, uint ReturnCode)>();
 
-            SafeSdkCameraHandle handle;
-            if (Camera is Camera locCam)
-                handle = locCam.CameraHandle;
-            else
-                throw new Exception("Type of Camera is wrong.");
+        //    SafeSdkCameraHandle handle;
+        //    if (Camera is Camera locCam)
+        //        handle = locCam.CameraHandle;
+        //    else
+        //        throw new Exception("Type of Camera is wrong.");
 
-            CheckCamera();
+        //    CheckCamera();
 
-            uint result;
+        //    uint result;
 
-            if (VSSpeed.HasValue)
-                {
-                    result = Call(handle, SdkInstance.SetVSSpeed, VSSpeed.Value.Index);
+        //    if (VSSpeed.HasValue)
+        //        {
+        //            result = Call(handle, SdkInstance.SetVSSpeed, VSSpeed.Value.Index);
 
-                    output.Add((nameof(VSSpeed), result == SDK.DRV_SUCCESS, result));
-                }
+        //            output.Add((nameof(VSSpeed), result == SDK.DRV_SUCCESS, result));
+        //        }
 
-                if (VSAmplitude.HasValue)
-                {
-                    result = Call(handle, SdkInstance.SetVSAmplitude, (int) VSAmplitude.Value);
+        //        if (VSAmplitude.HasValue)
+        //        {
+        //            result = Call(handle, SdkInstance.SetVSAmplitude, (int) VSAmplitude.Value);
 
-                    output.Add((nameof(VSAmplitude), result == SDK.DRV_SUCCESS, result));
-                }
+        //            output.Add((nameof(VSAmplitude), result == SDK.DRV_SUCCESS, result));
+        //        }
 
-                if (ADConverter.HasValue)
-                {
-                    result = Call(handle, SdkInstance.SetADChannel, ADConverter.Value.Index);
+        //        if (ADConverter.HasValue)
+        //        {
+        //            result = Call(handle, SdkInstance.SetADChannel, ADConverter.Value.Index);
 
-                    output.Add((nameof(ADConverter), result == SDK.DRV_SUCCESS, result));
-                }
+        //            output.Add((nameof(ADConverter), result == SDK.DRV_SUCCESS, result));
+        //        }
 
-                if (OutputAmplifier.HasValue)
-                {
-                    result = Call(handle, SdkInstance.SetOutputAmplifier, OutputAmplifier.Value.Index);
+        //        if (OutputAmplifier.HasValue)
+        //        {
+        //            result = Call(handle, SdkInstance.SetOutputAmplifier, OutputAmplifier.Value.Index);
 
-                    output.Add((nameof(OutputAmplifier), result == SDK.DRV_SUCCESS, result));
-                }
+        //            output.Add((nameof(OutputAmplifier), result == SDK.DRV_SUCCESS, result));
+        //        }
 
-                if (HSSpeed.HasValue)
-                {
-                    result = Call(handle,
-                        () => SdkInstance.SetHSSpeed(OutputAmplifier?.Item3 ?? 0, HSSpeed.Value.Index));
+        //        if (HSSpeed.HasValue)
+        //        {
+        //            result = Call(handle,
+        //                () => SdkInstance.SetHSSpeed(OutputAmplifier?.Item3 ?? 0, HSSpeed.Value.Index));
 
-                    output.Add((nameof(HSSpeed), result == SDK.DRV_SUCCESS, result));
-                }
+        //            output.Add((nameof(HSSpeed), result == SDK.DRV_SUCCESS, result));
+        //        }
 
-                if (PreAmpGain.HasValue)
-                {
-                    result = Call(handle, SdkInstance.SetPreAmpGain, PreAmpGain.Value.Index);
+        //        if (PreAmpGain.HasValue)
+        //        {
+        //            result = Call(handle, SdkInstance.SetPreAmpGain, PreAmpGain.Value.Index);
 
-                    output.Add((nameof(PreAmpGain), result == SDK.DRV_SUCCESS, result));
-                }
-
-
-                if (ImageArea.HasValue)
-                {
-                    result = Call(handle,
-                        () => SdkInstance.SetImage(1, 1, ImageArea.Value.X1, ImageArea.Value.X2, ImageArea.Value.Y1,
-                            ImageArea.Value.Y2));
+        //            output.Add((nameof(PreAmpGain), result == SDK.DRV_SUCCESS, result));
+        //        }
 
 
-                    output.Add((nameof(ImageArea), result == SDK.DRV_SUCCESS, result));
-                }
-
-                if (AcquisitionMode.HasValue)
-                {
-                    var mode = AcquisitionMode.Value;
-
-                    if (mode.HasFlag(Enums.AcquisitionMode.FrameTransfer))
-                    {
-                        result = Call(handle, SdkInstance.SetFrameTransferMode, 1);
-                        ThrowIfError(result, nameof(SdkInstance.SetFrameTransferMode));
-                        mode ^= Enums.AcquisitionMode.FrameTransfer;
-
-                        output.Add(("FrameTransfer", result == SDK.DRV_SUCCESS, result));
-                    }
-                    else
-                    {
-                        ThrowIfError(Call(handle, SdkInstance.SetFrameTransferMode, 0),
-                            nameof(SdkInstance.SetFrameTransferMode));
-                    }
-
-                    result = Call(handle, SdkInstance.SetAcquisitionMode, EnumConverter.AcquisitionModeTable[mode]);
-
-                    output.Add((nameof(AcquisitionMode), result == SDK.DRV_SUCCESS, result));
-                }
-                else
-                {
-                    throw new NullReferenceException("Acquisition mode should be set before applying settings.");
-                }
+        //        if (ImageArea.HasValue)
+        //        {
+        //            result = Call(handle,
+        //                () => SdkInstance.SetImage(1, 1, ImageArea.Value.X1, ImageArea.Value.X2, ImageArea.Value.Y1,
+        //                    ImageArea.Value.Y2));
 
 
-                if (ReadoutMode.HasValue)
-                {
-                    result = Call(handle, SdkInstance.SetReadMode, EnumConverter.ReadModeTable[ReadoutMode.Value]);
+        //            output.Add((nameof(ImageArea), result == SDK.DRV_SUCCESS, result));
+        //        }
 
-                    output.Add((nameof(ReadoutMode), result == SDK.DRV_SUCCESS, result));
-                }
-                else
-                {
-                    throw new NullReferenceException("Read mode should be set before applying settings.");
-                }
+        //        if (AcquisitionMode.HasValue)
+        //        {
+        //            var mode = AcquisitionMode.Value;
 
+        //            if (mode.HasFlag(Enums.AcquisitionMode.FrameTransfer))
+        //            {
+        //                result = Call(handle, SdkInstance.SetFrameTransferMode, 1);
+        //                ThrowIfError(result, nameof(SdkInstance.SetFrameTransferMode));
+        //                mode ^= Enums.AcquisitionMode.FrameTransfer;
 
-                if (TriggerMode.HasValue)
-                {
-                    result = Call(handle, SdkInstance.SetTriggerMode,
-                        EnumConverter.TriggerModeTable[TriggerMode.Value]);
+        //                output.Add(("FrameTransfer", result == SDK.DRV_SUCCESS, result));
+        //            }
+        //            else
+        //            {
+        //                ThrowIfError(Call(handle, SdkInstance.SetFrameTransferMode, 0),
+        //                    nameof(SdkInstance.SetFrameTransferMode));
+        //            }
 
-                    output.Add((nameof(TriggerMode), result == SDK.DRV_SUCCESS, result));
-                }
-                else
-                {
-                    throw new NullReferenceException("Trigger mode should be set before applying settings.");
-                }
+        //            result = Call(handle, SdkInstance.SetAcquisitionMode, EnumConverter.AcquisitionModeTable[mode]);
 
-                if (ExposureTime.HasValue)
-                {
-                    result = Call(handle, SdkInstance.SetExposureTime, ExposureTime.Value);
-
-                    output.Add((nameof(ExposureTime), result == SDK.DRV_SUCCESS, result));
-                }
-                else
-                {
-                    throw new NullReferenceException("Exposure time should be set before applying settings.");
-                }
-
-                if (AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Accumulation))
-                {
-                    if (!AccumulateCycle.HasValue)
-                        throw new NullReferenceException(
-                            $"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
-
-                    result = Call(handle, SdkInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
-                    output.Add((nameof(AccumulateCycle)+"Number", result == SDK.DRV_SUCCESS, result));
+        //            output.Add((nameof(AcquisitionMode), result == SDK.DRV_SUCCESS, result));
+        //        }
+        //        else
+        //        {
+        //            throw new NullReferenceException("Acquisition mode should be set before applying settings.");
+        //        }
 
 
-                    result = Call(handle, SdkInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
-                    //ThrowIfError(result, nameof(SDKInstance.SetAccumulationCycleTime));
-                    output.Add((nameof(AccumulateCycle)+"Time", result == SDK.DRV_SUCCESS, result));
-                }
+        //        if (ReadoutMode.HasValue)
+        //        {
+        //            result = Call(handle, SdkInstance.SetReadMode, EnumConverter.ReadModeTable[ReadoutMode.Value]);
+
+        //            output.Add((nameof(ReadoutMode), result == SDK.DRV_SUCCESS, result));
+        //        }
+        //        else
+        //        {
+        //            throw new NullReferenceException("Read mode should be set before applying settings.");
+        //        }
 
 
-                if (AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Kinetic))
-                {
-                    if (!AccumulateCycle.HasValue)
-                        throw new NullReferenceException(
-                            $"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
-                    if (!KineticCycle.HasValue)
-                        throw new NullReferenceException(
-                            $"Kinetic cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
+        //        if (TriggerMode.HasValue)
+        //        {
+        //            result = Call(handle, SdkInstance.SetTriggerMode,
+        //                EnumConverter.TriggerModeTable[TriggerMode.Value]);
 
-                    result = Call(handle, SdkInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
-                    //ThrowIfError(result, nameof(SDKInstance.SetNumberAccumulations));
-                    output.Add((nameof(AccumulateCycle) + "Number", result == SDK.DRV_SUCCESS, result));
+        //            output.Add((nameof(TriggerMode), result == SDK.DRV_SUCCESS, result));
+        //        }
+        //        else
+        //        {
+        //            throw new NullReferenceException("Trigger mode should be set before applying settings.");
+        //        }
+
+        //        if (ExposureTime.HasValue)
+        //        {
+        //            result = Call(handle, SdkInstance.SetExposureTime, ExposureTime.Value);
+
+        //            output.Add((nameof(ExposureTime), result == SDK.DRV_SUCCESS, result));
+        //        }
+        //        else
+        //        {
+        //            throw new NullReferenceException("Exposure time should be set before applying settings.");
+        //        }
+
+        //        if (AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Accumulation))
+        //        {
+        //            if (!AccumulateCycle.HasValue)
+        //                throw new NullReferenceException(
+        //                    $"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
+
+        //            result = Call(handle, SdkInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
+        //            output.Add((nameof(AccumulateCycle)+"Number", result == SDK.DRV_SUCCESS, result));
 
 
-                    result = Call(handle, SdkInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
-                    //ThrowIfError(result, nameof(SDKInstance.SetAccumulationCycleTime));
-                    output.Add((nameof(AccumulateCycle) + "Time", result == SDK.DRV_SUCCESS, result));
-
-                    result = Call(handle, SdkInstance.SetNumberKinetics, KineticCycle.Value.Frames);
-                    //ThrowIfError(result, nameof(SDKInstance.SetNumberKinetics));
-                    output.Add((nameof(KineticCycle)+"Number", result == SDK.DRV_SUCCESS, result));
+        //            result = Call(handle, SdkInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
+        //            //ThrowIfError(result, nameof(SDKInstance.SetAccumulationCycleTime));
+        //            output.Add((nameof(AccumulateCycle)+"Time", result == SDK.DRV_SUCCESS, result));
+        //        }
 
 
-                    result = Call(handle, SdkInstance.SetKineticCycleTime, KineticCycle.Value.Time);
-                    //ThrowIfError(result, nameof(SDKInstance.SetKineticCycleTime));
-                    output.Add((nameof(AccumulateCycle) + "Time", result == SDK.DRV_SUCCESS, result));
-                }
+        //        if (AcquisitionMode.Value.HasFlag(Enums.AcquisitionMode.Kinetic))
+        //        {
+        //            if (!AccumulateCycle.HasValue)
+        //                throw new NullReferenceException(
+        //                    $"Accumulation cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
+        //            if (!KineticCycle.HasValue)
+        //                throw new NullReferenceException(
+        //                    $"Kinetic cycle should be set if acquisition mode is {AcquisitionMode.Value}.");
 
-                if (EMCCDGain.HasValue)
-                {
-                    if (!OutputAmplifier.HasValue ||
-                        !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.Conventional))
-                        throw new NullReferenceException(
-                            $"OutputAmplifier should be set to {OutputAmplification.Conventional}");
+        //            result = Call(handle, SdkInstance.SetNumberAccumulations, AccumulateCycle.Value.Frames);
+        //            //ThrowIfError(result, nameof(SDKInstance.SetNumberAccumulations));
+        //            output.Add((nameof(AccumulateCycle) + "Number", result == SDK.DRV_SUCCESS, result));
 
-                    result = Call(handle, SdkInstance.SetEMCCDGain, EMCCDGain.Value);
-                    //ThrowIfError(result, nameof(SDKInstance.SetEMCCDGain));
-                    output.Add((nameof(EMCCDGain), result == SDK.DRV_SUCCESS, result));
-                }
 
-                var expTime = 0f;
-                var accTime = 0f;
-                var kinTime = 0f;
+        //            result = Call(handle, SdkInstance.SetAccumulationCycleTime, AccumulateCycle.Value.Time);
+        //            //ThrowIfError(result, nameof(SDKInstance.SetAccumulationCycleTime));
+        //            output.Add((nameof(AccumulateCycle) + "Time", result == SDK.DRV_SUCCESS, result));
 
-                result = Call(handle, () => SdkInstance.GetAcquisitionTimings(ref expTime, ref accTime, ref kinTime));
-                ThrowIfError(result, nameof(SdkInstance.GetAcquisitionTimings));
+        //            result = Call(handle, SdkInstance.SetNumberKinetics, KineticCycle.Value.Frames);
+        //            //ThrowIfError(result, nameof(SDKInstance.SetNumberKinetics));
+        //            output.Add((nameof(KineticCycle)+"Number", result == SDK.DRV_SUCCESS, result));
 
-                result = Call(handle, SdkInstance.GetSizeOfCircularBuffer, out int size);
-                ThrowIfError(result, nameof(SdkInstance.GetSizeOfCircularBuffer));
 
-                timing =
-                    (ExposureTime: expTime, AccumulationCycleTime: accTime, KineticCycleTime: kinTime, BufferSize: size
-                    );
+        //            result = Call(handle, SdkInstance.SetKineticCycleTime, KineticCycle.Value.Time);
+        //            //ThrowIfError(result, nameof(SDKInstance.SetKineticCycleTime));
+        //            output.Add((nameof(AccumulateCycle) + "Time", result == SDK.DRV_SUCCESS, result));
+        //        }
 
-            //Camera.CurrentSettings = this;
-            base.ApplySettings(out _);
+        //        if (EMCCDGain.HasValue)
+        //        {
+        //            if (!OutputAmplifier.HasValue ||
+        //                !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.Conventional))
+        //                throw new NullReferenceException(
+        //                    $"OutputAmplifier should be set to {OutputAmplification.Conventional}");
 
-            return output;
+        //            result = Call(handle, SdkInstance.SetEMCCDGain, EMCCDGain.Value);
+        //            //ThrowIfError(result, nameof(SDKInstance.SetEMCCDGain));
+        //            output.Add((nameof(EMCCDGain), result == SDK.DRV_SUCCESS, result));
+        //        }
+
+        //        var expTime = 0f;
+        //        var accTime = 0f;
+        //        var kinTime = 0f;
+
+        //        result = Call(handle, () => SdkInstance.GetAcquisitionTimings(ref expTime, ref accTime, ref kinTime));
+        //        ThrowIfError(result, nameof(SdkInstance.GetAcquisitionTimings));
+
+        //        result = Call(handle, SdkInstance.GetSizeOfCircularBuffer, out int size);
+        //        ThrowIfError(result, nameof(SdkInstance.GetSizeOfCircularBuffer));
+
+        //        timing =
+        //            (ExposureTime: expTime, AccumulationCycleTime: accTime, KineticCycleTime: kinTime, BufferSize: size
+        //            );
+
+        //    //Camera.CurrentSettings = this;
+        //    base.ApplySettings(out _);
+
+        //    return output;
             
-        }
+        //}
 
 
         /// <summary>

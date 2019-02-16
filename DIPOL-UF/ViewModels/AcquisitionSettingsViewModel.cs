@@ -34,7 +34,7 @@ namespace DIPOL_UF.ViewModels
 
         public DelegateCommand LoadCommand { get; private set; }
         public (float ExposureTime, float AccumulationCycleTime, 
-            float KineticCycleTime, int BufferSize) EstimatedTiming
+            float KineticCycleTime) EstimatedTiming
         {
             get;
             private set;
@@ -771,30 +771,32 @@ namespace DIPOL_UF.ViewModels
                     {
                         try
                         {
-                            var applicationResult = model.ApplySettings(out var timing);
-                            var failed = applicationResult.Where(item => !item.Success).ToList();
-                            if (failed.Count > 0)
+                            try
                             {
+                                Model.Camera.ApplySettings(model);
+                            }
+                            catch(Exception e)
+                            { 
                                 var messSize = UiSettingsProvider.Settings.Get("ExceptionStringLimit", 80);
                                 var listSize = UiSettingsProvider.Settings.Get("ExceptionStringLimit", 5);
                                 var sb = new StringBuilder(messSize * listSize);
 
                                 sb.AppendLine("Some of the settings were applied unsuccessfully:");
-                                foreach (var fl in failed.Take(listSize))
-                                    sb.AppendLine($"[{(fl.Option.Length < messSize ? fl.Option : fl.Option.Substring(0, messSize))}]");
+                                sb.AppendLine(e.Message);
+
                                 MessageBox.Show(sb.ToString(),
                                     "Partially unsuccessful application of settings", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
 
-                                foreach (var prop in PropertyList.Join(failed, x => x.Item1, y => y.Option, (x, y) =>
-                                    new {
-                                        Name = x.Item1,
-                                        Error = y.ReturnCode
-                                    }))
-                                    ValidateProperty(new AndorSdkException(prop.Name, prop.Error), prop.Name);
+                                //foreach (var prop in PropertyList.Join(failed, x => x.Item1, y => y.Option, (x, y) =>
+                                //    new {
+                                //        Name = x.Item1,
+                                //        Error = y.ReturnCode
+                                //    }))
+                                //    ValidateProperty(new AndorSdkException(prop.Name, prop.Error), prop.Name);
 
                                 return;
                             }
-                            EstimatedTiming = timing;
+                            EstimatedTiming = Model.Camera.Timings;
                         }
                         catch (Exception e)
                         {

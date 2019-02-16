@@ -136,7 +136,7 @@ namespace DIPOL_UF.ViewModels
 
         }
 
-        public Tuple<float, float, float, int> Timing => model.Timing;
+        public Tuple<float, float, float> Timing => model.Timing;
         public int CurrentImageIndex => model.CurrentImageIndex;
         public double TimeRemaining
         {
