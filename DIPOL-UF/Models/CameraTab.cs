@@ -31,7 +31,7 @@ namespace DIPOL_UF.Models
 
         public IObservable<TemperatureStatusEventArgs> WhenTemperatureChecked { get; private set; }
 
-        public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
+        public ReactiveCommand<int, Unit> CoolerCommand { get; private set; }
         public ReactiveCommand<FanMode, Unit> FanCommand { get; private set; }
         public ReactiveCommand<ShutterMode, Unit> InternalShutterCommand { get; private set; }
         public ReactiveCommand<ShutterMode, Unit> ExternalShutterCommand { get; private set; }
@@ -93,10 +93,14 @@ namespace DIPOL_UF.Models
         private void InitializeCommands()
         {
             CoolerCommand =
-                ReactiveCommand.Create(
-                                   () => Camera.CoolerControl(Camera.CoolerMode == Switch.Disabled
-                                       ? Switch.Enabled
-                                       : Switch.Disabled),
+                ReactiveCommand.Create<int>(
+                                   (x) =>
+                                   {
+                                       Camera.SetTemperature(x);
+                                       Camera.CoolerControl(Camera.CoolerMode == Switch.Disabled
+                                           ? Switch.Enabled
+                                           : Switch.Disabled);
+                                   },
                                    Observable.Return(
                                        Camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature)))
                                .DisposeWith(_subscriptions);
