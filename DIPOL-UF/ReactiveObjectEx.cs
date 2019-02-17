@@ -32,11 +32,10 @@ namespace DIPOL_UF
         public IObservable<DataErrorsChangedEventArgs> WhenErrorsChanged { get; private set; }
         public bool IsDisposed { get; private set; }
         public bool HasErrors => _validationErrors?.Items.Any(x => !(x.Message is null)) ?? false;
-        public IObservable<bool> ObserveHasErrors { get; }
+        public IObservable<bool> ObserveHasErrors { get; private set; }
 
         internal ReactiveObjectEx()
         {
-            ObserveHasErrors = WhenErrorsChanged.Select(_ => HasErrors);
         
 #if DEBUG
             Helper.WriteLog($"{GetType()}: Created");
@@ -89,7 +88,9 @@ namespace DIPOL_UF
             WhenErrorsChanged
                 .Subscribe(OnErrorsChanged)
                 .DisposeWith(_subscriptions);
-            
+
+            ObserveHasErrors = WhenErrorsChanged.Select(_ => HasErrors);
+
         }
 
         protected virtual void BindTo<TSource, TTarget, TProperty>(
