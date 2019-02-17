@@ -73,10 +73,11 @@ namespace DIPOL_UF.ViewModels
             CoolerCommand =
                 ReactiveCommand.Create(() => Unit.Default,
                                    Model.CoolerCommand.CanExecute.CombineLatest(
-                                       WhenErrorsChangedTyped
-                                           .Where(x => x.Property == nameof(TargetTemperatureText))
-                                           .Select(x => !HasSpecificErrors(x.Property)),
-                                     (x, y) => x && y))
+                                       ObserveSpecificErrors(nameof(TargetTemperatureText)),
+                                       //WhenErrorsChangedTyped
+                                       //    .Where(x => x.Property == nameof(TargetTemperatureText))
+                                       //    .Select(x => !HasSpecificErrors(x.Property)),
+                                     (x, y) => x && !y))
                                .DisposeWith(_subscriptions);
         }
 
@@ -182,8 +183,7 @@ namespace DIPOL_UF.ViewModels
         protected override void HookValidators()
         {
             base.HookValidators();
-
-
+            
             CreateValidator(
                 this.WhenAnyPropertyChanged(nameof(TargetTemperatureText))
                     .Select(x => (
