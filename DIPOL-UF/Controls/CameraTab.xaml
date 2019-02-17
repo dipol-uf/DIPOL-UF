@@ -35,7 +35,8 @@
             <cntr:DipolImagePresenter Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
                                        Height="700"
                                        VerticalAlignment="Top" HorizontalAlignment="Stretch" 
-                                       MaxWidth="750"
+                                       Width="600"
+                                       MaxWidth="600"
                                        DataContext="{Binding DipolImagePresenter}"/>
             <!--Placeholder for Camera Name-->
             <!--<Grid Grid.Row="0" Grid.Column="1">
