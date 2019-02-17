@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace DIPOL_UF.Validators
@@ -46,5 +47,20 @@ namespace DIPOL_UF.Validators
                     string.IsNullOrWhiteSpace(disallowed) ? "" : $" [{disallowed}]")
                 : null;
         }
+
+        public static string DoesNotThrow(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception e)
+            {
+                return e.Message;
+            }
+
+            return null;
+        }
+
     }
 }

@@ -40,11 +40,6 @@ namespace DIPOL_UF
         
 #if DEBUG
             Helper.WriteLog($"{GetType()}: Created");
-
-            //Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
-            //              x => PropertyChanged += x, x => PropertyChanged -= x)
-            //          .Subscribe(x => Helper.WriteLog($"{GetType()}: {x.EventArgs.PropertyName}"))
-            //          .DisposeWith(_subscriptions);
 #endif
         }
         
