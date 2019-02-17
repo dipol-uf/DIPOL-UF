@@ -224,7 +224,6 @@
     <Compile Include="Helper.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
     <Compile Include="Models\CameraTab.cs" />
-    <Compile Include="Models\ConnectedCamera.cs" />
     <Compile Include="Models\DescendantProvider.cs" />
     <Compile Include="Models\DipolImagePresenter.cs" />
     <Compile Include="Models\DipolMainWindow.cs" />
@@ -257,7 +256,6 @@
     <Compile Include="ViewModels\AvailableCamerasViewModel.cs" />
     <Compile Include="ViewModels\CameraPropertiesViewModel.cs" />
     <Compile Include="ViewModels\MainWindowTreeItemViewModel.cs" />
-    <Compile Include="ViewModels\ConnectedCameraViewModel.cs" />
     <Compile Include="ViewModels\DipolImagePresenterViewModel.cs" />
     <Compile Include="ViewModels\DipolMainWindowViewModel.cs" />
     <Compile Include="ViewModels\MainWindowTreeViewModel.cs" />
