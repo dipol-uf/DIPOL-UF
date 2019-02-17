@@ -6,7 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Windows;
+using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -16,7 +16,7 @@ namespace DIPOL_UF
 {
     public abstract class ReactiveObjectEx : ReactiveObject, INotifyDataErrorInfo, IDisposable
     {
-        private readonly ValidationErrorsCache _validationErrors =
+        internal readonly ValidationErrorsCache _validationErrors =
             new ValidationErrorsCache(x => (x.Property, x.Type));
 
         protected  readonly  CompositeDisposable _subscriptions = new CompositeDisposable();
@@ -32,7 +32,22 @@ namespace DIPOL_UF
         public IObservable<DataErrorsChangedEventArgs> WhenErrorsChanged { get; private set; }
         public bool IsDisposed { get; private set; }
         public bool HasErrors => _validationErrors?.Items.Any(x => !(x.Message is null)) ?? false;
+        public IObservable<bool> ObserveHasErrors { get; }
 
+        internal ReactiveObjectEx()
+        {
+            ObserveHasErrors = WhenErrorsChanged.Select(_ => HasErrors);
+        
+#if DEBUG
+            Helper.WriteLog($"{GetType()}: Created");
+
+            //Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+            //              x => PropertyChanged += x, x => PropertyChanged -= x)
+            //          .Subscribe(x => Helper.WriteLog($"{GetType()}: {x.EventArgs.PropertyName}"))
+            //          .DisposeWith(_subscriptions);
+#endif
+        }
+        
         private void UpdateErrors(string error, string propertyName, string validatorName)
         {
             this.RaisePropertyChanging(nameof(HasErrors));
@@ -103,6 +118,30 @@ namespace DIPOL_UF
                      .ToPropertyEx(target, trgtSelector, initialValue)
                      .DisposeWith(_subscriptions);
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    if (!_subscriptions.IsDisposed)
+                        _subscriptions.Dispose();
+
+                    _validationErrors.Dispose();
+
+#if DEBUG
+                    Helper.WriteLog($"{GetType()}: Disposed");
+#endif
+                }
+
+                IsDisposed = true;
+            }
+        }
+
+        public virtual IObservable<bool> ObserveSpecificErrors(string propertyName)
+            => WhenErrorsChangedTyped.Where(x => x.Property == propertyName)
+                                     .Select(_ => HasSpecificErrors(propertyName));
+
         public virtual List<(string Type, string Message)> GetTypedErrors(string propertyName)
         {
             return _validationErrors.Items
@@ -120,45 +159,13 @@ namespace DIPOL_UF
 
         public virtual bool HasSpecificErrors(string propertyName)
             => _validationErrors?.Items.Any(x => x.Property == propertyName && !(x.Message is null)) ?? false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!IsDisposed)
-            {
-                if (disposing)
-                {
-                    if(!_subscriptions.IsDisposed)
-                        _subscriptions.Dispose();
-
-                    _validationErrors.Dispose();
-
-#if DEBUG
-                    Helper.WriteLog($"{GetType()}: Disposed");
-#endif
-                }
-
-                IsDisposed = true;
-            }
-        }
-
+        
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-
-
-
-#if DEBUG
-        internal ReactiveObjectEx()
-        {
-            Helper.WriteLog($"{GetType()}: Created");
-
-            //Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
-            //              x => PropertyChanged += x, x => PropertyChanged -= x)
-            //          .Subscribe(x => Helper.WriteLog($"{GetType()}: {x.EventArgs.PropertyName}"))
-            //          .DisposeWith(_subscriptions);
-        }
-#endif
+        
+        
     }
 }
