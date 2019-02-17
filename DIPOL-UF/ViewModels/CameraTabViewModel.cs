@@ -75,11 +75,10 @@ namespace DIPOL_UF.ViewModels
                 ReactiveCommand.Create(() => Unit.Default,
                                    Model.CoolerCommand.CanExecute.CombineLatest(
                                        ObserveSpecificErrors(nameof(TargetTemperatureText)),
-                                       //WhenErrorsChangedTyped
-                                       //    .Where(x => x.Property == nameof(TargetTemperatureText))
-                                       //    .Select(x => !HasSpecificErrors(x.Property)),
                                      (x, y) => x && !y))
                                .DisposeWith(_subscriptions);
+
+            CoolerCommand.InvokeCommand(Model.CoolerCommand).DisposeWith(_subscriptions);
 
             AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow,
                 x => new AcquisitionSettingsViewModel((ReactiveWrapper<SettingsBase>) x)).DisposeWith(_subscriptions);

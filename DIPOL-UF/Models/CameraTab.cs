@@ -88,7 +88,6 @@ namespace DIPOL_UF.Models
                           .Select(x => x.EventArgs)
                           .DistinctUntilChanged();
 
-            SetUpAcquisitionCommand.InvokeCommand(AcquisitionSettingsWindow.ViewRequested).DisposeWith(_subscriptions);
         }
 
         private void InitializeCommands()
@@ -130,9 +129,13 @@ namespace DIPOL_UF.Models
            AcquisitionSettingsWindow = new DescendantProvider(
                    ReactiveCommand.Create<object, ReactiveObjectEx>(
                        _ => new ReactiveWrapper<SettingsBase>(Camera.GetAcquisitionSettingsTemplate())),
-                   null, null,
+                   ReactiveCommand.Create<Unit>(_ => { }),
+                   ReactiveCommand.Create<Unit>(_ => { }),
                    ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
                .DisposeWith(_subscriptions);
+
+            SetUpAcquisitionCommand.InvokeCommand(AcquisitionSettingsWindow.ViewRequested).DisposeWith(_subscriptions);
+
         }
 
     }
