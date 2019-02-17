@@ -8,6 +8,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DipolImage;
 using DIPOL_UF.Converters;
+using DIPOL_UF.Properties;
 using ReactiveUI;
 
 namespace DIPOL_UF.Models
@@ -34,6 +35,8 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<FanMode, Unit> FanCommand { get; private set; }
         public ReactiveCommand<ShutterMode, Unit> InternalShutterCommand { get; private set; }
         public ReactiveCommand<ShutterMode, Unit> ExternalShutterCommand { get; private set; }
+
+        public ReactiveCommand<Unit, object> SetUpAcquisitionCommand { get; private set; }
 
         public CameraTab(CameraBase camera)
         {
@@ -84,6 +87,8 @@ namespace DIPOL_UF.Models
                               x => Camera.TemperatureStatusChecked -= x)
                           .Select(x => x.EventArgs)
                           .DistinctUntilChanged();
+
+            SetUpAcquisitionCommand.InvokeCommand(AcquisitionSettingsWindow.ViewRequested).DisposeWith(_subscriptions);
         }
 
         private void InitializeCommands()
@@ -118,6 +123,16 @@ namespace DIPOL_UF.Models
                                    Observable.Return(CanControlShutter.External))
                                .DisposeWith(_subscriptions);
 
+           SetUpAcquisitionCommand =
+               ReactiveCommand.Create<Unit, object>(x => x)
+                              .DisposeWith(_subscriptions);
+
+           AcquisitionSettingsWindow = new DescendantProvider(
+                   ReactiveCommand.Create<object, ReactiveObjectEx>(
+                       _ => new ReactiveWrapper<SettingsBase>(Camera.GetAcquisitionSettingsTemplate())),
+                   null, null,
+                   ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
+               .DisposeWith(_subscriptions);
         }
 
     }

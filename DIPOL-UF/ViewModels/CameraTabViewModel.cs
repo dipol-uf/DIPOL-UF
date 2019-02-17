@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Models;
 using DynamicData.Binding;
@@ -52,7 +53,7 @@ namespace DIPOL_UF.ViewModels
         public Switch CoolerMode { [ObservableAsProperty] get; }
 
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
-
+        public ICommand SetUpAcquisitionCommand => Model.SetUpAcquisitionCommand;
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
@@ -79,6 +80,9 @@ namespace DIPOL_UF.ViewModels
                                        //    .Select(x => !HasSpecificErrors(x.Property)),
                                      (x, y) => x && !y))
                                .DisposeWith(_subscriptions);
+
+            AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow,
+                x => new AcquisitionSettingsViewModel((ReactiveWrapper<SettingsBase>) x)).DisposeWith(_subscriptions);
         }
 
         private void HookObservables()
