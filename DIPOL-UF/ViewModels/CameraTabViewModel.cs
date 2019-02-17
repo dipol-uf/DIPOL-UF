@@ -78,7 +78,7 @@ namespace DIPOL_UF.ViewModels
                                      (x, y) => x && !y))
                                .DisposeWith(_subscriptions);
 
-            CoolerCommand.InvokeCommand(Model.CoolerCommand).DisposeWith(_subscriptions);
+            CoolerCommand.Select(_ => (int)TargetTemperature).InvokeCommand(Model.CoolerCommand).DisposeWith(_subscriptions);
 
             AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow,
                 x => new AcquisitionSettingsViewModel((ReactiveWrapper<SettingsBase>) x)).DisposeWith(_subscriptions);
