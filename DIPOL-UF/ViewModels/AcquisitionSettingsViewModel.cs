@@ -32,7 +32,7 @@ namespace DIPOL_UF.ViewModels
             .Select(pi => (PropNameTrimmer.Replace(pi.Name, ""), pi))
             .ToList();
 
-        private CameraBase Camera => Model.Object.Camera;
+        public CameraBase Camera => Model.Object.Camera;
 
         public DelegateCommand SubmitCommand { get; private set; }
 
@@ -508,8 +508,8 @@ namespace DIPOL_UF.ViewModels
         //    }
         //}
 
-        public AcquisitionSettingsViewModel(SettingsBase model)
-            :base(new ReactiveWrapper<SettingsBase>(model))
+        public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model)
+            :base(model)
         {
             CheckSupportedFeatures();
             InitializeAllowedSettings();

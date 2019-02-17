@@ -5,12 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:loc="clr-namespace:DIPOL_UF"
         xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
+        xmlns:viewModels="clr-namespace:DIPOL_UF.ViewModels"
+        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
         Title="{extensions:Text Key=AcquisitionSettings_WindowName}"  WindowStyle="ToolWindow" 
         Topmost="True" WindowStartupLocation="CenterOwner"
         Height="500" Width="350"
         MinWidth="300" MinHeight="400"
         Style="{StaticResource ResourceKey=ContentFont}"
+        d:DataContext="{d:DesignInstance viewModels:AcquisitionSettingsViewModel}"
         ResizeMode="NoResize">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -123,30 +126,22 @@
                         <ComboBox Grid.Row="1" Grid.Column="1"
                                   ItemsSource="{Binding Camera.Properties.VSSpeeds}"
                                   SelectedIndex="{Binding 
-                                    VSSpeedIndex, 
+                                    VsSpeedIndex, 
                                     Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged, 
                                     ValidatesOnNotifyDataErrors=True}">
-                            <ComboBox.Style>
-                                <Style BasedOn="{StaticResource ResourceKey=ComboBoxStyle}"
-                                       TargetType="ComboBox">
-                                    <Style.Triggers>
-                                        <DataTrigger 
-                                            Binding="{Binding 
-                                                HasErrorsOfProperties[VSSpeedIndex], 
-                                                Mode=OneWay,
-                                                UpdateSourceTrigger=PropertyChanged}"
-                                            Value="True">
-                                            <Setter 
-                                                Property="ToolTip" 
-                                                Value="{Binding 
-                                                    LatestErrors[VSSpeedIndex], 
-                                                    Mode=OneWay,
-                                                    UpdateSourceTrigger=PropertyChanged}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ComboBox.Style>
+                            <behaviors:Interaction.Triggers>
+                                <behaviors:PropertyChangedTrigger 
+                                    Binding="{Binding ElementName=VsSpeedIndex, Path=(Validation.Errors).Count}">
+                                    <behaviors:ChangePropertyAction 
+                                        TargetName="TempControlTextBox"
+                                        PropertyName="ToolTip"
+                                        Value="{Binding
+                                            ElementName=VsSpeedIndex, 
+                                            Path=(Validation.Errors),
+                                            Converter={StaticResource ErrorsToStringConverter}}"/>
+                                </behaviors:PropertyChangedTrigger>
+                            </behaviors:Interaction.Triggers>
                             <ComboBox.IsEnabled>
                                 <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                                     <Binding Path="SupportedSettings[VSSpeed]" Mode="OneTime"/>
