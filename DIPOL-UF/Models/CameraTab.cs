@@ -2,6 +2,7 @@
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
@@ -24,6 +25,7 @@ namespace DIPOL_UF.Models
 
 
         public DipolImagePresenter ImagePresenter { get; private set; }
+
         public DescendantProvider AcquisitionSettingsWindow { get; private set; }
 
         public IObservable<TemperatureStatusEventArgs> WhenTemperatureChecked { get; private set; }
@@ -63,7 +65,11 @@ namespace DIPOL_UF.Models
 
             var img = new Image(imageArr, 512, 256);
 
-            ImagePresenter.LoadImage(img);
+            Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                ImagePresenter.LoadImage(img);
+            });
 #endif
 
             HookObservables();
@@ -112,14 +118,6 @@ namespace DIPOL_UF.Models
                                    Observable.Return(CanControlShutter.External))
                                .DisposeWith(_subscriptions);
 
-
-            //AcquisitionSettingsWindow = new DescendantProvider(
-            //    ReactiveCommand.Create<object, ReactiveObjectEx>(
-            //        _ => new ReactiveWrapper<SettingsBase>(Camera.GetAcquisitionSettingsTemplate())),
-            //    null,
-            //    null,
-            //    null
-            //    );
         }
 
     }

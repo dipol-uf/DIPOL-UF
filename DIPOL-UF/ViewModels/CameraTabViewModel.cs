@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reactive;
@@ -32,6 +33,8 @@ namespace DIPOL_UF.ViewModels
         // ReSharper disable once UnusedMember.Global
         public string TabHeader => Model.Alias;
 
+        public DipolImagePresenterViewModel DipolImagePresenter { get; private set; }
+        public DescendantProxy AcquisitionSettingsWindow { get; private set; }
 
         [Reactive]
         public float TargetTemperature { get; set; }
@@ -48,9 +51,8 @@ namespace DIPOL_UF.ViewModels
         public float CurrentTemperature { [ObservableAsProperty] get; }
         public Switch CoolerMode { [ObservableAsProperty] get; }
 
-        public ICommand CoolerCommand => Model.CoolerCommand;
+        public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
 
-        public DipolImagePresenterViewModel DipolImagePresenter { get; private set; }
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
@@ -59,10 +61,23 @@ namespace DIPOL_UF.ViewModels
             ExternalShutterMode = CanControlExternalShutter ? Model.Camera.Shutter.External : null;
 
             DipolImagePresenter = new DipolImagePresenterViewModel(Model.ImagePresenter);
-            
+            //AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow, null);
 
             HookValidators();
             HookObservables();
+            InitializeCommands();
+        }
+
+        private void InitializeCommands()
+        {
+            CoolerCommand =
+                ReactiveCommand.Create(() => Unit.Default,
+                                   Model.CoolerCommand.CanExecute.CombineLatest(
+                                       WhenErrorsChangedTyped
+                                           .Where(x => x.Property == nameof(TargetTemperatureText))
+                                           .Select(x => !HasSpecificErrors(x.Property)),
+                                     (x, y) => x && y))
+                               .DisposeWith(_subscriptions);
         }
 
         private void HookObservables()

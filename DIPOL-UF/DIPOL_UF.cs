@@ -25,9 +25,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
@@ -35,7 +33,6 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
-using ReactiveUI;
 using Tests;
 
 
@@ -51,8 +48,8 @@ namespace DIPOL_UF
             System.Diagnostics.Debug.AutoFlush = true;
             System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
-            Test2();
-            return 0;
+            //Test2();
+            //return 0;
 
 
 
@@ -64,8 +61,6 @@ namespace DIPOL_UF
                 using (var view = new ViewModels.DipolMainWindowViewModel(mainModel))
                     applicationInstance.Run(new Views.DipolMainWindow().WithDataContext(view));
 
-
-            //Test();
 
             return 0;
         }

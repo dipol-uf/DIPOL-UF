@@ -13,6 +13,9 @@
              mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
              d:DesignHeight="900" d:DesignWidth="1200"
              d:DataContext="{d:DesignInstance Type=dvms:CameraTabViewModel}">
+    <behaviors:Interaction.Triggers>
+    
+    </behaviors:Interaction.Triggers>
     <ScrollViewer
         HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Auto"
         VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto">
@@ -24,14 +27,15 @@
                 <RowDefinition Height="50"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2.5*" MinWidth="430"/>
-                <ColumnDefinition Width="1*" MinWidth="200"/>
+                <ColumnDefinition Width="auto" MinWidth="430"/>
+                <ColumnDefinition Width="auto" MinWidth="200"/>
                 <ColumnDefinition Width="auto" MinWidth="230"/>
             </Grid.ColumnDefinitions>
             <!--Custom Image Presenter-->
             <cntr:DipolImagePresenter Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
                                        Height="700"
                                        VerticalAlignment="Top" HorizontalAlignment="Stretch" 
+                                       MaxWidth="750"
                                        DataContext="{Binding DipolImagePresenter}"/>
             <!--Placeholder for Camera Name-->
             <!--<Grid Grid.Row="0" Grid.Column="1">
@@ -60,9 +64,9 @@
                           IsChecked="{Binding Autosave}"/>
             </Grid>-->
             <!--Placeholder for detailed status-->
-            <Label Grid.Row="1" Grid.Column="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
+            <Label Grid.Column="2" Grid.Row="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
             <!--RHS Controls grid-->
-            <Grid Column ="2" Grid.Row="1" HorizontalAlignment="Right" 
+            <Grid Column ="1" Grid.Row="1" HorizontalAlignment="Right" 
                   VerticalAlignment="Top" MinHeight="500">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="135"/>
