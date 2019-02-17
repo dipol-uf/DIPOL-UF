@@ -408,6 +408,15 @@ namespace DIPOL_UF.Models
                         temp = _sourceImage.Copy();
                     });
                     break;
+                case TypeCode.Int32:
+                {
+                    await Helper.RunNoMarshall(() =>
+                    {
+                        _sourceImage = image.CastTo<int, float>(x => x);
+                        temp = _sourceImage.Copy();
+                    });
+                    break;
+                }
                 default:
                     // TODO : Fix this
                     throw new NotSupportedException($"Image type {image.UnderlyingType} is not supported.");
