@@ -2,23 +2,6 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:enum="clr-namespace:DIPOL_UF.Enums">
 
-    <!--Validation style-->
-    <!--<Style x:Key="ErrorToolTipStyle" TargetType="Control">
-        <Style.Triggers>
-            <EventTrigger>
-                <EventTrigger.Actions>
-                <Setter
-                    Property="ToolTip"
-                    Value="{Binding 
-                        RelativeSource={RelativeSource Self},
-                        Path=(Validation.Errors),
-                        Converter={StaticResource ErrorsToStringConverter},
-                        UpdateSourceTrigger=PropertyChanged}"/>
-                </EventTrigger.Actions>
-            </EventTrigger>
-        </Style.Triggers>
-    </Style>-->
-
     <!--Basic font styles-->
     <Style x:Key="TitleFont"  TargetType="{x:Type Control}">
         <Setter Property="FontSize" Value="20"/>
@@ -235,6 +218,21 @@
         <Setter Property="Margin" Value="10, 3, 10, 3"/>
         <Setter Property="Height" Value="15"/>
         <Setter Property="Width" Value="auto"/>
+    </Style>
+
+    <Style x:Key="TextBoxWithErrors" BasedOn="{StaticResource TextBoxStyle}" TargetType="TextBox">
+        <Style.Triggers>
+            <DataTrigger 
+                Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).Count, Converter={StaticResource CompareToConverter}, ConverterParameter='> 0'}"
+                Value="True">
+                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors), Converter={StaticResource ErrorsToStringConverter}}"/>
+            </DataTrigger>
+            <DataTrigger 
+                Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).Count, Converter={StaticResource CompareToConverter}, ConverterParameter='== 0'}"
+                Value="True">
+                <Setter Property="ToolTip" Value="{x:Null}"/>
+            </DataTrigger>
+        </Style.Triggers>
     </Style>
 
 </ResourceDictionary>

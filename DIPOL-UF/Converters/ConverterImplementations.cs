@@ -142,6 +142,9 @@ namespace DIPOL_UF.Converters
 
         public static bool CompareToConversion(object src, object parameter)
         {
+            if(!src.GetType().IsPrimitive)
+                throw new TypeAccessException(nameof(src));
+
             if (parameter is string s)
             {
                 s = s.Trim();

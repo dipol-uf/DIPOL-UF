@@ -129,7 +129,8 @@
                                     VsSpeedIndex, 
                                     Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged, 
-                                    ValidatesOnNotifyDataErrors=True}">
+                                    ValidatesOnNotifyDataErrors=True}"
+                                  Style="{StaticResource ComboBoxStyle}">
                             <behaviors:Interaction.Triggers>
                                 <behaviors:PropertyChangedTrigger 
                                     Binding="{Binding ElementName=VsSpeedIndex, Path=(Validation.Errors).Count}">
