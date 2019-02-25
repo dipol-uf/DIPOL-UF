@@ -2,6 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:DIPOL_UF.ViewModels"
                     xmlns:cntrl="clr-namespace:DIPOL_UF.Controls"
+                    xmlns:ext="clr-namespace:DIPOL_UF.Extensions"
                     xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
                     xmlns:enums="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS">
     <HierarchicalDataTemplate x:Key="MenuBarItemTemplate"
@@ -79,7 +80,7 @@
                                 <Label VerticalAlignment="Center" Width="70"  HorizontalAlignment="Right"
                                        HorizontalContentAlignment="Right"
                                        Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}"
-                                       Content="{Binding Temperature, StringFormat={}{0:0.00}}"
+                                       Content="{Binding Temperature}" ContentStringFormat="{ext:Text Key=General_FloatTempFormat}"
                                        Foreground="{Binding Temperature, 
                                             Converter={StaticResource TemperatureToBrushConverter},
                                             ConverterParameter={StaticResource TemperatureColorBrushCollection}}"

@@ -66,7 +66,7 @@ namespace DIPOL_UF.ViewModels
         /// </summary>
         public AcquisitionMode[] AllowedAcquisitionModes =>
            Helper.EnumFlagsToArray<AcquisitionMode>(Model.Object.Camera.Capabilities.AcquisitionModes)
-            .Where(item => item != AcquisitionMode.FrameTransfer)
+            .Where(item => item != ANDOR_CS.Enums.AcquisitionMode.FrameTransfer)
             .Where(ANDOR_CS.Classes.EnumConverter.IsAcquisitionModeSupported)
             .ToArray();
 
@@ -687,22 +687,7 @@ namespace DIPOL_UF.ViewModels
             //    RaisePropertyChanged(nameof(AllowedSettings));
         }
 
-        private void ValidateProperty(Exception e = null,
-            [System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
-        {
-            if (!string.IsNullOrWhiteSpace(propertyName))
-            {
-                //if (e != null)
-                //    AddError(new ValidationErrorInstance("DefaultError", e.Message),
-                //       ErrorPriority.High,
-                //       propertyName);
-                //else
-                //    RemoveError(new ValidationErrorInstance("DefaultError", ""),
-                //        propertyName);
-
-            }
-        }
-
+        
         //protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         //{
         //    base.OnPropertyChanged(sender, e);
@@ -872,6 +857,24 @@ namespace DIPOL_UF.ViewModels
 
         [Reactive]
         public int VsSpeedIndex { get; set; }
+
+        [Reactive]
+        public int VsAmplitude { get; set; } 
+
+        [Reactive]
+        public int AdxBitDepth { get; set; }
+
+        [Reactive]
+        public int Amplifier { get; set; }
+
+        [Reactive]
+        public int HsSpeedIndex { get; set; }
+
+        [Reactive]
+        public int PreampGain { get; set; }
+
+        [Reactive]
+        public int AcquisitionMode { get; set; }
 
         #endregion
     }
