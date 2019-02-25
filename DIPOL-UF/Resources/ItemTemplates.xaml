@@ -123,4 +123,5 @@
     <DataTemplate x:Key="ShutterComboBoxItem" DataType="enums:ShutterMode">
         <TextBlock Text="{Binding Converter={StaticResource EnumToDescriptionConverter}}"/>
     </DataTemplate>
+        
 </ResourceDictionary>

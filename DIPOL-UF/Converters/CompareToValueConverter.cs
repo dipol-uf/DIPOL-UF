@@ -12,9 +12,7 @@ namespace DIPOL_UF.Converters
     class CompareToValueConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
+            => ConverterImplementations.CompareToConversion(value, parameter);
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotSupportedException(string.Format(Localization.General_OperationNotSupported,

@@ -145,6 +145,7 @@
                     <TextBox 
                             Name="TempControlTextBox" 
                             HorizontalContentAlignment="Right"
+                            Style="{StaticResource TextBoxWithErrors}"
                             Text="{Binding 
                                 Path=TargetTemperatureText,
                                 Mode=TwoWay,
@@ -156,7 +157,7 @@
                                 <Binding Path="CanControlTemperature" Mode="OneWay"/>
                             </MultiBinding>
                         </TextBox.IsEnabled>
-                        <behaviors:Interaction.Triggers>
+                        <!--<behaviors:Interaction.Triggers>
                             <behaviors:DataTrigger
                                 Binding="{Binding ElementName=TempControlTextBox, Path=(Validation.Errors).Count}"
                                 Comparison="GreaterThan"
@@ -181,7 +182,7 @@
                             <behaviors:PropertyChangedTrigger 
                                 Binding="{Binding ElementName=TempControlTextBox, Path=(Validation.Errors).Count}">
                             </behaviors:PropertyChangedTrigger>
-                        </behaviors:Interaction.Triggers>
+                        </behaviors:Interaction.Triggers>-->
                     </TextBox>
                     <Button Command="{Binding CoolerCommand}">
                         <Button.Content>

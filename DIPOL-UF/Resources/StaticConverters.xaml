@@ -20,6 +20,7 @@
     <cnvrt:NotValueConverter x:Key="NotConverter"/>
     <cnvrt:TextAsConverter x:Key="GetText"/>
     <cnvrt:CombineMultiValueConverter x:Key="CombineConverter"/>
+    <cnvrt:CompareToValueConverter x:Key="CompareToConverter"/>
     <!-- Debug converter -->
     <cnvrt:DebugConverter x:Key="Debug"/>
 </ResourceDictionary>
