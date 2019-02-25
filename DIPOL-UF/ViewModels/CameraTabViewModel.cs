@@ -193,7 +193,7 @@ namespace DIPOL_UF.ViewModels
                         Type: nameof(Validators.Validate.MatchesRegex),
                         Message: Validators.Validate.MatchesRegex(
                             x.TargetTemperatureText,
-                            "^[+-]?[0-9]+\\.?[0-9]*$",
+                            "^[+-]?[0-9]*\\.?[0-9]*$",
                             "Only numbers are allowed"))),
                 nameof(TargetTemperatureText));
 
