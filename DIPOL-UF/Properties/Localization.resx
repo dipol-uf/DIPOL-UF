@@ -297,6 +297,9 @@
   <data name="General_FloatTempFormat" xml:space="preserve">
     <value>{0:+0.00;-0.00;0.00}</value>
   </data>
+  <data name="General_InvalidArgument" xml:space="preserve">
+    <value>Argument {0} is invalid.</value>
+  </data>
   <data name="General_Load" xml:space="preserve">
     <value>Load</value>
   </data>

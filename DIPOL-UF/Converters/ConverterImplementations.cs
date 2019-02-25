@@ -24,16 +24,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Windows.Media;
 using System.Linq;
+using System.Text.RegularExpressions;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
+using DIPOL_UF.Properties;
 using DynamicData.Kernel;
 using Newtonsoft.Json.Linq;
 
 namespace DIPOL_UF.Converters
 {
-    internal static class ConverterImplementations
+    public static class ConverterImplementations
     {
         private static List<(string Name, string Alias)> _cachedAliases;
 
@@ -80,11 +83,7 @@ namespace DIPOL_UF.Converters
         public static List<string> EnumToDescriptionConversion(IEnumerable<Enum> enums)
             => enums.Select(x => x.GetEnumStringEx().EnumerableToString())
                     .ToList();
-        //    var resourceName = $"General_{@enum.GetType().Name}_{@enum}";
-        //    var localizedText = Properties.Localization.ResourceManager.GetString(resourceName);
-        //    return localizedText ?? Helper.GetEnumDescription(@enum, @enum.GetType());
-        //}
-
+       
         public static Enum DescriptionToEnumConversion(string desc, Type type)
         {
             if (type.BaseType == typeof(Enum))
@@ -139,6 +138,51 @@ namespace DIPOL_UF.Converters
             }
 
             return values.All(x => x);
+        }
+
+        public static bool CompareToConversion(object src, object parameter)
+        {
+            if (parameter is string s)
+            {
+                s = s.Trim();
+
+                var comparison = Regex.Match(s, "[+-]?[0-9]+\\.?[0-9]*") is var match && match.Success
+                    ? match.Value
+                    : throw new ArgumentException(string.Format(Localization.General_InvalidArgument, nameof(parameter)));
+
+                var operation = match.Index > 0
+                    ? s.Substring(0, match.Index).Trim()
+                    : throw new ArgumentException(string.Format(Localization.General_InvalidArgument, nameof(parameter)));
+
+                var diff = (src.GetType()
+                               .GetMethod("Parse",
+                                   new[] {typeof(string), typeof(NumberStyles), typeof(IFormatProvider)})
+                               ?.Invoke(null,
+                                   new object[] {comparison, NumberStyles.Any, NumberFormatInfo.InvariantInfo})
+                    as IComparable)
+                    ?.CompareTo(src);
+
+                switch (operation)
+                {
+                    case "=":
+                    case "==":
+                        return diff == 0;
+                    case ">":
+                        return diff < 0;
+                    case ">=":
+                        return diff <= 0;
+                    case "<":
+                        return diff > 0;
+                    case "<=":
+                        return diff >= 0;
+                    case "!=":
+                        return diff != 0;
+                    default:
+                        throw new ArgumentException(string.Format(Localization.General_InvalidArgument, nameof(parameter)));
+                }
+
+            }
+            throw new ArgumentException(string.Format(Localization.General_InvalidArgument, nameof(parameter)));
         }
     }
 }
