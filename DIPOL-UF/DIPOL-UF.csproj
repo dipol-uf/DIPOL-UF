@@ -197,6 +197,7 @@
     <Compile Include="Converters\BoolToBoolMultiValueConverter.cs" />
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
     <Compile Include="Converters\CombineMultiValueConverter.cs" />
+    <Compile Include="Converters\CompareToValueConverter.cs" />
     <Compile Include="Converters\ConverterImplementations.cs" />
     <Compile Include="Converters\DebugConverter.cs" />
     <Compile Include="Converters\DefaultValueConverter.cs" />

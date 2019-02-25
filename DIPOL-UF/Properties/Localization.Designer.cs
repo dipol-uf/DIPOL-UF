@@ -601,6 +601,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Argument {0} is invalid..
+        /// </summary>
+        public static string General_InvalidArgument {
+            get {
+                return ResourceManager.GetString("General_InvalidArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Load.
         /// </summary>
         public static string General_Load {
