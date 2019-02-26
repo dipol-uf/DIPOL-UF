@@ -30,9 +30,11 @@ using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.IO;
+using System.Linq.Expressions;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
+using System.Windows.Input;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Commands;
@@ -49,7 +51,8 @@ namespace DIPOL_UF.ViewModels
             public bool VsSpeed { [ObservableAsProperty] get; }
             public bool VsAmplitude { [ObservableAsProperty] get; }
             public bool AdcBitDepth { [ObservableAsProperty] get; }
-
+            public bool Amplifier { [ObservableAsProperty] get; }
+            
         }
 
         private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
@@ -603,21 +606,38 @@ namespace DIPOL_UF.ViewModels
         {
             base.HookValidators();
 
-            CreateValidator(
-                this.WhenPropertyChanged(x => x.VsSpeed)
-                    .Select(x =>
-                        (Type: nameof(Validators.Validate.CannotBeDefault),
-                            Message: Validators.Validate.CannotBeDefault(x.Value, -1))),
-                nameof(VsSpeed));
+            SetUpDefaultValueValidators();
+            SetUpApplicationValidators();
+            
+        }
 
-            CreateValidator(
-                this.WhenPropertyChanged(x => x.VsAmplitude)
-                    .Select(x =>
-                        (Type: nameof(Validators.Validate.CannotBeDefault),
-                            Message: Validators.Validate.CannotBeDefault((object)x.Value, null))),
-                nameof(VsSpeed));
+        private void SetUpDefaultValueValidators()
+        {
+            void DefaultValueValidator<TSrc>(
+                Expression<Func<AcquisitionSettingsViewModel, TSrc>> accessor,
+                object comparisonValue)
+            {
+                var name = (accessor.Body as MemberExpression)?.Member.Name
+                           ?? throw new ArgumentException(@"Only member access expressions are supported.",
+                               nameof(accessor));
+
+                CreateValidator(
+                    this.WhenPropertyChanged(accessor)
+                        .Select(x =>
+                            (Type: nameof(Validators.Validate.CannotBeDefault),
+                                Message: Validators.Validate.CannotBeDefault(x.Value, comparisonValue))),
+                    name);
+            }
 
 
+            DefaultValueValidator(x => x.VsSpeed, -1);
+            DefaultValueValidator(x => x.VsAmplitude, null);
+            DefaultValueValidator(x => x.AdcBitDepth, -1);
+            DefaultValueValidator(x => x.Amplifier, null);
+        }
+
+        private void SetUpApplicationValidators()
+        {
             CreateValidator(
                 this.WhenPropertyChanged(x => x.VsSpeed)
                     .Where(x => x.Value >= 0)
@@ -633,8 +653,16 @@ namespace DIPOL_UF.ViewModels
                         (Type: nameof(Validators.Validate.DoesNotThrow),
                             Message: Validators.Validate.DoesNotThrow(Model.Object.SetVSAmplitude, x.Value.Value))),
                 nameof(VsAmplitude));
+
+            CreateValidator(
+                this.WhenPropertyChanged(x => x.AdcBitDepth)
+                    .Where(x => x.Value >= 0)
+                    .Select(x =>
+                        (Type: nameof(Validators.Validate.DoesNotThrow),
+                            Message: Validators.Validate.DoesNotThrow(Model.Object.SetADConverter, x.Value))),
+                nameof(AdcBitDepth));
         }
-        
+
         private void InitializeAllowedSettings()
         {
             AllowedSettings = Model.Object.AllowedSettings();
@@ -941,7 +969,7 @@ namespace DIPOL_UF.ViewModels
         public int AdcBitDepth { get; set; }
 
         [Reactive]
-        public int Amplifier { get; set; }
+        public OutputAmplification? Amplifier { get; set; }
 
         [Reactive]
         public int HsSpeedIndex { get; set; }
