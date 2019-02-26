@@ -817,6 +817,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default value is illegal..
+        /// </summary>
+        public static string Validation_CannotBeDefault {
+            get {
+                return ResourceManager.GetString("Validation_CannotBeDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value cannot be greater than {0}.
         /// </summary>
         public static string Validation_ValueCannotBeGreaterThan {

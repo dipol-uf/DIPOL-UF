@@ -605,6 +605,21 @@ namespace DIPOL_UF.ViewModels
 
             CreateValidator(
                 this.WhenPropertyChanged(x => x.VsSpeed)
+                    .Select(x =>
+                        (Type: nameof(Validators.Validate.CannotBeDefault),
+                            Message: Validators.Validate.CannotBeDefault(x.Value, -1))),
+                nameof(VsSpeed));
+
+            CreateValidator(
+                this.WhenPropertyChanged(x => x.VsAmplitude)
+                    .Select(x =>
+                        (Type: nameof(Validators.Validate.CannotBeDefault),
+                            Message: Validators.Validate.CannotBeDefault((object)x.Value, null))),
+                nameof(VsSpeed));
+
+
+            CreateValidator(
+                this.WhenPropertyChanged(x => x.VsSpeed)
                     .Where(x => x.Value >= 0)
                     .Select(x =>
                         (Type: nameof(Validators.Validate.DoesNotThrow),

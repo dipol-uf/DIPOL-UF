@@ -87,5 +87,9 @@ namespace DIPOL_UF.Validators
             return null;
         }
 
+        public static string CannotBeDefault<T>(T value, T @default)
+            => Equals(value, @default)
+                ? Properties.Localization.Validation_CannotBeDefault
+                : null;
     }
 }
