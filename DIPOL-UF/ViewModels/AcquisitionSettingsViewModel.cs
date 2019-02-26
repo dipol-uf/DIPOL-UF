@@ -80,11 +80,13 @@ namespace DIPOL_UF.ViewModels
             .Where(ANDOR_CS.Classes.EnumConverter.IsTriggerModeSupported)
             .ToArray();
 
-        //public (int Index, float Speed)[] AvailableHSSpeeds =>
-        //    (ADConverterIndex < 0 || OutputAmplifierIndex < 0)
-        //        ? null
-        //        : Model.Object.GetAvailableHSSpeeds(ADConverterIndex, OutputAmplifierIndex)
-        //               .ToArray();
+        public (int Index, float Speed)[] AvailableHSSpeeds { [ObservableAsProperty] get; }
+
+        public (int Index, string Name)[] AvailablePreAmpGains { [ObservableAsProperty] get; }
+        //(ADConverterIndex < 0 || OutputAmplifierIndex < 0)
+            //    ? null
+            //    : Model.Object.GetAvailableHSSpeeds(ADConverterIndex, OutputAmplifierIndex)
+            //           .ToArray();
 
         //public (int Index, string Name)[] AvailablePreAmpGains =>
         //    (ADConverterIndex < 0 || OutputAmplifierIndex < 0 || HSSpeedIndex < 0)
@@ -93,8 +95,11 @@ namespace DIPOL_UF.ViewModels
         //                   OutputAmplifierIndex, HSSpeedIndex)
         //               .ToArray();
 
+        // Todo: Use (Min, Max)
         public int[] AvailableEMCCDGains =>
-            Enumerable.Range(Model.Object.Camera.Properties.EMCCDGainRange.Low, Model.Object.Camera.Properties.EMCCDGainRange.High)
+            Enumerable.Range(
+                          Model.Object.Camera.Properties.EMCCDGainRange.Low, 
+                          Model.Object.Camera.Properties.EMCCDGainRange.High)
             .ToArray();
 
         ///// <summary>
@@ -521,10 +526,26 @@ namespace DIPOL_UF.ViewModels
 
         private void HookObservables()
         {
-            Model.Object.WhenAnyPropertyChanged(nameof(Model.Object.VSSpeed))
-                 .Select(x => x.VSSpeed?.Index ?? -1)
+            AttachGetters();
+            AttachSetters();
+         
+            
+        }
+
+        private void AttachGetters()
+        {
+            Model.Object.WhenPropertyChanged(x => x.VSSpeed)
+                 .Select(x => x.Value?.Index ?? -1)
                  .BindTo(this, x => x.VsSpeedIndex)
                  .DisposeWith(_subscriptions);
+        }
+
+        private void AttachSetters()
+        {
+            this.WhenPropertyChanged(x => x.VsSpeedIndex)
+                .Select(x => x.Value)
+                .Subscribe(x => Model.Object.SetVSSpeed(x))
+                .DisposeWith(_subscriptions);
         }
 
         protected override void HookValidators()
@@ -862,7 +883,7 @@ namespace DIPOL_UF.ViewModels
         public int VsAmplitude { get; set; } 
 
         [Reactive]
-        public int AdxBitDepth { get; set; }
+        public int AdcBitDepth { get; set; }
 
         [Reactive]
         public int Amplifier { get; set; }
@@ -871,7 +892,7 @@ namespace DIPOL_UF.ViewModels
         public int HsSpeedIndex { get; set; }
 
         [Reactive]
-        public int PreampGain { get; set; }
+        public int PreAmpGain { get; set; }
 
         [Reactive]
         public int AcquisitionMode { get; set; }
