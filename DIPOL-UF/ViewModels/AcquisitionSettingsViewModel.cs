@@ -44,6 +44,12 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<SettingsBase>>
     {
+        public class SettingsAvailability : ReactiveObjectEx
+        {
+            public bool VsSpeed { [ObservableAsProperty] get; }
+            public bool VsAmplitude { [ObservableAsProperty] get; }
+        }
+
         private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
         private static readonly List<(string, PropertyInfo)> PropertyList =
             typeof(AcquisitionSettingsViewModel)
@@ -51,6 +57,10 @@ namespace DIPOL_UF.ViewModels
             .Where(pi => pi.CanRead && pi.CanWrite)
             .Select(pi => (PropNameTrimmer.Replace(pi.Name, ""), pi))
             .ToList();
+
+
+        public SettingsAvailability IsAvailable { get; }
+            = new SettingsAvailability();
 
         public CameraBase Camera => Model.Object.Camera;
 
@@ -70,15 +80,15 @@ namespace DIPOL_UF.ViewModels
        /// <summary>
         /// Collection of supported by a given Camera settings.
         /// </summary>
-        public Dictionary<string, bool> SupportedSettings { get; private set; }
+        public HashSet<string> SupportedSettings { get; private set; }
 
         /// <summary>
         /// Collection of settings that can be set now.
         /// </summary>
-        public ObservableConcurrentDictionary<string, bool> AllowedSettings
+        public HashSet<string> AllowedSettings
         {
             get;
-            set;
+            private set;
         }
 
         /// <summary>
@@ -125,7 +135,7 @@ namespace DIPOL_UF.ViewModels
         ///// <summary>
         ///// Index of VS Speed.
         ///// </summary>
-        //public int VSSpeedIndex
+        //public int VsSpeed
         //{
         //    get => model.VSSpeed?.Index ?? -1;
         //    set
@@ -536,12 +546,16 @@ namespace DIPOL_UF.ViewModels
         public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model)
             :base(model)
         {
-            CheckSupportedFeatures();
+            SupportedSettings = Model.Object.SupportedSettings();
             InitializeAllowedSettings();
+
+
             InitializeCommands();
 
             HookObservables();
             HookValidators();
+
+            WatchAvailableSettings();
         }
 
         private void HookObservables()
@@ -556,16 +570,30 @@ namespace DIPOL_UF.ViewModels
         {
             Model.Object.WhenPropertyChanged(x => x.VSSpeed)
                  .Select(x => x.Value?.Index ?? -1)
-                 .BindTo(this, x => x.VsSpeedIndex)
+                 .BindTo(this, x => x.VsSpeed)
                  .DisposeWith(_subscriptions);
         }
 
         private void AttachSetters()
         {
-            this.WhenPropertyChanged(x => x.VsSpeedIndex)
+            this.WhenPropertyChanged(x => x.VsSpeed)
                 .Select(x => x.Value)
+                .Where(x => x >= 0)
                 .Subscribe(x => Model.Object.SetVSSpeed(x))
                 .DisposeWith(_subscriptions);
+        }
+
+        private void WatchAvailableSettings()
+        {
+            Observable.Return(
+                    AllowedSettings.Contains(nameof(VsSpeed).ToLowerInvariant())
+                    && SupportedSettings.Contains(nameof(VsSpeed).ToLowerInvariant()))
+                .ToPropertyEx(IsAvailable, x => x.VsSpeed);
+
+            Observable.Return(
+                    AllowedSettings.Contains(nameof(VsAmplitude).ToLowerInvariant())
+                    && SupportedSettings.Contains(nameof(VsAmplitude).ToLowerInvariant()))
+                .ToPropertyEx(IsAvailable, x => x.VsAmplitude);
         }
 
         protected override void HookValidators()
@@ -573,59 +601,37 @@ namespace DIPOL_UF.ViewModels
             base.HookValidators();
 
             CreateValidator(
-                this.WhenPropertyChanged(x => x.VsSpeedIndex)
-                    .Select(x => { return (Action) (() => Model.Object.SetVSSpeed(x.Value)); }).Select(x =>
+                this.WhenPropertyChanged(x => x.VsSpeed)
+                    .Select(x =>
                         (Type: nameof(Validators.Validate.DoesNotThrow),
-                            Message: Validators.Validate.DoesNotThrow(x))), nameof(VsSpeedIndex));
+                            Message: Validators.Validate.DoesNotThrow(Model.Object.SetVSSpeed, x.Value))), nameof(VsSpeed));
         }
-
-        private void CheckSupportedFeatures()
-        {
-            SupportedSettings = new Dictionary<string, bool>()
-            {
-                { nameof(Model.Object.VSSpeed), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed)},
-                { nameof(Model.Object.VSAmplitude), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
-                { nameof(Model.Object.ADConverter), true },
-                { nameof(Model.Object.OutputAmplifier), true },
-                { nameof(Model.Object.HSSpeed), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) },
-                { nameof(Model.Object.PreAmpGain), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain) },
-                { nameof(Model.Object.AcquisitionMode), true },
-                { "FrameTransferValue", true},
-                { nameof(Model.Object.ReadoutMode), true },
-                { nameof(Model.Object.TriggerMode), true },
-                { nameof(Model.Object.ExposureTime), true },
-                { nameof(Model.Object.EMCCDGain), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) },
-                { nameof(Model.Object.ImageArea), true }
-            };
-        }
-
+        
         private void InitializeAllowedSettings()
         {
-            //AllowedSettings = new ObservableConcurrentDictionary<string, bool>(
-            //    new KeyValuePair<string, bool>[]
-            //    {
-            //        new KeyValuePair<string, bool>(nameof(model.VSSpeed), true),
-            //        new KeyValuePair<string, bool>(nameof(model.VSAmplitude), true),
-            //        new KeyValuePair<string, bool>(nameof(model.ADConverter), true),
-            //        new KeyValuePair<string, bool>(nameof(model.OutputAmplifier), true),
-            //        new KeyValuePair<string, bool>(nameof(model.HSSpeed),
-            //            ADConverterIndex >= 0
-            //            && OutputAmplifierIndex >= 0),
-            //        new KeyValuePair<string, bool>(nameof(model.PreAmpGain),
-            //            ADConverterIndex >= 0
-            //            && OutputAmplifierIndex >= 0
-            //            && HSSpeedIndex >= 0),
-            //        new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true),
-            //        new KeyValuePair<string, bool>(nameof(FrameTransferValue), false),
-            //        new KeyValuePair<string, bool>(nameof(model.ReadoutMode), true),
-            //        new KeyValuePair<string, bool>(nameof(model.TriggerMode), true),
-            //        new KeyValuePair<string, bool>(nameof(model.ExposureTime), true),
-            //        new KeyValuePair<string, bool>(nameof(model.EMCCDGain),
-            //            (OutputAmplifierIndex >= 0)
-            //            && Camera.Properties.OutputAmplifiers[OutputAmplifierIndex].OutputAmplifier == OutputAmplification.Conventional),
-            //        new KeyValuePair<string, bool>(nameof(model.ImageArea), true)   
-            //    }
-            //    );
+            AllowedSettings = Model.Object.AllowedSettings();
+            
+
+            //new KeyValuePair<string, bool>(nameof(model.ADConverter), true),
+            //new KeyValuePair<string, bool>(nameof(model.OutputAmplifier), true),
+            //new KeyValuePair<string, bool>(nameof(model.HSSpeed),
+            //    ADConverterIndex >= 0
+            //    && OutputAmplifierIndex >= 0),
+            //new KeyValuePair<string, bool>(nameof(model.PreAmpGain),
+            //    ADConverterIndex >= 0
+            //    && OutputAmplifierIndex >= 0
+            //    && HSSpeedIndex >= 0),
+            //new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true),
+            //new KeyValuePair<string, bool>(nameof(FrameTransferValue), false),
+            //new KeyValuePair<string, bool>(nameof(model.ReadoutMode), true),
+            //new KeyValuePair<string, bool>(nameof(model.TriggerMode), true),
+            //new KeyValuePair<string, bool>(nameof(model.ExposureTime), true),
+            //new KeyValuePair<string, bool>(nameof(model.EMCCDGain),
+            //    (OutputAmplifierIndex >= 0)
+            //    && Camera.Properties.OutputAmplifiers[OutputAmplifierIndex].OutputAmplifier == OutputAmplification.Conventional),
+            //new KeyValuePair<string, bool>(nameof(model.ImageArea), true)
+            //};
+
         }
 
         private void InitializeCommands()
@@ -695,11 +701,11 @@ namespace DIPOL_UF.ViewModels
             };
             dialog.Filter = $@"Acquisition settings (*{dialog.DefaultExt})|*{dialog.DefaultExt}|All files (*.*)|*.*";
 
-            var temp = AllowedSettings;
-            AllowedSettings =
-                new ObservableConcurrentDictionary<string, bool>(temp.Select(item => new KeyValuePair<string, bool>(item.Key, false)));
-            //RaisePropertyChanged(nameof(AllowedSettings));
-            AllowedSettings = temp;
+            //var temp = AllowedSettings;
+            //AllowedSettings =
+            //    new Dictionary<string, bool>(temp.Select(item => new KeyValuePair<string, bool>(item.Key, false)));
+            ////RaisePropertyChanged(nameof(AllowedSettings));
+            //AllowedSettings = temp;
             if (dialog.ShowDialog() == true)
             {
                 Task.Run(() =>
@@ -868,36 +874,37 @@ namespace DIPOL_UF.ViewModels
         /// <returns>True if all required fields are set.</returns>
         private bool CanSubmit(object parameter)
         {
-            // Helper function, checks if value is set.
-            bool ValueIsSet(PropertyInfo p)
-            {
-                if (Nullable.GetUnderlyingType(p.PropertyType) != null)
-                    return p.GetValue(this) != null;
-                if (p.PropertyType == typeof(int))
-                    return (int)p.GetValue(this) != -1;
-                if (p.PropertyType == typeof(string))
-                    return !string.IsNullOrWhiteSpace((string)p.GetValue(this));
-                return false;
-            }
+            //// Helper function, checks if value is set.
+            //bool ValueIsSet(PropertyInfo p)
+            //{
+            //    if (Nullable.GetUnderlyingType(p.PropertyType) != null)
+            //        return p.GetValue(this) != null;
+            //    if (p.PropertyType == typeof(int))
+            //        return (int)p.GetValue(this) != -1;
+            //    if (p.PropertyType == typeof(string))
+            //        return !string.IsNullOrWhiteSpace((string)p.GetValue(this));
+            //    return false;
+            //}
 
-            // Query that joins pulic Properties to Allowed settings with true value.
-            // As a result, propsQuery stores all Proprties that should have values set.
-            var propsQuery =
-                from prop in PropertyList
-                join allowedProp in AllowedSettings 
-                on prop.Item1 equals allowedProp.Key
-                where allowedProp.Value
-                select prop.Item2;
+            //// Query that joins pulic Properties to Allowed settings with true value.
+            //// As a result, propsQuery stores all Proprties that should have values set.
+            //var propsQuery =
+            //    from prop in PropertyList
+            //    join allowedProp in AllowedSettings 
+            //    on prop.Item1 equals allowedProp.Key
+            //    where allowedProp.Value
+            //    select prop.Item2;
 
-            // Runs check of values on all selected properties.
-            return propsQuery.All(ValueIsSet) && propsQuery.Any();
+            //// Runs check of values on all selected properties.
+            //return propsQuery.All(ValueIsSet) && propsQuery.Any();
+            return false;
         }
 
 
         #region V2
 
         [Reactive]
-        public int VsSpeedIndex { get; set; }
+        public int VsSpeed { get; set; }
 
         [Reactive]
         public int VsAmplitude { get; set; } 
