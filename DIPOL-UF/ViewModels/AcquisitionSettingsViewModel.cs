@@ -54,7 +54,8 @@ namespace DIPOL_UF.ViewModels
             public bool VsAmplitude { [ObservableAsProperty] get; }
             public bool AdcBitDepth { [ObservableAsProperty] get; }
             public bool Amplifier { [ObservableAsProperty] get; }
-            
+            public bool HsSpeed { [ObservableAsProperty] get; }
+
         }
 
         private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
@@ -605,6 +606,8 @@ namespace DIPOL_UF.ViewModels
             ImmutableAvailability(nameof(Model.Object.VSAmplitude), x => x.VsAmplitude);
             ImmutableAvailability(nameof(Model.Object.ADConverter), x => x.AdcBitDepth);
             ImmutableAvailability(nameof(Model.Object.OutputAmplifier), x=> x.Amplifier);
+            ImmutableAvailability(nameof(Model.Object.HSSpeed), x => x.HsSpeed);
+
         }
 
         protected override void HookValidators()
