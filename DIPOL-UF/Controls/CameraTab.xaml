@@ -157,32 +157,6 @@
                                 <Binding Path="CanControlTemperature" Mode="OneWay"/>
                             </MultiBinding>
                         </TextBox.IsEnabled>
-                        <!--<behaviors:Interaction.Triggers>
-                            <behaviors:DataTrigger
-                                Binding="{Binding ElementName=TempControlTextBox, Path=(Validation.Errors).Count}"
-                                Comparison="GreaterThan"
-                                Value="0">
-                                <behaviors:ChangePropertyAction 
-                                    TargetName="TempControlTextBox"
-                                    PropertyName="ToolTip"
-                                    Value="{Binding 
-                                        ElementName=TempControlTextBox, 
-                                        Path=(Validation.Errors),
-                                        Converter={StaticResource ErrorsToStringConverter}}"/>
-                            </behaviors:DataTrigger>
-                            <behaviors:DataTrigger
-                                Binding="{Binding ElementName=TempControlTextBox, Path=(Validation.Errors).Count}"
-                                Comparison="LessThanOrEqual"
-                                Value="0">
-                                <behaviors:ChangePropertyAction 
-                                    TargetName="TempControlTextBox"
-                                    PropertyName="ToolTip"
-                                    Value="{x:Null}"/>
-                            </behaviors:DataTrigger>
-                            <behaviors:PropertyChangedTrigger 
-                                Binding="{Binding ElementName=TempControlTextBox, Path=(Validation.Errors).Count}">
-                            </behaviors:PropertyChangedTrigger>
-                        </behaviors:Interaction.Triggers>-->
                     </TextBox>
                     <Button Command="{Binding CoolerCommand}">
                         <Button.Content>
