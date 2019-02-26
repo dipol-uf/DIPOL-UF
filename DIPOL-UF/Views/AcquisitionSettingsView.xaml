@@ -161,7 +161,7 @@
                                   ItemsSource="{Binding 
                                     Source={StaticResource ResourceKey=VSAmplitudeEnumProvider},
                                     Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
-                                  SelectedIndex="{Binding 
+                                  SelectedItem="{Binding 
                                     Path=VsAmplitude, 
                                     Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged,
