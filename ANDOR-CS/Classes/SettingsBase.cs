@@ -38,6 +38,7 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
 using ANDOR_CS.Attributes;
 using FITS_CS;
+using SettingsManager;
 
 // ReSharper disable InconsistentNaming
 #pragma warning disable 1591
@@ -719,6 +720,50 @@ namespace ANDOR_CS.Classes
             else
                 return false;
         
+        }
+
+        public virtual HashSet<string> AllowedSettings()
+        {
+            if (SettingsProvider.Settings.TryGet("AllowedSettingsPath", out string pathStr))
+            {
+                var path = Path.GetFullPath(pathStr);
+                using (var str = new StreamReader(path))
+                {
+                    var setts = new JsonSettings(str.ReadToEnd());
+                    var allowedItems = setts.GetArray<string>("AllowedSettings");
+
+                    return new HashSet<string>(allowedItems.Select(x => x.ToLowerInvariant()));
+                }
+            }
+            return new HashSet<string>(SerializedProperties.Select(x => x.Name.ToLowerInvariant()));
+        }
+
+        public virtual HashSet<string> SupportedSettings()
+        {
+            var settings = new HashSet<string>();
+
+            if(Camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed))
+				settings.Add(nameof(VSSpeed).ToLowerInvariant());
+            if(Camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) )
+				settings.Add(nameof(VSAmplitude).ToLowerInvariant());
+            if(Camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) )
+				settings.Add(nameof(HSSpeed).ToLowerInvariant());
+            if(Camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain) )
+				settings.Add(nameof(PreAmpGain).ToLowerInvariant());
+            if(Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) )
+				settings.Add(nameof(EMCCDGain).ToLowerInvariant());
+
+            // TODO: Check individual support of these features
+            settings.Add(nameof(ADConverter).ToLowerInvariant());
+            settings.Add(nameof(OutputAmplifier).ToLowerInvariant());
+            settings.Add(nameof(AcquisitionMode).ToLowerInvariant());
+            settings.Add("frametransfer");
+            settings.Add(nameof(ReadoutMode).ToLowerInvariant());
+            settings.Add(nameof(TriggerMode).ToLowerInvariant());
+            settings.Add(nameof(ExposureTime).ToLowerInvariant());
+            settings.Add(nameof(ImageArea).ToLowerInvariant());
+
+            return settings;
         }
 
         public abstract bool IsHSSpeedSupported(
