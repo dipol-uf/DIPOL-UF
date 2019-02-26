@@ -371,6 +371,9 @@
     <value>{0:g7}</value>
     <comment>Nonlocalized general resource</comment>
   </data>
+  <data name="Validation_CannotBeDefault" xml:space="preserve">
+    <value>Default value is illegal.</value>
+  </data>
   <data name="Validation_ValueCannotBeGreaterThan" xml:space="preserve">
     <value>Value cannot be greater than {0}</value>
   </data>
