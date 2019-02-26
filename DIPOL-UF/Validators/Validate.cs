@@ -88,7 +88,7 @@ namespace DIPOL_UF.Validators
         }
 
         public static string CannotBeDefault<T>(T value, T @default)
-            => Equals(value, @default)
+          => Equals(value, @default)
                 ? Properties.Localization.Validation_CannotBeDefault
                 : null;
     }
