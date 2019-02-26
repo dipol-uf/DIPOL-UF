@@ -48,6 +48,8 @@ namespace DIPOL_UF.ViewModels
         {
             public bool VsSpeed { [ObservableAsProperty] get; }
             public bool VsAmplitude { [ObservableAsProperty] get; }
+            public bool AdcBitDepth { [ObservableAsProperty] get; }
+
         }
 
         private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
@@ -576,24 +578,25 @@ namespace DIPOL_UF.ViewModels
 
         private void AttachSetters()
         {
-            this.WhenPropertyChanged(x => x.VsSpeed)
-                .Select(x => x.Value)
-                .Where(x => x >= 0)
-                .Subscribe(x => Model.Object.SetVSSpeed(x))
-                .DisposeWith(_subscriptions);
+
         }
 
         private void WatchAvailableSettings()
         {
             Observable.Return(
-                    AllowedSettings.Contains(nameof(VsSpeed).ToLowerInvariant())
-                    && SupportedSettings.Contains(nameof(VsSpeed).ToLowerInvariant()))
+                    AllowedSettings.Contains(nameof(Model.Object.VSSpeed).ToLowerInvariant())
+                    && SupportedSettings.Contains(nameof(Model.Object.VSSpeed).ToLowerInvariant()))
                 .ToPropertyEx(IsAvailable, x => x.VsSpeed);
 
             Observable.Return(
-                    AllowedSettings.Contains(nameof(VsAmplitude).ToLowerInvariant())
-                    && SupportedSettings.Contains(nameof(VsAmplitude).ToLowerInvariant()))
+                    AllowedSettings.Contains(nameof(Model.Object.VSAmplitude).ToLowerInvariant())
+                    && SupportedSettings.Contains(nameof(Model.Object.VSAmplitude).ToLowerInvariant()))
                 .ToPropertyEx(IsAvailable, x => x.VsAmplitude);
+
+            Observable.Return(
+                          AllowedSettings.Contains(nameof(Model.Object.ADConverter).ToLowerInvariant())
+                          && SupportedSettings.Contains(nameof(Model.Object.ADConverter).ToLowerInvariant()))
+                      .ToPropertyEx(IsAvailable, x => x.AdcBitDepth);
         }
 
         protected override void HookValidators()
@@ -602,9 +605,19 @@ namespace DIPOL_UF.ViewModels
 
             CreateValidator(
                 this.WhenPropertyChanged(x => x.VsSpeed)
+                    .Where(x => x.Value >= 0)
                     .Select(x =>
                         (Type: nameof(Validators.Validate.DoesNotThrow),
                             Message: Validators.Validate.DoesNotThrow(Model.Object.SetVSSpeed, x.Value))), nameof(VsSpeed));
+
+            // ReSharper disable once PossibleInvalidOperationException
+            CreateValidator(
+                this.WhenPropertyChanged(x => x.VsAmplitude)
+                    .Where(x => x.Value.HasValue)
+                    .Select(x =>
+                        (Type: nameof(Validators.Validate.DoesNotThrow),
+                            Message: Validators.Validate.DoesNotThrow(Model.Object.SetVSAmplitude, x.Value.Value))),
+                nameof(VsAmplitude));
         }
         
         private void InitializeAllowedSettings()
@@ -907,7 +920,7 @@ namespace DIPOL_UF.ViewModels
         public int VsSpeed { get; set; }
 
         [Reactive]
-        public int VsAmplitude { get; set; } 
+        public VSAmplitude? VsAmplitude { get; set; } 
 
         [Reactive]
         public int AdcBitDepth { get; set; }
