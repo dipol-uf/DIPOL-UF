@@ -581,6 +581,7 @@ namespace DIPOL_UF.ViewModels
             
             InitializeCommands();
 
+            WatchItemSources();
             HookObservables();
             HookValidators();
 
@@ -628,7 +629,9 @@ namespace DIPOL_UF.ViewModels
             CreateSetter(x => x.VsSpeed, y => y >= 0, z => z, Model.Object.SetVSSpeed);
             CreateSetter(x => x.VsAmplitude, y => y.HasValue, z => z.Value, Model.Object.SetVSAmplitude);
             CreateSetter(x => x.AdcBitDepth, y => y >= 0, z => z, Model.Object.SetADConverter);
-            CreateSetter(x => x.Amplifier, y => y.HasValue, y => y.Value, Model.Object.SetOutputAmplifier);
+            CreateSetter(x => x.Amplifier, y => y.HasValue, z => z.Value, Model.Object.SetOutputAmplifier);
+            CreateSetter(x => x.HsSpeed, y => y >= 0 && y < AvailableHsSpeeds.Count,
+                z => z, Model.Object.SetHSSpeed);
             // ReSharper restore PossibleInvalidOperationException
         }
 
@@ -649,6 +652,7 @@ namespace DIPOL_UF.ViewModels
             CreateGetter(x => x.VSAmplitude, y => y, z => z.VsAmplitude);
             CreateGetter(x => x.ADConverter, y => y?.Index ?? -1, z => z.AdcBitDepth);
             CreateGetter(x => x.OutputAmplifier, y => y?.OutputAmplifier, z => z.Amplifier);
+            CreateGetter(x => x.HSSpeed, y => y?.Index ?? -1, z => z.HsSpeed);
         }
 
         private void WatchAvailableSettings()
@@ -666,16 +670,36 @@ namespace DIPOL_UF.ViewModels
             ImmutableAvailability(nameof(Model.Object.VSAmplitude), x => x.VsAmplitude);
             ImmutableAvailability(nameof(Model.Object.ADConverter), x => x.AdcBitDepth);
             ImmutableAvailability(nameof(Model.Object.OutputAmplifier), x=> x.Amplifier);
-            ImmutableAvailability(nameof(Model.Object.HSSpeed), x => x.HsSpeed);
 
+            this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
+                .Where(x =>
+                {
+                    var name = nameof(HsSpeed).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && x.AdcBitDepth >= 0
+                           && Amplifier.HasValue;
+
+                })
+                .BindTo(IsAvailable, x => x.HsSpeed)
+                .DisposeWith(Subscriptions);
+
+        }
+
+        private void WatchItemSources()
+        {
+            // Watches ADConverter & Amplifier and updates HsSpeeds
             Model.Object.WhenAnyPropertyChanged(
-                     nameof(Model.Object.ADConverter), 
+                     nameof(Model.Object.ADConverter),
                      nameof(Model.Object.OutputAmplifier))
                  .Where(x => x.ADConverter.HasValue && x.OutputAmplifier.HasValue)
                  .Select(x => x.GetAvailableHSSpeeds(x.ADConverter?.Index ?? -1, x.OutputAmplifier?.Index ?? -1))
-                 .Subscribe(x => { _availableHsSpeeds.Edit(context => context.Load(x)); })
+                 .Subscribe(x =>
+                 {
+                     HsSpeed = -1;
+                     _availableHsSpeeds.Edit(context => context.Load(x));
+                 })
                  .DisposeWith(Subscriptions);
-
         }
 
         protected override void HookValidators()
@@ -709,14 +733,12 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.VsAmplitude, null);
             DefaultValueValidator(x => x.AdcBitDepth, -1);
             DefaultValueValidator(x => x.Amplifier, null);
+            DefaultValueValidator(x => x.HsSpeed, -1);
+
         }
 
         private void InitializeAllowedSettings()
         {
-            
-
-            //new KeyValuePair<string, bool>(nameof(model.ADConverter), true),
-            //new KeyValuePair<string, bool>(nameof(model.OutputAmplifier), true),
             //new KeyValuePair<string, bool>(nameof(model.HSSpeed),
             //    ADConverterIndex >= 0
             //    && OutputAmplifierIndex >= 0),
@@ -724,16 +746,9 @@ namespace DIPOL_UF.ViewModels
             //    ADConverterIndex >= 0
             //    && OutputAmplifierIndex >= 0
             //    && HSSpeedIndex >= 0),
-            //new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true),
-            //new KeyValuePair<string, bool>(nameof(FrameTransferValue), false),
-            //new KeyValuePair<string, bool>(nameof(model.ReadoutMode), true),
-            //new KeyValuePair<string, bool>(nameof(model.TriggerMode), true),
-            //new KeyValuePair<string, bool>(nameof(model.ExposureTime), true),
             //new KeyValuePair<string, bool>(nameof(model.EMCCDGain),
             //    (OutputAmplifierIndex >= 0)
             //    && Camera.Properties.OutputAmplifiers[OutputAmplifierIndex].OutputAmplifier == OutputAmplification.Conventional),
-            //new KeyValuePair<string, bool>(nameof(model.ImageArea), true)
-            //};
 
         }
 
@@ -1017,7 +1032,7 @@ namespace DIPOL_UF.ViewModels
         public OutputAmplification? Amplifier { get; set; }
 
         [Reactive]
-        public (int Index, float Speed) HsSpeed { get; set; }
+        public int HsSpeed { get; set; } = -1;
 
         [Reactive]
         public int PreAmpGain { get; set; }
