@@ -16,10 +16,10 @@ namespace DIPOL_UF
 {
     public abstract class ReactiveObjectEx : ReactiveObject, INotifyDataErrorInfo, IDisposable
     {
-        internal readonly ValidationErrorsCache _validationErrors =
+        internal readonly ValidationErrorsCache ValidationErrors =
             new ValidationErrorsCache(x => (x.Property, x.Type));
 
-        protected  readonly  CompositeDisposable _subscriptions = new CompositeDisposable();
+        protected  readonly  CompositeDisposable Subscriptions = new CompositeDisposable();
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
@@ -31,7 +31,7 @@ namespace DIPOL_UF
 
         public IObservable<DataErrorsChangedEventArgs> WhenErrorsChanged { get; private set; }
         public bool IsDisposed { get; private set; }
-        public bool HasErrors => _validationErrors?.Items.Any(x => !(x.Message is null)) ?? false;
+        public bool HasErrors => ValidationErrors?.Items.Any(x => !(x.Message is null)) ?? false;
         public IObservable<bool> ObserveHasErrors { get; private set; }
 
         internal ReactiveObjectEx()
@@ -42,11 +42,11 @@ namespace DIPOL_UF
 #endif
         }
         
-        private void UpdateErrors(string error, string propertyName, string validatorName)
+        protected void UpdateErrors(string error, string propertyName, string validatorName)
         {
             this.RaisePropertyChanging(nameof(HasErrors));
             
-            _validationErrors.Edit(context =>
+            ValidationErrors.Edit(context =>
             {
                 context.AddOrUpdate((propertyName, validatorName, error));
             });
@@ -57,7 +57,7 @@ namespace DIPOL_UF
         {
             validationSource
                 .Subscribe(x => UpdateErrors(x.Message, propertyName, x.Type))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
         }
 
         protected virtual void OnErrorsChanged(DataErrorsChangedEventArgs e) =>
@@ -67,13 +67,13 @@ namespace DIPOL_UF
         {
 
             WhenErrorsChangedTyped =
-                _validationErrors.Connect()
+                ValidationErrors.Connect()
                                  .Select(x => Observable.For(x, y => Observable.Return(y.Current)))
                                  .Merge()
                                  .DistinctUntilChanged();
 
             WhenErrorsChanged =
-                _validationErrors.Connect()
+                ValidationErrors.Connect()
                                  .Select(x =>
                                      x.Select(y => (y.Current.Property, y.Current.Message)).ToList())
                                  .Select(x => Observable.For(x, Observable.Return))
@@ -83,11 +83,11 @@ namespace DIPOL_UF
 
             WhenErrorsChanged
                 .Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             WhenErrorsChanged
                 .Subscribe(OnErrorsChanged)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             ObserveHasErrors = WhenErrorsChanged.Select(_ => HasErrors);
 
@@ -101,7 +101,7 @@ namespace DIPOL_UF
             => source.WhenPropertyChanged(srcSelector)
                      .Select(x => x.Value)
                      .BindTo(target, trgtSelector)
-                     .DisposeWith(_subscriptions);
+                     .DisposeWith(Subscriptions);
 
         protected virtual void ToPropertyEx<TSource, TTarget, TProperty>(
             TSource source, Expression<Func<TSource, TProperty>> srcSelector,
@@ -112,7 +112,7 @@ namespace DIPOL_UF
             => source.WhenPropertyChanged(srcSelector)
                      .Select(x => x.Value)
                      .ToPropertyEx(target, trgtSelector, initialValue)
-                     .DisposeWith(_subscriptions);
+                     .DisposeWith(Subscriptions);
 
         protected virtual void Dispose(bool disposing)
         {
@@ -120,10 +120,10 @@ namespace DIPOL_UF
             {
                 if (disposing)
                 {
-                    if (!_subscriptions.IsDisposed)
-                        _subscriptions.Dispose();
+                    if (!Subscriptions.IsDisposed)
+                        Subscriptions.Dispose();
 
-                    _validationErrors.Dispose();
+                    ValidationErrors.Dispose();
 
 #if DEBUG
                     Helper.WriteLog($"{GetType()}: Disposed");
@@ -140,7 +140,7 @@ namespace DIPOL_UF
 
         public virtual List<(string Type, string Message)> GetTypedErrors(string propertyName)
         {
-            return _validationErrors.Items
+            return ValidationErrors.Items
                                     .Where(x => x.Property == propertyName)
                                     .Select(x => (x.Type, x.Message))
                                     .ToList();
@@ -148,13 +148,13 @@ namespace DIPOL_UF
 
         public virtual IEnumerable GetErrors(string propertyName)
         {
-            return _validationErrors.Items
+            return ValidationErrors.Items
                                     .Where(x => x.Property == propertyName && !(x.Message is null))
                                     .Select(x => x.Message);
         }
 
         public virtual bool HasSpecificErrors(string propertyName)
-            => _validationErrors?.Items.Any(x => x.Property == propertyName && !(x.Message is null)) ?? false;
+            => ValidationErrors?.Items.Any(x => x.Property == propertyName && !(x.Message is null)) ?? false;
         
         public void Dispose()
         {

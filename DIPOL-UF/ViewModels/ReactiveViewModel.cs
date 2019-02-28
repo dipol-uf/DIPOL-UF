@@ -52,7 +52,7 @@ namespace DIPOL_UF.ViewModels
                  .Select(x => x.Value)
                  .ObserveOnUi()
                  .ToPropertyEx(@this, targetProperty)
-                 .DisposeWith(@this._subscriptions);
+                 .DisposeWith(@this.Subscriptions);
 
             if (withErrors)
             {
@@ -74,7 +74,7 @@ namespace DIPOL_UF.ViewModels
                      .Select(converter)
                      .ObserveOnUi()
                      .ToPropertyEx(@this, targetProperty)
-                     .DisposeWith(@this._subscriptions);
+                     .DisposeWith(@this.Subscriptions);
 
                  if(!(validationSource is null))
                      @this.CreateValidator(

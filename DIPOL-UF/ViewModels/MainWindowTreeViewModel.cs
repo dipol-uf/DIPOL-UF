@@ -40,7 +40,7 @@ namespace DIPOL_UF.ViewModels
                       .Bind(CameraList)
                       .DisposeMany()
                       .Subscribe()
-                      .DisposeWith(_subscriptions);
+                      .DisposeWith(Subscriptions);
         }
     }
 }

@@ -46,14 +46,14 @@ namespace DIPOL_UF.ViewModels
         {
             modelSource.ObserveOnUi()
                        .Subscribe(x => ViewRequested?.Invoke(this, new PropagatingEventArgs(x)))
-                       .DisposeWith(_subscriptions);
+                       .DisposeWith(Subscriptions);
 
             closingSource.ObserveOnUi()
                          .Subscribe(x => ClosingRequested?.Invoke(this, new EventArgs()))
-                         .DisposeWith(_subscriptions);
+                         .DisposeWith(Subscriptions);
 
 
-            ViewFinished = ReactiveViewModelBase.DisposeFromViewCallbackCommand(_subscriptions);
+            ViewFinished = ReactiveViewModelBase.DisposeFromViewCallbackCommand(Subscriptions);
         }
 
         public DescendantProxy(DescendantProvider provider,
@@ -69,29 +69,29 @@ namespace DIPOL_UF.ViewModels
                     .ObserveOnUi()
                     .Subscribe(x => 
                         ViewRequested?.Invoke(this, new PropagatingEventArgs(constructor(x))))
-                    .DisposeWith(_subscriptions);
+                    .DisposeWith(Subscriptions);
 
             provider.ClosingRequested
                     ?.ObserveOnUi()
                     .Subscribe(x => ClosingRequested?.Invoke(this, EventArgs.Empty))
-                    .DisposeWith(_subscriptions);
+                    .DisposeWith(Subscriptions);
 
             var shownCmd = ReactiveCommand.Create<Unit>(_ => { })
-                                          .DisposeWith(_subscriptions);
+                                          .DisposeWith(Subscriptions);
 
             WindowShown = shownCmd;
                 
 
             var finishedCmd = ReactiveViewModelBase
-                .DisposeFromViewCallbackCommand(_subscriptions);
+                .DisposeFromViewCallbackCommand(Subscriptions);
 
             ViewFinished = finishedCmd;
 
             if (!(provider.ViewFinished is null))
-                finishedCmd.InvokeCommand(provider.ViewFinished).DisposeWith(_subscriptions);
+                finishedCmd.InvokeCommand(provider.ViewFinished).DisposeWith(Subscriptions);
 
             if (!(provider.WindowShown is null))
-                shownCmd.InvokeCommand(provider.WindowShown).DisposeWith(_subscriptions);
+                shownCmd.InvokeCommand(provider.WindowShown).DisposeWith(Subscriptions);
         }
     }
 

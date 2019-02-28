@@ -126,32 +126,32 @@ namespace DIPOL_UF.Models
                                    },
                                    Observable.Return(
                                        Camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature)))
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             FanCommand =
                 ReactiveCommand.Create<FanMode>(
                                    Camera.FanControl,
                                    Observable.Return(
                                        Camera.Capabilities.Features.HasFlag(SdkFeatures.FanControl)))
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             InternalShutterCommand =
                 ReactiveCommand.Create<ShutterMode>(
                                    x => Camera.ShutterControl(
                                        x, Camera.Shutter.External ?? ShutterMode.FullyAuto),
                                    Observable.Return(CanControlShutter.Internal))
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
            ExternalShutterCommand =
                 ReactiveCommand.Create<ShutterMode>(
                                    x => Camera.ShutterControl(
                                        Camera.Shutter.Internal, x),
                                    Observable.Return(CanControlShutter.External))
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
            SetUpAcquisitionCommand =
                ReactiveCommand.Create<Unit, object>(x => x)
-                              .DisposeWith(_subscriptions);
+                              .DisposeWith(Subscriptions);
 
            AcquisitionSettingsWindow = new DescendantProvider(
                    ReactiveCommand.Create<object, ReactiveObjectEx>(
@@ -159,9 +159,9 @@ namespace DIPOL_UF.Models
                    ReactiveCommand.Create<Unit>(_ => { }),
                    ReactiveCommand.Create<Unit>(_ => { }),
                    ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
-               .DisposeWith(_subscriptions);
+               .DisposeWith(Subscriptions);
 
-            SetUpAcquisitionCommand.InvokeCommand(AcquisitionSettingsWindow.ViewRequested).DisposeWith(_subscriptions);
+            SetUpAcquisitionCommand.InvokeCommand(AcquisitionSettingsWindow.ViewRequested).DisposeWith(Subscriptions);
 
         }
 

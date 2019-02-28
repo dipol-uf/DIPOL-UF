@@ -55,7 +55,7 @@ namespace DIPOL_UF.ViewModels
                       .DistinctUntilChanged()
                       .ObserveOnUi()
                       .ToPropertyEx(this, x => x.IsSelected)
-                      .DisposeWith(_subscriptions);
+                      .DisposeWith(Subscriptions);
 
             new[] {new MenuItemViewModel(
                     Localization.Menu_MainWindow_CameraProperties, 
@@ -64,7 +64,7 @@ namespace DIPOL_UF.ViewModels
                 .DisposeMany()
                 .Bind(ContextMenu)
                 .Subscribe(new AnonymousObserver<IChangeSet<MenuItemViewModel>>(_ => { }))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
         }
 
@@ -80,20 +80,20 @@ namespace DIPOL_UF.ViewModels
 
             tempObs.Select(x => x.EventArgs.Temperature)
                    .ToPropertyEx(this, x => x.Temperature)
-                   .DisposeWith(_subscriptions);
+                   .DisposeWith(Subscriptions);
 
             tempObs.Select(x => x.EventArgs.Status)
                    .ToPropertyEx(this, 
                        x => x.TempStatus,
                        TemperatureStatus.Off)
-                   .DisposeWith(_subscriptions);
+                   .DisposeWith(Subscriptions);
             
             _model.WhenPropertyChanged(x => x.FanMode).Select(x => x.Value)
                   .ObserveOnUi()
                   .ToPropertyEx(this, 
                       x => x.FanMode, 
                       FanMode.Off)
-                  .DisposeWith(_subscriptions);
+                  .DisposeWith(Subscriptions);
         }
     }
 }

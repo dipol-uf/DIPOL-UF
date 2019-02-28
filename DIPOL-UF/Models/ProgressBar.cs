@@ -62,7 +62,7 @@ namespace DIPOL_UF.Models
             WindowDragCommand =
                 ReactiveCommand.Create<Window>(
                                    Commands.WindowDragCommandProvider.Execute)
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
             CancelCommand =
                 ReactiveCommand.Create<Window>(param =>
                                {
@@ -73,7 +73,7 @@ namespace DIPOL_UF.Models
                                }, this.WhenAnyPropertyChanged(nameof(CanAbort), nameof(IsAborted))
                                       .Select(x => x.CanAbort && !x.IsAborted)
                                       .ObserveOnUi())
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
         }
 
         private void HookObservers()
@@ -89,7 +89,7 @@ namespace DIPOL_UF.Models
             this.WhenAnyPropertyChanged(nameof(IsIndeterminate))
                 .DistinctUntilChanged()
                 .Subscribe(x => Reset())
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
         }
 
         protected sealed override void HookValidators()

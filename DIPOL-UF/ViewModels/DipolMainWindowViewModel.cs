@@ -35,12 +35,12 @@ namespace DIPOL_UF.ViewModels
             ProgressBarProxy = new DescendantProxy(
                 Model.ProgressBarProvider,
                 x => new ProgressBarViewModel((ProgressBar)x))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
                 
             AvailableCamerasProxy = new DescendantProxy(
                 Model.AvailableCamerasProvider,
                 x => new AvailableCamerasViewModel((AvailableCamerasModel)x))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             HookObservables();
             HookValidators();
@@ -52,7 +52,7 @@ namespace DIPOL_UF.ViewModels
                  .Select(x => x != 0)
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.AnyCameraConnected)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             Model.SelectedDevices.CountChanged
                  .CombineLatest(
@@ -65,7 +65,7 @@ namespace DIPOL_UF.ViewModels
                                  : new bool?(true))
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.AllCamerasSelected)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
 
             Model.ConnectedCameras.Connect()
@@ -79,7 +79,7 @@ namespace DIPOL_UF.ViewModels
                  .Bind(CameraPanel)
                  .DisposeMany()
                  .Subscribe()
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             Model.CameraTabs.Connect()
                  .ObserveOnUi()
@@ -87,7 +87,7 @@ namespace DIPOL_UF.ViewModels
                  .Bind(CameraTabs)
                  .DisposeMany()
                  .Subscribe()
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
         }
     }
