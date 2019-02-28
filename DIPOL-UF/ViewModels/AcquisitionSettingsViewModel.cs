@@ -47,6 +47,7 @@ using ReactiveUI.Fody.Helpers;
 
 using static DIPOL_UF.Validators.Validate;
 using EnumConverter = ANDOR_CS.Classes.EnumConverter;
+// ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace DIPOL_UF.ViewModels
 {
@@ -69,8 +70,8 @@ namespace DIPOL_UF.ViewModels
             .Select(pi => (PropNameTrimmer.Replace(pi.Name, ""), pi))
             .ToList();
 
-        private SourceCache<float, float> _availableHsSpeeds
-            = new SourceCache<float, float>(x => x);
+        private readonly SourceCache<(int Index, float Speed), int> _availableHsSpeeds
+            = new SourceCache<(int Index, float Speed), int>(x => x.Index);
 
 
         public SettingsAvailability IsAvailable { get; }
@@ -124,7 +125,7 @@ namespace DIPOL_UF.ViewModels
             .Where(EnumConverter.IsTriggerModeSupported)
             .ToArray();
 
-        public (int Index, float Speed)[] AvailableHSSpeeds { [ObservableAsProperty] get; }
+        public IObservableCollection<(int Index, float Speed)> AvailableHsSpeeds { [ObservableAsProperty] get; }
 
         public (int Index, string Name)[] AvailablePreAmpGains { [ObservableAsProperty] get; }
         //(ADConverterIndex < 0 || OutputAmplifierIndex < 0)
@@ -564,7 +565,12 @@ namespace DIPOL_UF.ViewModels
             Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
                           x => Model.Object.PropertyChanged += x,
                           x => Model.Object.PropertyChanged -= x)
-                      .Select(x => x.EventArgs.PropertyName)
+                      .Select(x =>
+                      {
+                          var name = x.EventArgs.PropertyName;
+                          var val = x.Sender.GetType().GetProperty(name)?.GetValue(x.Sender);
+                          return $"{name}\t{val?.ToString()}";
+                      })
                       .LogObservable("SETTINGS", Subscriptions);
 #endif
             SupportedSettings = Model.Object.SupportedSettings();
@@ -583,6 +589,11 @@ namespace DIPOL_UF.ViewModels
         {
             AttachAccessors();
             WatchAvailableSettings();
+
+            _availableHsSpeeds
+                .Connect()
+                .ObserveOnUi().Bind(AvailableHsSpeeds)
+                .SubscribeDispose(Subscriptions);
         }
 
         private void AttachAccessors()
@@ -654,6 +665,14 @@ namespace DIPOL_UF.ViewModels
             ImmutableAvailability(nameof(Model.Object.ADConverter), x => x.AdcBitDepth);
             ImmutableAvailability(nameof(Model.Object.OutputAmplifier), x=> x.Amplifier);
             ImmutableAvailability(nameof(Model.Object.HSSpeed), x => x.HsSpeed);
+
+            Model.Object.WhenAnyPropertyChanged(
+                     nameof(Model.Object.ADConverter), 
+                     nameof(Model.Object.OutputAmplifier))
+                 .Where(x => x.ADConverter.HasValue && x.OutputAmplifier.HasValue)
+                 .Select(x => x.GetAvailableHSSpeeds(x.ADConverter?.Index ?? -1, x.OutputAmplifier?.Index ?? -1))
+                 .Subscribe(x => { _availableHsSpeeds.Edit(context => context.Load(x)); })
+                 .DisposeWith(Subscriptions);
 
         }
 
@@ -998,7 +1017,7 @@ namespace DIPOL_UF.ViewModels
         public OutputAmplification? Amplifier { get; set; }
 
         [Reactive]
-        public int HsSpeed { get; set; }
+        public (int Index, float Speed) HsSpeed { get; set; }
 
         [Reactive]
         public int PreAmpGain { get; set; }
