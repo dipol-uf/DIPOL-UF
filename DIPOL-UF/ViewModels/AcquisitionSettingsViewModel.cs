@@ -38,6 +38,7 @@ using System.Windows.Input;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Commands;
+using DIPOL_UF.Properties;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -568,27 +569,56 @@ namespace DIPOL_UF.ViewModels
 
         private void HookObservables()
         {
-            AttachGetters();
-            AttachSetters();
+            AttachAccessors();
 
             this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
                 .Select(_ => Model.Object.GetAvailableHSSpeeds().ToArray())
                 .ToPropertyEx(this, x => x.AvailableHSSpeeds)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
         }
 
-        private void AttachGetters()
+        private void AttachAccessors()
         {
-            Model.Object.WhenPropertyChanged(x => x.VSSpeed)
-                 .Select(x => x.Value?.Index ?? -1)
-                 .BindTo(this, x => x.VsSpeed)
-                 .DisposeWith(_subscriptions);
+            AttachGetters();
+            AttachSetters();
+           
         }
 
         private void AttachSetters()
         {
+            void CreateSetter<TSrc, TTarget>(
+                Expression<Func<AcquisitionSettingsViewModel, TSrc>> sourceAccessor,
+                Func<TSrc, TTarget> selector,
+                Action<TTarget> setter)
+            {
+                var name = (sourceAccessor.Body as MemberExpression)?.Member?.Name
+                           ?? throw new ArgumentException("The accessor expression format is not supported.",
+                               nameof(sourceAccessor));
 
+                this.WhenPropertyChanged(sourceAccessor)
+                    .DistinctUntilChanged(x => x.Value)
+                    .Select(x => DoesNotThrow(setter, selector(x.Value)))
+                    .Subscribe(x => UpdateErrors(x, name, nameof(DoesNotThrow)))
+                    .DisposeWith(Subscriptions);
+            }
+
+            CreateSetter(x => x.VsSpeed, x => x, Model.Object.SetVSSpeed);
+        }
+
+        private void AttachGetters()
+        {
+            void CreateGetter<TSrc, TTarget>(
+                Expression<Func<SettingsBase, TSrc>> sourceAccessor,
+                Func<TSrc, TTarget> selector,
+                Expression<Func<AcquisitionSettingsViewModel, TTarget>> targetAccessor)
+                => Model.Object.WhenPropertyChanged(sourceAccessor)
+                        .Select(x => selector(x.Value))
+                        .DistinctUntilChanged()
+                        .BindTo(this, targetAccessor)
+                        .DisposeWith(Subscriptions);
+
+            CreateGetter(x => x.VSSpeed, y => y?.Index ?? -1, z => z.VsSpeed);
         }
 
         private void WatchAvailableSettings()
@@ -599,7 +629,7 @@ namespace DIPOL_UF.ViewModels
                 var lwrName = srcProperty.ToLowerInvariant();
                 Observable.Return(AllowedSettings.Contains(lwrName) && SupportedSettings.Contains(lwrName))
                           .ToPropertyEx(IsAvailable, accessor)
-                          .DisposeWith(_subscriptions);
+                          .DisposeWith(Subscriptions);
             }
             
             ImmutableAvailability(nameof(Model.Object.VSSpeed), x => x.VsSpeed);
@@ -615,7 +645,7 @@ namespace DIPOL_UF.ViewModels
             base.HookValidators();
 
             SetUpDefaultValueValidators();
-            SetUpApplicationValidators();
+            //SetUpApplicationValidators();
             
         }
 
@@ -644,34 +674,34 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.Amplifier, null);
         }
 
-        private void SetUpApplicationValidators()
-        {
-            void SettingsApplicationValidator<TSrc, TParam>(
-                Expression<Func<AcquisitionSettingsViewModel, TSrc>> accessor,
-                Func<TSrc, bool> condition,
-                Func<TSrc, TParam> selector,
-                Action<TParam> setter)
-            {
-                var name = (accessor.Body as MemberExpression)?.Member.Name
-                           ?? throw new ArgumentException(@"Only member access expressions are supported.",
-                               nameof(accessor));
+        //private void SetUpApplicationValidators()
+        //{
+        //    void SettingsApplicationValidator<TSrc, TParam>(
+        //        Expression<Func<AcquisitionSettingsViewModel, TSrc>> accessor,
+        //        Func<TSrc, bool> condition,
+        //        Func<TSrc, TParam> selector,
+        //        Action<TParam> setter)
+        //    {
+        //        var name = (accessor.Body as MemberExpression)?.Member.Name
+        //                   ?? throw new ArgumentException(@"Only member access expressions are supported.",
+        //                       nameof(accessor));
 
-                CreateValidator(
-                    this.WhenPropertyChanged(accessor)
-                        .Where(x => condition(x.Value))
-                        .Select(x =>
-                            (Type: nameof(DoesNotThrow),
-                                Message: DoesNotThrow(setter, selector(x.Value)))),
-                    name);
-            }
+        //        CreateValidator(
+        //            this.WhenPropertyChanged(accessor)
+        //                .Where(x => condition(x.Value))
+        //                .Select(x =>
+        //                    (Type: nameof(DoesNotThrow),
+        //                        Message: DoesNotThrow(setter, selector(x.Value)))),
+        //            name);
+        //    }
             
-            // ReSharper disable PossibleInvalidOperationException
-            SettingsApplicationValidator(x => x.VsSpeed, x => x >= 0, x => x, Model.Object.SetVSSpeed);
-            SettingsApplicationValidator(x => x.VsAmplitude, x => x.HasValue, x => x.Value, Model.Object.SetVSAmplitude);
-            SettingsApplicationValidator(x => x.AdcBitDepth, x=> x >= 0, x => x, Model.Object.SetADConverter);
-            SettingsApplicationValidator(x => x.Amplifier, x => x.HasValue, x => x.Value, Model.Object.SetOutputAmplifier);
-            // ReSharper restore PossibleInvalidOperationException
-        }
+        //    // ReSharper disable PossibleInvalidOperationException
+        //    SettingsApplicationValidator(x => x.VsSpeed, x => x >= 0, x => x, Model.Object.SetVSSpeed);
+        //    SettingsApplicationValidator(x => x.VsAmplitude, x => x.HasValue, x => x.Value, Model.Object.SetVSAmplitude);
+        //    SettingsApplicationValidator(x => x.AdcBitDepth, x=> x >= 0, x => x, Model.Object.SetADConverter);
+        //    SettingsApplicationValidator(x => x.Amplifier, x => x.HasValue, x => x.Value, Model.Object.SetOutputAmplifier);
+        //    // ReSharper restore PossibleInvalidOperationException
+        //}
 
         private void InitializeAllowedSettings()
         {
@@ -982,7 +1012,7 @@ namespace DIPOL_UF.ViewModels
         public OutputAmplification? Amplifier { get; set; }
 
         [Reactive]
-        public int HsSpeedIndex { get; set; }
+        public int HsSpeed { get; set; }
 
         [Reactive]
         public int PreAmpGain { get; set; }
