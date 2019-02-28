@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
@@ -125,7 +126,8 @@ namespace DIPOL_UF.ViewModels
             .Where(EnumConverter.IsTriggerModeSupported)
             .ToArray();
 
-        public IObservableCollection<(int Index, float Speed)> AvailableHsSpeeds { [ObservableAsProperty] get; }
+        public IObservableCollection<(int Index, float Speed)> AvailableHsSpeeds { get; }
+            = new ObservableCollectionExtended<(int Index, float Speed)>();
 
         public (int Index, string Name)[] AvailablePreAmpGains { [ObservableAsProperty] get; }
         //(ADConverterIndex < 0 || OutputAmplifierIndex < 0)
