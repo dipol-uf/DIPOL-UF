@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Windows.Media;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
@@ -187,5 +188,10 @@ namespace DIPOL_UF.Converters
             }
             throw new ArgumentException(string.Format(Localization.General_InvalidArgument, nameof(parameter)));
         }
+
+        public static object FieldAccessConversion(object src, string fieldName)
+            => src.GetType()
+                  .GetField(fieldName, BindingFlags.Public | BindingFlags.Instance)
+                  ?.GetValue(src);
     }
 }

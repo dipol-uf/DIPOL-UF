@@ -232,22 +232,22 @@
                                   ItemsSource="{Binding
                                     Path=AvailablePreAmpGains,
                                     Mode=OneWay,
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
-                                    ConverterParameter=Item2}"
+                                    UpdateSourceTrigger=PropertyChanged}"
                                   SelectedIndex="{Binding 
                                     PreAmpGain, 
                                     Mode=TwoWay, 
                                     UpdateSourceTrigger=PropertyChanged, 
                                     ValidatesOnNotifyDataErrors=True}"
-                                  Style="{StaticResource ComboBoxWithErrors}">
-                            <ComboBox.IsEnabled>
-                                <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                    <Binding Path="SupportedSettings[PreAmpGain]" Mode="OneTime"/>
-                                    <Binding Path="AllowedSettings[PreAmpGain]" 
-                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
-                                </MultiBinding>
-                            </ComboBox.IsEnabled>
+                                  Style="{StaticResource ComboBoxWithErrors}"
+                                  IsEnabled="{Binding IsAvailable.PreAmpGain}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="ComboBoxItem">
+                                    <ContentPresenter
+                                        Content ="{Binding 
+                                            Converter={StaticResource ValueTupleToValueConverter}, 
+                                            ConverterParameter=Item2}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
                         </ComboBox>
                         <!--Acquisition Mode-->
                         <ComboBox Grid.Row="7" Grid.Column="1"

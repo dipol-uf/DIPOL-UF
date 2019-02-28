@@ -62,6 +62,7 @@ namespace DIPOL_UF.ViewModels
             public bool AdcBitDepth { [ObservableAsProperty] get; }
             public bool Amplifier { [ObservableAsProperty] get; }
             public bool HsSpeed { [ObservableAsProperty] get; }
+            public bool PreAmpGain { [ObservableAsProperty] get; }
         }
 
         private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
@@ -75,6 +76,8 @@ namespace DIPOL_UF.ViewModels
         private readonly SourceCache<(int Index, float Speed), int> _availableHsSpeeds
             = new SourceCache<(int Index, float Speed), int>(x => x.Index);
 
+        private readonly  SourceCache<(int Index, string Name), int> _availablePreAmpGains
+            = new SourceCache<(int Index, string Name), int>(x => x.Index);
 
         public SettingsAvailability IsAvailable { get; }
             = new SettingsAvailability();
@@ -130,11 +133,8 @@ namespace DIPOL_UF.ViewModels
         public IObservableCollection<(int Index, float Speed)> AvailableHsSpeeds { get; }
             = new ObservableCollectionExtended<(int Index, float Speed)>();
 
-        public (int Index, string Name)[] AvailablePreAmpGains { [ObservableAsProperty] get; }
-        //(ADConverterIndex < 0 || OutputAmplifierIndex < 0)
-            //    ? null
-            //    : Model.Object.GetAvailableHSSpeeds(ADConverterIndex, OutputAmplifierIndex)
-            //           .ToArray();
+        public IObservableCollection<(int Index, string Name)> AvailablePreAmpGains { get; }
+            = new ObservableCollectionExtended<(int Index, string Name)>();
 
         //public (int Index, string Name)[] AvailablePreAmpGains =>
         //    (ADConverterIndex < 0 || OutputAmplifierIndex < 0 || HSSpeedIndex < 0)
@@ -599,6 +599,12 @@ namespace DIPOL_UF.ViewModels
                 .ObserveOnUi()
                 .Bind(AvailableHsSpeeds)
                 .SubscribeDispose(Subscriptions);
+
+            _availablePreAmpGains
+                .Connect()
+                .ObserveOnUi()
+                .Bind(AvailablePreAmpGains)
+                .SubscribeDispose(Subscriptions);
         }
 
         private void AttachAccessors()
@@ -634,6 +640,8 @@ namespace DIPOL_UF.ViewModels
             CreateSetter(x => x.Amplifier, y => y.HasValue, z => z.Value, Model.Object.SetOutputAmplifier);
             CreateSetter(x => x.HsSpeed, y => y >= 0 && y < AvailableHsSpeeds.Count,
                 z => z, Model.Object.SetHSSpeed);
+            CreateSetter(x => x.PreAmpGain, y => y >= 0 && y < AvailablePreAmpGains.Count,
+                z => z, Model.Object.SetPreAmpGain);
             // ReSharper restore PossibleInvalidOperationException
         }
 
@@ -655,6 +663,7 @@ namespace DIPOL_UF.ViewModels
             CreateGetter(x => x.ADConverter, y => y?.Index ?? -1, z => z.AdcBitDepth);
             CreateGetter(x => x.OutputAmplifier, y => y?.OutputAmplifier, z => z.Amplifier);
             CreateGetter(x => x.HSSpeed, y => y?.Index ?? -1, z => z.HsSpeed);
+            CreateGetter(x => x.PreAmpGain, y => y?.Index ?? -1, z => z.PreAmpGain);
         }
 
         private void WatchAvailableSettings()
@@ -677,7 +686,7 @@ namespace DIPOL_UF.ViewModels
             this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
                 .Select(x =>
                 {
-                    var name = nameof(HsSpeed).ToLowerInvariant();
+                    var name = nameof(Model.Object.HSSpeed).ToLowerInvariant();
                     return AllowedSettings.Contains(name)
                            && SupportedSettings.Contains(name)
                            && x.AdcBitDepth >= 0
@@ -685,6 +694,20 @@ namespace DIPOL_UF.ViewModels
 
                 })
                 .ToPropertyEx(IsAvailable, x => x.HsSpeed)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier), nameof(HsSpeed))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.PreAmpGain).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && x.AdcBitDepth >= 0
+                           && Amplifier.HasValue
+                           && HsSpeed >= 0;
+
+                })
+                .ToPropertyEx(IsAvailable, x => x.PreAmpGain)
                 .DisposeWith(Subscriptions);
 
         }
@@ -701,6 +724,26 @@ namespace DIPOL_UF.ViewModels
                  {
                      HsSpeed = -1;
                      _availableHsSpeeds.Edit(context => context.Load(x));
+                 })
+                 .DisposeWith(Subscriptions);
+
+            Model.Object.WhenAnyPropertyChanged(
+                     nameof(Model.Object.ADConverter),
+                     nameof(Model.Object.OutputAmplifier),
+                     nameof(Model.Object.HSSpeed))
+                 .Where(x =>
+                     x.ADConverter.HasValue
+                     && x.OutputAmplifier.HasValue
+                     && x.HSSpeed.HasValue)
+                 .Select(x =>
+                     x.GetAvailablePreAmpGain(
+                         x.ADConverter?.Index ?? -1,
+                         x.OutputAmplifier?.Index ?? -1,
+                         x.HSSpeed?.Index ?? -1))
+                 .Subscribe(x =>
+                 {
+                     PreAmpGain = -1;
+                     _availablePreAmpGains.Edit(context => context.Load(x));
                  })
                  .DisposeWith(Subscriptions);
         }
@@ -742,6 +785,7 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.AdcBitDepth, -1, y => y.AdcBitDepth);
             DefaultValueValidator(x => x.Amplifier, null, y => y.Amplifier);
             DefaultValueValidator(x => x.HsSpeed, -1, y => y.HsSpeed);
+            DefaultValueValidator(x => x.PreAmpGain, -1, y => y.PreAmpGain);
 
         }
 
