@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Text.RegularExpressions;
@@ -39,11 +40,13 @@ using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Commands;
 using DIPOL_UF.Properties;
+using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 using static DIPOL_UF.Validators.Validate;
+using EnumConverter = ANDOR_CS.Classes.EnumConverter;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -56,7 +59,6 @@ namespace DIPOL_UF.ViewModels
             public bool AdcBitDepth { [ObservableAsProperty] get; }
             public bool Amplifier { [ObservableAsProperty] get; }
             public bool HsSpeed { [ObservableAsProperty] get; }
-
         }
 
         private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
@@ -66,6 +68,9 @@ namespace DIPOL_UF.ViewModels
             .Where(pi => pi.CanRead && pi.CanWrite)
             .Select(pi => (PropNameTrimmer.Replace(pi.Name, ""), pi))
             .ToList();
+
+        private SourceCache<float, float> _availableHsSpeeds
+            = new SourceCache<float, float>(x => x);
 
 
         public SettingsAvailability IsAvailable { get; }
@@ -553,10 +558,19 @@ namespace DIPOL_UF.ViewModels
         //}
 
         public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model)
-            :base(model)
+            : base(model)
         {
+#if DEBUG
+            Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+                          x => Model.Object.PropertyChanged += x,
+                          x => Model.Object.PropertyChanged -= x)
+                      .LogObservable("SETTINGS", Subscriptions);
+#endif
             SupportedSettings = Model.Object.SupportedSettings();
-            InitializeAllowedSettings();
+            AllowedSettings = Model.Object.AllowedSettings();
+
+
+
 
 
             InitializeCommands();
@@ -565,30 +579,26 @@ namespace DIPOL_UF.ViewModels
             HookValidators();
 
             WatchAvailableSettings();
+
         }
 
         private void HookObservables()
         {
             AttachAccessors();
-
-            this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
-                .Select(_ => Model.Object.GetAvailableHSSpeeds().ToArray())
-                .ToPropertyEx(this, x => x.AvailableHSSpeeds)
-                .DisposeWith(Subscriptions);
-
+            WatchAvailableItems();
         }
 
         private void AttachAccessors()
         {
             AttachGetters();
             AttachSetters();
-           
         }
 
         private void AttachSetters()
         {
             void CreateSetter<TSrc, TTarget>(
                 Expression<Func<AcquisitionSettingsViewModel, TSrc>> sourceAccessor,
+                Func<TSrc, bool> condition,
                 Func<TSrc, TTarget> selector,
                 Action<TTarget> setter)
             {
@@ -598,12 +608,18 @@ namespace DIPOL_UF.ViewModels
 
                 this.WhenPropertyChanged(sourceAccessor)
                     .DistinctUntilChanged(x => x.Value)
+                    .Where(x => condition(x.Value))
                     .Select(x => DoesNotThrow(setter, selector(x.Value)))
                     .Subscribe(x => UpdateErrors(x, name, nameof(DoesNotThrow)))
                     .DisposeWith(Subscriptions);
             }
 
-            CreateSetter(x => x.VsSpeed, x => x, Model.Object.SetVSSpeed);
+            // ReSharper disable PossibleInvalidOperationException
+            CreateSetter(x => x.VsSpeed, y => y >= 0, z => z, Model.Object.SetVSSpeed);
+            CreateSetter(x => x.VsAmplitude, y => y.HasValue, z => z.Value, Model.Object.SetVSAmplitude);
+            CreateSetter(x => x.AdcBitDepth, y => y >= 0, z => z, Model.Object.SetADConverter);
+            CreateSetter(x => x.Amplifier, y => y.HasValue, y => y.Value, Model.Object.SetOutputAmplifier);
+            // ReSharper restore PossibleInvalidOperationException
         }
 
         private void AttachGetters()
@@ -619,8 +635,16 @@ namespace DIPOL_UF.ViewModels
                         .DisposeWith(Subscriptions);
 
             CreateGetter(x => x.VSSpeed, y => y?.Index ?? -1, z => z.VsSpeed);
+            CreateGetter(x => x.VSAmplitude, y => y, z => z.VsAmplitude);
+            CreateGetter(x => x.ADConverter, y => y?.Index ?? -1, z => z.AdcBitDepth);
+            CreateGetter(x => x.OutputAmplifier, y => y?.OutputAmplifier, z => z.Amplifier);
         }
 
+        private void WatchAvailableItems()
+        {
+
+        }
+        
         private void WatchAvailableSettings()
         {
             void ImmutableAvailability(string srcProperty,
@@ -645,7 +669,6 @@ namespace DIPOL_UF.ViewModels
             base.HookValidators();
 
             SetUpDefaultValueValidators();
-            //SetUpApplicationValidators();
             
         }
 
@@ -674,38 +697,8 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.Amplifier, null);
         }
 
-        //private void SetUpApplicationValidators()
-        //{
-        //    void SettingsApplicationValidator<TSrc, TParam>(
-        //        Expression<Func<AcquisitionSettingsViewModel, TSrc>> accessor,
-        //        Func<TSrc, bool> condition,
-        //        Func<TSrc, TParam> selector,
-        //        Action<TParam> setter)
-        //    {
-        //        var name = (accessor.Body as MemberExpression)?.Member.Name
-        //                   ?? throw new ArgumentException(@"Only member access expressions are supported.",
-        //                       nameof(accessor));
-
-        //        CreateValidator(
-        //            this.WhenPropertyChanged(accessor)
-        //                .Where(x => condition(x.Value))
-        //                .Select(x =>
-        //                    (Type: nameof(DoesNotThrow),
-        //                        Message: DoesNotThrow(setter, selector(x.Value)))),
-        //            name);
-        //    }
-            
-        //    // ReSharper disable PossibleInvalidOperationException
-        //    SettingsApplicationValidator(x => x.VsSpeed, x => x >= 0, x => x, Model.Object.SetVSSpeed);
-        //    SettingsApplicationValidator(x => x.VsAmplitude, x => x.HasValue, x => x.Value, Model.Object.SetVSAmplitude);
-        //    SettingsApplicationValidator(x => x.AdcBitDepth, x=> x >= 0, x => x, Model.Object.SetADConverter);
-        //    SettingsApplicationValidator(x => x.Amplifier, x => x.HasValue, x => x.Value, Model.Object.SetOutputAmplifier);
-        //    // ReSharper restore PossibleInvalidOperationException
-        //}
-
         private void InitializeAllowedSettings()
         {
-            AllowedSettings = Model.Object.AllowedSettings();
             
 
             //new KeyValuePair<string, bool>(nameof(model.ADConverter), true),
