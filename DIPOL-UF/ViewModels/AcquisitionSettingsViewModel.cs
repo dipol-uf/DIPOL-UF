@@ -1006,14 +1006,12 @@ namespace DIPOL_UF.ViewModels
 
         #region V2
 
-        [Reactive]
-        public int VsSpeed { get; set; }
+        [Reactive] public int VsSpeed { get; set; } = -1;
 
         [Reactive]
-        public VSAmplitude? VsAmplitude { get; set; } 
+        public VSAmplitude? VsAmplitude { get; set; }
 
-        [Reactive]
-        public int AdcBitDepth { get; set; }
+        [Reactive] public int AdcBitDepth { get; set; } = -1;
 
         [Reactive]
         public OutputAmplification? Amplifier { get; set; }
