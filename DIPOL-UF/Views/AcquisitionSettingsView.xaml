@@ -159,8 +159,7 @@
                         <!--VS Amplitude-->
                         <ComboBox Grid.Row="2" Grid.Column="1"
                                   ItemsSource="{Binding 
-                                    Source={StaticResource ResourceKey=VSAmplitudeEnumProvider},
-                                    Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
+                                    Source={StaticResource ResourceKey=VSAmplitudeEnumProvider}}"
                                   SelectedItem="{Binding 
                                     Path=VsAmplitude, 
                                     Mode=TwoWay,
@@ -168,6 +167,12 @@
                                     ValidatesOnNotifyDataErrors=True}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.VsAmplitude}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="ComboBoxItem">
+                                    <ContentControl 
+                                        Content="{Binding Converter={StaticResource EnumToDescriptionConverter}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
                         </ComboBox>
                         <!--AD Converter-->
                         <ComboBox Grid.Row="3" Grid.Column="1"
@@ -183,16 +188,22 @@
                         <!--Amplifier-->
                         <ComboBox Grid.Row="4" Grid.Column="1"
                                   ItemsSource="{Binding 
-                                    Camera.Properties.OutputAmplifiers, 
-                                    Converter={StaticResource ResourceKey=ValueTupleToValueConverter},
-                                    ConverterParameter=Item1}"
-                                  SelectedItem="{Binding 
+                                    Camera.Properties.OutputAmplifiers}"
+                                  SelectedIndex="{Binding 
                                     Amplifier, 
                                     Mode=TwoWay, 
                                     UpdateSourceTrigger=PropertyChanged,
                                     ValidatesOnNotifyDataErrors=True}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.Amplifier}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="ComboBoxItem">
+                                    <ContentControl
+                                        Content="{Binding
+                                            Converter={StaticResource ValueTupleToValueConverter}, 
+                                            ConverterParameter=Item1}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
                         </ComboBox>
                         <!--HS Speed-->
                         <ComboBox Grid.Row="5" Grid.Column="1"
