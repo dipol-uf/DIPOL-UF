@@ -160,7 +160,7 @@
                         <ComboBox Grid.Row="2" Grid.Column="1"
                                   ItemsSource="{Binding 
                                     Source={StaticResource ResourceKey=VSAmplitudeEnumProvider}}"
-                                  SelectedIndex="{Binding 
+                                  SelectedItem="{Binding 
                                     Path=VsAmplitude, 
                                     Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged,
@@ -191,7 +191,7 @@
                                     Camera.Properties.OutputAmplifiers,
                                     Converter={StaticResource ValueTupleToValueConverter},
                                     ConverterParameter=Item2}"
-                                  SelectedIndex="{Binding 
+                                  SelectedItem="{Binding 
                                     Amplifier, 
                                     Mode=TwoWay, 
                                     UpdateSourceTrigger=PropertyChanged,
