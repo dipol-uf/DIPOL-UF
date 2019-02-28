@@ -461,10 +461,10 @@ namespace DIPOL_UF.Models
         public DipolMainWindow()
         {
             _connectedCameras = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             SelectedDevices = new SourceList<string>()
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             InitializeCommands();
             HookObservables();
@@ -480,7 +480,7 @@ namespace DIPOL_UF.Models
                                    _connectedCameras.CountChanged.Select(x => x != 0)
                                                    .DistinctUntilChanged()
                                                    .ObserveOnUi())
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             SelectCameraCommand =
                 ReactiveCommand.Create<string>(
@@ -488,11 +488,11 @@ namespace DIPOL_UF.Models
                                    _connectedCameras.CountChanged.Select(x => x != 0)
                                                    .DistinctUntilChanged()
                                                    .ObserveOnUi())
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             WindowLoadedCommand =
                 ReactiveCommand.Create<Unit, Unit>(_ => Unit.Default)
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             ConnectButtonCommand =
                 ReactiveCommand.Create<object, AvailableCamerasModel>(
@@ -507,7 +507,7 @@ namespace DIPOL_UF.Models
                                        .Select(x => x.CanConnect)
                                        .DistinctUntilChanged()
                                        .ObserveOnUi())
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             DisconnectButtonCommand =
                 ReactiveCommand.Create(
@@ -515,7 +515,7 @@ namespace DIPOL_UF.Models
                                    SelectedDevices.CountChanged.Select(x => x != 0)
                                                   .DistinctUntilChanged()
                                                   .ObserveOnUi())
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             SelectAllCamerasCommand =
                 ReactiveCommand.Create(
@@ -523,7 +523,7 @@ namespace DIPOL_UF.Models
                                    _connectedCameras.CountChanged.Select(x => x != 0)
                                                    .DistinctUntilChanged()
                                                    .ObserveOnUi())
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             ProgressBarProvider = new DescendantProvider(
                     ReactiveCommand.CreateFromTask<object, ReactiveObjectEx>(
@@ -540,7 +540,7 @@ namespace DIPOL_UF.Models
                     ReactiveCommand.Create<Unit>(_ => { }),
                     ReactiveCommand.Create<Unit>(_ => { }),
                     ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             AvailableCamerasProvider = new DescendantProvider(
                 ReactiveCommand.Create<object, ReactiveObjectEx>(x => (ReactiveObjectEx)x), 
@@ -551,7 +551,7 @@ namespace DIPOL_UF.Models
                         await ReceiveConnectedCameras((AvailableCamerasModel) x).ExpectCancellation();
                         x.Dispose();
                     }))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
         }
 
         private void HookObservables()
@@ -562,17 +562,17 @@ namespace DIPOL_UF.Models
                           AvailableCamerasProvider.ViewRequested.Select(_ => false),
                           AvailableCamerasProvider.ViewFinished.Select(_ => true))
                       .ToPropertyEx(this, x => x.CanConnect)
-                      .DisposeWith(_subscriptions);
+                      .DisposeWith(Subscriptions);
 
 
            _connectedCameras.Connect()
                             .DisposeManyEx(async x => await DisposeCamera(x.Camera))
                             .Subscribe()
-                            .DisposeWith(_subscriptions);
+                            .DisposeWith(Subscriptions);
 
            ConnectedCameras = _connectedCameras
                               .AsObservableCache()
-                              .DisposeWith(_subscriptions);
+                              .DisposeWith(Subscriptions);
 
 
 
@@ -580,11 +580,11 @@ namespace DIPOL_UF.Models
                                          .Transform(x => (x.Id, Tab: new CameraTab(x.Camera)))
                                          .DisposeManyEx(x => x.Tab?.Dispose())
                                          .AsObservableCache()
-                                         .DisposeWith(_subscriptions);
+                                         .DisposeWith(Subscriptions);
 
            WindowLoadedCommand
                .InvokeCommand(ProgressBarProvider.ViewRequested)
-               .DisposeWith(_subscriptions);
+               .DisposeWith(Subscriptions);
 
            ProgressBarProvider.ViewRequested.Select(async x =>
                               {
@@ -595,10 +595,10 @@ namespace DIPOL_UF.Models
                                   (x, y) => Unit.Default)
                               .Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")))
                               .InvokeCommand(ProgressBarProvider.ClosingRequested)
-                              .DisposeWith(_subscriptions);
+                              .DisposeWith(Subscriptions);
 
            ConnectButtonCommand.InvokeCommand(AvailableCamerasProvider.ViewRequested as ICommand)
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
            AvailableCamerasProvider.WindowShown.WithLatestFrom(
                                        AvailableCamerasProvider.ViewRequested,
@@ -606,7 +606,7 @@ namespace DIPOL_UF.Models
                                    .Subscribe(async x =>
                                        await QueryCamerasAsync((AvailableCamerasModel) x)
                                            .ExpectCancellation())
-                                   .DisposeWith(_subscriptions);
+                                   .DisposeWith(Subscriptions);
 
         }
 

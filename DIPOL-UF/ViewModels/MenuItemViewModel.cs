@@ -23,7 +23,7 @@ namespace DIPOL_UF.ViewModels
         {
             Name = name;
             Command = command;
-            subMenus?.Connect().Bind(SubMenu).Subscribe().DisposeWith(_subscriptions);
+            subMenus?.Connect().Bind(SubMenu).Subscribe().DisposeWith(Subscriptions);
         }
 
 

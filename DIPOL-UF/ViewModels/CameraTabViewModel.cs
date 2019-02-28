@@ -97,12 +97,12 @@ namespace DIPOL_UF.ViewModels
                                    Model.CoolerCommand.CanExecute.CombineLatest(
                                        ObserveSpecificErrors(nameof(TargetTemperatureText)),
                                      (x, y) => x && !y))
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
-            CoolerCommand.Select(_ => (int)TargetTemperature).InvokeCommand(Model.CoolerCommand).DisposeWith(_subscriptions);
+            CoolerCommand.Select(_ => (int)TargetTemperature).InvokeCommand(Model.CoolerCommand).DisposeWith(Subscriptions);
 
             AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow,
-                x => new AcquisitionSettingsViewModel((ReactiveWrapper<SettingsBase>) x)).DisposeWith(_subscriptions);
+                x => new AcquisitionSettingsViewModel((ReactiveWrapper<SettingsBase>) x)).DisposeWith(Subscriptions);
             
         }
 
@@ -110,25 +110,25 @@ namespace DIPOL_UF.ViewModels
         {
 
             Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.IsAcquiring)).Select(x => x.IsAcquiring)
-                 .LogObservable("Acquiring", _subscriptions);
+                 .LogObservable("Acquiring", Subscriptions);
 
             Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.IsAcquiring))
                  .Select(x => x.IsAcquiring)
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.IsAcquiring)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.CoolerMode))
                  .Select(x => x.CoolerMode)
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.CoolerMode)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             Model.WhenTemperatureChecked
                  .Select(x => x.Temperature)
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.CurrentTemperature)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             // Handles temperature changes
             this.WhenPropertyChanged(x => x.TargetTemperature)
@@ -136,7 +136,7 @@ namespace DIPOL_UF.ViewModels
                 .DistinctUntilChanged()
                 .ObserveOnUi()
                 .BindTo(this, x => x.ActualTemperature)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             this.WhenPropertyChanged(x => x.TargetTemperatureText)
                 .DistinctUntilChanged()
@@ -144,31 +144,31 @@ namespace DIPOL_UF.ViewModels
                 .Select(x => float.Parse(x.Value, NumberStyles.Any, CultureInfo.CurrentUICulture))
                 .ObserveOnUi()
                 .BindTo(this, x => x.ActualTemperature)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             var actTempObs =
                 this.WhenPropertyChanged(x => x.ActualTemperature)
                     .Select(x => x.Value)
                     .ObserveOnUi();
 
-            actTempObs.BindTo(this, x => x.TargetTemperature).DisposeWith(_subscriptions);
+            actTempObs.BindTo(this, x => x.TargetTemperature).DisposeWith(Subscriptions);
             actTempObs.Select(x => x.ToString(
                           Properties.Localization.General_TemperatureFloatFormat,
                           CultureInfo.CurrentUICulture))
                       .BindTo(this, x => x.TargetTemperatureText)
-                      .DisposeWith(_subscriptions);
+                      .DisposeWith(Subscriptions);
 
             Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.FanMode))
                  .Select(x => 2 - (uint) x.FanMode)
                  .DistinctUntilChanged()
                  .ObserveOnUi()
                  .BindTo(this, x => x.FanMode)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             this.WhenPropertyChanged(x => x.FanMode)
                 .Select(x => (FanMode) (2 - x.Value))
                 .InvokeCommand(Model.FanCommand)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
 
             var shutterSrc =
@@ -180,26 +180,26 @@ namespace DIPOL_UF.ViewModels
             shutterSrc.Select(x => x.Internal)
                       .DistinctUntilChanged()
                       .BindTo(this, x => x.InternalShutterState)
-                      .DisposeWith(_subscriptions);
+                      .DisposeWith(Subscriptions);
 
             this.WhenPropertyChanged(x => x.InternalShutterState)
                 .Select(x => x.Value)
                 .DistinctUntilChanged()
                 .InvokeCommand(Model.InternalShutterCommand)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             if (CanControlExternalShutter)
             {
                 shutterSrc.Select(x => x.External.ToStringEx())
                           .DistinctUntilChanged()
                           .BindTo(this, x => x.ExternalShutterMode)
-                          .DisposeWith(_subscriptions);
+                          .DisposeWith(Subscriptions);
 
                 this.WhenPropertyChanged(x => x.ExternalShutterMode)
                     .Select(x => x.Value)
                     .DistinctUntilChanged()
                     .InvokeCommand(Model.ExternalShutterCommand)
-                    .DisposeWith(_subscriptions);
+                    .DisposeWith(Subscriptions);
 
             }
 

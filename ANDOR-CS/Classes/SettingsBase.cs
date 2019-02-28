@@ -794,22 +794,8 @@ namespace ANDOR_CS.Classes
 
         public virtual void Serialize(Stream stream)
         {
-            //using (var str = System.Xml.XmlWriter.Create(
-            //    stream,
-            //    new System.Xml.XmlWriterSettings()
             //    {
             //        Indent = true,
-            //        IndentChars = "\t"
-            //    }))
-            //{
-            //    var sourceCulture = System.Threading.Thread.CurrentThread.CurrentCulture;
-            //    System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
-            //    WriteXml(str);
-
-            //    System.Threading.Thread.CurrentThread.CurrentCulture = sourceCulture;
-            //}
-
             var str = new StreamWriter(stream);
             WriteJson(str);
         }
@@ -1030,5 +1016,6 @@ namespace ANDOR_CS.Classes
         {
             ReadXml(reader);
         }
+
     }   
 }

@@ -52,11 +52,11 @@ namespace DIPOL_UF.Models
 
             _remoteClients = remoteClients;
             IsInteractive = true;
-            SelectedIds = new SourceList<string>().DisposeWith(_subscriptions);
+            SelectedIds = new SourceList<string>().DisposeWith(Subscriptions);
 
             FoundDevices =
                 new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
-                    .DisposeWith(_subscriptions);
+                    .DisposeWith(Subscriptions);
 
             InitializeCommands();
             HookObservables();
@@ -77,18 +77,18 @@ namespace DIPOL_UF.Models
                                                        FoundDevices.CountChanged.Select(x => x != 0),
                                                        (x, y) => x && y)
                                                    .ObserveOnUi())
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             CloseCrossCommand =
                 ReactiveCommand.Create<Window>(
                                    CloseWindow,
                                    interactivitySrc)
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             CancelButtonCommand =
                 ReactiveCommand.Create<Window>(CancelButtonCommandExecute,
                                    interactivitySrc)
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             ConnectAllButtonCommand
                 = ReactiveCommand.Create<Window>(ConnectAllButtonCommandExecute,
@@ -96,23 +96,23 @@ namespace DIPOL_UF.Models
                                                          FoundDevices.CountChanged.Select(x => x != 0),
                                                          (x, y) => x && y)
                                                      .ObserveOnUi())
-                                 .DisposeWith(_subscriptions);
+                                 .DisposeWith(Subscriptions);
 
             ConnectButtonCommand
                 = ReactiveCommand.Create<Window>(ConnectButtonCommandExecute,
                                      interactivitySrc.CombineLatest(SelectedIds.CountChanged.Select(x => x != 0),
                                                          (x, y) => x && y)
                                                      .ObserveOnUi())
-                                 .DisposeWith(_subscriptions);
+                                 .DisposeWith(Subscriptions);
 
 
             QueryCamerasCommand =
                 ReactiveCommand.Create<Unit>(_ => { })
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             WindowContentRenderedCommand =
                  ReactiveCommand.Create<Window, Window>(x => x)
-                                .DisposeWith(_subscriptions);
+                                .DisposeWith(Subscriptions);
 
             ProgressBarProvider = new DescendantProvider(
                 ReactiveCommand.CreateFromTask<object, ReactiveObjectEx>(async x =>
@@ -129,27 +129,27 @@ namespace DIPOL_UF.Models
                 }),
                 null, null,
                 ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             QueryCamerasCommand.InvokeCommand(ProgressBarProvider.ViewRequested)
-                                        .DisposeWith(_subscriptions);
+                                        .DisposeWith(Subscriptions);
         }
         private void HookObservables()
         {
             // Binding source collection to the public read-only interface
-            FoundCameras = FoundDevices.AsObservableCache().DisposeWith(_subscriptions);
+            FoundCameras = FoundDevices.AsObservableCache().DisposeWith(Subscriptions);
 
             FoundDevices.Connect().DisposeManyEx(x =>
             {
                 var (id, camera) = x;
                 if (!SelectedIds.Items.Contains(id))
                     camera?.Dispose();
-            }).Subscribe().DisposeWith(_subscriptions);
+            }).Subscribe().DisposeWith(Subscriptions);
 
             ProgressBarProvider.ViewRequested.Subscribe(async x =>
             {
                 await QueryCamerasCommandExecuteAsync((ProgressBar) x);
-            }).DisposeWith(_subscriptions);
+            }).DisposeWith(Subscriptions);
         }
 
         private async Task<int> QueryAvailableCamerasAsync(CancellationToken cancelToken, ProgressBar pb)

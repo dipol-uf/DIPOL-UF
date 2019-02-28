@@ -21,19 +21,19 @@ namespace DIPOL_UF.Models
         {
             if(requestView is null)
                 throw new ArgumentNullException(nameof(requestView));
-            ViewRequested = requestView.DisposeWith(_subscriptions);
+            ViewRequested = requestView.DisposeWith(Subscriptions);
 
             ClosingRequested = (requestClosing ??
                                 ReactiveCommand.Create<Unit>(_ => { }))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             ViewFinished = (finalize ??
                             ReactiveCommand.Create<ReactiveObjectEx, Unit>(_ => Unit.Default))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             WindowShown = (windowShown ?? 
                            ReactiveCommand.Create<Unit>(_ => { }))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
         }
     }
 }

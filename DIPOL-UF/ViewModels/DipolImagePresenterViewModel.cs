@@ -106,7 +106,7 @@ namespace DIPOL_UF.ViewModels
                 ReactiveCommand.Create<MouseEventArgs, MouseEventArgs>(
                                    x => x,
                                    this.WhenPropertyChanged(x => x.IsImageLoaded).Select(x => x.Value))
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
         }
 
         private void HookObservables()
@@ -114,12 +114,12 @@ namespace DIPOL_UF.ViewModels
             this.WhenPropertyChanged(x => x.ThumbLeft)
                 .Select(x => x.Value)
                 .InvokeCommand(Model.LeftThumbChangedCommand)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             this.WhenPropertyChanged(x => x.ThumbRight)
                 .Select(x => x.Value)
                 .InvokeCommand(Model.RightThumbChangedCommand)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             this.WhenAnyPropertyChanged(
                     nameof(IsImageLoaded),
@@ -127,12 +127,12 @@ namespace DIPOL_UF.ViewModels
                     nameof(IsSamplerFixed))
                 .Select(x => x.IsImageLoaded && (x.IsMouseOverImage || x.IsSamplerFixed))
                 .ToPropertyEx(this, x => x.IsGeometryDisplayed)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             this.WhenPropertyChanged(x => x.SamplerColorBrushIndex)
                 .Select(x => ColorPickerColor[x.Value])
                 .ToPropertyEx(this, x => x.SamplerColor)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             BindTo(this, x => x.SelectedGeometryIndex,
                 Model, y => y.SelectedGeometryIndex);
@@ -156,7 +156,7 @@ namespace DIPOL_UF.ViewModels
                 .Select(x => x.RoutedEvent.Name == nameof(Image.MouseEnter))
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.IsMouseOverImage)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             MouseHoverCommand.Where(x => x.Source is Image)
                              .Sample(TimeSpan.Parse(
@@ -169,7 +169,7 @@ namespace DIPOL_UF.ViewModels
                                  return (Size: new Size(src.ActualWidth, src.ActualHeight),
                                      SamplerCenterPosInPix: x.GetPosition(src));
                              }).InvokeCommand(Model.MouseHoverCommand)
-                             .DisposeWith(_subscriptions);
+                             .DisposeWith(Subscriptions);
 
             HookModelObservables();
         }
@@ -181,13 +181,13 @@ namespace DIPOL_UF.ViewModels
                  .Select(x => x.Value)
                  .ObserveOnUi()
                  .BindTo(this, x => x.ThumbRight)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             Model.WhenPropertyChanged(x => x.ThumbLeft)
                  .Select(x => x.Value)
                  .ObserveOnUi()
                  .BindTo(this, x => x.ThumbLeft)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
 
             Model.WhenAnyPropertyChanged(
@@ -199,13 +199,13 @@ namespace DIPOL_UF.ViewModels
                  .Merge()
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.BitmapSource)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             Model.WhenPropertyChanged(x => x.DisplayedImage)
                  .Select(x => !(x.Value is null))
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.IsImageLoaded)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             Model.WhenAnyPropertyChanged(
                      nameof(Model.SamplerCenterPos),
@@ -215,7 +215,7 @@ namespace DIPOL_UF.ViewModels
                      x.SamplerCenterPos.Y - x.ApertureGeometry.Center.Y))
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.AperturePos)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             Model.WhenAnyPropertyChanged(
                      nameof(Model.SamplerCenterPos),
@@ -225,7 +225,7 @@ namespace DIPOL_UF.ViewModels
                      x.SamplerCenterPos.Y - x.GapGeometry.Center.Y))
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.GapPos)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             Model.WhenAnyPropertyChanged(
                      nameof(Model.SamplerCenterPos),
@@ -235,13 +235,13 @@ namespace DIPOL_UF.ViewModels
                      x.SamplerCenterPos.Y - x.SamplerGeometry.Center.Y))
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.SamplerPos)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             Model.WhenPropertyChanged(x => x.SamplerCenterPosInPix)
                  .Select(x => x.Value)
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.SamplerCenterPosInPix)
-                 .DisposeWith(_subscriptions);
+                 .DisposeWith(Subscriptions);
 
             PropagateReadOnlyProperty(this, x => x.IsSamplerFixed, y => y.IsSamplerFixed);
             PropagateReadOnlyProperty(this, x => x.ApertureGeometry, y => y.ApertureGeometry);

@@ -52,7 +52,7 @@ namespace DIPOL_UF.ViewModels
                     .Bind(ListedCameras)
                     .DisposeMany()
                     .Subscribe()
-                    .DisposeWith(_subscriptions);
+                    .DisposeWith(Subscriptions);
 
 
             (SelectionChangedCommand as ReactiveCommand<IList, IList>)
@@ -66,18 +66,18 @@ namespace DIPOL_UF.ViewModels
                         context.AddRange(x);
                     });
                 })
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             ProgressBarProxy = new DescendantProxy(Model.ProgressBarProvider,
                     x => new ProgressBarViewModel((ProgressBar) x))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
         }
 
         private void HookCommands()
         {
             SelectionChangedCommand =
                 ReactiveCommand.Create<IList, IList>(x => x)
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
         }
 
     }

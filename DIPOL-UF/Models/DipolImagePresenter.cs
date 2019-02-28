@@ -166,7 +166,7 @@ namespace DIPOL_UF.Models
                                            return ThumbScaleMax - ThumbDelta;
                                        return x;
                                    })
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             RightThumbChangedCommand =
                 ReactiveCommand.Create<int, int>(
@@ -178,7 +178,7 @@ namespace DIPOL_UF.Models
                                            return ThumbScaleMax;
                                        return x;
                                    })
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             LoadImageCommand =
                 ReactiveCommand.CreateFromTask<Image, Image>(
@@ -187,21 +187,21 @@ namespace DIPOL_UF.Models
                                        await LoadImageAsync(x);
                                        return DisplayedImage;
                                    })
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             ImageClickCommand =
                 ReactiveCommand.Create<MouseButtonEventArgs, MouseButtonEventArgs>(
                                    x => x,
                                    this.WhenPropertyChanged(x => x.DisplayedImage)
                                        .Select(x => !(x.Value is null)))
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             MouseHoverCommand =
                 ReactiveCommand.Create<(Size Size, Point Pos), (Size Size, Point Pos)>(
                                    x => x,
                                    this.WhenPropertyChanged(x => x.DisplayedImage)
                                        .Select(x => !(x.Value is null)))
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
 
             SizeChangedCommand =
@@ -209,14 +209,14 @@ namespace DIPOL_UF.Models
                                    x => x,
                                    this.WhenPropertyChanged(x => x.DisplayedImage)
                                        .Select(x => !(x.Value is null)))
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
             UnloadImageCommand =
                 ReactiveCommand.Create<Unit>(
                                    _ => UnloadImageCommandExecute(),
                                    this.WhenPropertyChanged(x => x.DisplayedImage)
                                        .Select(x => !(x.Value is null)))
-                               .DisposeWith(_subscriptions);
+                               .DisposeWith(Subscriptions);
 
         }
 
@@ -232,20 +232,20 @@ namespace DIPOL_UF.Models
         private void HookObservables()
         {
             LeftThumbChangedCommand.BindTo(this, x => x.ThumbLeft)
-                                   .DisposeWith(_subscriptions);
+                                   .DisposeWith(Subscriptions);
             RightThumbChangedCommand.BindTo(this, x => x.ThumbRight)
-                                    .DisposeWith(_subscriptions);
+                                    .DisposeWith(Subscriptions);
 
             LeftThumbChangedCommand
                 .Where(x => x >= ThumbRight)
                 .Select(x => x + ThumbDelta)
                 .BindTo(this, x => x.ThumbRight)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
             RightThumbChangedCommand
                 .Where(x => x <= ThumbLeft)
                 .Select(x => x - ThumbDelta)
                 .BindTo(this, x => x.ThumbLeft)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             var leftThumbObs = this.WhenPropertyChanged(x => x.ThumbLeft)
                                    .Select(x => x.Value)
@@ -262,44 +262,44 @@ namespace DIPOL_UF.Models
             thumbObs.Select(x => 1.0 * (x.Left - ThumbScaleMin) /
                                  (ThumbScaleMax - ThumbScaleMin) *
                                  (ImageScaleMax - ImageScaleMin))
-                    .BindTo(this, x => x.LeftScale).DisposeWith(_subscriptions);
+                    .BindTo(this, x => x.LeftScale).DisposeWith(Subscriptions);
 
             thumbObs.Select(x => 1.0 * (x.Right - ThumbScaleMin) /
                                  (ThumbScaleMax - ThumbScaleMin) *
                                  (ImageScaleMax - ImageScaleMin))
-                    .BindTo(this, x => x.RightScale).DisposeWith(_subscriptions);
+                    .BindTo(this, x => x.RightScale).DisposeWith(Subscriptions);
 
             this.WhenPropertyChanged(x => x.SamplerCenterPosInPix)
                 .Select(x => GetImageScale(x.Value))
                 .ToPropertyEx(this, x => x.SamplerCenterPos)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             this.WhenPropertyChanged(x => DisplayedImage)
                 .Subscribe(_ => UpdateGeometrySizeRanges())
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             ImageClickCommand
                 .Where(x => x.LeftButton == MouseButtonState.Pressed && x.ClickCount == 2)
                 .Subscribe(ImageDoubleClickCommandExecute)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
 
             MouseHoverCommand
                 .Where(x => !IsSamplerFixed)
                 .Subscribe(x => UpdateSamplerPosition(x.Size, x.Pos))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
 
             // Geometry updates
             this.WhenAnyPropertyChanged(nameof(ImageApertureSize), nameof(ImageGap))
                 .Select(x => x.ImageGap + x.ImageApertureSize)
                 .ToPropertyEx(this, x => x.ImageGapSize)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             this.WhenAnyPropertyChanged(nameof(ImageApertureSize), nameof(ImageGap), nameof(ImageAnnulus))
                 .Select(x => x.ImageGap + x.ImageApertureSize + x.ImageAnnulus)
                 .ToPropertyEx(this, x => x.ImageSamplerSize)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             this.WhenAnyPropertyChanged(
                     nameof(SelectedGeometryIndex),
@@ -310,7 +310,7 @@ namespace DIPOL_UF.Models
                     x.ImageSamplerScaleFactor * x.ImageApertureSize,
                     x.ImageSamplerScaleFactor * x.ImageSamplerThickness))
                 .BindTo(this, x => x.ApertureGeometry)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             this.WhenAnyPropertyChanged(
                     nameof(SelectedGeometryIndex),
@@ -321,7 +321,7 @@ namespace DIPOL_UF.Models
                     x.ImageSamplerScaleFactor * x.ImageGapSize,
                     x.ImageSamplerScaleFactor * x.ImageSamplerThickness))
                 .BindTo(this, x => x.GapGeometry)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             this.WhenAnyPropertyChanged(
                     nameof(SelectedGeometryIndex),
@@ -332,14 +332,14 @@ namespace DIPOL_UF.Models
                     x.ImageSamplerScaleFactor * x.ImageSamplerSize,
                     x.ImageSamplerScaleFactor * x.ImageSamplerThickness))
                 .BindTo(this, x => x.SamplerGeometry)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             this.WhenAnyPropertyChanged(
                     nameof(ApertureGeometry),
                     nameof(GapGeometry),
                     nameof(SamplerGeometry))
                 .Subscribe(_ => UpdateSamplerPosition(LastKnownImageControlSize, SamplerCenterPos))
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             this.WhenPropertyChanged(x => x.SamplerCenterPosInPix)
                 .Where(x =>
@@ -349,7 +349,7 @@ namespace DIPOL_UF.Models
                                  Convert.ToInt32(x.Value.Y),
                                  Convert.ToInt32(x.Value.X)))
                 .ToPropertyEx(this, x => x.PixValue)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
 
             var statsObservable =
                 this.WhenAnyPropertyChanged(
@@ -364,17 +364,17 @@ namespace DIPOL_UF.Models
             statsObservable.Where(x => !x.IsMouseOverImage && !IsSamplerFixed)
                            .Select<DipolImagePresenter, ImageStatsCollection>(x => null)
                            .BindTo(this, x => x.ImageStats)
-                           .DisposeWith(_subscriptions);
+                           .DisposeWith(Subscriptions);
             statsObservable.Where(x => x.IsSamplerFixed || x.IsMouseOverImage)
                            .Select(_ => Observable.FromAsync(async () => await CalculateStatisticsAsync()))
                            .Merge()
-                           .SubscribeDispose(_subscriptions);
+                           .SubscribeDispose(Subscriptions);
 
             SizeChangedCommand
                 //.Sample(TimeSpan.Parse(
                 //                  UiSettingsProvider.Settings.Get("ImageRedrawDelay", "00:00:00.5")))
                 .Subscribe(SizeChangedCommandExecute)
-                .DisposeWith(_subscriptions);
+                .DisposeWith(Subscriptions);
         }
 
         public void LoadImage(Image image)
