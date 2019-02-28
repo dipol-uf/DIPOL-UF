@@ -190,7 +190,7 @@ namespace DIPOL_UF.Converters
         }
 
         public static object FieldAccessConversion(object src, string fieldName)
-            => src.GetType()
+            => src?.GetType()
                   .GetField(fieldName, BindingFlags.Public | BindingFlags.Instance)
                   ?.GetValue(src);
     }

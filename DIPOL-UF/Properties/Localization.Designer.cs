@@ -646,6 +646,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An unexpected error has happened. This is indicates a likely unrecoverable error in the software. Consider reporting it..
+        /// </summary>
+        public static string General_ShouldNotHappen {
+            get {
+                return ResourceManager.GetString("General_ShouldNotHappen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Submit.
         /// </summary>
         public static string General_Submit {

@@ -136,13 +136,6 @@ namespace DIPOL_UF.ViewModels
         public IObservableCollection<(int Index, string Name)> AvailablePreAmpGains { get; }
             = new ObservableCollectionExtended<(int Index, string Name)>();
 
-        //public (int Index, string Name)[] AvailablePreAmpGains =>
-        //    (ADConverterIndex < 0 || OutputAmplifierIndex < 0 || HSSpeedIndex < 0)
-        //        ? null
-        //        : Model.Object.GetAvailablePreAmpGain(ADConverterIndex,
-        //                   OutputAmplifierIndex, HSSpeedIndex)
-        //               .ToArray();
-
         // Todo: Use (Min, Max)
         public int[] AvailableEMCCDGains =>
             Enumerable.Range(
@@ -622,7 +615,9 @@ namespace DIPOL_UF.ViewModels
                 Action<TTarget> setter)
             {
                 var name = (sourceAccessor.Body as MemberExpression)?.Member?.Name
-                           ?? throw new ArgumentException("The accessor expression format is not supported.",
+                           ?? throw new ArgumentException(
+                               Properties.Localization.General_ShouldNotHappen 
+                               + @" [Failed to create setter; Only property accessors are allowed.]",
                                nameof(sourceAccessor));
 
                 this.WhenPropertyChanged(sourceAccessor)
