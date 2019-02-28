@@ -564,6 +564,7 @@ namespace DIPOL_UF.ViewModels
             Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
                           x => Model.Object.PropertyChanged += x,
                           x => Model.Object.PropertyChanged -= x)
+                      .Select(x => x.EventArgs.PropertyName)
                       .LogObservable("SETTINGS", Subscriptions);
 #endif
             SupportedSettings = Model.Object.SupportedSettings();
