@@ -817,7 +817,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Default value is illegal..
+        ///   Looks up a localized string similar to Default value is illegal.
         /// </summary>
         public static string Validation_CannotBeDefault {
             get {
