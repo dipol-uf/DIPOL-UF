@@ -794,8 +794,6 @@ namespace ANDOR_CS.Classes
 
         public virtual void Serialize(Stream stream)
         {
-            //    {
-            //        Indent = true,
             var str = new StreamWriter(stream);
             WriteJson(str);
         }
