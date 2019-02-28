@@ -188,7 +188,9 @@
                         <!--Amplifier-->
                         <ComboBox Grid.Row="4" Grid.Column="1"
                                   ItemsSource="{Binding 
-                                    Camera.Properties.OutputAmplifiers}"
+                                    Camera.Properties.OutputAmplifiers,
+                                    Converter={StaticResource ValueTupleToValueConverter},
+                                    ConverterParameter=Item2}"
                                   SelectedItem="{Binding 
                                     Amplifier, 
                                     Mode=TwoWay, 
@@ -200,8 +202,7 @@
                                 <DataTemplate DataType="ComboBoxItem">
                                     <ContentControl
                                         Content="{Binding
-                                            Converter={StaticResource ValueTupleToValueConverter}, 
-                                            ConverterParameter=Item1}"/>
+                                            Converter={StaticResource EnumToDescriptionConverter}}"/>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
