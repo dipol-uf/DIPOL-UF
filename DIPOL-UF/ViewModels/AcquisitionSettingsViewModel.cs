@@ -35,6 +35,7 @@ using System.IO;
 using System.Linq.Expressions;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Input;
 using ANDOR_CS.Classes;
@@ -716,7 +717,8 @@ namespace DIPOL_UF.ViewModels
         {
             void DefaultValueValidator<TSrc>(
                 Expression<Func<AcquisitionSettingsViewModel, TSrc>> accessor,
-                TSrc comparisonValue)
+                TSrc comparisonValue,
+                Expression<Func<SettingsAvailability, bool>> availability)
             {
                 var name = (accessor.Body as MemberExpression)?.Member.Name
                            ?? throw new ArgumentException(@"Only member access expressions are supported.",
@@ -724,18 +726,22 @@ namespace DIPOL_UF.ViewModels
 
                 CreateValidator(
                     this.WhenPropertyChanged(accessor)
-                        .Select(x =>
-                            (Type: nameof(CannotBeDefault),
-                                Message: CannotBeDefault(x.Value, comparisonValue))),
+                        .CombineLatest(IsAvailable.WhenPropertyChanged(availability),
+                            (x, y) => (x.Value, IsAvailable: y.Value))
+                        .Select(x => (
+                            Type: nameof(CannotBeDefault),
+                            Message: x.IsAvailable
+                                ? CannotBeDefault(x.Value, comparisonValue)
+                                : null)),
                     name);
             }
 
 
-            DefaultValueValidator(x => x.VsSpeed, -1);
-            DefaultValueValidator(x => x.VsAmplitude, null);
-            DefaultValueValidator(x => x.AdcBitDepth, -1);
-            DefaultValueValidator(x => x.Amplifier, null);
-            DefaultValueValidator(x => x.HsSpeed, -1);
+            DefaultValueValidator(x => x.VsSpeed, -1, y=> y.VsSpeed);
+            DefaultValueValidator(x => x.VsAmplitude, null, y=> y.VsAmplitude);
+            DefaultValueValidator(x => x.AdcBitDepth, -1, y => y.AdcBitDepth);
+            DefaultValueValidator(x => x.Amplifier, null, y => y.Amplifier);
+            DefaultValueValidator(x => x.HsSpeed, -1, y => y.HsSpeed);
 
         }
 
