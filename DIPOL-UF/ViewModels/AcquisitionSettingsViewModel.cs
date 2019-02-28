@@ -595,11 +595,9 @@ namespace DIPOL_UF.ViewModels
 
             _availableHsSpeeds
                 .Connect()
-                .LogObservable("SPEEDS", Subscriptions)
                 .ObserveOnUi()
                 .Bind(AvailableHsSpeeds)
                 .SubscribeDispose(Subscriptions);
-            _availableHsSpeeds.Connect().LogObservable("VIEW", Subscriptions);
         }
 
         private void AttachAccessors()
@@ -673,20 +671,20 @@ namespace DIPOL_UF.ViewModels
             ImmutableAvailability(nameof(Model.Object.VSAmplitude), x => x.VsAmplitude);
             ImmutableAvailability(nameof(Model.Object.ADConverter), x => x.AdcBitDepth);
             ImmutableAvailability(nameof(Model.Object.OutputAmplifier), x=> x.Amplifier);
-            ImmutableAvailability(nameof(Model.Object.HSSpeed), x => x.HsSpeed);
+            //ImmutableAvailability(nameof(Model.Object.HSSpeed), x => x.HsSpeed);
 
-            //this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
-            //    .Select(x =>
-            //    {
-            //        var name = nameof(HsSpeed).ToLowerInvariant();
-            //        return AllowedSettings.Contains(name)
-            //               && SupportedSettings.Contains(name);
-            //        //&& x.AdcBitDepth >= 0
-            //        //&& Amplifier.HasValue;
+            this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
+                .Select(x =>
+                {
+                    var name = nameof(HsSpeed).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && x.AdcBitDepth >= 0
+                           && Amplifier.HasValue;
 
-            //    })
-            //    .ToPropertyEx(IsAvailable, x => x.HsSpeed)
-            //    .DisposeWith(Subscriptions);
+                })
+                .ToPropertyEx(IsAvailable, x => x.HsSpeed)
+                .DisposeWith(Subscriptions);
 
         }
 

@@ -210,8 +210,6 @@
                         <ComboBox Grid.Row="5" Grid.Column="1"
                                   ItemsSource="{Binding
                                     Path=AvailableHsSpeeds,
-                                    Converter={StaticResource ValueTupleToValueConverter},
-                                    ConverterParameter = Item2,
                                     Mode=OneWay}"
                                   SelectedIndex="{Binding 
                                     HsSpeed, 
