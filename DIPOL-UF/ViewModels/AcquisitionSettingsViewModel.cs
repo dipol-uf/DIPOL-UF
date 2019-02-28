@@ -569,10 +569,7 @@ namespace DIPOL_UF.ViewModels
             SupportedSettings = Model.Object.SupportedSettings();
             AllowedSettings = Model.Object.AllowedSettings();
 
-
-
-
-
+            
             InitializeCommands();
 
             HookObservables();
