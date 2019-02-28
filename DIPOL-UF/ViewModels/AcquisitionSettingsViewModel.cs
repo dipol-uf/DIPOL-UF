@@ -576,14 +576,13 @@ namespace DIPOL_UF.ViewModels
             HookObservables();
             HookValidators();
 
-            WatchAvailableSettings();
 
         }
 
         private void HookObservables()
         {
             AttachAccessors();
-            WatchAvailableItems();
+            WatchAvailableSettings();
         }
 
         private void AttachAccessors()
@@ -629,6 +628,7 @@ namespace DIPOL_UF.ViewModels
                 => Model.Object.WhenPropertyChanged(sourceAccessor)
                         .Select(x => selector(x.Value))
                         .DistinctUntilChanged()
+                        .ObserveOnUi()
                         .BindTo(this, targetAccessor)
                         .DisposeWith(Subscriptions);
 
@@ -638,11 +638,6 @@ namespace DIPOL_UF.ViewModels
             CreateGetter(x => x.OutputAmplifier, y => y?.OutputAmplifier, z => z.Amplifier);
         }
 
-        private void WatchAvailableItems()
-        {
-
-        }
-        
         private void WatchAvailableSettings()
         {
             void ImmutableAvailability(string srcProperty,
