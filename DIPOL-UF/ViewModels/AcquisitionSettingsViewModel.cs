@@ -66,6 +66,7 @@ namespace DIPOL_UF.ViewModels
             public bool PreAmpGain { [ObservableAsProperty] get; }
             public bool AcquisitionMode { [ObservableAsProperty] get; }
             public bool ExposureTimeText { [ObservableAsProperty] get; }
+            public bool FrameTransfer { [ObservableAsProperty] get; }
         }
 
         private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
@@ -627,6 +628,7 @@ namespace DIPOL_UF.ViewModels
                     .DistinctUntilChanged(x => x.Value)
                     .Where(x => condition(x.Value))
                     .Select(x => DoesNotThrow(setter, selector(x.Value)))
+                    .ObserveOnUi()
                     .Subscribe(x => UpdateErrors(x, name, nameof(DoesNotThrow)))
                     .DisposeWith(Subscriptions);
             }
@@ -640,7 +642,6 @@ namespace DIPOL_UF.ViewModels
                 z => z, Model.Object.SetHSSpeed);
             CreateSetter(x => x.PreAmpGain, y => y >= 0 && y < AvailablePreAmpGains.Count,
                 z => z, Model.Object.SetPreAmpGain);
-            CreateSetter(x => x.AcquisitionMode, y => y.HasValue, z => z.Value, Model.Object.SetAcquisitionMode);
             CreateSetter(x => x.ExposureTimeText, y => !string.IsNullOrWhiteSpace(y),
                 z => float.TryParse(z, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var result)
                      && result >= 0
@@ -656,7 +657,24 @@ namespace DIPOL_UF.ViewModels
                     ? result
                     : 0f)
                 .Select(x => DoesNotThrow(Model.Object.SetExposureTime, x))
+                .ObserveOnUi()
                 .Subscribe(x => UpdateErrors(x, nameof(ExposureTimeText), nameof(DoesNotThrow)))
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
+                .Where(x => x.AcquisitionMode.HasValue)
+                .Select(x => x.FrameTransfer
+                    ? x.AcquisitionMode.Value | ANDOR_CS.Enums.AcquisitionMode.FrameTransfer
+                    : x.AcquisitionMode.Value)
+                .Select(x => DoesNotThrow(Model.Object.SetAcquisitionMode, x))
+                .ObserveOnUi()
+                .Subscribe(x =>
+                {
+                    if(IsAvailable.AcquisitionMode)
+                        UpdateErrors(x, nameof(AcquisitionMode), nameof(DoesNotThrow));
+                    if(IsAvailable.FrameTransfer)
+                        UpdateErrors(x, nameof(FrameTransfer), nameof(DoesNotThrow));
+                })
                 .DisposeWith(Subscriptions);
             // ReSharper restore PossibleInvalidOperationException
         }
@@ -680,10 +698,36 @@ namespace DIPOL_UF.ViewModels
             CreateGetter(x => x.OutputAmplifier, y => y?.OutputAmplifier, z => z.Amplifier);
             CreateGetter(x => x.HSSpeed, y => y?.Index ?? -1, z => z.HsSpeed);
             CreateGetter(x => x.PreAmpGain, y => y?.Index ?? -1, z => z.PreAmpGain);
-            CreateGetter(x => x.AcquisitionMode, y => y, z => z.AcquisitionMode);
             CreateGetter(x => x.ExposureTime, 
                 y => y?.ToString(Properties.Localization.General_ExposureFloatFormat),
                 z => z.ExposureTimeText);
+
+            var acqModeObs =
+                Model.Object.WhenPropertyChanged(x => x.AcquisitionMode)
+                     .Select(x =>
+                     {
+                         var hasFt = x.Value?.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer) ??
+                                     false;
+
+                         return (
+                             Mode: hasFt
+                                 ? x.Value ^ ANDOR_CS.Enums.AcquisitionMode.FrameTransfer
+                                 : x.Value,
+                             FrameTransfer: hasFt);
+                     })
+                     .DistinctUntilChanged();
+
+            acqModeObs.Select(x => x.Mode)
+                      .DistinctUntilChanged()
+                      .ObserveOnUi()
+                      .BindTo(this, x => x.AcquisitionMode)
+                      .DisposeWith(Subscriptions);
+
+            acqModeObs.Select(x => x.FrameTransfer)
+                      .DistinctUntilChanged()
+                      .ObserveOnUi()
+                      .BindTo(this, x => x.FrameTransfer)
+                      .DisposeWith(Subscriptions);
         }
 
         private void WatchAvailableSettings()
@@ -703,7 +747,7 @@ namespace DIPOL_UF.ViewModels
             ImmutableAvailability(nameof(Model.Object.OutputAmplifier), x=> x.Amplifier);
             ImmutableAvailability(nameof(Model.Object.AcquisitionMode), x => x.AcquisitionMode);
             ImmutableAvailability(nameof(Model.Object.ExposureTime), x => x.ExposureTimeText);
-
+            ImmutableAvailability(nameof(FrameTransfer), x => x.FrameTransfer); // This is correct
 
             this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
                 .Select(x =>
@@ -814,7 +858,8 @@ namespace DIPOL_UF.ViewModels
                             Type: nameof(CannotBeDefault),
                             Message: x.IsAvailable
                                 ? CannotBeDefault(x.Value, comparisonValue)
-                                : null)),
+                                : null))
+                        .ObserveOnUi(),
                     name);
             }
 
@@ -835,7 +880,8 @@ namespace DIPOL_UF.ViewModels
                         Type: nameof(CannotBeDefault),
                         Message: x.IsAvailable
                             ? CannotBeDefault(x.Value)
-                            : null)),
+                            : null))
+                    .ObserveOnUi(),
                 nameof(ExposureTimeText));
 
         }
@@ -1147,6 +1193,8 @@ namespace DIPOL_UF.ViewModels
         [Reactive]
         public AcquisitionMode? AcquisitionMode { get; set; }
 
+        [Reactive]
+        public bool FrameTransfer { get; set; }
         #endregion
     }
 }
