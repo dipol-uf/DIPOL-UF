@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Text.RegularExpressions;
@@ -64,6 +65,7 @@ namespace DIPOL_UF.ViewModels
             public bool HsSpeed { [ObservableAsProperty] get; }
             public bool PreAmpGain { [ObservableAsProperty] get; }
             public bool AcquisitionMode { [ObservableAsProperty] get; }
+            public bool ExposureTimeText { [ObservableAsProperty] get; }
         }
 
         private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
@@ -639,6 +641,10 @@ namespace DIPOL_UF.ViewModels
             CreateSetter(x => x.PreAmpGain, y => y >= 0 && y < AvailablePreAmpGains.Count,
                 z => z, Model.Object.SetPreAmpGain);
             CreateSetter(x => x.AcquisitionMode, y => y.HasValue, z => z.Value, Model.Object.SetAcquisitionMode);
+            CreateSetter(x => x.ExposureTimeText, y => !string.IsNullOrWhiteSpace(y),
+                z => float.TryParse(z, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var result)
+                    ? result
+                    : 0f, Model.Object.SetExposureTime);
             // ReSharper restore PossibleInvalidOperationException
         }
 
@@ -662,6 +668,9 @@ namespace DIPOL_UF.ViewModels
             CreateGetter(x => x.HSSpeed, y => y?.Index ?? -1, z => z.HsSpeed);
             CreateGetter(x => x.PreAmpGain, y => y?.Index ?? -1, z => z.PreAmpGain);
             CreateGetter(x => x.AcquisitionMode, y => y, z => z.AcquisitionMode);
+            CreateGetter(x => x.ExposureTime, 
+                y => y?.ToString(Properties.Localization.General_ExposureFloatFormat),
+                z => z.ExposureTimeText);
         }
 
         private void WatchAvailableSettings()
@@ -752,7 +761,20 @@ namespace DIPOL_UF.ViewModels
             base.HookValidators();
 
             SetUpDefaultValueValidators();
-            
+
+            CreateValidator(
+                this.WhenPropertyChanged(x => x.ExposureTimeText)
+                    .CombineLatest(IsAvailable.WhenPropertyChanged(y => y.ExposureTimeText),
+                        (x, y) => (x.Value, IsAvailable: y.Value))
+                    .Select(x => (
+                        Type: nameof(MatchesRegex),
+                        Message: x.IsAvailable
+                            ? MatchesRegex(x.Value,
+                                "^[0-9]+\\.?[0-9]*$",
+                                Properties.Localization.Validation_OnlyNumbersAllowed)
+                            : null)),
+                nameof(ExposureTimeText));
+
         }
 
         private void SetUpDefaultValueValidators()
@@ -788,6 +810,17 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.HsSpeed, -1, y => y.HsSpeed);
             DefaultValueValidator(x => x.PreAmpGain, -1, y => y.PreAmpGain);
             DefaultValueValidator(x => x.AcquisitionMode, null, x => x.AcquisitionMode);
+
+            CreateValidator(
+                this.WhenPropertyChanged(x => x.ExposureTimeText)
+                    .CombineLatest(IsAvailable.WhenPropertyChanged(y => y.ExposureTimeText),
+                        (x, y) => (x.Value, IsAvailable: y.Value))
+                    .Select(x => (
+                        Type: nameof(CannotBeDefault),
+                        Message: x.IsAvailable
+                            ? CannotBeDefault(x.Value)
+                            : null)),
+                nameof(ExposureTimeText));
 
         }
 
@@ -1075,6 +1108,11 @@ namespace DIPOL_UF.ViewModels
 
         #region V2
 
+        [Reactive]
+        public string ExposureTimeText { get; set; } = null;
+
+        // -1 is the default selected index in the list, equivalent to
+        // [SelectedItem] = null in case of nullable proeprties
         [Reactive] public int VsSpeed { get; set; } = -1;
 
         [Reactive]
@@ -1088,7 +1126,7 @@ namespace DIPOL_UF.ViewModels
         [Reactive] public int HsSpeed { get; set; } = -1;
 
         [Reactive]
-        public int PreAmpGain { get; set; }
+        public int PreAmpGain { get; set; } = -1;
 
         [Reactive]
         public AcquisitionMode? AcquisitionMode { get; set; }
