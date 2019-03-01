@@ -1128,7 +1128,7 @@ namespace DIPOL_UF.ViewModels
         public string ExposureTimeText { get; set; } = null;
 
         // -1 is the default selected index in the list, equivalent to
-        // [SelectedItem] = null in case of nullable proeprties
+        // [SelectedItem] = null in case of nullable properties
         [Reactive] public int VsSpeed { get; set; } = -1;
 
         [Reactive]
