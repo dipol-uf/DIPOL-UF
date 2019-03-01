@@ -583,7 +583,9 @@ namespace DIPOL_UF.ViewModels
             HookObservables();
             HookValidators();
 
-
+            _availableHsSpeeds.DisposeWith(Subscriptions);
+            _availablePreAmpGains.DisposeWith(Subscriptions);
+            
         }
 
         private void HookObservables()
