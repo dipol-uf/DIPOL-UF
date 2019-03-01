@@ -285,6 +285,9 @@
   <data name="General_Disconnect" xml:space="preserve">
     <value>Disconnect</value>
   </data>
+  <data name="General_ExposureFloatFormat" xml:space="preserve">
+    <value>F6</value>
+  </data>
   <data name="General_FanMode_Full" xml:space="preserve">
     <value>Full</value>
   </data>
@@ -376,6 +379,9 @@
   </data>
   <data name="Validation_CannotBeDefault" xml:space="preserve">
     <value>Default value is illegal</value>
+  </data>
+  <data name="Validation_OnlyNumbersAllowed" xml:space="preserve">
+    <value>Only numeric values are permitted</value>
   </data>
   <data name="Validation_ValueCannotBeGreaterThan" xml:space="preserve">
     <value>Value cannot be greater than {0}</value>
