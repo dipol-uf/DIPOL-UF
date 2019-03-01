@@ -646,6 +646,18 @@ namespace DIPOL_UF.ViewModels
                      && result >= 0
                     ? result
                     : 0f, Model.Object.SetExposureTime);
+
+            this.WhenPropertyChanged(x => x.ExposureTimeText)
+                .DistinctUntilChanged(x => x.Value)
+                .Throttle(TimeSpan.FromMilliseconds(100))
+                .Where(x => !string.IsNullOrWhiteSpace(x.Value))
+                .Select(x => float.TryParse(x.Value, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var result)
+                             && result >= 0
+                    ? result
+                    : 0f)
+                .Select(x => DoesNotThrow(Model.Object.SetExposureTime, x))
+                .Subscribe(x => UpdateErrors(x, nameof(ExposureTimeText), nameof(DoesNotThrow)))
+                .DisposeWith(Subscriptions);
             // ReSharper restore PossibleInvalidOperationException
         }
 
