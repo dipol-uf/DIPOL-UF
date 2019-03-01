@@ -752,14 +752,23 @@ namespace ANDOR_CS.Classes
 				settings.Add(nameof(PreAmpGain).ToLowerInvariant());
             if(Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) )
 				settings.Add(nameof(EMCCDGain).ToLowerInvariant());
+            if(Camera.Capabilities.AcquisitionModes.HasFlag(Enums.AcquisitionMode.FrameTransfer))
+                settings.Add(@"FrameTransfer");
+
+            if (Camera.Capabilities.TriggerModes != Enums.TriggerMode.Unknown)
+                settings.Add(nameof(TriggerMode));
+            if (Camera.Capabilities.AcquisitionModes != Enums.AcquisitionMode.Unknown)
+                settings.Add(nameof(AcquisitionMode));
+            if (Camera.Capabilities.ReadModes != ReadMode.Unknown)
+                settings.Add(nameof(ReadoutMode));
+            if (Camera.Capabilities.AcquisitionModes.HasFlag(Enums.AcquisitionMode.FrameTransfer)
+                && Camera.Capabilities.FtReadModes != ReadMode.Unknown)
+                settings.Add($@"Ft{nameof(ReadoutMode)}");
+
 
             // TODO: Check individual support of these features
             settings.Add(nameof(ADConverter).ToLowerInvariant());
             settings.Add(nameof(OutputAmplifier).ToLowerInvariant());
-            settings.Add(nameof(AcquisitionMode).ToLowerInvariant());
-            settings.Add("frametransfer");
-            settings.Add(nameof(ReadoutMode).ToLowerInvariant());
-            settings.Add(nameof(TriggerMode).ToLowerInvariant());
             settings.Add(nameof(ExposureTime).ToLowerInvariant());
             settings.Add(nameof(ImageArea).ToLowerInvariant());
 
