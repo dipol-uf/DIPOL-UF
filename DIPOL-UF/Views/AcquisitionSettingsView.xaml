@@ -115,35 +115,11 @@
                         <!--Exposure time-->
                         <TextBox Grid.Row="0" Grid.Column="1"
                                  Text="{Binding 
-                                    ExposureTimeValueText,
+                                    ExposureTimeText,
                                     Mode=TwoWay,
-                                    UpdateSourceTrigger=LostFocus,
-                                    ValidatesOnNotifyDataErrors=True}">
-                            <TextBox.IsEnabled>
-                                <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                    <Binding Path="SupportedSettings[ExposureTime]" Mode="OneTime"/>
-                                    <Binding Path="AllowedSettings[ExposureTime]" 
-                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
-                                </MultiBinding>
-                            </TextBox.IsEnabled>
-                            <TextBox.Style>
-                                <Style BasedOn="{StaticResource ResourceKey=TextBoxStyle}" TargetType="TextBox">
-                                    <Style.Triggers>
-                                        <DataTrigger 
-                                            Binding="{Binding 
-                                                HasErrorsOfProperties[ExposureTimeValueText], 
-                                                Mode=OneWay,
-                                                UpdateSourceTrigger=PropertyChanged}"
-                                            Value="true">
-                                            <Setter Property="ToolTip"
-                                                    Value="{Binding 
-                                                        LatestErrors[ExposureTimeValueText],
-                                                        Mode=OneWay,
-                                                        UpdateSourceTrigger=PropertyChanged}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBox.Style>
+                                    ValidatesOnNotifyDataErrors=True}"
+                                    IsEnabled="{Binding IsAvailable.ExposureTimeText}"
+                                 Style="{StaticResource TextBoxWithErrors}">
                         </TextBox>
                         <!--VS Speed-->
                         <ComboBox Grid.Row="1" Grid.Column="1"

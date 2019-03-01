@@ -774,7 +774,6 @@ namespace DIPOL_UF.ViewModels
                                 Properties.Localization.Validation_OnlyNumbersAllowed)
                             : null)),
                 nameof(ExposureTimeText));
-
         }
 
         private void SetUpDefaultValueValidators()
