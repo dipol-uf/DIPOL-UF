@@ -63,6 +63,7 @@ namespace DIPOL_UF.ViewModels
             public bool Amplifier { [ObservableAsProperty] get; }
             public bool HsSpeed { [ObservableAsProperty] get; }
             public bool PreAmpGain { [ObservableAsProperty] get; }
+            public bool AcquisitionMode { [ObservableAsProperty] get; }
         }
 
         private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
@@ -637,6 +638,7 @@ namespace DIPOL_UF.ViewModels
                 z => z, Model.Object.SetHSSpeed);
             CreateSetter(x => x.PreAmpGain, y => y >= 0 && y < AvailablePreAmpGains.Count,
                 z => z, Model.Object.SetPreAmpGain);
+            CreateSetter(x => x.AcquisitionMode, y => y.HasValue, z => z.Value, Model.Object.SetAcquisitionMode);
             // ReSharper restore PossibleInvalidOperationException
         }
 
@@ -659,6 +661,7 @@ namespace DIPOL_UF.ViewModels
             CreateGetter(x => x.OutputAmplifier, y => y?.OutputAmplifier, z => z.Amplifier);
             CreateGetter(x => x.HSSpeed, y => y?.Index ?? -1, z => z.HsSpeed);
             CreateGetter(x => x.PreAmpGain, y => y?.Index ?? -1, z => z.PreAmpGain);
+            CreateGetter(x => x.AcquisitionMode, y => y, z => z.AcquisitionMode);
         }
 
         private void WatchAvailableSettings()
@@ -676,7 +679,7 @@ namespace DIPOL_UF.ViewModels
             ImmutableAvailability(nameof(Model.Object.VSAmplitude), x => x.VsAmplitude);
             ImmutableAvailability(nameof(Model.Object.ADConverter), x => x.AdcBitDepth);
             ImmutableAvailability(nameof(Model.Object.OutputAmplifier), x=> x.Amplifier);
-            //ImmutableAvailability(nameof(Model.Object.HSSpeed), x => x.HsSpeed);
+            ImmutableAvailability(nameof(Model.Object.AcquisitionMode), x => x.AcquisitionMode);
 
             this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
                 .Select(x =>
@@ -735,6 +738,7 @@ namespace DIPOL_UF.ViewModels
                          x.ADConverter?.Index ?? -1,
                          x.OutputAmplifier?.Index ?? -1,
                          x.HSSpeed?.Index ?? -1))
+                 .ObserveOnUi()
                  .Subscribe(x =>
                  {
                      PreAmpGain = -1;
@@ -759,7 +763,9 @@ namespace DIPOL_UF.ViewModels
                 Expression<Func<SettingsAvailability, bool>> availability)
             {
                 var name = (accessor.Body as MemberExpression)?.Member.Name
-                           ?? throw new ArgumentException(@"Only member access expressions are supported.",
+                           ?? throw new ArgumentException(
+                               Properties.Localization.General_ShouldNotHappen
+                               + @" [Failed to create setter; Only property accessors are allowed.]",
                                nameof(accessor));
 
                 CreateValidator(
@@ -781,6 +787,7 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.Amplifier, null, y => y.Amplifier);
             DefaultValueValidator(x => x.HsSpeed, -1, y => y.HsSpeed);
             DefaultValueValidator(x => x.PreAmpGain, -1, y => y.PreAmpGain);
+            DefaultValueValidator(x => x.AcquisitionMode, null, x => x.AcquisitionMode);
 
         }
 
@@ -1084,7 +1091,7 @@ namespace DIPOL_UF.ViewModels
         public int PreAmpGain { get; set; }
 
         [Reactive]
-        public int AcquisitionMode { get; set; }
+        public AcquisitionMode? AcquisitionMode { get; set; }
 
         #endregion
     }
