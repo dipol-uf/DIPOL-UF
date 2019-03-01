@@ -234,7 +234,6 @@
                                     Path=AcquisitionMode,
                                     Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged,
-                                    Converter={StaticResource ResourceKey=EnumToDescriptionConverter}, 
                                     ValidatesOnNotifyDataErrors=True}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.AcquisitionMode}">
