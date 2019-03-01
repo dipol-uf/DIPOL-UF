@@ -91,5 +91,10 @@ namespace DIPOL_UF.Validators
           => Equals(value, @default)
                 ? Properties.Localization.Validation_CannotBeDefault
                 : null;
+
+        public static string CannotBeDefault(string value)
+            => string.IsNullOrWhiteSpace(value)
+                ? Properties.Localization.Validation_CannotBeDefault
+                : null;
     }
 }
