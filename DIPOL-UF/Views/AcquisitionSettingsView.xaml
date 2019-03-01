@@ -248,36 +248,12 @@
                         <CheckBox Grid.Row="8" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center"
                                   Margin="{StaticResource ResourceKey=DefaultMargin}" IsThreeState="False"
                                   IsChecked="{Binding 
-                                    FrameTransferValue, 
+                                    FrameTransfer, 
                                     Mode=TwoWay, 
                                     UpdateSourceTrigger=PropertyChanged, 
-                                    ValidatesOnNotifyDataErrors=True}">
-                            <CheckBox.Style>
-                                <Style TargetType="CheckBox">
-                                    <Style.Triggers>
-                                         <DataTrigger 
-                                            Binding="{Binding 
-                                                HasErrorsOfProperties[FrameTransferValue], 
-                                                Mode=OneWay,
-                                                UpdateSourceTrigger=PropertyChanged}"
-                                            Value="True">
-                                                    <Setter 
-                                                Property="ToolTip" 
-                                                Value="{Binding 
-                                                    LatestErrors[FrameTransferValue], 
-                                                    Mode=OneWay,
-                                                    UpdateSourceTrigger=PropertyChanged}"/>
-                                         </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </CheckBox.Style>
-                            <CheckBox.IsEnabled>
-                                <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                    <Binding Path="SupportedSettings[FrameTransferValue]" Mode="OneTime"/>
-                                    <Binding Path="AllowedSettings[FrameTransferValue]" 
-                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
-                                </MultiBinding>
-                            </CheckBox.IsEnabled>
+                                    ValidatesOnNotifyDataErrors=True}"
+                                  IsEnabled="{Binding IsAvailable.FrameTransfer}"
+                                  Style="{StaticResource CheckBoxWithErrors}">
                         </CheckBox>
                         <!--Readout mode-->
                         <ComboBox Grid.Row="9" Grid.Column="1"

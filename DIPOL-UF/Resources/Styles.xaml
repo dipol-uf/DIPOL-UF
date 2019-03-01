@@ -250,4 +250,19 @@
         </Style.Triggers>
     </Style>
 
+    <Style x:Key="CheckBoxWithErrors" BasedOn="{StaticResource ContentFont}" TargetType="CheckBox">
+        <Style.Triggers>
+            <DataTrigger 
+                Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).Count, Converter={StaticResource CompareToConverter}, ConverterParameter='> 0'}"
+                Value="True">
+                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors), Converter={StaticResource ErrorsToStringConverter}}"/>
+            </DataTrigger>
+            <DataTrigger 
+                Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).Count, Converter={StaticResource CompareToConverter}, ConverterParameter='== 0'}"
+                Value="True">
+                <Setter Property="ToolTip" Value="{x:Null}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
 </ResourceDictionary>
