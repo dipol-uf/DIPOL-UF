@@ -565,6 +565,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to F6.
+        /// </summary>
+        public static string General_ExposureFloatFormat {
+            get {
+                return ResourceManager.GetString("General_ExposureFloatFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Full.
         /// </summary>
         public static string General_FanMode_Full {
@@ -831,6 +840,15 @@ namespace DIPOL_UF.Properties {
         public static string Validation_CannotBeDefault {
             get {
                 return ResourceManager.GetString("Validation_CannotBeDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only numeric values are permitted.
+        /// </summary>
+        public static string Validation_OnlyNumbersAllowed {
+            get {
+                return ResourceManager.GetString("Validation_OnlyNumbersAllowed", resourceCulture);
             }
         }
         
