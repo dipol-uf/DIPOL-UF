@@ -643,6 +643,7 @@ namespace DIPOL_UF.ViewModels
             CreateSetter(x => x.AcquisitionMode, y => y.HasValue, z => z.Value, Model.Object.SetAcquisitionMode);
             CreateSetter(x => x.ExposureTimeText, y => !string.IsNullOrWhiteSpace(y),
                 z => float.TryParse(z, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var result)
+                     && result >= 0
                     ? result
                     : 0f, Model.Object.SetExposureTime);
             // ReSharper restore PossibleInvalidOperationException
@@ -689,6 +690,8 @@ namespace DIPOL_UF.ViewModels
             ImmutableAvailability(nameof(Model.Object.ADConverter), x => x.AdcBitDepth);
             ImmutableAvailability(nameof(Model.Object.OutputAmplifier), x=> x.Amplifier);
             ImmutableAvailability(nameof(Model.Object.AcquisitionMode), x => x.AcquisitionMode);
+            ImmutableAvailability(nameof(Model.Object.ExposureTime), x => x.ExposureTimeText);
+
 
             this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
                 .Select(x =>
@@ -764,6 +767,7 @@ namespace DIPOL_UF.ViewModels
 
             CreateValidator(
                 this.WhenPropertyChanged(x => x.ExposureTimeText)
+                    .Where(x => !string.IsNullOrWhiteSpace(x.Value))
                     .CombineLatest(IsAvailable.WhenPropertyChanged(y => y.ExposureTimeText),
                         (x, y) => (x.Value, IsAvailable: y.Value))
                     .Select(x => (
@@ -774,6 +778,7 @@ namespace DIPOL_UF.ViewModels
                                 Properties.Localization.Validation_OnlyNumbersAllowed)
                             : null)),
                 nameof(ExposureTimeText));
+
         }
 
         private void SetUpDefaultValueValidators()

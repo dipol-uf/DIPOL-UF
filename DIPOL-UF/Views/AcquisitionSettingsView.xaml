@@ -117,6 +117,7 @@
                                  Text="{Binding 
                                     ExposureTimeText,
                                     Mode=TwoWay,
+                                    UpdateSourceTrigger=PropertyChanged,
                                     ValidatesOnNotifyDataErrors=True}"
                                     IsEnabled="{Binding IsAvailable.ExposureTimeText}"
                                  Style="{StaticResource TextBoxWithErrors}">
