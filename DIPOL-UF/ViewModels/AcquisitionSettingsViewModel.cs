@@ -67,21 +67,25 @@ namespace DIPOL_UF.ViewModels
             public bool AcquisitionMode { [ObservableAsProperty] get; }
             public bool ExposureTimeText { [ObservableAsProperty] get; }
             public bool FrameTransfer { [ObservableAsProperty] get; }
+            public bool ReadMode { [ObservableAsProperty] get; }
         }
 
-        private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
-        private static readonly List<(string, PropertyInfo)> PropertyList =
-            typeof(AcquisitionSettingsViewModel)
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(pi => pi.CanRead && pi.CanWrite)
-            .Select(pi => (PropNameTrimmer.Replace(pi.Name, ""), pi))
-            .ToList();
+        //private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
+        //private static readonly List<(string, PropertyInfo)> PropertyList =
+        //    typeof(AcquisitionSettingsViewModel)
+        //    .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        //    .Where(pi => pi.CanRead && pi.CanWrite)
+        //    .Select(pi => (PropNameTrimmer.Replace(pi.Name, ""), pi))
+        //    .ToList();
 
         private readonly SourceCache<(int Index, float Speed), int> _availableHsSpeeds
             = new SourceCache<(int Index, float Speed), int>(x => x.Index);
 
         private readonly  SourceCache<(int Index, string Name), int> _availablePreAmpGains
             = new SourceCache<(int Index, string Name), int>(x => x.Index);
+
+        private readonly SourceCache<ReadMode, ReadMode> _availableReadModes
+            = new SourceCache<ReadMode, ReadMode>(x => x);
 
         public SettingsAvailability IsAvailable { get; }
             = new SettingsAvailability();
@@ -124,10 +128,6 @@ namespace DIPOL_UF.ViewModels
             .Where(EnumConverter.IsAcquisitionModeSupported)
             .ToArray();
 
-        public ReadMode[] AllowedReadoutModes =>
-            Helper.EnumFlagsToArray<ReadMode>(Model.Object.Camera.Capabilities.ReadModes)
-            .Where(EnumConverter.IsReadModeSupported)
-            .ToArray();
 
         public TriggerMode[] AllowedTriggerModes =>
             Helper.EnumFlagsToArray<TriggerMode>(Model.Object.Camera.Capabilities.TriggerModes)
@@ -139,6 +139,9 @@ namespace DIPOL_UF.ViewModels
 
         public IObservableCollection<(int Index, string Name)> AvailablePreAmpGains { get; }
             = new ObservableCollectionExtended<(int Index, string Name)>();
+
+        public IObservableCollection<ReadMode> AvailableReadModes { get; }
+        = new ObservableCollectionExtended<ReadMode>();
 
         // Todo: Use (Min, Max)
         public int[] AvailableEMCCDGains =>
@@ -585,6 +588,7 @@ namespace DIPOL_UF.ViewModels
 
             _availableHsSpeeds.DisposeWith(Subscriptions);
             _availablePreAmpGains.DisposeWith(Subscriptions);
+            _availableReadModes.DisposeWith(Subscriptions);
             
         }
 
@@ -603,6 +607,12 @@ namespace DIPOL_UF.ViewModels
                 .Connect()
                 .ObserveOnUi()
                 .Bind(AvailablePreAmpGains)
+                .SubscribeDispose(Subscriptions);
+
+            _availableReadModes
+                .Connect()
+                .ObserveOnUi()
+                .Bind(AvailableReadModes)
                 .SubscribeDispose(Subscriptions);
         }
 
@@ -750,6 +760,7 @@ namespace DIPOL_UF.ViewModels
             ImmutableAvailability(nameof(Model.Object.AcquisitionMode), x => x.AcquisitionMode);
             ImmutableAvailability(nameof(Model.Object.ExposureTime), x => x.ExposureTimeText);
             ImmutableAvailability(nameof(FrameTransfer), x => x.FrameTransfer); // This is correct
+            ImmutableAvailability(nameof(ReadMode), x => x.ReadMode);
 
             this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
                 .Select(x =>
@@ -788,6 +799,7 @@ namespace DIPOL_UF.ViewModels
                      nameof(Model.Object.OutputAmplifier))
                  .Where(x => x.ADConverter.HasValue && x.OutputAmplifier.HasValue)
                  .Select(x => x.GetAvailableHSSpeeds(x.ADConverter?.Index ?? -1, x.OutputAmplifier?.Index ?? -1))
+                 .ObserveOnUi()
                  .Subscribe(x =>
                  {
                      HsSpeed = -1;
@@ -813,6 +825,22 @@ namespace DIPOL_UF.ViewModels
                  {
                      PreAmpGain = -1;
                      _availablePreAmpGains.Edit(context => context.Load(x));
+                 })
+                 .DisposeWith(Subscriptions);
+
+            // Read mode changes if FrameTransfer is enabled
+            Model.Object.WhenAnyPropertyChanged(nameof(Model.Object.AcquisitionMode))
+                 .Select(x => x.AcquisitionMode?.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer) ?? false)
+                 .DistinctUntilChanged()
+                 .Select(x => Helper.EnumFlagsToArray<ReadMode>(x
+                                        ? Camera.Capabilities.FtReadModes
+                                        : Camera.Capabilities.ReadModes)
+                                    .Where(EnumConverter.IsReadModeSupported))
+                 .ObserveOnUi()
+                 .Subscribe(x =>
+                 {
+                     ReadMode = null;
+                     _availableReadModes.Edit(context => context.Load(x));
                  })
                  .DisposeWith(Subscriptions);
         }
@@ -1197,6 +1225,9 @@ namespace DIPOL_UF.ViewModels
 
         [Reactive]
         public bool FrameTransfer { get; set; }
+
+        [Reactive]
+        public ReadMode? ReadMode { get; set; }
         #endregion
     }
 }
