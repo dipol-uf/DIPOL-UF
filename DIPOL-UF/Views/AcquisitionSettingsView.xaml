@@ -231,8 +231,7 @@
                         <ComboBox Grid.Row="6" Grid.Column="1"
                                   ItemsSource="{Binding
                                     Path=AvailablePreAmpGains,
-                                    Mode=OneWay,
-                                    UpdateSourceTrigger=PropertyChanged}"
+                                    Mode=OneWay}"
                                   SelectedIndex="{Binding 
                                     PreAmpGain, 
                                     Mode=TwoWay, 
@@ -253,22 +252,21 @@
                         <ComboBox Grid.Row="7" Grid.Column="1"
                                   ItemsSource="{Binding
                                     Path=AllowedAcquisitionModes,
-                                    Mode=OneWay,
-                                    Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
-                                  SelectedIndex="{Binding
+                                    Mode=OneWay}"
+                                  SelectedItem="{Binding
                                     Path=AcquisitionMode,
                                     Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged,
                                     Converter={StaticResource ResourceKey=EnumToDescriptionConverter}, 
                                     ValidatesOnNotifyDataErrors=True}"
-                                  Style="{StaticResource ComboBoxWithErrors}">
-                            <ComboBox.IsEnabled>
-                                <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                    <Binding Path="SupportedSettings[AcquisitionMode]" Mode="OneTime"/>
-                                    <Binding Path="AllowedSettings[AcquisitionMode]" 
-                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
-                                </MultiBinding>
-                            </ComboBox.IsEnabled>
+                                  Style="{StaticResource ComboBoxWithErrors}"
+                                  IsEnabled="{Binding IsAvailable.AcquisitionMode}">
+                         <ComboBox.ItemTemplate>
+                             <DataTemplate DataType="ComboBoxItem">
+                                 <ContentControl
+                                     Content="{Binding Converter={StaticResource EnumToDescriptionConverter}}"/>
+                             </DataTemplate>
+                         </ComboBox.ItemTemplate>
                         </ComboBox>
                         <!--Frame transfer-->
                         <CheckBox Grid.Row="8" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center"
