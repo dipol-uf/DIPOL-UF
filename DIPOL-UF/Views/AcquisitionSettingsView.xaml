@@ -258,42 +258,21 @@
                         <!--Readout mode-->
                         <ComboBox Grid.Row="9" Grid.Column="1"
                                   ItemsSource="{Binding
-                                    Path=AllowedReadoutModes,
-                                    Mode=OneWay,
-                                    Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
+                                    Path=AvailableReadModes,
+                                    Mode=OneWay}"
                                   SelectedItem="{Binding
-                                    Path=ReadoutModeValue,
+                                    Path=ReadMode,
                                     Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged,
-                                    Converter={StaticResource ResourceKey=EnumToDescriptionConverter}, 
-                                    ValidatesOnNotifyDataErrors=True}">
-                            <ComboBox.Style>
-                                <Style BasedOn="{StaticResource ResourceKey=ComboBoxStyle}"
-                                       TargetType="ComboBox">
-                                    <Style.Triggers>
-                                        <DataTrigger 
-                                            Binding="{Binding 
-                                                HasErrorsOfProperties[ReadoutModeValue], 
-                                                Mode=OneWay,
-                                                UpdateSourceTrigger=PropertyChanged}"
-                                            Value="True">
-                                            <Setter 
-                                                Property="ToolTip" 
-                                                Value="{Binding 
-                                                    LatestErrors[ReadoutModeValue], 
-                                                    Mode=OneWay,
-                                                    UpdateSourceTrigger=PropertyChanged}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ComboBox.Style>
-                            <ComboBox.IsEnabled>
-                                <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                    <Binding Path="SupportedSettings[ReadoutMode]" Mode="OneTime"/>
-                                    <Binding Path="AllowedSettings[ReadoutMode]" 
-                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
-                                </MultiBinding>
-                            </ComboBox.IsEnabled>
+                                    ValidatesOnNotifyDataErrors=True}"
+                                  IsEnabled="{Binding IsAvailable.ReadMode}"
+                                  Style="{StaticResource ComboBoxWithErrors}">
+                           <ComboBox.ItemTemplate>
+                               <DataTemplate DataType="ComboBoxItem">
+                                   <ContentControl
+                                       Content="{Binding Converter={StaticResource EnumToDescriptionConverter}}"/>
+                               </DataTemplate>
+                           </ComboBox.ItemTemplate>
                         </ComboBox>
                         <!--Trigger mode-->
                         <ComboBox Grid.Row="10" Grid.Column="1"
