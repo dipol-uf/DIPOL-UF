@@ -1567,7 +1567,7 @@ namespace ANDOR_CS.Classes
             if (settings.AcquisitionMode?.HasFlag(AcquisitionMode.Accumulation) == true)
             {
                 if (settings.AccumulateCycle?.Frames is int nAccFrames
-                    && settings.AccumulateCycle?.Time is float accExpTime)
+                    && settings.AccumulateCycle.Value.Time is float accExpTime)
                 {
                     if (FailIfError(
                         Call(CameraHandle, SdkInstance.SetNumberAccumulations, nAccFrames),
@@ -1590,7 +1590,7 @@ namespace ANDOR_CS.Classes
             if (settings.AcquisitionMode?.HasFlag(AcquisitionMode.Kinetic) == true)
             {
                 if (settings.AccumulateCycle?.Frames is int nAccFrames
-                    && settings.AccumulateCycle?.Time is float accExpTime)
+                    && settings.AccumulateCycle.Value.Time is float accExpTime)
                 {
                     if (FailIfError(
                         Call(CameraHandle, SdkInstance.SetNumberAccumulations, nAccFrames),
@@ -1609,7 +1609,7 @@ namespace ANDOR_CS.Classes
                         $"Accumulation cycle should be set if acquisition mode is {settings.AcquisitionMode.Value}.");
 
                 if (settings.KineticCycle?.Frames is int nKinFrames
-                    && settings.KineticCycle?.Time is float kinExpTime)
+                    && settings.KineticCycle.Value.Time is float kinExpTime)
                 {
                     if (FailIfError(Call(CameraHandle, SdkInstance.SetNumberKinetics, nKinFrames),
                         nameof(SdkInstance.SetNumberKinetics),
