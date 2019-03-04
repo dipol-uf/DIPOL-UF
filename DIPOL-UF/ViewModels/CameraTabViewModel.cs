@@ -95,9 +95,9 @@ namespace DIPOL_UF.ViewModels
         {
             CoolerCommand =
                 ReactiveCommand.Create(() => Unit.Default,
-                                   Model.CoolerCommand.CanExecute.LogObservable("CanExecute", Subscriptions)
+                                   Model.CoolerCommand.CanExecute
                                         .CombineLatest(
-                                       ObserveSpecificErrors(nameof(TargetTemperatureText)).LogObservable("HAS ERRORS", Subscriptions),
+                                       ObserveSpecificErrors(nameof(TargetTemperatureText)),
                                      (x, y) => x && !y))
                                .DisposeWith(Subscriptions);
 

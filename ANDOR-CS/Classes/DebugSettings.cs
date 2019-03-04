@@ -34,6 +34,11 @@ namespace ANDOR_CS.Classes
 #if DEBUG
     public class DebugSettings : SettingsBase
     {
+        public DebugSettings(DebugCamera camera)
+        {
+            Camera = camera;
+        }
+
         public override void SetEmCcdGain(int gain)
         {
             
@@ -56,6 +61,11 @@ namespace ANDOR_CS.Classes
         {
             yield return (Index: 0, Name: "Zero");
             yield return (Index: 1, Name: "One");
+        }
+
+        public override HashSet<string> SupportedSettings()
+        {
+            return AllowedSettings();
         }
     }
 #endif

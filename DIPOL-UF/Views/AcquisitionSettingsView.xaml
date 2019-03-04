@@ -26,6 +26,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
         xmlns:viewModels="clr-namespace:DIPOL_UF.ViewModels"
         mc:Ignorable="d"
@@ -115,10 +116,26 @@
                                  Text="{Binding 
                                     ExposureTimeText,
                                     Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged,
+                                    UpdateSourceTrigger=LostFocus,
                                     ValidatesOnNotifyDataErrors=True}"
-                                    IsEnabled="{Binding IsAvailable.ExposureTimeText}"
+                                 IsEnabled="{Binding IsAvailable.ExposureTimeText}"
                                  Style="{StaticResource TextBoxWithErrors}">
+                            <behaviors:Interaction.Triggers>
+                                <behaviors:EventTrigger 
+                                    EventName="GotFocus"
+                                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=TextBox}}">
+                                    <behaviors:InvokeCommandAction 
+                                        Command="{Binding GotFocusCommand}"
+                                        CommandParameter="ExposureTimeText"/>
+                                </behaviors:EventTrigger>
+                                <behaviors:EventTrigger 
+                                    EventName="LostFocus"
+                                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=TextBox}}">
+                                    <behaviors:InvokeCommandAction 
+                                        Command="{Binding LostFocusCommand}"
+                                        CommandParameter="ExposureTimeText"/>
+                                </behaviors:EventTrigger>
+                            </behaviors:Interaction.Triggers>
                         </TextBox>
                         <!--VS Speed-->
                         <ComboBox Grid.Row="1" Grid.Column="1"
