@@ -49,6 +49,33 @@
         </Grid.RowDefinitions>
         <TabControl Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <TabItem Header="{extensions:Text Key=AcquisitionSettings_Settings}">
+                <TabItem.HeaderTemplate>
+                    <DataTemplate>
+                        <Border>
+                            <Border.Style>
+                                <Style BasedOn="{StaticResource ErrorBorderStyle}" TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger 
+                                            Binding="{Binding 
+                                                DataContext.Group1ContainsErrors,
+                                                RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" 
+                                            Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderErrorColor}"/>
+                                        </DataTrigger>
+                                        <DataTrigger 
+                                            Binding="{Binding 
+                                                DataContext.Group1ContainsErrors,
+                                                RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                            Value="False">
+                                            <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderDefaultColor}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <ContentControl Content="{Binding}"/>
+                        </Border>
+                    </DataTemplate>
+                </TabItem.HeaderTemplate>
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -321,25 +348,6 @@
 
                     </Grid>
                 </ScrollViewer>
-                <TabItem.HeaderTemplate>
-                    <DataTemplate>
-                        <Border>
-                            <Border.Style>
-                                <Style BasedOn="{StaticResource ErrorBorderStyle}" TargetType="Border">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Group1ContainsErrors}" Value="True">
-                                            <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderErrorColor}"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding Group1ContainsErrors}" Value="False">
-                                            <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderDefaultColor}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <ContentControl Content="{Binding}"/>
-                        </Border>
-                    </DataTemplate>
-                </TabItem.HeaderTemplate>
             </TabItem>
             <TabItem Header="{extensions:Text Key=AcquisitionSettings_ImageSize}">
                 <TabItem.HeaderTemplate>
