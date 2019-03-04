@@ -304,8 +304,46 @@
 
                     </Grid>
                 </ScrollViewer>
+                <TabItem.HeaderTemplate>
+                    <DataTemplate>
+                        <Border>
+                            <Border.Style>
+                                <Style BasedOn="{StaticResource ErrorBorderStyle}" TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Group1ContainsErrors}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderErrorColor}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Group1ContainsErrors}" Value="False">
+                                            <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderDefaultColor}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <ContentControl Content="{Binding}"/>
+                        </Border>
+                    </DataTemplate>
+                </TabItem.HeaderTemplate>
             </TabItem>
             <TabItem Header="{extensions:Text Key=AcquisitionSettings_ImageSize}">
+                <TabItem.HeaderTemplate>
+                    <DataTemplate>
+                        <Border>
+                            <Border.Style>
+                                <Style BasedOn="{StaticResource ErrorBorderStyle}" TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Group2ContainsErrors}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderErrorColor}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Group2ContainsErrors}" Value="False">
+                                            <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderDefaultColor}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <ContentControl Content="{Binding}"/>
+                        </Border>
+                    </DataTemplate>
+                </TabItem.HeaderTemplate>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
@@ -388,7 +426,25 @@
                 </Grid>
             </TabItem>
             <TabItem Header="{extensions:Text Key=AcquisitionSettings_Cycles}">
-                
+                <TabItem.HeaderTemplate>
+                    <DataTemplate>
+                        <Border>
+                            <Border.Style>
+                                <Style BasedOn="{StaticResource ErrorBorderStyle}" TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Group3ContainsErrors}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderErrorColor}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Group3ContainsErrors}" Value="False">
+                                            <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderDefaultColor}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <ContentControl Content="{Binding}"/>
+                        </Border>
+                    </DataTemplate>
+                </TabItem.HeaderTemplate>
             </TabItem>
         </TabControl>
         <!--Save-->

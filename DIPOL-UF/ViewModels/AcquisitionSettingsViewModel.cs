@@ -31,8 +31,11 @@ using System.Windows;
 using System.Threading.Tasks;
 using System.IO;
 using System.Linq.Expressions;
+using System.Net;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
@@ -69,13 +72,6 @@ namespace DIPOL_UF.ViewModels
             public bool ImageArea { [ObservableAsProperty] get; }
         }
 
-        //private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
-        //private static readonly List<(string, PropertyInfo)> PropertyList =
-        //    typeof(AcquisitionSettingsViewModel)
-        //    .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        //    .Where(pi => pi.CanRead && pi.CanWrite)
-        //    .Select(pi => (PropNameTrimmer.Replace(pi.Name, ""), pi))
-        //    .ToList();
 
         private readonly SourceCache<(int Index, float Speed), int> _availableHsSpeeds
             = new SourceCache<(int Index, float Speed), int>(x => x.Index);
@@ -85,6 +81,11 @@ namespace DIPOL_UF.ViewModels
 
         private readonly SourceCache<ReadMode, ReadMode> _availableReadModes
             = new SourceCache<ReadMode, ReadMode>(x => x);
+
+        private string[] Group1Names { get; }
+        private string[] Group2Names { get; }
+        private string[] Group3Names { get; }
+
 
         public SettingsAvailability IsAvailable { get; }
             = new SettingsAvailability();
@@ -126,7 +127,6 @@ namespace DIPOL_UF.ViewModels
             .Where(EnumConverter.IsAcquisitionModeSupported)
             .ToArray();
 
-
         public TriggerMode[] AllowedTriggerModes =>
             Helper.EnumFlagsToArray<TriggerMode>(Model.Object.Camera.Capabilities.TriggerModes)
             .Where(EnumConverter.IsTriggerModeSupported)
@@ -140,6 +140,11 @@ namespace DIPOL_UF.ViewModels
 
         public IObservableCollection<ReadMode> AvailableReadModes { get; }
         = new ObservableCollectionExtended<ReadMode>();
+
+        public bool Group1ContainsErrors { [ObservableAsProperty] get; }
+        public bool Group2ContainsErrors { [ObservableAsProperty] get; }
+        public bool Group3ContainsErrors { [ObservableAsProperty] get; }
+
 
         public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model)
             : base(model)
@@ -159,7 +164,30 @@ namespace DIPOL_UF.ViewModels
             SupportedSettings = Model.Object.SupportedSettings();
             AllowedSettings = Model.Object.AllowedSettings();
 
-            
+            Group1Names = new[]
+            {
+                nameof(IsAvailable.VsSpeed),
+                nameof(IsAvailable.VsAmplitude),
+                nameof(IsAvailable.AdcBitDepth),
+                nameof(IsAvailable.Amplifier),
+                nameof(IsAvailable.HsSpeed),
+                nameof(IsAvailable.PreAmpGain),
+                nameof(IsAvailable.AcquisitionMode),
+                nameof(IsAvailable.ExposureTimeText),
+                nameof(IsAvailable.FrameTransfer),
+                nameof(IsAvailable.ReadMode),
+                nameof(IsAvailable.TriggerMode),
+                nameof(IsAvailable.EmCcdGainText)
+            };
+
+            Group2Names = new[]
+            {
+                nameof(IsAvailable.ImageArea)
+            };
+
+            // TODO: Add property names here
+            Group3Names = new[] { string.Empty };
+
             InitializeCommands();
 
             WatchItemSources();
@@ -199,6 +227,28 @@ namespace DIPOL_UF.ViewModels
                 .Select(x => x.Amplifier)
                 .DistinctUntilChanged()
                 .Subscribe(_ => EmCcdGainText = null)
+                .DisposeWith(Subscriptions);
+
+
+            ObserveHasErrors
+                .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                .Select(_ => Group1Names.Any(HasSpecificErrors))
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.Group1ContainsErrors)
+                .DisposeWith(Subscriptions);
+
+            ObserveHasErrors
+                .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                .Select(_ => Group2Names.Any(HasSpecificErrors))
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.Group2ContainsErrors)
+                .DisposeWith(Subscriptions);
+
+            ObserveHasErrors
+                .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                .Select(_ => Group3Names.Any(HasSpecificErrors))
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.Group3ContainsErrors)
                 .DisposeWith(Subscriptions);
         }
 

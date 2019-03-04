@@ -265,4 +265,11 @@
         </Style.Triggers>
     </Style>
 
+    <Style x:Key="ErrorBorderStyle" TargetType="Border">
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="CornerRadius" Value="5"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderDefaultColor}"/>
+        <Setter Property="Padding" Value="{StaticResource DefaultPadding}"/>
+        <Setter Property="Margin" Value="0"/>
+    </Style>
 </ResourceDictionary>
