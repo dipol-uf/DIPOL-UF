@@ -543,17 +543,6 @@ namespace ANDOR_CS.Classes
                 speedArray[speedIndex] = localSpeed;
             }
 
-            var (low, high) = (0, 0);
-
-            if (Capabilities.GetFunctions.HasFlag(GetFunction.EmccdGain))
-            {
-                Call(CameraHandle, (ref (int Low, int High) output) =>
-                    SdkInstance.GetEMGainRange(ref output.Low, ref output.High),
-                    out var gainRange);
-                low = gainRange.Low;
-                high = gainRange.High;
-            }
-
             // Assembles a new CameraProperties object using collected above information
             Properties = new CameraProperties
             {
@@ -564,7 +553,6 @@ namespace ANDOR_CS.Classes
                 OutputAmplifiers = amplifiers,
                 PreAmpGains = preAmpGainDesc,
                 VSSpeeds = speedArray,
-                EMCCDGainRange = (low, high)
             };
 
         }

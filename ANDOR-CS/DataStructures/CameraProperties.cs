@@ -97,11 +97,5 @@ namespace ANDOR_CS.DataStructures
             internal set;
         }
 
-        [DataMember(IsRequired = true)]
-        public (int Low, int High) EMCCDGainRange
-        {
-            get;
-            internal set;
-        }
     }
 }

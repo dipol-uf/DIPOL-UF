@@ -657,24 +657,6 @@ namespace ANDOR_CS.Classes
             ImageArea = area;
         }
 
-        public virtual void SetEMCCDGain(int gain)
-        {
-            if (Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain))
-            {
-
-                if (!OutputAmplifier.HasValue || !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.ElectronMultiplication))
-                    throw new NullReferenceException($"OutputAmplifier should be set to {OutputAmplification.Conventional} before accessing EMCCDGain.");
-
-                var range = Camera.Properties.EMCCDGainRange;
-
-                if (gain > range.High || gain < range.Low)
-                    throw new ArgumentOutOfRangeException($"Gain is out of range. (Provided value {gain} should be in [{range.Low}, {range.High}].)");
-
-                EMCCDGain = gain;
-            }
-            else
-                throw new NotSupportedException("EM CCD Gain feature is not supported.");
-        }
 
         public virtual void SetAccumulationCycle(int number, float time)
         {
@@ -774,6 +756,8 @@ namespace ANDOR_CS.Classes
 
             return settings;
         }
+
+        public abstract void SetEmCcdGain(int gain);
 
         public abstract bool IsHSSpeedSupported(
             int speedIndex, 
