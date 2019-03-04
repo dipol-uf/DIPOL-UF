@@ -25,6 +25,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace DIPOL_UF.Validators
@@ -34,7 +36,7 @@ namespace DIPOL_UF.Validators
         private static readonly Dictionary<string, Regex> RegexCache =
             new Dictionary<string, Regex>();
 
-        public static string CannotBeLessThan(int x, int comp)
+ public static string CannotBeLessThan(int x, int comp)
         {
             return x < comp
                 ? string.Format(Properties.Localization.Validation_ValueCannotBeLessThan, comp)
@@ -65,7 +67,7 @@ namespace DIPOL_UF.Validators
         public static string MatchesRegex(string input, string pattern, string disallowed = null)
         {
             if (!RegexCache.ContainsKey(pattern))
-                RegexCache.Add(pattern, new Regex(pattern));
+                RegexCache.Add(pattern, new Regex(pattern, RegexOptions.Compiled));
 
             return !RegexCache[pattern].IsMatch(input)
                 ? string.Format(Properties.Localization.Validation_ValueMatchesRegex,
@@ -96,5 +98,23 @@ namespace DIPOL_UF.Validators
             => string.IsNullOrWhiteSpace(value)
                 ? Properties.Localization.Validation_CannotBeDefault
                 : null;
+
+        public static string CanBeParsed(string value, out int result)
+            => int.TryParse(value, NumberStyles.Any, NumberFormatInfo.InvariantInfo,
+                out result)
+                ? null
+                : Properties.Localization.Validation_CannotBeParsed;
+
+        public static string CanBeParsed(string value, out float result)
+            => float.TryParse(value, NumberStyles.Any, NumberFormatInfo.InvariantInfo,
+                out result)
+                ? null
+                : Properties.Localization.Validation_CannotBeParsed;
+
+        public static string CanBeParsed(string value, out double result)
+            => double.TryParse(value, NumberStyles.Any, NumberFormatInfo.InvariantInfo,
+                out result)
+                ? null
+                : Properties.Localization.Validation_CannotBeParsed;
     }
 }
