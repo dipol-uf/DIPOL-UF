@@ -626,7 +626,7 @@ namespace DIPOL_UF.ViewModels
                 Func<TSrc, TTarget> selector,
                 Action<TTarget> setter)
             {
-                var name = (sourceAccessor.Body as MemberExpression)?.Member?.Name
+                var name = (sourceAccessor.Body as MemberExpression)?.Member.Name
                            ?? throw new ArgumentException(
                                Properties.Localization.General_ShouldNotHappen,
                                nameof(sourceAccessor));
