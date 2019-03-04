@@ -300,6 +300,9 @@
   <data name="General_FloatTempFormat" xml:space="preserve">
     <value>{0:+0.00;-0.00;0.00}</value>
   </data>
+  <data name="General_IntegerFormat" xml:space="preserve">
+    <value>D</value>
+  </data>
   <data name="General_InvalidArgument" xml:space="preserve">
     <value>Argument {0} is invalid.</value>
   </data>
@@ -379,6 +382,9 @@
   </data>
   <data name="Validation_CannotBeDefault" xml:space="preserve">
     <value>Default value is illegal</value>
+  </data>
+  <data name="Validation_CannotBeParsed" xml:space="preserve">
+    <value>Invalid input format</value>
   </data>
   <data name="Validation_OnlyNumbersAllowed" xml:space="preserve">
     <value>Only numeric values are permitted</value>

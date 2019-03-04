@@ -853,6 +853,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid input format.
+        /// </summary>
+        public static string Validation_CannotBeParsed {
+            get {
+                return ResourceManager.GetString("Validation_CannotBeParsed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Only numeric values are permitted.
         /// </summary>
         public static string Validation_OnlyNumbersAllowed {
