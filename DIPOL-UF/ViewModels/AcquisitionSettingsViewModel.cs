@@ -171,23 +171,26 @@ namespace DIPOL_UF.ViewModels
 
             Group1Names = new[]
             {
-                nameof(IsAvailable.VsSpeed),
-                nameof(IsAvailable.VsAmplitude),
-                nameof(IsAvailable.AdcBitDepth),
-                nameof(IsAvailable.Amplifier),
-                nameof(IsAvailable.HsSpeed),
-                nameof(IsAvailable.PreAmpGain),
-                nameof(IsAvailable.AcquisitionMode),
-                nameof(IsAvailable.ExposureTimeText),
-                nameof(IsAvailable.FrameTransfer),
-                nameof(IsAvailable.ReadMode),
-                nameof(IsAvailable.TriggerMode),
-                nameof(IsAvailable.EmCcdGainText)
+                nameof(VsSpeed),
+                nameof(VsAmplitude),
+                nameof(AdcBitDepth),
+                nameof(Amplifier),
+                nameof(HsSpeed),
+                nameof(PreAmpGain),
+                nameof(AcquisitionMode),
+                nameof(ExposureTimeText),
+                nameof(FrameTransfer),
+                nameof(ReadMode),
+                nameof(TriggerMode),
+                nameof(EmCcdGainText)
             };
 
             Group2Names = new[]
             {
-                nameof(IsAvailable.ImageArea)
+                nameof(ImageArea_X1),
+                nameof(ImageArea_X2),
+                nameof(ImageArea_Y1),
+                nameof(ImageArea_Y2)
             };
 
             // TODO: Add property names here
@@ -277,13 +280,13 @@ namespace DIPOL_UF.ViewModels
                     .Subscribe(x =>
                     {
                         var test1 = CanBeParsed(x, out int result);
-                        Helper.ExecuteOnUi(() => UpdateErrors(test1, name, nameof(CanBeParsed)));
+                        UpdateErrors(test1, name, nameof(CanBeParsed));
 
                         string test2 = null;
                         if (string.IsNullOrEmpty(test1))
                             test2 = DoesNotThrow(setter, result);
 
-                        Helper.ExecuteOnUi(() => UpdateErrors(test2, name, nameof(DoesNotThrow)));
+                        UpdateErrors(test2, name, nameof(DoesNotThrow));
 
                     }).DisposeWith(Subscriptions);
             }
@@ -332,30 +335,66 @@ namespace DIPOL_UF.ViewModels
 
             CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime);
             CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain);
-            CreateStringToIntSetter(x => x.ImageArea_X1, y =>
-            {
-                Model.Object.SetImageArea(
-                    (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
-                    .CopyWithModifications(ctx => ctx.X1 += y));
-            });
-            CreateStringToIntSetter(x => x.ImageArea_Y1, y =>
-            {
-                Model.Object.SetImageArea(
-                    (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
-                    .CopyWithModifications(ctx => ctx.Y1 += y));
-            });
-            CreateStringToIntSetter(x => x.ImageArea_X2, y =>
-            {
-                Model.Object.SetImageArea(
-                    (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
-                    .CopyWithModifications(ctx => ctx.X2 += y));
-            });
-            CreateStringToIntSetter(x => x.ImageArea_Y1, y =>
-            {
-                Model.Object.SetImageArea(
-                    (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
-                    .CopyWithModifications(ctx => ctx.Y2 += y));
-            });
+
+            this.WhenAnyValue(x => x.ImageArea_X1, x => x.ImageArea_Y1, x => x.ImageArea_X2, x => x.ImageArea_Y2)
+                .Subscribe(x =>
+                {
+                    var testX1 = CanBeParsed(x.Item1, out int x1);
+                    UpdateErrors(testX1, nameof(ImageArea_X1), nameof(CanBeParsed));
+                    var testY1 = CanBeParsed(x.Item2, out int y1);
+                    UpdateErrors(testY1, nameof(ImageArea_Y1), nameof(CanBeParsed));
+                    var testX2 = CanBeParsed(x.Item3, out int x2);
+                    UpdateErrors(testX2, nameof(ImageArea_X2), nameof(CanBeParsed));
+                    var testY2 = CanBeParsed(x.Item4, out int y2);
+                    UpdateErrors(testY2, nameof(ImageArea_Y2), nameof(CanBeParsed));
+
+                    string secondTest = null;
+
+                    if (string.IsNullOrEmpty(testX1)
+                        && string.IsNullOrEmpty(testY1)
+                        && string.IsNullOrEmpty(testX2)
+                        && string.IsNullOrEmpty(testY2))
+                        secondTest = DoesNotThrow(() => Model.Object.SetImageArea(new Rectangle(x1, y1, x2, y2)));
+                    UpdateErrors(secondTest, nameof(ImageArea_X1), nameof(DoesNotThrow));
+                    UpdateErrors(secondTest, nameof(ImageArea_Y1), nameof(DoesNotThrow));
+                    UpdateErrors(secondTest, nameof(ImageArea_X2), nameof(DoesNotThrow));
+                    UpdateErrors(secondTest, nameof(ImageArea_Y2), nameof(DoesNotThrow));
+
+                })
+                .DisposeWith(Subscriptions);
+
+            //CreateStringToIntSetter(x => x.ImageArea_X1, y =>
+            //{
+            //    Model.Object.SetImageArea(
+            //        (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
+            //        .CopyWithModifications(ctx =>
+            //        {
+            //            ctx.X1 += y;
+            //            ctx.X2 = ctx.X2 > ctx.X1 ? ctx.X2 : ctx.X1 + 1;
+            //        }));
+            //});
+            //CreateStringToIntSetter(x => x.ImageArea_Y1, y =>
+            //{
+            //    Model.Object.SetImageArea(
+            //        (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
+            //        .CopyWithModifications(ctx =>
+            //        {
+            //            ctx.Y1 += y;
+            //            ctx.Y2 = ctx.Y2 > ctx.Y1 ? ctx.Y2 : ctx.Y1 + 1;
+            //        }));
+            //});
+            //CreateStringToIntSetter(x => x.ImageArea_X2, y =>
+            //{
+            //    Model.Object.SetImageArea(
+            //        (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
+            //        .CopyWithModifications(ctx => ctx.X2 += y));
+            //});
+            //CreateStringToIntSetter(x => x.ImageArea_Y2, y =>
+            //{
+            //    Model.Object.SetImageArea(
+            //        (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
+            //        .CopyWithModifications(ctx => ctx.Y2 += y));
+            //});
 
 
             this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
@@ -568,7 +607,6 @@ namespace DIPOL_UF.ViewModels
             ObserveHasErrors
                 .Throttle(UiSettingsProvider.UiThrottlingDelay)
                 .Select(_ => Group1Names.Any(HasSpecificErrors))
-                .LogObservable("Group1", Subscriptions)
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group1ContainsErrors)
                 .DisposeWith(Subscriptions);
@@ -576,6 +614,7 @@ namespace DIPOL_UF.ViewModels
             ObserveHasErrors
                 .Throttle(UiSettingsProvider.UiThrottlingDelay)
                 .Select(_ => Group2Names.Any(HasSpecificErrors))
+                .LogObservable("GROUP2", Subscriptions)
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group2ContainsErrors)
                 .DisposeWith(Subscriptions);
@@ -586,6 +625,8 @@ namespace DIPOL_UF.ViewModels
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group3ContainsErrors)
                 .DisposeWith(Subscriptions);
+
+            this.ObserveSpecificErrors(nameof(EmCcdGainText)).LogObservable("EMCCD", Subscriptions);
         }
 
         private void SetUpDefaultValueValidators()
@@ -612,8 +653,29 @@ namespace DIPOL_UF.ViewModels
                     name);
             }
 
+            void DefaultStringValueValidator(
+                Expression<Func<AcquisitionSettingsViewModel, string>> accessor,
+                Expression<Func<SettingsAvailability, bool>> availability)
+            {
+                var name = (accessor.Body as MemberExpression)?.Member.Name
+                           ?? throw new ArgumentException(
+                               Properties.Localization.General_ShouldNotHappen,
+                               nameof(accessor));
 
-            DefaultValueValidator(x => x.VsSpeed, -1, y=> y.VsSpeed);
+                CreateValidator(
+                    this.WhenPropertyChanged(accessor)
+                        .CombineLatest(IsAvailable.WhenPropertyChanged(availability),
+                            (x, y) => (x.Value, IsAvailable: y.Value))
+                        .Select(x => (
+                            Type: nameof(CannotBeDefault),
+                            Message: x.IsAvailable
+                                ? CannotBeDefault(x.Value)
+                                : null))
+                        .ObserveOnUi(),
+                    name);
+            }
+
+            DefaultValueValidator(x => x.VsSpeed, -1, y => y.VsSpeed);
             DefaultValueValidator(x => x.VsAmplitude, null, y=> y.VsAmplitude);
             DefaultValueValidator(x => x.AdcBitDepth, -1, y => y.AdcBitDepth);
             DefaultValueValidator(x => x.Amplifier, null, y => y.Amplifier);
@@ -622,30 +684,14 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.AcquisitionMode, null, x => x.AcquisitionMode);
             DefaultValueValidator(x => x.TriggerMode, null, y => y.TriggerMode);
             DefaultValueValidator(x => x.ReadMode, null, y => y.ReadMode);
+            
 
-            CreateValidator(
-                this.WhenPropertyChanged(x => x.ExposureTimeText)
-                    .CombineLatest(IsAvailable.WhenPropertyChanged(y => y.ExposureTimeText),
-                        (x, y) => (x.Value, IsAvailable: y.Value))
-                    .Select(x => (
-                        Type: nameof(CannotBeDefault),
-                        Message: x.IsAvailable
-                            ? CannotBeDefault(x.Value)
-                            : null))
-                    .ObserveOnUi(),
-                nameof(ExposureTimeText));
-
-            CreateValidator(
-                this.WhenPropertyChanged(x => x.EmCcdGainText)
-                    .CombineLatest(IsAvailable.WhenPropertyChanged(y => y.EmCcdGainText),
-                        (x, y) => (x.Value, IsAvailable: y.Value))
-                    .Select(x => (
-                        Type: nameof(CannotBeDefault),
-                        Message: x.IsAvailable
-                            ? CannotBeDefault(x.Value)
-                            : null))
-                    .ObserveOnUi(),
-                nameof(EmCcdGainText));
+            //DefaultStringValueValidator(x => x.ExposureTimeText, y => y.ExposureTimeText);
+            //DefaultStringValueValidator(x => x.EmCcdGainText, y => y.EmCcdGainText);
+            //DefaultStringValueValidator(x => x.ImageArea_X1, y => y.ImageArea);
+            //DefaultStringValueValidator(x => x.ImageArea_Y1, y => y.ImageArea);
+            //DefaultStringValueValidator(x => x.ImageArea_X2, y => y.ImageArea);
+            //DefaultStringValueValidator(x => x.ImageArea_Y2, y => y.ImageArea);
 
         }
 

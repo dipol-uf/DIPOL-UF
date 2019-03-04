@@ -76,7 +76,8 @@
                         </Border>
                     </DataTemplate>
                 </TabItem.HeaderTemplate>
-                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <AdornerDecorator>
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="auto"/>
@@ -348,6 +349,7 @@
 
                     </Grid>
                 </ScrollViewer>
+                </AdornerDecorator>
             </TabItem>
             <TabItem Header="{extensions:Text Key=AcquisitionSettings_ImageSize}">
                 <TabItem.HeaderTemplate>
@@ -356,10 +358,18 @@
                             <Border.Style>
                                 <Style BasedOn="{StaticResource ErrorBorderStyle}" TargetType="Border">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Group2ContainsErrors}" Value="True">
+                                        <DataTrigger 
+                                            Binding="{Binding 
+                                                DataContext.Group2ContainsErrors,
+                                                RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" 
+                                            Value="True">
                                             <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderErrorColor}"/>
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding Group2ContainsErrors}" Value="False">
+                                        <DataTrigger 
+                                            Binding="{Binding 
+                                                DataContext.Group2ContainsErrors,
+                                                RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                            Value="False">
                                             <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderDefaultColor}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -369,7 +379,8 @@
                         </Border>
                     </DataTemplate>
                 </TabItem.HeaderTemplate>
-                <Grid>
+                <AdornerDecorator>
+                    <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="4*"/>
@@ -416,7 +427,7 @@
                              Text="{Binding 
                                     'ImageArea_X1',
                                     Mode=TwoWay,
-                                    UpdateSourceTrigger=LostFocus,
+                                    UpdateSourceTrigger=PropertyChanged,
                                     ValidatesOnNotifyDataErrors=True}"
                              IsEnabled="{Binding IsAvailable.ImageArea}"
                              Style="{StaticResource TextBoxWithErrors}"/>
@@ -425,7 +436,7 @@
                               Text="{Binding 
                                     'ImageArea_Y1',
                                     Mode=TwoWay,
-                                    UpdateSourceTrigger=LostFocus,
+                                    UpdateSourceTrigger=PropertyChanged,
                                     ValidatesOnNotifyDataErrors=True}"
                               IsEnabled="{Binding IsAvailable.ImageArea}"
                               Style="{StaticResource TextBoxWithErrors}"/>
@@ -434,7 +445,7 @@
                               Text="{Binding 
                                     'ImageArea_X2',
                                     Mode=TwoWay,
-                                    UpdateSourceTrigger=LostFocus,
+                                    UpdateSourceTrigger=PropertyChanged,
                                     ValidatesOnNotifyDataErrors=True}"
                               IsEnabled="{Binding IsAvailable.ImageArea}"
                               Style="{StaticResource TextBoxWithErrors}"/>
@@ -443,12 +454,13 @@
                               Text="{Binding 
                                     'ImageArea_Y2',
                                     Mode=TwoWay,
-                                    UpdateSourceTrigger=LostFocus,
+                                    UpdateSourceTrigger=PropertyChanged,
                                     ValidatesOnNotifyDataErrors=True}"
                               IsEnabled="{Binding IsAvailable.ImageArea}"
                               Style="{StaticResource TextBoxWithErrors}"/>
 
                 </Grid>
+                </AdornerDecorator>
             </TabItem>
             <TabItem Header="{extensions:Text Key=AcquisitionSettings_Cycles}">
                 <TabItem.HeaderTemplate>
@@ -457,10 +469,18 @@
                             <Border.Style>
                                 <Style BasedOn="{StaticResource ErrorBorderStyle}" TargetType="Border">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Group3ContainsErrors}" Value="True">
+                                        <DataTrigger 
+                                            Binding="{Binding 
+                                                DataContext.Group3ContainsErrors,
+                                                RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" 
+                                            Value="True">
                                             <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderErrorColor}"/>
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding Group3ContainsErrors}" Value="False">
+                                        <DataTrigger 
+                                            Binding="{Binding 
+                                                DataContext.Group3ContainsErrors,
+                                                RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                            Value="False">
                                             <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderDefaultColor}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
