@@ -208,16 +208,7 @@ namespace DIPOL_UF.ViewModels
         protected override void HookValidators()
         {
             base.HookValidators();
-            
-            //CreateValidator(
-            //    this.WhenAnyPropertyChanged(nameof(TargetTemperatureText))
-            //        .Select(x => (
-            //            Type: nameof(Validators.Validate.MatchesRegex),
-            //            Message: Validators.Validate.MatchesRegex(
-            //                x.TargetTemperatureText,
-            //                "^[+-]?[0-9]+\\.?[0-9]*$",
-            //                Properties.Localization.Validation_OnlyNumbersAllowed))),
-            //    nameof(TargetTemperatureText));
+
             CreateValidator(
                 this.WhenAnyPropertyChanged(nameof(TargetTemperatureText))
                     .Sample(UiSettingsProvider.UiThrottlingDelay)
