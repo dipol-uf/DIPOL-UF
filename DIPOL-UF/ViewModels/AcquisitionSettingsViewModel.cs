@@ -40,6 +40,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Input;
 using ANDOR_CS.Classes;
+using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Commands;
 using DIPOL_UF.Properties;
@@ -51,6 +52,8 @@ using ReactiveUI.Fody.Helpers;
 
 using static DIPOL_UF.Validators.Validate;
 using EnumConverter = ANDOR_CS.Classes.EnumConverter;
+using Size = ANDOR_CS.DataStructures.Size;
+
 // ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace DIPOL_UF.ViewModels
@@ -648,6 +651,60 @@ namespace DIPOL_UF.ViewModels
                     .DisposeWith(Subscriptions);
             }
 
+            void CreateStringToIntSetter(
+                Expression<Func<AcquisitionSettingsViewModel, string>> sourceAccessor,
+                Action<int> setter)
+            {
+                var name = (sourceAccessor.Body as MemberExpression)?.Member.Name
+                           ?? throw new ArgumentException(
+                               Properties.Localization.General_ShouldNotHappen,
+                               nameof(sourceAccessor));
+
+                this.WhenPropertyChanged(sourceAccessor)
+                    .DistinctUntilChanged(x => x.Value)
+                    .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                    .Select(x => x.Value)
+                    .Subscribe(x =>
+                    {
+                        var test1 = CanBeParsed(x, out int result);
+                        Helper.ExecuteOnUi(() => UpdateErrors(test1, name, nameof(CanBeParsed)));
+
+                        string test2 = null;
+                        if (string.IsNullOrEmpty(test1))
+                            test2 = DoesNotThrow(setter, result);
+
+                        Helper.ExecuteOnUi(() => UpdateErrors(test2, name, nameof(DoesNotThrow)));
+
+                    }).DisposeWith(Subscriptions);
+            }
+
+            void CreateStringToFloatSetter(
+                Expression<Func<AcquisitionSettingsViewModel, string>> sourceAccessor,
+                Action<float> setter)
+            {
+                var name = (sourceAccessor.Body as MemberExpression)?.Member.Name
+                           ?? throw new ArgumentException(
+                               Properties.Localization.General_ShouldNotHappen,
+                               nameof(sourceAccessor));
+
+                this.WhenPropertyChanged(sourceAccessor)
+                    .DistinctUntilChanged(x => x.Value)
+                    .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                    .Select(x => x.Value)
+                    .Subscribe(x =>
+                    {
+                        var test1 = CanBeParsed(x, out float result);
+                        Helper.ExecuteOnUi(() => UpdateErrors(test1, name, nameof(CanBeParsed)));
+
+                        string test2 = null;
+                        if (string.IsNullOrEmpty(test1))
+                            test2 = DoesNotThrow(setter, result);
+
+                        Helper.ExecuteOnUi(() => UpdateErrors(test2, name, nameof(DoesNotThrow)));
+
+                    }).DisposeWith(Subscriptions);
+            }
+
             // ReSharper disable PossibleInvalidOperationException
             CreateSetter(x => x.VsSpeed, y => y >= 0, z => z, Model.Object.SetVSSpeed);
             CreateSetter(x => x.VsAmplitude, y => y.HasValue, z => z.Value, Model.Object.SetVSAmplitude);
@@ -665,39 +722,33 @@ namespace DIPOL_UF.ViewModels
                     : 0,
                 Model.Object.SetEmCcdGain);
 
-            this.WhenPropertyChanged(x => x.ExposureTimeText)
-                .DistinctUntilChanged(x => x.Value)
-                .Throttle(UiSettingsProvider.UiThrottlingDelay)
-                .Select(x => x.Value)
-                .Subscribe(x =>
-                {
-                    var test1 = CanBeParsed(x, out float result);
-                    Helper.ExecuteOnUi(() => UpdateErrors(test1, nameof(ExposureTimeText), nameof(CanBeParsed)));
+            CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime);
+            CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain);
+            CreateStringToIntSetter(x => x.ImageArea_X1, y =>
+            {
+                Model.Object.SetImageArea(
+                    (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
+                    .CopyWithModifications(ctx => ctx.X1 += y));
+            });
+            CreateStringToIntSetter(x => x.ImageArea_Y1, y =>
+            {
+                Model.Object.SetImageArea(
+                    (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
+                    .CopyWithModifications(ctx => ctx.Y1 += y));
+            });
+            CreateStringToIntSetter(x => x.ImageArea_X2, y =>
+            {
+                Model.Object.SetImageArea(
+                    (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
+                    .CopyWithModifications(ctx => ctx.X2 += y));
+            });
+            CreateStringToIntSetter(x => x.ImageArea_Y1, y =>
+            {
+                Model.Object.SetImageArea(
+                    (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
+                    .CopyWithModifications(ctx => ctx.Y2 += y));
+            });
 
-                    string test2 = null;
-                    if (string.IsNullOrEmpty(test1))
-                        test2 = DoesNotThrow(Model.Object.SetExposureTime, result);
-
-                    Helper.ExecuteOnUi(() => UpdateErrors(test2, nameof(ExposureTimeText), nameof(DoesNotThrow)));
-
-                }).DisposeWith(Subscriptions);
-
-            this.WhenPropertyChanged(x => x.EmCcdGainText)
-                .DistinctUntilChanged(x => x.Value)
-                .Throttle(UiSettingsProvider.UiThrottlingDelay)
-                .Select(x => x.Value)
-                .Subscribe(x =>
-                {
-                    var test1 = CanBeParsed(x, out int result);
-                    Helper.ExecuteOnUi(() => UpdateErrors(test1, nameof(EmCcdGainText), nameof(CanBeParsed)));
-
-                    string test2 = null;
-                    if (string.IsNullOrEmpty(test1))
-                        test2 = DoesNotThrow(Model.Object.SetEmCcdGain, result);
-
-                    Helper.ExecuteOnUi(() => UpdateErrors(test2, nameof(EmCcdGainText), nameof(DoesNotThrow)));
-
-                }).DisposeWith(Subscriptions);
 
             this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
                 .Where(x => x.AcquisitionMode.HasValue)
