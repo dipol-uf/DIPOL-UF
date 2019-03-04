@@ -71,6 +71,7 @@ namespace DIPOL_UF.ViewModels
             public bool ReadMode { [ObservableAsProperty] get; }
             public bool TriggerMode { [ObservableAsProperty] get; }
             public bool EmCcdGainText { [ObservableAsProperty] get; }
+            public bool ImageArea { [ObservableAsProperty] get; }
         }
 
         //private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
@@ -1273,6 +1274,19 @@ namespace DIPOL_UF.ViewModels
 
         [Reactive]
         public string EmCcdGainText { get; set; } = null;
+
+        [Reactive]
+        // ReSharper disable once InconsistentNaming
+        public string ImageArea_X1 { get; set; } = null;
+        [Reactive]
+        // ReSharper disable once InconsistentNaming
+        public string ImageArea_Y1 { get; set; } = null;
+        [Reactive]
+        // ReSharper disable once InconsistentNaming
+        public string ImageArea_X2 { get; set; } = null;
+        [Reactive]
+        // ReSharper disable once InconsistentNaming
+        public string ImageArea_Y2 { get; set; } = null;
 
         #endregion
     }
