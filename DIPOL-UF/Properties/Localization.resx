@@ -325,7 +325,7 @@
     <value>Submit</value>
   </data>
   <data name="General_TemperatureFloatFormat" xml:space="preserve">
-    <value>F2</value>
+    <value>G2</value>
   </data>
   <data name="General_TemperatureStatus_Drift" xml:space="preserve">
     <value>Drifting</value>
