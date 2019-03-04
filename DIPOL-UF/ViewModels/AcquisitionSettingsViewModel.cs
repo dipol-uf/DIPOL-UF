@@ -666,13 +666,11 @@ namespace DIPOL_UF.ViewModels
                     var test1 = CanBeParsed(x, out float result);
                     Helper.ExecuteOnUi(() => UpdateErrors(test1, nameof(ExposureTimeText), nameof(CanBeParsed)));
 
+                    string test2 = null;
                     if (string.IsNullOrEmpty(test1))
-                    {
-                        var test2 = DoesNotThrow(Model.Object.SetExposureTime, result);
-                        Helper.ExecuteOnUi(() => UpdateErrors(test2, nameof(ExposureTimeText), nameof(DoesNotThrow)));
-                    }
-                    else
-                        Helper.ExecuteOnUi(() => UpdateErrors(null, nameof(ExposureTimeText), nameof(DoesNotThrow)));
+                        test2 = DoesNotThrow(Model.Object.SetExposureTime, result);
+
+                    Helper.ExecuteOnUi(() => UpdateErrors(test2, nameof(ExposureTimeText), nameof(DoesNotThrow)));
 
                 }).DisposeWith(Subscriptions);
 
@@ -685,13 +683,11 @@ namespace DIPOL_UF.ViewModels
                     var test1 = CanBeParsed(x, out int result);
                     Helper.ExecuteOnUi(() => UpdateErrors(test1, nameof(EmCcdGainText), nameof(CanBeParsed)));
 
+                    string test2 = null;
                     if (string.IsNullOrEmpty(test1))
-                    {
-                        var test2 = DoesNotThrow(Model.Object.SetEmCcdGain, result);
-                        Helper.ExecuteOnUi(() => UpdateErrors(test2, nameof(EmCcdGainText), nameof(DoesNotThrow)));
-                    }
-                    else
-                        Helper.ExecuteOnUi(() => UpdateErrors(null, nameof(EmCcdGainText), nameof(DoesNotThrow)));
+                        test2 = DoesNotThrow(Model.Object.SetEmCcdGain, result);
+
+                    Helper.ExecuteOnUi(() => UpdateErrors(test2, nameof(EmCcdGainText), nameof(DoesNotThrow)));
 
                 }).DisposeWith(Subscriptions);
 
