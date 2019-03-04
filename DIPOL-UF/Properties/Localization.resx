@@ -286,7 +286,7 @@
     <value>Disconnect</value>
   </data>
   <data name="General_ExposureFloatFormat" xml:space="preserve">
-    <value>F6</value>
+    <value>G6</value>
   </data>
   <data name="General_FanMode_Full" xml:space="preserve">
     <value>Full</value>

@@ -565,7 +565,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to F6.
+        ///   Looks up a localized string similar to G6.
         /// </summary>
         public static string General_ExposureFloatFormat {
             get {
