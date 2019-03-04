@@ -78,9 +78,6 @@ namespace DIPOL_UF.ViewModels
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
-            TargetTemperatureText = "0";
-            InternalShutterState = Model.Camera.Shutter.Internal;
-            ExternalShutterMode = CanControlExternalShutter ? Model.Camera.Shutter.External : null;
 
             DipolImagePresenter = new DipolImagePresenterViewModel(Model.ImagePresenter);
             //AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow, null);
@@ -88,14 +85,19 @@ namespace DIPOL_UF.ViewModels
             HookValidators();
             HookObservables();
             InitializeCommands();
+
+            TargetTemperatureText = "0";
+            InternalShutterState = Model.Camera.Shutter.Internal;
+            ExternalShutterMode = CanControlExternalShutter ? Model.Camera.Shutter.External : null;
         }
 
         private void InitializeCommands()
         {
             CoolerCommand =
                 ReactiveCommand.Create(() => Unit.Default,
-                                   Model.CoolerCommand.CanExecute.CombineLatest(
-                                       ObserveSpecificErrors(nameof(TargetTemperatureText)),
+                                   Model.CoolerCommand.CanExecute.LogObservable("CanExecute", Subscriptions)
+                                        .CombineLatest(
+                                       ObserveSpecificErrors(nameof(TargetTemperatureText)).LogObservable("HAS ERRORS", Subscriptions),
                                      (x, y) => x && !y))
                                .DisposeWith(Subscriptions);
 
@@ -140,7 +142,7 @@ namespace DIPOL_UF.ViewModels
 
             this.WhenPropertyChanged(x => x.TargetTemperatureText)
                 .DistinctUntilChanged()
-                .Where(x => !HasSpecificErrors(nameof(TargetTemperatureText)))
+                .Where(x => !HasSpecificErrors(nameof(TargetTemperatureText)) && !string.IsNullOrEmpty(x.Value))
                 .Select(x => float.Parse(x.Value, NumberStyles.Any, CultureInfo.CurrentUICulture))
                 .ObserveOnUi()
                 .BindTo(this, x => x.ActualTemperature)

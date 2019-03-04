@@ -65,7 +65,6 @@ namespace DIPOL_UF
 
         protected virtual void HookValidators()
         {
-
             WhenErrorsChangedTyped =
                 ValidationErrors.Connect()
                                  .Select(x => Observable.For(x, y => Observable.Return(y.Current)))
