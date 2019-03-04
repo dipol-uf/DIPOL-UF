@@ -802,8 +802,8 @@ namespace DIPOL_UF.ViewModels
             ImmutableAvailability(nameof(Model.Object.AcquisitionMode), x => x.AcquisitionMode);
             ImmutableAvailability(nameof(Model.Object.ExposureTime), x => x.ExposureTimeText);
             ImmutableAvailability(nameof(FrameTransfer), x => x.FrameTransfer); // This is correct
-            ImmutableAvailability(nameof(ReadMode), x => x.ReadMode);
-            ImmutableAvailability(nameof(TriggerMode), x => x.TriggerMode);
+            ImmutableAvailability(nameof(Model.Object.ReadoutMode), x => x.ReadMode);
+            ImmutableAvailability(nameof(Model.Object.TriggerMode), x => x.TriggerMode);
             ImmutableAvailability(nameof(Model.Object.ImageArea), x => x.ImageArea);
 
             this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
