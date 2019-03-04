@@ -121,7 +121,7 @@ namespace ANDOR_CS.Classes
         }
         public override SettingsBase GetAcquisitionSettingsTemplate()
         {
-            return new DebugSettings();
+            return new DebugSettings(this);
         }
 
         protected override void Dispose(bool disposing)

@@ -32,6 +32,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Linq.Expressions;
 using System.Net;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -91,6 +92,10 @@ namespace DIPOL_UF.ViewModels
             = new SettingsAvailability();
 
         public CameraBase Camera => Model.Object.Camera;
+
+        public ReactiveCommand<string, Unit> GotFocusCommand { get; private set; }
+        public ReactiveCommand<string, Unit> LostFocusCommand { get; private set; }
+
 
         public DelegateCommand SubmitCommand { get; private set; }
 
@@ -251,7 +256,6 @@ namespace DIPOL_UF.ViewModels
                                nameof(sourceAccessor));
 
                 this.WhenPropertyChanged(sourceAccessor)
-                    .DistinctUntilChanged(x => x.Value)
                     .Where(x => condition(x.Value))
                     .Select(x => DoesNotThrow(setter, selector(x.Value)))
                     .ObserveOnUi()
@@ -269,8 +273,6 @@ namespace DIPOL_UF.ViewModels
                                nameof(sourceAccessor));
 
                 this.WhenPropertyChanged(sourceAccessor)
-                    .DistinctUntilChanged(x => x.Value)
-                    .Throttle(UiSettingsProvider.UiThrottlingDelay)
                     .Select(x => x.Value)
                     .Subscribe(x =>
                     {
@@ -296,19 +298,17 @@ namespace DIPOL_UF.ViewModels
                                nameof(sourceAccessor));
 
                 this.WhenPropertyChanged(sourceAccessor)
-                    .DistinctUntilChanged(x => x.Value)
-                    .Throttle(UiSettingsProvider.UiThrottlingDelay)
                     .Select(x => x.Value)
                     .Subscribe(x =>
                     {
                         var test1 = CanBeParsed(x, out float result);
-                        Helper.ExecuteOnUi(() => UpdateErrors(test1, name, nameof(CanBeParsed)));
+                        UpdateErrors(test1, name, nameof(CanBeParsed));
 
                         string test2 = null;
                         if (string.IsNullOrEmpty(test1))
                             test2 = DoesNotThrow(setter, result);
 
-                        Helper.ExecuteOnUi(() => UpdateErrors(test2, name, nameof(DoesNotThrow)));
+                       UpdateErrors(test2, name, nameof(DoesNotThrow));
 
                     }).DisposeWith(Subscriptions);
             }
@@ -568,7 +568,7 @@ namespace DIPOL_UF.ViewModels
             ObserveHasErrors
                 .Throttle(UiSettingsProvider.UiThrottlingDelay)
                 .Select(_ => Group1Names.Any(HasSpecificErrors))
-                .LogObservable("HAS ERRORS", Subscriptions)
+                //.LogObservable("HAS ERRORS", Subscriptions)
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group1ContainsErrors)
                 .DisposeWith(Subscriptions);
@@ -586,6 +586,8 @@ namespace DIPOL_UF.ViewModels
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group3ContainsErrors)
                 .DisposeWith(Subscriptions);
+
+            ErrorsChanged += (sender, args) => Helper.WriteLog(args.PropertyName + $"{GetErrors(nameof(ExposureTimeText)).Cast<string>().Count()}");
         }
 
         private void SetUpDefaultValueValidators()
@@ -597,8 +599,7 @@ namespace DIPOL_UF.ViewModels
             {
                 var name = (accessor.Body as MemberExpression)?.Member.Name
                            ?? throw new ArgumentException(
-                               Properties.Localization.General_ShouldNotHappen
-                               + @" [Failed to create setter; Only property accessors are allowed.]",
+                               Properties.Localization.General_ShouldNotHappen,
                                nameof(accessor));
 
                 CreateValidator(
@@ -609,8 +610,7 @@ namespace DIPOL_UF.ViewModels
                             Type: nameof(CannotBeDefault),
                             Message: x.IsAvailable
                                 ? CannotBeDefault(x.Value, comparisonValue)
-                                : null))
-                        .ObserveOnUi(),
+                                : null)),
                     name);
             }
 
@@ -653,6 +653,14 @@ namespace DIPOL_UF.ViewModels
 
         private void InitializeCommands()
         {
+            GotFocusCommand =
+                ReactiveCommand.Create<string>(RemoveAllErrors)
+                               .DisposeWith(Subscriptions);
+            LostFocusCommand =
+                ReactiveCommand.Create<string>(this.RaisePropertyChanged)
+                               .DisposeWith(Subscriptions);
+
+
             SubmitCommand = new DelegateCommand(
                 (param) => CloseView(param, false),
                 CanSubmit
@@ -920,7 +928,6 @@ namespace DIPOL_UF.ViewModels
 
         #region V2
 
-        [Reactive]
         public string ExposureTimeText { get; set; }
 
         // -1 is the default selected index in the list, equivalent to

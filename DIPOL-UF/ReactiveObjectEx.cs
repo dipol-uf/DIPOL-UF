@@ -77,7 +77,8 @@ namespace DIPOL_UF
                                      x.Select(y => (y.Current.Property, y.Current.Message)).ToList())
                                  .Select(x => Observable.For(x, Observable.Return))
                                  .Merge()
-                                 .DistinctUntilChanged()
+                                 .LogObservable("WHENERRORSCHANGED", Subscriptions)
+                                 //.DistinctUntilChanged()
                                  .Select(x => new DataErrorsChangedEventArgs(x.Property));
 
             WhenErrorsChanged
@@ -90,6 +91,17 @@ namespace DIPOL_UF
 
             ObserveHasErrors = WhenErrorsChanged.Select(_ => HasErrors);
 
+        }
+
+        protected virtual void RemoveAllErrors(string propertyName)
+        {
+            ValidationErrors.Edit(context =>
+            {
+                var items = context.Items.Where(x => x.Property == propertyName)
+                                   .Select(x => (x.Property, x.Type, Message: (string)null))
+                                   .ToList();
+                context.AddOrUpdate(items);
+            });
         }
 
         protected virtual void BindTo<TSource, TTarget, TProperty>(
