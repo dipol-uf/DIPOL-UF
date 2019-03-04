@@ -568,7 +568,6 @@ namespace DIPOL_UF.ViewModels
             ObserveHasErrors
                 .Throttle(UiSettingsProvider.UiThrottlingDelay)
                 .Select(_ => Group1Names.Any(HasSpecificErrors))
-                //.LogObservable("HAS ERRORS", Subscriptions)
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group1ContainsErrors)
                 .DisposeWith(Subscriptions);
@@ -586,8 +585,6 @@ namespace DIPOL_UF.ViewModels
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group3ContainsErrors)
                 .DisposeWith(Subscriptions);
-
-            ErrorsChanged += (sender, args) => Helper.WriteLog(args.PropertyName + $"{GetErrors(nameof(ExposureTimeText)).Cast<string>().Count()}");
         }
 
         private void SetUpDefaultValueValidators()
