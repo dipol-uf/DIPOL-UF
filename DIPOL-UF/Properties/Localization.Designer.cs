@@ -682,7 +682,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to F2.
+        ///   Looks up a localized string similar to G2.
         /// </summary>
         public static string General_TemperatureFloatFormat {
             get {

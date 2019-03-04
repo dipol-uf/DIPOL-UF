@@ -209,15 +209,20 @@ namespace DIPOL_UF.ViewModels
         {
             base.HookValidators();
             
+            //CreateValidator(
+            //    this.WhenAnyPropertyChanged(nameof(TargetTemperatureText))
+            //        .Select(x => (
+            //            Type: nameof(Validators.Validate.MatchesRegex),
+            //            Message: Validators.Validate.MatchesRegex(
+            //                x.TargetTemperatureText,
+            //                "^[+-]?[0-9]+\\.?[0-9]*$",
+            //                Properties.Localization.Validation_OnlyNumbersAllowed))),
+            //    nameof(TargetTemperatureText));
             CreateValidator(
                 this.WhenAnyPropertyChanged(nameof(TargetTemperatureText))
-                    .Select(x => (
-                        Type: nameof(Validators.Validate.MatchesRegex),
-                        Message: Validators.Validate.MatchesRegex(
-                            x.TargetTemperatureText,
-                            "^[+-]?[0-9]+\\.?[0-9]*$",
-                            Properties.Localization.Validation_OnlyNumbersAllowed))),
-                nameof(TargetTemperatureText));
+                    .Select(x => (Type: nameof(Validators.Validate.CanBeParsed),
+                            Message: Validators.Validate.CanBeParsed(x.TargetTemperatureText, out float _))),
+                        nameof(TargetTemperatureText));
 
             CreateValidator(
                 this.WhenAnyPropertyChanged(nameof(TargetTemperatureText))
