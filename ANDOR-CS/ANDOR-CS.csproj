@@ -118,6 +118,7 @@
     <Compile Include="Classes\AcquisitionSettings.cs" />
     <Compile Include="Classes\CameraBase.cs" />
     <Compile Include="Classes\DebugCamera.cs" />
+    <Compile Include="Classes\DebugSettings.cs" />
     <Compile Include="Classes\EnumConverter.cs" />
     <Compile Include="Classes\JsonParser.cs" />
     <Compile Include="Classes\SafeSDKCameraHandle.cs" />

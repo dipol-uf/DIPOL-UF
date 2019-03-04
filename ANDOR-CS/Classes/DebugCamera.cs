@@ -27,6 +27,7 @@ using FITS_CS;
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
 {
+#if DEBUG
     public sealed class DebugCamera : CameraBase
     {
         private static readonly Random R = new Random();
@@ -120,7 +121,7 @@ namespace ANDOR_CS.Classes
         }
         public override SettingsBase GetAcquisitionSettingsTemplate()
         {
-            throw new NotImplementedException();
+            return new DebugSettings();
         }
 
         protected override void Dispose(bool disposing)
@@ -186,4 +187,5 @@ namespace ANDOR_CS.Classes
             throw new NotImplementedException();
         }
     }
+#endif
 }
