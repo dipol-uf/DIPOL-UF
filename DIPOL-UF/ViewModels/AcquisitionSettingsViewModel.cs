@@ -628,8 +628,7 @@ namespace DIPOL_UF.ViewModels
             {
                 var name = (sourceAccessor.Body as MemberExpression)?.Member?.Name
                            ?? throw new ArgumentException(
-                               Properties.Localization.General_ShouldNotHappen 
-                               + @" [Failed to create setter; Only property accessors are allowed.]",
+                               Properties.Localization.General_ShouldNotHappen,
                                nameof(sourceAccessor));
 
                 this.WhenPropertyChanged(sourceAccessor)
@@ -658,32 +657,43 @@ namespace DIPOL_UF.ViewModels
                     : 0,
                 Model.Object.SetEmCcdGain);
 
-
             this.WhenPropertyChanged(x => x.ExposureTimeText)
                 .DistinctUntilChanged(x => x.Value)
-                .Throttle(UiSettingsProvider.UiThrottlingDelay) // Throttling to avoid excessive parsing during user input
-                .Where(x => !string.IsNullOrWhiteSpace(x.Value))
-                .Select(x => float.TryParse(x.Value, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var result)
-                             && result >= 0
-                    ? result
-                    : 0f)
-                .Select(x => DoesNotThrow(Model.Object.SetExposureTime, x))
-                .ObserveOnUi()
-                .Subscribe(x => UpdateErrors(x, nameof(ExposureTimeText), nameof(DoesNotThrow)))
-                .DisposeWith(Subscriptions);
+                .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                .Select(x => x.Value)
+                .Subscribe(x =>
+                {
+                    var test1 = CanBeParsed(x, out float result);
+                    Helper.ExecuteOnUi(() => UpdateErrors(test1, nameof(ExposureTimeText), nameof(CanBeParsed)));
+
+                    if (!string.IsNullOrEmpty(test1))
+                    {
+                        var test2 = DoesNotThrow(Model.Object.SetExposureTime, result);
+                        Helper.ExecuteOnUi(() => UpdateErrors(test2, nameof(ExposureTimeText), nameof(DoesNotThrow)));
+                    }
+                    else
+                        Helper.ExecuteOnUi(() => UpdateErrors(null, nameof(ExposureTimeText), nameof(DoesNotThrow)));
+
+                }).DisposeWith(Subscriptions);
 
             this.WhenPropertyChanged(x => x.EmCcdGainText)
                 .DistinctUntilChanged(x => x.Value)
-                .Throttle(UiSettingsProvider.UiThrottlingDelay) // Throttling to avoid excessive parsing during user input
-                .Where(x => !string.IsNullOrWhiteSpace(x.Value))
-                .Select(x => int.TryParse(x.Value, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var emGain)
-                             && emGain >= 0
-                    ? emGain
-                    : 0)
-                .Select(x => DoesNotThrow(Model.Object.SetEmCcdGain, x))
-                .ObserveOnUi()
-                .Subscribe(x => UpdateErrors(x, nameof(ExposureTimeText), nameof(DoesNotThrow)))
-                .DisposeWith(Subscriptions);
+                .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                .Select(x => x.Value)
+                .Subscribe(x =>
+                {
+                    var test1 = CanBeParsed(x, out int result);
+                    Helper.ExecuteOnUi(() => UpdateErrors(test1, nameof(EmCcdGainText), nameof(CanBeParsed)));
+
+                    if (!string.IsNullOrEmpty(test1))
+                    {
+                        var test2 = DoesNotThrow(Model.Object.SetEmCcdGain, result);
+                        Helper.ExecuteOnUi(() => UpdateErrors(test2, nameof(EmCcdGainText), nameof(DoesNotThrow)));
+                    }
+                    else
+                        Helper.ExecuteOnUi(() => UpdateErrors(null, nameof(EmCcdGainText), nameof(DoesNotThrow)));
+
+                }).DisposeWith(Subscriptions);
 
             this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
                 .Where(x => x.AcquisitionMode.HasValue)
