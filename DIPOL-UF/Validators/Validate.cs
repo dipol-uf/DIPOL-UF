@@ -88,6 +88,19 @@ namespace DIPOL_UF.Validators
 
             return null;
         }
+        public static string DoesNotThrow(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception e)
+            {
+                return e.Message;
+            }
+
+            return null;
+        }
 
         public static string CannotBeDefault<T>(T value, T @default)
           => Equals(value, @default)
