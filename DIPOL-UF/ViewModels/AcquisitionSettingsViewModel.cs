@@ -45,6 +45,7 @@ using DIPOL_UF.Commands;
 using DIPOL_UF.Properties;
 using DynamicData;
 using DynamicData.Binding;
+using DynamicData.Kernel;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -610,6 +611,12 @@ namespace DIPOL_UF.ViewModels
                 .ObserveOnUi()
                 .Bind(AvailableReadModes)
                 .SubscribeDispose(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(Amplifier))
+                .Select(x => x.Amplifier)
+                .DistinctUntilChanged()
+                .Subscribe(_ => EmCcdGainText = null)
+                .DisposeWith(Subscriptions);
         }
 
         private void AttachAccessors()
@@ -812,6 +819,17 @@ namespace DIPOL_UF.ViewModels
                 .ToPropertyEx(IsAvailable, x => x.PreAmpGain)
                 .DisposeWith(Subscriptions);
 
+            this.WhenAnyPropertyChanged(nameof(Amplifier))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.EMCCDGain).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && Amplifier.HasValue
+                           && Amplifier.Value == OutputAmplification.ElectronMultiplication;
+                })
+                .ToPropertyEx(IsAvailable, x => x.EmCcdGainText)
+                .DisposeWith(Subscriptions);
         }
 
         private void WatchItemSources()
@@ -873,7 +891,6 @@ namespace DIPOL_UF.ViewModels
             base.HookValidators();
 
             SetUpDefaultValueValidators();
-
         }
 
         private void SetUpDefaultValueValidators()
