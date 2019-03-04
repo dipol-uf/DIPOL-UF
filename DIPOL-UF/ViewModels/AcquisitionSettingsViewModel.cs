@@ -743,6 +743,18 @@ namespace DIPOL_UF.ViewModels
             CreateGetter(x => x.EMCCDGain, 
                 y => y?.ToString(Properties.Localization.General_IntegerFormat),
                 z => z.EmCcdGainText);
+            CreateGetter(x => x.ImageArea,
+                y => y?.X1.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.ImageArea_X1);
+            CreateGetter(x => x.ImageArea,
+                y => y?.Y1.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.ImageArea_Y1);
+            CreateGetter(x => x.ImageArea,
+                y => y?.X2.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.ImageArea_X2);
+            CreateGetter(x => x.ImageArea,
+                y => y?.Y2.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.ImageArea_Y2);
 
             var acqModeObs =
                 Model.Object.WhenPropertyChanged(x => x.AcquisitionMode)
@@ -792,6 +804,7 @@ namespace DIPOL_UF.ViewModels
             ImmutableAvailability(nameof(FrameTransfer), x => x.FrameTransfer); // This is correct
             ImmutableAvailability(nameof(ReadMode), x => x.ReadMode);
             ImmutableAvailability(nameof(TriggerMode), x => x.TriggerMode);
+            ImmutableAvailability(nameof(Model.Object.ImageArea), x => x.ImageArea);
 
             this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
                 .Select(x =>
