@@ -220,6 +220,8 @@ namespace DIPOL_UF.ViewModels
             //    nameof(TargetTemperatureText));
             CreateValidator(
                 this.WhenAnyPropertyChanged(nameof(TargetTemperatureText))
+                    .Sample(UiSettingsProvider.UiThrottlingDelay)
+                    .ObserveOnUi()
                     .Select(x => (Type: nameof(Validators.Validate.CanBeParsed),
                             Message: Validators.Validate.CanBeParsed(x.TargetTemperatureText, out float _))),
                         nameof(TargetTemperatureText));
