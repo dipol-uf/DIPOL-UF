@@ -138,7 +138,7 @@ namespace ANDOR_CS.Classes
                 if (!OutputAmplifier.HasValue ||
                     !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.ElectronMultiplication))
                     throw new NullReferenceException(
-                        $"OutputAmplifier should be set to {OutputAmplification.Conventional} before accessing EMCCDGain.");
+                        $"OutputAmplifier should be set to {OutputAmplification.ElectronMultiplication} before accessing EMCCDGain.");
 
                 var range = (Low: 0, High: 0);
 

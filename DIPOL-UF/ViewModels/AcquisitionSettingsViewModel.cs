@@ -68,6 +68,8 @@ namespace DIPOL_UF.ViewModels
             public bool ExposureTimeText { [ObservableAsProperty] get; }
             public bool FrameTransfer { [ObservableAsProperty] get; }
             public bool ReadMode { [ObservableAsProperty] get; }
+            public bool TriggerMode { [ObservableAsProperty] get; }
+            public bool EmCcdGainText { [ObservableAsProperty] get; }
         }
 
         //private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
@@ -143,12 +145,6 @@ namespace DIPOL_UF.ViewModels
         public IObservableCollection<ReadMode> AvailableReadModes { get; }
         = new ObservableCollectionExtended<ReadMode>();
 
-        // Todo: Use (Min, Max)
-        public int[] AvailableEMCCDGains =>
-            Enumerable.Range(
-                          Model.Object.Camera.Properties.EMCCDGainRange.Low, 
-                          Model.Object.Camera.Properties.EMCCDGainRange.High)
-            .ToArray();
 
         ///// <summary>
         ///// Index of VS Speed.
@@ -654,21 +650,37 @@ namespace DIPOL_UF.ViewModels
                 z => z, Model.Object.SetHSSpeed);
             CreateSetter(x => x.PreAmpGain, y => y >= 0 && y < AvailablePreAmpGains.Count,
                 z => z, Model.Object.SetPreAmpGain);
-            CreateSetter(x => x.ExposureTimeText, y => !string.IsNullOrWhiteSpace(y),
-                z => float.TryParse(z, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var result)
-                     && result >= 0
-                    ? result
-                    : 0f, Model.Object.SetExposureTime);
+            CreateSetter(x => x.TriggerMode, y => y.HasValue, z => z.Value, Model.Object.SetTriggerMode);
+            CreateSetter(x => x.EmCcdGainText, y => !string.IsNullOrWhiteSpace(y),
+                z => int.TryParse(z, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var emGain)
+                     && emGain > 0
+                    ? emGain
+                    : 0,
+                Model.Object.SetEmCcdGain);
+
 
             this.WhenPropertyChanged(x => x.ExposureTimeText)
                 .DistinctUntilChanged(x => x.Value)
-                .Throttle(TimeSpan.FromMilliseconds(100))
+                .Throttle(UiSettingsProvider.UiThrottlingDelay) // Throttling to avoid excessive parsing during user input
                 .Where(x => !string.IsNullOrWhiteSpace(x.Value))
                 .Select(x => float.TryParse(x.Value, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var result)
                              && result >= 0
                     ? result
                     : 0f)
                 .Select(x => DoesNotThrow(Model.Object.SetExposureTime, x))
+                .ObserveOnUi()
+                .Subscribe(x => UpdateErrors(x, nameof(ExposureTimeText), nameof(DoesNotThrow)))
+                .DisposeWith(Subscriptions);
+
+            this.WhenPropertyChanged(x => x.EmCcdGainText)
+                .DistinctUntilChanged(x => x.Value)
+                .Throttle(UiSettingsProvider.UiThrottlingDelay) // Throttling to avoid excessive parsing during user input
+                .Where(x => !string.IsNullOrWhiteSpace(x.Value))
+                .Select(x => int.TryParse(x.Value, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var emGain)
+                             && emGain >= 0
+                    ? emGain
+                    : 0)
+                .Select(x => DoesNotThrow(Model.Object.SetEmCcdGain, x))
                 .ObserveOnUi()
                 .Subscribe(x => UpdateErrors(x, nameof(ExposureTimeText), nameof(DoesNotThrow)))
                 .DisposeWith(Subscriptions);
@@ -713,6 +725,10 @@ namespace DIPOL_UF.ViewModels
             CreateGetter(x => x.ExposureTime, 
                 y => y?.ToString(Properties.Localization.General_ExposureFloatFormat),
                 z => z.ExposureTimeText);
+            CreateGetter(x => x.TriggerMode, y => y, z => z.TriggerMode);
+            CreateGetter(x => x.EMCCDGain, 
+                y => y?.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.EmCcdGainText);
 
             var acqModeObs =
                 Model.Object.WhenPropertyChanged(x => x.AcquisitionMode)
@@ -761,6 +777,7 @@ namespace DIPOL_UF.ViewModels
             ImmutableAvailability(nameof(Model.Object.ExposureTime), x => x.ExposureTimeText);
             ImmutableAvailability(nameof(FrameTransfer), x => x.FrameTransfer); // This is correct
             ImmutableAvailability(nameof(ReadMode), x => x.ReadMode);
+            ImmutableAvailability(nameof(TriggerMode), x => x.TriggerMode);
 
             this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
                 .Select(x =>
@@ -851,20 +868,6 @@ namespace DIPOL_UF.ViewModels
 
             SetUpDefaultValueValidators();
 
-            CreateValidator(
-                this.WhenPropertyChanged(x => x.ExposureTimeText)
-                    .Where(x => !string.IsNullOrWhiteSpace(x.Value))
-                    .CombineLatest(IsAvailable.WhenPropertyChanged(y => y.ExposureTimeText),
-                        (x, y) => (x.Value, IsAvailable: y.Value))
-                    .Select(x => (
-                        Type: nameof(MatchesRegex),
-                        Message: x.IsAvailable
-                            ? MatchesRegex(x.Value,
-                                "^[0-9]+\\.?[0-9]*$",
-                                Properties.Localization.Validation_OnlyNumbersAllowed)
-                            : null)),
-                nameof(ExposureTimeText));
-
         }
 
         private void SetUpDefaultValueValidators()
@@ -901,6 +904,7 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.HsSpeed, -1, y => y.HsSpeed);
             DefaultValueValidator(x => x.PreAmpGain, -1, y => y.PreAmpGain);
             DefaultValueValidator(x => x.AcquisitionMode, null, x => x.AcquisitionMode);
+            DefaultValueValidator(x => x.TriggerMode, null, y => y.TriggerMode);
 
             CreateValidator(
                 this.WhenPropertyChanged(x => x.ExposureTimeText)
@@ -913,6 +917,18 @@ namespace DIPOL_UF.ViewModels
                             : null))
                     .ObserveOnUi(),
                 nameof(ExposureTimeText));
+
+            CreateValidator(
+                this.WhenPropertyChanged(x => x.EmCcdGainText)
+                    .CombineLatest(IsAvailable.WhenPropertyChanged(y => y.EmCcdGainText),
+                        (x, y) => (x.Value, IsAvailable: y.Value))
+                    .Select(x => (
+                        Type: nameof(CannotBeDefault),
+                        Message: x.IsAvailable
+                            ? CannotBeDefault(x.Value)
+                            : null))
+                    .ObserveOnUi(),
+                nameof(EmCcdGainText));
 
         }
 
@@ -1228,6 +1244,13 @@ namespace DIPOL_UF.ViewModels
 
         [Reactive]
         public ReadMode? ReadMode { get; set; }
+
+        [Reactive]
+        public TriggerMode? TriggerMode { get; set; }
+
+        [Reactive]
+        public string EmCcdGainText { get; set; } = null;
+
         #endregion
     }
 }
