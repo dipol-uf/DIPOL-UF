@@ -229,27 +229,6 @@ namespace DIPOL_UF.ViewModels
                 .Subscribe(_ => EmCcdGainText = null)
                 .DisposeWith(Subscriptions);
 
-
-            ObserveHasErrors
-                .Throttle(UiSettingsProvider.UiThrottlingDelay)
-                .Select(_ => Group1Names.Any(HasSpecificErrors))
-                .ObserveOnUi()
-                .ToPropertyEx(this, x => x.Group1ContainsErrors)
-                .DisposeWith(Subscriptions);
-
-            ObserveHasErrors
-                .Throttle(UiSettingsProvider.UiThrottlingDelay)
-                .Select(_ => Group2Names.Any(HasSpecificErrors))
-                .ObserveOnUi()
-                .ToPropertyEx(this, x => x.Group2ContainsErrors)
-                .DisposeWith(Subscriptions);
-
-            ObserveHasErrors
-                .Throttle(UiSettingsProvider.UiThrottlingDelay)
-                .Select(_ => Group3Names.Any(HasSpecificErrors))
-                .ObserveOnUi()
-                .ToPropertyEx(this, x => x.Group3ContainsErrors)
-                .DisposeWith(Subscriptions);
         }
 
         private void AttachAccessors()
@@ -585,6 +564,28 @@ namespace DIPOL_UF.ViewModels
             base.HookValidators();
 
             SetUpDefaultValueValidators();
+
+            ObserveHasErrors
+                .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                .Select(_ => Group1Names.Any(HasSpecificErrors))
+                .LogObservable("HAS ERRORS", Subscriptions)
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.Group1ContainsErrors)
+                .DisposeWith(Subscriptions);
+
+            ObserveHasErrors
+                .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                .Select(_ => Group2Names.Any(HasSpecificErrors))
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.Group2ContainsErrors)
+                .DisposeWith(Subscriptions);
+
+            ObserveHasErrors
+                .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                .Select(_ => Group3Names.Any(HasSpecificErrors))
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.Group3ContainsErrors)
+                .DisposeWith(Subscriptions);
         }
 
         private void SetUpDefaultValueValidators()
@@ -622,6 +623,7 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.PreAmpGain, -1, y => y.PreAmpGain);
             DefaultValueValidator(x => x.AcquisitionMode, null, x => x.AcquisitionMode);
             DefaultValueValidator(x => x.TriggerMode, null, y => y.TriggerMode);
+            DefaultValueValidator(x => x.ReadMode, null, y => y.ReadMode);
 
             CreateValidator(
                 this.WhenPropertyChanged(x => x.ExposureTimeText)
