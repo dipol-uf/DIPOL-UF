@@ -568,6 +568,7 @@ namespace DIPOL_UF.ViewModels
             ObserveHasErrors
                 .Throttle(UiSettingsProvider.UiThrottlingDelay)
                 .Select(_ => Group1Names.Any(HasSpecificErrors))
+                .LogObservable("Group1", Subscriptions)
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group1ContainsErrors)
                 .DisposeWith(Subscriptions);
