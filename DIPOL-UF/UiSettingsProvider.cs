@@ -22,6 +22,7 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System;
 using System.IO;
 using SettingsManager;
 using StreamReader = System.IO.StreamReader;
@@ -33,6 +34,7 @@ namespace DIPOL_UF
     /// </summary>
     public class UiSettingsProvider
     {
+        private static TimeSpan _uiThrottlingDelay = default;
         /// <summary>
         /// 
         /// </summary>
@@ -42,6 +44,18 @@ namespace DIPOL_UF
         /// 
         /// </summary>
         public static JsonSettings Settings;
+
+        public static TimeSpan UiThrottlingDelay
+        {
+            get
+            {
+                if (_uiThrottlingDelay == default)
+                    _uiThrottlingDelay =
+                        TimeSpan.Parse(Settings.Get("UiThrottlingDelay", "00:00:00.100"));
+
+                return _uiThrottlingDelay;
+            }
+        }
 
         static UiSettingsProvider()
         {

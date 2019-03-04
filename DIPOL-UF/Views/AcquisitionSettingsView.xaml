@@ -33,7 +33,7 @@
         mc:Ignorable="d"
         Title="{extensions:Text Key=AcquisitionSettings_WindowName}"  WindowStyle="ToolWindow" 
         Topmost="True" WindowStartupLocation="CenterOwner"
-        Height="500" Width="350"
+        Height="545" Width="350"
         MinWidth="300" MinHeight="400"
         Style="{StaticResource ResourceKey=ContentFont}"
         d:DataContext="{d:DesignInstance viewModels:AcquisitionSettingsViewModel}"
@@ -278,76 +278,30 @@
                         <ComboBox Grid.Row="10" Grid.Column="1"
                                   ItemsSource="{Binding
                                     Path=AllowedTriggerModes,
-                                    Mode=OneWay,
-                                    Converter={StaticResource ResourceKey=EnumToDescriptionConverter}}"
+                                    Mode=OneWay}"
                                   SelectedItem="{Binding
-                                    Path=TriggerModeValue,
+                                    Path=TriggerMode,
                                     Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged,
-                                    Converter={StaticResource ResourceKey=EnumToDescriptionConverter}, 
-                                    ValidatesOnNotifyDataErrors=True}">
-                            <ComboBox.Style>
-                                <Style BasedOn="{StaticResource ResourceKey=ComboBoxStyle}"
-                                       TargetType="ComboBox">
-                                    <Style.Triggers>
-                                        <DataTrigger 
-                                            Binding="{Binding 
-                                                HasErrorsOfProperties[TriggerModeValue], 
-                                                Mode=OneWay,
-                                                UpdateSourceTrigger=PropertyChanged}"
-                                            Value="True">
-                                            <Setter 
-                                                Property="ToolTip" 
-                                                Value="{Binding 
-                                                    LatestErrors[TriggerModeValue], 
-                                                    Mode=OneWay,
-                                                    UpdateSourceTrigger=PropertyChanged}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ComboBox.Style>
-                            <ComboBox.IsEnabled>
-                                <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                    <Binding Path="SupportedSettings[TriggerMode]" Mode="OneTime"/>
-                                    <Binding Path="AllowedSettings[TriggerMode]" 
-                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
-                                </MultiBinding>
-                            </ComboBox.IsEnabled>
+                                    ValidatesOnNotifyDataErrors=True}"
+                                  IsEnabled="{Binding IsAvailable.TriggerMode}"
+                                  Style="{StaticResource ComboBoxWithErrors}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="ComboBoxItem">
+                                    <ContentControl
+                                        Content="{Binding Converter={StaticResource EnumToDescriptionConverter}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
                         </ComboBox>
                         <!--EMCCD gain-->
                         <TextBox Grid.Row="11" Grid.Column="1"
                                  Text="{Binding 
-                                    EMCCDGainValueText,
+                                    EmCcdGainText,
                                     Mode=TwoWay,
-                                    UpdateSourceTrigger=LostFocus,
-                                    ValidatesOnNotifyDataErrors=True}">
-                            <TextBox.Style>
-                                <Style BasedOn="{StaticResource ResourceKey=TextBoxStyle}" 
-                                       TargetType="TextBox">
-                                    <Style.Triggers>
-                                            <DataTrigger 
-                                                Binding="{Binding
-                                                    HasErrorsOfProperties[EMCCDGainValueText],
-                                                    Mode=OneWay,
-                                                    UpdateSourceTrigger=PropertyChanged}"
-                                                Value="true">
-                                                <Setter 
-                                                    Property="ToolTip"
-                                                    Value="{Binding 
-                                                        LatestErrors[EMCCDGainValueText], 
-                                                        Mode=OneWay,
-                                                        UpdateSourceTrigger=PropertyChanged}"/>
-                                            </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBox.Style>
-                            <TextBox.IsEnabled>
-                                <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
-                                    <Binding Path="SupportedSettings[EMCCDGain]" Mode="OneTime"/>
-                                    <Binding Path="AllowedSettings[EMCCDGain]" 
-                                             Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
-                                </MultiBinding>
-                            </TextBox.IsEnabled>
+                                    UpdateSourceTrigger=PropertyChanged,
+                                    ValidatesOnNotifyDataErrors=True}"
+                                 IsEnabled="{Binding IsAvailable.EmCcdGain}"
+                                 Style="{StaticResource TextBoxWithErrors}">
                         </TextBox>
 
                     </Grid>

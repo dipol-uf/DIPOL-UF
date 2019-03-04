@@ -610,6 +610,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to D.
+        /// </summary>
+        public static string General_IntegerFormat {
+            get {
+                return ResourceManager.GetString("General_IntegerFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Argument {0} is invalid..
         /// </summary>
         public static string General_InvalidArgument {
