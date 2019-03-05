@@ -193,6 +193,8 @@ namespace DIPOL_UF.ViewModels
 
             // TODO: Add property names here
             Group3Names = new[] { string.Empty };
+            //this.ObserveSpecificErrors(nameof(ImageArea_X1)).LogObservable("IMAGEx1", Subscriptions);
+            
 
             InitializeCommands();
 
@@ -483,7 +485,6 @@ namespace DIPOL_UF.ViewModels
             ObserveHasErrors
                 .Throttle(UiSettingsProvider.UiThrottlingDelay)
                 .Select(_ => Group2Names.Any(HasSpecificErrors))
-                .LogObservable("GROUP2", Subscriptions)
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group2ContainsErrors)
                 .DisposeWith(Subscriptions);
@@ -494,9 +495,7 @@ namespace DIPOL_UF.ViewModels
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group3ContainsErrors)
                 .DisposeWith(Subscriptions);
-
-            // TODO remove this
-            ObserveSpecificErrors(nameof(EmCcdGainText)).LogObservable("EMCCD", Subscriptions);
+            
         }
 
         private void SetUpDefaultValueValidators()
@@ -557,10 +556,10 @@ namespace DIPOL_UF.ViewModels
             
             DefaultStringValueValidator(x => x.ExposureTimeText, y => y.ExposureTimeText);
             DefaultStringValueValidator(x => x.EmCcdGainText, y => y.EmCcdGainText);
-            //DefaultStringValueValidator(x => x.ImageArea_X1, y => y.ImageArea);
-            //DefaultStringValueValidator(x => x.ImageArea_Y1, y => y.ImageArea);
-            //DefaultStringValueValidator(x => x.ImageArea_X2, y => y.ImageArea);
-            //DefaultStringValueValidator(x => x.ImageArea_Y2, y => y.ImageArea);
+            DefaultStringValueValidator(x => x.ImageArea_X1, y => y.ImageArea);
+            DefaultStringValueValidator(x => x.ImageArea_Y1, y => y.ImageArea);
+            DefaultStringValueValidator(x => x.ImageArea_X2, y => y.ImageArea);
+            DefaultStringValueValidator(x => x.ImageArea_Y2, y => y.ImageArea);
         }
 
         private void WatchAvailableSettings()
