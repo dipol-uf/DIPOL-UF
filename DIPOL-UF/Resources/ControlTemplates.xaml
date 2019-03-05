@@ -1,8 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:loc="clr-namespace:DIPOL_UF"
-                    xmlns:cntr="clr-namespace:DIPOL_UF.Controls"
-                    xmlns:enum="clr-namespace:DIPOL_UF.Enums"
+                    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
                     xmlns:extensions="clr-namespace:DIPOL_UF.Extensions">
     <Style x:Key="ThumbWithValueToolTip" TargetType="Thumb">
         <Setter Property="SnapsToDevicePixels" Value="True"/>
@@ -314,6 +312,5 @@
             </Setter.Value>
         </Setter>
     </Style>
-
 
 </ResourceDictionary>

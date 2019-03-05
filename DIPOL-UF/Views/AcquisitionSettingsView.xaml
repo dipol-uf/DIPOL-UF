@@ -431,7 +431,7 @@
                                     ValidatesOnNotifyDataErrors=True}"
                              IsEnabled="{Binding IsAvailable.ImageArea}"
                              Style="{StaticResource TextBoxWithErrors}"/>
-                     <TextBox Grid.Row="2" Grid.Column="1"
+                    <TextBox Grid.Row="2" Grid.Column="1"
                               Width="100" HorizontalAlignment="Left"
                               Text="{Binding 
                                     'ImageArea_Y1',
@@ -440,7 +440,7 @@
                                     ValidatesOnNotifyDataErrors=True}"
                               IsEnabled="{Binding IsAvailable.ImageArea}"
                               Style="{StaticResource TextBoxWithErrors}"/>
-                     <TextBox Grid.Row="3" Grid.Column="1"
+                    <TextBox Grid.Row="3" Grid.Column="1"
                               Width="100" HorizontalAlignment="Left"
                               Text="{Binding 
                                     'ImageArea_X2',
@@ -449,7 +449,7 @@
                                     ValidatesOnNotifyDataErrors=True}"
                               IsEnabled="{Binding IsAvailable.ImageArea}"
                               Style="{StaticResource TextBoxWithErrors}"/>
-                     <TextBox Grid.Row="4" Grid.Column="1"
+                    <TextBox Grid.Row="4" Grid.Column="1"
                               Width="100" HorizontalAlignment="Left"
                               Text="{Binding 
                                     'ImageArea_Y2',
