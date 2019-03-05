@@ -57,9 +57,33 @@ namespace DIPOL_UF
         public bool HasErrors => _validationErrors?.Items.Any(x => !(x.Message is null)) ?? false;
         public IObservable<bool> ObserveHasErrors { get; private set; }
 
-        internal ReactiveObjectEx()
+
+        public ReactiveObjectEx()
         {
-        
+             WhenErrorsChangedTyped =
+                _validationErrors.Connect()
+                                 .Select(x => Observable.For(x, y => Observable.Return(y.Current)))
+                                 .Merge()
+                                 .DistinctUntilChanged();
+
+            WhenErrorsChanged =
+                _validationErrors.Connect()
+                                 .Select(x =>
+                                     x.Select(y => (y.Current.Property, y.Current.Message)).ToList())
+                                 .Select(x => Observable.For(x, Observable.Return))
+                                 .Merge()
+                                 .Select(x => new DataErrorsChangedEventArgs(x.Property));
+
+            WhenErrorsChanged
+                .Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
+                .DisposeWith(Subscriptions);
+
+            WhenErrorsChanged
+                .Subscribe(OnErrorsChanged)
+                .DisposeWith(Subscriptions);
+
+            ObserveHasErrors = WhenErrorsChanged.Select(_ => HasErrors);
+       
 #if DEBUG
             Helper.WriteLog($"{GetType()}: Created");
 #endif
@@ -107,30 +131,6 @@ namespace DIPOL_UF
 
         protected virtual void HookValidators()
         {
-            WhenErrorsChangedTyped =
-                _validationErrors.Connect()
-                                 .Select(x => Observable.For(x, y => Observable.Return(y.Current)))
-                                 .Merge()
-                                 .DistinctUntilChanged();
-
-            WhenErrorsChanged =
-                _validationErrors.Connect()
-                                 .Select(x =>
-                                     x.Select(y => (y.Current.Property, y.Current.Message)).ToList())
-                                 .Select(x => Observable.For(x, Observable.Return))
-                                 .Merge()
-                                 .Select(x => new DataErrorsChangedEventArgs(x.Property));
-
-            WhenErrorsChanged
-                .Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
-                .DisposeWith(Subscriptions);
-
-            WhenErrorsChanged
-                .Subscribe(OnErrorsChanged)
-                .DisposeWith(Subscriptions);
-
-            ObserveHasErrors = WhenErrorsChanged.Select(_ => HasErrors);
-
         }
 
         protected virtual void RemoveAllErrors(string propertyName)
