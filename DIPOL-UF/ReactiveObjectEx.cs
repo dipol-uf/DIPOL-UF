@@ -58,7 +58,7 @@ namespace DIPOL_UF
         public IObservable<bool> ObserveHasErrors { get; private set; }
 
 
-        public ReactiveObjectEx()
+        protected ReactiveObjectEx()
         {
              WhenErrorsChangedTyped =
                 _validationErrors.Connect()
@@ -93,30 +93,23 @@ namespace DIPOL_UF
         {
             this.RaisePropertyChanging(nameof(HasErrors));
             
-            _validationErrors.Edit(context =>
-            {
-                context.AddOrUpdate((propertyName, validatorName, error));
-            });
+            _validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, null)));
+            if(!(error is null))
+                _validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, error)));
 
         }
 
         protected void BatchUpdateErrors(IEnumerable<(string Property, string Type, string Message)> updates)
         {
             this.RaisePropertyChanging(nameof(HasErrors));
-
-            _validationErrors.Edit(context =>
-            {
-                context.AddOrUpdate(updates);
-            });
+            _validationErrors.Edit(context => context.AddOrUpdate(updates.Select(x => (x.Property, x.Type, (string)null))));
+            _validationErrors.Edit(context => context.AddOrUpdate(updates.Where( x=> !(x.Message is null))));
         }
         protected void BatchUpdateErrors(params (string Property, string Type, string Message)[] updates)
         {
             this.RaisePropertyChanging(nameof(HasErrors));
-
-            _validationErrors.Edit(context =>
-            {
-                context.AddOrUpdate(updates);
-            });
+            _validationErrors.Edit(context => context.AddOrUpdate(updates.Select(x => (x.Property, x.Type, (string)null))));
+            _validationErrors.Edit(context => context.AddOrUpdate(updates.Where(x => !(x.Message is null))));
         }
 
         protected void CreateValidator(IObservable<(string Type, string Message)> validationSource, string propertyName)
