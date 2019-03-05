@@ -81,6 +81,10 @@ namespace DIPOL_UF.Validators
             {
                 action(param);
             }
+            catch (ArgumentOutOfRangeException outOfRangeExcept)
+            {
+                return outOfRangeExcept.Message.Split('\r', '\n')[0]?.TrimEnd('.');
+            }
             catch (Exception e)
             {
                 return e.Message;
@@ -93,6 +97,10 @@ namespace DIPOL_UF.Validators
             try
             {
                 action();
+            }
+            catch (ArgumentOutOfRangeException outOfRangeExcept)
+            {
+                return outOfRangeExcept.Message.Split('\r', '\n')[0]?.TrimEnd('.');
             }
             catch (Exception e)
             {

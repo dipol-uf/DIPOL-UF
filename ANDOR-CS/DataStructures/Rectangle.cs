@@ -73,7 +73,7 @@ namespace ANDOR_CS.DataStructures
         public Rectangle(Point2D start, Point2D end)
         {
             if (start.X > end.X || start.Y > end.Y)
-                throw new ArgumentOutOfRangeException($"{nameof(start)} should point to lower left corner, {nameof(end)} - to upper right. (start: {start} and end: {end})");
+                throw new ArgumentException($"{nameof(start)} should point to lower left corner, {nameof(end)} - to upper right. (start: {start} and end: {end})");
 
             Start = start;
             End = end;
@@ -82,9 +82,11 @@ namespace ANDOR_CS.DataStructures
         public Rectangle(int x1, int y1, int x2, int y2)
         {
             if (x2 < x1)
-                throw new ArgumentOutOfRangeException($"{nameof(x2)} should be greater than or equal to {nameof(x1)} ({x1} <= {x2})");
+                throw new ArgumentOutOfRangeException(nameof(x2),
+                    $"{nameof(x2)} should be greater than or equal to {nameof(x1)} ({x1} <= {x2})");
             if (y2 < y1)
-                throw new ArgumentOutOfRangeException($"{nameof(y2)} should be greater than or equal to {nameof(y1)} ({y1} <= {y2})");
+                throw new ArgumentOutOfRangeException(nameof(y2),
+                    $"{nameof(y2)} should be greater than or equal to {nameof(y1)} ({y1} <= {y2})");
 
             Start = new Point2D(x1, y1);
             End = new Point2D(x2, y2);
@@ -93,10 +95,12 @@ namespace ANDOR_CS.DataStructures
         public Rectangle(Point2D start, int width, int height)
         {
             if (width < 0)
-                throw new ArgumentOutOfRangeException($"{nameof(width)} should be greater than or equal to {0} ({width} >= {0})");
+                throw new ArgumentOutOfRangeException(nameof(width),
+                    $"{nameof(width)} should be greater than or equal to {0} ({width} >= {0})");
 
             if (height < 0)
-                throw new ArgumentOutOfRangeException($"{nameof(height)} should be greater than or equal to {0} ({height} >= {0})");
+                throw new ArgumentOutOfRangeException(nameof(height),
+                    $"{nameof(height)} should be greater than or equal to {0} ({height} >= {0})");
 
             Start = start;
             End = start + new Size(width, height);

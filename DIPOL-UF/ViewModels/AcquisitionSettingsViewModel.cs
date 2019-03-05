@@ -25,7 +25,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Threading.Tasks;
@@ -35,7 +34,6 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
-using System.Windows.Forms.VisualStyles;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
@@ -192,7 +190,6 @@ namespace DIPOL_UF.ViewModels
 
             // TODO: Add property names here
             Group3Names = new[] { string.Empty };
-            //this.ObserveSpecificErrors(nameof(ImageArea_X1)).LogObservable("IMAGEx1", Subscriptions);
             
 
             InitializeCommands();
@@ -326,8 +323,10 @@ namespace DIPOL_UF.ViewModels
                             if (string.IsNullOrEmpty(test1))
                                 test2 = DoesNotThrow(setter, result);
                         }
-                        UpdateErrors(name, nameof(CanBeParsed), test1);
-                        UpdateErrors(name, nameof(DoesNotThrow), test2);
+
+                        BatchUpdateErrors(
+                            (name, nameof(CanBeParsed), test1),
+                            (name, nameof(DoesNotThrow), test2));
                     }).DisposeWith(Subscriptions);
             }
 
@@ -364,7 +363,6 @@ namespace DIPOL_UF.ViewModels
                         if (firstTest.All(y => y is null))
                             secondTest = DoesNotThrow(() => Model.Object.SetImageArea(new Rectangle(x1, y1, x2, y2)));
                     }
-                    Helper.WriteLog(secondTest);
                     BatchUpdateErrors(
                         (nameof(ImageArea_X1), nameof(CanBeParsed), firstTest[0]),
                         (nameof(ImageArea_Y1), nameof(CanBeParsed), firstTest[1]),
@@ -777,94 +775,18 @@ namespace DIPOL_UF.ViewModels
                         var messSize = UiSettingsProvider.Settings.Get("ExceptionStringLimit", 80);
                         Application.Current?.Dispatcher?.Invoke(() =>
                         {
-                            MessageBox.Show($"An error occured while reading acquisition settings from {dialog.FileName}.\n" +
-                                            $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
-                                "Unable to load file", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                            MessageBox.Show(
+                                $"An error occured while reading acquisition settings from {dialog.FileName}.\n" +
+                                $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
+                                "Unable to load file", MessageBoxButton.OK, MessageBoxImage.Information,
+                                MessageBoxResult.OK);
                         });
                     }
-                    //Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AllowedSettings)));
                 });
 
             }
-            //else
-            //    RaisePropertyChanged(nameof(AllowedSettings));
         }
 
-        
-        //protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
-        //{
-        //    base.OnPropertyChanged(sender, e);
-
-        //    if ((e.PropertyName == nameof(OutputAmplifierIndex) ||
-        //         e.PropertyName == nameof(ADConverterIndex)) &&
-        //        (AllowedSettings[nameof(model.HSSpeed)]
-        //            = ADConverterIndex >= 0 &&
-        //              OutputAmplifierIndex >= 0))
-        //    {
-        //        RaisePropertyChanged(nameof(PreAmpGainIndex));
-        //        RaisePropertyChanged(nameof(HSSpeedIndex));
-        //        RaisePropertyChanged(nameof(AvailableHSSpeeds));
-        //    }
-
-        //    if ((e.PropertyName == nameof(OutputAmplifierIndex) ||
-        //         e.PropertyName == nameof(ADConverterIndex) ||
-        //         e.PropertyName == nameof(HSSpeedIndex)) &&
-        //        (AllowedSettings[nameof(model.PreAmpGain)]
-        //            = OutputAmplifierIndex >= 0 &&
-        //              ADConverterIndex >= 0 &&
-        //              HSSpeedIndex >= 0))
-        //    {
-        //        RaisePropertyChanged(nameof(PreAmpGainIndex));
-        //        RaisePropertyChanged(nameof(AvailablePreAmpGains));
-        //    }
-
-        //    if (e.PropertyName == nameof(AcquisitionModeValue) &&
-        //        AcquisitionModeValue.HasValue)
-        //    {
-        //        AllowedSettings[nameof(FrameTransferValue)] =
-        //            AcquisitionModeValue != AcquisitionMode.SingleScan &&
-        //            AcquisitionModeValue != AcquisitionMode.FastKinetics;
-        //        if (!AllowedSettings[nameof(FrameTransferValue)])
-        //        {
-        //            FrameTransferValue = false;
-        //            //RaisePropertyChanged(nameof(FrameTransferValue));
-        //        }
-        //    }
-        //    if (e.PropertyName == nameof(OutputAmplifierIndex))
-        //    {
-        //        AllowedSettings[nameof(model.EMCCDGain)] = (OutputAmplifierIndex >= 0) &&
-        //            (Camera.Properties.OutputAmplifiers[OutputAmplifierIndex].OutputAmplifier 
-        //            == OutputAmplification.Conventional);
-        //        RaisePropertyChanged(nameof(EMCCDGainValueText));
-        //    }
-
-        //    SubmitCommand?.OnCanExecuteChanged();
-
-        //}
-
-        //protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        //{
-        //    // Model can raise PropertyChange from non-UI thread,
-        //    // therefore ModelView should dispatch respective events on UI thread
-
-        //    base.OnModelPropertyChanged(sender, e);
-        //    var prop = PropertyList
-        //        .FirstOrDefault(item => item.Item1 == e.PropertyName);
-
-        //    if (prop.Item2 != null)
-        //       Helper.ExecuteOnUI(() => RaisePropertyChanged(prop.Item2.Name));
-
-        //    if (e.PropertyName == nameof(model.AcquisitionMode))
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(FrameTransferValue)));
-
-        //    if (e.PropertyName == nameof(model.ImageArea))
-        //    {
-        //        Helper.ExecuteOnUI(() => RaiseErrorChanged(nameof(ImageArea_X1)));
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(ImageArea_Y1)));
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(ImageArea_X2)));
-        //        Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(ImageArea_Y2)));
-        //    }
-        //}
 
         private void CloseView(object parameter, bool isCanceled)
         {
