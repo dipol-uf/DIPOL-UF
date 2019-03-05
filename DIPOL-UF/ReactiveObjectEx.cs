@@ -39,7 +39,7 @@ namespace DIPOL_UF
 {
     public abstract class ReactiveObjectEx : ReactiveObject, INotifyDataErrorInfo, IDisposable
     {
-        internal readonly ValidationErrorsCache ValidationErrors =
+        private readonly ValidationErrorsCache _validationErrors =
             new ValidationErrorsCache(x => (x.Property, x.Type));
 
         protected  readonly  CompositeDisposable Subscriptions = new CompositeDisposable();
@@ -54,7 +54,7 @@ namespace DIPOL_UF
 
         public IObservable<DataErrorsChangedEventArgs> WhenErrorsChanged { get; private set; }
         public bool IsDisposed { get; private set; }
-        public bool HasErrors => ValidationErrors?.Items.Any(x => !(x.Message is null)) ?? false;
+        public bool HasErrors => _validationErrors?.Items.Any(x => !(x.Message is null)) ?? false;
         public IObservable<bool> ObserveHasErrors { get; private set; }
 
         internal ReactiveObjectEx()
@@ -65,21 +65,40 @@ namespace DIPOL_UF
 #endif
         }
         
-        protected void UpdateErrors(string error, string propertyName, string validatorName)
+        protected void UpdateErrors(string propertyName, string validatorName, string error)
         {
             this.RaisePropertyChanging(nameof(HasErrors));
             
-            ValidationErrors.Edit(context =>
+            _validationErrors.Edit(context =>
             {
                 context.AddOrUpdate((propertyName, validatorName, error));
             });
 
         }
-        
+
+        protected void BatchUpdateErrors(IEnumerable<(string Property, string Type, string Message)> updates)
+        {
+            this.RaisePropertyChanging(nameof(HasErrors));
+
+            _validationErrors.Edit(context =>
+            {
+                context.AddOrUpdate(updates);
+            });
+        }
+        protected void BatchUpdateErrors(params (string Property, string Type, string Message)[] updates)
+        {
+            this.RaisePropertyChanging(nameof(HasErrors));
+
+            _validationErrors.Edit(context =>
+            {
+                context.AddOrUpdate(updates);
+            });
+        }
+
         protected void CreateValidator(IObservable<(string Type, string Message)> validationSource, string propertyName)
         {
             validationSource
-                .Subscribe(x => UpdateErrors(x.Message, propertyName, x.Type))
+                .Subscribe(x => UpdateErrors(propertyName, x.Type, x.Message))
                 .DisposeWith(Subscriptions);
         }
 
@@ -89,13 +108,13 @@ namespace DIPOL_UF
         protected virtual void HookValidators()
         {
             WhenErrorsChangedTyped =
-                ValidationErrors.Connect()
+                _validationErrors.Connect()
                                  .Select(x => Observable.For(x, y => Observable.Return(y.Current)))
                                  .Merge()
                                  .DistinctUntilChanged();
 
             WhenErrorsChanged =
-                ValidationErrors.Connect()
+                _validationErrors.Connect()
                                  .Select(x =>
                                      x.Select(y => (y.Current.Property, y.Current.Message)).ToList())
                                  .Select(x => Observable.For(x, Observable.Return))
@@ -116,7 +135,7 @@ namespace DIPOL_UF
 
         protected virtual void RemoveAllErrors(string propertyName)
         {
-            ValidationErrors.Edit(context =>
+            _validationErrors.Edit(context =>
             {
                 var items = context.Items.Where(x => x.Property == propertyName)
                                    .Select(x => (x.Property, x.Type, Message: (string)null))
@@ -155,7 +174,7 @@ namespace DIPOL_UF
                     if (!Subscriptions.IsDisposed)
                         Subscriptions.Dispose();
 
-                    ValidationErrors.Dispose();
+                    _validationErrors.Dispose();
 
 #if DEBUG
                     Helper.WriteLog($"{GetType()}: Disposed");
@@ -172,7 +191,7 @@ namespace DIPOL_UF
 
         public virtual List<(string Type, string Message)> GetTypedErrors(string propertyName)
         {
-            return ValidationErrors.Items
+            return _validationErrors.Items
                                     .Where(x => x.Property == propertyName)
                                     .Select(x => (x.Type, x.Message))
                                     .ToList();
@@ -180,13 +199,13 @@ namespace DIPOL_UF
 
         public virtual IEnumerable GetErrors(string propertyName)
         {
-            return ValidationErrors.Items
+            return _validationErrors.Items
                                     .Where(x => x.Property == propertyName && !(x.Message is null))
                                     .Select(x => x.Message);
         }
 
         public virtual bool HasSpecificErrors(string propertyName)
-            => ValidationErrors?.Items.Any(x => x.Property == propertyName && !(x.Message is null)) ?? false;
+            => _validationErrors?.Items.Any(x => x.Property == propertyName && !(x.Message is null)) ?? false;
         
         public void Dispose()
         {

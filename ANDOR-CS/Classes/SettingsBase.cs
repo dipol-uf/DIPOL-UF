@@ -550,14 +550,15 @@ namespace ANDOR_CS.Classes
             // Checks if Camera is OK
             CheckCamera();
 
-
+            var hasFt = mode.HasFlag(Enums.AcquisitionMode.FrameTransfer);
+            var actualMode = hasFt ? mode ^ Enums.AcquisitionMode.FrameTransfer : mode;
             // Checks if Camera supports specified mode
-            if (!Camera.Capabilities.AcquisitionModes.HasFlag(mode))
+            if (!Camera.Capabilities.AcquisitionModes.HasFlag(actualMode))
                 throw new NotSupportedException($"Camera does not support specified regime ({mode})");
 
 
             // If there are no matches in the pre-defined table, then this mode cannot be set explicitly
-            if (!EnumConverter.AcquisitionModeTable.ContainsKey(mode.HasFlag(Enums.AcquisitionMode.FrameTransfer)? mode^Enums.AcquisitionMode.FrameTransfer : mode))
+            if (!EnumConverter.AcquisitionModeTable.ContainsKey(actualMode))
                 throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({mode})");
 
             AcquisitionMode = mode;
