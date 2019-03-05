@@ -120,6 +120,12 @@
   <data name="AcquisitionSettings_Cycles" xml:space="preserve">
     <value>Cycles</value>
   </data>
+  <data name="AcquisitionSettings_DetectorSize" xml:space="preserve">
+    <value>Detector size (H x V):</value>
+  </data>
+  <data name="AcquisitionSettings_DetectorSize_Format" xml:space="preserve">
+    <value>{0} x {1}</value>
+  </data>
   <data name="AcquisitionSettings_ImageSize" xml:space="preserve">
     <value>Image size</value>
   </data>
@@ -128,6 +134,9 @@
   </data>
   <data name="AcquisitionSettings_WindowName" xml:space="preserve">
     <value>Set up acquisition process</value>
+  </data>
+  <data name="AcquisitionSetttings_AvailableGainFormat" xml:space="preserve">
+    <value>[{0}, {1}]</value>
   </data>
   <data name="ApplicationName" xml:space="preserve">
     <value>Dipol-UF</value>

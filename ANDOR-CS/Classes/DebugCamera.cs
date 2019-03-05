@@ -103,7 +103,8 @@ namespace ANDOR_CS.Classes
                                | SetFunction.VerticalReadoutSpeed
                                | SetFunction.VerticalClockVoltage
                                | SetFunction.HorizontalReadoutSpeed
-                               | SetFunction.PreAmpGain,
+                               | SetFunction.PreAmpGain
+                               | SetFunction.EMCCDGain,
                 Features = SdkFeatures.FanControl
                            | SdkFeatures.LowFanMode
                            | SdkFeatures.Shutter

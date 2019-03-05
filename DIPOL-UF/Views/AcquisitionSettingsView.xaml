@@ -322,16 +322,26 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                         <!--EMCCD gain-->
-                        <TextBox Grid.Row="11" Grid.Column="1"
-                                 Text="{Binding 
-                                    EmCcdGainText,
-                                    Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    ValidatesOnNotifyDataErrors=True}"
-                                 IsEnabled="{Binding IsAvailable.EmCcdGainText}"
-                                 Style="{StaticResource TextBoxWithErrors}">
-                        </TextBox>
-
+                        <Grid Grid.Row="11" Grid.Column="1" Margin="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding 
+                                        EmCcdGainText,
+                                        Mode=TwoWay,
+                                        UpdateSourceTrigger=PropertyChanged,
+                                        ValidatesOnNotifyDataErrors=True}"
+                                     IsEnabled="{Binding IsAvailable.EmCcdGainText}"
+                                     Style="{StaticResource TextBoxWithErrors}">
+                            </TextBox>
+                            <Label Grid.Column="1"
+                                Style="{StaticResource ContentFont_Label}"
+                                Content="{Binding AllowedGain}"
+                                Visibility="{Binding IsAvailable.EmCcdGainText,
+                                        Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        </Grid>
                     </Grid>
                 </ScrollViewer>
                 </AdornerDecorator>
@@ -376,6 +386,7 @@
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
                     </Grid.RowDefinitions>
                      <!--Image area-->
                     <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
@@ -406,7 +417,17 @@
                         Y<Run BaselineAlignment="Subscript" 
                               FontSize="{StaticResource ResourceKey=SmallFontSize}" >2</Run>
                     </TextBlock>
-                    <!--Image Area controls-->
+                    <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                        <TextBlock Grid.Row="5" Grid.Column="0"
+                                    Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                                    VerticalAlignment="Center"
+                                    Text="{extensions:Text Key=AcquisitionSettings_DetectorSize}"/>
+                        <TextBlock Grid.Row="5" Grid.Column="1"
+                                Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                                VerticalAlignment="Center"
+                                Text="{Binding DetectorSize}"/>
+                    </StackPanel>
+                     <!--Image Area controls-->
                     <TextBox Grid.Row="1" Grid.Column="1" 
                              Width="100" HorizontalAlignment="Left"
                              Text="{Binding 
@@ -444,7 +465,7 @@
                               IsEnabled="{Binding IsAvailable.ImageArea}"
                               Style="{StaticResource TextBoxWithErrors}"/>
 
-                </Grid>
+                    </Grid>
                 </AdornerDecorator>
             </TabItem>
             <TabItem Header="{extensions:Text Key=AcquisitionSettings_Cycles}">
