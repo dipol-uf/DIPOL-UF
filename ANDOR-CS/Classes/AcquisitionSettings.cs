@@ -56,7 +56,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         ///     SERIALIZATION TEST CONSTRUCTOR; DO NOT USE
         /// </summary>
-//#if DEBUG
+#if DEBUG
         public AcquisitionSettings(bool empty = false)
         {
             if (empty) 
@@ -77,8 +77,7 @@ namespace ANDOR_CS.Classes
             VSAmplitude = Enums.VSAmplitude.Plus2;
             VSSpeed = (0, 0.3f);
         }
-
-//#endif
+#endif
         private SafeSdkCameraHandle Handle
             => Camera is Camera cam
                 ? cam.CameraHandle

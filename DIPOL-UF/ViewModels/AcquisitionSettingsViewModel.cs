@@ -31,13 +31,11 @@ using System.Windows;
 using System.Threading.Tasks;
 using System.IO;
 using System.Linq.Expressions;
-using System.Net;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
+using System.Windows.Forms.VisualStyles;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
@@ -210,8 +208,8 @@ namespace DIPOL_UF.ViewModels
 
         private void HookObservables()
         {
-            AttachAccessors();
             WatchAvailableSettings();
+            AttachAccessors();
 
             _availableHsSpeeds
                 .Connect()
@@ -268,51 +266,67 @@ namespace DIPOL_UF.ViewModels
 
             void CreateStringToIntSetter(
                 Expression<Func<AcquisitionSettingsViewModel, string>> sourceAccessor,
-                Action<int> setter)
+                Action<int> setter,
+                Expression<Func<SettingsAvailability, bool>> availability)
             {
                 var name = (sourceAccessor.Body as MemberExpression)?.Member.Name
                            ?? throw new ArgumentException(
                                Properties.Localization.General_ShouldNotHappen,
                                nameof(sourceAccessor));
 
-                this.WhenPropertyChanged(sourceAccessor)
-                    .Select(x => x.Value)
+                var srcGetter = sourceAccessor.Compile();
+                var avGetter = availability.Compile();
+
+                this.WhenPropertyChanged(sourceAccessor).Select(_ => Unit.Default)
+                    .Merge(
+                        IsAvailable.WhenPropertyChanged(availability).Select(_ => Unit.Default))
                     .Subscribe(x =>
                     {
-                        var test1 = CanBeParsed(x, out int result);
-                        UpdateErrors(test1, name, nameof(CanBeParsed));
-
+                        string test1 = null;
                         string test2 = null;
-                        if (string.IsNullOrEmpty(test1))
-                            test2 = DoesNotThrow(setter, result);
+                        if (avGetter(IsAvailable))
+                        {
+                            test1 = CanBeParsed(srcGetter(this), out int result);
 
-                        UpdateErrors(test2, name, nameof(DoesNotThrow));
+                            if (string.IsNullOrEmpty(test1))
+                                test2 = DoesNotThrow(setter, result);
+                        }
+
+                        UpdateErrors(name, nameof(CanBeParsed), test1);
+                        UpdateErrors(name, nameof(DoesNotThrow), test2);
 
                     }).DisposeWith(Subscriptions);
             }
 
             void CreateStringToFloatSetter(
                 Expression<Func<AcquisitionSettingsViewModel, string>> sourceAccessor,
-                Action<float> setter)
+                Action<float> setter,
+                Expression<Func<SettingsAvailability, bool>> availability)
             {
                 var name = (sourceAccessor.Body as MemberExpression)?.Member.Name
                            ?? throw new ArgumentException(
                                Properties.Localization.General_ShouldNotHappen,
                                nameof(sourceAccessor));
 
-                this.WhenPropertyChanged(sourceAccessor)
-                    .Select(x => x.Value)
+                var srcGetter = sourceAccessor.Compile();
+                var avGetter = availability.Compile();
+
+                this.WhenPropertyChanged(sourceAccessor).Select(_ => Unit.Default)
+                    .Merge(
+                        IsAvailable.WhenPropertyChanged(availability).Select(_ => Unit.Default))
                     .Subscribe(x =>
                     {
-                        var test1 = CanBeParsed(x, out float result);
-                        UpdateErrors(test1, name, nameof(CanBeParsed));
-
+                        string test1 = null;
                         string test2 = null;
-                        if (string.IsNullOrEmpty(test1))
-                            test2 = DoesNotThrow(setter, result);
+                        if (avGetter(IsAvailable))
+                        {
+                            test1 = CanBeParsed(srcGetter(this), out float result);
 
-                       UpdateErrors(test2, name, nameof(DoesNotThrow));
-
+                            if (string.IsNullOrEmpty(test1))
+                                test2 = DoesNotThrow(setter, result);
+                        }
+                        UpdateErrors(name, nameof(CanBeParsed), test1);
+                        UpdateErrors(name, nameof(DoesNotThrow), test2);
                     }).DisposeWith(Subscriptions);
             }
 
@@ -333,69 +347,40 @@ namespace DIPOL_UF.ViewModels
                     : 0,
                 Model.Object.SetEmCcdGain);
 
-            CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime);
-            CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain);
+            CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime, y => y.ExposureTimeText);
+            CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain, y => y.EmCcdGainText);
 
             this.WhenAnyValue(x => x.ImageArea_X1, x => x.ImageArea_Y1, x => x.ImageArea_X2, x => x.ImageArea_Y2)
+                .Select(_ => Unit.Default)
+                .Merge(IsAvailable.WhenPropertyChanged(x => x.ImageArea).Select(_ => Unit.Default))
                 .Subscribe(x =>
                 {
-                    var testX1 = CanBeParsed(x.Item1, out int x1);
-                    UpdateErrors(testX1, nameof(ImageArea_X1), nameof(CanBeParsed));
-                    var testY1 = CanBeParsed(x.Item2, out int y1);
-                    UpdateErrors(testY1, nameof(ImageArea_Y1), nameof(CanBeParsed));
-                    var testX2 = CanBeParsed(x.Item3, out int x2);
-                    UpdateErrors(testX2, nameof(ImageArea_X2), nameof(CanBeParsed));
-                    var testY2 = CanBeParsed(x.Item4, out int y2);
-                    UpdateErrors(testY2, nameof(ImageArea_Y2), nameof(CanBeParsed));
-
+                    var firstTest = new string[] {null, null, null, null};
                     string secondTest = null;
 
-                    if (string.IsNullOrEmpty(testX1)
-                        && string.IsNullOrEmpty(testY1)
-                        && string.IsNullOrEmpty(testX2)
-                        && string.IsNullOrEmpty(testY2))
-                        secondTest = DoesNotThrow(() => Model.Object.SetImageArea(new Rectangle(x1, y1, x2, y2)));
-                    UpdateErrors(secondTest, nameof(ImageArea_X1), nameof(DoesNotThrow));
-                    UpdateErrors(secondTest, nameof(ImageArea_Y1), nameof(DoesNotThrow));
-                    UpdateErrors(secondTest, nameof(ImageArea_X2), nameof(DoesNotThrow));
-                    UpdateErrors(secondTest, nameof(ImageArea_Y2), nameof(DoesNotThrow));
+                    if (IsAvailable.ImageArea)
+                    {
+                        firstTest[0] = CanBeParsed(ImageArea_X1, out int x1);
+                        firstTest[1] = CanBeParsed(ImageArea_Y1, out int y1);
+                        firstTest[2] = CanBeParsed(ImageArea_X2, out int x2);
+                        firstTest[3] = CanBeParsed(ImageArea_Y2, out int y2);
+
+                        if (firstTest.All(y => y is null))
+                            secondTest = DoesNotThrow(() => Model.Object.SetImageArea(new Rectangle(x1, y1, x2, y2)));
+                    }
+                    Helper.WriteLog(secondTest);
+                    BatchUpdateErrors(
+                        (nameof(ImageArea_X1), nameof(CanBeParsed), firstTest[0]),
+                        (nameof(ImageArea_Y1), nameof(CanBeParsed), firstTest[1]),
+                        (nameof(ImageArea_X2), nameof(CanBeParsed), firstTest[2]),
+                        (nameof(ImageArea_Y2), nameof(CanBeParsed), firstTest[3]),
+                        (nameof(ImageArea_X1), nameof(DoesNotThrow), secondTest),
+                        (nameof(ImageArea_Y1), nameof(DoesNotThrow), secondTest),
+                        (nameof(ImageArea_X2), nameof(DoesNotThrow), secondTest),
+                        (nameof(ImageArea_Y2), nameof(DoesNotThrow), secondTest));
 
                 })
                 .DisposeWith(Subscriptions);
-
-            //CreateStringToIntSetter(x => x.ImageArea_X1, y =>
-            //{
-            //    Model.Object.SetImageArea(
-            //        (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
-            //        .CopyWithModifications(ctx =>
-            //        {
-            //            ctx.X1 += y;
-            //            ctx.X2 = ctx.X2 > ctx.X1 ? ctx.X2 : ctx.X1 + 1;
-            //        }));
-            //});
-            //CreateStringToIntSetter(x => x.ImageArea_Y1, y =>
-            //{
-            //    Model.Object.SetImageArea(
-            //        (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
-            //        .CopyWithModifications(ctx =>
-            //        {
-            //            ctx.Y1 += y;
-            //            ctx.Y2 = ctx.Y2 > ctx.Y1 ? ctx.Y2 : ctx.Y1 + 1;
-            //        }));
-            //});
-            //CreateStringToIntSetter(x => x.ImageArea_X2, y =>
-            //{
-            //    Model.Object.SetImageArea(
-            //        (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
-            //        .CopyWithModifications(ctx => ctx.X2 += y));
-            //});
-            //CreateStringToIntSetter(x => x.ImageArea_Y2, y =>
-            //{
-            //    Model.Object.SetImageArea(
-            //        (Model.Object.ImageArea ?? new Rectangle(0, 0, 1, 1))
-            //        .CopyWithModifications(ctx => ctx.Y2 += y));
-            //});
-
 
             this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
                 .Where(x => x.AcquisitionMode.HasValue)
@@ -407,9 +392,9 @@ namespace DIPOL_UF.ViewModels
                 .Subscribe(x =>
                 {
                     if(IsAvailable.AcquisitionMode)
-                        UpdateErrors(x, nameof(AcquisitionMode), nameof(DoesNotThrow));
+                        UpdateErrors(nameof(AcquisitionMode), nameof(DoesNotThrow), x);
                     if(IsAvailable.FrameTransfer)
-                        UpdateErrors(x, nameof(FrameTransfer), nameof(DoesNotThrow));
+                        UpdateErrors(nameof(FrameTransfer), nameof(DoesNotThrow), x);
                 })
                 .DisposeWith(Subscriptions);
             // ReSharper restore PossibleInvalidOperationException
@@ -482,122 +467,6 @@ namespace DIPOL_UF.ViewModels
                       .DisposeWith(Subscriptions);
         }
 
-        private void WatchAvailableSettings()
-        {
-            void ImmutableAvailability(string srcProperty,
-                Expression<Func<SettingsAvailability, bool>> accessor)
-            {
-                var lwrName = srcProperty.ToLowerInvariant();
-                Observable.Return(AllowedSettings.Contains(lwrName) && SupportedSettings.Contains(lwrName))
-                          .ToPropertyEx(IsAvailable, accessor)
-                          .DisposeWith(Subscriptions);
-            }
-            
-            ImmutableAvailability(nameof(Model.Object.VSSpeed), x => x.VsSpeed);
-            ImmutableAvailability(nameof(Model.Object.VSAmplitude), x => x.VsAmplitude);
-            ImmutableAvailability(nameof(Model.Object.ADConverter), x => x.AdcBitDepth);
-            ImmutableAvailability(nameof(Model.Object.OutputAmplifier), x=> x.Amplifier);
-            ImmutableAvailability(nameof(Model.Object.AcquisitionMode), x => x.AcquisitionMode);
-            ImmutableAvailability(nameof(Model.Object.ExposureTime), x => x.ExposureTimeText);
-            ImmutableAvailability(nameof(FrameTransfer), x => x.FrameTransfer); // This is correct
-            ImmutableAvailability(nameof(Model.Object.ReadoutMode), x => x.ReadMode);
-            ImmutableAvailability(nameof(Model.Object.TriggerMode), x => x.TriggerMode);
-            ImmutableAvailability(nameof(Model.Object.ImageArea), x => x.ImageArea);
-
-            this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
-                .Select(x =>
-                {
-                    var name = nameof(Model.Object.HSSpeed).ToLowerInvariant();
-                    return AllowedSettings.Contains(name)
-                           && SupportedSettings.Contains(name)
-                           && x.AdcBitDepth >= 0
-                           && Amplifier.HasValue;
-
-                })
-                .ToPropertyEx(IsAvailable, x => x.HsSpeed)
-                .DisposeWith(Subscriptions);
-
-            this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier), nameof(HsSpeed))
-                .Select(x =>
-                {
-                    var name = nameof(Model.Object.PreAmpGain).ToLowerInvariant();
-                    return AllowedSettings.Contains(name)
-                           && SupportedSettings.Contains(name)
-                           && x.AdcBitDepth >= 0
-                           && Amplifier.HasValue
-                           && HsSpeed >= 0;
-
-                })
-                .ToPropertyEx(IsAvailable, x => x.PreAmpGain)
-                .DisposeWith(Subscriptions);
-
-            this.WhenAnyPropertyChanged(nameof(Amplifier))
-                .Select(x =>
-                {
-                    var name = nameof(Model.Object.EMCCDGain).ToLowerInvariant();
-                    return AllowedSettings.Contains(name)
-                           && SupportedSettings.Contains(name)
-                           && Amplifier.HasValue
-                           && Amplifier.Value == OutputAmplification.ElectronMultiplication;
-                })
-                .ToPropertyEx(IsAvailable, x => x.EmCcdGainText)
-                .DisposeWith(Subscriptions);
-        }
-
-        private void WatchItemSources()
-        {
-            // Watches ADConverter & Amplifier and updates HsSpeeds
-            Model.Object.WhenAnyPropertyChanged(
-                     nameof(Model.Object.ADConverter),
-                     nameof(Model.Object.OutputAmplifier))
-                 .Where(x => x.ADConverter.HasValue && x.OutputAmplifier.HasValue)
-                 .Select(x => x.GetAvailableHSSpeeds(x.ADConverter?.Index ?? -1, x.OutputAmplifier?.Index ?? -1))
-                 .ObserveOnUi()
-                 .Subscribe(x =>
-                 {
-                     HsSpeed = -1;
-                     _availableHsSpeeds.Edit(context => context.Load(x));
-                 })
-                 .DisposeWith(Subscriptions);
-
-            Model.Object.WhenAnyPropertyChanged(
-                     nameof(Model.Object.ADConverter),
-                     nameof(Model.Object.OutputAmplifier),
-                     nameof(Model.Object.HSSpeed))
-                 .Where(x =>
-                     x.ADConverter.HasValue
-                     && x.OutputAmplifier.HasValue
-                     && x.HSSpeed.HasValue)
-                 .Select(x =>
-                     x.GetAvailablePreAmpGain(
-                         x.ADConverter?.Index ?? -1,
-                         x.OutputAmplifier?.Index ?? -1,
-                         x.HSSpeed?.Index ?? -1))
-                 .ObserveOnUi()
-                 .Subscribe(x =>
-                 {
-                     PreAmpGain = -1;
-                     _availablePreAmpGains.Edit(context => context.Load(x));
-                 })
-                 .DisposeWith(Subscriptions);
-
-            // Read mode changes if FrameTransfer is enabled
-            Model.Object.WhenAnyPropertyChanged(nameof(Model.Object.AcquisitionMode))
-                 .Select(x => x.AcquisitionMode?.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer) ?? false)
-                 .DistinctUntilChanged()
-                 .Select(x => Helper.EnumFlagsToArray<ReadMode>(x
-                                        ? Camera.Capabilities.FtReadModes
-                                        : Camera.Capabilities.ReadModes)
-                                    .Where(EnumConverter.IsReadModeSupported))
-                 .ObserveOnUi()
-                 .Subscribe(x =>
-                 {
-                     ReadMode = null;
-                     _availableReadModes.Edit(context => context.Load(x));
-                 })
-                 .DisposeWith(Subscriptions);
-        }
-
         protected override void HookValidators()
         {
             base.HookValidators();
@@ -626,7 +495,8 @@ namespace DIPOL_UF.ViewModels
                 .ToPropertyEx(this, x => x.Group3ContainsErrors)
                 .DisposeWith(Subscriptions);
 
-            this.ObserveSpecificErrors(nameof(EmCcdGainText)).LogObservable("EMCCD", Subscriptions);
+            // TODO remove this
+            ObserveSpecificErrors(nameof(EmCcdGainText)).LogObservable("EMCCD", Subscriptions);
         }
 
         private void SetUpDefaultValueValidators()
@@ -685,16 +555,140 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.TriggerMode, null, y => y.TriggerMode);
             DefaultValueValidator(x => x.ReadMode, null, y => y.ReadMode);
             
-
-            //DefaultStringValueValidator(x => x.ExposureTimeText, y => y.ExposureTimeText);
-            //DefaultStringValueValidator(x => x.EmCcdGainText, y => y.EmCcdGainText);
+            DefaultStringValueValidator(x => x.ExposureTimeText, y => y.ExposureTimeText);
+            DefaultStringValueValidator(x => x.EmCcdGainText, y => y.EmCcdGainText);
             //DefaultStringValueValidator(x => x.ImageArea_X1, y => y.ImageArea);
             //DefaultStringValueValidator(x => x.ImageArea_Y1, y => y.ImageArea);
             //DefaultStringValueValidator(x => x.ImageArea_X2, y => y.ImageArea);
             //DefaultStringValueValidator(x => x.ImageArea_Y2, y => y.ImageArea);
-
         }
 
+        private void WatchAvailableSettings()
+        {
+            void ImmutableAvailability(string srcProperty,
+                Expression<Func<SettingsAvailability, bool>> accessor)
+            {
+                var lwrName = srcProperty.ToLowerInvariant();
+                Observable.Return(AllowedSettings.Contains(lwrName) && SupportedSettings.Contains(lwrName))
+                          .ToPropertyEx(IsAvailable, accessor)
+                          .DisposeWith(Subscriptions);
+            }
+            
+            ImmutableAvailability(nameof(Model.Object.VSSpeed), x => x.VsSpeed);
+            ImmutableAvailability(nameof(Model.Object.VSAmplitude), x => x.VsAmplitude);
+            ImmutableAvailability(nameof(Model.Object.ADConverter), x => x.AdcBitDepth);
+            ImmutableAvailability(nameof(Model.Object.OutputAmplifier), x=> x.Amplifier);
+            ImmutableAvailability(nameof(Model.Object.AcquisitionMode), x => x.AcquisitionMode);
+            ImmutableAvailability(nameof(Model.Object.ExposureTime), x => x.ExposureTimeText);
+            ImmutableAvailability(nameof(FrameTransfer), x => x.FrameTransfer); // This is correct
+            ImmutableAvailability(nameof(Model.Object.TriggerMode), x => x.TriggerMode);
+            ImmutableAvailability(nameof(Model.Object.ImageArea), x => x.ImageArea);
+
+            this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.HSSpeed).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && x.AdcBitDepth >= 0
+                           && Amplifier.HasValue;
+
+                })
+                .ToPropertyEx(IsAvailable, x => x.HsSpeed)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier), nameof(HsSpeed))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.PreAmpGain).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && x.AdcBitDepth >= 0
+                           && Amplifier.HasValue
+                           && HsSpeed >= 0;
+
+                })
+                .ToPropertyEx(IsAvailable, x => x.PreAmpGain)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(Amplifier))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.EMCCDGain).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && Amplifier.HasValue
+                           && Amplifier.Value == OutputAmplification.ElectronMultiplication;
+                })
+                .ToPropertyEx(IsAvailable, x => x.EmCcdGainText)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.ReadoutMode).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && AcquisitionMode.HasValue;
+                })
+                .ToPropertyEx(IsAvailable, x => x.ReadMode)
+                .DisposeWith(Subscriptions);
+        }
+
+        private void WatchItemSources()
+        {
+            // Watches ADConverter & Amplifier and updates HsSpeeds
+            Model.Object.WhenAnyPropertyChanged(
+                     nameof(Model.Object.ADConverter),
+                     nameof(Model.Object.OutputAmplifier))
+                 .Where(x => x.ADConverter.HasValue && x.OutputAmplifier.HasValue)
+                 .Select(x => x.GetAvailableHSSpeeds(x.ADConverter?.Index ?? -1, x.OutputAmplifier?.Index ?? -1))
+                 .ObserveOnUi()
+                 .Subscribe(x =>
+                 {
+                     HsSpeed = -1;
+                     _availableHsSpeeds.Edit(context => context.Load(x));
+                 })
+                 .DisposeWith(Subscriptions);
+
+            Model.Object.WhenAnyPropertyChanged(
+                     nameof(Model.Object.ADConverter),
+                     nameof(Model.Object.OutputAmplifier),
+                     nameof(Model.Object.HSSpeed))
+                 .Where(x =>
+                     x.ADConverter.HasValue
+                     && x.OutputAmplifier.HasValue
+                     && x.HSSpeed.HasValue)
+                 .Select(x =>
+                     x.GetAvailablePreAmpGain(
+                         x.ADConverter?.Index ?? -1,
+                         x.OutputAmplifier?.Index ?? -1,
+                         x.HSSpeed?.Index ?? -1))
+                 .ObserveOnUi()
+                 .Subscribe(x =>
+                 {
+                     PreAmpGain = -1;
+                     _availablePreAmpGains.Edit(context => context.Load(x));
+                 })
+                 .DisposeWith(Subscriptions);
+
+            // Read mode changes if FrameTransfer is enabled
+            Model.Object.WhenAnyPropertyChanged(nameof(Model.Object.AcquisitionMode))
+                 .Select(x => x.AcquisitionMode?.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer) ?? false)
+                 .DistinctUntilChanged()
+                 .Select(x => Helper.EnumFlagsToArray<ReadMode>(x
+                                        ? Camera.Capabilities.FtReadModes
+                                        : Camera.Capabilities.ReadModes)
+                                    .Where(EnumConverter.IsReadModeSupported))
+                 .ObserveOnUi()
+                 .Subscribe(x =>
+                 {
+                     ReadMode = null;
+                     _availableReadModes.Edit(context => context.Load(x));
+                 })
+                 .DisposeWith(Subscriptions);
+        }
+        
         private void InitializeCommands()
         {
             GotFocusCommand =
