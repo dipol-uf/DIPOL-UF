@@ -70,6 +70,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Detector size (H x V):.
+        /// </summary>
+        public static string AcquisitionSettings_DetectorSize {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_DetectorSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} x {1}.
+        /// </summary>
+        public static string AcquisitionSettings_DetectorSize_Format {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_DetectorSize_Format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Image size.
         /// </summary>
         public static string AcquisitionSettings_ImageSize {
@@ -93,6 +111,15 @@ namespace DIPOL_UF.Properties {
         public static string AcquisitionSettings_WindowName {
             get {
                 return ResourceManager.GetString("AcquisitionSettings_WindowName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [{0}, {1}].
+        /// </summary>
+        public static string AcquisitionSetttings_AvailableGainFormat {
+            get {
+                return ResourceManager.GetString("AcquisitionSetttings_AvailableGainFormat", resourceCulture);
             }
         }
         

@@ -784,6 +784,8 @@ namespace ANDOR_CS.Classes
            int amplifier,
            int hsSpeed);
 
+        public abstract (int Low, int High) GetEmGainRange();
+
         protected virtual void CheckCamera()
         {
             // Checks if Camera object is null

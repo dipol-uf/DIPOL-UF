@@ -23,6 +23,7 @@
 //     SOFTWARE.
 
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -142,10 +143,16 @@ namespace DIPOL_UF.ViewModels
         public IObservableCollection<ReadMode> AvailableReadModes { get; }
         = new ObservableCollectionExtended<ReadMode>();
 
+        public string DetectorSize =>
+            string.Format(Properties.Localization.AcquisitionSettings_DetectorSize_Format,
+                Camera.Properties.DetectorSize.Horizontal,
+                Camera.Properties.DetectorSize.Vertical);
+
         public bool Group1ContainsErrors { [ObservableAsProperty] get; }
         public bool Group2ContainsErrors { [ObservableAsProperty] get; }
         public bool Group3ContainsErrors { [ObservableAsProperty] get; }
-        
+        public string AllowedGain { [ObservableAsProperty] get; }
+
         public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model)
             : base(model)
         {
@@ -678,6 +685,19 @@ namespace DIPOL_UF.ViewModels
                      _availableReadModes.Edit(context => context.Load(x));
                  })
                  .DisposeWith(Subscriptions);
+
+            Model.Object.WhenPropertyChanged(x => x.OutputAmplifier)
+                 .Select(x =>
+                 {
+                     var isEm = x.Value?.OutputAmplifier == OutputAmplification.ElectronMultiplication;
+                     if (!isEm) return null;
+                     var (low, high) = Model.Object.GetEmGainRange();
+                     return string.Format(Properties.Localization.AcquisitionSetttings_AvailableGainFormat,
+                         low, high);
+                 })
+                 .ToPropertyEx(this, x => x.AllowedGain)
+                 .DisposeWith(Subscriptions);
+
         }
         
         private void InitializeCommands()

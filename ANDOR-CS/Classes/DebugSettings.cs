@@ -22,7 +22,10 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using ANDOR_CS.Enums;
 
 namespace ANDOR_CS.Classes
 {
@@ -56,6 +59,20 @@ namespace ANDOR_CS.Classes
         {
             yield return (Index: 0, Name: "Zero");
             yield return (Index: 1, Name: "One");
+        }
+
+        public override (int Low, int High) GetEmGainRange()
+        {
+            // Limit functionality to only default regime
+            // (with limits from 0 to 255 as stated in the manual)
+            CheckCamera();
+
+            if (!Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain)
+                || Camera.Capabilities.CameraType == CameraType.Clara
+                || Camera.Properties.OutputAmplifiers.All(x => x.OutputAmplifier != OutputAmplification.ElectronMultiplication))
+                throw new NotSupportedException("EM CCD gain control is not supported.");
+            
+            return (0, 255);
         }
 
         public override HashSet<string> SupportedSettings()

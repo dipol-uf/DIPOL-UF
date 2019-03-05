@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
+using System.Linq;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
@@ -252,6 +253,32 @@ namespace ANDOR_CS.Classes
             {
                 throw new NotSupportedException("Camera does not support Pre Amp Gain controls.");
             }
+        }
+
+        public override (int Low, int High) GetEmGainRange()
+        {
+            // Limit functionality to only default regime
+            // (with limits from 0 to 255 as stated in the manual)
+            CheckCamera();
+
+            if(!Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) 
+               || Camera.Capabilities.CameraType == CameraType.Clara
+               || Camera.Properties.OutputAmplifiers.All(x => x.OutputAmplifier != OutputAmplification.ElectronMultiplication))
+                    throw new NotSupportedException("EM CCD gain control is not supported.");
+
+
+            if (FailIfError(Call(Handle, SdkInstance.SetOutputAmplifier, 0), nameof(SdkInstance.SetOutputAmplifier),
+                out var except))
+                throw except;
+
+            (int low, int high) = (default, default);
+
+            if (FailIfError(Call(Handle, () => SdkInstance.GetEMGainRange(ref low, ref high)), 
+                nameof(SdkInstance.GetEMGainRange),
+                out except))
+                throw except;
+
+            return (low, high);
         }
 
 
