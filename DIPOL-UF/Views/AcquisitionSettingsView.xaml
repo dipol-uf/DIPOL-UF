@@ -142,28 +142,13 @@
                         <!--Exposure time-->
                         <TextBox Grid.Row="0" Grid.Column="1"
                                  Text="{Binding 
-                                    ExposureTimeText,
+                                    Path=ExposureTimeText,
                                     Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged,
                                     ValidatesOnNotifyDataErrors=True}"
                                  IsEnabled="{Binding IsAvailable.ExposureTimeText}"
                                  Style="{StaticResource TextBoxWithErrors}">
-                            <behaviors:Interaction.Triggers>
-                                <behaviors:EventTrigger 
-                                    EventName="GotFocus"
-                                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=TextBox}}">
-                                    <behaviors:InvokeCommandAction 
-                                        Command="{Binding GotFocusCommand}"
-                                        CommandParameter="ExposureTimeText"/>
-                                </behaviors:EventTrigger>
-                                <behaviors:EventTrigger 
-                                    EventName="LostFocus"
-                                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=TextBox}}">
-                                    <behaviors:InvokeCommandAction 
-                                        Command="{Binding LostFocusCommand}"
-                                        CommandParameter="ExposureTimeText"/>
-                                </behaviors:EventTrigger>
-                            </behaviors:Interaction.Triggers>
+                         
                         </TextBox>
                         <!--VS Speed-->
                         <ComboBox Grid.Row="1" Grid.Column="1"

@@ -147,8 +147,7 @@ namespace DIPOL_UF.ViewModels
         public bool Group1ContainsErrors { [ObservableAsProperty] get; }
         public bool Group2ContainsErrors { [ObservableAsProperty] get; }
         public bool Group3ContainsErrors { [ObservableAsProperty] get; }
-
-
+        
         public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model)
             : base(model)
         {
@@ -342,12 +341,7 @@ namespace DIPOL_UF.ViewModels
             CreateSetter(x => x.PreAmpGain, y => y >= 0 && y < AvailablePreAmpGains.Count,
                 z => z, Model.Object.SetPreAmpGain);
             CreateSetter(x => x.TriggerMode, y => y.HasValue, z => z.Value, Model.Object.SetTriggerMode);
-            CreateSetter(x => x.EmCcdGainText, y => !string.IsNullOrWhiteSpace(y),
-                z => int.TryParse(z, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var emGain)
-                     && emGain > 0
-                    ? emGain
-                    : 0,
-                Model.Object.SetEmCcdGain);
+          
 
             CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime, y => y.ExposureTimeText);
             CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain, y => y.EmCcdGainText);
@@ -554,7 +548,7 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.TriggerMode, null, y => y.TriggerMode);
             DefaultValueValidator(x => x.ReadMode, null, y => y.ReadMode);
             
-            DefaultStringValueValidator(x => x.ExposureTimeText, y => y.ExposureTimeText);
+            //DefaultStringValueValidator(x => x.ExposureTimeText, y => y.ExposureTimeText);
             DefaultStringValueValidator(x => x.EmCcdGainText, y => y.EmCcdGainText);
             DefaultStringValueValidator(x => x.ImageArea_X1, y => y.ImageArea);
             DefaultStringValueValidator(x => x.ImageArea_Y1, y => y.ImageArea);
@@ -965,6 +959,7 @@ namespace DIPOL_UF.ViewModels
 
         #region V2
 
+        [Reactive]
         public string ExposureTimeText { get; set; }
 
         // -1 is the default selected index in the list, equivalent to
