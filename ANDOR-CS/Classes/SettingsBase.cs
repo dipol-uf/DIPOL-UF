@@ -336,8 +336,8 @@ namespace ANDOR_CS.Classes
 
             // If speed index is invalid
             if (speedIndex < 0 || speedIndex >= length)
-                throw new ArgumentOutOfRangeException(
-                    $"{nameof(speedIndex)} is out of range (should be in [{0},  {length - 1}]).");
+                throw new ArgumentOutOfRangeException(nameof(speedIndex),
+                    $"Vertical speed index is out of range (should be in [{0},  {length - 1}]).");
 
 
             // If success, updates VSSpeed field and 
@@ -372,7 +372,8 @@ namespace ANDOR_CS.Classes
             CheckCamera();
 
             if (converterIndex < 0 || converterIndex >= Camera.Properties.ADConverters.Length)
-                throw new ArgumentOutOfRangeException($"AD converter index {converterIndex} if out of range " +
+                throw new ArgumentOutOfRangeException(nameof(converterIndex),
+                    $"AD converter index {converterIndex} if out of range " +
                     $"(should be in [{0}, {Camera.Properties.ADConverters.Length - 1}]).");
 
             ADConverter = (Index: converterIndex, BitDepth: Camera.Properties.ADConverters[converterIndex]);
@@ -400,7 +401,8 @@ namespace ANDOR_CS.Classes
 
             // If no matches found, throws an exception
             if (query.Count == 0)
-                throw new ArgumentOutOfRangeException("Provided amplifier i sout of range " +
+                throw new ArgumentOutOfRangeException(nameof(amplifier), 
+                    "Provided amplifier is out of range " +
                     $"{(Enum.IsDefined(typeof(OutputAmplification), amplifier) ? Enum.GetName(typeof(OutputAmplification), amplifier) : "Unknown")}.");
 
             // Otherwise, assigns name and type of the amplifier 
@@ -529,12 +531,14 @@ namespace ANDOR_CS.Classes
 
             // Checks if argument is in valid range
             if (gainIndex < 0 || gainIndex >= gainNumber)
-                throw new ArgumentOutOfRangeException($"Gain index (nameof{gainIndex}) is out of range (should be in [{0}, {gainNumber}]).");
+                throw new ArgumentOutOfRangeException(nameof(gainIndex),
+                    $"Gain index is out of range (should be in [{0}, {gainNumber}]).");
 
             if (GetAvailablePreAmpGain().Any(item => item.Index == gainIndex))
                 PreAmpGain = (Index: gainIndex, Name: Camera.Properties.PreAmpGains[gainIndex]);
             else
-                throw new ArgumentOutOfRangeException($"Pre amp gain index ({gainIndex}) is out of range.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(gainIndex), $"Pre amp gain index is out of range.");
 
         }
 
@@ -623,7 +627,9 @@ namespace ANDOR_CS.Classes
 
             // If time is negative throws exception
             if (time < 0)
-                throw new ArgumentOutOfRangeException($"Exposure time cannot be less than 0 (provided {time}).");
+                throw new ArgumentOutOfRangeException(
+                    nameof(time),
+                    $"Exposure time cannot be less than 0 (provided {time}).");
 
 
             ExposureTime = time;
@@ -640,7 +646,8 @@ namespace ANDOR_CS.Classes
             CheckCamera();
 
             if (area.X1 <= 0 || area.Y1 <= 0)
-                throw new ArgumentOutOfRangeException($"Start position of rectangel cannot be to the lower-left of {new Point2D(1, 1)} (provided {area.Start}).");
+                throw new ArgumentOutOfRangeException(nameof(area),
+                    $"Start position of rectangle cannot be to the lower-left of {new Point2D(1, 1)} (provided {area.Start}).");
 
 
 
@@ -649,10 +656,12 @@ namespace ANDOR_CS.Classes
                 var size = Camera.Properties.DetectorSize;
 
                 if (area.X2 > size.Horizontal)
-                    throw new ArgumentOutOfRangeException($"Right boundary exceeds CCD size ({area.X2} >= {size.Horizontal}).");
+                    throw new ArgumentOutOfRangeException(nameof(area),
+                        $"Right boundary exceeds CCD size ({area.X2} >= {size.Horizontal}).");
 
                 if (area.Y2 > size.Vertical)
-                    throw new ArgumentOutOfRangeException($"Top boundary exceeds CCD size ({area.Y2} >= {size.Vertical}).");
+                    throw new ArgumentOutOfRangeException(nameof(area), 
+                        $"Top boundary exceeds CCD size ({area.Y2} >= {size.Vertical}).");
             }
 
             ImageArea = area;
