@@ -513,6 +513,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <!--Section labels-->
                     <Rectangle Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3"
@@ -637,6 +638,19 @@
                                     IsAvailable.KineticCycleNumber, 
                                     Converter={StaticResource BoolToVisibilityConverter},
                                     ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                    <TextBlock Grid.Column="0" Grid.Row="10" Grid.ColumnSpan="3"
+                               Style="{StaticResource ContentFont_TextBlock}"
+                               HorizontalAlignment="Center"
+                               TextWrapping="Wrap"
+                               Text="{extensions:Text Key=AcquisitionSettings_AcquisitionModeDoesNotSupportCycles}">
+                        <TextBlock.Visibility>
+                            <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}" 
+                                          ConverterParameter="{StaticResource BoolToVisibilityConverter}">
+                                <Binding Path="IsAvailable.KineticCycleBlock" Converter="{StaticResource NotConverter}"/>
+                                <Binding Path="IsAvailable.AccumulateCycleTime" Converter="{StaticResource NotConverter}"/>
+                            </MultiBinding>
+                        </TextBlock.Visibility>
+                    </TextBlock>
                 </Grid>
             </TabItem>
         </TabControl>

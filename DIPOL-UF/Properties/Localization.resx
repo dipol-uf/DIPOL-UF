@@ -120,6 +120,9 @@
   <data name="AcquisitionSettings_AccumulationCycle" xml:space="preserve">
     <value>Accumulation cycle settings:</value>
   </data>
+  <data name="AcquisitionSettings_AcquisitionModeDoesNotSupportCycles" xml:space="preserve">
+    <value>Selected Camera or camera Acquisition Mode does not support either of Accumulation or Kinetic cycles.</value>
+  </data>
   <data name="AcquisitionSettings_CycleNumber" xml:space="preserve">
     <value># of cycles</value>
   </data>
