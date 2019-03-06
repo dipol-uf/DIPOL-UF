@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Markup;
@@ -51,9 +52,17 @@ namespace DIPOL_UF.Extensions
                     new Tuple<CultureInfo, CultureInfo>(old, newCulture)));
         }
 
-        internal static string GetText(string key)
-            => Properties.Localization.ResourceManager.GetString(key, CultureInfo.CurrentUICulture);
-        
+        internal string GetText(string key)
+        {
+#if DEBUG
+            if(_dependencyObjectInfo.Item1 is DependencyObject obj
+                && DesignerProperties.GetIsInDesignMode(obj))
+                return Properties.Localization.ResourceManager.GetString(key);
+
+#endif
+            return Properties.Localization.ResourceManager.GetString(key, CultureInfo.CurrentUICulture);
+        }
+
 
         public override object ProvideValue(IServiceProvider serviceProvider)
         {
@@ -89,7 +98,6 @@ namespace DIPOL_UF.Extensions
 
         protected virtual string GetValue()
         {
-            
             if (Key != null)
             {
                 var value = GetText(Key) ?? Key;
