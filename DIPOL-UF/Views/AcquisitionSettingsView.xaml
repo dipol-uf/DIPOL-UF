@@ -542,15 +542,27 @@
                     <Rectangle Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="3"
                                HorizontalAlignment="Stretch" VerticalAlignment="Top" 
                                Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Height="{StaticResource BorderThicknessValue}"/>
+                               Height="{StaticResource BorderThicknessValue}"
+                               Visibility="{Binding 
+                                    IsAvailable.KineticCycleBlock, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="6"
                                Style="{StaticResource ContentFont_TextBlock}"
                                HorizontalAlignment="Left"
-                               Text="{extensions:Text Key=AcquisitionSettings_KineticCycle}" />
+                               Text="{extensions:Text Key=AcquisitionSettings_KineticCycle}" 
+                               Visibility="{Binding 
+                                    IsAvailable.KineticCycleBlock, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <Rectangle Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="3"
                                HorizontalAlignment="Stretch" VerticalAlignment="Bottom" 
                                Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Height="{StaticResource BorderThicknessValue}"/>
+                               Height="{StaticResource BorderThicknessValue}"
+                               Visibility="{Binding 
+                                    IsAvailable.KineticCycleBlock, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <!--Settings labels-->
                     <TextBlock Grid.Column="0" Grid.Row="3"
                                Style="{StaticResource ContentFont_TextBlock}"
@@ -571,19 +583,35 @@
                     <Rectangle Grid.Column="1" Grid.Row="3" Grid.RowSpan="2"
                                HorizontalAlignment="Right" VerticalAlignment="Stretch" 
                                Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Width="{StaticResource BorderThicknessValue}" Margin="4"/>
+                               Width="{StaticResource BorderThicknessValue}" Margin="4"
+                               Visibility="{Binding 
+                                    IsAvailable.AccumulateCycleTime, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <TextBlock Grid.Column="0" Grid.Row="8"
                                Style="{StaticResource ContentFont_TextBlock}"
                                HorizontalAlignment="Right"
-                               Text="{extensions:Text Key=AcquisitionSettings_CycleTime}"/>
+                               Text="{extensions:Text Key=AcquisitionSettings_CycleTime}"
+                               Visibility="{Binding 
+                                    IsAvailable.KineticCycleTime, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <TextBlock Grid.Column="0" Grid.Row="9"
                                Style="{StaticResource ContentFont_TextBlock}"
                                HorizontalAlignment="Right"
-                               Text="{extensions:Text Key=AcquisitionSettings_CycleNumber}"/>
+                               Text="{extensions:Text Key=AcquisitionSettings_CycleNumber}"
+                               Visibility="{Binding 
+                                    IsAvailable.KineticCycleNumber, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <Rectangle Grid.Column="1" Grid.Row="8" Grid.RowSpan="2"
                                HorizontalAlignment="Right" VerticalAlignment="Stretch" 
                                Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Width="{StaticResource BorderThicknessValue}"/>
+                               Width="{StaticResource BorderThicknessValue}"
+                               Visibility="{Binding 
+                                    IsAvailable.KineticCycleBlock, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <!-- Input textboxes -->
                     <TextBox Grid.Column="2" Grid.Row="3" Width="100" HorizontalAlignment="Left"
                              Style="{StaticResource TextBoxWithErrors}"
@@ -598,9 +626,17 @@
                                     Converter={StaticResource BoolToVisibilityConverter},
                                     ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <TextBox Grid.Column="2" Grid.Row="8" Width="100" HorizontalAlignment="Left"
-                             Style="{StaticResource TextBoxWithErrors}"/>
+                             Style="{StaticResource TextBoxWithErrors}"
+                             Visibility="{Binding 
+                                    IsAvailable.KineticCycleTime, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <TextBox Grid.Column="2" Grid.Row="9" Width="100" HorizontalAlignment="Left"
-                             Style="{StaticResource TextBoxWithErrors}"/>
+                             Style="{StaticResource TextBoxWithErrors}"
+                             Visibility="{Binding 
+                                    IsAvailable.KineticCycleNumber, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                 </Grid>
             </TabItem>
         </TabControl>

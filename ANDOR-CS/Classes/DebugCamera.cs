@@ -99,7 +99,8 @@ namespace ANDOR_CS.Classes
                 AcquisitionModes = AcquisitionMode.SingleScan
                                    | AcquisitionMode.RunTillAbort
                                    | AcquisitionMode.Accumulation
-                                   | AcquisitionMode.FastKinetics,
+                                   | AcquisitionMode.FastKinetics
+                                   | AcquisitionMode.Kinetic,
                 GetFunctions = GetFunction.Temperature | GetFunction.TemperatureRange,
                 SetFunctions = SetFunction.Temperature
                                | SetFunction.VerticalReadoutSpeed
