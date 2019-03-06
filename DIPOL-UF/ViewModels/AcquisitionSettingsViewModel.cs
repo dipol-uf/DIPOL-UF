@@ -33,11 +33,13 @@ using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Input;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
+using ANDOR_CS.Exceptions;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Xaml.Behaviors.Core;
@@ -75,7 +77,6 @@ namespace DIPOL_UF.ViewModels
             public bool KineticCycleBlock { [ObservableAsProperty] get; }
         }
 
-
         private readonly SourceCache<(int Index, float Speed), int> _availableHsSpeeds
             = new SourceCache<(int Index, float Speed), int>(x => x.Index);
 
@@ -98,6 +99,7 @@ namespace DIPOL_UF.ViewModels
         public ReactiveCommand<string, Unit> GotFocusCommand { get; private set; }
         public ReactiveCommand<string, Unit> LostFocusCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
+        public ReactiveCommand<Window, Window> SubmitCommand { get; private set; }
 
         /// <summary>
         /// Collection of supported by a given Camera settings.
@@ -187,11 +189,12 @@ namespace DIPOL_UF.ViewModels
                 nameof(ImageArea_Y2)
             };
 
-            // TODO: Add property names here
             Group3Names = new[]
             {
                 nameof(AccumulationCycleTime),
-                nameof(AccumulationCycleNumber)
+                nameof(AccumulationCycleNumber),
+                nameof(KineticCycleTime),
+                nameof(KineticCycleNumber)
             };
             
 
@@ -921,6 +924,34 @@ namespace DIPOL_UF.ViewModels
             
             // Sacrificing reactivity in order to avoid command disposal and memory leaks
             CancelCommand = new ActionCommand(x => (x as Window)?.Close());
+
+            SubmitCommand =
+                ReactiveCommand.Create<Window, Window>(
+                                   x => x,
+                                   this.WhenAnyPropertyChanged(
+                                           nameof(Group1ContainsErrors),
+                                           nameof(Group2ContainsErrors),
+                                           nameof(Group3ContainsErrors))
+                                       .Select(x => !x.Group1ContainsErrors
+                                           && !x.Group2ContainsErrors
+                                           && !x.Group3ContainsErrors)
+                                       .DistinctUntilChanged())
+                               .DisposeWith(Subscriptions);
+        }
+
+        private void Submit()
+        {
+            try
+            {
+                Camera.ApplySettings(Model.Object);
+            }
+            catch (AndorSdkException andorExcept)
+            {
+                
+            }
+            catch (Exception)
+            {
+            }
         }
 
         private void SaveTo(object parameter)
@@ -1093,60 +1124,81 @@ namespace DIPOL_UF.ViewModels
         #region V2
 
         [Reactive]
+        [UnderlyingCameraSettings(@"SetExposureTime")]
         public string ExposureTimeText { get; set; }
 
         // -1 is the default selected index in the list, equivalent to
         // [SelectedItem] = null in case of nullable properties
-        [Reactive] public int VsSpeed { get; set; } = -1;
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetVSSpeed")]
+        public int VsSpeed { get; set; } = -1;
 
         [Reactive]
+        [UnderlyingCameraSettings(@"SetVSAmplitude")]
         public VSAmplitude? VsAmplitude { get; set; }
 
-        [Reactive] public int AdcBitDepth { get; set; } = -1;
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetADChannel")]
+        public int AdcBitDepth { get; set; } = -1;
 
         [Reactive]
+        [UnderlyingCameraSettings(@"SetOutputAmplifier")]
         public OutputAmplification? Amplifier { get; set; }
 
-        [Reactive] public int HsSpeed { get; set; } = -1;
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetHSSpeed")]
+        public int HsSpeed { get; set; } = -1;
 
         [Reactive]
+        [UnderlyingCameraSettings(@"SetPreAmpGain")]
         public int PreAmpGain { get; set; } = -1;
 
         [Reactive]
+        [UnderlyingCameraSettings(@"SetAcquisitionMode")]
         public AcquisitionMode? AcquisitionMode { get; set; }
 
         [Reactive]
+        [UnderlyingCameraSettings(@"SetFrameTransferMode")]
         public bool FrameTransfer { get; set; }
 
         [Reactive]
+        [UnderlyingCameraSettings(@"SetReadMode")]
         public ReadMode? ReadMode { get; set; }
 
         [Reactive]
+        [UnderlyingCameraSettings(@"SetTriggerMode")]
         public TriggerMode? TriggerMode { get; set; }
 
         [Reactive]
+        [UnderlyingCameraSettings(@"SetEMCCDGain")]
         public string EmCcdGainText { get; set; }
 
+        // ReSharper disable InconsistentNaming
         [Reactive]
-        // ReSharper disable once InconsistentNaming
+        [UnderlyingCameraSettings(@"SetImage")]
         public string ImageArea_X1 { get; set; }
         [Reactive]
-        // ReSharper disable once InconsistentNaming
+        [UnderlyingCameraSettings(@"SetImage")]
         public string ImageArea_Y1 { get; set; }
         [Reactive]
-        // ReSharper disable once InconsistentNaming
+        [UnderlyingCameraSettings(@"SetImage")]
         public string ImageArea_X2 { get; set; }
         [Reactive]
-        // ReSharper disable once InconsistentNaming
+        [UnderlyingCameraSettings(@"SetImage")]
         public string ImageArea_Y2 { get; set; }
+        // ReSharper restore InconsistentNaming
 
         [Reactive]
+        [UnderlyingCameraSettings(@"SetAccumulationCycleTime")]
         public string AccumulationCycleTime { get; set; }
         [Reactive]
+        [UnderlyingCameraSettings(@"SetNumberAccumulations")]
         public string AccumulationCycleNumber { get; set; }
         [Reactive]
+        [UnderlyingCameraSettings(@"SetKineticCycleTime")]
         public string KineticCycleTime { get; set; }
         [Reactive]
+        [UnderlyingCameraSettings(@"SetNumberKinetics")]
         public string KineticCycleNumber { get; set; }
 
         #endregion
