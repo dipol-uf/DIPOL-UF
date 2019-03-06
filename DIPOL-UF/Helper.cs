@@ -27,6 +27,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -38,6 +39,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using DynamicData;
+using DynamicData.Binding;
+using ReactiveUI;
 
 namespace DIPOL_UF
 {
@@ -403,6 +406,9 @@ namespace DIPOL_UF
                     }, null)
                     .ConfigureAwait(marshal);
 
+        public static IObservable<Unit> NotifyWhenAnyPropertyChanged(this ReactiveObject @this, params string[] properties)
+            => @this.WhenAnyPropertyChanged(properties).Select(_ => Unit.Default);
+
         public static void SubscribeDispose<T>(this IObservable<T> @this, CompositeDisposable disposedWith)
             => @this.Subscribe().DisposeWith(disposedWith);
 
@@ -415,6 +421,7 @@ namespace DIPOL_UF
                    ? attr.Description
                    : key);
 
+        
     }
 
 #if DEBUG
