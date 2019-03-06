@@ -565,6 +565,8 @@ namespace ANDOR_CS.Classes
             if (!EnumConverter.AcquisitionModeTable.ContainsKey(actualMode))
                 throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({mode})");
 
+            AccumulateCycle = null;
+            KineticCycle = null;
             AcquisitionMode = mode;
         }
 

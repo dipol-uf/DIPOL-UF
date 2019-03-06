@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.ServiceModel.Security;
 using System.Text.RegularExpressions;
 
 namespace DIPOL_UF.Validators
@@ -35,7 +36,7 @@ namespace DIPOL_UF.Validators
         private static readonly Dictionary<string, Regex> RegexCache =
             new Dictionary<string, Regex>();
 
- public static string CannotBeLessThan(int x, int comp)
+        public static string CannotBeLessThan(int x, int comp)
         {
             return x < comp
                 ? string.Format(Properties.Localization.Validation_ValueCannotBeLessThan, comp)
@@ -91,11 +92,12 @@ namespace DIPOL_UF.Validators
 
             return null;
         }
-        public static string DoesNotThrow(Action action)
+        
+        public static string DoesNotThrow<T1, T2>(Action<T1, T2> action, T1 param1, T2 param2)
         {
             try
             {
-                action();
+                action(param1, param2);
             }
             catch (ArgumentOutOfRangeException outOfRangeExcept)
             {
