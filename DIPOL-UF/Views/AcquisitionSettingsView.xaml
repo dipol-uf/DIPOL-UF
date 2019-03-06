@@ -639,16 +639,28 @@
                                         ConverterParameter={x:Static Visibility.Collapsed}}"/>
                         <TextBox Grid.Column="2" Grid.Row="8" Width="100" HorizontalAlignment="Left"
                                  Style="{StaticResource TextBoxWithErrors}"
+                                 Text="{Binding 
+                                        Path = KineticCycleTime,
+                                        Mode=TwoWay,
+                                        ValidatesOnNotifyDataErrors=True,
+                                        UpdateSourceTrigger=PropertyChanged}"
                                  Visibility="{Binding 
                                         IsAvailable.KineticCycleTime, 
                                         Converter={StaticResource BoolToVisibilityConverter},
                                         ConverterParameter={x:Static Visibility.Collapsed}}"/>
                         <TextBox Grid.Column="2" Grid.Row="9" Width="100" HorizontalAlignment="Left"
                                  Style="{StaticResource TextBoxWithErrors}"
+                                 Text="{Binding 
+                                        Path = KineticCycleNumber,
+                                        Mode=TwoWay,
+                                        ValidatesOnNotifyDataErrors=True,
+                                        UpdateSourceTrigger=PropertyChanged}"
                                  Visibility="{Binding 
                                         IsAvailable.KineticCycleNumber, 
                                         Converter={StaticResource BoolToVisibilityConverter},
                                         ConverterParameter={x:Static Visibility.Collapsed}}"/>
+
+                        <!-- Notifies if no cycles settings are available -->
                         <TextBlock Grid.Column="0" Grid.Row="10" Grid.ColumnSpan="3"
                                    Style="{StaticResource ContentFont_TextBlock}"
                                    HorizontalAlignment="Center"
