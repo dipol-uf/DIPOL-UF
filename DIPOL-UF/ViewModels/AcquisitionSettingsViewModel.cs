@@ -71,7 +71,9 @@ namespace DIPOL_UF.ViewModels
             public bool ImageArea { [ObservableAsProperty] get; }
             public bool AccumulateCycleTime { [ObservableAsProperty] get; }
             public bool AccumulateCycleNumber { [ObservableAsProperty] get; }
-            public bool KineticCycle { [ObservableAsProperty] get; }
+            public bool KineticCycleTime { [ObservableAsProperty] get; }
+            public bool KineticCycleNumber { [ObservableAsProperty] get; }
+            public bool KineticCycleBlock { [ObservableAsProperty] get; }
         }
 
 
@@ -243,6 +245,15 @@ namespace DIPOL_UF.ViewModels
                 .DistinctUntilChanged()
                 .Subscribe(_ => EmCcdGainText = null)
                 .DisposeWith(Subscriptions);
+
+            IsAvailable.WhenPropertyChanged(x => x.KineticCycleTime)
+                       .Select(x => x.Value)
+                       .CombineLatest(
+                            IsAvailable.WhenPropertyChanged(y => y.KineticCycleNumber)
+                                       .Select(y => y.Value),
+                           (x, y) => x || y)
+                       .ToPropertyEx(IsAvailable, x => x.KineticCycleBlock)
+                       .DisposeWith(Subscriptions);
 
         }
 
@@ -661,6 +672,32 @@ namespace DIPOL_UF.ViewModels
                                || mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Kinetic));
                 })
                 .ToPropertyEx(IsAvailable, x => x.AccumulateCycleNumber)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.KineticCycle).ToLowerInvariant();
+                    return AcquisitionMode is AcquisitionMode mode
+                           && AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && (mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Kinetic)
+                               || mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.RunTillAbort));
+                })
+                .ToPropertyEx(IsAvailable, x => x.KineticCycleTime)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.KineticCycle).ToLowerInvariant();
+                    return AcquisitionMode is AcquisitionMode mode
+                           && AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && (mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Kinetic)
+                               || mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FastKinetics));
+                })
+                .ToPropertyEx(IsAvailable, x => x.KineticCycleNumber)
                 .DisposeWith(Subscriptions);
         }
 
