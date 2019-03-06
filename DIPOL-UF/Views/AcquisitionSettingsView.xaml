@@ -496,164 +496,176 @@
                         </Border>
                     </DataTemplate>
                 </TabItem.HeaderTemplate>
-                <Grid VerticalAlignment="Top">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <!--Section labels-->
-                    <Rectangle Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3"
-                               HorizontalAlignment="Stretch" VerticalAlignment="Top" 
-                               Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Height="{StaticResource BorderThicknessValue}"
-                               Visibility="{Binding 
-                                    IsAvailable.AccumulateCycleTime, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
-                               Style="{StaticResource ContentFont_TextBlock}"
-                               HorizontalAlignment="Left"
-                               Text="{extensions:Text Key=AcquisitionSettings_AccumulationCycle}"
-                               Visibility="{Binding 
-                                    IsAvailable.AccumulateCycleTime, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <Rectangle Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3"
-                               HorizontalAlignment="Stretch" VerticalAlignment="Bottom" 
-                               Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Height="{StaticResource BorderThicknessValue}"
-                               Visibility="{Binding 
-                                    IsAvailable.AccumulateCycleTime, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <Rectangle Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="3"
-                               HorizontalAlignment="Stretch" VerticalAlignment="Top" 
-                               Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Height="{StaticResource BorderThicknessValue}"
-                               Visibility="{Binding 
-                                    IsAvailable.KineticCycleBlock, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="6"
-                               Style="{StaticResource ContentFont_TextBlock}"
-                               HorizontalAlignment="Left"
-                               Text="{extensions:Text Key=AcquisitionSettings_KineticCycle}" 
-                               Visibility="{Binding 
-                                    IsAvailable.KineticCycleBlock, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <Rectangle Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="3"
-                               HorizontalAlignment="Stretch" VerticalAlignment="Bottom" 
-                               Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Height="{StaticResource BorderThicknessValue}"
-                               Visibility="{Binding 
-                                    IsAvailable.KineticCycleBlock, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <!--Settings labels-->
-                    <TextBlock Grid.Column="0" Grid.Row="3"
-                               Style="{StaticResource ContentFont_TextBlock}"
-                               HorizontalAlignment="Right"
-                               Text="{extensions:Text Key=AcquisitionSettings_CycleTime}"
-                               Visibility="{Binding 
-                                    IsAvailable.AccumulateCycleTime, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <TextBlock Grid.Column="0" Grid.Row="4"
-                               Style="{StaticResource ContentFont_TextBlock}"
-                               HorizontalAlignment="Right"
-                               Text="{extensions:Text Key=AcquisitionSettings_CycleNumber}"
-                               Visibility="{Binding 
-                                    IsAvailable.AccumulateCycleNumber, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <Rectangle Grid.Column="1" Grid.Row="3" Grid.RowSpan="2"
-                               HorizontalAlignment="Right" VerticalAlignment="Stretch" 
-                               Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Width="{StaticResource BorderThicknessValue}" Margin="4"
-                               Visibility="{Binding 
-                                    IsAvailable.AccumulateCycleTime, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <TextBlock Grid.Column="0" Grid.Row="8"
-                               Style="{StaticResource ContentFont_TextBlock}"
-                               HorizontalAlignment="Right"
-                               Text="{extensions:Text Key=AcquisitionSettings_CycleTime}"
-                               Visibility="{Binding 
-                                    IsAvailable.KineticCycleTime, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <TextBlock Grid.Column="0" Grid.Row="9"
-                               Style="{StaticResource ContentFont_TextBlock}"
-                               HorizontalAlignment="Right"
-                               Text="{extensions:Text Key=AcquisitionSettings_CycleNumber}"
-                               Visibility="{Binding 
-                                    IsAvailable.KineticCycleNumber, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <Rectangle Grid.Column="1" Grid.Row="8" Grid.RowSpan="2"
-                               HorizontalAlignment="Right" VerticalAlignment="Stretch" 
-                               Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Width="{StaticResource BorderThicknessValue}"
-                               Visibility="{Binding 
-                                    IsAvailable.KineticCycleBlock, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <!-- Input textboxes -->
-                    <TextBox Grid.Column="2" Grid.Row="3" Width="100" HorizontalAlignment="Left"
-                             Style="{StaticResource TextBoxWithErrors}"
-                             Visibility="{Binding 
-                                    IsAvailable.AccumulateCycleTime, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <TextBox Grid.Column="2" Grid.Row="4" Width="100" HorizontalAlignment="Left"
-                             Style="{StaticResource TextBoxWithErrors}"
-                             Visibility="{Binding 
-                                    IsAvailable.AccumulateCycleNumber, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <TextBox Grid.Column="2" Grid.Row="8" Width="100" HorizontalAlignment="Left"
-                             Style="{StaticResource TextBoxWithErrors}"
-                             Visibility="{Binding 
-                                    IsAvailable.KineticCycleTime, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <TextBox Grid.Column="2" Grid.Row="9" Width="100" HorizontalAlignment="Left"
-                             Style="{StaticResource TextBoxWithErrors}"
-                             Visibility="{Binding 
-                                    IsAvailable.KineticCycleNumber, 
-                                    Converter={StaticResource BoolToVisibilityConverter},
-                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
-                    <TextBlock Grid.Column="0" Grid.Row="10" Grid.ColumnSpan="3"
-                               Style="{StaticResource ContentFont_TextBlock}"
-                               HorizontalAlignment="Center"
-                               TextWrapping="Wrap"
-                               Text="{extensions:Text Key=AcquisitionSettings_AcquisitionModeDoesNotSupportCycles}">
+                <AdornerDecorator>
+                    <Grid VerticalAlignment="Top">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <!--Section labels-->
+                        <Rectangle Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3"
+                                   HorizontalAlignment="Stretch" VerticalAlignment="Top" 
+                                   Style="{StaticResource RectangleAsSeparatorStyle}"
+                                   Height="{StaticResource BorderThicknessValue}"
+                                   Visibility="{Binding 
+                                        IsAvailable.AccumulateCycleTime, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
+                                   Style="{StaticResource ContentFont_TextBlock}"
+                                   HorizontalAlignment="Left"
+                                   Text="{extensions:Text Key=AcquisitionSettings_AccumulationCycle}"
+                                   Visibility="{Binding 
+                                        IsAvailable.AccumulateCycleTime, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <Rectangle Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3"
+                                   HorizontalAlignment="Stretch" VerticalAlignment="Bottom" 
+                                   Style="{StaticResource RectangleAsSeparatorStyle}"
+                                   Height="{StaticResource BorderThicknessValue}"
+                                   Visibility="{Binding 
+                                        IsAvailable.AccumulateCycleTime, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <Rectangle Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="3"
+                                   HorizontalAlignment="Stretch" VerticalAlignment="Top" 
+                                   Style="{StaticResource RectangleAsSeparatorStyle}"
+                                   Height="{StaticResource BorderThicknessValue}"
+                                   Visibility="{Binding 
+                                        IsAvailable.KineticCycleBlock, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="6"
+                                   Style="{StaticResource ContentFont_TextBlock}"
+                                   HorizontalAlignment="Left"
+                                   Text="{extensions:Text Key=AcquisitionSettings_KineticCycle}" 
+                                   Visibility="{Binding 
+                                        IsAvailable.KineticCycleBlock, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <Rectangle Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="3"
+                                   HorizontalAlignment="Stretch" VerticalAlignment="Bottom" 
+                                   Style="{StaticResource RectangleAsSeparatorStyle}"
+                                   Height="{StaticResource BorderThicknessValue}"
+                                   Visibility="{Binding 
+                                        IsAvailable.KineticCycleBlock, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <!--Settings labels-->
+                        <TextBlock Grid.Column="0" Grid.Row="3"
+                                   Style="{StaticResource ContentFont_TextBlock}"
+                                   HorizontalAlignment="Right"
+                                   Text="{extensions:Text Key=AcquisitionSettings_CycleTime}"
+                                   Visibility="{Binding 
+                                        IsAvailable.AccumulateCycleTime, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <TextBlock Grid.Column="0" Grid.Row="4"
+                                   Style="{StaticResource ContentFont_TextBlock}"
+                                   HorizontalAlignment="Right"
+                                   Text="{extensions:Text Key=AcquisitionSettings_CycleNumber}"
+                                   Visibility="{Binding 
+                                        IsAvailable.AccumulateCycleNumber, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <Rectangle Grid.Column="1" Grid.Row="3" Grid.RowSpan="2"
+                                   HorizontalAlignment="Right" VerticalAlignment="Stretch" 
+                                   Style="{StaticResource RectangleAsSeparatorStyle}"
+                                   Width="{StaticResource BorderThicknessValue}" Margin="4"
+                                   Visibility="{Binding 
+                                        IsAvailable.AccumulateCycleTime, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <TextBlock Grid.Column="0" Grid.Row="8"
+                                   Style="{StaticResource ContentFont_TextBlock}"
+                                   HorizontalAlignment="Right"
+                                   Text="{extensions:Text Key=AcquisitionSettings_CycleTime}"
+                                   Visibility="{Binding 
+                                        IsAvailable.KineticCycleTime, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <TextBlock Grid.Column="0" Grid.Row="9"
+                                   Style="{StaticResource ContentFont_TextBlock}"
+                                   HorizontalAlignment="Right"
+                                   Text="{extensions:Text Key=AcquisitionSettings_CycleNumber}"
+                                   Visibility="{Binding 
+                                        IsAvailable.KineticCycleNumber, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <Rectangle Grid.Column="1" Grid.Row="8" Grid.RowSpan="2"
+                                   HorizontalAlignment="Right" VerticalAlignment="Stretch" 
+                                   Style="{StaticResource RectangleAsSeparatorStyle}"
+                                   Width="{StaticResource BorderThicknessValue}"
+                                   Visibility="{Binding 
+                                        IsAvailable.KineticCycleBlock, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <!-- Input textboxes -->
+                        <TextBox Grid.Column="2" Grid.Row="3" Width="100" HorizontalAlignment="Left"
+                                 Style="{StaticResource TextBoxWithErrors}"
+                                 Text="{Binding 
+                                        Path = AccumulationCycleTime,
+                                        Mode=TwoWay,
+                                        ValidatesOnNotifyDataErrors=True,
+                                        UpdateSourceTrigger=PropertyChanged}"
+                                 Visibility="{Binding 
+                                        IsAvailable.AccumulateCycleTime, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <TextBox Grid.Column="2" Grid.Row="4" Width="100" HorizontalAlignment="Left"
+                                 Style="{StaticResource TextBoxWithErrors}"
+                                 Text="{Binding 
+                                        Path = AccumulationCycleNumber,
+                                        Mode=TwoWay,
+                                        ValidatesOnNotifyDataErrors=True,
+                                        UpdateSourceTrigger=PropertyChanged}"
+                                 Visibility="{Binding 
+                                        IsAvailable.AccumulateCycleNumber, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <TextBox Grid.Column="2" Grid.Row="8" Width="100" HorizontalAlignment="Left"
+                                 Style="{StaticResource TextBoxWithErrors}"
+                                 Visibility="{Binding 
+                                        IsAvailable.KineticCycleTime, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <TextBox Grid.Column="2" Grid.Row="9" Width="100" HorizontalAlignment="Left"
+                                 Style="{StaticResource TextBoxWithErrors}"
+                                 Visibility="{Binding 
+                                        IsAvailable.KineticCycleNumber, 
+                                        Converter={StaticResource BoolToVisibilityConverter},
+                                        ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                        <TextBlock Grid.Column="0" Grid.Row="10" Grid.ColumnSpan="3"
+                                   Style="{StaticResource ContentFont_TextBlock}"
+                                   HorizontalAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Text="{extensions:Text Key=AcquisitionSettings_AcquisitionModeDoesNotSupportCycles}">
                         <TextBlock.Visibility>
                             <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}" 
-                                          ConverterParameter="{StaticResource BoolToVisibilityConverter}">
+                                              ConverterParameter="{StaticResource BoolToVisibilityConverter}">
                                 <Binding Path="IsAvailable.KineticCycleBlock" Converter="{StaticResource NotConverter}"/>
                                 <Binding Path="IsAvailable.AccumulateCycleTime" Converter="{StaticResource NotConverter}"/>
                             </MultiBinding>
                         </TextBlock.Visibility>
                     </TextBlock>
                 </Grid>
-            </TabItem>
-        </TabControl>
+            </AdornerDecorator>
+        </TabItem>
+    </TabControl>
         <!--Save-->
         <Button Grid.Column="0" Grid.Row="1" 
                 Style="{StaticResource ResourceKey=BasicButtonStyle}"

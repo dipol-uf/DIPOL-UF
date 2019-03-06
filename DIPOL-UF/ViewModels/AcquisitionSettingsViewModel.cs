@@ -23,7 +23,6 @@
 //     SOFTWARE.
 
 using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -41,7 +40,6 @@ using ANDOR_CS.Enums;
 using DIPOL_UF.Commands;
 using DynamicData;
 using DynamicData.Binding;
-using DynamicData.Kernel;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -202,7 +200,11 @@ namespace DIPOL_UF.ViewModels
             };
 
             // TODO: Add property names here
-            Group3Names = new[] { string.Empty };
+            Group3Names = new[]
+            {
+                nameof(AccumulationCycleTime),
+                nameof(AccumulationCycleNumber)
+            };
             
 
             InitializeCommands();
@@ -254,6 +256,12 @@ namespace DIPOL_UF.ViewModels
                            (x, y) => x || y)
                        .ToPropertyEx(IsAvailable, x => x.KineticCycleBlock)
                        .DisposeWith(Subscriptions);
+            //this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
+            //    .Subscribe(_ =>
+            //    {
+            //        AccumulationCycleTime = null;
+            //        AccumulationCycleNumber = null;
+            //    });
 
         }
 
@@ -367,10 +375,56 @@ namespace DIPOL_UF.ViewModels
             CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime, y => y.ExposureTimeText);
             CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain, y => y.EmCcdGainText);
 
+            this.WhenAnyPropertyChanged(nameof(AccumulationCycleTime))
+                .Select(_ => Unit.Default)
+                .Merge(IsAvailable
+                       .WhenAnyPropertyChanged(nameof(IsAvailable.AccumulateCycleTime)).Select(_ => Unit.Default))
+                .Subscribe(_ =>
+                {
+                    string firstTest = null;
+                    string secondTest = null;
+                    if (IsAvailable.AccumulateCycleTime)
+                    {
+                        firstTest = CanBeParsed(AccumulationCycleTime, out float time);
+                        if (firstTest is null)
+                            secondTest = DoesNotThrow(Model.Object.SetAccumulationCycle,
+                                Model.Object.AccumulateCycle?.Frames ?? 0,
+                                time);
+                    }
+
+                    BatchUpdateErrors(
+                        (nameof(AccumulationCycleTime), nameof(CanBeParsed), firstTest),
+                        (nameof(AccumulationCycleTime), nameof(DoesNotThrow), secondTest));
+                })
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AccumulationCycleNumber))
+                .Select(_ => Unit.Default)
+                .Merge(IsAvailable
+                       .WhenAnyPropertyChanged(nameof(IsAvailable.AccumulateCycleNumber)).Select(_ => Unit.Default))
+                .Subscribe(_ =>
+                {
+                    string firstTest = null;
+                    string secondTest = null;
+                    if (IsAvailable.AccumulateCycleNumber)
+                    {
+                        firstTest = CanBeParsed(AccumulationCycleNumber, out int number);
+                        if (firstTest is null)
+                            secondTest = DoesNotThrow(Model.Object.SetAccumulationCycle,
+                                number,
+                                Model.Object.AccumulateCycle?.Time ?? 0f);
+                    }
+
+                    BatchUpdateErrors(
+                        (nameof(AccumulationCycleNumber), nameof(CanBeParsed), firstTest),
+                        (nameof(AccumulationCycleNumber), nameof(DoesNotThrow), secondTest));
+                })
+                .DisposeWith(Subscriptions);
+
             this.WhenAnyValue(x => x.ImageArea_X1, x => x.ImageArea_Y1, x => x.ImageArea_X2, x => x.ImageArea_Y2)
                 .Select(_ => Unit.Default)
                 .Merge(IsAvailable.WhenPropertyChanged(x => x.ImageArea).Select(_ => Unit.Default))
-                .Subscribe(x =>
+                .Subscribe(_ =>
                 {
                     var firstTest = new string[] {null, null, null, null};
                     string secondTest = null;
@@ -383,7 +437,7 @@ namespace DIPOL_UF.ViewModels
                         firstTest[3] = CanBeParsed(ImageArea_Y2, out int y2);
 
                         if (firstTest.All(y => y is null))
-                            secondTest = DoesNotThrow(() => Model.Object.SetImageArea(new Rectangle(x1, y1, x2, y2)));
+                            secondTest = DoesNotThrow(Model.Object.SetImageArea, new Rectangle(x1, y1, x2, y2));
                     }
                     BatchUpdateErrors(
                         (nameof(ImageArea_X1), nameof(CanBeParsed), firstTest[0]),
@@ -454,6 +508,12 @@ namespace DIPOL_UF.ViewModels
             CreateGetter(x => x.ImageArea,
                 y => y?.Y2.ToString(Properties.Localization.General_IntegerFormat),
                 z => z.ImageArea_Y2);
+            CreateGetter(x => x.AccumulateCycle,
+                y => y?.Time.ToString(Properties.Localization.General_ExposureFloatFormat),
+                z => z.AccumulationCycleTime);
+            CreateGetter(x => x.AccumulateCycle,
+                y => y?.Frames.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.AccumulationCycleNumber);
 
             var acqModeObs =
                 Model.Object.WhenPropertyChanged(x => x.AcquisitionMode)
@@ -568,12 +628,15 @@ namespace DIPOL_UF.ViewModels
             DefaultValueValidator(x => x.TriggerMode, null, y => y.TriggerMode);
             DefaultValueValidator(x => x.ReadMode, null, y => y.ReadMode);
             
-            //DefaultStringValueValidator(x => x.ExposureTimeText, y => y.ExposureTimeText);
+            DefaultStringValueValidator(x => x.ExposureTimeText, y => y.ExposureTimeText);
             DefaultStringValueValidator(x => x.EmCcdGainText, y => y.EmCcdGainText);
             DefaultStringValueValidator(x => x.ImageArea_X1, y => y.ImageArea);
             DefaultStringValueValidator(x => x.ImageArea_Y1, y => y.ImageArea);
             DefaultStringValueValidator(x => x.ImageArea_X2, y => y.ImageArea);
             DefaultStringValueValidator(x => x.ImageArea_Y2, y => y.ImageArea);
+            DefaultStringValueValidator(x => x.AccumulationCycleTime, y => y.AccumulateCycleTime);
+            DefaultStringValueValidator(x => x.AccumulationCycleNumber, y => y.AccumulateCycleNumber);
+
         }
 
         private void WatchAvailableSettings()
@@ -875,7 +938,6 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
-
         private void CloseView(object parameter, bool isCanceled)
         {
             if (parameter is DependencyObject elem)
@@ -1006,16 +1068,21 @@ namespace DIPOL_UF.ViewModels
 
         [Reactive]
         // ReSharper disable once InconsistentNaming
-        public string ImageArea_X1 { get; set; } = null;
+        public string ImageArea_X1 { get; set; }
         [Reactive]
         // ReSharper disable once InconsistentNaming
-        public string ImageArea_Y1 { get; set; } = null;
+        public string ImageArea_Y1 { get; set; }
         [Reactive]
         // ReSharper disable once InconsistentNaming
-        public string ImageArea_X2 { get; set; } = null;
+        public string ImageArea_X2 { get; set; }
         [Reactive]
         // ReSharper disable once InconsistentNaming
-        public string ImageArea_Y2 { get; set; } = null;
+        public string ImageArea_Y2 { get; set; }
+
+        [Reactive]
+        public string AccumulationCycleTime { get; set; }
+        [Reactive]
+        public string AccumulationCycleNumber { get; set; }
 
         #endregion
     }
