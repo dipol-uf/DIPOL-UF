@@ -195,7 +195,7 @@ namespace DIPOL_UF.ViewModels
                      nameof(Model.LeftScale),
                      nameof(Model.RightScale))
                  .Where(x => !(x.DisplayedImage is null))
-                 .Select(x => Observable.FromAsync(async () => await UpdateBitmapAsync(x.DisplayedImage)))
+                 .Select(x => Observable.FromAsync(() => UpdateBitmapAsync(x.DisplayedImage)))
                  .Merge()
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.BitmapSource)
