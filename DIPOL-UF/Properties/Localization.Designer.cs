@@ -70,6 +70,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Selected Camera or camera Acquisition Mode does not support either of Accumulation or Kinetic cycles..
+        /// </summary>
+        public static string AcquisitionSettings_AcquisitionModeDoesNotSupportCycles {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_AcquisitionModeDoesNotSupportCycles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to # of cycles.
         /// </summary>
         public static string AcquisitionSettings_CycleNumber {
