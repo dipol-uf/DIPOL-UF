@@ -157,7 +157,7 @@ namespace DIPOL_UF.Models
                    ReactiveCommand.Create<object, ReactiveObjectEx>(
                        _ => new ReactiveWrapper<SettingsBase>(Camera.GetAcquisitionSettingsTemplate())),
                    ReactiveCommand.Create<Unit>(_ => { }),
-                   ReactiveCommand.Create<Unit>(_ => { }),
+                   null,
                    ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
                .DisposeWith(Subscriptions);
 

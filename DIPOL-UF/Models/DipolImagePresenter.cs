@@ -366,7 +366,7 @@ namespace DIPOL_UF.Models
                            .BindTo(this, x => x.ImageStats)
                            .DisposeWith(Subscriptions);
             statsObservable.Where(x => x.IsSamplerFixed || x.IsMouseOverImage)
-                           .Select(_ => Observable.FromAsync(async () => await CalculateStatisticsAsync()))
+                           .Select(_ => Observable.FromAsync(CalculateStatisticsAsync))
                            .Merge()
                            .SubscribeDispose(Subscriptions);
 
