@@ -133,6 +133,11 @@
         <Setter Property="Focusable" Value="True"/>
     </Style>
    
+    <Style x:Key="RectangleAsSeparatorStyle" 
+           TargetType="Rectangle" BasedOn="{StaticResource {x:Type Rectangle}}">
+        <Setter Property="Fill" Value="{StaticResource SeparatorColor}"/>
+        <Setter Property="Margin" Value="{StaticResource DefaultMargin}"/>
+    </Style>
 
     <!--TabItem style-->
     <Style x:Key="TabItemStyle" TargetType="{x:Type TabItem}">
@@ -247,7 +252,7 @@
 
     <Style x:Key="TextBoxWithErrors" BasedOn="{StaticResource TextBoxStyle}" TargetType="TextBox">
         <Style.Triggers>
-            <DataTrigger 
+            <DataTrigger
                 Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).Count, Converter={StaticResource CompareToConverter}, ConverterParameter='> 0'}"
                 Value="True">
                 <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors), Converter={StaticResource ErrorsToStringConverter}}"/>

@@ -117,8 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AcquisitionSettings_AccumulationCycle" xml:space="preserve">
+    <value>Accumulation cycle settings:</value>
+  </data>
+  <data name="AcquisitionSettings_CycleNumber" xml:space="preserve">
+    <value># of cycles</value>
+  </data>
   <data name="AcquisitionSettings_Cycles" xml:space="preserve">
     <value>Cycles</value>
+  </data>
+  <data name="AcquisitionSettings_CycleTime" xml:space="preserve">
+    <value>Cycle time (s)</value>
   </data>
   <data name="AcquisitionSettings_DetectorSize" xml:space="preserve">
     <value>Detector size (H x V):</value>
@@ -128,6 +137,9 @@
   </data>
   <data name="AcquisitionSettings_ImageSize" xml:space="preserve">
     <value>Image size</value>
+  </data>
+  <data name="AcquisitionSettings_KineticCycle" xml:space="preserve">
+    <value>Kinetic cycle settings:</value>
   </data>
   <data name="AcquisitionSettings_Settings" xml:space="preserve">
     <value>Settings</value>
