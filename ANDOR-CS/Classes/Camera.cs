@@ -1475,7 +1475,7 @@ namespace ANDOR_CS.Classes
             if (settings.HSSpeed?.Index is int hsIndex
                 && FailIfError(
                     Call(CameraHandle,
-                        () => SdkInstance.SetHSSpeed(settings.OutputAmplifier?.Item3 ?? 0, hsIndex)),
+                        () => SdkInstance.SetHSSpeed(settings.OutputAmplifier?.Index ?? 0, hsIndex)),
                     nameof(SdkInstance.SetHSSpeed),
                     out except))
                 throw except;

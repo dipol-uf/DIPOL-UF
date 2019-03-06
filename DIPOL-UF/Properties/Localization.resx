@@ -428,4 +428,7 @@
   <data name="DipolImagePresenter_CenterPixelFormat" xml:space="preserve">
     <value>{0,6:000}:{1,-6:000}</value>
   </data>
+  <data name="MainWindow_ConnectingToRemoteLocations" xml:space="preserve">
+    <value>Connecting to remote services...</value>
+  </data>
 </root>

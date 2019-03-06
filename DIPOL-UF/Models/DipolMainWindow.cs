@@ -559,7 +559,7 @@ namespace DIPOL_UF.Models
                                 Value = 0,
                                 IsIndeterminate = true,
                                 CanAbort = false,
-                                BarTitle = "Connecting to remote locations..."
+                                BarTitle = Properties.Localization.MainWindow_ConnectingToRemoteLocations
                             })),
                     null,
                     null,
