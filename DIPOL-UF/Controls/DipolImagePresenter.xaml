@@ -275,7 +275,8 @@
             <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Center" HorizontalContentAlignment="Center">
                 <TextBox.Text>
-                    <MultiBinding StringFormat="{}{0,6:000}:{1,-6:000}" Mode="OneWay">
+                    <MultiBinding StringFormat="{extensions:Text Key=DipolImagePresenter_CenterPixelFormat}"
+                                  Mode="OneWay">
                         <Binding Path="SamplerCenterPosInPix.X" Mode="OneWay"/>
                         <Binding Path="SamplerCenterPosInPix.Y" Mode="OneWay"/>
                     </MultiBinding>

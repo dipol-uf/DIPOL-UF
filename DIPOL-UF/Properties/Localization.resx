@@ -425,4 +425,7 @@
   <data name="Validation_ValueShouldFallWithinRange" xml:space="preserve">
     <value>Value cannot be outside of the [{0}, {1}] range</value>
   </data>
+  <data name="DipolImagePresenter_CenterPixelFormat" xml:space="preserve">
+    <value>{0,6:000}:{1,-6:000}</value>
+  </data>
 </root>

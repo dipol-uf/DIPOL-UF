@@ -448,6 +448,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0,6:000}:{1,-6:000}.
+        /// </summary>
+        public static string DipolImagePresenter_CenterPixelFormat {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_CenterPixelFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Gap.
         /// </summary>
         public static string DipolImagePresenter_Geometry_Gap {
