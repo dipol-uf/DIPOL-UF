@@ -256,12 +256,6 @@ namespace DIPOL_UF.ViewModels
                            (x, y) => x || y)
                        .ToPropertyEx(IsAvailable, x => x.KineticCycleBlock)
                        .DisposeWith(Subscriptions);
-            //this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
-            //    .Subscribe(_ =>
-            //    {
-            //        AccumulationCycleTime = null;
-            //        AccumulationCycleNumber = null;
-            //    });
 
         }
 
@@ -375,51 +369,6 @@ namespace DIPOL_UF.ViewModels
             CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime, y => y.ExposureTimeText);
             CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain, y => y.EmCcdGainText);
 
-            this.WhenAnyPropertyChanged(nameof(AccumulationCycleTime))
-                .Select(_ => Unit.Default)
-                .Merge(IsAvailable
-                       .WhenAnyPropertyChanged(nameof(IsAvailable.AccumulateCycleTime)).Select(_ => Unit.Default))
-                .Subscribe(_ =>
-                {
-                    string firstTest = null;
-                    string secondTest = null;
-                    if (IsAvailable.AccumulateCycleTime)
-                    {
-                        firstTest = CanBeParsed(AccumulationCycleTime, out float time);
-                        if (firstTest is null)
-                            secondTest = DoesNotThrow(Model.Object.SetAccumulationCycle,
-                                Model.Object.AccumulateCycle?.Frames ?? 0,
-                                time);
-                    }
-
-                    BatchUpdateErrors(
-                        (nameof(AccumulationCycleTime), nameof(CanBeParsed), firstTest),
-                        (nameof(AccumulationCycleTime), nameof(DoesNotThrow), secondTest));
-                })
-                .DisposeWith(Subscriptions);
-
-            this.WhenAnyPropertyChanged(nameof(AccumulationCycleNumber))
-                .Select(_ => Unit.Default)
-                .Merge(IsAvailable
-                       .WhenAnyPropertyChanged(nameof(IsAvailable.AccumulateCycleNumber)).Select(_ => Unit.Default))
-                .Subscribe(_ =>
-                {
-                    string firstTest = null;
-                    string secondTest = null;
-                    if (IsAvailable.AccumulateCycleNumber)
-                    {
-                        firstTest = CanBeParsed(AccumulationCycleNumber, out int number);
-                        if (firstTest is null)
-                            secondTest = DoesNotThrow(Model.Object.SetAccumulationCycle,
-                                number,
-                                Model.Object.AccumulateCycle?.Time ?? 0f);
-                    }
-
-                    BatchUpdateErrors(
-                        (nameof(AccumulationCycleNumber), nameof(CanBeParsed), firstTest),
-                        (nameof(AccumulationCycleNumber), nameof(DoesNotThrow), secondTest));
-                })
-                .DisposeWith(Subscriptions);
 
             this.WhenAnyValue(x => x.ImageArea_X1, x => x.ImageArea_Y1, x => x.ImageArea_X2, x => x.ImageArea_Y2)
                 .Select(_ => Unit.Default)
@@ -467,6 +416,73 @@ namespace DIPOL_UF.ViewModels
                         UpdateErrors(nameof(FrameTransfer), nameof(DoesNotThrow), x);
                 })
                 .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(
+                    nameof(AccumulationCycleTime),
+                    nameof(AccumulationCycleNumber))
+                .Select(_ => Unit.Default)
+                .Merge(IsAvailable.WhenAnyPropertyChanged(
+                    nameof(IsAvailable.AccumulateCycleTime),
+                    nameof(IsAvailable.AccumulateCycleNumber))
+                                  .Select(_ => Unit.Default))
+                .Subscribe(_ =>
+                {
+                    if (!IsAvailable.AccumulateCycleTime && !IsAvailable.AccumulateCycleNumber)
+                        BatchUpdateErrors(
+                            (nameof(AccumulationCycleTime), nameof(CanBeParsed), null),
+                            (nameof(AccumulationCycleNumber), nameof(CanBeParsed), null),
+                            (nameof(AccumulationCycleTime), nameof(DoesNotThrow), null),
+                            (nameof(AccumulationCycleNumber), nameof(DoesNotThrow), null));
+                    else if (IsAvailable.AccumulateCycleTime && IsAvailable.AccumulateCycleNumber)
+                    {
+                        string secondTest = default;
+
+                        var firstTestTime = CanBeParsed(AccumulationCycleTime, out float time);
+                        var firstTestNumber = CanBeParsed(AccumulationCycleNumber, out int frames);
+
+                        if (firstTestTime is null && firstTestNumber is null
+                            && Model.Object.AccumulateCycle != (frames, time))
+                            secondTest = DoesNotThrow(Model.Object.SetAccumulationCycle, frames, time);
+
+                        BatchUpdateErrors(
+                            (nameof(AccumulationCycleTime), nameof(CanBeParsed), firstTestTime),
+                            (nameof(AccumulationCycleNumber), nameof(CanBeParsed), firstTestNumber),
+                            (nameof(AccumulationCycleTime), nameof(DoesNotThrow), secondTest),
+                            (nameof(AccumulationCycleNumber), nameof(DoesNotThrow), secondTest));
+                    }
+                    else if (IsAvailable.AccumulateCycleTime)
+                    {
+                        string secondTest = default;
+
+                        var firstTest = CanBeParsed(AccumulationCycleTime, out float time);
+
+                        if (firstTest is null
+                            && Model.Object.AccumulateCycle != (0, time))
+                            secondTest = DoesNotThrow(Model.Object.SetAccumulationCycle, 
+                               0, time);
+
+                        BatchUpdateErrors(
+                            (nameof(AccumulationCycleTime), nameof(CanBeParsed), firstTest),
+                            (nameof(AccumulationCycleTime), nameof(DoesNotThrow), secondTest));
+                    }
+                    else if (IsAvailable.AccumulateCycleNumber)
+                    {
+                        string secondTest = default;
+
+                        var firstTest = CanBeParsed(AccumulationCycleNumber, out int frames);
+
+                        if (firstTest is null
+                            && Model.Object.AccumulateCycle != (frames, 0f))
+                            secondTest = DoesNotThrow(Model.Object.SetAccumulationCycle,
+                                frames, 0f);
+
+                        BatchUpdateErrors(
+                            (nameof(AccumulationCycleNumber), nameof(CanBeParsed), firstTest),
+                            (nameof(AccumulationCycleNumber), nameof(DoesNotThrow), secondTest));
+                    }
+                })
+                .DisposeWith(Subscriptions);
+          
             // ReSharper restore PossibleInvalidOperationException
         }
 
@@ -1083,6 +1099,8 @@ namespace DIPOL_UF.ViewModels
         public string AccumulationCycleTime { get; set; }
         [Reactive]
         public string AccumulationCycleNumber { get; set; }
+        //[Reactive]
+        //public string 
 
         #endregion
     }
