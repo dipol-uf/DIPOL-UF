@@ -34,12 +34,13 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
+using System.Windows.Input;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
-using DIPOL_UF.Commands;
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Xaml.Behaviors.Core;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -96,7 +97,7 @@ namespace DIPOL_UF.ViewModels
 
         public ReactiveCommand<string, Unit> GotFocusCommand { get; private set; }
         public ReactiveCommand<string, Unit> LostFocusCommand { get; private set; }
-
+        public ICommand CancelCommand { get; private set; }
 
         /// <summary>
         /// Collection of supported by a given Camera settings.
@@ -917,8 +918,9 @@ namespace DIPOL_UF.ViewModels
             LostFocusCommand =
                 ReactiveCommand.Create<string>(this.RaisePropertyChanged)
                                .DisposeWith(Subscriptions);
-
-
+            
+            // Sacrificing reactivity in order to avoid command disposal and memory leaks
+            CancelCommand = new ActionCommand(x => (x as Window)?.Close());
         }
 
         private void SaveTo(object parameter)

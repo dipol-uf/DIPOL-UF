@@ -34,6 +34,9 @@ namespace ANDOR_CS.Classes
     {
         public DebugSettings(DebugCamera camera)
         {
+            Console.WriteLine("--> Settings created");
+
+
             Camera = camera;
         }
 
@@ -78,6 +81,12 @@ namespace ANDOR_CS.Classes
         public override HashSet<string> SupportedSettings()
         {
             return AllowedSettings();
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            Console.WriteLine("--> Settings disposed");
         }
     }
 #endif
