@@ -23,6 +23,7 @@
 //     SOFTWARE.
 
 using System;
+using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows;
 using System.Globalization;
@@ -34,6 +35,11 @@ namespace DIPOL_UF.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+#if DEBUG
+            // Designer always Visibility.Visible
+            if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
+                return Visibility.Visible;
+#endif
             if (value is null)
                 return Visibility.Hidden;
             var boolVal = (bool)value;
@@ -42,7 +48,6 @@ namespace DIPOL_UF.Converters
             if (parameter is Visibility vis)
                 return vis;
             return Visibility.Hidden;
-
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
