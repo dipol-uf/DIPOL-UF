@@ -826,6 +826,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connecting to remote services....
+        /// </summary>
+        public static string MainWindow_ConnectingToRemoteLocations {
+            get {
+                return ResourceManager.GetString("MainWindow_ConnectingToRemoteLocations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error.
         /// </summary>
         public static string MainWindow_MB_FailedToAddCamera_Caption {
