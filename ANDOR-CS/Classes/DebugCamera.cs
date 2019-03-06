@@ -97,7 +97,9 @@ namespace ANDOR_CS.Classes
             {
                 CameraType = CameraType.IXonUltra,
                 AcquisitionModes = AcquisitionMode.SingleScan
-                                   | AcquisitionMode.RunTillAbort,
+                                   | AcquisitionMode.RunTillAbort
+                                   | AcquisitionMode.Accumulation
+                                   | AcquisitionMode.FastKinetics,
                 GetFunctions = GetFunction.Temperature | GetFunction.TemperatureRange,
                 SetFunctions = SetFunction.Temperature
                                | SetFunction.VerticalReadoutSpeed
