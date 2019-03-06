@@ -15,6 +15,7 @@
     <SolidColorBrush x:Key="BorderColor" Color="Black"/>
     <SolidColorBrush x:Key="ErrorBorderDefaultColor" Color="Transparent"/>
     <SolidColorBrush x:Key="ErrorBorderErrorColor" Color="Red"/>
+    <SolidColorBrush x:Key="SeparatorColor" Color="Indigo"/>
 
     <sys:Double x:Key="BorderThicknessValue">1</sys:Double>
     <Thickness x:Key="BorderThickness" 
