@@ -61,11 +61,38 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Accumulation cycle settings:.
+        /// </summary>
+        public static string AcquisitionSettings_AccumulationCycle {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_AccumulationCycle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to # of cycles.
+        /// </summary>
+        public static string AcquisitionSettings_CycleNumber {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_CycleNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cycles.
         /// </summary>
         public static string AcquisitionSettings_Cycles {
             get {
                 return ResourceManager.GetString("AcquisitionSettings_Cycles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cycle time (s).
+        /// </summary>
+        public static string AcquisitionSettings_CycleTime {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_CycleTime", resourceCulture);
             }
         }
         
@@ -93,6 +120,15 @@ namespace DIPOL_UF.Properties {
         public static string AcquisitionSettings_ImageSize {
             get {
                 return ResourceManager.GetString("AcquisitionSettings_ImageSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Kinetic cycle settings:.
+        /// </summary>
+        public static string AcquisitionSettings_KineticCycle {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_KineticCycle", resourceCulture);
             }
         }
         
