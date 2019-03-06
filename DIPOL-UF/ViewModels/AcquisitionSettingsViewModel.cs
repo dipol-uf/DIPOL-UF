@@ -98,20 +98,7 @@ namespace DIPOL_UF.ViewModels
         public ReactiveCommand<string, Unit> LostFocusCommand { get; private set; }
 
 
-        public DelegateCommand SubmitCommand { get; private set; }
-
-        public DelegateCommand CancelCommand { get; private set; }
-        public DelegateCommand SaveCommand { get; private set; }
-
-        public DelegateCommand LoadCommand { get; private set; }
-        public (float ExposureTime, float AccumulationCycleTime, 
-            float KineticCycleTime) EstimatedTiming
-        {
-            get;
-            private set;
-        }
-
-       /// <summary>
+        /// <summary>
         /// Collection of supported by a given Camera settings.
         /// </summary>
         public HashSet<string> SupportedSettings { get; }
@@ -932,24 +919,6 @@ namespace DIPOL_UF.ViewModels
                                .DisposeWith(Subscriptions);
 
 
-            SubmitCommand = new DelegateCommand(
-                (param) => CloseView(param, false),
-                CanSubmit
-                );
-
-            CancelCommand = new DelegateCommand(
-                (param) => CloseView(param, true),
-                DelegateCommand.CanExecuteAlways
-                );
-
-            SaveCommand = new DelegateCommand(
-                SaveTo,
-                DelegateCommand.CanExecuteAlways
-                );
-
-            LoadCommand = new DelegateCommand(
-                LoadFrom,
-                DelegateCommand.CanExecuteAlways);
         }
 
         private void SaveTo(object parameter)
@@ -1065,7 +1034,6 @@ namespace DIPOL_UF.ViewModels
 
                                 return;
                             }
-                            EstimatedTiming = Model.Object.Camera.Timings;
                         }
                         catch (Exception e)
                         {
