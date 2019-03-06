@@ -428,6 +428,21 @@
   <data name="DipolImagePresenter_CenterPixelFormat" xml:space="preserve">
     <value>{0,6:000}:{1,-6:000}</value>
   </data>
+  <data name="AcquisitionSettings_ApplicationFailed" xml:space="preserve">
+    <value>Failed to apply settings</value>
+  </data>
+  <data name="AcquisitionSettings_ApplicationFailedUnrecoverable_Message" xml:space="preserve">
+    <value>An unrecoverable error happened while applying acquisition settings, which indicates the program is in a faulty state. The error message is:
+{0}</value>
+  </data>
+  <data name="AcquisitionSettings_ApplicationFailed_Message" xml:space="preserve">
+    <value>An unexpected error happened while applying acquisition settings: "{0}".
+The following settings produced this error:
+{1}</value>
+  </data>
+  <data name="AcquisitionSettings_UnknownSetting" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
   <data name="MainWindow_ConnectingToRemoteLocations" xml:space="preserve">
     <value>Connecting to remote services...</value>
   </data>

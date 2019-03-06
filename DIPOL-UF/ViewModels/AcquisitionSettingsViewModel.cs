@@ -33,8 +33,10 @@ using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Windows.Forms;
 using System.Windows.Input;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
@@ -47,7 +49,9 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 using static DIPOL_UF.Validators.Validate;
+using Application = System.Windows.Application;
 using EnumConverter = ANDOR_CS.Classes.EnumConverter;
+using MessageBox = System.Windows.MessageBox;
 
 // ReSharper disable UnassignedGetOnlyAutoProperty
 
@@ -55,6 +59,17 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<SettingsBase>>
     {
+        private static List<(PropertyInfo Property, string EquivalentName)> InteractiveSettings { get; }
+            = typeof(AcquisitionSettingsViewModel)
+              .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+              .Where(x => !(x.GetCustomAttribute<ReactiveAttribute>() is null))
+              .Select(x => (Property: x,
+                  EquivalentName: x.GetCustomAttribute<UnderlyingCameraSettingsAttribute>()?.AndorName
+                                   .ToLowerInvariant()))
+              .Where(x => !(x.EquivalentName is null))
+              .ToList();
+
+
         public class SettingsAvailability : ReactiveObjectEx
         {
             public bool VsSpeed { [ObservableAsProperty] get; }
@@ -191,8 +206,8 @@ namespace DIPOL_UF.ViewModels
 
             Group3Names = new[]
             {
-                nameof(AccumulationCycleTime),
-                nameof(AccumulationCycleNumber),
+                nameof(AccumulateCycleTime),
+                nameof(AccumulateCycleNumber),
                 nameof(KineticCycleTime),
                 nameof(KineticCycleNumber)
             };
@@ -410,8 +425,8 @@ namespace DIPOL_UF.ViewModels
                 .DisposeWith(Subscriptions);
 
             this.NotifyWhenAnyPropertyChanged(
-                    nameof(AccumulationCycleTime),
-                    nameof(AccumulationCycleNumber))
+                    nameof(AccumulateCycleTime),
+                    nameof(AccumulateCycleNumber))
                 .Merge(IsAvailable.NotifyWhenAnyPropertyChanged(
                     nameof(IsAvailable.AccumulateCycleTime),
                     nameof(IsAvailable.AccumulateCycleNumber)))
@@ -419,32 +434,32 @@ namespace DIPOL_UF.ViewModels
                 {
                     if (!IsAvailable.AccumulateCycleTime && !IsAvailable.AccumulateCycleNumber)
                         BatchUpdateErrors(
-                            (nameof(AccumulationCycleTime), nameof(CanBeParsed), null),
-                            (nameof(AccumulationCycleNumber), nameof(CanBeParsed), null),
-                            (nameof(AccumulationCycleTime), nameof(DoesNotThrow), null),
-                            (nameof(AccumulationCycleNumber), nameof(DoesNotThrow), null));
+                            (nameof(AccumulateCycleTime), nameof(CanBeParsed), null),
+                            (nameof(AccumulateCycleNumber), nameof(CanBeParsed), null),
+                            (nameof(AccumulateCycleTime), nameof(DoesNotThrow), null),
+                            (nameof(AccumulateCycleNumber), nameof(DoesNotThrow), null));
                     else if (IsAvailable.AccumulateCycleTime && IsAvailable.AccumulateCycleNumber)
                     {
                         string secondTest = default;
 
-                        var firstTestTime = CanBeParsed(AccumulationCycleTime, out float time);
-                        var firstTestNumber = CanBeParsed(AccumulationCycleNumber, out int frames);
+                        var firstTestTime = CanBeParsed(AccumulateCycleTime, out float time);
+                        var firstTestNumber = CanBeParsed(AccumulateCycleNumber, out int frames);
 
                         if (firstTestTime is null && firstTestNumber is null
                                                   && Model.Object.AccumulateCycle != (frames, time))
                             secondTest = DoesNotThrow(Model.Object.SetAccumulationCycle, frames, time);
 
                         BatchUpdateErrors(
-                            (nameof(AccumulationCycleTime), nameof(CanBeParsed), firstTestTime),
-                            (nameof(AccumulationCycleNumber), nameof(CanBeParsed), firstTestNumber),
-                            (nameof(AccumulationCycleTime), nameof(DoesNotThrow), secondTest),
-                            (nameof(AccumulationCycleNumber), nameof(DoesNotThrow), secondTest));
+                            (nameof(AccumulateCycleTime), nameof(CanBeParsed), firstTestTime),
+                            (nameof(AccumulateCycleNumber), nameof(CanBeParsed), firstTestNumber),
+                            (nameof(AccumulateCycleTime), nameof(DoesNotThrow), secondTest),
+                            (nameof(AccumulateCycleNumber), nameof(DoesNotThrow), secondTest));
                     }
                     else if (IsAvailable.AccumulateCycleTime)
                     {
                         string secondTest = default;
 
-                        var firstTest = CanBeParsed(AccumulationCycleTime, out float time);
+                        var firstTest = CanBeParsed(AccumulateCycleTime, out float time);
 
                         if (firstTest is null
                             && Model.Object.AccumulateCycle != (0, time))
@@ -452,14 +467,14 @@ namespace DIPOL_UF.ViewModels
                                 0, time);
 
                         BatchUpdateErrors(
-                            (nameof(AccumulationCycleTime), nameof(CanBeParsed), firstTest),
-                            (nameof(AccumulationCycleTime), nameof(DoesNotThrow), secondTest));
+                            (nameof(AccumulateCycleTime), nameof(CanBeParsed), firstTest),
+                            (nameof(AccumulateCycleTime), nameof(DoesNotThrow), secondTest));
                     }
                     else if (IsAvailable.AccumulateCycleNumber)
                     {
                         string secondTest = default;
 
-                        var firstTest = CanBeParsed(AccumulationCycleNumber, out int frames);
+                        var firstTest = CanBeParsed(AccumulateCycleNumber, out int frames);
 
                         if (firstTest is null
                             && Model.Object.AccumulateCycle != (frames, 0f))
@@ -467,8 +482,8 @@ namespace DIPOL_UF.ViewModels
                                 frames, 0f);
 
                         BatchUpdateErrors(
-                            (nameof(AccumulationCycleNumber), nameof(CanBeParsed), firstTest),
-                            (nameof(AccumulationCycleNumber), nameof(DoesNotThrow), secondTest));
+                            (nameof(AccumulateCycleNumber), nameof(CanBeParsed), firstTest),
+                            (nameof(AccumulateCycleNumber), nameof(DoesNotThrow), secondTest));
                     }
                 })
                 .DisposeWith(Subscriptions);
@@ -582,10 +597,10 @@ namespace DIPOL_UF.ViewModels
 
             CreateGetter(x => x.AccumulateCycle,
                 y => y?.Time.ToString(Properties.Localization.General_ExposureFloatFormat),
-                z => z.AccumulationCycleTime);
+                z => z.AccumulateCycleTime);
             CreateGetter(x => x.AccumulateCycle,
                 y => y?.Frames.ToString(Properties.Localization.General_IntegerFormat),
-                z => z.AccumulationCycleNumber);
+                z => z.AccumulateCycleNumber);
 
             CreateGetter(x => x.KineticCycle,
                 y => y?.Time.ToString(Properties.Localization.General_ExposureFloatFormat),
@@ -714,8 +729,8 @@ namespace DIPOL_UF.ViewModels
             DefaultStringValueValidator(x => x.ImageArea_X2, y => y.ImageArea);
             DefaultStringValueValidator(x => x.ImageArea_Y2, y => y.ImageArea);
 
-            DefaultStringValueValidator(x => x.AccumulationCycleTime, y => y.AccumulateCycleTime);
-            DefaultStringValueValidator(x => x.AccumulationCycleNumber, y => y.AccumulateCycleNumber);
+            DefaultStringValueValidator(x => x.AccumulateCycleTime, y => y.AccumulateCycleTime);
+            DefaultStringValueValidator(x => x.AccumulateCycleNumber, y => y.AccumulateCycleNumber);
             DefaultStringValueValidator(x => x.KineticCycleTime, y => y.KineticCycleTime);
             DefaultStringValueValidator(x => x.KineticCycleNumber, y => y.KineticCycleNumber);
 
@@ -937,20 +952,70 @@ namespace DIPOL_UF.ViewModels
                                            && !x.Group3ContainsErrors)
                                        .DistinctUntilChanged())
                                .DisposeWith(Subscriptions);
+
+            SubmitCommand.Subscribe(Submit).DisposeWith(Subscriptions);
         }
 
-        private void Submit()
+        private void Submit(Window w)
         {
             try
             {
                 Camera.ApplySettings(Model.Object);
+                Helper.ExecuteOnUi(() => CancelCommand.Execute(w));
             }
             catch (AndorSdkException andorExcept)
             {
-                
+                if (andorExcept.MethodName?.ToLowerInvariant() is string methodName)
+                {
+                    var errors = new List<(string, string, string)>();
+                    var errorStrings= new List<string>();
+
+                    foreach (var (prop, _) in InteractiveSettings.Where(x => x.EquivalentName == methodName))
+                    {
+                        var isAvailableName = prop.GetCustomAttribute<MappedNameAttribute>()?.MappedName ?? prop.Name;
+                        var isAvailable = typeof(SettingsAvailability).GetProperty(isAvailableName,
+                                              BindingFlags.Public | BindingFlags.Instance)?.GetValue(IsAvailable) is bool b && b;
+
+                        if (isAvailable)
+                            errors.Add((prop.Name, nameof(DoesNotThrow), andorExcept.Message));
+                        else
+                            errorStrings.Add(prop.Name);
+                        
+                    }
+
+                    if(errors.Count > 0)
+                        BatchUpdateErrors(errors);
+
+                    if (errorStrings.Count > 0)
+                        Helper.ExecuteOnUi(() => MessageBox.Show(
+                            string.Format(Properties.Localization.AcquisitionSettings_ApplicationFailed_Message,
+                                andorExcept.Message,
+                                errorStrings.EnumerableToString(",\r\n") is var message
+                                && UiSettingsProvider.Settings.Get(@"MessageBoxMessageMaxLength", 200) is var maxLength
+                                && message.Length > maxLength
+                                    ? message.Substring(0, maxLength) + "..."
+                                    : message),
+                            Properties.Localization.AcquisitionSettings_ApplicationFailed,
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error));
+                }
+                else
+                    Helper.ExecuteOnUi(() => MessageBox.Show(
+                        string.Format(Properties.Localization.AcquisitionSettings_ApplicationFailed_Message,
+                            andorExcept.Message,
+                            Properties.Localization.AcquisitionSettings_UnknownSetting),
+                        Properties.Localization.AcquisitionSettings_ApplicationFailed,
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error));
             }
-            catch (Exception)
+            catch (Exception except)
             {
+                Helper.ExecuteOnUi(() => MessageBox.Show(
+                    string.Format(
+                        Properties.Localization.AcquisitionSettings_ApplicationFailedUnrecoverable_Message,
+                        except.Message),
+                    Properties.Localization.AcquisitionSettings_ApplicationFailed,
+                    MessageBoxButton.OK, MessageBoxImage.Error));
             }
         }
 
@@ -1176,24 +1241,28 @@ namespace DIPOL_UF.ViewModels
         // ReSharper disable InconsistentNaming
         [Reactive]
         [UnderlyingCameraSettings(@"SetImage")]
+        [MappedName(nameof(SettingsAvailability.ImageArea))]
         public string ImageArea_X1 { get; set; }
         [Reactive]
         [UnderlyingCameraSettings(@"SetImage")]
+        [MappedName(nameof(SettingsAvailability.ImageArea))]
         public string ImageArea_Y1 { get; set; }
         [Reactive]
         [UnderlyingCameraSettings(@"SetImage")]
+        [MappedName(nameof(SettingsAvailability.ImageArea))]
         public string ImageArea_X2 { get; set; }
         [Reactive]
         [UnderlyingCameraSettings(@"SetImage")]
+        [MappedName(nameof(SettingsAvailability.ImageArea))]
         public string ImageArea_Y2 { get; set; }
         // ReSharper restore InconsistentNaming
 
         [Reactive]
         [UnderlyingCameraSettings(@"SetAccumulationCycleTime")]
-        public string AccumulationCycleTime { get; set; }
+        public string AccumulateCycleTime { get; set; }
         [Reactive]
         [UnderlyingCameraSettings(@"SetNumberAccumulations")]
-        public string AccumulationCycleNumber { get; set; }
+        public string AccumulateCycleNumber { get; set; }
         [Reactive]
         [UnderlyingCameraSettings(@"SetKineticCycleTime")]
         public string KineticCycleTime { get; set; }

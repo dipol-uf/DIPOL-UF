@@ -223,6 +223,7 @@
     <Compile Include="Extensions\ShowViewAction.cs" />
     <Compile Include="GeometryDescriptor.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="MappedNameAttribute.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
     <Compile Include="Models\CameraTab.cs" />
     <Compile Include="Models\DescendantProvider.cs" />
@@ -230,6 +231,7 @@
     <Compile Include="Models\DipolMainWindow.cs" />
     <Compile Include="PropagatingEventArgs.cs" />
     <Compile Include="ReactiveWrapper.cs" />
+    <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
     <Compile Include="ViewModels\CameraTabViewModel.cs" />
     <Compile Include="ViewModels\DescendantProxy.cs" />
     <Compile Include="ViewModels\ReactiveViewModelBase.cs" />

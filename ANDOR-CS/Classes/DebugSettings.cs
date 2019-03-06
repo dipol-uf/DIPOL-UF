@@ -27,9 +27,11 @@ using System.Collections.Generic;
 using System.Linq;
 using ANDOR_CS.Enums;
 
+
+#if DEBUG
+
 namespace ANDOR_CS.Classes
 {
-#if DEBUG
     public class DebugSettings : SettingsBase
     {
         public DebugSettings(DebugCamera camera)
@@ -89,5 +91,5 @@ namespace ANDOR_CS.Classes
             Console.WriteLine("--> Settings disposed");
         }
     }
-#endif
 }
+#endif
