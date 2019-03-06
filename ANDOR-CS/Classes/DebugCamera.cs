@@ -29,8 +29,16 @@ using System.Threading.Tasks;
 using System.Threading;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
+using ANDOR_CS.Exceptions;
 using DipolImage;
 using FITS_CS;
+
+#if X86
+using SDK = ATMCD32CS.AndorSDK;
+#endif
+#if X64
+using SDK = ATMCD64CS.AndorSDK;
+#endif
 
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
@@ -213,6 +221,12 @@ namespace ANDOR_CS.Classes
         protected override void AbortAcquisition()
         {
             throw new NotImplementedException();
+        }
+
+        public override void ApplySettings(SettingsBase settings)
+        {
+            //throw new AndorSdkException("Failed", SDK.DRV_P1INVALID,
+            //    nameof(AndorSdkInitialization.SdkInstance.SetImage));
         }
     }
 }

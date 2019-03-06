@@ -79,6 +79,36 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to apply settings.
+        /// </summary>
+        public static string AcquisitionSettings_ApplicationFailed {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_ApplicationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unexpected error happened while applying acquisition settings: &quot;{0}&quot;.
+        ///The following settings produced this error:
+        ///{1}.
+        /// </summary>
+        public static string AcquisitionSettings_ApplicationFailed_Message {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_ApplicationFailed_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unrecoverable error happened while applying acquisition settings, which indicates the program is in a faulty state. The error message is:
+        ///{0}.
+        /// </summary>
+        public static string AcquisitionSettings_ApplicationFailedUnrecoverable_Message {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_ApplicationFailedUnrecoverable_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to # of cycles.
         /// </summary>
         public static string AcquisitionSettings_CycleNumber {
@@ -147,6 +177,15 @@ namespace DIPOL_UF.Properties {
         public static string AcquisitionSettings_Settings {
             get {
                 return ResourceManager.GetString("AcquisitionSettings_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string AcquisitionSettings_UnknownSetting {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_UnknownSetting", resourceCulture);
             }
         }
         

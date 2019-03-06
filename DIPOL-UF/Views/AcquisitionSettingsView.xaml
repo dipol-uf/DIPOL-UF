@@ -617,7 +617,7 @@
                         <TextBox Grid.Column="2" Grid.Row="3" Width="100" HorizontalAlignment="Left"
                                  Style="{StaticResource TextBoxWithErrors}"
                                  Text="{Binding 
-                                        Path = AccumulationCycleTime,
+                                        Path = AccumulateCycleTime,
                                         Mode=TwoWay,
                                         ValidatesOnNotifyDataErrors=True,
                                         UpdateSourceTrigger=PropertyChanged}"
@@ -628,7 +628,7 @@
                         <TextBox Grid.Column="2" Grid.Row="4" Width="100" HorizontalAlignment="Left"
                                  Style="{StaticResource TextBoxWithErrors}"
                                  Text="{Binding 
-                                        Path = AccumulationCycleNumber,
+                                        Path = AccumulateCycleNumber,
                                         Mode=TwoWay,
                                         ValidatesOnNotifyDataErrors=True,
                                         UpdateSourceTrigger=PropertyChanged}"
