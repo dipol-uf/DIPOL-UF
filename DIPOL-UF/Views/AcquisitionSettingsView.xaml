@@ -418,11 +418,11 @@
                               FontSize="{StaticResource ResourceKey=SmallFontSize}" >2</Run>
                     </TextBlock>
                     <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
-                        <TextBlock Grid.Row="5" Grid.Column="0"
+                        <TextBlock
                                     Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                     VerticalAlignment="Center"
                                     Text="{extensions:Text Key=AcquisitionSettings_DetectorSize}"/>
-                        <TextBlock Grid.Row="5" Grid.Column="1"
+                        <TextBlock
                                 Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                                 VerticalAlignment="Center"
                                 Text="{Binding DetectorSize}"/>
@@ -518,15 +518,27 @@
                     <Rectangle Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3"
                                HorizontalAlignment="Stretch" VerticalAlignment="Top" 
                                Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Height="{StaticResource BorderThicknessValue}"/>
+                               Height="{StaticResource BorderThicknessValue}"
+                               Visibility="{Binding 
+                                    IsAvailable.AccumulateCycleTime, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
                                Style="{StaticResource ContentFont_TextBlock}"
                                HorizontalAlignment="Left"
-                               Text="{extensions:Text Key=AcquisitionSettings_AccumulationCycle}"/>
+                               Text="{extensions:Text Key=AcquisitionSettings_AccumulationCycle}"
+                               Visibility="{Binding 
+                                    IsAvailable.AccumulateCycleTime, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <Rectangle Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3"
                                HorizontalAlignment="Stretch" VerticalAlignment="Bottom" 
                                Style="{StaticResource RectangleAsSeparatorStyle}"
-                               Height="{StaticResource BorderThicknessValue}"/>
+                               Height="{StaticResource BorderThicknessValue}"
+                               Visibility="{Binding 
+                                    IsAvailable.AccumulateCycleTime, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <Rectangle Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="3"
                                HorizontalAlignment="Stretch" VerticalAlignment="Top" 
                                Style="{StaticResource RectangleAsSeparatorStyle}"
@@ -543,11 +555,19 @@
                     <TextBlock Grid.Column="0" Grid.Row="3"
                                Style="{StaticResource ContentFont_TextBlock}"
                                HorizontalAlignment="Right"
-                               Text="{extensions:Text Key=AcquisitionSettings_CycleTime}"/>
+                               Text="{extensions:Text Key=AcquisitionSettings_CycleTime}"
+                               Visibility="{Binding 
+                                    IsAvailable.AccumulateCycleTime, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <TextBlock Grid.Column="0" Grid.Row="4"
                                Style="{StaticResource ContentFont_TextBlock}"
                                HorizontalAlignment="Right"
-                               Text="{extensions:Text Key=AcquisitionSettings_CycleNumber}"/>
+                               Text="{extensions:Text Key=AcquisitionSettings_CycleNumber}"
+                               Visibility="{Binding 
+                                    IsAvailable.AccumulateCycleNumber, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <Rectangle Grid.Column="1" Grid.Row="3" Grid.RowSpan="2"
                                HorizontalAlignment="Right" VerticalAlignment="Stretch" 
                                Style="{StaticResource RectangleAsSeparatorStyle}"
@@ -565,13 +585,21 @@
                                Style="{StaticResource RectangleAsSeparatorStyle}"
                                Width="{StaticResource BorderThicknessValue}"/>
                     <!-- Input textboxes -->
-                    <TextBox Grid.Column="2" Grid.Row="1" Width="100" HorizontalAlignment="Left"
-                             Style="{StaticResource TextBoxWithErrors}"/>
-                    <TextBox Grid.Column="2" Grid.Row="2" Width="100" HorizontalAlignment="Left"
-                             Style="{StaticResource TextBoxWithErrors}"/>
+                    <TextBox Grid.Column="2" Grid.Row="3" Width="100" HorizontalAlignment="Left"
+                             Style="{StaticResource TextBoxWithErrors}"
+                             Visibility="{Binding 
+                                    IsAvailable.AccumulateCycleTime, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
                     <TextBox Grid.Column="2" Grid.Row="4" Width="100" HorizontalAlignment="Left"
+                             Style="{StaticResource TextBoxWithErrors}"
+                             Visibility="{Binding 
+                                    IsAvailable.AccumulateCycleNumber, 
+                                    Converter={StaticResource BoolToVisibilityConverter},
+                                    ConverterParameter={x:Static Visibility.Collapsed}}"/>
+                    <TextBox Grid.Column="2" Grid.Row="8" Width="100" HorizontalAlignment="Left"
                              Style="{StaticResource TextBoxWithErrors}"/>
-                    <TextBox Grid.Column="2" Grid.Row="5" Width="100" HorizontalAlignment="Left"
+                    <TextBox Grid.Column="2" Grid.Row="9" Width="100" HorizontalAlignment="Left"
                              Style="{StaticResource TextBoxWithErrors}"/>
                 </Grid>
             </TabItem>

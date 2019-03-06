@@ -41,6 +41,7 @@ using ANDOR_CS.Enums;
 using DIPOL_UF.Commands;
 using DynamicData;
 using DynamicData.Binding;
+using DynamicData.Kernel;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -68,6 +69,9 @@ namespace DIPOL_UF.ViewModels
             public bool TriggerMode { [ObservableAsProperty] get; }
             public bool EmCcdGainText { [ObservableAsProperty] get; }
             public bool ImageArea { [ObservableAsProperty] get; }
+            public bool AccumulateCycleTime { [ObservableAsProperty] get; }
+            public bool AccumulateCycleNumber { [ObservableAsProperty] get; }
+            public bool KineticCycle { [ObservableAsProperty] get; }
         }
 
 
@@ -630,6 +634,33 @@ namespace DIPOL_UF.ViewModels
                            && AcquisitionMode.HasValue;
                 })
                 .ToPropertyEx(IsAvailable, x => x.ReadMode)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.AccumulateCycle).ToLowerInvariant();
+                    return AcquisitionMode is AcquisitionMode mode
+                           && AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && (mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Accumulation)
+                               || mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Kinetic)
+                               || mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FastKinetics));
+                })
+                .ToPropertyEx(IsAvailable, x => x.AccumulateCycleTime)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.AccumulateCycle).ToLowerInvariant();
+                    return AcquisitionMode is AcquisitionMode mode
+                           && AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && (mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Accumulation)
+                               || mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Kinetic));
+                })
+                .ToPropertyEx(IsAvailable, x => x.AccumulateCycleNumber)
                 .DisposeWith(Subscriptions);
         }
 
