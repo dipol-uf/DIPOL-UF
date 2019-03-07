@@ -155,10 +155,19 @@ namespace DIPOL_UF.Models
 
            AcquisitionSettingsWindow = new DescendantProvider(
                    ReactiveCommand.Create<object, ReactiveObjectEx>(
-                       _ => new ReactiveWrapper<SettingsBase>(Camera.GetAcquisitionSettingsTemplate())),
+                       _ => new ReactiveWrapper<SettingsBase>(
+                           Camera.CurrentSettings ?? Camera.GetAcquisitionSettingsTemplate())),
                    ReactiveCommand.Create<Unit>(_ => { }),
                    null,
-                   ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
+                   ReactiveCommand.Create<ReactiveObjectEx>(x =>
+                   {
+                       if (x is ReactiveWrapper<SettingsBase> wrapper
+                           && wrapper.Object is SettingsBase setts
+                           && ReferenceEquals(setts, Camera.CurrentSettings))
+                           wrapper.Object = null;
+
+                        x.Dispose();
+                   }))
                .DisposeWith(Subscriptions);
 
             SetUpAcquisitionCommand.InvokeCommand(AcquisitionSettingsWindow.ViewRequested).DisposeWith(Subscriptions);

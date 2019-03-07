@@ -92,7 +92,27 @@ namespace DIPOL_UF.Validators
 
             return null;
         }
-        
+
+        public static string DoesNotThrow<TSrc, TRet>(
+            Func<TSrc, TRet> action, TSrc param, out TRet result)
+        {
+            result = default;
+            try
+            {
+                result = action(param);
+            }
+            catch (ArgumentOutOfRangeException outOfRangeExcept)
+            {
+                return outOfRangeExcept.Message.Split('\r', '\n')[0]?.TrimEnd('.');
+            }
+            catch (Exception e)
+            {
+                return e.Message;
+            }
+
+            return null;
+        }
+
         public static string DoesNotThrow<T1, T2>(Action<T1, T2> action, T1 param1, T2 param2)
         {
             try

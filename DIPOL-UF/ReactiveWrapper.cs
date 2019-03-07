@@ -16,7 +16,7 @@ namespace DIPOL_UF
         {
             if(!IsDisposed)
                 if(disposing)
-                    Object.Dispose();
+                    Object?.Dispose();
 
             base.Dispose(disposing);
         }
