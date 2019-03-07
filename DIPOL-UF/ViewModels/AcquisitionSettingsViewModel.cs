@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Threading.Tasks;
@@ -44,6 +45,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
 using DynamicData;
 using DynamicData.Binding;
+using MathNet.Numerics;
 using Microsoft.Xaml.Behaviors.Core;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -52,6 +54,7 @@ using static DIPOL_UF.Validators.Validate;
 using Application = System.Windows.Application;
 using EnumConverter = ANDOR_CS.Classes.EnumConverter;
 using MessageBox = System.Windows.MessageBox;
+using Window = System.Windows.Window;
 
 // ReSharper disable UnassignedGetOnlyAutoProperty
 
@@ -288,7 +291,7 @@ namespace DIPOL_UF.ViewModels
                     .Where(x => condition(x.Value))
                     .Select(x => DoesNotThrow(setter, selector(x.Value)))
                     .ObserveOnUi()
-                    .Subscribe(x => UpdateErrors(x, name, nameof(DoesNotThrow)))
+                    .Subscribe(x => UpdateErrors(name, nameof(DoesNotThrow), x))
                     .DisposeWith(Subscriptions);
             }
 
@@ -329,7 +332,8 @@ namespace DIPOL_UF.ViewModels
             void CreateStringToFloatSetter(
                 Expression<Func<AcquisitionSettingsViewModel, string>> sourceAccessor,
                 Action<float> setter,
-                Expression<Func<SettingsAvailability, bool>> availability)
+                Expression<Func<SettingsAvailability, bool>> availability,
+                Func<SettingsBase, float> comparison)
             {
                 var name = (sourceAccessor.Body as MemberExpression)?.Member.Name
                            ?? throw new ArgumentException(
@@ -354,9 +358,9 @@ namespace DIPOL_UF.ViewModels
                                 test2 = DoesNotThrow(setter, result);
                         }
 
-                        BatchUpdateErrors(
-                            (name, nameof(CanBeParsed), test1),
-                            (name, nameof(DoesNotThrow), test2));
+                            BatchUpdateErrors(
+                                (name, nameof(CanBeParsed), test1),
+                                (name, nameof(DoesNotThrow), test2));
                     }).DisposeWith(Subscriptions);
             }
 
@@ -372,7 +376,8 @@ namespace DIPOL_UF.ViewModels
             CreateSetter(x => x.TriggerMode, y => y.HasValue, z => z.Value, Model.Object.SetTriggerMode);
 
 
-            CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime, y => y.ExposureTimeText);
+            CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime, 
+                y => y.ExposureTimeText, z=> z.ExposureTime ?? float.NaN);
             CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain, y => y.EmCcdGainText);
 
             this.NotifyWhenAnyPropertyChanged(
@@ -559,57 +564,84 @@ namespace DIPOL_UF.ViewModels
 
         private void AttachGetters()
         {
+            bool FloatIsNotEqualString(float? src, string tar)
+                => src?.AlmostEqual(float.TryParse(tar, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var val)
+                       ? val
+                       : float.NaN) == true;
+
+            bool IntIsNotEqualString(int? src, string tar)
+                => src?.Equals(int.TryParse(tar, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var val)
+                       ? val
+                       : 0) == true;
+
             void CreateGetter<TSrc, TTarget>(
                 Expression<Func<SettingsBase, TSrc>> sourceAccessor,
                 Func<TSrc, TTarget> selector,
-                Expression<Func<AcquisitionSettingsViewModel, TTarget>> targetAccessor)
+                Expression<Func<AcquisitionSettingsViewModel, TTarget>> targetAccessor,
+                Func<TSrc, TTarget, bool> comparator = null)
                 => Model.Object.WhenPropertyChanged(sourceAccessor)
+                        .ModifyIf(!(comparator is null),
+                            // ReSharper disable once PossibleNullReferenceException
+                            x => x.Where(y => comparator(y.Value, targetAccessor.Compile()(this))))
                         .Select(x => selector(x.Value))
                         .DistinctUntilChanged()
                         .ObserveOnUi()
                         .BindTo(this, targetAccessor)
                         .DisposeWith(Subscriptions);
 
-            CreateGetter(x => x.VSSpeed, y => y?.Index ?? -1, z => z.VsSpeed);
-            CreateGetter(x => x.VSAmplitude, y => y, z => z.VsAmplitude);
-            CreateGetter(x => x.ADConverter, y => y?.Index ?? -1, z => z.AdcBitDepth);
-            CreateGetter(x => x.OutputAmplifier, y => y?.OutputAmplifier, z => z.Amplifier);
-            CreateGetter(x => x.HSSpeed, y => y?.Index ?? -1, z => z.HsSpeed);
-            CreateGetter(x => x.PreAmpGain, y => y?.Index ?? -1, z => z.PreAmpGain);
-            CreateGetter(x => x.ExposureTime, 
+            CreateGetter(x => x.VSSpeed, y => y?.Index ?? -1, z => z.VsSpeed, (src, tar) => src?.Index != tar);
+            CreateGetter(x => x.VSAmplitude, y => y, z => z.VsAmplitude, (src, tar) => src != tar);
+            CreateGetter(x => x.ADConverter, y => y?.Index ?? -1, z => z.AdcBitDepth, (src, tar) => src?.Index != tar);
+            CreateGetter(x => x.OutputAmplifier, y => y?.OutputAmplifier, 
+                z => z.Amplifier, (src, tar) => src?.OutputAmplifier != tar);
+            CreateGetter(x => x.HSSpeed, y => y?.Index ?? -1, z => z.HsSpeed, (src, tar) => src?.Index != tar);
+            CreateGetter(x => x.PreAmpGain, y => y?.Index ?? -1, z => z.PreAmpGain, (src, tar) => src?.Index != tar);
+            CreateGetter(x => x.TriggerMode, y => y, z => z.TriggerMode, (src, tar) => src != tar);
+
+            CreateGetter(x => x.ExposureTime,
                 y => y?.ToString(Properties.Localization.General_ExposureFloatFormat),
-                z => z.ExposureTimeText);
-            CreateGetter(x => x.TriggerMode, y => y, z => z.TriggerMode);
+                z => z.ExposureTimeText,
+                FloatIsNotEqualString);
+
             CreateGetter(x => x.EMCCDGain, 
                 y => y?.ToString(Properties.Localization.General_IntegerFormat),
-                z => z.EmCcdGainText);
+                z => z.EmCcdGainText,
+                IntIsNotEqualString);
 
             CreateGetter(x => x.ImageArea,
                 y => y?.X1.ToString(Properties.Localization.General_IntegerFormat),
-                z => z.ImageArea_X1);
+                z => z.ImageArea_X1,
+                (src, tar) => IntIsNotEqualString(src?.X1, tar));
             CreateGetter(x => x.ImageArea,
                 y => y?.Y1.ToString(Properties.Localization.General_IntegerFormat),
-                z => z.ImageArea_Y1);
+                z => z.ImageArea_Y1,
+                (src, tar) => IntIsNotEqualString(src?.Y1, tar));
             CreateGetter(x => x.ImageArea,
                 y => y?.X2.ToString(Properties.Localization.General_IntegerFormat),
-                z => z.ImageArea_X2);
+                z => z.ImageArea_X2,
+                (src, tar) => IntIsNotEqualString(src?.X2, tar));
             CreateGetter(x => x.ImageArea,
                 y => y?.Y2.ToString(Properties.Localization.General_IntegerFormat),
-                z => z.ImageArea_Y2);
+                z => z.ImageArea_Y2,
+                (src, tar) => IntIsNotEqualString(src?.Y2, tar));
 
             CreateGetter(x => x.AccumulateCycle,
                 y => y?.Time.ToString(Properties.Localization.General_ExposureFloatFormat),
-                z => z.AccumulateCycleTime);
+                z => z.AccumulateCycleTime,
+                (src, tar) => FloatIsNotEqualString(src?.Time, tar));
             CreateGetter(x => x.AccumulateCycle,
                 y => y?.Frames.ToString(Properties.Localization.General_IntegerFormat),
-                z => z.AccumulateCycleNumber);
+                z => z.AccumulateCycleNumber,
+                (src, tar) => IntIsNotEqualString(src?.Frames, tar));
 
             CreateGetter(x => x.KineticCycle,
                 y => y?.Time.ToString(Properties.Localization.General_ExposureFloatFormat),
-                z => z.KineticCycleTime);
+                z => z.KineticCycleTime,
+                (src, tar) => FloatIsNotEqualString(src?.Time, tar));
             CreateGetter(x => x.KineticCycle,
                 y => y?.Frames.ToString(Properties.Localization.General_IntegerFormat),
-                z => z.KineticCycleNumber);
+                z => z.KineticCycleNumber,
+                (src, tar) => IntIsNotEqualString(src?.Frames, tar));
 
             var acqModeObs =
                 Model.Object.WhenPropertyChanged(x => x.AcquisitionMode)
@@ -627,12 +659,14 @@ namespace DIPOL_UF.ViewModels
                      .DistinctUntilChanged();
 
             acqModeObs.Select(x => x.Mode)
+                      .Where(x => x != AcquisitionMode)
                       .DistinctUntilChanged()
                       .ObserveOnUi()
                       .BindTo(this, x => x.AcquisitionMode)
                       .DisposeWith(Subscriptions);
 
             acqModeObs.Select(x => x.FrameTransfer)
+                      .Where(x => x != FrameTransfer)
                       .DistinctUntilChanged()
                       .ObserveOnUi()
                       .BindTo(this, x => x.FrameTransfer)
@@ -667,9 +701,11 @@ namespace DIPOL_UF.ViewModels
                 .DisposeWith(Subscriptions);
 
             // TODO :Remove this
-            this.ObserveSpecificErrors(nameof(ExposureTimeText))
-                .Select(_ => this.GetTypedErrors(nameof(ExposureTimeText)).EnumerableToString())
-                .LogObservable("EXPTIME", Subscriptions);
+            this.ErrorsChanged += (sender, args) =>
+            {
+                if (args.PropertyName == nameof(ExposureTimeText))
+                    Helper.WriteLog(GetErrors(nameof(ExposureTimeText)).Cast<string>().Count());
+            };
 
         }
 

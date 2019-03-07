@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Sockets;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData;
@@ -40,8 +41,8 @@ namespace DIPOL_UF
 {
     public abstract class ReactiveObjectEx : ReactiveObject, INotifyDataErrorInfo, IDisposable
     {
-        private readonly ValidationErrorsCache _validationErrors =
-            new ValidationErrorsCache(x => (x.Property, x.Type));
+        //private readonly ValidationErrorsCache _validationErrors =
+        //    new ValidationErrorsCache(x => (x.Property, x.Type));
 
         protected  readonly  CompositeDisposable Subscriptions = new CompositeDisposable();
 
@@ -55,27 +56,46 @@ namespace DIPOL_UF
 
         public IObservable<DataErrorsChangedEventArgs> WhenErrorsChanged { get; private set; }
         public bool IsDisposed { get; private set; }
-        public bool HasErrors => _validationErrors?.Items.Any(x => !(x.Message is null)) ?? false;
+        //public bool HasErrors => _validationErrors?.Items.Any(x => !(x.Message is null)) ?? false;
         public IObservable<bool> ObserveHasErrors { get; private set; }
 
 
         protected ReactiveObjectEx()
         {
+             //WhenErrorsChangedTyped =
+             //   _validationErrors.Connect()
+             //                    .Flatten()
+             //                    .Select(x => x.Current)
+             //                    .DistinctUntilChanged();
+
              WhenErrorsChangedTyped =
-                _validationErrors.Connect()
+                 _errorCollection.Connect()
+                                 .Transform(x => x.Connect()
+                                                  .Flatten()
+                                                  .Select(y => y.Current))
                                  .Flatten()
                                  .Select(x => x.Current)
-                                 .DistinctUntilChanged();
+                                 .Merge();
 
-            WhenErrorsChanged =
-                _validationErrors.Connect()
-                                 .Select(x => Observable.For<string, string>(x.Select(y => y.Current.Property).Distinct(), Observable.Return))
-                                 .Merge()
-                                 //.Select(x => x)
-                                 //.Flatten()
-                                 //.Select(x => (x.Current.Property, x.Current.Type))
-                                 //.DistinctUntilChanged()
-                                 .Select(x => new DataErrorsChangedEventArgs(x));
+            //WhenErrorsChanged =
+            //    _validationErrors.Connect()
+            //                     .Select(x => Observable.For<string, string>(x.Select(y => y.Current.Property).Distinct(), Observable.Return))
+            //                     .Merge()
+            //                     //.Select(x => x)
+            //                     //.Flatten()
+            //                     //.Select(x => (x.Current.Property, x.Current.Type))
+            //                     //.DistinctUntilChanged()
+            //                     .Select(x => new DataErrorsChangedEventArgs(x));
+
+            WhenErrorsChanged
+                = _errorCollection.Connect()
+                                  .Transform(x => x.Connect()
+                                                   .Select(_ => x.Items.First().Property)
+                                                   .DistinctUntilChanged())
+                                  .Flatten()
+                                  .Select(x => x.Current)
+                                  .Merge()
+                                  .Select(x => new DataErrorsChangedEventArgs(x));
 
             WhenErrorsChanged
                 .Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
@@ -96,22 +116,61 @@ namespace DIPOL_UF
         {
             this.RaisePropertyChanging(nameof(HasErrors));
 
-            _validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, null)));
-            if (!(error is null))
-                _validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, error)));
+            //_validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, null)));
+            //if (!(error is null))
+            //    _validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, error)));
+
+            _errorCollection.Edit(context =>
+            {
+                var lookup = context.Lookup(propertyName);
+                var payload = lookup.HasValue
+                    ? lookup.Value
+                    : new SourceCache<(string Property, string Type, string Message), string>(x => x.Type);
+                payload.AddOrUpdate((propertyName, validatorName, error));
+                context.AddOrUpdate(payload);
+            });
         }
 
         protected void BatchUpdateErrors(IEnumerable<(string Property, string Type, string Message)> updates)
         {
+            var solidUpdates = updates.ToList();
             this.RaisePropertyChanging(nameof(HasErrors));
-            _validationErrors.Edit(context => context.AddOrUpdate(updates.Select(x => (x.Property, x.Type, (string)null))));
-            _validationErrors.Edit(context => context.AddOrUpdate(updates.Where( x=> !(x.Message is null))));
+            //_validationErrors.Edit(context => context.AddOrUpdate(solidUpdates.Select(x => (x.Property, x.Type, (string)null))));
+            //_validationErrors.Edit(context => context.AddOrUpdate(solidUpdates.Where( x=> !(x.Message is null))));
+
+           _errorCollection.Edit(context =>
+           {
+               foreach (var group in solidUpdates.GroupBy(x => x.Property))
+               {
+                   var lookup = context.Lookup(group.Key);
+                   var payload = lookup.HasValue
+                       ? lookup.Value
+                       : new SourceCache<(string Property, string Type, string Message), string>(x => x.Type);
+                   payload.AddOrUpdate(group);
+
+                   context.AddOrUpdate(payload);
+               }
+           });
         }
         protected void BatchUpdateErrors(params (string Property, string Type, string Message)[] updates)
         {
             this.RaisePropertyChanging(nameof(HasErrors));
-            _validationErrors.Edit(context => context.AddOrUpdate(updates.Select(x => (x.Property, x.Type, (string)null))));
-            _validationErrors.Edit(context => context.AddOrUpdate(updates.Where(x => !(x.Message is null))));
+            //_validationErrors.Edit(context => context.AddOrUpdate(updates.Select(x => (x.Property, x.Type, (string)null))));
+            //_validationErrors.Edit(context => context.AddOrUpdate(updates.Where(x => !(x.Message is null))));
+
+            _errorCollection.Edit(context =>
+            {
+                foreach (var group in updates.GroupBy(x => x.Property))
+                {
+                    var lookup = context.Lookup(group.Key);
+                    var payload = lookup.HasValue
+                        ? lookup.Value
+                        : new SourceCache<(string Property, string Type, string Message), string>(x => x.Type);
+                    payload.AddOrUpdate(group);
+
+                    context.AddOrUpdate(payload);
+                }
+            });
         }
 
         protected void CreateValidator(IObservable<(string Type, string Message)> validationSource, string propertyName)
@@ -121,8 +180,8 @@ namespace DIPOL_UF
                 .DisposeWith(Subscriptions);
         }
 
-        protected virtual void OnErrorsChanged(DataErrorsChangedEventArgs e) =>
-            ErrorsChanged?.Invoke(this, e);
+        protected virtual void OnErrorsChanged(DataErrorsChangedEventArgs e)
+            => ErrorsChanged?.Invoke(this, e);
 
         protected virtual void HookValidators()
         {
@@ -130,13 +189,14 @@ namespace DIPOL_UF
 
         protected virtual void RemoveAllErrors(string propertyName)
         {
-            _validationErrors.Edit(context =>
-            {
-                var items = context.Items.Where(x => x.Property == propertyName)
-                                   .Select(x => (x.Property, x.Type, Message: (string)null))
-                                   .ToList();
-                context.AddOrUpdate(items);
-            });
+            //_validationErrors.Edit(context =>
+            //{
+            //    var items = context.Items.Where(x => x.Property == propertyName)
+            //                       .Select(x => (x.Property, x.Type, Message: (string)null))
+            //                       .ToList();
+            //    context.AddOrUpdate(items);
+            //});
+            _errorCollection.Edit(context => context.Remove(propertyName));
         }
 
         protected virtual void BindTo<TSource, TTarget, TProperty>(
@@ -169,8 +229,10 @@ namespace DIPOL_UF
                     if (!Subscriptions.IsDisposed)
                         Subscriptions.Dispose();
 
-                    _validationErrors.Dispose();
-
+                    //_validationErrors.Dispose();
+                    foreach (var item in _errorCollection.Items)
+                        item.Dispose();
+                    _errorCollection.Dispose();
 #if DEBUG
                     Helper.WriteLog($"{GetType()}: Disposed");
 #endif
@@ -185,29 +247,54 @@ namespace DIPOL_UF
                                      .Select(_ => HasSpecificErrors(propertyName));
 
         public virtual List<(string Type, string Message)> GetTypedErrors(string propertyName)
-        {
-            return _validationErrors.Items
-                                    .Where(x => x.Property == propertyName)
-                                    .Select(x => (x.Type, x.Message))
-                                    .ToList();
-        }
 
-        public virtual IEnumerable GetErrors(string propertyName)
-        {
-            return _validationErrors.Items
-                                    .Where(x => x.Property == propertyName && !(x.Message is null))
-                                    .Select(x => x.Message);
-        }
+            //return _validationErrors.Items
+            //                        .Where(x => x.Property == propertyName)
+            //                        .Select(x => (x.Type, x.Message))
+            //                        .ToList();
+            => _errorCollection.Lookup(propertyName) is var lookup
+               && lookup.HasValue
+                ? lookup.Value.Items.Select(x => (x.Type, x.Message)).ToList()
+                : new List<(string Type, string Message)>(0);
+        
+
+        //public virtual IEnumerable GetErrors(string propertyName)
+        //{
+        //    return _validationErrors.Items
+        //                            .Where(x => x.Property == propertyName && !(x.Message is null))
+        //                            .Select(x => x.Message);
+        //}
 
         public virtual bool HasSpecificErrors(string propertyName)
-            => _validationErrors?.Items.Any(x => x.Property == propertyName && !(x.Message is null)) ?? false;
+            //=> _validationErrors?.Items.Any(x => x.Property == propertyName && !(x.Message is null)) ?? false;
+            => _errorCollection.Lookup(propertyName) is var lookup
+               && lookup.HasValue && lookup.Value.Items.Any(x => !(x.Message is null));
         
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        
-        
+
+        #region v2
+
+        //private readonly Dictionary<string, SourceCache<(string Type, string Message), string>> _errorCollection
+        //    = new Dictionary<string, SourceCache<(string Type, string Message), string>>();
+
+        private readonly SourceCache<SourceCache<(string Property, string Type, string Message), string>, string>
+            _errorCollection =
+                new SourceCache<SourceCache<(string Property, string Type, string Message), string>, string>(x =>
+                    x.Items.First().Property);
+
+        public bool HasErrors => _errorCollection.Items.Any(x => x.Items.Any(y => !(y.Message is null)));
+
+        public virtual IEnumerable GetErrors(string propertyName)
+            => _errorCollection.Lookup(propertyName) is var lookup
+               && lookup.HasValue
+                ? lookup.Value.Items.Select(x => x.Message).Where(x => !(x is null))
+                : Enumerable.Empty<string>();
+
+
+        #endregion
     }
 }
