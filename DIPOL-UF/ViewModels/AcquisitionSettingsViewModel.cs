@@ -391,8 +391,10 @@ namespace DIPOL_UF.ViewModels
                         firstTest[2] = CanBeParsed(ImageArea_X2, out int x2);
                         firstTest[3] = CanBeParsed(ImageArea_Y2, out int y2);
 
-                        if (firstTest.All(y => y is null))
-                            secondTest = DoesNotThrow(Model.Object.SetImageArea, new Rectangle(x1, y1, x2, y2));
+                        if (firstTest.All(y => y is null)
+                            && (secondTest =
+                                DoesNotThrow(x => new Rectangle(x), (x1, y1, x2, y2), out var rect)) is null)
+                            secondTest = DoesNotThrow(Model.Object.SetImageArea, rect);
                     }
 
                     BatchUpdateErrors(
@@ -663,7 +665,12 @@ namespace DIPOL_UF.ViewModels
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group3ContainsErrors)
                 .DisposeWith(Subscriptions);
-            
+
+            // TODO :Remove this
+            this.ObserveSpecificErrors(nameof(ExposureTimeText))
+                .Select(_ => this.GetTypedErrors(nameof(ExposureTimeText)).EnumerableToString())
+                .LogObservable("EXPTIME", Subscriptions);
+
         }
 
         private void SetUpDefaultValueValidators()

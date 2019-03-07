@@ -30,6 +30,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -62,17 +63,19 @@ namespace DIPOL_UF
         {
              WhenErrorsChangedTyped =
                 _validationErrors.Connect()
-                                 .Select(x => Observable.For(x, y => Observable.Return(y.Current)))
-                                 .Merge()
+                                 .Flatten()
+                                 .Select(x => x.Current)
                                  .DistinctUntilChanged();
 
             WhenErrorsChanged =
                 _validationErrors.Connect()
-                                 .Select(x =>
-                                     x.Select(y => (y.Current.Property, y.Current.Message)).ToList())
-                                 .Select(x => Observable.For(x, Observable.Return))
+                                 .Select(x => Observable.For<string, string>(x.Select(y => y.Current.Property).Distinct(), Observable.Return))
                                  .Merge()
-                                 .Select(x => new DataErrorsChangedEventArgs(x.Property));
+                                 //.Select(x => x)
+                                 //.Flatten()
+                                 //.Select(x => (x.Current.Property, x.Current.Type))
+                                 //.DistinctUntilChanged()
+                                 .Select(x => new DataErrorsChangedEventArgs(x));
 
             WhenErrorsChanged
                 .Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
@@ -92,11 +95,10 @@ namespace DIPOL_UF
         protected void UpdateErrors(string propertyName, string validatorName, string error)
         {
             this.RaisePropertyChanging(nameof(HasErrors));
-            
-            _validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, null)));
-            if(!(error is null))
-                _validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, error)));
 
+            _validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, null)));
+            if (!(error is null))
+                _validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, error)));
         }
 
         protected void BatchUpdateErrors(IEnumerable<(string Property, string Type, string Message)> updates)

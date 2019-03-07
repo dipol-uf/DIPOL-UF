@@ -29,7 +29,6 @@ using System.Threading.Tasks;
 using System.Threading;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
-using ANDOR_CS.Exceptions;
 using DipolImage;
 using FITS_CS;
 
@@ -225,6 +224,7 @@ namespace ANDOR_CS.Classes
 
         public override void ApplySettings(SettingsBase settings)
         {
+            base.ApplySettings(settings);
             //throw new AndorSdkException("Failed", SDK.DRV_P1INVALID,
             //    nameof(AndorSdkInitialization.SdkInstance.SetImage));
         }

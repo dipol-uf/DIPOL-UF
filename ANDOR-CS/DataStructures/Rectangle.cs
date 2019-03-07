@@ -26,6 +26,7 @@ using System;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
+#pragma warning disable 1591
 
 namespace ANDOR_CS.DataStructures
 {
@@ -112,6 +113,11 @@ namespace ANDOR_CS.DataStructures
             End = start - new Point2D(1, 1) +  size;
         }
 
+        public Rectangle((int X1, int Y1, int X2, int Y2) param)
+            : this(param.X1, param.Y1, param.X2, param.Y2)
+        {
+        }
+
         public Rectangle CopyWithModifications(Action<RectangleUpdater> context)
         {
             var updater = new RectangleUpdater()
@@ -126,7 +132,15 @@ namespace ANDOR_CS.DataStructures
 
             return new Rectangle(updater.X1, updater.Y1, updater.X2, updater.Y2);
         }
-        
+
+        public void Deconstruct(out int x1, out int y1, out int x2, out int y2)
+        {
+            x1 = X1;
+            x2 = X2;
+            y1 = Y1;
+            y2 = Y2;
+        }
+
         public override string ToString()
         {
             return $"{X1}, {Y1}, {X2}, {Y2}";

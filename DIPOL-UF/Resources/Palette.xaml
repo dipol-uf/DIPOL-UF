@@ -84,6 +84,11 @@
         <GradientStop Color="#D7D2CC" Offset="1.0"/>
     </GradientStopCollection>
 
+    <!-- Colors -->
+    <Color x:Key="OutlineColor" R="0" G="0" B="0"/>
+    <Color x:Key="BackgroundColor_1">#E27D60</Color>
+    <Color x:Key="BackgroundColor_2">#659DBD</Color>
+    <Color x:Key="BackgroundColor_3">#41B3A3</Color>
     <!-- Solid brushes -->
     
     <SolidColorBrush x:Key="ColorDisabledBrush" Color="{x:Static SystemColors.ControlLightColor}"/>
@@ -95,11 +100,6 @@
     <SolidColorBrush x:Key="Background_2" Color="{StaticResource BackgroundColor_2}"/>
     <SolidColorBrush x:Key="Background_3" Color="{StaticResource BackgroundColor_3}"/>
 
-    <!-- Colors -->
-    <Color x:Key="OutlineColor" R="0" G="0" B="0"/>
-    <Color x:Key="BackgroundColor_1">#E27D60</Color>
-    <Color x:Key="BackgroundColor_2">#659DBD</Color>
-    <Color x:Key="BackgroundColor_3">#41B3A3</Color>
 
     <!--Enum text representations-->
     <x:Array x:Key="SwitchEnumTextRepresentation" Type="{x:Type sys:String}">
