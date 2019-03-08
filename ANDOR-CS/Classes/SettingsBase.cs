@@ -771,6 +771,12 @@ namespace ANDOR_CS.Classes
 
         public abstract void SetEmCcdGain(int gain);
 
+        public virtual void UpdateAllProperties()
+        {
+            foreach(var prop in SerializedProperties.Where(x => !(x.GetValue(this) is null)))
+                this.RaisePropertyChanged(prop.Name);
+        }
+
         public abstract bool IsHSSpeedSupported(
             int speedIndex, 
             int adConverter,

@@ -22,8 +22,14 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System.Drawing;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Media;
+using Brushes = System.Drawing.Brushes;
 
 namespace DIPOL_UF.Extensions
 {
@@ -52,7 +58,11 @@ namespace DIPOL_UF.Extensions
                         Validation.GetErrors(obj)));
             }
             else
+            {
                 ToolTipService.SetToolTip(obj, null);
+            }
+
+            e.Handled = true;
         }
 
         public static void SetAdorner(DependencyObject element, bool value)
