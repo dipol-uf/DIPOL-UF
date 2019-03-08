@@ -229,7 +229,7 @@ namespace DIPOL_UF.ViewModels
                                 CultureInfo.CurrentUICulture,
                                 out var val)
                                 ? val
-                                : float.PositiveInfinity,
+                                : x.MinimumAllowedTemperature,
                             x.MinimumAllowedTemperature,
                             x.MaximumAllowedTemperature))),
                 nameof(TargetTemperatureText));
