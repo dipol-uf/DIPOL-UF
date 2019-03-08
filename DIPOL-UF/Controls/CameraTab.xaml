@@ -175,11 +175,7 @@
                             Name="TempControlTextBox" 
                             HorizontalContentAlignment="Right"
                             Style="{StaticResource TextBoxWithErrors}"
-                            Text="{Binding 
-                                Path=TargetTemperatureText,
-                                Mode=TwoWay,
-                                ValidatesOnNotifyDataErrors=True,
-                                UpdateSourceTrigger=PropertyChanged}">
+                            Text="{extensions:ValidationBinding TargetTemperatureText}">
                         <TextBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                                 <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
