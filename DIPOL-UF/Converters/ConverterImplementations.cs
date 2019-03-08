@@ -29,6 +29,7 @@ using System.Windows.Media;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Windows.Controls;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Properties;
@@ -193,5 +194,10 @@ namespace DIPOL_UF.Converters
             => src?.GetType()
                   .GetField(fieldName, BindingFlags.Public | BindingFlags.Instance)
                   ?.GetValue(src);
+
+        public static string ValidationErrorsToStringConversion(object value)
+            => value is IReadOnlyCollection<ValidationError> collection
+                ? collection.Select(x => x.ErrorContent).EnumerableToString(";\r\n") + "."
+                : null;
     }
 }
