@@ -251,48 +251,15 @@
     </Style>
 
     <Style x:Key="TextBoxWithErrors" BasedOn="{StaticResource TextBoxStyle}" TargetType="TextBox">
-        <Style.Triggers>
-            <DataTrigger
-                Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).Count, Converter={StaticResource CompareToConverter}, ConverterParameter='> 0'}"
-                Value="True">
-                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors), Converter={StaticResource ErrorsToStringConverter}}"/>
-            </DataTrigger>
-            <DataTrigger 
-                Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).Count, Converter={StaticResource CompareToConverter}, ConverterParameter='== 0'}"
-                Value="True">
-                <Setter Property="ToolTip" Value="{x:Null}"/>
-            </DataTrigger>
-        </Style.Triggers>
+        <Setter Property="ext:ValidationAdorner.Adorner" Value="True"/>
     </Style>
 
     <Style x:Key="ComboBoxWithErrors" BasedOn="{StaticResource ComboBoxStyle}" TargetType="ComboBox">
-        <Style.Triggers>
-            <DataTrigger 
-                Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).Count, Converter={StaticResource CompareToConverter}, ConverterParameter='> 0'}"
-                Value="True">
-                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors), Converter={StaticResource ErrorsToStringConverter}}"/>
-            </DataTrigger>
-            <DataTrigger 
-                Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).Count, Converter={StaticResource CompareToConverter}, ConverterParameter='== 0'}"
-                Value="True">
-                <Setter Property="ToolTip" Value="{x:Null}"/>
-            </DataTrigger>
-        </Style.Triggers>
+        <Setter Property="ext:ValidationAdorner.Adorner" Value="True"/>
     </Style>
 
     <Style x:Key="CheckBoxWithErrors" BasedOn="{StaticResource ContentFont}" TargetType="CheckBox">
-        <Style.Triggers>
-            <DataTrigger 
-                Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).Count, Converter={StaticResource CompareToConverter}, ConverterParameter='> 0'}"
-                Value="True">
-                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors), Converter={StaticResource ErrorsToStringConverter}}"/>
-            </DataTrigger>
-            <DataTrigger 
-                Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).Count, Converter={StaticResource CompareToConverter}, ConverterParameter='== 0'}"
-                Value="False">
-                <Setter Property="ToolTip" Value="{x:Null}"/>
-            </DataTrigger>
-        </Style.Triggers>
+        <Setter Property="ext:ValidationAdorner.Adorner" Value="True"/>
     </Style>
 
     <Style x:Key="ErrorBorderStyle" TargetType="Border">

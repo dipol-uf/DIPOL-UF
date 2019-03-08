@@ -22,22 +22,25 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System;
-using System.Globalization;
 using System.Windows.Data;
-using DIPOL_UF.Properties;
 
-namespace DIPOL_UF.Converters
+namespace DIPOL_UF.Extensions
 {
-    internal class ValidationErrorsToStringValueConverter :IValueConverter
+    internal class ValidationBinding : Binding
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public ValidationBinding(string path)
+            : base(path)
+            => AssignDefaults();
+
+        public ValidationBinding()
+            => AssignDefaults();
+
+        private void AssignDefaults()
         {
-            return ConverterImplementations.ValidationErrorsToStringConversion(value);
+            NotifyOnValidationError = true;
+            ValidatesOnNotifyDataErrors = true;
+            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
+            Mode = BindingMode.Default;
         }
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-            => throw new NotSupportedException(
-                string.Format(Localization.General_OperationNotSupported,
-                    $"{nameof(ValidationErrorsToStringValueConverter)}.{nameof(ConvertBack)}"));
     }
 }
