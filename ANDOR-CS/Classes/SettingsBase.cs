@@ -172,7 +172,7 @@ namespace ANDOR_CS.Classes
         /// Stores type of currently set PreAmp Gain
         /// </summary>
         [SerializationOrder(6)]
-        [FitsKey("AMPGAIN", index: 2)]
+        [FitsKey("AMPGAIN", index: 1)]
         public (int Index, string Name)? PreAmpGain
         {
             get => _PreAmpGain;
@@ -979,7 +979,7 @@ namespace ANDOR_CS.Classes
 
                     var val = value;
 
-                    if (val is ITuple tuple && attr?.Index is int index)
+                    if (val is ITuple tuple && attr?.Index is int index && index < tuple.Length)
                         val = tuple[index];
 
                     if(val is int)
