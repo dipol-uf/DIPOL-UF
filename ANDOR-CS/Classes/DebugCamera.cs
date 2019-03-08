@@ -32,13 +32,6 @@ using ANDOR_CS.DataStructures;
 using DipolImage;
 using FITS_CS;
 
-#if X86
-using SDK = ATMCD32CS.AndorSDK;
-#endif
-#if X64
-using SDK = ATMCD64CS.AndorSDK;
-#endif
-
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
 {
