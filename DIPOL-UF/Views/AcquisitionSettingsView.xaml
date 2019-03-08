@@ -139,24 +139,18 @@
                                    Text="EM CCD gain" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                         <!--Right-hand side controls-->
                         <!--Exposure time-->
-                        <TextBox Grid.Row="0" Grid.Column="1"
-                                 Text="{Binding 
-                                    Path=ExposureTimeText,
-                                    Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    ValidatesOnNotifyDataErrors=True}"
+                        <TextBox x:Name="ExpTimeTextBox" Grid.Row="0" Grid.Column="1"
+                                 extensions:ValidationAdorner.Adorner="True"
+                                 Text="{extensions:ValidationBinding Path=ExposureTimeText}"
                                  IsEnabled="{Binding IsAvailable.ExposureTimeText}"
-                                 Style="{StaticResource TextBoxWithErrors}">
-                         
+                                 Style="{StaticResource TextBoxStyle}">
                         </TextBox>
                         <!--VS Speed-->
                         <ComboBox Grid.Row="1" Grid.Column="1"
                                   ItemsSource="{Binding Camera.Properties.VSSpeeds}"
-                                  SelectedIndex="{Binding 
+                                  SelectedIndex="{extensions:ValidationBinding
                                     Path=VsSpeed, 
-                                    Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged, 
-                                    ValidatesOnNotifyDataErrors=True}"
+                                    Mode=TwoWay}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.VsSpeed}">
                         </ComboBox>
@@ -164,11 +158,9 @@
                         <ComboBox Grid.Row="2" Grid.Column="1"
                                   ItemsSource="{Binding 
                                     Source={StaticResource ResourceKey=VSAmplitudeEnumProvider}}"
-                                  SelectedItem="{Binding 
+                                  SelectedItem="{extensions:ValidationBinding
                                     Path=VsAmplitude, 
-                                    Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    ValidatesOnNotifyDataErrors=True}"
+                                    Mode=TwoWay}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.VsAmplitude}">
                             <ComboBox.ItemTemplate>
@@ -181,11 +173,9 @@
                         <!--AD Converter-->
                         <ComboBox Grid.Row="3" Grid.Column="1"
                                   ItemsSource="{Binding Camera.Properties.ADConverters}"
-                                  SelectedIndex="{Binding 
-                                    AdcBitDepth, 
-                                    Mode=TwoWay, 
-                                    UpdateSourceTrigger=PropertyChanged, 
-                                    ValidatesOnNotifyDataErrors=True}"
+                                  SelectedIndex="{extensions:ValidationBinding 
+                                    Path=AdcBitDepth, 
+                                    Mode=TwoWay}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.AdcBitDepth}">
                         </ComboBox>
@@ -195,11 +185,9 @@
                                     Camera.Properties.OutputAmplifiers,
                                     Converter={StaticResource ValueTupleToValueConverter},
                                     ConverterParameter=Item2}"
-                                  SelectedItem="{Binding 
-                                    Amplifier, 
-                                    Mode=TwoWay, 
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    ValidatesOnNotifyDataErrors=True}"
+                                  SelectedItem="{extensions:ValidationBinding
+                                    Path=Amplifier, 
+                                    Mode=TwoWay}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.Amplifier}">
                             <ComboBox.ItemTemplate>
@@ -215,11 +203,9 @@
                                   ItemsSource="{Binding
                                     Path=AvailableHsSpeeds,
                                     Mode=OneWay}"
-                                  SelectedIndex="{Binding 
+                                  SelectedIndex="{extensions:ValidationBinding
                                     HsSpeed, 
-                                    Mode=TwoWay, 
-                                    UpdateSourceTrigger=PropertyChanged, 
-                                    ValidatesOnNotifyDataErrors=True}"
+                                    Mode=TwoWay}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.HsSpeed}">
                             <ComboBox.ItemTemplate>
@@ -236,11 +222,9 @@
                                   ItemsSource="{Binding
                                     Path=AvailablePreAmpGains,
                                     Mode=OneWay}"
-                                  SelectedIndex="{Binding 
-                                    PreAmpGain, 
-                                    Mode=TwoWay, 
-                                    UpdateSourceTrigger=PropertyChanged, 
-                                    ValidatesOnNotifyDataErrors=True}"
+                                  SelectedIndex="{extensions:ValidationBinding
+                                    Path=PreAmpGain, 
+                                    Mode=TwoWay}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.PreAmpGain}">
                             <ComboBox.ItemTemplate>
@@ -257,11 +241,7 @@
                                   ItemsSource="{Binding
                                     Path=AllowedAcquisitionModes,
                                     Mode=OneWay}"
-                                  SelectedItem="{Binding
-                                    Path=AcquisitionMode,
-                                    Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    ValidatesOnNotifyDataErrors=True}"
+                                  SelectedItem="{extensions:ValidationBinding Path=AcquisitionMode}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.AcquisitionMode}">
                          <ComboBox.ItemTemplate>
@@ -289,7 +269,6 @@
                                     Mode=OneWay}"
                                   SelectedItem="{Binding
                                     Path=ReadMode,
-                                    Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged,
                                     ValidatesOnNotifyDataErrors=True}"
                                   IsEnabled="{Binding IsAvailable.ReadMode}"
@@ -308,7 +287,6 @@
                                     Mode=OneWay}"
                                   SelectedItem="{Binding
                                     Path=TriggerMode,
-                                    Mode=TwoWay,
                                     UpdateSourceTrigger=PropertyChanged,
                                     ValidatesOnNotifyDataErrors=True}"
                                   IsEnabled="{Binding IsAvailable.TriggerMode}"
@@ -327,11 +305,7 @@
                                 <ColumnDefinition/>
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0"
-                                     Text="{Binding 
-                                        EmCcdGainText,
-                                        Mode=TwoWay,
-                                        UpdateSourceTrigger=PropertyChanged,
-                                        ValidatesOnNotifyDataErrors=True}"
+                                     Text="{extensions:ValidationBinding EmCcdGainText}"
                                      IsEnabled="{Binding IsAvailable.EmCcdGainText}"
                                      Style="{StaticResource TextBoxWithErrors}">
                             </TextBox>
@@ -429,38 +403,22 @@
                      <!--Image Area controls-->
                     <TextBox Grid.Row="1" Grid.Column="1" 
                              Width="100" HorizontalAlignment="Left"
-                             Text="{Binding 
-                                    'ImageArea_X1',
-                                    Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    ValidatesOnNotifyDataErrors=True}"
+                             Text="{extensions:ValidationBinding 'ImageArea_X1'}"
                              IsEnabled="{Binding IsAvailable.ImageArea}"
                              Style="{StaticResource TextBoxWithErrors}"/>
                     <TextBox Grid.Row="2" Grid.Column="1"
                               Width="100" HorizontalAlignment="Left"
-                              Text="{Binding 
-                                    'ImageArea_Y1',
-                                    Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    ValidatesOnNotifyDataErrors=True}"
+                              Text="{extensions:ValidationBinding 'ImageArea_Y1'}"
                               IsEnabled="{Binding IsAvailable.ImageArea}"
                               Style="{StaticResource TextBoxWithErrors}"/>
                     <TextBox Grid.Row="3" Grid.Column="1"
                               Width="100" HorizontalAlignment="Left"
-                              Text="{Binding 
-                                    'ImageArea_X2',
-                                    Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    ValidatesOnNotifyDataErrors=True}"
+                              Text="{extensions:ValidationBinding 'ImageArea_X2'}"
                               IsEnabled="{Binding IsAvailable.ImageArea}"
                               Style="{StaticResource TextBoxWithErrors}"/>
                     <TextBox Grid.Row="4" Grid.Column="1"
                               Width="100" HorizontalAlignment="Left"
-                              Text="{Binding 
-                                    'ImageArea_Y2',
-                                    Mode=TwoWay,
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    ValidatesOnNotifyDataErrors=True}"
+                              Text="{extensions:ValidationBinding 'ImageArea_Y2'}"
                               IsEnabled="{Binding IsAvailable.ImageArea}"
                               Style="{StaticResource TextBoxWithErrors}"/>
 
@@ -616,44 +574,28 @@
                         <!-- Input textboxes -->
                         <TextBox Grid.Column="2" Grid.Row="3" Width="100" HorizontalAlignment="Left"
                                  Style="{StaticResource TextBoxWithErrors}"
-                                 Text="{Binding 
-                                        Path = AccumulateCycleTime,
-                                        Mode=TwoWay,
-                                        ValidatesOnNotifyDataErrors=True,
-                                        UpdateSourceTrigger=PropertyChanged}"
+                                 Text="{extensions:ValidationBinding AccumulateCycleTime}"
                                  Visibility="{Binding 
                                         IsAvailable.AccumulateCycleTime, 
                                         Converter={StaticResource BoolToVisibilityConverter},
                                         ConverterParameter={x:Static Visibility.Collapsed}}"/>
                         <TextBox Grid.Column="2" Grid.Row="4" Width="100" HorizontalAlignment="Left"
                                  Style="{StaticResource TextBoxWithErrors}"
-                                 Text="{Binding 
-                                        Path = AccumulateCycleNumber,
-                                        Mode=TwoWay,
-                                        ValidatesOnNotifyDataErrors=True,
-                                        UpdateSourceTrigger=PropertyChanged}"
+                                 Text="{extensions:ValidationBinding AccumulateCycleNumber}"
                                  Visibility="{Binding 
                                         IsAvailable.AccumulateCycleNumber, 
                                         Converter={StaticResource BoolToVisibilityConverter},
                                         ConverterParameter={x:Static Visibility.Collapsed}}"/>
                         <TextBox Grid.Column="2" Grid.Row="8" Width="100" HorizontalAlignment="Left"
                                  Style="{StaticResource TextBoxWithErrors}"
-                                 Text="{Binding 
-                                        Path = KineticCycleTime,
-                                        Mode=TwoWay,
-                                        ValidatesOnNotifyDataErrors=True,
-                                        UpdateSourceTrigger=PropertyChanged}"
+                                 Text="{extensions:ValidationBinding KineticCycleTime}"
                                  Visibility="{Binding 
                                         IsAvailable.KineticCycleTime, 
                                         Converter={StaticResource BoolToVisibilityConverter},
                                         ConverterParameter={x:Static Visibility.Collapsed}}"/>
                         <TextBox Grid.Column="2" Grid.Row="9" Width="100" HorizontalAlignment="Left"
                                  Style="{StaticResource TextBoxWithErrors}"
-                                 Text="{Binding 
-                                        Path = KineticCycleNumber,
-                                        Mode=TwoWay,
-                                        ValidatesOnNotifyDataErrors=True,
-                                        UpdateSourceTrigger=PropertyChanged}"
+                                 Text="{extensions:ValidationBinding KineticCycleNumber}"
                                  Visibility="{Binding 
                                         IsAvailable.KineticCycleNumber, 
                                         Converter={StaticResource BoolToVisibilityConverter},
