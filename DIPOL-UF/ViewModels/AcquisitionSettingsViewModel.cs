@@ -37,6 +37,7 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using ANDOR_CS.Classes;
@@ -111,19 +112,16 @@ namespace DIPOL_UF.ViewModels
 
         public SettingsAvailability IsAvailable { get; }
             = new SettingsAvailability();
-
         public CameraBase Camera => Model.Object.Camera;
 
-        public ReactiveCommand<string, Unit> GotFocusCommand { get; private set; }
-        public ReactiveCommand<string, Unit> LostFocusCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
         public ReactiveCommand<Window, Window> SubmitCommand { get; private set; }
+        public ReactiveCommand<Window, Unit> ViewLoadedCommand { get; private set; }
 
         /// <summary>
         /// Collection of supported by a given Camera settings.
         /// </summary>
         public HashSet<string> SupportedSettings { get; }
-
         /// <summary>
         /// Collection of settings that can be set now.
         /// </summary>
@@ -140,18 +138,14 @@ namespace DIPOL_UF.ViewModels
             .Where(item => item != ANDOR_CS.Enums.AcquisitionMode.FrameTransfer)
             .Where(EnumConverter.IsAcquisitionModeSupported)
             .ToArray();
-
         public TriggerMode[] AllowedTriggerModes =>
             Helper.EnumFlagsToArray<TriggerMode>(Model.Object.Camera.Capabilities.TriggerModes)
             .Where(EnumConverter.IsTriggerModeSupported)
             .ToArray();
-
         public IObservableCollection<(int Index, float Speed)> AvailableHsSpeeds { get; }
             = new ObservableCollectionExtended<(int Index, float Speed)>();
-
         public IObservableCollection<(int Index, string Name)> AvailablePreAmpGains { get; }
             = new ObservableCollectionExtended<(int Index, string Name)>();
-
         public IObservableCollection<ReadMode> AvailableReadModes { get; }
         = new ObservableCollectionExtended<ReadMode>();
 
@@ -225,7 +219,7 @@ namespace DIPOL_UF.ViewModels
             _availableHsSpeeds.DisposeWith(Subscriptions);
             _availablePreAmpGains.DisposeWith(Subscriptions);
             _availableReadModes.DisposeWith(Subscriptions);
-            
+
         }
 
         private void HookObservables()
@@ -377,7 +371,7 @@ namespace DIPOL_UF.ViewModels
 
 
             CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime, 
-                y => y.ExposureTimeText, z=> z.ExposureTime ?? float.NaN);
+                y => y.ExposureTimeText, z => z.ExposureTime ?? float.NaN);
             CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain, y => y.EmCcdGainText);
 
             this.NotifyWhenAnyPropertyChanged(
@@ -567,12 +561,12 @@ namespace DIPOL_UF.ViewModels
             bool FloatIsNotEqualString(float? src, string tar)
                 => src?.AlmostEqual(float.TryParse(tar, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var val)
                        ? val
-                       : float.NaN) == true;
+                       : float.NaN) != true;
 
             bool IntIsNotEqualString(int? src, string tar)
                 => src?.Equals(int.TryParse(tar, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var val)
                        ? val
-                       : 0) == true;
+                       : 0) != true;
 
             void CreateGetter<TSrc, TTarget>(
                 Expression<Func<SettingsBase, TSrc>> sourceAccessor,
@@ -973,13 +967,13 @@ namespace DIPOL_UF.ViewModels
         
         private void InitializeCommands()
         {
-            GotFocusCommand =
-                ReactiveCommand.Create<string>(RemoveAllErrors)
-                               .DisposeWith(Subscriptions);
-            LostFocusCommand =
-                ReactiveCommand.Create<string>(this.RaisePropertyChanged)
-                               .DisposeWith(Subscriptions);
-            
+            ViewLoadedCommand = 
+                    ReactiveCommand.Create<Window>(x =>
+                    {
+                        foreach (var name in Group1Names)
+                            this.OnErrorsChanged(new DataErrorsChangedEventArgs(name));
+                    });
+
             // Sacrificing reactivity in order to avoid command disposal and memory leaks
             CancelCommand = new ActionCommand(x => (x as Window)?.Close());
 

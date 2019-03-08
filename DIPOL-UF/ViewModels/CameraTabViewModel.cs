@@ -192,7 +192,7 @@ namespace DIPOL_UF.ViewModels
 
             if (CanControlExternalShutter)
             {
-                shutterSrc.Select(x => x.External.ToStringEx())
+                shutterSrc.Select(x => x.External)
                           .DistinctUntilChanged()
                           .BindTo(this, x => x.ExternalShutterMode)
                           .DisposeWith(Subscriptions);

@@ -26,6 +26,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
         xmlns:viewModels="clr-namespace:DIPOL_UF.ViewModels"
         mc:Ignorable="d"
@@ -36,6 +37,15 @@
         Style="{StaticResource ResourceKey=ContentFont}"
         d:DataContext="{d:DesignInstance viewModels:AcquisitionSettingsViewModel}"
         ResizeMode="NoResize">
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger 
+            EventName="ContentRendered"
+            SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
+            <behavior:InvokeCommandAction 
+                Command="{Binding ViewLoadedCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"/>
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -143,7 +153,7 @@
                                  extensions:ValidationAdorner.Adorner="True"
                                  Text="{extensions:ValidationBinding Path=ExposureTimeText}"
                                  IsEnabled="{Binding IsAvailable.ExposureTimeText}"
-                                 Style="{StaticResource TextBoxStyle}">
+                                 Style="{StaticResource TextBoxWithErrors}" Template="{DynamicResource TextBoxBaseControlTemplate1}">
                         </TextBox>
                         <!--VS Speed-->
                         <ComboBox Grid.Row="1" Grid.Column="1"
