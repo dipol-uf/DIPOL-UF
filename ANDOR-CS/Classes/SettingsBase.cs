@@ -33,11 +33,15 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 using System.ComponentModel;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
 using ANDOR_CS.Attributes;
 using FITS_CS;
+using Newtonsoft.Json;
 using SettingsManager;
 
 // ReSharper disable InconsistentNaming
@@ -771,13 +775,7 @@ namespace ANDOR_CS.Classes
 
         public abstract void SetEmCcdGain(int gain);
 
-        public virtual void UpdateAllProperties()
-        {
-            foreach(var prop in SerializedProperties.Where(x => !(x.GetValue(this) is null)))
-                this.RaisePropertyChanged(prop.Name);
-        }
-
-        public abstract bool IsHSSpeedSupported(
+       public abstract bool IsHSSpeedSupported(
             int speedIndex, 
             int adConverter,
             int amplifier, 
@@ -810,6 +808,9 @@ namespace ANDOR_CS.Classes
             var str = new StreamWriter(stream);
             WriteJson(str);
         }
+
+        public virtual async Task SerializeAsync(Stream stream, Encoding enc, CancellationToken token)
+            => await WriteJsonAsync(stream, enc, token);
 
         public virtual List<string> Deserialize(Stream stream)
         {
@@ -884,6 +885,9 @@ namespace ANDOR_CS.Classes
 
         public void WriteJson(StreamWriter writer)
             => JsonParser.WriteJson(writer, this);
+
+        public async Task WriteJsonAsync(Stream str, Encoding enc, CancellationToken token)
+            => await JsonParser.WriteJsonAsync(this, str, enc, token);
 
         public List<string> ReadJson(StreamReader str)
         {
