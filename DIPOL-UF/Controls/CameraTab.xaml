@@ -197,9 +197,7 @@
                                                             Mode=OneWay}" 
                                                         Value="{x:Static enm:Switch.Enabled}">
                                                 <Setter Property="TextBlock.Text" 
-                                                        Value="{Binding 
-                                                            Converter={StaticResource GetText}, 
-                                                            ConverterParameter=CameraTab_Cooler_Stop}"/>
+                                                        Value="{Binding LocalizedText[CameraTab_Cooler_Stop], Mode=OneTime}"/>
                                             </DataTrigger>
                                             <DataTrigger 
                                                         Binding="{Binding
@@ -207,9 +205,7 @@
                                                             Mode=OneWay}" 
                                                         Value="{x:Static enm:Switch.Disabled}">
                                                 <Setter Property="TextBlock.Text" 
-                                                        Value="{Binding 
-                                                            Converter={StaticResource GetText}, 
-                                                            ConverterParameter=CameraTab_Cooler_Start}"/>
+                                                        Value="{Binding LocalizedText[CameraTab_Cooler_Start], Mode=OneTime}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>

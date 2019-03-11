@@ -22,33 +22,50 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System.Reactive.Disposables;
-using ReactiveUI;
 
-namespace DIPOL_UF.ViewModels
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Resources;
+
+namespace DIPOL_UF
 {
-    internal abstract class ReactiveViewModelBase : ReactiveObjectEx
+    internal class ResourceMangerEx : IReadOnlyDictionary<string, string>
     {
-        public ResourceMangerEx LocalizedText { get; }
-        public abstract ReactiveObjectEx ReactiveModel { get; }
+        public ResourceManager Manger { get; }
 
-        protected ReactiveViewModelBase()
+        public ResourceMangerEx(ResourceManager manger)
         {
-            LocalizedText = new ResourceMangerEx(Properties.Localization.ResourceManager);
+            Manger = manger ?? throw new ArgumentNullException(nameof(manger));
         }
 
-        public static ReactiveCommand<ReactiveViewModelBase, ReactiveObjectEx> 
-            DisposeFromViewCallbackCommand(CompositeDisposable disposesWith)
-        {
-            var cmd = ReactiveCommand.Create<ReactiveViewModelBase, ReactiveObjectEx>(
-                x =>
-                {
-                    var mdl = x.ReactiveModel;
-                    x.Dispose();
-                    return mdl;
-                });
 
-            return disposesWith is null ? cmd : cmd.DisposeWith(disposesWith);
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
+        {
+            //TODO: Fix exception message
+            throw new NotSupportedException(@"Enumeration not supported");
         }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public int Count => throw new NotSupportedException(@"Enumeration not supported");
+
+        public bool ContainsKey(string key)
+        {
+            return !(Manger.GetString(key) is null);
+        }
+
+        public bool TryGetValue(string key, out string value)
+        {
+            return !((value = Manger.GetString(key)) is null);
+        }
+
+        public string this[string key] => Manger.GetString(key);
+
+        public IEnumerable<string> Keys => throw new NotSupportedException(@"Enumeration not supported");
+        public IEnumerable<string> Values => throw new NotSupportedException(@"Enumeration not supported");
     }
 }

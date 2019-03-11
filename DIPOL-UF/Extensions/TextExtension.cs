@@ -34,15 +34,10 @@ namespace DIPOL_UF.Extensions
     //[MarkupExtensionReturnType(typeof(string))]
     public class TextExtension : MarkupExtension
     {
-        private Tuple<DependencyObject, DependencyProperty> _dependencyObjectInfo;
-        /// <summary>
-        /// Raised when application localization is changed through <see cref="UpdateUiCulture"/>.
-        /// </summary>
-        public static event EventHandler<Tuple<CultureInfo, CultureInfo>> LocalizationChanged;
-
         /// <summary>
         /// Resource key used to lookup localized strings
         /// </summary>
+        [ConstructorArgument(@"key")]
         public string Key
         {
             get;
@@ -56,59 +51,30 @@ namespace DIPOL_UF.Extensions
 
         public TextExtension()
         {
-            LocalizationChanged += Localization_Changed;
         }
+
+        public TextExtension(string key)
+            => Key = key;
+
        
-
-        /// <summary>
-        /// Updates UI culture and forces update of all localized strings.
-        /// </summary>
-        /// <param name="newCulture">Culture to switch to.</param>
-        public static void UpdateUiCulture(CultureInfo newCulture)
-        {
-            if(Application.Current?.Dispatcher?.Thread == null)
-                throw new NullReferenceException("Application is not properly initialized.");
-
-            var old = Application.Current.Dispatcher.Thread.CurrentUICulture;
-            Application.Current.Dispatcher.Thread.CurrentUICulture = newCulture;
-            Helper.ExecuteOnUI(() => 
-                LocalizationChanged?.Invoke(null, 
-                    new Tuple<CultureInfo, CultureInfo>(old, newCulture)));
-        }
-
-        internal string GetText(string key)
-        {
-#if DEBUG
-            if(_dependencyObjectInfo?.Item1 is DependencyObject obj
-                && DesignerProperties.GetIsInDesignMode(obj))
-                return Properties.Localization.ResourceManager.GetString(key);
-
-#endif
-            return Properties.Localization.ResourceManager.GetString(key, CultureInfo.CurrentUICulture);
-        }
+        internal string GetText(string key, CultureInfo info = null)
+            => Properties.Localization.ResourceManager.GetString(key, info ?? CultureInfo.CurrentUICulture);
 
 
         public override object ProvideValue(IServiceProvider serviceProvider)
         {
-          
-            if (_dependencyObjectInfo == null)
-            {
+
+#if DEBUG
                 var ipvt = serviceProvider.GetService(typeof(IProvideValueTarget)) as IProvideValueTarget;
-                if (ipvt?.TargetObject is DependencyObject depObj &&
-                    ipvt.TargetProperty is DependencyProperty depProp)
+                if (ipvt?.TargetObject is DependencyObject depObj)
                 {
-                    _dependencyObjectInfo = new Tuple<DependencyObject, DependencyProperty>(
-                        depObj, depProp); 
+                    if (DesignerProperties.GetIsInDesignMode(depObj))
+                        return Properties.Localization.ResourceManager.GetString(Key, CultureInfo.InvariantCulture);
                 }
-                
-            }
+#endif
+
 
             return GetValue();
-        }
-
-        protected virtual void Localization_Changed(object sender, Tuple<CultureInfo, CultureInfo> e)
-        {
-                _dependencyObjectInfo?.Item1?.SetValue(_dependencyObjectInfo.Item2, GetValue());
         }
 
         protected virtual string GetFormat()
@@ -120,11 +86,11 @@ namespace DIPOL_UF.Extensions
             throw new ArgumentException();
         }
 
-        protected virtual string GetValue()
+        protected virtual string GetValue(CultureInfo info = null)
         {
             if (Key != null)
             {
-                var value = GetText(Key) ?? Key;
+                var value = GetText(Key, info) ?? Key;
 
                 return string.Format(GetFormat(), value);
             }

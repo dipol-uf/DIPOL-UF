@@ -721,7 +721,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0:+0.00;-0.00;0.00}.
+        ///   Looks up a localized string similar to +0.00;-0.00;0.00.
         /// </summary>
         public static string General_FloatTempFormat {
             get {

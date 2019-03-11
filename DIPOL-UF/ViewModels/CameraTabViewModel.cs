@@ -30,7 +30,9 @@ using System.Windows.Input;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Models;
+using DIPOL_UF.Properties;
 using DynamicData.Binding;
+using MathNet.Numerics;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 // ReSharper disable UnassignedGetOnlyAutoProperty
@@ -55,7 +57,7 @@ namespace DIPOL_UF.ViewModels
         // ReSharper disable once UnusedMember.Global
         public string TabHeader => Model.Alias;
 
-        public DipolImagePresenterViewModel DipolImagePresenter { get; private set; }
+        public DipolImagePresenterViewModel DipolImagePresenter { get; }
         public DescendantProxy AcquisitionSettingsWindow { get; private set; }
 
         [Reactive]
@@ -111,9 +113,6 @@ namespace DIPOL_UF.ViewModels
         private void HookObservables()
         {
 
-            Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.IsAcquiring)).Select(x => x.IsAcquiring)
-                 .LogObservable("Acquiring", Subscriptions);
-
             Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.IsAcquiring))
                  .Select(x => x.IsAcquiring)
                  .ObserveOnUi()
@@ -133,32 +132,73 @@ namespace DIPOL_UF.ViewModels
                  .DisposeWith(Subscriptions);
 
             // Handles temperature changes
+            //this.WhenPropertyChanged(x => x.TargetTemperature)
+            //    .Select(x => x.Value)
+            //    .DistinctUntilChanged()
+            //    .ObserveOnUi()
+            //    .BindTo(this, x => x.ActualTemperature)
+            //    .DisposeWith(Subscriptions);
+
+            //this.WhenPropertyChanged(x => x.TargetTemperatureText)
+            //    .DistinctUntilChanged()
+            //    .Where(x => !HasSpecificErrors(nameof(TargetTemperatureText)) && !string.IsNullOrEmpty(x.Value))
+            //    .Select(x => float.Parse(x.Value, NumberStyles.Any, CultureInfo.CurrentUICulture))
+            //    .ObserveOnUi()
+            //    .BindTo(this, x => x.ActualTemperature)
+            //    .DisposeWith(Subscriptions);
+
+            //var actTempObs =
+            //    this.WhenPropertyChanged(x => x.ActualTemperature)
+            //        .Select(x => x.Value)
+            //        .ObserveOnUi();
+
+            //actTempObs.BindTo(this, x => x.TargetTemperature).DisposeWith(Subscriptions);
+            //actTempObs.Select(x => x.ToString(
+            //              Properties.Localization.General_TemperatureFloatFormat,
+            //              CultureInfo.CurrentUICulture))
+            //          .BindTo(this, x => x.TargetTemperatureText)
+            //          .DisposeWith(Subscriptions);
+
+            // +--------+ +----> +----------------------+ +----> +--------+
+            // | Slider |        | VM.TargetTemperature |        | Checks |
+            // +--------+ <----+ +----------------------+ <----+ ++------^+
+            //                                                    |      |
+            // +-----+       +----------+ <----+ +----------------v------++
+            // |Model|<----+ |Validation|        |VM.TargetTemperatureText|
+            // +-----+       +----------+ +----> +-----------------+-----^+
+            //                                                     |     |
+            //                                                    +v-----++
+            //                                                    |TextBox|
+            //                                                    +-------+
+
+            ObserveSpecificErrors(nameof(TargetTemperatureText))
+                .LogObservable("TEMPERR", Subscriptions);
+
+
             this.WhenPropertyChanged(x => x.TargetTemperature)
-                .Select(x => x.Value)
-                .DistinctUntilChanged()
+                //.Sample(UiSettingsProvider.UiThrottlingDelay)
+                .Where(x => !x.Value.AlmostEqual(float.TryParse(x.Sender.TargetTemperatureText, NumberStyles.Any,
+                    NumberFormatInfo.InvariantInfo, out var temp)
+                    ? temp
+                    : float.NaN))
+                .Select(x => x.Value.ToString(Localization.General_FloatTempFormat))
                 .ObserveOnUi()
-                .BindTo(this, x => x.ActualTemperature)
+                .BindTo(this, x => x.TargetTemperatureText)
                 .DisposeWith(Subscriptions);
 
             this.WhenPropertyChanged(x => x.TargetTemperatureText)
-                .DistinctUntilChanged()
-                .Where(x => !HasSpecificErrors(nameof(TargetTemperatureText)) && !string.IsNullOrEmpty(x.Value))
-                .Select(x => float.Parse(x.Value, NumberStyles.Any, CultureInfo.CurrentUICulture))
-                .ObserveOnUi()
-                .BindTo(this, x => x.ActualTemperature)
+                .Where(_ => !HasSpecificErrors(nameof(TargetTemperatureText)))
+                .Select(x =>
+                    float.TryParse(x.Value, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var temp)
+                        ? temp
+                        : float.NaN)
+                .Where(x => !float.IsNaN(x) && !x.AlmostEqual(TargetTemperature))
+                .BindTo(this, x => x.TargetTemperature)
                 .DisposeWith(Subscriptions);
 
-            var actTempObs =
-                this.WhenPropertyChanged(x => x.ActualTemperature)
-                    .Select(x => x.Value)
-                    .ObserveOnUi();
 
-            actTempObs.BindTo(this, x => x.TargetTemperature).DisposeWith(Subscriptions);
-            actTempObs.Select(x => x.ToString(
-                          Properties.Localization.General_TemperatureFloatFormat,
-                          CultureInfo.CurrentUICulture))
-                      .BindTo(this, x => x.TargetTemperatureText)
-                      .DisposeWith(Subscriptions);
+            // End of temperature changes
+            
 
             Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.FanMode))
                  .Select(x => 2 - (uint) x.FanMode)
