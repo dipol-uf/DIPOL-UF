@@ -233,6 +233,7 @@
     <Compile Include="Models\DipolMainWindow.cs" />
     <Compile Include="PropagatingEventArgs.cs" />
     <Compile Include="ReactiveWrapper.cs" />
+    <Compile Include="ResourceMangerEx.cs" />
     <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
     <Compile Include="ViewModels\CameraTabViewModel.cs" />
     <Compile Include="ViewModels\DescendantProxy.cs" />

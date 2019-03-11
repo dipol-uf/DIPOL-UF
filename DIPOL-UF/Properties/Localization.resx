@@ -322,7 +322,7 @@
     <value>Off</value>
   </data>
   <data name="General_FloatTempFormat" xml:space="preserve">
-    <value>{0:+0.00;-0.00;0.00}</value>
+    <value>+0.00;-0.00;0.00</value>
   </data>
   <data name="General_IntegerFormat" xml:space="preserve">
     <value>D</value>
