@@ -22,6 +22,7 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System;
 using System.Globalization;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -132,70 +133,35 @@ namespace DIPOL_UF.ViewModels
                  .DisposeWith(Subscriptions);
 
             // Handles temperature changes
-            //this.WhenPropertyChanged(x => x.TargetTemperature)
-            //    .Select(x => x.Value)
-            //    .DistinctUntilChanged()
-            //    .ObserveOnUi()
-            //    .BindTo(this, x => x.ActualTemperature)
-            //    .DisposeWith(Subscriptions);
 
-            //this.WhenPropertyChanged(x => x.TargetTemperatureText)
-            //    .DistinctUntilChanged()
-            //    .Where(x => !HasSpecificErrors(nameof(TargetTemperatureText)) && !string.IsNullOrEmpty(x.Value))
-            //    .Select(x => float.Parse(x.Value, NumberStyles.Any, CultureInfo.CurrentUICulture))
-            //    .ObserveOnUi()
-            //    .BindTo(this, x => x.ActualTemperature)
-            //    .DisposeWith(Subscriptions);
+            this.WhenPropertyChanged(x => x.TargetTemperatureText)
+                .Subscribe(x =>
+                {
+                    var canParseMessage = Validators.Validate.CanBeParsed(x.Value, out float temp);
+                    string inRangeMessage = null;
+                    if (canParseMessage is null)
+                        inRangeMessage = Validators.Validate.ShouldFallWithinRange(temp,
+                            x.Sender.MinimumAllowedTemperature,
+                            x.Sender.MaximumAllowedTemperature);
 
-            //var actTempObs =
-            //    this.WhenPropertyChanged(x => x.ActualTemperature)
-            //        .Select(x => x.Value)
-            //        .ObserveOnUi();
+                    BatchUpdateErrors(
+                        (nameof(TargetTemperatureText), nameof(Validators.Validate.CanBeParsed), canParseMessage),
+                        (nameof(TargetTemperatureText), nameof(Validators.Validate.ShouldFallWithinRange), inRangeMessage));
 
-            //actTempObs.BindTo(this, x => x.TargetTemperature).DisposeWith(Subscriptions);
-            //actTempObs.Select(x => x.ToString(
-            //              Properties.Localization.General_TemperatureFloatFormat,
-            //              CultureInfo.CurrentUICulture))
-            //          .BindTo(this, x => x.TargetTemperatureText)
-            //          .DisposeWith(Subscriptions);
-
-            // +--------+ +----> +----------------------+ +----> +--------+
-            // | Slider |        | VM.TargetTemperature |        | Checks |
-            // +--------+ <----+ +----------------------+ <----+ ++------^+
-            //                                                    |      |
-            // +-----+       +----------+ <----+ +----------------v------++
-            // |Model|<----+ |Validation|        |VM.TargetTemperatureText|
-            // +-----+       +----------+ +----> +-----------------+-----^+
-            //                                                     |     |
-            //                                                    +v-----++
-            //                                                    |TextBox|
-            //                                                    +-------+
-
-            ObserveSpecificErrors(nameof(TargetTemperatureText))
-                .LogObservable("TEMPERR", Subscriptions);
-
+                    if (canParseMessage is null && inRangeMessage is null)
+                        TargetTemperature = temp;
+                })
+                .DisposeWith(Subscriptions);
 
             this.WhenPropertyChanged(x => x.TargetTemperature)
-                //.Sample(UiSettingsProvider.UiThrottlingDelay)
-                .Where(x => !x.Value.AlmostEqual(float.TryParse(x.Sender.TargetTemperatureText, NumberStyles.Any,
-                    NumberFormatInfo.InvariantInfo, out var temp)
+                .Where(x => !x.Value.AlmostEqual(float.TryParse(
+                    x.Sender.TargetTemperatureText, NumberStyles.Any, NumberFormatInfo.InvariantInfo,
+                    out var temp)
                     ? temp
                     : float.NaN))
                 .Select(x => x.Value.ToString(Localization.General_FloatTempFormat))
-                .ObserveOnUi()
                 .BindTo(this, x => x.TargetTemperatureText)
                 .DisposeWith(Subscriptions);
-
-            this.WhenPropertyChanged(x => x.TargetTemperatureText)
-                .Where(_ => !HasSpecificErrors(nameof(TargetTemperatureText)))
-                .Select(x =>
-                    float.TryParse(x.Value, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var temp)
-                        ? temp
-                        : float.NaN)
-                .Where(x => !float.IsNaN(x) && !x.AlmostEqual(TargetTemperature))
-                .BindTo(this, x => x.TargetTemperature)
-                .DisposeWith(Subscriptions);
-
 
             // End of temperature changes
             
@@ -244,35 +210,6 @@ namespace DIPOL_UF.ViewModels
                     .DisposeWith(Subscriptions);
 
             }
-
-        }
-
-        protected override void HookValidators()
-        {
-            base.HookValidators();
-
-            CreateValidator(
-                this.WhenAnyPropertyChanged(nameof(TargetTemperatureText))
-                    .Sample(UiSettingsProvider.UiThrottlingDelay)
-                    .ObserveOnUi()
-                    .Select(x => (Type: nameof(Validators.Validate.CanBeParsed),
-                            Message: Validators.Validate.CanBeParsed(x.TargetTemperatureText, out float _))),
-                        nameof(TargetTemperatureText));
-
-            CreateValidator(
-                this.WhenAnyPropertyChanged(nameof(TargetTemperatureText))
-                    .Select(x => (
-                        Type: nameof(Validators.Validate.ShouldFallWithinRange),
-                        Message: Validators.Validate.ShouldFallWithinRange(
-                            float.TryParse(x.TargetTemperatureText,
-                                NumberStyles.Any,
-                                CultureInfo.CurrentUICulture,
-                                out var val)
-                                ? val
-                                : x.MinimumAllowedTemperature,
-                            x.MinimumAllowedTemperature,
-                            x.MaximumAllowedTemperature))),
-                nameof(TargetTemperatureText));
 
         }
 

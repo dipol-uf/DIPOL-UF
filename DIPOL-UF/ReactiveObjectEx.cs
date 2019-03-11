@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Mime;
 using System.Net.Sockets;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -62,40 +63,26 @@ namespace DIPOL_UF
 
         protected ReactiveObjectEx()
         {
-             //WhenErrorsChangedTyped =
-             //   _validationErrors.Connect()
-             //                    .Flatten()
-             //                    .Select(x => x.Current)
-             //                    .DistinctUntilChanged();
 
-             WhenErrorsChangedTyped =
-                 _errorCollection.Connect()
-                                 .Transform(x => x.Connect()
-                                                  .Flatten()
-                                                  .Select(y => y.Current))
-                                 .Flatten()
-                                 .Select(x => x.Current)
-                                 .Merge();
-
-            //WhenErrorsChanged =
-            //    _validationErrors.Connect()
-            //                     .Select(x => Observable.For<string, string>(x.Select(y => y.Current.Property).Distinct(), Observable.Return))
-            //                     .Merge()
-            //                     //.Select(x => x)
-            //                     //.Flatten()
-            //                     //.Select(x => (x.Current.Property, x.Current.Type))
-            //                     //.DistinctUntilChanged()
-            //                     .Select(x => new DataErrorsChangedEventArgs(x));
-
-            WhenErrorsChanged
-                = _errorCollection.Connect()
-                                  .Transform(x => x.Connect()
-                                                   .Select(_ => x.Items.First().Property)
-                                                   .DistinctUntilChanged())
-                                  .Flatten()
-                                  .Select(x => x.Current)
-                                  .Merge()
-                                  .Select(x => new DataErrorsChangedEventArgs(x));
+            WhenErrorsChangedTyped =
+                _errorCollection.Connect()
+                                .Transform(x => x.Connect()
+                                                 .Flatten()
+                                                 .Select(y => y.Current))
+                                .Flatten()
+                                .Select(x => x.Current)
+                                .Merge();
+                                
+           
+            WhenErrorsChanged =
+               _errorCollection.Connect()
+                               .Transform(x => x.Connect()
+                                                .Select(_ => x.Items.First().Property)
+                                                .DistinctUntilChanged())
+                               .Flatten()
+                               .Select(x => x.Current)
+                               .Merge()
+                               .Select(x => new DataErrorsChangedEventArgs(x));
 
             WhenErrorsChanged
                 .Subscribe(_ => this.RaisePropertyChanged(nameof(HasErrors)))
@@ -116,16 +103,12 @@ namespace DIPOL_UF
         {
             this.RaisePropertyChanging(nameof(HasErrors));
 
-            //_validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, null)));
-            //if (!(error is null))
-            //    _validationErrors.Edit(context => context.AddOrUpdate((propertyName, validatorName, error)));
-
             _errorCollection.Edit(context =>
             {
                 var lookup = context.Lookup(propertyName);
                 var payload = lookup.HasValue
                     ? lookup.Value
-                    : new SourceCache<(string Property, string Type, string Message), string>(x => x.Type);
+                : new SourceCache<(string Property, string Type, string Message), string>(x => x.Type);
                 payload.AddOrUpdate((propertyName, validatorName, error));
                 context.AddOrUpdate(payload);
             });
@@ -243,30 +226,18 @@ namespace DIPOL_UF
         }
 
         public virtual IObservable<bool> ObserveSpecificErrors(string propertyName)
-            => WhenErrorsChangedTyped.Where(x => x.Property == propertyName)
-                                     .Select(_ => HasSpecificErrors(propertyName));
+            => _errorCollection.Watch(propertyName).Select(x => x.Current.Items.Any(y => !(y.Message is null)));
 
         public virtual List<(string Type, string Message)> GetTypedErrors(string propertyName)
-
-            //return _validationErrors.Items
-            //                        .Where(x => x.Property == propertyName)
-            //                        .Select(x => (x.Type, x.Message))
-            //                        .ToList();
             => _errorCollection.Lookup(propertyName) is var lookup
                && lookup.HasValue
                 ? lookup.Value.Items.Select(x => (x.Type, x.Message)).ToList()
                 : new List<(string Type, string Message)>(0);
         
 
-        //public virtual IEnumerable GetErrors(string propertyName)
-        //{
-        //    return _validationErrors.Items
-        //                            .Where(x => x.Property == propertyName && !(x.Message is null))
-        //                            .Select(x => x.Message);
-        //}
+       
 
         public virtual bool HasSpecificErrors(string propertyName)
-            //=> _validationErrors?.Items.Any(x => x.Property == propertyName && !(x.Message is null)) ?? false;
             => _errorCollection.Lookup(propertyName) is var lookup
                && lookup.HasValue && lookup.Value.Items.Any(x => !(x.Message is null));
         
@@ -278,8 +249,6 @@ namespace DIPOL_UF
 
         #region v2
 
-        //private readonly Dictionary<string, SourceCache<(string Type, string Message), string>> _errorCollection
-        //    = new Dictionary<string, SourceCache<(string Type, string Message), string>>();
 
         private readonly SourceCache<SourceCache<(string Property, string Type, string Message), string>, string>
             _errorCollection =
