@@ -289,10 +289,18 @@ namespace DIPOL_UF
         public bool HasErrors => _errorCollection.Items.Any(x => x.Items.Any(y => !(y.Message is null)));
 
         public virtual IEnumerable GetErrors(string propertyName)
-            => _errorCollection.Lookup(propertyName) is var lookup
-               && lookup.HasValue
-                ? lookup.Value.Items.Select(x => x.Message).Where(x => !(x is null))
-                : Enumerable.Empty<string>();
+            => string.IsNullOrEmpty(propertyName)
+                ? _errorCollection.Items.Select(x => 
+                                      x.Items.Select(y => y.Message).Where(y => !(y is null)))
+                                  .Aggregate(new List<string>(), (old, @new) =>
+                                  {
+                                      old.Add(@new);
+                                      return old;
+                                  })
+                : _errorCollection.Lookup(propertyName) is var lookup
+                  && lookup.HasValue
+                    ? lookup.Value.Items.Select(x => x.Message).Where(x => !(x is null))
+                    : Enumerable.Empty<string>();
 
 
         #endregion
