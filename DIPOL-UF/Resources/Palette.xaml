@@ -130,6 +130,14 @@
     </x:Array>
     
 
+    <sys:Double x:Key="ErrorBorderThicknessValue">2</sys:Double>
+    <Thickness x:Key="ErrorBorderThickness" 
+               Bottom="{StaticResource ErrorBorderThicknessValue}"
+               Top="{StaticResource ErrorBorderThicknessValue}"
+               Left="{StaticResource ErrorBorderThicknessValue}"
+               Right="{StaticResource ErrorBorderThicknessValue}"/>
+
+
     <!--Margins-->
     <sys:Double x:Key="MarginValue">4</sys:Double>
 

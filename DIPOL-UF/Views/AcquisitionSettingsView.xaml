@@ -268,8 +268,7 @@
                                     UpdateSourceTrigger=PropertyChanged, 
                                     ValidatesOnNotifyDataErrors=True}"
                                   IsEnabled="{Binding IsAvailable.FrameTransfer}"
-                                  Style="{StaticResource CheckBoxWithErrors}">
-                        </CheckBox>
+                                  Style="{StaticResource CheckBoxWithErrors}"/>
                         <!--Readout mode-->
                         <ComboBox Grid.Row="9" Grid.Column="1"
                                   ItemsSource="{Binding
@@ -315,8 +314,7 @@
                             <TextBox Grid.Column="0"
                                      Text="{extensions:ValidationBinding EmCcdGainText}"
                                      IsEnabled="{Binding IsAvailable.EmCcdGainText}"
-                                     Style="{StaticResource TextBoxWithErrors}">
-                            </TextBox>
+                                     Style="{StaticResource TextBoxWithErrors}"/>
                             <Label Grid.Column="1"
                                 Style="{StaticResource ContentFont_Label}"
                                 Content="{Binding AllowedGain}"
