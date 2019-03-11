@@ -150,11 +150,9 @@
                         <!--Right-hand side controls-->
                         <!--Exposure time-->
                         <TextBox x:Name="ExpTimeTextBox" Grid.Row="0" Grid.Column="1"
-                                 extensions:ValidationAdorner.Adorner="True"
                                  Text="{extensions:ValidationBinding Path=ExposureTimeText}"
                                  IsEnabled="{Binding IsAvailable.ExposureTimeText}"
-                                 Style="{StaticResource TextBoxWithErrors}">
-                        </TextBox>
+                                 Style="{StaticResource TextBoxWithErrors}"/>
                         <!--VS Speed-->
                         <ComboBox Grid.Row="1" Grid.Column="1"
                                   ItemsSource="{Binding Camera.Properties.VSSpeeds}"
