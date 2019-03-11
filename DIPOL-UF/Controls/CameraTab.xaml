@@ -31,6 +31,7 @@
              xmlns:cntr="clr-namespace:DIPOL_UF.Controls"
              xmlns:dvms="clr-namespace:DIPOL_UF.ViewModels"
              xmlns:vs="clr-namespace:DIPOL_UF.Views"
+             xmlns:props="clr-namespace:DIPOL_UF.Properties"
              xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
              mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
              d:DesignHeight="900" d:DesignWidth="1200"
@@ -197,7 +198,7 @@
                                                             Mode=OneWay}" 
                                                         Value="{x:Static enm:Switch.Enabled}">
                                                 <Setter Property="TextBlock.Text" 
-                                                        Value="{Binding LocalizedText[CameraTab_Cooler_Stop], Mode=OneTime}"/>
+                                                        Value="{x:Static props:Localization.CameraTab_Cooler_Stop}"/>
                                             </DataTrigger>
                                             <DataTrigger 
                                                         Binding="{Binding
@@ -205,7 +206,7 @@
                                                             Mode=OneWay}" 
                                                         Value="{x:Static enm:Switch.Disabled}">
                                                 <Setter Property="TextBlock.Text" 
-                                                        Value="{Binding LocalizedText[CameraTab_Cooler_Start], Mode=OneTime}"/>
+                                                        Value="{x:Static props:Localization.CameraTab_Cooler_Start}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>

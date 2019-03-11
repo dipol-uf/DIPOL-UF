@@ -250,15 +250,6 @@
     </Style>
 
 
-
-    <Style x:Key="ComboBoxWithErrors" BasedOn="{StaticResource ComboBoxStyle}" TargetType="ComboBox">
-        <Setter Property="ext:ValidationAdorner.Adorner" Value="True"/>
-    </Style>
-
-    <Style x:Key="CheckBoxWithErrors" BasedOn="{StaticResource ContentFont}" TargetType="CheckBox">
-        <Setter Property="ext:ValidationAdorner.Adorner" Value="True"/>
-    </Style>
-
     <Style x:Key="ErrorBorderStyle" TargetType="Border">
         <Setter Property="BorderThickness" Value="{StaticResource ErrorBorderThickness}"/>
         <Setter Property="CornerRadius" Value="5"/>

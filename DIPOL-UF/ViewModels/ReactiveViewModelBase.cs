@@ -23,19 +23,14 @@
 //     SOFTWARE.
 
 using System.Reactive.Disposables;
+using DIPOL_UF.Properties;
 using ReactiveUI;
 
 namespace DIPOL_UF.ViewModels
 {
     internal abstract class ReactiveViewModelBase : ReactiveObjectEx
     {
-        public ResourceMangerEx LocalizedText { get; }
         public abstract ReactiveObjectEx ReactiveModel { get; }
-
-        protected ReactiveViewModelBase()
-        {
-            LocalizedText = new ResourceMangerEx(Properties.Localization.ResourceManager);
-        }
 
         public static ReactiveCommand<ReactiveViewModelBase, ReactiveObjectEx> 
             DisposeFromViewCallbackCommand(CompositeDisposable disposesWith)
