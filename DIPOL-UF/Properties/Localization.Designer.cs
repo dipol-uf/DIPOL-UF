@@ -136,6 +136,25 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occured while loading acquisition settings to {0}:
+        ///{1}.
+        /// </summary>
+        public static string AcquisitionSettings_DeserializationFailed_Message {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_DeserializationFailed_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to load file.
+        /// </summary>
+        public static string AcquisitionSettings_DeserializationFailed_Title {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_DeserializationFailed_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Detector size (H x V):.
         /// </summary>
         public static string AcquisitionSettings_DetectorSize {
@@ -154,6 +173,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Load current acquisition settings.
+        /// </summary>
+        public static string AcquisitionSettings_Dialog_Load_Title {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_Dialog_Load_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save current acquisition settings.
+        /// </summary>
+        public static string AcquisitionSettings_Dialog_Save_Title {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_Dialog_Save_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Image size.
         /// </summary>
         public static string AcquisitionSettings_ImageSize {
@@ -168,6 +205,25 @@ namespace DIPOL_UF.Properties {
         public static string AcquisitionSettings_KineticCycle {
             get {
                 return ResourceManager.GetString("AcquisitionSettings_KineticCycle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occured while saving acquisition settings to {0}:
+        ///{1}.
+        /// </summary>
+        public static string AcquisitionSettings_SerializationFailed_Message {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_SerializationFailed_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to save file.
+        /// </summary>
+        public static string AcquisitionSettings_SerializationFailed_Title {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_SerializationFailed_Title", resourceCulture);
             }
         }
         

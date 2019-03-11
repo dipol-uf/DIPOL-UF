@@ -446,4 +446,24 @@ The following settings produced this error:
   <data name="MainWindow_ConnectingToRemoteLocations" xml:space="preserve">
     <value>Connecting to remote services...</value>
   </data>
+  <data name="AcquisitionSettings_DeserializationFailed_Message" xml:space="preserve">
+    <value>An error occured while loading acquisition settings to {0}:
+{1}</value>
+  </data>
+  <data name="AcquisitionSettings_DeserializationFailed_Title" xml:space="preserve">
+    <value>Unable to load file</value>
+  </data>
+  <data name="AcquisitionSettings_Dialog_Load_Title" xml:space="preserve">
+    <value>Load current acquisition settings</value>
+  </data>
+  <data name="AcquisitionSettings_Dialog_Save_Title" xml:space="preserve">
+    <value>Save current acquisition settings</value>
+  </data>
+  <data name="AcquisitionSettings_SerializationFailed_Message" xml:space="preserve">
+    <value>An error occured while saving acquisition settings to {0}:
+{1}</value>
+  </data>
+  <data name="AcquisitionSettings_SerializationFailed_Title" xml:space="preserve">
+    <value>Unable to save file</value>
+  </data>
 </root>

@@ -45,6 +45,13 @@
                 Command="{Binding ViewLoadedCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"/>
         </behavior:EventTrigger>
+        <behavior:EventTrigger
+            EventName="FileDialogRequested"
+            SourceObject="{Binding}">
+            <extensions:FileDialogAction
+                SaveCommand="{Binding SaveActionCommand}"
+                LoadCommand="{Binding LoadActionCommand}"/>
+        </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -629,12 +636,12 @@
         <Button Grid.Column="0" Grid.Row="1" 
                 Style="{StaticResource ResourceKey=BasicButtonStyle}"
                 Content="{extensions:Text Key=General_Save}"
-                Command="{Binding SaveCommand}"/>
+                Command="{Binding SaveButtonCommand}"/>
         <!--Load-->
         <Button Grid.Column="1" Grid.Row="1"
                 Style="{StaticResource ResourceKey=BasicButtonStyle}"
                 Content="{extensions:Text Key=General_Load}"
-                Command="{Binding LoadCommand}"/>
+                Command="{Binding LoadButtonCommand}"/>
         <!--Submit-->
         <Button Grid.Column="0" Grid.Row="2" 
                 Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}"
