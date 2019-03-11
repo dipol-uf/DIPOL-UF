@@ -817,7 +817,7 @@ namespace ANDOR_CS.Classes
             //using (var str = XmlReader.Create(stream))
             //    return ReadXml(str);
 
-            return ReadJson(new StreamReader(stream));
+            return ReadJson(new StreamReader(stream, Encoding.Unicode));
         }
 
         public virtual void Dispose()

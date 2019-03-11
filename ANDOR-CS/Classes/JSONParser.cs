@@ -39,7 +39,7 @@ namespace ANDOR_CS.Classes
 {
     internal static class JsonParser
     {
-        private static readonly int WriteChunkSize = 64;
+        private const int WriteChunkSize = 64;
 
         internal static object Converter(object inp, bool convertAll = false)
         {
@@ -119,7 +119,7 @@ namespace ANDOR_CS.Classes
 
             var byteRep = enc.GetBytes(TabifyNestedNodes(new JavaScriptSerializer().Serialize(data)));
 
-            var nStep = (int)Math.Ceiling(1.0 * byteRep.Length / WriteChunkSize);
+            var nStep = byteRep.Length / WriteChunkSize;
 
             try
             {
@@ -133,11 +133,6 @@ namespace ANDOR_CS.Classes
                 await str.FlushAsync(token);
             }
         }
-
-        //public static void ReadJson(Stream str, Encoding enc, CancellationToken token)
-        //{
-            
-        //}
 
         private static string TabifyNestedNodes(string nodeVal)
         {

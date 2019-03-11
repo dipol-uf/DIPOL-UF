@@ -37,6 +37,7 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -63,6 +64,15 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<SettingsBase>>
     {
+        public class DialogRequestedEventArgs : EventArgs
+        {
+            public FileDialogDescriptor Descriptor { get; }
+
+            public DialogRequestedEventArgs(FileDialogDescriptor desc)
+                : base()
+                => Descriptor = desc;
+        }
+
         private static List<(PropertyInfo Property, string EquivalentName)> InteractiveSettings { get; }
             = typeof(AcquisitionSettingsViewModel)
               .GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -109,6 +119,7 @@ namespace DIPOL_UF.ViewModels
         private string[] Group2Names { get; }
         private string[] Group3Names { get; }
 
+        public event EventHandler FileDialogRequested;
 
         public SettingsAvailability IsAvailable { get; }
             = new SettingsAvailability();
@@ -117,6 +128,10 @@ namespace DIPOL_UF.ViewModels
         public ICommand CancelCommand { get; private set; }
         public ReactiveCommand<Window, Window> SubmitCommand { get; private set; }
         public ReactiveCommand<Window, Unit> ViewLoadedCommand { get; private set; }
+        public ReactiveCommand<Unit, FileDialogDescriptor> SaveButtonCommand { get; private set; }
+        public ReactiveCommand<Unit, FileDialogDescriptor> LoadButtonCommand { get; private set; }
+        public ReactiveCommand<string, Unit> SaveActionCommand { get; private set; }
+        public ReactiveCommand<string, Unit> LoadActionCommand { get; private set; }
 
         /// <summary>
         /// Collection of supported by a given Camera settings.
@@ -971,26 +986,76 @@ namespace DIPOL_UF.ViewModels
                     ReactiveCommand.Create<Window>(x =>
                     {
                         foreach (var name in Group1Names)
-                            this.OnErrorsChanged(new DataErrorsChangedEventArgs(name));
+                            OnErrorsChanged(new DataErrorsChangedEventArgs(name));
                     });
 
             // Sacrificing reactivity in order to avoid command disposal and memory leaks
             CancelCommand = new ActionCommand(x => (x as Window)?.Close());
 
+            var isValid = this.WhenAnyPropertyChanged(
+                                  nameof(Group1ContainsErrors),
+                                  nameof(Group2ContainsErrors),
+                                  nameof(Group3ContainsErrors))
+                              .Select(x => !x.Group1ContainsErrors
+                                           && !x.Group2ContainsErrors
+                                           && !x.Group3ContainsErrors)
+                              .DistinctUntilChanged();
+
             SubmitCommand =
                 ReactiveCommand.Create<Window, Window>(
                                    x => x,
-                                   this.WhenAnyPropertyChanged(
-                                           nameof(Group1ContainsErrors),
-                                           nameof(Group2ContainsErrors),
-                                           nameof(Group3ContainsErrors))
-                                       .Select(x => !x.Group1ContainsErrors
-                                           && !x.Group2ContainsErrors
-                                           && !x.Group3ContainsErrors)
-                                       .DistinctUntilChanged())
+                                   isValid)
                                .DisposeWith(Subscriptions);
 
             SubmitCommand.Subscribe(Submit).DisposeWith(Subscriptions);
+
+            SaveButtonCommand =
+                ReactiveCommand.Create<Unit, FileDialogDescriptor>(
+                                   _ => new FileDialogDescriptor()
+                                   {
+                                       Mode = FileDialogDescriptor.DialogMode.Save,
+                                       Title = Properties.Localization.AcquisitionSettings_Dialog_Save_Title,
+                                       InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                                       FileName = Camera.ToString(),
+                                       DefaultExtenstion = ".acq"
+                                   }, isValid)
+                               .DisposeWith(Subscriptions);
+
+            LoadButtonCommand =
+                ReactiveCommand.Create<Unit, FileDialogDescriptor>(
+                                   _ => new FileDialogDescriptor()
+                                   {
+                                       Mode = FileDialogDescriptor.DialogMode.Load,
+                                       Title = Properties.Localization.AcquisitionSettings_Dialog_Load_Title,
+                                       InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                                       FileName = Camera.ToString(),
+                                       DefaultExtenstion = ".acq"
+                                   })
+                               .DisposeWith(Subscriptions);
+
+            SaveButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
+            LoadButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
+
+            SaveActionCommand =
+                ReactiveCommand.CreateFromTask<string>(
+                                   async (x, token) =>
+                                   {
+                                       if (x is null)
+                                           return;
+                                       await SaveTo(x, token);
+                                   })
+                               .DisposeWith(Subscriptions);
+
+            LoadActionCommand =
+                ReactiveCommand.CreateFromTask<string>(
+                                   async (x, token) =>
+                                   {
+                                       if (x is null)
+                                           return;
+                                       await LoadFrom(x, token);
+                                   })
+                               .DisposeWith(Subscriptions);
+
         }
 
         private void Submit(Window w)
@@ -1056,171 +1121,49 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
-        private void SaveTo(object parameter)
+        private async Task SaveTo(string fileName, CancellationToken token)
         {
-            var dialog = new Microsoft.Win32.SaveFileDialog
+            try
             {
-                AddExtension = true,
-                CheckPathExists = true,
-                DefaultExt = ".acq",
-                FileName = Camera.ToString(),
-                FilterIndex = 0,
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                Title = "Save current acquisition settings"
-            };
-            dialog.Filter = $@"Acquisition settings (*{dialog.DefaultExt})|*{dialog.DefaultExt}|All files (*.*)|*.*";
-            
-
-            if (dialog.ShowDialog() == true)
-                try
-                {
-                    using (var fl = File.Open(dialog.FileName, FileMode.Create, FileAccess.Write, FileShare.Read))
-                        Model.Object.Serialize(fl);
-                }
-                catch (Exception e)
-                {
-                    var messSize = UiSettingsProvider.Settings.Get("ExceptionStringLimit", 80);
-                    MessageBox.Show($"An error occured while saving acquisition settings to {dialog.FileName}.\n" +
-                                    $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]", 
-                        "Unable to save file", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-                }
-        }
-
-        private void LoadFrom(object parameter)
-        {
-            var dialog = new Microsoft.Win32.OpenFileDialog()
+                using (var fl = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.Read))
+                    await Model.Object.SerializeAsync(fl, Encoding.Unicode, token);
+            }
+            catch (Exception e)
             {
-                AddExtension = true,
-                CheckFileExists = true,
-                CheckPathExists = true,
-                DefaultExt = ".acq",
-                FileName = Camera.ToString(),
-                FilterIndex = 0,
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                Title = "Load acquisition settings from file"
-            };
-            dialog.Filter = $@"Acquisition settings (*{dialog.DefaultExt})|*{dialog.DefaultExt}|All files (*.*)|*.*";
-
-            //var temp = AllowedSettings;
-            //AllowedSettings =
-            //    new Dictionary<string, bool>(temp.Select(item => new KeyValuePair<string, bool>(item.Key, false)));
-            ////RaisePropertyChanged(nameof(AllowedSettings));
-            //AllowedSettings = temp;
-            if (dialog.ShowDialog() == true)
-            {
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        Task.Delay(2000).Wait();
-                        using (var fl = File.Open(dialog.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                            Model.Object.Deserialize(fl);
-                    }
-                    catch (Exception e)
-                    {
-                        var messSize = UiSettingsProvider.Settings.Get("ExceptionStringLimit", 80);
-                        Application.Current?.Dispatcher?.Invoke(() =>
-                        {
-                            MessageBox.Show(
-                                $"An error occured while reading acquisition settings from {dialog.FileName}.\n" +
-                                $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
-                                "Unable to load file", MessageBoxButton.OK, MessageBoxImage.Information,
-                                MessageBoxResult.OK);
-                        });
-                    }
-                });
-
+                var messSize = UiSettingsProvider.Settings.Get("MessageBoxMessageMaxLength", 100);
+                var message = string.Format(Properties.Localization.AcquisitionSettings_SerializationFailed_Message,
+                    Path.GetFileName(fileName),
+                    e.Message);
+                message = message.Length > messSize ? message.Substring(0, messSize) : message;
+                MessageBox.Show(message,
+                    Properties.Localization.AcquisitionSettings_SerializationFailed_Title,
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void CloseView(object parameter, bool isCanceled)
+        private async Task LoadFrom(string fileName, CancellationToken token)
         {
-            if (parameter is DependencyObject elem)
+            try
             {
-                var window = Helper.FindParentOfType<Window>(elem);
-                if (window != null && Helper.IsDialogWindow(window))
-                {
-                    if (!isCanceled)
-                    {
-                        try
-                        {
-                            try
-                            {
-                                Model.Object.Camera.ApplySettings(Model.Object);
-                            }
-                            catch(Exception e)
-                            { 
-                                var messSize = UiSettingsProvider.Settings.Get("ExceptionStringLimit", 80);
-                                var listSize = UiSettingsProvider.Settings.Get("ExceptionStringLimit", 5);
-                                var sb = new StringBuilder(messSize * listSize);
-
-                                sb.AppendLine("Some of the settings were applied unsuccessfully:");
-                                sb.AppendLine(e.Message);
-
-                                MessageBox.Show(sb.ToString(),
-                                    "Partially unsuccessful application of settings", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-
-                                //foreach (var prop in PropertyList.Join(failed, x => x.Item1, y => y.Option, (x, y) =>
-                                //    new {
-                                //        Name = x.Item1,
-                                //        Error = y.ReturnCode
-                                //    }))
-                                //    ValidateProperty(new AndorSdkException(prop.Name, prop.Error), prop.Name);
-
-                                return;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            var messSize = UiSettingsProvider.Settings.Get("ExceptionStringLimit", 80);
-                            MessageBox.Show("Failed to apply current settings to target camera.\n" +
-                                            $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
-                                "Incompatible settings", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-                            return;
-                        }
-                    }
-
-
-                    window.DialogResult = !isCanceled;
-                    window.Close();
-                }
-
-             
+                using (var fl = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    await Helper.RunNoMarshall(() => Model.Object.Deserialize(fl));
             }
+            catch (Exception e)
+            {
+                var messSize = UiSettingsProvider.Settings.Get("MessageBoxMessageMaxLength", 100);
+                var message = string.Format(Properties.Localization.AcquisitionSettings_DeserializationFailed_Message,
+                    Path.GetFileName(fileName),
+                    e.Message);
+                message = message.Length > messSize ? message.Substring(0, messSize) : message;
+                MessageBox.Show(message,
+                    Properties.Localization.AcquisitionSettings_DeserializationFailed_Title,
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
         }
 
-        /// <summary>
-        /// Checks if Acquisiotn Settings form can be submitted.
-        /// </summary>
-        /// <param name="parameter">Unused parameter for compatibility with <see cref="Commands.DelegateCommand"/>.</param>
-        /// <returns>True if all required fields are set.</returns>
-        private bool CanSubmit(object parameter)
-        {
-            //// Helper function, checks if value is set.
-            //bool ValueIsSet(PropertyInfo p)
-            //{
-            //    if (Nullable.GetUnderlyingType(p.PropertyType) != null)
-            //        return p.GetValue(this) != null;
-            //    if (p.PropertyType == typeof(int))
-            //        return (int)p.GetValue(this) != -1;
-            //    if (p.PropertyType == typeof(string))
-            //        return !string.IsNullOrWhiteSpace((string)p.GetValue(this));
-            //    return false;
-            //}
-
-            //// Query that joins pulic Properties to Allowed settings with true value.
-            //// As a result, propsQuery stores all Proprties that should have values set.
-            //var propsQuery =
-            //    from prop in PropertyList
-            //    join allowedProp in AllowedSettings 
-            //    on prop.Item1 equals allowedProp.Key
-            //    where allowedProp.Value
-            //    select prop.Item2;
-
-            //// Runs check of values on all selected properties.
-            //return propsQuery.All(ValueIsSet) && propsQuery.Any();
-            return false;
-        }
+        private void OnFileDialogRequested(FileDialogDescriptor e)
+            => FileDialogRequested?.Invoke(this, new DialogRequestedEventArgs(e));
 
 
         #region V2
@@ -1308,5 +1251,7 @@ namespace DIPOL_UF.ViewModels
         public string KineticCycleNumber { get; set; }
 
         #endregion
+
+       
     }
 }
