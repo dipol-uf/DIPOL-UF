@@ -249,13 +249,7 @@
         <Setter Property="Width" Value="auto"/>
     </Style>
 
-    <Style x:Key="TextBoxWithErrors" BasedOn="{StaticResource TextBoxStyle}" TargetType="TextBox">
-        <Setter Property="ext:ValidationAdorner.Adorner" Value="True"/>
-        <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
-        <Style.Triggers>
-        </Style.Triggers>
-        
-    </Style>
+
 
     <Style x:Key="ComboBoxWithErrors" BasedOn="{StaticResource ComboBoxStyle}" TargetType="ComboBox">
         <Setter Property="ext:ValidationAdorner.Adorner" Value="True"/>
@@ -272,23 +266,5 @@
         <Setter Property="Padding" Value="{StaticResource DefaultPadding}"/>
         <Setter Property="Margin" Value="0"/>
     </Style>
-    <ControlTemplate x:Key="TextBoxBaseControlTemplate1" TargetType="{x:Type TextBox}">
-        <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
-            <ScrollViewer x:Name="PART_ContentHost" Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
-        </Border>
-        <ControlTemplate.Triggers>
-            <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Opacity" TargetName="border" Value="0.56"/>
-            </Trigger>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="BorderBrush" TargetName="border" Value="#FF7EB4EA"/>
-            </Trigger>
-            <Trigger Property="IsKeyboardFocused" Value="True">
-                <Setter Property="BorderBrush" TargetName="border" Value="#FF569DE5"/>
-            </Trigger>
-            <Trigger Property="Validation.HasError" Value="True">
-                <Setter TargetName="border" Property="BorderBrush" Value="Red"/>
-            </Trigger>
-        </ControlTemplate.Triggers>
-    </ControlTemplate>
+   
 </ResourceDictionary>

@@ -153,7 +153,7 @@
                                  extensions:ValidationAdorner.Adorner="True"
                                  Text="{extensions:ValidationBinding Path=ExposureTimeText}"
                                  IsEnabled="{Binding IsAvailable.ExposureTimeText}"
-                                 Style="{StaticResource TextBoxWithErrors}" Template="{DynamicResource TextBoxBaseControlTemplate1}">
+                                 Style="{StaticResource TextBoxWithErrors}">
                         </TextBox>
                         <!--VS Speed-->
                         <ComboBox Grid.Row="1" Grid.Column="1"
