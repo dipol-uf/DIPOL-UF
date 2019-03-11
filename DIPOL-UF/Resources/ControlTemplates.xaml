@@ -357,7 +357,6 @@
                         </Trigger>
                         <Trigger Property="Validation.HasError" Value="True">
                             <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource ErrorBorderErrorColor}"/>
-                            <Setter Property="BorderThickness" Value="{StaticResource ErrorBorderThickness}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
