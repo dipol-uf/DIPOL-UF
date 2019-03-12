@@ -167,7 +167,8 @@ namespace DIPOL_UF.ViewModels
         public bool Group1ContainsErrors { [ObservableAsProperty] get; }
         public bool Group2ContainsErrors { [ObservableAsProperty] get; }
         public bool Group3ContainsErrors { [ObservableAsProperty] get; }
-        public string AllowedGain { [ObservableAsProperty] get; }
+        [Reactive]
+        public string AllowedGain {  get; private set; }
 
         public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model)
             : base(model)
@@ -218,7 +219,7 @@ namespace DIPOL_UF.ViewModels
                 nameof(KineticCycleTime),
                 nameof(KineticCycleNumber)
             };
-            
+
 
             InitializeCommands();
 
@@ -230,6 +231,41 @@ namespace DIPOL_UF.ViewModels
             _availablePreAmpGains.DisposeWith(Subscriptions);
             _availableReadModes.DisposeWith(Subscriptions);
 
+            if (Model.Object?.ADConverter.HasValue == true
+                && Model.Object.OutputAmplifier.HasValue)
+            {
+                _availableHsSpeeds.Edit(context =>
+                    context.Load(Model.Object.GetAvailableHSSpeeds(
+                        Model.Object.ADConverter.Value.Index,
+                        Model.Object.OutputAmplifier.Value.Index)));
+            }
+
+            if (Model.Object?.ADConverter.HasValue == true
+                && Model.Object.OutputAmplifier.HasValue
+                && Model.Object.HSSpeed.HasValue)
+            {
+                _availablePreAmpGains.Edit(context =>
+                    context.Load(Model.Object.GetAvailablePreAmpGain(
+                        Model.Object.ADConverter.Value.Index,
+                        Model.Object.OutputAmplifier.Value.Index,
+                        Model.Object.HSSpeed.Value.Index)));
+            }
+
+            if (Model.Object?.AcquisitionMode.HasValue == true)
+            {
+                var isFmt = Model.Object.AcquisitionMode.Value.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer);
+                _availableReadModes.Edit(context => context.Load(
+                    Helper.EnumFlagsToArray<ReadMode>(isFmt ? Camera.Capabilities.FtReadModes : Camera.Capabilities.ReadModes)));
+            }
+
+            if (Model.Object?.OutputAmplifier.HasValue == true
+                && Model.Object.OutputAmplifier.Value.OutputAmplifier == OutputAmplification.ElectronMultiplication)
+            {
+
+                var (low, high) = Model.Object.GetEmGainRange();
+                AllowedGain = string.Format(Properties.Localization.AcquisitionSetttings_AvailableGainFormat,
+                    low, high);
+            }
         }
 
         private void HookObservables()
@@ -963,7 +999,7 @@ namespace DIPOL_UF.ViewModels
                      return string.Format(Properties.Localization.AcquisitionSetttings_AvailableGainFormat,
                          low, high);
                  })
-                 .ToPropertyEx(this, x => x.AllowedGain)
+                 .BindTo(this, x => x.AllowedGain)
                  .DisposeWith(Subscriptions);
 
         }

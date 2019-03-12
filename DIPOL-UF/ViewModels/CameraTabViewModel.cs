@@ -63,6 +63,7 @@ namespace DIPOL_UF.ViewModels
         public string TargetTemperatureText { get; set; }
         [Reactive]
         public int FanMode { get; set; }
+
         [Reactive]
         public ShutterMode InternalShutterState { get; set; }
         [Reactive]
@@ -87,8 +88,6 @@ namespace DIPOL_UF.ViewModels
             InitializeCommands();
 
             TargetTemperatureText = "0";
-            InternalShutterState = Model.Camera.Shutter.Internal;
-            ExternalShutterMode = CanControlExternalShutter ? Model.Camera.Shutter.External : null;
         }
 
         private void InitializeCommands()
