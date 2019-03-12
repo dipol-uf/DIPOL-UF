@@ -218,7 +218,7 @@ namespace DIPOL_UF.ViewModels
 
             }
 
-            Model.WhenTimingCalculated.Select(x => x.Accumulation)
+            Model.WhenTimingCalculated.Select(x => x.Kinetic)
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.ExposureTime)
                  .DisposeWith(Subscriptions);
