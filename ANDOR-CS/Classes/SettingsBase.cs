@@ -728,6 +728,14 @@ namespace ANDOR_CS.Classes
             if (Camera.Capabilities.AcquisitionModes.HasFlag(Enums.AcquisitionMode.FrameTransfer)
                 && Camera.Capabilities.FtReadModes != ReadMode.Unknown)
                 settings.Add($@"Ft{nameof(ReadoutMode).ToLowerInvariant()}");
+            if (Camera.Capabilities.AcquisitionModes.HasFlag(Enums.AcquisitionMode.Kinetic)
+                || Camera.Capabilities.AcquisitionModes.HasFlag(Enums.AcquisitionMode.FastKinetics)
+                || Camera.Capabilities.AcquisitionModes.HasFlag(Enums.AcquisitionMode.Accumulation))
+                settings.Add(nameof(AccumulateCycle).ToLowerInvariant());
+            if (Camera.Capabilities.AcquisitionModes.HasFlag(Enums.AcquisitionMode.Kinetic)
+                || Camera.Capabilities.AcquisitionModes.HasFlag(Enums.AcquisitionMode.FastKinetics)
+                || Camera.Capabilities.AcquisitionModes.HasFlag(Enums.AcquisitionMode.RunTillAbort))
+                settings.Add(nameof(KineticCycle).ToLowerInvariant());
 
 
             // TODO: Check individual support of these features
