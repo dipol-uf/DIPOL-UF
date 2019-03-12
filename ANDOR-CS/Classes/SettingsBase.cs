@@ -55,19 +55,19 @@ namespace ANDOR_CS.Classes
     {
         private static readonly PropertyInfo[] SerializedProperties =
             typeof(SettingsBase)
-            .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-            .Where(p =>
-                p.GetCustomAttribute<Attributes.NonSerializedAttribute>(true) == null &&
-                p.SetMethod != null &&
-                p.GetMethod != null)
-            .OrderBy(p => p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0)
-            .ToArray();
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(p =>
+                    p.GetCustomAttribute<Attributes.NonSerializedAttribute>(true) == null &&
+                    p.SetMethod != null &&
+                    p.GetMethod != null)
+                .OrderBy(p => p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0)
+                .ToArray();
 
         private static readonly MethodInfo[] DeserializationSetMethods =
             typeof(SettingsBase)
-            .GetMethods(BindingFlags.Instance | BindingFlags.Public)
-            .Where(mi => mi.Name.Contains("Set") && mi.ReturnType == typeof(void))
-            .ToArray();
+                .GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                .Where(mi => mi.Name.Contains("Set") && mi.ReturnType == typeof(void))
+                .ToArray();
 
         private static readonly Regex SetFunctionNameParser = new Regex(@"Set(.+)$");
 
@@ -86,14 +86,10 @@ namespace ANDOR_CS.Classes
         private (int Frames, float Time)? _KineticCycle;
         private int? _EmCcdGain;
 
-        public  event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
 
         [Attributes.NonSerialized]
-        public CameraBase Camera
-        {
-            get;
-            protected set;
-        }
+        public CameraBase Camera { get; protected set; }
 
         /// <summary>
         /// Stores the value of currently set vertical speed
@@ -104,7 +100,7 @@ namespace ANDOR_CS.Classes
         {
             get => _VSSpeed;
             protected set => RaisePropertyChanged(ref _VSSpeed, value);
-        } 
+        }
 
         /// <summary>
         /// Stores the value of currently set horizontal speed
@@ -114,8 +110,12 @@ namespace ANDOR_CS.Classes
         public (int Index, float Speed)? HSSpeed
         {
             get => _HSSpeed;
-            protected set => RaisePropertyChanged(ref _HSSpeed, value);
-        } 
+            protected set
+            {
+                if (RaisePropertyChanged(ref _HSSpeed, value))
+                    PreAmpGain = null;
+            }
+        }
 
         /// <summary>
         /// Stores the index of currently set Analogue-Digital Converter and its bit depth.
@@ -126,8 +126,16 @@ namespace ANDOR_CS.Classes
         public (int Index, int BitDepth)? ADConverter
         {
             get => _ADConverter;
-            protected set => RaisePropertyChanged(ref _ADConverter, value);
-        } 
+            protected set
+            {
+                if (RaisePropertyChanged(ref _ADConverter, value))
+                {
+                    HSSpeed = null;
+                    PreAmpGain = null;
+                }
+            }
+        }
+
 
         /// <summary>
         /// Stores the value of currently set vertical clock voltage amplitude
@@ -148,7 +156,15 @@ namespace ANDOR_CS.Classes
         public (OutputAmplification OutputAmplifier, string Name, int Index)? OutputAmplifier
         {
             get => _OutputAmplifier;
-            protected set => RaisePropertyChanged(ref _OutputAmplifier, value);
+            protected set
+            {
+                if (RaisePropertyChanged(ref _OutputAmplifier, value))
+                {
+                    HSSpeed = null;
+                    PreAmpGain = null;
+                    EMCCDGain = null;
+                }
+            }
         } 
 
         /// <summary>
@@ -170,7 +186,14 @@ namespace ANDOR_CS.Classes
         public AcquisitionMode? AcquisitionMode
         {
             get => _AcquisitionMode;
-            protected set => RaisePropertyChanged(ref _AcquisitionMode, value);
+            protected set
+            {
+                if (RaisePropertyChanged(ref _AcquisitionMode, value))
+                {
+                    AccumulateCycle = null;
+                    KineticCycle = null;
+                }
+            }
         } 
 
         /// <summary>
@@ -246,28 +269,19 @@ namespace ANDOR_CS.Classes
         protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
             => PropertyChanged?.Invoke(sender, e);
 
-        protected virtual void RaisePropertyChanged<T>(
+        protected virtual bool RaisePropertyChanged<T>(
             ref T? target,
             T? value,
             [CallerMemberName] string name = "")
         where T: struct
         {
-            if (target?.Equals(value) != true)
-            {
-                target = value;
-                OnPropertyChanged(this, new PropertyChangedEventArgs(name));
-            }
-        }
+            var comp = target?.Equals(value) == true;
+            if (comp) return false;
+            target = value;
+            OnPropertyChanged(this, new PropertyChangedEventArgs(name));
 
-        //public virtual List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
-        //    out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
-        //{
-        //    Camera.CurrentSettings = this;
-        //    timing = default((float, float, float, int));
-        //    Camera.Timings = (timing.ExposureTime, timing.AccumulationCycleTime, timing.KineticCycleTime);
-        //    //Camera.SettingsFitsKeys 
-        //    return null;
-        //}
+            return true;
+        }
 
         /// <summary>
         /// Tries to set vertical speed. 
@@ -333,8 +347,8 @@ namespace ANDOR_CS.Classes
                     $"(should be in [{0}, {Camera.Properties.ADConverters.Length - 1}]).");
 
             ADConverter = (Index: converterIndex, BitDepth: Camera.Properties.ADConverters[converterIndex]);
-            HSSpeed = null;
-            PreAmpGain = null;
+            //HSSpeed = null;
+            //PreAmpGain = null;
         }
 
         /// <summary>
@@ -365,9 +379,9 @@ namespace ANDOR_CS.Classes
             var element = query[0];
 
             OutputAmplifier = (element.OutputAmplifier, element.Name,Index: Camera.Properties.OutputAmplifiers.IndexOf(element));
-            HSSpeed = null;
-            PreAmpGain = null;
-            EMCCDGain = null;
+            //HSSpeed = null;
+            //PreAmpGain = null;
+            //EMCCDGain = null;
         }
 
         /// <summary>
@@ -425,7 +439,7 @@ namespace ANDOR_CS.Classes
             else
             {
                 HSSpeed = (Index: speedIndex, Speed: speed);
-                PreAmpGain = null;
+                //PreAmpGain = null;
             }
         }
 
@@ -521,8 +535,8 @@ namespace ANDOR_CS.Classes
             if (!EnumConverter.AcquisitionModeTable.ContainsKey(actualMode))
                 throw new InvalidOperationException($"Cannot explicitly set provided acquisition mode ({mode})");
 
-            AccumulateCycle = null;
-            KineticCycle = null;
+            //AccumulateCycle = null;
+            //KineticCycle = null;
             AcquisitionMode = mode;
         }
 
