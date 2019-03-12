@@ -1346,7 +1346,7 @@ namespace ANDOR_CS.Classes
                     if (FailIfError(Call(CameraHandle,
                         () => SdkInstance.GetImages(index, index, (int[])data, (uint)matrixSize,
                             ref validInds.First,
-                            ref validInds.Last)), nameof(SdkInstance.GetImages16), out except))
+                            ref validInds.Last)), nameof(SdkInstance.GetImages), out except))
                         throw except;
                 }
                 return new Image(data, size.Width, size.Height, false);
@@ -1627,9 +1627,9 @@ namespace ANDOR_CS.Classes
 
             if (settings.EMCCDGain is int gain)
             {
-                if (settings.OutputAmplifier?.OutputAmplifier != OutputAmplification.Conventional)
+                if (settings.OutputAmplifier?.OutputAmplifier != OutputAmplification.ElectronMultiplication)
                     throw new NullReferenceException(
-                        $"OutputAmplifier should be set to {OutputAmplification.Conventional}");
+                        $"OutputAmplifier should be set to {OutputAmplification.ElectronMultiplication}");
 
                 if (FailIfError(
                     Call(CameraHandle, SdkInstance.SetEMCCDGain, gain),

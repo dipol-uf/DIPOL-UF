@@ -377,7 +377,7 @@ namespace DIPOL_UF.ViewModels
             CreateSetter(x => x.PreAmpGain, y => y >= 0 && y < AvailablePreAmpGains.Count,
                 z => z, Model.Object.SetPreAmpGain);
             CreateSetter(x => x.TriggerMode, y => y.HasValue, z => z.Value, Model.Object.SetTriggerMode);
-
+            CreateSetter(x => x.ReadMode, y => y.HasValue, z => z.Value, Model.Object.SetReadoutMode);
 
             CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime, 
                 y => y.ExposureTimeText);
@@ -600,6 +600,7 @@ namespace DIPOL_UF.ViewModels
             CreateGetter(x => x.HSSpeed, y => y?.Index ?? -1, z => z.HsSpeed, (src, tar) => src?.Index != tar);
             CreateGetter(x => x.PreAmpGain, y => y?.Index ?? -1, z => z.PreAmpGain, (src, tar) => src?.Index != tar);
             CreateGetter(x => x.TriggerMode, y => y, z => z.TriggerMode, (src, tar) => src != tar);
+            CreateGetter(x => x.ReadoutMode, y => y, z => z.ReadMode, (src, tar) => src != tar);
 
             CreateGetter(x => x.ExposureTime,
                 y => y?.ToString(Properties.Localization.General_ExposureFloatFormat),
