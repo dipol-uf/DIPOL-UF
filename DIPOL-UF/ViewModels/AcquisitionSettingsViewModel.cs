@@ -35,11 +35,8 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
-using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Input;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
@@ -53,7 +50,6 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 using static DIPOL_UF.Validators.Validate;
-using Application = System.Windows.Application;
 using EnumConverter = ANDOR_CS.Classes.EnumConverter;
 using MessageBox = System.Windows.MessageBox;
 using Window = System.Windows.Window;
@@ -69,7 +65,6 @@ namespace DIPOL_UF.ViewModels
             public FileDialogDescriptor Descriptor { get; }
 
             public DialogRequestedEventArgs(FileDialogDescriptor desc)
-                : base()
                 => Descriptor = desc;
         }
 
@@ -341,8 +336,7 @@ namespace DIPOL_UF.ViewModels
             void CreateStringToFloatSetter(
                 Expression<Func<AcquisitionSettingsViewModel, string>> sourceAccessor,
                 Action<float> setter,
-                Expression<Func<SettingsAvailability, bool>> availability,
-                Func<SettingsBase, float> comparison)
+                Expression<Func<SettingsAvailability, bool>> availability)
             {
                 var name = (sourceAccessor.Body as MemberExpression)?.Member.Name
                            ?? throw new ArgumentException(
@@ -386,7 +380,7 @@ namespace DIPOL_UF.ViewModels
 
 
             CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime, 
-                y => y.ExposureTimeText, z => z.ExposureTime ?? float.NaN);
+                y => y.ExposureTimeText);
             CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain, y => y.EmCcdGainText);
 
             this.NotifyWhenAnyPropertyChanged(
@@ -708,13 +702,6 @@ namespace DIPOL_UF.ViewModels
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.Group3ContainsErrors)
                 .DisposeWith(Subscriptions);
-
-            // TODO :Remove this
-            this.ErrorsChanged += (sender, args) =>
-            {
-                if (args.PropertyName == nameof(ExposureTimeText))
-                    Helper.WriteLog(GetErrors(nameof(ExposureTimeText)).Cast<string>().Count());
-            };
 
         }
 
@@ -1126,7 +1113,9 @@ namespace DIPOL_UF.ViewModels
             try
             {
                 using (var fl = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.Read))
-                    await Model.Object.SerializeAsync(fl, Encoding.Unicode, token);
+                    await Model.Object.SerializeAsync(fl, Encoding.Unicode, token)
+                               .ExpectCancellationAsync()
+                               .ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -1146,7 +1135,10 @@ namespace DIPOL_UF.ViewModels
             try
             {
                 using (var fl = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    await Helper.RunNoMarshall(() => Model.Object.Deserialize(fl));
+                    // ReSharper disable once AccessToDisposedClosure
+                    await Task.Run(() => Model.Object.Deserialize(fl), token)
+                              .ExpectCancellationAsync()
+                              .ConfigureAwait(false);
             }
             catch (Exception e)
             {

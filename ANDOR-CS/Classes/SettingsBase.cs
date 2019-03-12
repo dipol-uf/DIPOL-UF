@@ -41,7 +41,6 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
 using ANDOR_CS.Attributes;
 using FITS_CS;
-using Newtonsoft.Json;
 using SettingsManager;
 
 // ReSharper disable InconsistentNaming
@@ -893,13 +892,7 @@ namespace ANDOR_CS.Classes
         {
             var result = JsonParser.ReadJson(str);
             var props = new List<string>();
-            //if (data.Any(x =>
-            //    x.Key == @"CompatibleDevice" &&
-            //    (x.Value == null ||
-            //        (CameraType)x.Value != Camera.Capabilities.CameraType)))
-            //    throw new AndorSdkException("Failed to deserialize acquisition settings: " +
-            //                                "device type mismatch. Check attribute \"CompatibleDevice\" of Settings node", null);
-
+            
             foreach (var item in
                 from r in SerializedProperties
                     .Join(result, x => x.Name, y => y.Key, (x, y) => y)
