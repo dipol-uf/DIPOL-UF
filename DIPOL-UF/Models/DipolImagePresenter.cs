@@ -341,13 +341,13 @@ namespace DIPOL_UF.Models
                 .Subscribe(_ => UpdateSamplerPosition(LastKnownImageControlSize, SamplerCenterPos))
                 .DisposeWith(Subscriptions);
 
-            this.WhenPropertyChanged(x => x.SamplerCenterPosInPix)
+            this.WhenAnyPropertyChanged(nameof(SamplerCenterPos), nameof(DisplayedImage))
                 .Where(x =>
                     !LastKnownImageControlSize.IsEmpty
                     && !(_sourceImage is null))
                 .Select(x => 1.0 * _sourceImage.Get<float>(
-                                 Convert.ToInt32(x.Value.Y),
-                                 Convert.ToInt32(x.Value.X)))
+                                 Convert.ToInt32(x.SamplerCenterPosInPix.Y),
+                                 Convert.ToInt32(x.SamplerCenterPosInPix.X)))
                 .ToPropertyEx(this, x => x.PixValue)
                 .DisposeWith(Subscriptions);
 
