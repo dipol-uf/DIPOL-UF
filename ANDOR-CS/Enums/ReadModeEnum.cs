@@ -25,7 +25,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-
+using ANDOR_CS.Attributes;
 #if X86
 using SDK = ATMCD32CS.AndorSDK;
 #endif
@@ -40,6 +40,7 @@ namespace ANDOR_CS.Enums
     [DataContract]
     public enum ReadMode : uint
     {
+        [IgnoreDefault]
         [Description("Unknown")]
         [EnumMember]
         Unknown = 0,

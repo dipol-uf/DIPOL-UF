@@ -37,6 +37,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using ANDOR_CS.Attributes;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -210,21 +211,35 @@ namespace DIPOL_UF
         {
             var type = @enum.GetType();
 
-            return
-                type.GetCustomAttribute(typeof(FlagsAttribute)) is null
-                    ? new List<string>()
-                        {Enum.IsDefined(type, @enum) ? GetEnumString(type.GetEnumName(@enum), type) : @enum.ToString()}
-                    : type.GetEnumValues()
-                               .Cast<Enum>()
-                               .Where(@enum.HasFlag)
-                               .Select(x => x.ToString())
-                               .Select(x => GetEnumString(x, type))
-                               .ToList();
+            if (type.GetCustomAttribute(typeof(FlagsAttribute)) is null)
+                return new List<string>
+                {
+                    Enum.IsDefined(type, @enum) ? GetEnumString(type.GetEnumName(@enum), type) : @enum.ToString()
+                };
+
+            var enumDesc = GetEnumNames(type);
+
+            var @default = enumDesc
+                           .Where(x => type.GetField(x.Value).GetCustomAttribute<IgnoreDefaultAttribute>() != null)
+                           .ToList();
+            if (@default.Count == 1 && Equals(@enum, @default[0].Key))
+                return new List<string>
+                {
+                    GetEnumString(@default[0].Value, type)
+                };
+
+
+            return enumDesc.Where(x => type.GetField(x.Value).GetCustomAttribute<IgnoreDefaultAttribute>() is null
+                                       && @enum.HasFlag(x.Key))
+                           .Select(x => x.Key.ToString())
+                           .Select(x => GetEnumString(x, type))
+                           .ToList();
+
         }
 
-        public static Dictionary<T, string> GetEnumNames<T>() where T : Enum
-            => Enum.GetValues(typeof(T)).Cast<T>().Zip(Enum.GetNames(typeof(T)),
-                       (x, y) => (x, y: GetEnumString(y, typeof(T))))
+        public static Dictionary<Enum, string> GetEnumNames(Type type)
+            => Enum.GetValues(type).Cast<Enum>().Zip(Enum.GetNames(type),
+                       (x, y) => (x, y))
                    .ToDictionary(x => x.x, x => x.y);
 
         public static string GetValueTupleString(this ITuple tuple)

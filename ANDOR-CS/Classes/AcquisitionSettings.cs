@@ -74,7 +74,7 @@ namespace ANDOR_CS.Classes
             PreAmpGain = (0, "Gain 1");
             ReadoutMode = ReadMode.FullImage;
 
-            TriggerMode = Enums.TriggerMode.Bulb;
+            TriggerMode = Enums.TriggerMode.Internal;
             VSAmplitude = Enums.VSAmplitude.Plus2;
             VSSpeed = (0, 0.3f);
         }
