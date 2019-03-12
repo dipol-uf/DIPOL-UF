@@ -113,6 +113,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\FitsKeyAttribute.cs" />
+    <Compile Include="Attributes\IgnoreDefaultAttribute.cs" />
     <Compile Include="Attributes\SerializationOrderAttribute.cs" />
     <Compile Include="Attributes\NonSerializedAttribute.cs" />
     <Compile Include="Classes\AcquisitionSettings.cs" />

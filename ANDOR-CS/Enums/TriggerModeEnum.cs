@@ -25,7 +25,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-
+using ANDOR_CS.Attributes;
 #if X86
 using SDK = ATMCD32CS.AndorSDK;
 #endif
@@ -41,6 +41,7 @@ namespace ANDOR_CS.Enums
     [DataContract]
     public enum TriggerMode : uint
     {
+        [IgnoreDefault]
         [Description("Unknown")]
         [EnumMember]
         Unknown = 0,
@@ -64,13 +65,6 @@ namespace ANDOR_CS.Enums
         [Description("External start")]
         [EnumMember]
         ExternalStart = SDK.AC_TRIGGERMODE_EXTERNALSTART,
-
-        /// <summary>
-        /// WARNING! Deprecated by <see cref="TriggerMode.ExternalExposure"/>
-        /// </summary>
-        [Description("Depricated")]
-        [EnumMember]
-        Bulb = SDK.AC_TRIGGERMODE_BULB,
 
         [Description("External exposure")]
         [EnumMember]

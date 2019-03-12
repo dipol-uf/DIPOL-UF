@@ -134,7 +134,7 @@
    
     <Style x:Key="RectangleAsSeparatorStyle" 
            TargetType="Rectangle">
-        <Setter Property="Fill" Value="{StaticResource SeparatorColor}"/>
+        <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
         <Setter Property="Margin" Value="{StaticResource DefaultMargin}"/>
     </Style>
 

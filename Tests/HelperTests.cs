@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using ANDOR_CS.Enums;
 using DIPOL_UF;
 using NUnit.Framework;
-using NUnit.Framework.Internal;
 
 namespace Tests
 {
@@ -40,6 +33,20 @@ namespace Tests
 
 
             var str = x.GetValueTupleString();
+        }
+
+        [Test]
+        public void Test_EnumToString()
+        {
+            Enum mode = ReadMode.FullImage;
+            CollectionAssert.AreEquivalent(mode.GetEnumStringEx(), new[] {"Full image"});
+
+            mode = ReadMode.Unknown;
+            CollectionAssert.AreEquivalent(mode.GetEnumStringEx(), new[] { "Unknown" });
+
+            mode = TriggerMode.Internal;
+            CollectionAssert.AreEquivalent(mode.GetEnumStringEx(), new[] { "Internal" });
+
         }
     }
 }

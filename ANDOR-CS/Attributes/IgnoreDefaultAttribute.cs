@@ -23,32 +23,11 @@
 //     SOFTWARE.
 
 using System;
-using System.Runtime.Serialization;
-using ANDOR_CS.Attributes;
-#if X86
-using SDK = ATMCD32CS.AndorSDK;
-#endif
-#if X64
-using SDK = ATMCD64CS.AndorSDK;
-#endif
 
-
-namespace ANDOR_CS.Enums
+namespace ANDOR_CS.Attributes
 {
-    [Flags]
-    [DataContract]
-    public enum EmGain : uint
+    [AttributeUsage(AttributeTargets.Field)]
+    public class IgnoreDefaultAttribute : Attribute
     {
-        [IgnoreDefault]
-        [EnumMember]
-        Unknown = 0,
-        [EnumMember]
-        Bits8 = SDK.AC_EMGAIN_8BIT,
-        [EnumMember]
-        Bits12 = SDK.AC_EMGAIN_12BIT,
-        [EnumMember]
-        LinearBits12 = SDK.AC_EMGAIN_LINEAR12,
-        [EnumMember]
-        RealBits12 = SDK.AC_EMGAIN_REAL12
     }
 }
