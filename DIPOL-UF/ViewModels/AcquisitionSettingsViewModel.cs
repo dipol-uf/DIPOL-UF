@@ -508,9 +508,9 @@ namespace DIPOL_UF.ViewModels
                         var firstTest = CanBeParsed(AccumulateCycleTime, out float time);
 
                         if (firstTest is null
-                            && Model.Object.AccumulateCycle != (0, time))
+                            && Model.Object.AccumulateCycle?.Time.AlmostEqual(time) != true)
                             secondTest = DoesNotThrow(Model.Object.SetAccumulateCycle,
-                                0, time);
+                                Model.Object.AccumulateCycle?.Frames ?? 0, time);
 
                         BatchUpdateErrors(
                             (nameof(AccumulateCycleTime), nameof(CanBeParsed), firstTest),
@@ -523,9 +523,9 @@ namespace DIPOL_UF.ViewModels
                         var firstTest = CanBeParsed(AccumulateCycleNumber, out int frames);
 
                         if (firstTest is null
-                            && Model.Object.AccumulateCycle != (frames, 0f))
+                            && Model.Object.AccumulateCycle?.Frames != frames)
                             secondTest = DoesNotThrow(Model.Object.SetAccumulateCycle,
-                                frames, 0f);
+                                frames, Model.Object.AccumulateCycle?.Time ?? 0f);
 
                         BatchUpdateErrors(
                             (nameof(AccumulateCycleNumber), nameof(CanBeParsed), firstTest),
@@ -573,9 +573,9 @@ namespace DIPOL_UF.ViewModels
                         var firstTest = CanBeParsed(KineticCycleTime, out float time);
 
                         if (firstTest is null
-                            && Model.Object.KineticCycle != (0, time))
+                            && Model.Object.KineticCycle?.Time.AlmostEqual(time) != true)
                             secondTest = DoesNotThrow(Model.Object.SetKineticCycle,
-                                0, time);
+                                Model.Object.KineticCycle?.Frames ?? 0, time);
 
                         BatchUpdateErrors(
                             (nameof(KineticCycleTime), nameof(CanBeParsed), firstTest),
@@ -588,9 +588,9 @@ namespace DIPOL_UF.ViewModels
                         var firstTest = CanBeParsed(KineticCycleNumber, out int frames);
 
                         if (firstTest is null
-                            && Model.Object.KineticCycle != (frames, 0f))
+                            && Model.Object.KineticCycle?.Frames != frames)
                             secondTest = DoesNotThrow(Model.Object.SetKineticCycle,
-                                frames, 0f);
+                                frames, Model.Object.KineticCycle?.Time ?? 0f);
 
                         BatchUpdateErrors(
                             (nameof(KineticCycleNumber), nameof(CanBeParsed), firstTest),

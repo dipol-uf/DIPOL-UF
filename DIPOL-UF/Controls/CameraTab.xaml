@@ -58,7 +58,6 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" MinWidth="430"/>
                 <ColumnDefinition Width="auto" MinWidth="200"/>
-                <ColumnDefinition Width="auto" MinWidth="230"/>
             </Grid.ColumnDefinitions>
             <!--Custom Image Presenter-->
             <cntr:DipolImagePresenter Grid.Row="1" Grid.Column="0" 
@@ -67,8 +66,6 @@
                                        Width="600"
                                        MaxWidth="600"
                                        DataContext="{Binding DipolImagePresenter}"/>
-            <!--Placeholder for detailed status-->
-            <Label Grid.Column="2" Grid.Row="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
             <!--RHS Controls grid-->
             <Grid Column ="1" Grid.Row="1" HorizontalAlignment="Right" 
                   VerticalAlignment="Top" MinHeight="500">
