@@ -98,7 +98,7 @@ namespace DIPOL_UF.Models
             HookObservables();
             InitializeCommands();
 
-            AcquisitionProgressRange = (0, 100);
+            AcquisitionProgressRange = (0, 50);
             AcquisitionProgress = 0;
 
             _pbTimer.AutoReset = true;
@@ -125,18 +125,19 @@ namespace DIPOL_UF.Models
             //TODO : ImageFormat for displaying
 
             WhenNewPreviewArrives
-                .Subscribe(x => ImagePresenter.LoadImage(x))
-                .DisposeWith(Subscriptions);
+                .Select(x => Observable.FromAsync(_ => ImagePresenter.LoadImageAsync(x)))
+                .Merge()
+                .SubscribeDispose(Subscriptions);
 
-            void ResetTimer()
+            void ResetTimer(double val)
             {
                 _pbTimer.Stop();
-                AcquisitionProgress = AcquisitionProgressRange.Max;
+                AcquisitionProgress = val;
             }
 
-            Camera.AcquisitionFinished += (_, e) => ResetTimer();
+            Camera.AcquisitionFinished += (_, e) => ResetTimer(AcquisitionProgressRange.Min);
 
-            Camera.NewImageReceived += (_, e) => ResetTimer();
+            Camera.NewImageReceived += (_, e) => ResetTimer(AcquisitionProgressRange.Max);
         }
 
         private void InitializeCommands()
@@ -212,7 +213,7 @@ namespace DIPOL_UF.Models
                                    if (!Camera.IsAcquiring 
                                        && !(Camera.CurrentSettings is null))
                                    {
-                                       _pbTimer.Interval = Camera.Timings.Accumulation /
+                                       _pbTimer.Interval = Camera.Timings.Kinetic /
                                                   (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min);
                                        AcquisitionProgress = AcquisitionProgressRange.Min;
                                        _pbTimer.Start();

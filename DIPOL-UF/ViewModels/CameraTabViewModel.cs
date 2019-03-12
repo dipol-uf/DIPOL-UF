@@ -225,7 +225,7 @@ namespace DIPOL_UF.ViewModels
 
             Model.WhenPropertyChanged(x => x.AcquisitionProgress)
                  .Select(x => x.Value)
-                 .Sample(UiSettingsProvider.UiThrottlingDelay)
+                 //.Sample(UiSettingsProvider.UiThrottlingDelay)
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.AcquisitionPbVal)
                  .DisposeWith(Subscriptions);
