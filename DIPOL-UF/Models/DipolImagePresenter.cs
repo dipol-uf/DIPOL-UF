@@ -28,7 +28,7 @@ namespace DIPOL_UF.Models
             Annulus
         }
 
-        public class ImageStatsCollection : ReactiveObjectEx
+        public class ImageStatsCollection
         {
             public double Median { get; set; }
             public double Minimum { get; set; }

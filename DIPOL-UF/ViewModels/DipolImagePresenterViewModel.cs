@@ -58,7 +58,7 @@ namespace DIPOL_UF.ViewModels
         public Point AperturePos { [ObservableAsProperty] get; }
         public Point GapPos { [ObservableAsProperty] get; }
         public Point SamplerPos { [ObservableAsProperty] get; }
-        public Point SamplerCenterPosInPix { [ObservableAsProperty] get; }
+        public Point? SamplerCenterPosInPix { [ObservableAsProperty] get; }
         public Brush SamplerColor { [ObservableAsProperty] get; }
         public GeometryDescriptor ApertureGeometry { [ObservableAsProperty] get; }
         public GeometryDescriptor GapGeometry { [ObservableAsProperty] get; }
@@ -73,7 +73,7 @@ namespace DIPOL_UF.ViewModels
         public double MaxAnnulusWidth { [ObservableAsProperty] get; }
 
         public DipolImagePresenter.ImageStatsCollection ImageStats { [ObservableAsProperty] get; }
-        public double PixValue { [ObservableAsProperty] get; }
+        public double? PixValue { [ObservableAsProperty] get; }
 
         public ReactiveCommand<MouseEventArgs, MouseEventArgs> MouseHoverCommand { get; private set; }
         public ICommand SizeChangedCommand => Model.SizeChangedCommand;
@@ -237,11 +237,6 @@ namespace DIPOL_UF.ViewModels
                  .ToPropertyEx(this, x => x.SamplerPos)
                  .DisposeWith(Subscriptions);
 
-            Model.WhenPropertyChanged(x => x.SamplerCenterPosInPix)
-                 .Select(x => x.Value)
-                 .ObserveOnUi()
-                 .ToPropertyEx(this, x => x.SamplerCenterPosInPix)
-                 .DisposeWith(Subscriptions);
 
             PropagateReadOnlyProperty(this, x => x.IsSamplerFixed, y => y.IsSamplerFixed);
             PropagateReadOnlyProperty(this, x => x.ApertureGeometry, y => y.ApertureGeometry);
@@ -250,8 +245,22 @@ namespace DIPOL_UF.ViewModels
             PropagateReadOnlyProperty(this, x => x.MaxApertureWidth, y => y.MaxApertureWidth);
             PropagateReadOnlyProperty(this, x => x.MaxGapWidth, y => y.MaxGapWidth);
             PropagateReadOnlyProperty(this, x => x.MaxAnnulusWidth, y => y.MaxAnnulusWidth);
-            PropagateReadOnlyProperty(this, x => x.PixValue, y => y.PixValue);
             PropagateReadOnlyProperty(this, x => x.ImageStats, y => y.ImageStats);
+
+            Model.WhenPropertyChanged(x => x.SamplerCenterPosInPix)
+                 .Select(x => (Point?)x.Value)
+                 .Merge(Model.WhenPropertyChanged(x => x.ImageStats).Where(x => x.Value is null)
+                             .Select(_ => (Point?)null))
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.SamplerCenterPosInPix)
+                 .DisposeWith(Subscriptions);
+            Model.WhenPropertyChanged(x => x.PixValue)
+                 .Select(x => new double?(x.Value))
+                 .Merge(Model.WhenPropertyChanged(x => x.ImageStats).Where(x => x.Value is null)
+                             .Select(_ => (double?) null))
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.PixValue)
+                 .DisposeWith(Subscriptions);
 
         }
 
