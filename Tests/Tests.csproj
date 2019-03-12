@@ -120,7 +120,6 @@
     <Compile Include="HelperTests.cs" />
     <Compile Include="JsonSettingsTests.cs" />
     <Compile Include="MiscTests.cs" />
-    <Compile Include="ObservableCollectionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteCameraTests.cs" />
     <Compile Include="RemoteCommunicationTests.cs" />

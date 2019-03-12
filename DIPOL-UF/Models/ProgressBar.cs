@@ -61,7 +61,7 @@ namespace DIPOL_UF.Models
         {
             WindowDragCommand =
                 ReactiveCommand.Create<Window>(
-                                   Commands.WindowDragCommandProvider.Execute)
+                                   x => x.DragMove())
                                .DisposeWith(Subscriptions);
             CancelCommand =
                 ReactiveCommand.Create<Window>(param =>
