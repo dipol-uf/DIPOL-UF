@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
+using ANDOR_CS.Events;
 using DipolImage;
 using FITS_CS;
 
@@ -181,8 +182,22 @@ namespace ANDOR_CS.Classes
 
         public override async Task StartAcquisitionAsync(CancellationToken token)
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(1), token);
-            throw new NotImplementedException();
+            StartAcquisition();
+            OnAcquisitionStarted(new AcquisitionStatusEventArgs(default));
+            try
+            {
+                await Task.Delay(1500, token);
+                OnNewImageReceived(new NewImageReceivedEventArgs(0, default));
+            }
+            catch (Exception)
+            {
+                OnAcquisitionAborted(new AcquisitionStatusEventArgs(default));
+            }
+            finally
+            {
+                OnAcquisitionFinished(new AcquisitionStatusEventArgs(default));
+                IsAcquiring = false;
+            }
         }
 
         public override Image PullPreviewImage<T>(int index)
@@ -192,7 +207,18 @@ namespace ANDOR_CS.Classes
 
         public override Image PullPreviewImage(int index, ImageFormat format)
         {
-            throw new NotImplementedException();
+            var r = new Random();
+
+            if (r.Next(0, 10) == 5)
+                return null;
+
+            var imageArr = new ushort[256 * 512];
+            var byteImg = new byte[256 * 512 * sizeof(ushort)];
+            r.NextBytes(byteImg);
+
+            Buffer.BlockCopy(byteImg, 0, imageArr, 0, byteImg.Length);
+
+           return new Image(imageArr, 512, 256);
         }
 
         public override int GetTotalNumberOfAcquiredImages()
@@ -207,12 +233,12 @@ namespace ANDOR_CS.Classes
 
         protected override void StartAcquisition()
         {
-            throw new NotImplementedException();
+            IsAcquiring = true;
         }
 
         protected override void AbortAcquisition()
         {
-            throw new NotImplementedException();
+            IsAcquiring = false;
         }
 
         public override void ApplySettings(SettingsBase settings)
