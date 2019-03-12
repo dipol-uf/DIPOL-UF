@@ -750,17 +750,17 @@ namespace ANDOR_CS.Classes
             if(Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) )
 				settings.Add(nameof(EMCCDGain).ToLowerInvariant());
             if(Camera.Capabilities.AcquisitionModes.HasFlag(Enums.AcquisitionMode.FrameTransfer))
-                settings.Add(@"FrameTransfer");
+                settings.Add(@"FrameTransfer".ToLowerInvariant());
 
             if (Camera.Capabilities.TriggerModes != Enums.TriggerMode.Unknown)
-                settings.Add(nameof(TriggerMode));
+                settings.Add(nameof(TriggerMode).ToLowerInvariant());
             if (Camera.Capabilities.AcquisitionModes != Enums.AcquisitionMode.Unknown)
-                settings.Add(nameof(AcquisitionMode));
+                settings.Add(nameof(AcquisitionMode).ToLowerInvariant());
             if (Camera.Capabilities.ReadModes != ReadMode.Unknown)
-                settings.Add(nameof(ReadoutMode));
+                settings.Add(nameof(ReadoutMode).ToLowerInvariant());
             if (Camera.Capabilities.AcquisitionModes.HasFlag(Enums.AcquisitionMode.FrameTransfer)
                 && Camera.Capabilities.FtReadModes != ReadMode.Unknown)
-                settings.Add($@"Ft{nameof(ReadoutMode)}");
+                settings.Add($@"Ft{nameof(ReadoutMode).ToLowerInvariant()}");
 
 
             // TODO: Check individual support of these features

@@ -269,11 +269,7 @@
                         <!--Frame transfer-->
                         <CheckBox Grid.Row="8" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center"
                                   Margin="{StaticResource ResourceKey=DefaultMargin}" IsThreeState="False"
-                                  IsChecked="{Binding 
-                                    FrameTransfer, 
-                                    Mode=TwoWay, 
-                                    UpdateSourceTrigger=PropertyChanged, 
-                                    ValidatesOnNotifyDataErrors=True}"
+                                  IsChecked="{extensions:ValidationBinding Path=FrameTransfer}"
                                   IsEnabled="{Binding IsAvailable.FrameTransfer}"
                                   Style="{StaticResource CheckBoxWithErrors}"/>
                         <!--Readout mode-->
@@ -281,11 +277,7 @@
                                   ItemsSource="{Binding
                                     Path=AvailableReadModes,
                                     Mode=OneWay}"
-                                  SelectedItem="{Binding
-                                    Path=ReadMode,
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    ValidatesOnNotifyDataErrors=True}"
-                                  IsEnabled="{Binding IsAvailable.ReadMode}"
+                                  SelectedItem="{extensions:ValidationBinding Path=ReadMode}"
                                   Style="{StaticResource ComboBoxWithErrors}">
                            <ComboBox.ItemTemplate>
                                <DataTemplate DataType="ComboBoxItem">
@@ -299,10 +291,7 @@
                                   ItemsSource="{Binding
                                     Path=AllowedTriggerModes,
                                     Mode=OneWay}"
-                                  SelectedItem="{Binding
-                                    Path=TriggerMode,
-                                    UpdateSourceTrigger=PropertyChanged,
-                                    ValidatesOnNotifyDataErrors=True}"
+                                  SelectedItem="{extensions:ValidationBinding Path=TriggerMode}"
                                   IsEnabled="{Binding IsAvailable.TriggerMode}"
                                   Style="{StaticResource ComboBoxWithErrors}">
                             <ComboBox.ItemTemplate>
