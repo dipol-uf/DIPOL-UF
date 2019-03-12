@@ -36,9 +36,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
 using DynamicData;
 using DynamicData.Binding;
@@ -51,47 +48,6 @@ namespace DIPOL_UF
         public static Dispatcher UiDispatcher =>
             Application.Current?.Dispatcher
             ?? throw new InvalidOperationException("Dispatcher is unavailable.");
-
-
-        public static Size MeasureString(string strToMeasure, TextBlock presenter)
-        {
-            var formattedText = new FormattedText(strToMeasure,
-                System.Globalization.CultureInfo.CurrentUICulture,
-                FlowDirection.LeftToRight,
-                new Typeface(
-                    presenter.FontFamily,
-                    presenter.FontStyle,
-                    presenter.FontWeight,
-                    presenter.FontStretch),
-                presenter.FontSize,
-                presenter.Foreground,
-                VisualTreeHelper.GetDpi(presenter).PixelsPerDip);
-
-            return new Size(formattedText.Width, formattedText.Height);
-        }
-
-        public static T FindParentOfType<T>(DependencyObject element) where T : DependencyObject
-        {
-            if (element is T)
-                return element as T;
-
-            var parent = VisualTreeHelper.GetParent(element);
-
-            while (parent != null && !(parent is T))
-                parent = VisualTreeHelper.GetParent(parent);
-
-            return parent as T;
-        }
-
-        public static DependencyObject FindParentByName(DependencyObject element, string name)
-        {
-            var parent = VisualTreeHelper.GetParent(element);
-
-            while (parent is FrameworkElement elem && elem.Name != name)
-                parent = VisualTreeHelper.GetParent(elem);
-
-            return (parent is FrameworkElement e && e.Name == name) ? parent : null;
-        }
 
         public static bool IsDialogWindow(Window window)
         {
@@ -129,20 +85,6 @@ namespace DIPOL_UF
             return string.Empty;
         }
 
-        /// <summary>
-        /// Checks if dispatcher has not been shut down yet.
-        /// </summary>
-        /// <param name="d">Dispatcher instance (usually <see cref="Dispatcher"/>)</param>
-        /// <returns>True if Dispatcher.Invoke can still be called.</returns>
-        public static bool IsAvailable(this Dispatcher d)
-            => !d.HasShutdownStarted && !d.HasShutdownFinished;
-
-        public static void ExecuteOnUI(Action action)
-            => ExecuteOnUi(action);
-
-        public static T ExecuteOnUI<T>(Func<T> action)
-            => ExecuteOnUi(action);
-
         public static void ExecuteOnUi(Action action)
         {
             if (UiDispatcher.CheckAccess())
@@ -170,27 +112,6 @@ namespace DIPOL_UF
                 .TryGetValue(key, out object item)
                     ? item
                     : null;
-
-        public static T GetValueOrNullSafe<T>(this Dictionary<string, object> settings, string key,
-            T nullReplacement = default)
-        {
-            var tempValue = GetValueOrNullSafe(settings, key);
-
-            object value;
-
-            if (tempValue is ArrayList list)
-                value = list.ToArray();
-            else
-                value = tempValue;
-
-            if (value is T safe)
-                return safe;
-            else
-                return nullReplacement;
-        }
-
-        public static string ArrayToString(this Array array, string separator = ", ")
-            => array.EnumerableToString(separator);
 
         public static string EnumerableToString<T>(this IEnumerable<T> input, string separator = ", ")
             =>  input.ToList() is var list && list.Count != 0
@@ -437,7 +358,6 @@ namespace DIPOL_UF
             }
             catch (OperationCanceledException)
             {
-                return;
             }
             catch (Exception e)
             {
