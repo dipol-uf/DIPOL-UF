@@ -38,13 +38,6 @@
         d:DataContext="{d:DesignInstance viewModels:AcquisitionSettingsViewModel}"
         ResizeMode="NoResize">
     <behavior:Interaction.Triggers>
-        <behavior:EventTrigger 
-            EventName="ContentRendered"
-            SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
-            <behavior:InvokeCommandAction 
-                Command="{Binding ViewLoadedCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"/>
-        </behavior:EventTrigger>
         <behavior:EventTrigger
             EventName="FileDialogRequested"
             SourceObject="{Binding}">
@@ -218,9 +211,7 @@
                                   ItemsSource="{Binding
                                     Path=AvailableHsSpeeds,
                                     Mode=OneWay}"
-                                  SelectedIndex="{extensions:ValidationBinding
-                                    HsSpeed, 
-                                    Mode=TwoWay}"
+                                  SelectedIndex="{extensions:ValidationBinding Path=HsSpeed, Mode=TwoWay}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.HsSpeed}">
                             <ComboBox.ItemTemplate>
@@ -278,6 +269,7 @@
                                     Path=AvailableReadModes,
                                     Mode=OneWay}"
                                   SelectedItem="{extensions:ValidationBinding Path=ReadMode}"
+                                  IsEnabled="{Binding IsAvailable.ReadMode}"
                                   Style="{StaticResource ComboBoxWithErrors}">
                            <ComboBox.ItemTemplate>
                                <DataTemplate DataType="ComboBoxItem">
