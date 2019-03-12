@@ -28,12 +28,15 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DipolImage;
 using DIPOL_UF.Converters;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
+using Timer = System.Timers.Timer;
 
 namespace DIPOL_UF.Models
 {
@@ -41,6 +44,8 @@ namespace DIPOL_UF.Models
     {
         private Task _acquisitionTask;
         private CancellationTokenSource _acquisitionTokenSource;
+
+        private readonly Timer _pbTimer = new Timer();
 
         public CameraBase Camera { get; }
         public (float Minimum, float Maximum) TemperatureRange { get; }
@@ -51,12 +56,15 @@ namespace DIPOL_UF.Models
         public (bool Internal, bool External) CanControlShutter { get; }
         public string Alias { get; }
 
+        [Reactive]
+        public double AcquisitionProgress { get; private set; }
+        [Reactive]
+        public (int Min, int Max) AcquisitionProgressRange { get; private set; }
+
+        public IObservable<(float Exposure, float Accumulation, float Kinetic)> WhenTimingCalculated { get; private set; }
         public IObservable<Image> WhenNewPreviewArrives { get; private set; }
-
         public DipolImagePresenter ImagePresenter { get; }
-
         public DescendantProvider AcquisitionSettingsWindow { get; private set; }
-
         public IObservable<TemperatureStatusEventArgs> WhenTemperatureChecked { get; private set; }
 
         public ReactiveCommand<int, Unit> CoolerCommand { get; private set; }
@@ -89,6 +97,13 @@ namespace DIPOL_UF.Models
 
             HookObservables();
             InitializeCommands();
+
+            AcquisitionProgressRange = (0, 100);
+            AcquisitionProgress = 0;
+
+            _pbTimer.AutoReset = true;
+            _pbTimer.Enabled = false;
+            _pbTimer.Elapsed += TimerTick;
         }
 
         private void HookObservables()
@@ -113,6 +128,15 @@ namespace DIPOL_UF.Models
                 .Subscribe(x => ImagePresenter.LoadImage(x))
                 .DisposeWith(Subscriptions);
 
+            void ResetTimer()
+            {
+                _pbTimer.Stop();
+                AcquisitionProgress = AcquisitionProgressRange.Max;
+            }
+
+            Camera.AcquisitionFinished += (_, e) => ResetTimer();
+
+            Camera.NewImageReceived += (_, e) => ResetTimer();
         }
 
         private void InitializeCommands()
@@ -180,12 +204,18 @@ namespace DIPOL_UF.Models
                                 .ViewFinished
                                 .Select(_ => !(Camera.CurrentSettings is null));
 
+            WhenTimingCalculated = AcquisitionSettingsWindow.ViewFinished.Select(_ => Camera.Timings);
+
             StartAcquisitionCommand =
                 ReactiveCommand.Create(() =>
                                {
                                    if (!Camera.IsAcquiring 
                                        && !(Camera.CurrentSettings is null))
                                    {
+                                       _pbTimer.Interval = Camera.Timings.Accumulation /
+                                                  (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min);
+                                       AcquisitionProgress = AcquisitionProgressRange.Min;
+                                       _pbTimer.Start();
                                        _acquisitionTokenSource = new CancellationTokenSource();
                                        _acquisitionTask = Camera
                                                           .StartAcquisitionAsync(_acquisitionTokenSource.Token)
@@ -196,11 +226,28 @@ namespace DIPOL_UF.Models
                                        if (Camera.IsAcquiring)
                                            _acquisitionTokenSource.Cancel();
                                        _acquisitionTask = null;
+                                       _acquisitionTokenSource.Dispose();
                                        _acquisitionTokenSource = null;
                                    }
                                }, hasValidSettings)
                                .DisposeWith(Subscriptions);
         }
 
+        private void TimerTick(object sender, ElapsedEventArgs e)
+        {
+            if (sender is Timer t && t.Enabled && _acquisitionTask != null
+                && AcquisitionProgress <= AcquisitionProgressRange.Max)
+                AcquisitionProgress +=
+                    Math.Floor((AcquisitionProgressRange.Max - AcquisitionProgressRange.Min) * t.Interval);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if(!IsDisposed && disposing)
+                _pbTimer.Stop();
+                _pbTimer.Elapsed -= TimerTick;
+
+            base.Dispose(disposing);
+        }
     }
 }

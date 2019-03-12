@@ -493,7 +493,7 @@ namespace DIPOL_UF.ViewModels
 
                         if (firstTestTime is null && firstTestNumber is null
                                                   && Model.Object.AccumulateCycle != (frames, time))
-                            secondTest = DoesNotThrow(Model.Object.SetAccumulationCycle, frames, time);
+                            secondTest = DoesNotThrow(Model.Object.SetAccumulateCycle, frames, time);
 
                         BatchUpdateErrors(
                             (nameof(AccumulateCycleTime), nameof(CanBeParsed), firstTestTime),
@@ -509,7 +509,7 @@ namespace DIPOL_UF.ViewModels
 
                         if (firstTest is null
                             && Model.Object.AccumulateCycle != (0, time))
-                            secondTest = DoesNotThrow(Model.Object.SetAccumulationCycle,
+                            secondTest = DoesNotThrow(Model.Object.SetAccumulateCycle,
                                 0, time);
 
                         BatchUpdateErrors(
@@ -524,7 +524,7 @@ namespace DIPOL_UF.ViewModels
 
                         if (firstTest is null
                             && Model.Object.AccumulateCycle != (frames, 0f))
-                            secondTest = DoesNotThrow(Model.Object.SetAccumulationCycle,
+                            secondTest = DoesNotThrow(Model.Object.SetAccumulateCycle,
                                 frames, 0f);
 
                         BatchUpdateErrors(

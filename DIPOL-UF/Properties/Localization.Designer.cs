@@ -462,6 +462,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exposure (s):.
+        /// </summary>
+        public static string CameraTab_EstimatedTime {
+            get {
+                return ResourceManager.GetString("CameraTab_EstimatedTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fan.
         /// </summary>
         public static string CameraTab_Fan {
@@ -503,33 +512,6 @@ namespace DIPOL_UF.Properties {
         public static string CameraTab_Shutter_Internal {
             get {
                 return ResourceManager.GetString("CameraTab_Shutter_Internal", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Acc.
-        /// </summary>
-        public static string CameraTab_Timing_AccumulationCycle {
-            get {
-                return ResourceManager.GetString("CameraTab_Timing_AccumulationCycle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Exp.
-        /// </summary>
-        public static string CameraTab_Timing_Exposure {
-            get {
-                return ResourceManager.GetString("CameraTab_Timing_Exposure", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Kin.
-        /// </summary>
-        public static string CameraTab_Timing_KineticCycle {
-            get {
-                return ResourceManager.GetString("CameraTab_Timing_KineticCycle", resourceCulture);
             }
         }
         

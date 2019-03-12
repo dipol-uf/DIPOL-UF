@@ -640,7 +640,7 @@ namespace ANDOR_CS.Classes
         }
 
 
-        public virtual void SetAccumulationCycle(int number, float time)
+        public virtual void SetAccumulateCycle(int number, float time)
         {
             CheckCamera();
 

@@ -102,7 +102,7 @@ namespace DIPOL_UF
                     setts.SetImageArea(new Rectangle(1, 1, 512, 512));
                     setts.SetAcquisitionMode(AcquisitionMode.Kinetic | AcquisitionMode.FrameTransfer);
                     setts.SetKineticCycle(15, 0.0f);
-                    setts.SetAccumulationCycle(3, 0.0f);
+                    setts.SetAccumulateCycle(3, 0.0f);
                     setts.SetReadoutMode(ReadMode.FullImage);
                     setts.SetTriggerMode(TriggerMode.Internal);
                     setts.SetOutputAmplifier(OutputAmplification.Conventional);
