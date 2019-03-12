@@ -33,6 +33,7 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -377,10 +378,16 @@ namespace DIPOL_UF
         }
 
         public static ConfiguredTaskAwaitable RunNoMarshall(Action action)
-            => Task.Run(action).ConfigureAwait(false);
+            => RunNoMarshall(action, CancellationToken.None);
 
         public static ConfiguredTaskAwaitable<T> RunNoMarshall<T>(Func<T> action)
-            => Task.Run(action).ConfigureAwait(false);
+            => RunNoMarshall(action, CancellationToken.None);
+
+        public static ConfiguredTaskAwaitable RunNoMarshall(Action action, CancellationToken token)
+            => Task.Run(action, token).ConfigureAwait(false);
+
+        public static ConfiguredTaskAwaitable<T> RunNoMarshall<T>(Func<T> action, CancellationToken token)
+            => Task.Run(action, token).ConfigureAwait(false);
 
         public static ConfiguredTaskAwaitable ExpectCancellation(
             this Task input,
@@ -405,6 +412,37 @@ namespace DIPOL_UF
                         return task.Status == TaskStatus.RanToCompletion ? task.Result : default;
                     }, null)
                     .ConfigureAwait(marshal);
+
+        public static async Task<T> ExpectCancellationAsync<T>(this Task<T> input)
+        {
+            try
+            {
+                return await input;
+            }
+            catch (OperationCanceledException)
+            {
+                return await Task.FromResult(default(T));
+            }
+            catch (Exception e)
+            {
+                return await Task.FromException<T>(e);
+            }
+        }
+        public static async Task ExpectCancellationAsync(this Task input)
+        {
+            try
+            {
+                await input;
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception e)
+            {
+                await Task.FromException(e);
+            }
+        }
 
         public static IObservable<Unit> NotifyWhenAnyPropertyChanged(this ReactiveObject @this, params string[] properties)
             => @this.WhenAnyPropertyChanged(properties).Select(_ => Unit.Default);
