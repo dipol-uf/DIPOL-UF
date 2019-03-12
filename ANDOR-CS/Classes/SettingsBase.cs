@@ -103,11 +103,7 @@ namespace ANDOR_CS.Classes
         public (int Index, float Speed)? VSSpeed
         {
             get => _VSSpeed;
-            protected set
-            {
-                _VSSpeed = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _VSSpeed, value);
         } 
 
         /// <summary>
@@ -118,11 +114,7 @@ namespace ANDOR_CS.Classes
         public (int Index, float Speed)? HSSpeed
         {
             get => _HSSpeed;
-            protected set
-            {
-                _HSSpeed = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _HSSpeed, value);
         } 
 
         /// <summary>
@@ -134,11 +126,7 @@ namespace ANDOR_CS.Classes
         public (int Index, int BitDepth)? ADConverter
         {
             get => _ADConverter;
-            protected set
-            {
-                _ADConverter = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _ADConverter, value);
         } 
 
         /// <summary>
@@ -149,11 +137,7 @@ namespace ANDOR_CS.Classes
         public VSAmplitude? VSAmplitude
         {
             get => _VSAmplitude;
-            protected set
-            {
-                _VSAmplitude = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _VSAmplitude, value);
         } 
 
         /// <summary>
@@ -164,11 +148,7 @@ namespace ANDOR_CS.Classes
         public (OutputAmplification OutputAmplifier, string Name, int Index)? OutputAmplifier
         {
             get => _OutputAmplifier;
-            protected set
-            {
-                _OutputAmplifier = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _OutputAmplifier, value);
         } 
 
         /// <summary>
@@ -179,11 +159,7 @@ namespace ANDOR_CS.Classes
         public (int Index, string Name)? PreAmpGain
         {
             get => _PreAmpGain;
-            protected set
-            {
-                _PreAmpGain = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _PreAmpGain, value);
         } 
 
         /// <summary>
@@ -194,11 +170,7 @@ namespace ANDOR_CS.Classes
         public AcquisitionMode? AcquisitionMode
         {
             get => _AcquisitionMode;
-            protected set
-            {
-                _AcquisitionMode = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _AcquisitionMode, value);
         } 
 
         /// <summary>
@@ -209,11 +181,7 @@ namespace ANDOR_CS.Classes
         public ReadMode? ReadoutMode
         {
             get => _ReadoutMode;
-            protected set
-            {
-                _ReadoutMode = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _ReadoutMode, value);
         }
 
         /// <summary>
@@ -224,11 +192,7 @@ namespace ANDOR_CS.Classes
         public TriggerMode? TriggerMode
         {
             get => _TriggerMode;
-            protected set
-            {
-                _TriggerMode = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _TriggerMode, value);
         }
 
         /// <summary>
@@ -239,11 +203,7 @@ namespace ANDOR_CS.Classes
         public float? ExposureTime
         {
             get => _ExposureTime;
-            protected set
-            {
-                _ExposureTime = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _ExposureTime, value);
         } 
 
         /// <summary>
@@ -254,11 +214,7 @@ namespace ANDOR_CS.Classes
         public Rectangle? ImageArea
         {
             get => _ImageArea;
-            protected set
-            {
-                _ImageArea = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _ImageArea, value);
         } 
 
         [SerializationOrder(12, true)]
@@ -267,11 +223,7 @@ namespace ANDOR_CS.Classes
         public (int Frames, float Time)? AccumulateCycle
         {
             get => _AccumulateCycle;
-            protected set
-            {
-                _AccumulateCycle = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _AccumulateCycle, value);
         } 
 
         [SerializationOrder(13, true)]
@@ -280,11 +232,7 @@ namespace ANDOR_CS.Classes
         public (int Frames, float Time)? KineticCycle
         {
             get => _KineticCycle;
-            protected set
-            {
-                _KineticCycle = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _KineticCycle, value);
         } 
 
         [SerializationOrder(10)]
@@ -292,19 +240,24 @@ namespace ANDOR_CS.Classes
         public int? EMCCDGain
         {
             get => _EmCcdGain;
-            protected set
-            {
-                _EmCcdGain = value;
-                RaisePropertyChanged();
-            }
+            protected set => RaisePropertyChanged(ref _EmCcdGain, value);
         }
 
         protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
             => PropertyChanged?.Invoke(sender, e);
 
-        protected virtual void RaisePropertyChanged(
+        protected virtual void RaisePropertyChanged<T>(
+            ref T? target,
+            T? value,
             [CallerMemberName] string name = "")
-            => OnPropertyChanged(this, new PropertyChangedEventArgs(name));
+        where T: struct
+        {
+            if (target?.Equals(value) != true)
+            {
+                target = value;
+                OnPropertyChanged(this, new PropertyChangedEventArgs(name));
+            }
+        }
 
         //public virtual List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
         //    out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
