@@ -186,9 +186,6 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\DelegateCommand.cs" />
-    <Compile Include="Commands\CommandEventArgs.cs" />
-    <Compile Include="Commands\EventToCommndExtension.cs" />
     <Compile Include="Controls\CameraTab.xaml.cs">
       <DependentUpon>CameraTab.xaml</DependentUpon>
     </Compile>
@@ -242,9 +239,6 @@
     <Compile Include="ViewModels\ReactiveViewModelBase.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="Models\ProgressBar.cs" />
-    <Compile Include="Commands\WindowDragCommandProvider.cs" />
-    <Compile Include="ObservableConcurrentDictionary.cs" />
-    <Compile Include="ObservableObject.cs" />
     <Compile Include="Properties\Localization.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -258,7 +252,6 @@
     <Compile Include="ReactiveObjectEx.cs" />
     <Compile Include="Extensions\TextExtension.cs" />
     <Compile Include="UiSettingsProvider.cs" />
-    <Compile Include="ValidationErrorInstance.cs" />
     <Compile Include="Validators\Validate.cs" />
     <Compile Include="ViewModels\AcquisitionSettingsViewModel.cs" />
     <Compile Include="ViewModels\AvailableCamerasViewModel.cs" />
@@ -269,7 +262,6 @@
     <Compile Include="ViewModels\MainWindowTreeViewModel.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
     <Compile Include="ViewModels\ReactiveViewModel.cs" />
-    <Compile Include="ViewModels\ViewModel.cs" />
     <Compile Include="Views\AcquisitionSettingsView.xaml.cs">
       <DependentUpon>AcquisitionSettingsView.xaml</DependentUpon>
     </Compile>
