@@ -234,15 +234,6 @@
   <data name="CameraTab_Shutter_Internal" xml:space="preserve">
     <value>Internal</value>
   </data>
-  <data name="CameraTab_Timing_AccumulationCycle" xml:space="preserve">
-    <value>Acc</value>
-  </data>
-  <data name="CameraTab_Timing_Exposure" xml:space="preserve">
-    <value>Exp</value>
-  </data>
-  <data name="CameraTab_Timing_KineticCycle" xml:space="preserve">
-    <value>Kin</value>
-  </data>
   <data name="DipolImagePresenter_ApertureControlGroup" xml:space="preserve">
     <value>Aperture settings</value>
   </data>
@@ -465,5 +456,8 @@ The following settings produced this error:
   </data>
   <data name="AcquisitionSettings_SerializationFailed_Title" xml:space="preserve">
     <value>Unable to save file</value>
+  </data>
+  <data name="CameraTab_EstimatedTime" xml:space="preserve">
+    <value>Exposure (s):</value>
   </data>
 </root>

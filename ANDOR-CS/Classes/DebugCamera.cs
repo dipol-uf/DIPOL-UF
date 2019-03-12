@@ -243,6 +243,7 @@ namespace ANDOR_CS.Classes
 
         public override void ApplySettings(SettingsBase settings)
         {
+            Timings = (1.5f, 1.5f, 1.5f);
             base.ApplySettings(settings);
             //throw new AndorSdkException("Failed", SDK.DRV_P1INVALID,
             //    nameof(AndorSdkInitialization.SdkInstance.SetImage));

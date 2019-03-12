@@ -57,6 +57,12 @@ namespace DIPOL_UF.ViewModels
         public DipolImagePresenterViewModel DipolImagePresenter { get; }
         public DescendantProxy AcquisitionSettingsWindow { get; private set; }
 
+        public float ExposureTime { [ObservableAsProperty] get; }
+        public int AcquisitionPbMax { [ObservableAsProperty] get; }
+        public int AcquisitionPbMin { [ObservableAsProperty] get; }
+        public double AcquisitionPbVal { [ObservableAsProperty] get; }
+
+
         [Reactive]
         public float TargetTemperature { get; set; }
         [Reactive]
@@ -104,7 +110,11 @@ namespace DIPOL_UF.ViewModels
 
             AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow,
                 x => new AcquisitionSettingsViewModel((ReactiveWrapper<SettingsBase>) x)).DisposeWith(Subscriptions);
-            
+
+            if (CanControlExternalShutter)
+                ExternalShutterMode = ShutterMode.PermanentlyClosed;
+            if (CanControlInternalShutter)
+                InternalShutterState = ShutterMode.PermanentlyClosed;
         }
 
         private void HookObservables()
@@ -142,7 +152,8 @@ namespace DIPOL_UF.ViewModels
 
                     BatchUpdateErrors(
                         (nameof(TargetTemperatureText), nameof(Validators.Validate.CanBeParsed), canParseMessage),
-                        (nameof(TargetTemperatureText), nameof(Validators.Validate.ShouldFallWithinRange), inRangeMessage));
+                        (nameof(TargetTemperatureText), nameof(Validators.Validate.ShouldFallWithinRange),
+                            inRangeMessage));
 
                     if (canParseMessage is null && inRangeMessage is null)
                         TargetTemperature = temp;
@@ -160,7 +171,7 @@ namespace DIPOL_UF.ViewModels
                 .DisposeWith(Subscriptions);
 
             // End of temperature changes
-            
+
 
             Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.FanMode))
                  .Select(x => 2 - (uint) x.FanMode)
@@ -207,6 +218,29 @@ namespace DIPOL_UF.ViewModels
 
             }
 
+            Model.WhenTimingCalculated.Select(x => x.Accumulation)
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.ExposureTime)
+                 .DisposeWith(Subscriptions);
+
+            Model.WhenPropertyChanged(x => x.AcquisitionProgress)
+                 .Select(x => x.Value)
+                 .Sample(UiSettingsProvider.UiThrottlingDelay)
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.AcquisitionPbVal)
+                 .DisposeWith(Subscriptions);
+
+            Model.WhenPropertyChanged(x => x.AcquisitionProgressRange)
+                 .Select(x => x.Value.Min)
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.AcquisitionPbMin)
+                 .DisposeWith(Subscriptions);
+
+            Model.WhenPropertyChanged(x => x.AcquisitionProgressRange)
+                 .Select(x => x.Value.Max)
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.AcquisitionPbMax)
+                 .DisposeWith(Subscriptions);
         }
 
         public string Name => Model.ToString();

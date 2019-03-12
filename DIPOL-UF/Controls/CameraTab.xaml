@@ -49,11 +49,10 @@
     <ScrollViewer
         HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Auto"
         VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto">
-        <Grid>
+        <Grid VerticalAlignment="Top">
             <Grid.RowDefinitions>
                 <RowDefinition Height="50"/>
-                <RowDefinition Height="500"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition Height="50"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
@@ -62,38 +61,12 @@
                 <ColumnDefinition Width="auto" MinWidth="230"/>
             </Grid.ColumnDefinitions>
             <!--Custom Image Presenter-->
-            <cntr:DipolImagePresenter Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
+            <cntr:DipolImagePresenter Grid.Row="1" Grid.Column="0" 
                                        Height="700"
                                        VerticalAlignment="Top" HorizontalAlignment="Stretch" 
                                        Width="600"
                                        MaxWidth="600"
                                        DataContext="{Binding DipolImagePresenter}"/>
-            <!--Placeholder for Camera Name-->
-            <!--<Grid Grid.Row="0" Grid.Column="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*"/>
-                    <ColumnDefinition Width="3*"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0" 
-                           Text="{Binding Name}" 
-                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                           TextAlignment="Left"/>
-                <Slider Grid.Row="1" VerticalAlignment="Center"
-                        Style="{StaticResource SlaveMasterSlider}"
-                        Value="{Binding StateIntVal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                <TextBlock Grid.Row="1" Grid.Column="1"
-                           HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                           TextAlignment="Right"
-                           Padding="0,0,15,0"
-                           Text="{extensions:Text Key=CameraTab_Autosave_Checkbox}"/>
-                <CheckBox Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center"
-                          IsChecked="{Binding Autosave}"/>
-            </Grid>-->
             <!--Placeholder for detailed status-->
             <Label Grid.Column="2" Grid.Row="1" BorderThickness="2" BorderBrush="Black">Detailed status</Label>
             <!--RHS Controls grid-->
@@ -376,74 +349,22 @@
                     </Button.Style>
                 </Button>
                 <!-- Timing table -->
-                <Grid Grid.Column="1" Grid.Row="3" Grid.RowSpan="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0"
-                               Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                               HorizontalAlignment="Left"
-                               VerticalAlignment="Center"
-                               Text="{extensions:Text Key=CameraTab_Timing_Exposure}"/>
-                    <TextBlock Grid.Row="1" Grid.Column="0"
-                               Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                               HorizontalAlignment="Left"
-                               VerticalAlignment="Center"
-                               Text="{extensions:Text Key=CameraTab_Timing_AccumulationCycle}"/>
-                    <TextBlock Grid.Row="2" Grid.Column="0"
-                               Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                               HorizontalAlignment="Left"
-                               VerticalAlignment="Center"
-                               Text="{extensions:Text Key=CameraTab_Timing_KineticCycle}"/>
-                    <TextBox Grid.Row="0" Grid.Column="1"
-                              Focusable="False" IsReadOnly="True"
-                              Style="{StaticResource ResourceKey=TextBoxStyle}"
-                              FontSize="{StaticResource ResourceKey=SmallFontSize}"
-                              Text="{Binding Timing.Item1, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
-                    <TextBox Grid.Row="1" Grid.Column="1"
-                              Focusable="False" IsReadOnly="True"
-                              Style="{StaticResource ResourceKey=TextBoxStyle}"
-                              FontSize="{StaticResource ResourceKey=SmallFontSize}"
-                              Text="{Binding Timing.Item2, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
-                    <TextBox Grid.Row="2" Grid.Column="1"
-                              Focusable="False" IsReadOnly="True"
-                              Style="{StaticResource ResourceKey=TextBoxStyle}"
-                              FontSize="{StaticResource ResourceKey=SmallFontSize}"
-                              Text="{Binding Timing.Item3, Mode=OneWay, StringFormat='\{0:f2\} s'}"/>
-                </Grid>
+                <StackPanel Grid.Column="1" Grid.Row="3" Grid.RowSpan="2" Orientation="Vertical">
+                    <TextBlock HorizontalAlignment="Stretch"
+                               Style="{StaticResource ContentFont_TextBlock}"
+                               Text="{extensions:Text Key=CameraTab_EstimatedTime}"/>
+                    <TextBox Style="{StaticResource TextBoxStyle}" IsReadOnly="True"
+                             HorizontalAlignment="Stretch"
+                             Text="{Binding ExposureTime, 
+                                Mode=OneWay,
+                                StringFormat={extensions:Text Key=General_ExposureFloatFormat}}"/>
+                </StackPanel>
             </Grid>
-
-            <!--Acquisition textbox-->
-            <TextBlock Grid.Row="3" Grid.Column="0"
-                    Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Bottom"
-                    Text="{extensions:Text Key=CameraTab_Acquisition, Format='\{0\}:'}"/>
-            <!--Acquisition progress bar-->
-            <Grid Grid.Row="3" Grid.ColumnSpan="3" VerticalAlignment="Top"  Grid.Column="0"
-               HorizontalAlignment="Stretch" MinWidth="300" MaxWidth="800">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width ="130"/>
-                </Grid.ColumnDefinitions>
-                <ProgressBar  Grid.Column="0" HorizontalAlignment="Stretch"
-                         Maximum="{Binding Timing.Item1, Mode=OneWay}" Minimum="0"
-                         Value="{Binding TimeRemaining, Mode=OneWay}"
-                         Style="{StaticResource ResourceKey=ProgressBarStyle}"
-                         />
-
-                <TextBox   Grid.Column="1" VerticalAlignment="Center"
-                       Style="{StaticResource ResourceKey=TextBoxStyle}"
-                       FontSize="{StaticResource ResourceKey=SmallFontSize}"
-                       Text="{Binding Remaining, Mode=OneWay}"
-                       />
-            </Grid>
+            <ProgressBar Grid.Row="2" Grid.Column="0"
+                         Style="{StaticResource ProgressBarStyle}"
+                         Minimum="{Binding AcquisitionPbMin}"
+                         Maximum="{Binding AcquisitionPbMax}"
+                         Value="{Binding AcquisitionPbVal, Mode=OneWay}"/>
         </Grid>
     </ScrollViewer>
 </UserControl>
