@@ -26,6 +26,7 @@ using System;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
@@ -38,6 +39,9 @@ namespace DIPOL_UF.Models
 {
     internal sealed class CameraTab: ReactiveObjectEx
     {
+        private Task _acquisitionTask;
+        private CancellationTokenSource _acquisitionTokenSource;
+
         public CameraBase Camera { get; }
         public (float Minimum, float Maximum) TemperatureRange { get; }
         public bool CanControlTemperature { get; }
@@ -47,8 +51,9 @@ namespace DIPOL_UF.Models
         public (bool Internal, bool External) CanControlShutter { get; }
         public string Alias { get; }
 
+        public IObservable<Image> WhenNewPreviewArrives { get; private set; }
 
-        public DipolImagePresenter ImagePresenter { get; private set; }
+        public DipolImagePresenter ImagePresenter { get; }
 
         public DescendantProvider AcquisitionSettingsWindow { get; private set; }
 
@@ -58,8 +63,9 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<FanMode, Unit> FanCommand { get; private set; }
         public ReactiveCommand<ShutterMode, Unit> InternalShutterCommand { get; private set; }
         public ReactiveCommand<ShutterMode, Unit> ExternalShutterCommand { get; private set; }
-
+        
         public ReactiveCommand<Unit, object> SetUpAcquisitionCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit> StartAcquisitionCommand { get; private set; }
 
         public CameraTab(CameraBase camera)
         {
@@ -81,23 +87,6 @@ namespace DIPOL_UF.Models
 
             ImagePresenter = new DipolImagePresenter();
 
-#if DEBUG
-            var imageArr = new int[256 * 512];
-            var byteImg = new byte[256 * 512 * sizeof(int)];
-            var r = new Random();
-            r.NextBytes(byteImg);
-
-            Buffer.BlockCopy(byteImg, 0, imageArr, 0, byteImg.Length);
-
-            var img = new Image(imageArr, 512, 256);
-
-            Task.Run(async () =>
-            {
-                await Task.Delay(TimeSpan.FromSeconds(5));
-                ImagePresenter.LoadImage(img);
-            });
-#endif
-
             HookObservables();
             InitializeCommands();
         }
@@ -111,10 +100,25 @@ namespace DIPOL_UF.Models
                           .Select(x => x.EventArgs)
                           .DistinctUntilChanged();
 
+           WhenNewPreviewArrives =
+                Observable.FromEventPattern<NewImageReceivedHandler, NewImageReceivedEventArgs>(
+                              x => Camera.NewImageReceived += x,
+                              x => Camera.NewImageReceived -= x)
+                          .Sample(TimeSpan.Parse(UiSettingsProvider.Settings.Get("NewImagePollDelay", "00:00:00.500")))
+                          .Select(x => Camera.PullPreviewImage(x.EventArgs.Index, ImageFormat.UnsignedInt16))
+                          .Where(x => !(x is null));
+            //TODO : ImageFormat for displaying
+
+            WhenNewPreviewArrives
+                .Subscribe(x => ImagePresenter.LoadImage(x))
+                .DisposeWith(Subscriptions);
+
         }
 
         private void InitializeCommands()
         {
+
+
             CoolerCommand =
                 ReactiveCommand.Create<int>(
                                    (x) =>
@@ -142,36 +146,60 @@ namespace DIPOL_UF.Models
                                    Observable.Return(CanControlShutter.Internal))
                                .DisposeWith(Subscriptions);
 
-           ExternalShutterCommand =
+            ExternalShutterCommand =
                 ReactiveCommand.Create<ShutterMode>(
                                    x => Camera.ShutterControl(
                                        Camera.Shutter.Internal, x),
                                    Observable.Return(CanControlShutter.External))
                                .DisposeWith(Subscriptions);
 
-           SetUpAcquisitionCommand =
-               ReactiveCommand.Create<Unit, object>(x => x)
-                              .DisposeWith(Subscriptions);
+            SetUpAcquisitionCommand =
+                ReactiveCommand.Create<Unit, object>(x => x)
+                               .DisposeWith(Subscriptions);
 
-           AcquisitionSettingsWindow = new DescendantProvider(
-                   ReactiveCommand.Create<object, ReactiveObjectEx>(
-                       _ => new ReactiveWrapper<SettingsBase>(
-                           Camera.CurrentSettings ?? Camera.GetAcquisitionSettingsTemplate())),
-                   ReactiveCommand.Create<Unit>(_ => { }),
-                   null,
-                   ReactiveCommand.Create<ReactiveObjectEx>(x =>
-                   {
-                       if (x is ReactiveWrapper<SettingsBase> wrapper
-                           && wrapper.Object is SettingsBase setts
-                           && ReferenceEquals(setts, Camera.CurrentSettings))
-                           wrapper.Object = null;
+            AcquisitionSettingsWindow = new DescendantProvider(
+                    ReactiveCommand.Create<object, ReactiveObjectEx>(
+                        _ => new ReactiveWrapper<SettingsBase>(
+                            Camera.CurrentSettings ?? Camera.GetAcquisitionSettingsTemplate())),
+                    ReactiveCommand.Create<Unit>(_ => { }),
+                    null,
+                    ReactiveCommand.Create<ReactiveObjectEx>(x =>
+                    {
+                        if (x is ReactiveWrapper<SettingsBase> wrapper
+                            && wrapper.Object is SettingsBase setts
+                            && ReferenceEquals(setts, Camera.CurrentSettings))
+                            wrapper.Object = null;
 
                         x.Dispose();
-                   }))
-               .DisposeWith(Subscriptions);
+                    }))
+                .DisposeWith(Subscriptions);
 
             SetUpAcquisitionCommand.InvokeCommand(AcquisitionSettingsWindow.ViewRequested).DisposeWith(Subscriptions);
 
+            var hasValidSettings = AcquisitionSettingsWindow
+                                .ViewFinished
+                                .Select(_ => !(Camera.CurrentSettings is null));
+
+            StartAcquisitionCommand =
+                ReactiveCommand.Create(() =>
+                               {
+                                   if (!Camera.IsAcquiring 
+                                       && !(Camera.CurrentSettings is null))
+                                   {
+                                       _acquisitionTokenSource = new CancellationTokenSource();
+                                       _acquisitionTask = Camera
+                                                          .StartAcquisitionAsync(_acquisitionTokenSource.Token)
+                                                          .ExpectCancellationAsync();
+                                   }
+                                   else if (!(_acquisitionTask is null) && !(_acquisitionTokenSource is null))
+                                   {
+                                       if (Camera.IsAcquiring)
+                                           _acquisitionTokenSource.Cancel();
+                                       _acquisitionTask = null;
+                                       _acquisitionTokenSource = null;
+                                   }
+                               }, hasValidSettings)
+                               .DisposeWith(Subscriptions);
         }
 
     }

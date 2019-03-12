@@ -42,10 +42,6 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class CameraTabViewModel : ReactiveViewModel<CameraTab>
     {
-        [Reactive]
-        // ReSharper disable once UnusedAutoPropertyAccessor.Local
-        private float ActualTemperature { get; set; }
-
         public float MinimumAllowedTemperature => Model.TemperatureRange.Minimum;
         public float MaximumAllowedTemperature => Model.TemperatureRange.Maximum;
         public bool CanControlTemperature => Model.CanControlTemperature;
@@ -78,6 +74,7 @@ namespace DIPOL_UF.ViewModels
 
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
         public ICommand SetUpAcquisitionCommand => Model.SetUpAcquisitionCommand;
+        public ICommand StartAcquisitionCommand => Model.StartAcquisitionCommand;
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {

@@ -353,7 +353,7 @@
                 <!-- Acquire images button -->
                 <Button Grid.Column="0" Grid.Row="4"
                         VerticalAlignment="Center" HorizontalAlignment="Center"
-                        Command="{Binding ControlAcquisitionCommand}">
+                        Command="{Binding StartAcquisitionCommand}">
                     <Button.Style>
                         <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
                             <Style.Triggers>
