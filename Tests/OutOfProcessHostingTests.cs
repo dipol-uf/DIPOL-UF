@@ -25,6 +25,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Tests
@@ -32,7 +33,7 @@ namespace Tests
     
 
     [TestFixture]
-    public class RemoteCommunicationTests
+    public class OutOfProcessHostingTests
     {
 
         [Theory]
@@ -66,7 +67,7 @@ namespace Tests
             if (proc?.HasExited == false)
                 Assert.That(() =>
                 {
-                    System.Threading.SpinWait.SpinUntil(() => false, TimeSpan.FromMilliseconds(2000));
+                    Task.Delay(TimeSpan.FromMilliseconds(2000)).GetAwaiter().GetResult();
                     proc.StandardInput.WriteLine("exit");
                     proc.StandardInput.Flush();
                     proc.WaitForExit(10000);

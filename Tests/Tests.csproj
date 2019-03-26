@@ -96,7 +96,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteCameraTests.cs" />
     <Compile Include="RemoteCommunicationConfigProvider.cs" />
-    <Compile Include="RemoteCommunicationTests.cs" />
+    <Compile Include="OutOfProcessHostingTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ANDOR-CS\ANDOR-CS.csproj">
@@ -133,6 +133,9 @@
   <ItemGroup>
     <PackageReference Include="Castle.Core">
       <Version>4.3.1</Version>
+    </PackageReference>
+    <PackageReference Include="JetBrains.DotMemoryUnit">
+      <Version>3.0.20171219.105559</Version>
     </PackageReference>
     <PackageReference Include="MathNet.Numerics">
       <Version>4.7.0</Version>

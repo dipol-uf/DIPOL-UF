@@ -49,7 +49,7 @@ namespace Tests
             _host = new DipolHost(uri);
             _host.Host();
 
-            _client = new DipolClient("localhost");
+            _client = new DipolClient(new Uri("net.tcp://localhost:400/DipolHost"));
             _client.Connect();
         }
 
