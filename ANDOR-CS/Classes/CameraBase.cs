@@ -37,6 +37,7 @@ using System.Timers;
 using FITS_CS;
 using Timer = System.Timers.Timer;
 using System.Collections.Generic;
+using System.Text;
 
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
@@ -592,21 +593,13 @@ namespace ANDOR_CS.Classes
         }
 
         public override int GetHashCode()
-        {
-            var strRep = $"{CameraIndex} {ToString()}";
-            int hash = 0;
-            foreach (var ch in strRep)
-                hash += BitConverter.GetBytes(ch).Aggregate(hash, (current, b) => current + b);
-            return hash;
-        }
+            => $"{CameraIndex}{CameraModel}{SerialNumber}".GetHashCode();
 
         public override bool Equals(object obj)
         {
             if (obj is CameraBase cam)
                 return
-                    cam.CameraIndex == CameraIndex &
-                    cam.CameraModel == CameraModel &
-                    cam.SerialNumber == SerialNumber;
+                    cam.GetHashCode() == GetHashCode();
             return false;
         }
 

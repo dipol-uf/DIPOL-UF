@@ -432,7 +432,7 @@ namespace DIPOL_Remote.Classes
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
 
-        public static CameraBase Create(int camIndex = 0, object otherParams = null)
+        public new static CameraBase Create(int camIndex = 0, object otherParams = null)
         {
             var commObj = (otherParams
                  ?? throw new ArgumentNullException(
@@ -446,7 +446,7 @@ namespace DIPOL_Remote.Classes
             return commObj.CreateRemoteCamera(camIndex);
         }
 
-        public static async Task<CameraBase> CreateAsync(int camIndex = 0, object otherParams = null)
+        public new static async Task<CameraBase> CreateAsync(int camIndex = 0, object otherParams = null)
         {
             var commObj = (otherParams
                            ?? throw new ArgumentNullException(
