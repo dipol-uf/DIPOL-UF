@@ -22,17 +22,18 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-#define HOST_IN_PROCESS
+//#define HOST_IN_PROCESS
 
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using ANDOR_CS.Classes;
 using DIPOL_Remote.Classes;
 using NUnit.Framework;
 
-
+#if !HOST_IN_PROCESS
+using System.Diagnostics;
+using System.IO;
+#endif
 
 namespace Tests
 {
@@ -52,7 +53,7 @@ namespace Tests
                 throw new InvalidOperationException("Bad connection string");
 
           _host = new DipolHost(_hostUri);
-          _host.Host();
+          _host.Open();
         }
 
         [TearDown]
@@ -70,7 +71,6 @@ namespace Tests
             if(!Uri.TryCreate(hostConfigString, UriKind.RelativeOrAbsolute, out _hostUri))
                 throw new InvalidOperationException("Bad connection string");
 
-            // Testing X86 debug config
             var procInfo = new ProcessStartInfo(
                 Path.GetFullPath(Path.Combine(
                     TestContext.CurrentContext.TestDirectory,
@@ -81,7 +81,7 @@ namespace Tests
                 ErrorDialog = true,
                 WorkingDirectory = Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory,
                     RemoteCommunicationConfigProvider.HostConfig.Get("HostDirRelativePath", string.Empty))),
-                Arguments = $@"{uri.AbsoluteUri}",
+                Arguments = $@"{_hostUri.AbsoluteUri}",
                 RedirectStandardInput = true,
                 UseShellExecute = false
             };

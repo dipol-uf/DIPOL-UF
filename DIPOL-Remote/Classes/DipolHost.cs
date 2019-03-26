@@ -33,19 +33,18 @@ using DIPOL_Remote.Interfaces;
 
 namespace DIPOL_Remote.Classes
 {
-    public class DipolHost : IDisposable
+    public class DipolHost : ServiceHost, IDisposable
     {
         //private const string LogName = @"Dipol Event Log";
+        // TODO: To resources
         private const string SourceName = @"Dipol Remote Camera Service";
         // ReSharper disable once InconsistentNaming
         private static readonly ConcurrentDictionary<int, DipolHost> _OpenedHosts =
             new ConcurrentDictionary<int, DipolHost>();
 
-        private readonly ServiceHost _host;
 
-
-        public static IReadOnlyDictionary<int, DipolHost> OpenedHosts
-            => _OpenedHosts;
+        //public static IReadOnlyDictionary<int, DipolHost> OpenedHosts
+        //    => _OpenedHosts;
 
         public delegate void HostEventHandler(object source, string message);
 
@@ -65,12 +64,12 @@ namespace DIPOL_Remote.Classes
                 ReceiveTimeout = TimeSpan.FromHours(12)
             };
 
+            
+            InitializeDescription(typeof(RemoteControl), new UriSchemeKeyedCollection(endpoint));
 
-            _host = new ServiceHost(typeof(RemoteControl), endpoint);
+            AddServiceEndpoint(typeof(IRemoteControl),bnd, "");
 
-            _host.AddServiceEndpoint(typeof(IRemoteControl),bnd, "");
-
-            _OpenedHosts.TryAdd(_host.BaseAddresses[0].GetHashCode(), this);
+            //_OpenedHosts.TryAdd(_host.BaseAddresses[0].GetHashCode(), this);
 
             EventReceived += (sender, message) =>
             {
@@ -87,16 +86,13 @@ namespace DIPOL_Remote.Classes
             };
         }
         
-        public void Host() => _host?.Open();
+        [Obsolete("Use [ServiceHost.Open] instead")]
+        public void Host() => Open();
 
-      
+
         public void Dispose()
         {
-            var baseAddress = _host.BaseAddresses[0];
-
-            _host?.Close(TimeSpan.FromSeconds(15));
-
-            _OpenedHosts.TryRemove(baseAddress.GetHashCode(), out _);
+            Close();
         }
 
         public virtual void OnEventReceived(object sender, string message)

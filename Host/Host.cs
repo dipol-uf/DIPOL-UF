@@ -107,7 +107,7 @@ namespace Host
 
             using (var host = new DIPOL_Remote.Classes.DipolHost(uri))
             {
-                host.Host();
+                host.Open();
                 host.EventReceived += (sender, message)
                     =>
                 {
