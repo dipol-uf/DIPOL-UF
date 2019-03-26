@@ -97,8 +97,8 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Read-only collection of all local cameras in use.
         /// </summary>
-        public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
-            => CreatedCameras;
+        //public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
+        //    => CreatedCameras;
 
         /// <summary>
         /// Creates a new instance of Camera class to represent a connected Andor device.
@@ -1673,6 +1673,7 @@ namespace ANDOR_CS.Classes
             => await Task.Run(() => Create(camIndex, otherParams));
 
 #if DEBUG
+        [Obsolete]
         public static CameraBase GetDebugInterface(int camIndex = 0)
             => new DebugCamera(camIndex);
 
