@@ -344,7 +344,7 @@ namespace DIPOL_Remote.Classes
         }
 
         protected override void StartAcquisition()
-            => session.CallStartAcquisition(CameraIndex);
+            => throw new NotSupportedException();
 
         protected override void AbortAcquisition()
             => session.CallAbortAcquisition(CameraIndex);

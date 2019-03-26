@@ -44,11 +44,13 @@ using ANDOR_CS.Enums;
 using DIPOL_Remote.Interfaces;
 using SettingsManager;
 using Newtonsoft.Json;
+// ReSharper disable InheritdocConsiderUsage
 
 namespace DIPOL_Remote.Classes
 {
+    /// <inheritdoc />
     /// <summary>
-    /// Implementation of <see cref="IRemoteControl"/> service interface.
+    /// Implementation of <see cref="T:DIPOL_Remote.Interfaces.IRemoteControl" /> service interface.
     /// This class should not be utilized directly.
     /// Instances are executed on server (service) side.
     /// </summary>
@@ -62,22 +64,20 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Defines max number of attempts to create unique identifier.
         /// </summary>
-        private static readonly int MaxTryAddAttempts = 30;
+        // TODO : Move to settings
+        private const int MaxTryAddAttempts = 30;
 
-        private static JsonSettings Config;
+        // TODO : Check settings
+        private static JsonSettings _config;
 
-        /// <summary>
-        /// Unique ID of the current session
-        /// </summary>
-        private string sessionID = null;
         /// <summary>
         /// Operation context of current connection. Used for callbacks
         /// </summary>
-        private OperationContext context;
+        private OperationContext _context;
         /// <summary>
         /// A reference to Host instance
         /// </summary>
-        private DipolHost host;
+        private DipolHost _host;
 
         /// <summary>
         /// Thread-safe collection of all active instances of AcquisitionSettings.
@@ -93,6 +93,7 @@ namespace DIPOL_Remote.Classes
         /// </summary>
         private static readonly ConcurrentDictionary<string, RemoteControl> serviceInstances 
             = new ConcurrentDictionary<string, RemoteControl>();
+
         /// <summary>
         /// Thread-safe collection of active remote cameras.
         /// </summary>
@@ -102,24 +103,25 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Unique ID of current session
         /// </summary>
-        public string SessionID
-        {
-            [OperationBehavior]
-            get => sessionID;
-
+        public string SessionID { [OperationBehavior]
+            get; private set;
         }
+
         /// <summary>
         /// Interface to collection of all active <see cref="AcquisitionSettings"/> instances.
         /// </summary>
         public IReadOnlyDictionary<string,  SettingsBase> Settings
            => settings as IReadOnlyDictionary<string, SettingsBase>;
+
         public IReadOnlyDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> ActiveTasks
             => activeTasks as IReadOnlyDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>;
+
         /// <summary>
         /// Interface to collection of all active <see cref="RemoteControl"/> service instances.
         /// </summary>
         public static IReadOnlyDictionary<string, RemoteControl> ActiveConnections
             => serviceInstances as IReadOnlyDictionary<string, RemoteControl>;
+
         /// <summary>
         /// Interface to collectio of all active cameras of all sessions
         /// </summary>
@@ -142,18 +144,18 @@ namespace DIPOL_Remote.Classes
         public void Connect()
         {
             // Stores current context
-            context = OperationContext.Current;
+            _context = OperationContext.Current;
             // Assigns session ID
-            sessionID = Guid.NewGuid().ToString("N");
+            SessionID = Guid.NewGuid().ToString("N");
 
             
             int count = 0;
             // Stores current instance of service class into collection
 
             for(;
-                !serviceInstances.TryAdd(sessionID, this) & count < MaxTryAddAttempts;
+                !serviceInstances.TryAdd(SessionID, this) & count < MaxTryAddAttempts;
                 count++)
-                sessionID = Guid.NewGuid().ToString("N");
+                SessionID = Guid.NewGuid().ToString("N");
            
 
             if (count >= MaxTryAddAttempts)
@@ -170,9 +172,9 @@ namespace DIPOL_Remote.Classes
 
 
             // Looks up for a host with the same endpoint
-            host = DipolHost.OpenedHosts.FirstOrDefault(item => item.Key == context.Host.BaseAddresses[0].GetHashCode()).Value;
+            _host = DipolHost.OpenedHosts.FirstOrDefault(item => item.Key == _context.Host.BaseAddresses[0].GetHashCode()).Value;
 
-            host?.OnEventReceived("Host", $"Session {SessionID} established.");
+            _host?.OnEventReceived("Host", $"Session {SessionID} established.");
 
         }
         /// <summary>
@@ -182,7 +184,7 @@ namespace DIPOL_Remote.Classes
         public void Disconnect()
         {
            Dispose();
-           host?.OnEventReceived("Host", $"Session {SessionID} closed.");
+           _host?.OnEventReceived("Host", $"Session {SessionID} closed.");
         }
  
 
@@ -211,7 +213,7 @@ namespace DIPOL_Remote.Classes
                     RemoveTask(key);
 
                 // Remove this session from collection
-                serviceInstances.TryRemove(sessionID, out _);
+                serviceInstances.TryRemove(SessionID, out _);
             }
             catch (Exception e)
             {
@@ -276,8 +278,8 @@ namespace DIPOL_Remote.Classes
             try
             {
                 // Tries to create new remote camera
-#if NO_ACTUAL_CAMERA
-                camera = Camera.GetDebugInterface(camIndex);
+#if DEBUG
+                camera = Camera.GetNumberOfCameras() <= 0 ? Camera.GetDebugInterface(camIndex) : new Camera(camIndex);
 
 #else
                 camera = new Camera(camIndex);
@@ -303,7 +305,7 @@ namespace DIPOL_Remote.Classes
 
          
 
-            if(!activeCameras.TryAdd(camera.CameraIndex, (sessionID, camera)))
+            if(!activeCameras.TryAdd(camera.CameraIndex, (SessionID, camera)))
             {
                 // Clean & and throw exception
                 camera.Dispose();
@@ -391,10 +393,10 @@ namespace DIPOL_Remote.Classes
                     e);
 
             camera.TemperatureStatusChecked += (sender, e)
-                => host?.OnEventReceived(sender, $"{e.Status} {e.Temperature}");
+                => _host?.OnEventReceived(sender, $"{e.Status} {e.Temperature}");
 
             camera.PropertyChanged += (sender, e)
-                => host?.OnEventReceived(sender, e.PropertyName);
+                => _host?.OnEventReceived(sender, e.PropertyName);
 
             // TODO: Update Logging
             //camera.AcquisitionStarted += (sender, e)
@@ -410,7 +412,7 @@ namespace DIPOL_Remote.Classes
             //camera.NewImageReceived += (sender, e)
             //    => host?.OnEventReceived(sender, $"New image:  ({e.First}, {e.Last})");
 
-            host?.OnEventReceived(camera, "Camera was created remotely");
+            _host?.OnEventReceived(camera, "Camera was created remotely");
         }
         [OperationBehavior]
         public void RemoveCamera(int camIndex)
@@ -431,8 +433,8 @@ namespace DIPOL_Remote.Classes
                     select item.Key)
                     RemoveTask(taskKey);
 
-                var removedCamera = GetCameraSafe(sessionID, camIndex);
-                host?.OnEventReceived(removedCamera, "Camera was disposed remotely.");
+                var removedCamera = GetCameraSafe(SessionID, camIndex);
+                _host?.OnEventReceived(removedCamera, "Camera was disposed remotely.");
                 activeCameras.TryRemove(camIndex, out _);
 
                 removedCamera.Dispose();
@@ -469,7 +471,7 @@ namespace DIPOL_Remote.Classes
                     },
                     ServiceException.GeneralServiceErrorReason);
 
-            host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} created.");
+            _host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} created.");
 
             return settingsID;
         }
@@ -479,7 +481,7 @@ namespace DIPOL_Remote.Classes
             settings.TryRemove(settingsID, out SettingsBase setts);
             setts?.Dispose();
 
-            host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} removed.");
+            _host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} removed.");
         }
         [OperationBehavior]
         public string CreateAcquisitionTask(int camIndex, int delay)
@@ -521,7 +523,7 @@ namespace DIPOL_Remote.Classes
                 taskInfo.Token.Dispose();
             }
 
-            host?.OnEventReceived("Host", $"AcqTask with ID {taskID} removed.");
+            _host?.OnEventReceived("Host", $"AcqTask with ID {taskID} removed.");
         }
 
 
@@ -530,31 +532,31 @@ namespace DIPOL_Remote.Classes
             => activeCameras.Keys.ToArray();
         [OperationBehavior]
         public string GetCameraModel(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).CameraModel;
+            => GetCameraSafe(SessionID, camIndex).CameraModel;
         [OperationBehavior]
         public bool GetIsActive(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).IsActive;
+            => GetCameraSafe(SessionID, camIndex).IsActive;
         [OperationBehavior]
         public string GetSerialNumber(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).SerialNumber;
+            => GetCameraSafe(SessionID, camIndex).SerialNumber;
         [OperationBehavior]
         public CameraProperties GetProperties(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).Properties;
+            => GetCameraSafe(SessionID, camIndex).Properties;
         [OperationBehavior]
         public bool GetIsInitialized(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).IsInitialized;
+            => GetCameraSafe(SessionID, camIndex).IsInitialized;
         [OperationBehavior]
         public FanMode GetFanMode(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).FanMode;
+            => GetCameraSafe(SessionID, camIndex).FanMode;
         [OperationBehavior]
         public Switch GetCoolerMode(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).CoolerMode;
+            => GetCameraSafe(SessionID, camIndex).CoolerMode;
         [OperationBehavior]
         public DeviceCapabilities GetCapabilities(int camIndex)
-           => GetCameraSafe(sessionID, camIndex).Capabilities;
+           => GetCameraSafe(SessionID, camIndex).Capabilities;
         [OperationBehavior]
         public bool GetIsAcquiring(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).IsAcquiring;
+            => GetCameraSafe(SessionID, camIndex).IsAcquiring;
         //[OperationBehavior]
         //public bool GetIsAsyncAcquisition(int camIndex)
         //    => GetCameraSafe(sessionID, camIndex).IsAsyncAcquisition;
@@ -565,16 +567,16 @@ namespace DIPOL_Remote.Classes
            TtlShutterSignal Type,
            int OpenTime,
            int CloseTime) GetShutter(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).Shutter;
+            => GetCameraSafe(SessionID, camIndex).Shutter;
         [OperationBehavior]
         public bool GetIsTemperatureMonitored(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).IsTemperatureMonitored;
+            => GetCameraSafe(SessionID, camIndex).IsTemperatureMonitored;
         [OperationBehavior]
         public (Version EPROM, Version COFFile, Version Driver, Version Dll) GetSoftware(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).Software;
+            => GetCameraSafe(SessionID, camIndex).Software;
         [OperationBehavior]
         public (Version PCB, Version Decode, Version CameraFirmware) GetHardware(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).Hardware;
+            => GetCameraSafe(SessionID, camIndex).Hardware;
 
         //[OperationBehavior]
         //public (byte[] Data, int Width, int Height, TypeCode TypeCode) PullNewImage(int camIndex)
@@ -588,22 +590,22 @@ namespace DIPOL_Remote.Classes
 
         [OperationBehavior]
         public CameraStatus CallGetStatus(int camIndex)
-           => GetCameraSafe(sessionID, camIndex).GetStatus();
+           => GetCameraSafe(SessionID, camIndex).GetStatus();
         [OperationBehavior]
         public (TemperatureStatus Status, float Temperature) CallGetCurrentTemperature(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).GetCurrentTemperature();
+            => GetCameraSafe(SessionID, camIndex).GetCurrentTemperature();
         [OperationBehavior]
         public void CallSetActive(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).SetActive();
+            => GetCameraSafe(SessionID, camIndex).SetActive();
         [OperationBehavior]
         public void CallFanControl(int camIndex, FanMode mode)
-            => GetCameraSafe(sessionID, camIndex).FanControl(mode);
+            => GetCameraSafe(SessionID, camIndex).FanControl(mode);
         [OperationBehavior]
         public void CallCoolerControl(int camIndex, Switch mode)
-            => GetCameraSafe(sessionID, camIndex).CoolerControl(mode);
+            => GetCameraSafe(SessionID, camIndex).CoolerControl(mode);
         [OperationBehavior]
         public void CallSetTemperature(int camIndex, int temperature)
-            => GetCameraSafe(sessionID, camIndex).SetTemperature(temperature);
+            => GetCameraSafe(SessionID, camIndex).SetTemperature(temperature);
         // TODO: Take a look at the parameter order
         [OperationBehavior]
         public void CallShutterControl(
@@ -613,7 +615,7 @@ namespace DIPOL_Remote.Classes
             ShutterMode inter,
             ShutterMode @extern = ShutterMode.FullyAuto,
             TtlShutterSignal type = TtlShutterSignal.Low)
-            => GetCameraSafe(sessionID, camIndex).ShutterControl(
+            => GetCameraSafe(SessionID, camIndex).ShutterControl(
                 inter,
                 @extern,
                 clTime,
@@ -621,7 +623,7 @@ namespace DIPOL_Remote.Classes
                 type);
         [OperationBehavior]
         public void CallTemperatureMonitor(int camIndex, Switch mode, int timeout)
-            => GetCameraSafe(sessionID, camIndex).TemperatureMonitor(mode, timeout);
+            => GetCameraSafe(SessionID, camIndex).TemperatureMonitor(mode, timeout);
 
         [OperationBehavior]
         public void CallStartAcquisition(int camIndex)
@@ -742,8 +744,8 @@ namespace DIPOL_Remote.Classes
         private OperationContext GetContext()
         {
 
-            if (context.Channel.State == CommunicationState.Opened)
-                return context;
+            if (_context.Channel.State == CommunicationState.Opened)
+                return _context;
             else
                 return null;
 
@@ -766,7 +768,7 @@ namespace DIPOL_Remote.Classes
 
                 var isAccepted = GetContext()
                     ?.GetCallbackChannel<IRemoteCallback>()
-                    ?.NotifyCameraCreatedAsynchronously(camIndex, sessionID, result);
+                    ?.NotifyCameraCreatedAsynchronously(camIndex, SessionID, result);
 
                 if (!isAccepted ?? true)
                     RemoveCamera(camIndex);
@@ -799,7 +801,7 @@ namespace DIPOL_Remote.Classes
                     }
                 }
 
-            Config = settings;
+            _config = settings;
         }
     }
 }
