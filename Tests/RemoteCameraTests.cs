@@ -45,7 +45,7 @@ namespace Tests
             if (!Uri.TryCreate(uriStr, UriKind.RelativeOrAbsolute, out var uri))
                 throw new InvalidOperationException("No configuration found");
             _host = new DipolHost(uri);
-            _host.Host();
+            _host.Open();
 
             _client = new DipolClient(new Uri("net.tcp://localhost:400/DipolHost"));
             _client.Connect();

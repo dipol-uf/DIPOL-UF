@@ -33,8 +33,7 @@ using System.Threading.Tasks;
 using System.Threading;
 
 using System.ServiceModel;
-
-
+using System.Text;
 using DIPOL_Remote.Faults;
 
 using ANDOR_CS.Classes;
@@ -74,10 +73,7 @@ namespace DIPOL_Remote.Classes
         // TODO : Check settings
         private static JsonSettings _config;
 
-        /// <summary>
-        /// Operation context of current connection. Used for callbacks
-        /// </summary>
-        private OperationContext _context;
+        
         /// <summary>
         /// A reference to Host instance
         /// </summary>
@@ -149,11 +145,16 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void Connect()
         {
-            // Stores current context
-            _context = OperationContext.Current;
-            // Looks up for a host with the same endpoint
-            _host = DipolHost.OpenedHosts.FirstOrDefault(item => item.Key == _context.Host.BaseAddresses[0].GetHashCode()).Value;
-            var host2 = OperationContext.Current.Host;
+            _host = OperationContext.Current.Host as DipolHost ??
+                    throw new InvalidOperationException("Unsupported host type.");
+
+            var uriHash = _host.BaseAddresses.Select(x => x.ToString().GetHashCode()).DefaultIfEmpty(0).FirstOrDefault();
+
+            SessionID = BitConverter.GetBytes(uriHash).Concat(BitConverter.GetBytes(DateTimeOffset.UtcNow.UtcTicks))
+                                    .Aggregate(new StringBuilder(2 * (sizeof(long) + sizeof(int))), 
+                                        (old, @new) => old.Append(@new.ToString("X2"))).ToString();
+                            
+
             _host?.OnEventReceived("Host", $"Session {SessionID} established.");
 
         }
@@ -727,14 +728,9 @@ namespace DIPOL_Remote.Classes
                 throw new Exception();
         }
 
-        private OperationContext GetContext()
+        private static OperationContext GetContext()
         {
-
-            if (_context.Channel.State == CommunicationState.Opened)
-                return _context;
-            else
-                return null;
-
+            return OperationContext.Current?.Channel.State == CommunicationState.Opened ? OperationContext.Current : null;
         }
 
         public void RequestCreateCamera(int camIndex)
