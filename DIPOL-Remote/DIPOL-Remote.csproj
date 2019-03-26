@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DIPOL_Remote</RootNamespace>
     <AssemblyName>DIPOL-Remote</AssemblyName>
-    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
@@ -41,7 +41,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>latest</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -85,22 +85,18 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\ANDOR-CS\ANDOR-CS.csproj">
       <Project>{d1e8b17d-4c59-42dd-87bd-f111df8e631d}</Project>
       <Name>ANDOR-CS</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DipolImage\DipolImage.csproj">
-      <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
-      <Name>DipolImage</Name>
     </ProjectReference>
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj">
       <Project>{f9a3b5ae-04c0-43cc-a0b7-7e03924b6698}</Project>
       <Name>SettingsManager</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
