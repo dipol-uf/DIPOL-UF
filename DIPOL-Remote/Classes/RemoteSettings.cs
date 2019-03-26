@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-
-using ANDOR_CS.Enums;
-using ANDOR_CS.DataStructures;
 using ANDOR_CS.Classes;
-using ANDOR_CS.Exceptions;
-
 using DIPOL_Remote.Interfaces;
 
 namespace DIPOL_Remote.Classes
@@ -67,31 +58,32 @@ namespace DIPOL_Remote.Classes
             Camera = cam;
         }
 
-        public override List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
-            out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
-        {
-            // Stores byte representation of settings
-            byte[] data;
+        // TODO: Migrate to [Camera]
+        //public override List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
+        //    out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
+        //{
+        //    // Stores byte representation of settings
+        //    byte[] data;
 
-            // Creates MemoryStream and serializes settings into it.
-            using (var memStr = new MemoryStream())
-            {
-                Serialize(memStr);
+        //    // Creates MemoryStream and serializes settings into it.
+        //    using (var memStr = new MemoryStream())
+        //    {
+        //        Serialize(memStr);
                 
-                // Writes stream bytes to array.
-                data = memStr.ToArray();
-            }
+        //        // Writes stream bytes to array.
+        //        data = memStr.ToArray();
+        //    }
 
-            // Calls remote method.
-            var result = session.CallApplySettings(SettingsID, data);
+        //    // Calls remote method.
+        //    var result = session.CallApplySettings(SettingsID, data);
 
-            base.ApplySettings(out _);
-            // Assigns out values
-            timing = result.Timing;
+        //    base.ApplySettings(out _);
+        //    // Assigns out values
+        //    timing = result.Timing;
 
-            return result.Result.ToList();
+        //    return result.Result.ToList();
             
-        }
+        //}
 
         public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int ADConverter, int amplifier)
             => session.GetAvailableHSSpeeds(
@@ -108,6 +100,16 @@ namespace DIPOL_Remote.Classes
                 ADConverter, 
                 amplifier,
                 HSSpeed);
+
+        public override (int Low, int High) GetEmGainRange()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SetEmCcdGain(int gain)
+        {
+            throw new NotImplementedException();
+        }
 
         public override bool IsHSSpeedSupported(
             int speedIndex, 
