@@ -239,8 +239,16 @@ namespace DIPOL_Remote.Classes
         {
             try
             {
-#if NO_ACTUAL_CAMERA
-                return 3;
+#if DEBUG
+                var nCams = 0;
+                try
+                {
+                    nCams = Camera.GetNumberOfCameras();
+                }
+                catch (Exception)
+                {
+                }
+                return nCams == 0 ? 3 : nCams;
 #else
                 // Trys to retrieve the number of available cameras
                 return Camera.GetNumberOfCameras();

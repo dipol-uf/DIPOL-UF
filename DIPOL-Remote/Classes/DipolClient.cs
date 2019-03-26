@@ -34,8 +34,6 @@ namespace DIPOL_Remote.Classes
 {
     public class DipolClient : IDisposable
     {
-        private const string EndpointTemplate = @"net.tcp://{0}:400/DipolRemote"; //new Uri(@"net.tcp://localhost:400/DipolRemote");
-
         private readonly InstanceContext _context = new InstanceContext(new RemoteCallbackHandler());
         private readonly IRemoteControl _remote;
 
@@ -54,26 +52,25 @@ namespace DIPOL_Remote.Classes
         public string SessionID
             => Remote.SessionID;
 
-        public DipolClient(string host)
+        public DipolClient(Uri hostUri)
         {
-            HostAddress = host;
+            HostAddress = hostUri.ToString();
             var bnd = new NetTcpBinding(SecurityMode.None)
             {
                 MaxReceivedMessageSize = 512 * 512 * 8 * 2
             };
             // IMPORTANT! Limits the size of SOAP message. For larger images requires another implementation
-            var endpoint = new Uri(string.Format(EndpointTemplate, host));
             _remote = new DuplexChannelFactory<IRemoteControl>(
                 _context, 
                 bnd, 
-                new EndpointAddress(endpoint)).CreateChannel();
+                new EndpointAddress(hostUri)).CreateChannel();
 
             
         }
 
-        public DipolClient(string host, TimeSpan openTimeout, TimeSpan sendTimeout, TimeSpan operationTimeout, TimeSpan closeTimeout)
+        public DipolClient(Uri hostUri, TimeSpan openTimeout, TimeSpan sendTimeout, TimeSpan operationTimeout, TimeSpan closeTimeout)
         {
-            HostAddress = host;
+            HostAddress = hostUri.ToString();
             var bnd = new NetTcpBinding(SecurityMode.None)
             {
                 MaxReceivedMessageSize = 512 * 512 * 8 * 2,
@@ -84,11 +81,10 @@ namespace DIPOL_Remote.Classes
             // IMPORTANT! Limits the size of SOAP message. For larger images requires another implementation
 
 
-            var endpoint = new Uri(string.Format(EndpointTemplate, host));
             _remote = new DuplexChannelFactory<IRemoteControl>(
                 _context,
                 bnd,
-                new EndpointAddress(endpoint)).CreateChannel();
+                new EndpointAddress(hostUri)).CreateChannel();
 
             // ReSharper disable once SuspiciousTypeConversion.Global
             ((IDuplexContextChannel) _remote).OperationTimeout = operationTimeout;
