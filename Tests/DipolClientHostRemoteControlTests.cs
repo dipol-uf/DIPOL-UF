@@ -22,6 +22,8 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+#define HOST_IN_PROCESS
+
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -30,19 +32,42 @@ using ANDOR_CS.Classes;
 using DIPOL_Remote.Classes;
 using NUnit.Framework;
 
+
+
 namespace Tests
 {
     [TestFixture]
     public class DipolClientHostRemoteControlTests
     {
-        private Process _proc;
         private Uri _hostUri;
+
+#if HOST_IN_PROCESS
+        private DipolHost _host;
         [SetUp]
         public void Initialize()
         {
             var hostConfigString =
                 RemoteCommunicationConfigProvider.HostConfig.Get("HostConnectionString", string.Empty);
-            if(!Uri.TryCreate(hostConfigString, UriKind.RelativeOrAbsolute, out var uri))
+            if (!Uri.TryCreate(hostConfigString, UriKind.RelativeOrAbsolute, out _hostUri))
+                throw new InvalidOperationException("Bad connection string");
+
+          _host = new DipolHost(_hostUri);
+          _host.Host();
+        }
+
+        [TearDown]
+        public void Destroy()
+        {
+            _host.Dispose();
+        }
+#else
+        private Process _proc;
+        [SetUp]
+        public void Initialize()
+        {
+            var hostConfigString =
+                RemoteCommunicationConfigProvider.HostConfig.Get("HostConnectionString", string.Empty);
+            if(!Uri.TryCreate(hostConfigString, UriKind.RelativeOrAbsolute, out _hostUri))
                 throw new InvalidOperationException("Bad connection string");
 
             // Testing X86 debug config
@@ -63,7 +88,6 @@ namespace Tests
 
             _proc = Process.Start(procInfo);
 
-            _hostUri = uri;
         }
 
         [TearDown]
@@ -83,7 +107,7 @@ namespace Tests
 
             _proc?.Dispose();
         }
-
+#endif
         [Test]
         [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         public void Test_CanConnect()

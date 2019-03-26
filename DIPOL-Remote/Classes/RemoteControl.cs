@@ -44,6 +44,9 @@ using ANDOR_CS.Enums;
 using DIPOL_Remote.Interfaces;
 using SettingsManager;
 using Newtonsoft.Json;
+
+using ServiceCollection = System.Collections.Concurrent.ConcurrentDictionary<string, DIPOL_Remote.Classes.RemoteControl>;
+
 // ReSharper disable InheritdocConsiderUsage
 
 namespace DIPOL_Remote.Classes
@@ -57,6 +60,7 @@ namespace DIPOL_Remote.Classes
     [ServiceBehavior(
         ConcurrencyMode = ConcurrencyMode.Multiple, 
         InstanceContextMode = InstanceContextMode.PerSession,
+        AutomaticSessionShutdown = true,
         UseSynchronizationContext = true,
         IncludeExceptionDetailInFaults = true)]
     internal sealed class RemoteControl : IRemoteControl, IDisposable
@@ -91,8 +95,10 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Thread-safe collection of all active <see cref="RemoteControl"/> service instances.
         /// </summary>
-        private static readonly ConcurrentDictionary<string, RemoteControl> serviceInstances 
-            = new ConcurrentDictionary<string, RemoteControl>();
+        //private static readonly ConcurrentDictionary<string, RemoteControl> serviceInstances 
+        //    = new ConcurrentDictionary<string, RemoteControl>();
+
+
 
         /// <summary>
         /// Thread-safe collection of active remote cameras.
@@ -119,8 +125,8 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Interface to collection of all active <see cref="RemoteControl"/> service instances.
         /// </summary>
-        public static IReadOnlyDictionary<string, RemoteControl> ActiveConnections
-            => serviceInstances as IReadOnlyDictionary<string, RemoteControl>;
+        //public static IReadOnlyDictionary<string, RemoteControl> ActiveConnections
+        //    => serviceInstances as IReadOnlyDictionary<string, RemoteControl>;
 
         /// <summary>
         /// Interface to collectio of all active cameras of all sessions
@@ -145,35 +151,9 @@ namespace DIPOL_Remote.Classes
         {
             // Stores current context
             _context = OperationContext.Current;
-            // Assigns session ID
-            SessionID = Guid.NewGuid().ToString("N");
-
-            
-            int count = 0;
-            // Stores current instance of service class into collection
-
-            for(;
-                !serviceInstances.TryAdd(SessionID, this) & count < MaxTryAddAttempts;
-                count++)
-                SessionID = Guid.NewGuid().ToString("N");
-           
-
-            if (count >= MaxTryAddAttempts)
-                throw new FaultException<ServiceException>(
-                    new ServiceException()
-                    {
-                        Message = "Initialization of connection failed.",
-                        Details = "Unable to generate unique session ID. " +
-                        "Failed to add current session to the pool of active sessions.",
-                        MethodName = nameof(serviceInstances.TryAdd)
-                    }, 
-                    ServiceException.GeneralServiceErrorReason
-                    );
-
-
             // Looks up for a host with the same endpoint
             _host = DipolHost.OpenedHosts.FirstOrDefault(item => item.Key == _context.Host.BaseAddresses[0].GetHashCode()).Value;
-
+            var host2 = OperationContext.Current.Host;
             _host?.OnEventReceived("Host", $"Session {SessionID} established.");
 
         }
@@ -212,8 +192,6 @@ namespace DIPOL_Remote.Classes
                 foreach (var key in activeTasks.Keys)
                     RemoveTask(key);
 
-                // Remove this session from collection
-                serviceInstances.TryRemove(SessionID, out _);
             }
             catch (Exception e)
             {
@@ -250,7 +228,7 @@ namespace DIPOL_Remote.Classes
                 }
                 return nCams == 0 ? 3 : nCams;
 #else
-                // Trys to retrieve the number of available cameras
+                // Tries to retrieve the number of available cameras
                 return Camera.GetNumberOfCameras();
 #endif
 
