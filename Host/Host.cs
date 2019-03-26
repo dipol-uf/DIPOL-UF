@@ -24,16 +24,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using CommandLine;
 
 namespace Host
 {
     internal class Host
     {
+        [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
         private sealed class Options
         {
             private static List<(PropertyInfo Property, object Default)> props =
@@ -45,11 +46,9 @@ namespace Host
                                    Default: x.GetCustomAttribute<OptionAttribute>()?.Default ??
                                             x.GetCustomAttribute<ValueAttribute>()?.Default))
                                .ToList();
+
             [Value(0, HelpText = @"Service connection string", Required = true)]
             public string Uri { get; set; }
-
-            [Option('t', "test", Default = false, HelpText = @"Displays help message")]
-            public bool Test { get; set; }
 
             [Option("console-width", Default = 120, HelpText = @"Width of the console window")]
             public int ConsoleWidth { get; set; }
