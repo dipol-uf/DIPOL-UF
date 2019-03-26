@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -23,45 +23,112 @@
 //     SOFTWARE.
 
 using System;
-
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using CommandLine;
 
 namespace Host
 {
     internal class Host
     {
-        private static readonly object Locker = new object();
-
-        private static void Main(string[] args)
+        private sealed class Options
         {
-            Console.WindowWidth = 180;
-            Console.WindowHeight = 60;
+            private static List<(PropertyInfo Property, object Default)> props =
+                typeof(Options).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                               .Where(x => x.CanWrite &&
+                                           (x.GetCustomAttribute<OptionAttribute>()?.Default != null
+                                            || x.GetCustomAttribute<ValueAttribute>()?.Default != null))
+                               .Select(x => (Property: x,
+                                   Default: x.GetCustomAttribute<OptionAttribute>()?.Default ??
+                                            x.GetCustomAttribute<ValueAttribute>()?.Default))
+                               .ToList();
+            [Value(0, HelpText = @"Service connection string", Required = true)]
+            public string Uri { get; set; }
 
-            //Debug();
+            [Option('t', "test", Default = false, HelpText = @"Displays help message")]
+            public bool Test { get; set; }
 
-            using (var host = new DIPOL_Remote.Classes.DipolHost())
+            [Option("console-width", Default = 120, HelpText = @"Width of the console window")]
+            public int ConsoleWidth { get; set; }
+
+            [Option("console-height", Default = 80, HelpText = @"Height of the console window")]
+            public int ConsoleHeight { get; set; }
+
+            public static Options MakeDefault()
+            {
+                var opt = new Options();
+
+                foreach (var (property, @default) in props)
+                    property.SetValue(opt, @default);
+
+                return opt;
+            }
+        }
+
+        private static TextWriter Output { get; } = Console.Out;
+
+        private static Options HandleArgs(IEnumerable<string> args)
+        {
+            if (args is null)
+                return Options.MakeDefault();
+
+            using (var parser = new Parser(settings =>
+            {
+                settings.AutoHelp = true;
+                settings.AutoVersion = true;
+                settings.CaseInsensitiveEnumValues = true;
+                settings.HelpWriter = Output;
+                settings.IgnoreUnknownArguments = true;
+            }))
+            {
+                var arguments = parser.ParseArguments<Options>(args);
+
+                return arguments.MapResult(x => x, y => Options.MakeDefault());
+            }
+        }
+
+        private static int Main(string[] args)
+        {
+            var options = HandleArgs(args);
+
+            if (options.Uri is null)
+                return 13;
+
+            if (options.ConsoleWidth < Console.LargestWindowWidth)
+                Console.WindowWidth = options.ConsoleWidth;
+
+            if (options.ConsoleHeight < Console.LargestWindowHeight)
+                Console.WindowHeight = options.ConsoleHeight;
+
+            using (var host = new DIPOL_Remote.Classes.DipolHost(new Uri("")))
             {
                 host.Host();
                 host.EventReceived += (sender, message)
                     =>
                 {
-                    if (!(sender is ANDOR_CS.Classes.DebugCamera))
-                    {
-                        string senderString;
-                        if (sender is ANDOR_CS.Classes.CameraBase cam)
-                            senderString = $"{cam.CameraModel}/{cam.SerialNumber}";
-                        else
-                            senderString = sender.ToString();
+                    //if (!(sender is ANDOR_CS.Classes.DebugCamera))
+                    //{
+                    //    string senderString;
+                    //    if (sender is ANDOR_CS.Classes.CameraBase cam)
+                    //        senderString = $"{cam.CameraModel}/{cam.SerialNumber}";
+                    //    else
+                    //        senderString = sender.ToString();
 
-                        lock (Locker)
-                        {
-                            Console.ForegroundColor = ConsoleColor.Yellow;
-                            Console.Write("[{0,23:yyyy/MM/dd HH-mm-ss.fff}] @", DateTime.Now);
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.Write(" {0, 16}", senderString);
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.WriteLine($": { message}");
-                        }
-                    }
+                    //    lock (Locker)
+                    //    {
+                    //        Console.ForegroundColor = ConsoleColor.Yellow;
+                    //        Console.Write("[{0,23:yyyy/MM/dd HH-mm-ss.fff}] @", DateTime.Now);
+                    //        Console.ForegroundColor = ConsoleColor.Cyan;
+                    //        Console.Write(" {0, 16}", senderString);
+                    //        Console.ForegroundColor = ConsoleColor.White;
+                    //        Console.WriteLine($": { message}");
+                    //    }
+                    //}
+
+                    Console.WriteLine($"{sender}:\t{message}");
 
                 };
 
@@ -69,17 +136,9 @@ namespace Host
                 while (Console.ReadKey().Key != ConsoleKey.Escape)
                 { }
             }
-        }
 
-        private static void Debug()
-        {
-            var t = System.Diagnostics.Stopwatch.StartNew();
-            using(var cam = new ANDOR_CS.Classes.Camera())
-            {
-                t.Stop();
-                Console.WriteLine(cam.CameraModel + $"\t{t.ElapsedMilliseconds / 1000.0}");
-                Console.ReadKey();
-            }
+            return 0;
         }
+        
     }
 }

@@ -35,8 +35,7 @@ namespace DIPOL_Remote.Classes
 {
     public class DipolHost : IDisposable
     {
-        private static readonly Uri Endpoint = new Uri(@"net.tcp://localhost:400/DipolRemote");
-        private const string LogName = @"Dipol Event Log";
+        //private const string LogName = @"Dipol Event Log";
         private const string SourceName = @"Dipol Remote Camera Service";
         // ReSharper disable once InconsistentNaming
         private static readonly ConcurrentDictionary<int, DipolHost> _OpenedHosts =
@@ -52,10 +51,11 @@ namespace DIPOL_Remote.Classes
 
         public event HostEventHandler EventReceived;
 
-        public DipolHost()
+        public DipolHost(Uri serviceUri)
         {
-            if (!EventLog.SourceExists(SourceName))
-                EventLog.CreateEventSource(SourceName, LogName);
+            var endpoint = serviceUri ?? throw new ArgumentNullException(nameof(serviceUri));
+            //if (!EventLog.SourceExists(SourceName))
+            //    EventLog.CreateEventSource(SourceName, LogName);
 
             var bnd = new NetTcpBinding(SecurityMode.None)
             {
@@ -66,7 +66,7 @@ namespace DIPOL_Remote.Classes
             };
 
 
-            _host = new ServiceHost(typeof(RemoteControl), Endpoint);
+            _host = new ServiceHost(typeof(RemoteControl), endpoint);
 
             _host.AddServiceEndpoint(typeof(IRemoteControl),bnd, "");
 
