@@ -61,11 +61,11 @@ namespace DIPOL_Remote.Classes
             };
             // IMPORTANT! Limits the size of SOAP message. For larger images requires another implementation
             _remote = new DuplexChannelFactory<IRemoteControl>(
-                _context, 
-                bnd, 
+                _context,
+                bnd,
                 new EndpointAddress(hostUri)).CreateChannel();
 
-            
+
         }
 
         public DipolClient(Uri hostUri, TimeSpan openTimeout, TimeSpan sendTimeout, TimeSpan operationTimeout, TimeSpan closeTimeout)
@@ -122,7 +122,15 @@ namespace DIPOL_Remote.Classes
         public void Dispose()
         {
             // ReSharper disable once SuspiciousTypeConversion.Global
-            (_remote as ICommunicationObject)?.Close();
+            var comObj = (_remote as ICommunicationObject);
+
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            var channel = (_remote as IDuplexContextChannel)?.CallbackInstance;
+            if(channel?.State == CommunicationState.Opened)
+                channel.Close();
+
+            if(comObj?.State == CommunicationState.Opened)
+                comObj.Close();
         }
 
         private static CommunicationException CommunicationException

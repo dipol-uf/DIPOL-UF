@@ -24,13 +24,11 @@
 
 
 using System;
-using System.IO;
 using System.ServiceModel;
 using ANDOR_CS.Exceptions;
 using DIPOL_Remote.Classes;
 using DIPOL_Remote.Faults;
 using NUnit.Framework;
-using SettingsManager;
 
 namespace Tests
 {
