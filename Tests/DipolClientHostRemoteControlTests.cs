@@ -24,20 +24,26 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using ANDOR_CS.Classes;
 using DIPOL_Remote.Classes;
 using NUnit.Framework;
+using SettingsManager;
 
 namespace Tests
 {
     [TestFixture]
     public class DipolClientHostRemoteControlTests
     {
+
         private DipolHost _host;
         [SetUp]
         public void Initialize()
         {
-            _host = new DipolHost();
+            var uriStr = RemoteCommunicationConfigProvider.HostConfig.Get<string>(@"ConnectionString", null);
+            if(!Uri.TryCreate(uriStr, UriKind.RelativeOrAbsolute, out var uri))
+                throw new InvalidOperationException("No configuration found");
+            _host = new DipolHost(uri);
             _host.Host();
         }
 
