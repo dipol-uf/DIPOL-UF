@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -396,18 +396,19 @@ namespace DIPOL_Remote.Classes
             camera.PropertyChanged += (sender, e)
                 => host?.OnEventReceived(sender, e.PropertyName);
 
-            camera.AcquisitionStarted += (sender, e)
-                => host?.OnEventReceived(sender, $"Acq. Started      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            camera.AcquisitionFinished += (sender, e)
-                => host?.OnEventReceived(sender, $"Acq. Finished     {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            camera.AcquisitionStatusChecked += (sender, e)
-                => host?.OnEventReceived(sender, $"Acq. Stat. Check. {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            camera.AcquisitionAborted += (sender, e)
-                => host?.OnEventReceived(sender, $"Acq. Aborted      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            camera.AcquisitionErrorReturned += (sender, e)
-                => host?.OnEventReceived(sender, $"Acq. Err. Ret.    {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            camera.NewImageReceived += (sender, e)
-                => host?.OnEventReceived(sender, $"New image:  ({e.First}, {e.Last})");
+            // TODO: Update Logging
+            //camera.AcquisitionStarted += (sender, e)
+            //    => host?.OnEventReceived(sender, $"Acq. Started      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            //camera.AcquisitionFinished += (sender, e)
+            //    => host?.OnEventReceived(sender, $"Acq. Finished     {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            //camera.AcquisitionStatusChecked += (sender, e)
+            //    => host?.OnEventReceived(sender, $"Acq. Stat. Check. {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            //camera.AcquisitionAborted += (sender, e)
+            //    => host?.OnEventReceived(sender, $"Acq. Aborted      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            //camera.AcquisitionErrorReturned += (sender, e)
+            //    => host?.OnEventReceived(sender, $"Acq. Err. Ret.    {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            //camera.NewImageReceived += (sender, e)
+            //    => host?.OnEventReceived(sender, $"New image:  ({e.First}, {e.Last})");
 
             host?.OnEventReceived(camera, "Camera was created remotely");
         }
@@ -483,29 +484,30 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public string CreateAcquisitionTask(int camIndex, int delay)
         {
-            var cam = GetCameraSafe(sessionID, camIndex);
-            string taskID = Guid.NewGuid().ToString("N");
+            throw new NotImplementedException();
+            //var cam = GetCameraSafe(sessionID, camIndex);
+            //string taskID = Guid.NewGuid().ToString("N");
 
-            int counter = 0;
-            var source = new CancellationTokenSource();
-            var task = cam.StartAcquisitionAsync(source, delay);
+            //int counter = 0;
+            //var source = new CancellationTokenSource();
+            //var task = cam.StartAcquisitionAsync(source, delay);
 
-            while (counter <= MaxTryAddAttempts && !activeTasks.TryAdd(taskID, (Task: task, Token: source, CameraIndex: camIndex)))
-                taskID = Guid.NewGuid().ToString("N");
+            //while (counter <= MaxTryAddAttempts && !activeTasks.TryAdd(taskID, (Task: task, Token: source, CameraIndex: camIndex)))
+            //    taskID = Guid.NewGuid().ToString("N");
 
-            if (counter >= MaxTryAddAttempts)
-            {
-                source.Cancel();
-                task.Wait();
-                task.Dispose();
-                source.Dispose();
+            //if (counter >= MaxTryAddAttempts)
+            //{
+            //    source.Cancel();
+            //    task.Wait();
+            //    task.Dispose();
+            //    source.Dispose();
 
-                throw new Exception();
-            }
+            //    throw new Exception();
+            //}
 
-            host?.OnEventReceived("Host", $"AcqTask with ID {taskID} created.");
+            //host?.OnEventReceived("Host", $"AcqTask with ID {taskID} created.");
 
-            return taskID;
+            //return taskID;
         }
         [OperationBehavior]
         public void RemoveTask(string taskID)
@@ -553,9 +555,9 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public bool GetIsAcquiring(int camIndex)
             => GetCameraSafe(sessionID, camIndex).IsAcquiring;
-        [OperationBehavior]
-        public bool GetIsAsyncAcquisition(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).IsAsyncAcquisition;
+        //[OperationBehavior]
+        //public bool GetIsAsyncAcquisition(int camIndex)
+        //    => GetCameraSafe(sessionID, camIndex).IsAsyncAcquisition;
         [OperationBehavior]
         public (
            ShutterMode Internal,
@@ -574,14 +576,14 @@ namespace DIPOL_Remote.Classes
         public (Version PCB, Version Decode, Version CameraFirmware) GetHardware(int camIndex)
             => GetCameraSafe(sessionID, camIndex).Hardware;
 
-        [OperationBehavior]
-        public (byte[] Data, int Width, int Height, TypeCode TypeCode) PullNewImage(int camIndex)
-        {
-            if (GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out var im))
-                return (im.GetBytes(), im.Width, im.Height, im.UnderlyingType);
-            else
-                throw new Exception();
-        }
+        //[OperationBehavior]
+        //public (byte[] Data, int Width, int Height, TypeCode TypeCode) PullNewImage(int camIndex)
+        //{
+        //    if (GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out var im))
+        //        return (im.GetBytes(), im.Width, im.Height, im.UnderlyingType);
+        //    else
+        //        throw new Exception();
+        //}
         
 
         [OperationBehavior]
@@ -602,30 +604,32 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void CallSetTemperature(int camIndex, int temperature)
             => GetCameraSafe(sessionID, camIndex).SetTemperature(temperature);
+        // TODO: Take a look at the parameter order
         [OperationBehavior]
         public void CallShutterControl(
             int camIndex,
             int clTime,
             int opTime,
             ShutterMode inter,
-            ShutterMode exter = ShutterMode.FullyAuto,
+            ShutterMode @extern = ShutterMode.FullyAuto,
             TtlShutterSignal type = TtlShutterSignal.Low)
             => GetCameraSafe(sessionID, camIndex).ShutterControl(
+                inter,
+                @extern,
                 clTime,
                 opTime,
-                inter,
-                exter,
                 type);
         [OperationBehavior]
         public void CallTemperatureMonitor(int camIndex, Switch mode, int timeout)
             => GetCameraSafe(sessionID, camIndex).TemperatureMonitor(mode, timeout);
+
         [OperationBehavior]
         public void CallStartAcquisition(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).StartAcquisition();
+            => throw new NotImplementedException();
+
         [OperationBehavior]
         public void CallAbortAcquisition(int camIndex)
-            => GetCameraSafe(sessionID, camIndex).AbortAcquisition();
-
+            => throw new NotImplementedException();
 
         [OperationBehavior]
         public (int Index, float Speed)[] GetAvailableHSSpeeds(
@@ -672,18 +676,19 @@ namespace DIPOL_Remote.Classes
          (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) Timing)
          CallApplySettings(string settingsID, byte[] data)
         {
-            // Safely retrieves local copy of AcquisitionSettings.
-            var setts = GetSettingsSafe(settingsID);
+            throw new NotImplementedException();
+            //// Safely retrieves local copy of AcquisitionSettings.
+            //var setts = GetSettingsSafe(settingsID);
 
-            // Creates MemoryStream from byte array and uses it for deserialization.
-            using (var memStr = new System.IO.MemoryStream(data))
-                setts.Deserialize(memStr);
+            //// Creates MemoryStream from byte array and uses it for deserialization.
+            //using (var memStr = new System.IO.MemoryStream(data))
+            //    setts.Deserialize(memStr);
 
-            // Applies settings on a local copy of settings.
-            var result = setts.ApplySettings(out (float, float, float, int) timing);
+            //// Applies settings on a local copy of settings.
+            //var result = setts.ApplySettings(out (float, float, float, int) timing);
 
-            // Returns results.
-            return (Result: result.ToArray(), Timing: timing);
+            //// Returns results.
+            //return (Result: result.ToArray(), Timing: timing);
         }
 
         [OperationBehavior]
