@@ -22,25 +22,20 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System;
-using System.Diagnostics;
 using System.IO;
-using DIPOL_Remote.Classes;
 using NUnit.Framework;
 using SettingsManager;
 
 namespace Tests
 {
-    
-
-    [TestFixture]
-    public class RemoteCommunicationTests
+    internal static class RemoteCommunicationConfigProvider
     {
+        internal static JsonSettings HostConfig { get; }
 
-        [Test]
-        public void Test_HostProcess()
+        static RemoteCommunicationConfigProvider()
         {
-            var hostConfigString = RemoteCommunicationConfigProvider.HostConfig.Get("HostConnectionString");
+            using (var reader = new FileStream(Path.Combine(TestContext.CurrentContext.TestDirectory, "test-config.json"), FileMode.Open, FileAccess.Read))
+                HostConfig = new JsonSettings(new StreamReader(reader).ReadToEnd());
         }
     }
 }

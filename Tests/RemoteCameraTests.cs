@@ -24,38 +24,42 @@
 
 
 using System;
+using System.IO;
 using System.ServiceModel;
 using ANDOR_CS.Exceptions;
 using DIPOL_Remote.Classes;
 using DIPOL_Remote.Faults;
 using NUnit.Framework;
+using SettingsManager;
 
 namespace Tests
 {
     [TestFixture]
     public class RemoteCameraTests
     {
-        private DipolHost host;
-        private DipolClient client;
+        private DipolHost _host;
+        private DipolClient _client;
 
-        [SetUp]
+       [SetUp]
         public void Initialize()
         {
-            host = new DipolHost();
-            host.Host();
-            
+            var uriStr = RemoteCommunicationConfigProvider.HostConfig.Get<string>(@"ConnectionString", null);
+            if (!Uri.TryCreate(uriStr, UriKind.RelativeOrAbsolute, out var uri))
+                throw new InvalidOperationException("No configuration found");
+            _host = new DipolHost(uri);
+            _host.Host();
 
-            client = new DipolClient("localhost");
-            client.Connect();
+            _client = new DipolClient("localhost");
+            _client.Connect();
         }
 
-       [TearDown]
+        [TearDown]
         public void Destroy()
         {
-            client.Disconnect();
-            client.Dispose();
+            _client.Disconnect();
+            _client.Dispose();
 
-            host.Dispose();
+            _host.Dispose();
         }
 
         [Test]
@@ -63,8 +67,8 @@ namespace Tests
         {
             Assert.Multiple(() =>
             {
-                Assert.That(client.Remote, Is.Not.Null);
-                Assert.That(client.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0));
+                Assert.That(_client.Remote, Is.Not.Null);
+                Assert.That(_client.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0));
             });
         }
 
@@ -86,8 +90,8 @@ namespace Tests
         {
             Assert.Multiple(() =>
             {
-                Assert.Throws<FaultException<AndorSDKServiceException>>(() => RemoteCamera.Create(0, client));
-                Assert.ThrowsAsync<AndorSdkException>(() => RemoteCamera.CreateAsync(0, client));
+                Assert.Throws<FaultException<AndorSDKServiceException>>(() => RemoteCamera.Create(0, _client));
+                Assert.ThrowsAsync<AndorSdkException>(() => RemoteCamera.CreateAsync(0, _client));
             });
         }
     }
