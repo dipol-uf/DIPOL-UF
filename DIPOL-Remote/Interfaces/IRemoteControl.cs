@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
 //     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
+
 
 using System;
 using System.ServiceModel;
@@ -126,39 +127,53 @@ namespace DIPOL_Remote.Interfaces
 
         [OperationContract(IsOneWay = false)]
         string GetCameraModel(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         bool GetIsActive(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         string GetSerialNumber(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         CameraProperties GetProperties(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         bool GetIsInitialized(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         FanMode GetFanMode(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         Switch GetCoolerMode(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         DeviceCapabilities GetCapabilities(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         bool GetIsAcquiring(int camIndex);
-        [OperationContract(IsOneWay = false)]
-        bool GetIsAsyncAcquisition(int camIndex);
+
+        // TODO: Deprecate & Remove
+        //[OperationContract(IsOneWay = false)]
+        //bool GetIsAsyncAcquisition(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         (ShutterMode Internal,
            ShutterMode? External,
            TtlShutterSignal Type,
            int OpenTime,
            int CloseTime) GetShutter(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         bool GetIsTemperatureMonitored(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         (Version EPROM, Version COFFile, Version Driver, Version Dll) GetSoftware(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         (Version PCB, Version Decode, Version CameraFirmware) GetHardware(int camIndex);
 
-        [OperationContract(IsOneWay = false)]
-        (byte[] Data, int Width, int Height, TypeCode TypeCode) PullNewImage(int camIndex);
+        //[OperationContract(IsOneWay = false)]
+        //(byte[] Data, int Width, int Height, TypeCode TypeCode) PullNewImage(int camIndex);
 
 
         [OperationContract(IsOneWay = false)]
@@ -181,10 +196,14 @@ namespace DIPOL_Remote.Interfaces
             ShutterMode inter,
             ShutterMode exter = ShutterMode.FullyAuto,
             TtlShutterSignal type = TtlShutterSignal.Low);
+
         [OperationContract(IsOneWay = false)]
         void CallTemperatureMonitor(int camIndex, Switch mode, int timeout);
-        [OperationContract(IsOneWay = false)]
-        void CallStartAcquisition(int camIndex);
+
+        // TODO: Update this
+        //[OperationContract(IsOneWay = false)]
+        //void CallStartAcquisition(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         void CallAbortAcquisition(int camIndex);
 
