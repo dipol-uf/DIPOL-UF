@@ -94,7 +94,10 @@ namespace Host
             var options = HandleArgs(args);
 
             if (options.Uri is null || !Uri.TryCreate(options.Uri, UriKind.RelativeOrAbsolute, out var uri))
+            {
+                Console.ReadKey();
                 return 13;
+            }
 
             if (options.ConsoleWidth < Console.LargestWindowWidth)
                 Console.WindowWidth = options.ConsoleWidth;
@@ -131,9 +134,16 @@ namespace Host
 
                 };
 
-
-                while (Console.ReadKey().Key != ConsoleKey.Escape)
+#if DEBUG
+                while (Console.ReadLine() != "exit")
+                {
+                }
+#else
+                while (Console.ReadKey().Key is var key 
+                && key != ConsoleKey.Escape
+                && key != ConsoleKey.Q)
                 { }
+#endif
             }
 
             return 0;
