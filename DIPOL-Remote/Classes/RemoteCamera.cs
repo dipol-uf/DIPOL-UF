@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,12 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.XPath;
 using CameraBase = ANDOR_CS.Classes.CameraBase;
 using IRemoteControl = DIPOL_Remote.Interfaces.IRemoteControl;
 using AcquisitionEventType = DIPOL_Remote.Enums.AcquisitionEventType;
@@ -41,6 +38,7 @@ using ANDOR_CS.Events;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
 using DipolImage;
+using FITS_CS;
 
 namespace DIPOL_Remote.Classes
 {
@@ -190,19 +188,6 @@ namespace DIPOL_Remote.Classes
                 return base.IsAcquiring;
             }
         }
-        public override bool IsAsyncAcquisition
-        {
-            get
-            {
-                if (changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
-                {
-                    IsAsyncAcquisition = session.GetIsAsyncAcquisition(CameraIndex);
-                    changedProperties.TryUpdate(NameofProperty(), false, true);
-                }
-
-                return base.IsAsyncAcquisition;
-            }
-        }
         public override (
            ShutterMode Internal,
            ShutterMode? External,
@@ -268,7 +253,6 @@ namespace DIPOL_Remote.Classes
             CoolerMode = session.GetCoolerMode(CameraIndex);
             Capabilities = session.GetCapabilities(CameraIndex);
             IsAcquiring = session.GetIsAcquiring(CameraIndex);
-            IsAsyncAcquisition = session.GetIsAsyncAcquisition(CameraIndex);
             Shutter = session.GetShutter(CameraIndex);
             Software = session.GetSoftware(CameraIndex);
             Hardware = session.GetHardware(CameraIndex);
@@ -287,60 +271,82 @@ namespace DIPOL_Remote.Classes
         public override void SetTemperature(int temperature)
             => session.CallSetTemperature(CameraIndex, temperature);
         public override void ShutterControl(
-            int clTime,
+            ShutterMode shutterMode,
+            ShutterMode extrn,
             int opTime,
-            ShutterMode inter,
-            ShutterMode exter = ShutterMode.FullyAuto,
-            TtlShutterSignal type = TtlShutterSignal.Low)
+            int clTime,
+            TtlShutterSignal type)
             => session.CallShutterControl(
                 CameraIndex,
                 clTime,
                 opTime,
-                inter,
-                exter,
+                shutterMode,
+                extrn,
                 type);
+
+        public override void ShutterControl(ShutterMode inter, ShutterMode extrn)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs)
             => session.CallTemperatureMonitor(CameraIndex, mode, timeout);
 
         public override SettingsBase GetAcquisitionSettingsTemplate()
             => new RemoteSettings(session.SessionID, CameraIndex, session.CreateSettings(CameraIndex), session);
 
-        public override void EnableAutosave(in string pattern)
+        public override async Task StartAcquisitionAsync(CancellationToken cancellationToken)
         {
-            
+            // TODO : ReImplement
+            //_acquiredImages = new ConcurrentQueue<Image>();
+
+            //string taskID = session.CreateAcquisitionTask(CameraIndex, timeout);
+
+            //try
+            //{
+            //   await Task.Run(() =>
+            //   {
+            //       while (!session.IsTaskFinished(taskID))
+            //       {
+            //           Task.Delay(timeout).Wait();
+            //           if (token.IsCancellationRequested)
+            //           {
+            //               session.RequestCancellation(taskID);
+            //               break;
+            //           }
+            //       }
+            //   });
+            //}
+            //finally
+            //{
+            //    session.RemoveTask(taskID);
+            //}
         }
 
-        public override async Task StartAcquisitionAsync(CancellationTokenSource token, int timeout)
+        public override Image PullPreviewImage<T>(int index)
         {
-            _acquiredImages = new ConcurrentQueue<Image>();
-
-            string taskID = session.CreateAcquisitionTask(CameraIndex, timeout);
-
-            try
-            {
-               await Task.Run(() =>
-               {
-                   while (!session.IsTaskFinished(taskID))
-                   {
-                       Task.Delay(timeout).Wait();
-                       if (token.IsCancellationRequested)
-                       {
-                           session.RequestCancellation(taskID);
-                           break;
-                       }
-                   }
-               });
-            }
-            finally
-            {
-                session.RemoveTask(taskID);
-            }
+            throw new NotImplementedException();
         }
 
-        public override void StartAcquisition()
+        public override Image PullPreviewImage(int index, ImageFormat format)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int GetTotalNumberOfAcquiredImages()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SaveNextAcquisitionAs(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void StartAcquisition()
             => session.CallStartAcquisition(CameraIndex);
 
-        public override void AbortAcquisition()
+        protected override void AbortAcquisition()
             => session.CallAbortAcquisition(CameraIndex);
 
         protected override void Dispose(bool disposing)
@@ -357,7 +363,7 @@ namespace DIPOL_Remote.Classes
         protected override void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")
             => OnPropertyChangedRemotely(property, true);
 
-        protected void OnPropertyChangedRemotely(
+        private void OnPropertyChangedRemotely(
             [System.Runtime.CompilerServices.CallerMemberName] string property = "",
             bool suppressBaseEvent = false)
         {
@@ -410,16 +416,17 @@ namespace DIPOL_Remote.Classes
         }
         internal static void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string sessionID, NewImageReceivedEventArgs e)
         {
-            if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
-            {
-                var cam = camera as RemoteCamera;
+            // TODO: ReImplement
+            //if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
+            //{
+            //    var cam = camera as RemoteCamera;
 
-                var message = cam.session.PullNewImage(cam.CameraIndex);
+            //    var message = cam.session.PullNewImage(cam.CameraIndex);
                
-                cam.AcquiredImages.Enqueue(new Image(message.Data, message.Width, message.Height, message.TypeCode));
+            //    cam.AcquiredImages.Enqueue(new Image(message.Data, message.Width, message.Height, message.TypeCode));
 
-                cam.OnNewImageReceived(e);
-            }
+            //    cam.OnNewImageReceived(e);
+            //}
         }
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
