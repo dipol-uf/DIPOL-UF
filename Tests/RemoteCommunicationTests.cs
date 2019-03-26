@@ -25,9 +25,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using DIPOL_Remote.Classes;
 using NUnit.Framework;
-using SettingsManager;
 
 namespace Tests
 {
@@ -37,10 +35,46 @@ namespace Tests
     public class RemoteCommunicationTests
     {
 
-        [Test]
+        [Theory]
         public void Test_HostProcess()
         {
-            var hostConfigString = RemoteCommunicationConfigProvider.HostConfig.Get("HostConnectionString");
+            var hostConfigString =
+                RemoteCommunicationConfigProvider.HostConfig.Get("HostConnectionString", string.Empty);
+            Uri uri = null;
+            Assume.That(() => Uri.TryCreate(hostConfigString, UriKind.RelativeOrAbsolute, out uri),
+                Throws.Nothing);
+
+            // Testing X86 debug config
+            var procInfo = new ProcessStartInfo(
+                Path.GetFullPath(Path.Combine(
+                    TestContext.CurrentContext.TestDirectory,
+                    RemoteCommunicationConfigProvider.HostConfig.Get("HostDirRelativePath", string.Empty),
+                    RemoteCommunicationConfigProvider.HostConfig.Get("HostExeName", string.Empty))))
+            {
+                CreateNoWindow = false,
+                ErrorDialog = true,
+                WorkingDirectory = Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory,
+                    RemoteCommunicationConfigProvider.HostConfig.Get("HostDirRelativePath", string.Empty))),
+                Arguments = $@"{uri.AbsoluteUri}",
+                RedirectStandardInput = true,
+                UseShellExecute = false
+            };
+
+            Process proc = null;
+            Assert.That(() => proc = Process.Start(procInfo), Throws.Nothing);
+
+            if (proc?.HasExited == false)
+                Assert.That(() =>
+                {
+                    System.Threading.SpinWait.SpinUntil(() => false, TimeSpan.FromMilliseconds(2000));
+                    proc.StandardInput.WriteLine("exit");
+                    proc.StandardInput.Flush();
+                    proc.WaitForExit(10000);
+                }, Throws.Nothing);
+
+            Assert.That(proc?.HasExited, Is.True, "Process did not shutdown in time.");
+
+            proc.Dispose();
         }
     }
 }
