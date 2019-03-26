@@ -94,7 +94,7 @@ namespace Host
         {
             var options = HandleArgs(args);
 
-            if (options.Uri is null)
+            if (options.Uri is null || !Uri.TryCreate(options.Uri, UriKind.RelativeOrAbsolute, out var uri))
                 return 13;
 
             if (options.ConsoleWidth < Console.LargestWindowWidth)
@@ -103,7 +103,7 @@ namespace Host
             if (options.ConsoleHeight < Console.LargestWindowHeight)
                 Console.WindowHeight = options.ConsoleHeight;
 
-            using (var host = new DIPOL_Remote.Classes.DipolHost(new Uri("")))
+            using (var host = new DIPOL_Remote.Classes.DipolHost(uri))
             {
                 host.Host();
                 host.EventReceived += (sender, message)
