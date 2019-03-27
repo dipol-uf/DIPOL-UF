@@ -187,7 +187,7 @@ namespace Tests
 
                 CameraBase cam = null;
 
-                Assert.That(() => cam = client.CreateRemoteCamera(), Throws.Nothing,
+                Assert.That(() => cam = RemoteCamera.Create(0, client), Throws.Nothing,
                     $"Remote camera should be created with {nameof(client.CreateRemoteCamera)} method.");
 
                 cam.Dispose();

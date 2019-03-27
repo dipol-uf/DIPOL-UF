@@ -70,7 +70,7 @@ namespace DIPOL_Remote.Classes
         // TODO : Move to settings
         private const int MaxTryAddAttempts = 30;
 
-        
+        private OperationContext _currentContext;
         /// <summary>
         /// A reference to Host instance
         /// </summary>
@@ -138,6 +138,7 @@ namespace DIPOL_Remote.Classes
         {
             _host = OperationContext.Current.Host as DipolHost ??
                     throw new InvalidOperationException("Unsupported host type.");
+            _currentContext = OperationContext.Current;
 
             var uriHash = _host.BaseAddresses.Select(x => x.ToString().GetHashCode()).DefaultIfEmpty(0).FirstOrDefault();
 
@@ -715,9 +716,9 @@ namespace DIPOL_Remote.Classes
                 throw new Exception();
         }
 
-        private static OperationContext GetContext()
+        private OperationContext GetContext()
         {
-            return OperationContext.Current?.Channel.State == CommunicationState.Opened ? OperationContext.Current : null;
+            return _currentContext?.Channel.State == CommunicationState.Opened ? _currentContext : null;
         }
 
         public void RequestCreateCamera(int camIndex)

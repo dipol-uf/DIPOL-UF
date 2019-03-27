@@ -104,12 +104,11 @@ namespace DIPOL_Remote.Classes
         public int[] ActiveRemoteCameras()
             => Remote.GetCamerasInUse();
 
-        public RemoteCamera CreateRemoteCamera(int camIndex = 0)
+        public void CreateRemoteCamera(int camIndex = 0)
         {
             if (Remote.GetCamerasInUse().Contains(camIndex))
                 throw new ArgumentException($"Camera with index {camIndex} is already in use.");
             Remote.CreateCamera(camIndex);
-            return new RemoteCamera(Remote, camIndex);
         }
 
         public void RequestCreateRemoteCamera(int camIndex = 0)
