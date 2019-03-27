@@ -22,12 +22,19 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-#define HOST_IN_PROCESS
+//#define HOST_IN_PROCESS
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using DIPOL_Remote.Classes;
 using NUnit.Framework;
+
+#if !HOST_IN_PROCESS
+using System.Diagnostics;
+using System.IO;
+#endif
 
 namespace Tests
 {
@@ -64,6 +71,7 @@ namespace Tests
         }
 #else
         private Process _proc;
+
         [SetUp]
         public void Initialize()
         {
@@ -89,11 +97,16 @@ namespace Tests
 
             _proc = Process.Start(procInfo);
 
+            _client = new DipolClient(_hostUri);
+            _client.Connect();
+
         }
 
         [TearDown]
         public void Destroy()
         {
+            _client.Disconnect();
+            _client.Dispose();
             if (_proc?.HasExited == false)
             {
                 _proc.StandardInput.WriteLine("exit");
@@ -174,6 +187,49 @@ namespace Tests
 
             foreach(var cam in camList)
                 cam.Dispose();
+        }
+
+        [Test]
+        public void Test_CameraProperties()
+        {
+            void Generate<TTarget>(IEnumerable<RemoteCamera> cams, Func<RemoteCamera, TTarget> accessor)
+            {
+                List<TTarget> result = null;
+                Assert.That(() => result = cams.Select(accessor).ToList(), Throws.Nothing);
+                CollectionAssert.AllItemsAreNotNull(result);
+            }
+
+
+            var n = _client.GetNumberOfCameras();
+
+            var camList = Task.Run(async () =>
+            {
+                var cams = new Task<RemoteCamera>[n];
+
+                for (var i = 0; i < n; i++)
+                    cams[i] = RemoteCamera.CreateAsync(i, _client);
+                return await Task.WhenAll(cams);
+            }).GetAwaiter().GetResult();
+
+            Assert.Multiple(() =>
+            {
+                Generate(camList, x => x.IsTemperatureMonitored);
+                Generate(camList, x => x.CameraModel);
+                Generate(camList, x => x.SerialNumber);
+                Generate(camList, x => x.IsActive);
+                Generate(camList, x => x.Properties);
+                Generate(camList, x => x.IsInitialized);
+                Generate(camList, x => x.FanMode);
+                Generate(camList, x => x.CoolerMode);
+                Generate(camList, x => x.Capabilities);
+                Generate(camList, x => x.IsAcquiring);
+                Generate(camList, x => x.Shutter);
+                Generate(camList, x => x.Software);
+                Generate(camList, x => x.Hardware);
+            });
+
+            foreach (var cam in camList)
+               cam.Dispose();
         }
 
     }
