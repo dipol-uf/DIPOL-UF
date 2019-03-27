@@ -92,6 +92,8 @@ namespace ANDOR_CS.Classes
 
         public DebugCamera(int camIndex)
         {
+            Task.Delay(TimeSpan.FromSeconds(1.5)).GetAwaiter().GetResult();
+            
             CameraIndex = camIndex;
             SerialNumber = $"XYZ-{R.Next(9999):0000}";
             Capabilities = new DeviceCapabilities()
@@ -248,6 +250,12 @@ namespace ANDOR_CS.Classes
             //throw new AndorSdkException("Failed", SDK.DRV_P1INVALID,
             //    nameof(AndorSdkInitialization.SdkInstance.SetImage));
         }
+
+        public new static DebugCamera Create(int camIndex = 0, params object[] @params)
+            => new DebugCamera(camIndex);
+
+        public new static async Task<DebugCamera> CreateAsync(int camIndex = 0, params object[] @params)
+            => await Task.Run(() => Create(camIndex, @params));
     }
 }
 #endif
