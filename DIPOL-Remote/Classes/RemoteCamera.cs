@@ -23,7 +23,6 @@
 //     SOFTWARE.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.ServiceModel;
@@ -64,14 +63,14 @@ namespace DIPOL_Remote.Classes
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
-                return false;
+                return base.IsTemperatureMonitored;
             }
         }
         public override string CameraModel
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     CameraModel = _session.GetCameraModel(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -85,7 +84,7 @@ namespace DIPOL_Remote.Classes
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     SerialNumber = _session.GetSerialNumber(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -98,7 +97,7 @@ namespace DIPOL_Remote.Classes
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     IsActive = _session.GetIsActive(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -111,7 +110,7 @@ namespace DIPOL_Remote.Classes
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     Properties = _session.GetProperties(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -124,7 +123,7 @@ namespace DIPOL_Remote.Classes
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     IsInitialized = _session.GetIsInitialized(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -137,7 +136,7 @@ namespace DIPOL_Remote.Classes
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     FanMode = _session.GetFanMode(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -150,7 +149,7 @@ namespace DIPOL_Remote.Classes
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     CoolerMode = _session.GetCoolerMode(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -163,7 +162,7 @@ namespace DIPOL_Remote.Classes
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     Capabilities = _session.GetCapabilities(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -176,7 +175,7 @@ namespace DIPOL_Remote.Classes
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     IsAcquiring = _session.GetIsAcquiring(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -194,7 +193,7 @@ namespace DIPOL_Remote.Classes
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     Shutter = _session.GetShutter(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -208,7 +207,7 @@ namespace DIPOL_Remote.Classes
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     Software = _session.GetSoftware(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -222,7 +221,7 @@ namespace DIPOL_Remote.Classes
         {
             get
             {
-                if (_changedProperties.TryGetValue(NameofProperty(), out bool hasChanged) && hasChanged)
+                if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
                     Hardware = _session.GetHardware(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
@@ -257,8 +256,6 @@ namespace DIPOL_Remote.Classes
             => _session.CallGetStatus(CameraIndex);
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
             => _session.CallGetCurrentTemperature(CameraIndex);
-        public override void SetActive()
-            => _session.CallSetActive(CameraIndex);
         public override void FanControl(FanMode mode)
             => _session.CallFanControl(CameraIndex, mode);
         public override void CoolerControl(Switch mode)
@@ -281,7 +278,10 @@ namespace DIPOL_Remote.Classes
 
         public override void ShutterControl(ShutterMode inter, ShutterMode extrn)
         {
-            throw new NotImplementedException();
+            ShutterControl(inter, extrn,
+                SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
+                SettingsProvider.Settings.Get("ShutterCloseTimeMS", 27),
+                (TtlShutterSignal)SettingsProvider.Settings.Get("TTLShutterSignal", 1));
         }
 
         public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs)

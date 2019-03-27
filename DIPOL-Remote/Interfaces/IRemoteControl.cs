@@ -181,8 +181,6 @@ namespace DIPOL_Remote.Interfaces
         [OperationContract(IsOneWay = false)]
         (TemperatureStatus Status, float Temperature) CallGetCurrentTemperature(int camIndex);
         [OperationContract(IsOneWay = false)]
-        void CallSetActive(int camIndex);
-        [OperationContract(IsOneWay = false)]
         void CallFanControl(int camIndex, FanMode mode);
         [OperationContract(IsOneWay = false)]
         void CallCoolerControl(int camIndex, Switch mode);

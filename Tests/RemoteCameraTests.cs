@@ -22,12 +22,13 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-//#define HOST_IN_PROCESS
+#define HOST_IN_PROCESS
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ANDOR_CS.Enums;
 using DIPOL_Remote.Classes;
 using NUnit.Framework;
 
@@ -230,6 +231,66 @@ namespace Tests
 
             foreach (var cam in camList)
                cam.Dispose();
+        }
+
+        [Test]
+        public void Test_CameraMethods()
+        {
+           var n = _client.GetNumberOfCameras();
+
+            var camList = Task.Run(async () =>
+            {
+                var cams = new Task<RemoteCamera>[n];
+
+                for (var i = 0; i < n; i++)
+                    cams[i] = RemoteCamera.CreateAsync(i, _client);
+                return await Task.WhenAll(cams);
+            }).GetAwaiter().GetResult();
+
+            Assert.Multiple(() =>
+            {
+                foreach (var cam in camList)
+                {
+                    Assert.That(() => cam.GetStatus(), Is.EqualTo(CameraStatus.Idle));
+                    Assert.That(() => cam.GetCurrentTemperature(), Throws.Nothing);
+                    Assert.That(() => cam.SetTemperature(0), Throws.Nothing);
+
+                    Assert.That(
+                        () => cam.ShutterControl(ShutterMode.PermanentlyOpen, ShutterMode.PermanentlyOpen),
+                        Throws.Nothing);
+                    Assert.That(cam.Shutter.Internal, Is.EqualTo(ShutterMode.PermanentlyOpen));
+                    Assert.That(cam.Shutter.External, Is.EqualTo(ShutterMode.PermanentlyOpen));
+
+                    Assert.That(() =>
+                    {
+                        var result = false;
+                        cam.TemperatureStatusChecked += (sender, e) => result = true;
+                        cam.TemperatureMonitor(Switch.Enabled, 100);
+                        Task.Delay(300).GetAwaiter().GetResult();
+                        result = result && cam.IsTemperatureMonitored;
+                        cam.TemperatureMonitor(Switch.Disabled);
+
+                        return result;
+                    }, Is.EqualTo(true));
+
+                    Assert.That(() =>
+                    {
+                        cam.FanControl(FanMode.FullSpeed);
+                        return cam.FanMode;
+                    }, Is.EqualTo(FanMode.FullSpeed));
+
+                    Assert.That(() =>
+                    {
+                        cam.CoolerControl(Switch.Enabled);
+                        return cam.CoolerMode;
+                    }, Is.EqualTo(Switch.Enabled));
+
+                }
+
+            });
+
+            foreach (var cam in camList)
+                cam.Dispose();
         }
 
     }

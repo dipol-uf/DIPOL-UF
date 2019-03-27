@@ -571,9 +571,7 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public (TemperatureStatus Status, float Temperature) CallGetCurrentTemperature(int camIndex)
             => GetCameraSafe(camIndex).GetCurrentTemperature();
-        [OperationBehavior]
-        public void CallSetActive(int camIndex)
-            => GetCameraSafe(camIndex).SetActive();
+
         [OperationBehavior]
         public void CallFanControl(int camIndex, FanMode mode)
             => GetCameraSafe(camIndex).FanControl(mode);

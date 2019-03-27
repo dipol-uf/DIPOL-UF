@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// 
     /// </summary>
-    internal class SettingsProvider
+    public class SettingsProvider
     {
         /// <summary>
         /// 
