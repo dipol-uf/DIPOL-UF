@@ -55,8 +55,8 @@ namespace ANDOR_CS.Classes
             WriteMessage("Current temperature returned.", Blue);
             return (Status: TemperatureStatus.Stabilized, Temperature: R.Next(-40, 25));
         }
-        public override void SetActive()
-            => WriteMessage("Camera is manually set active.", Green);
+        //public override void SetActive()
+            //=> WriteMessage("Camera is manually set active.", Green);
         public override void FanControl(FanMode mode)
         {
             FanMode = mode;
