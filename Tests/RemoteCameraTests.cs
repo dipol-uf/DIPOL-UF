@@ -90,7 +90,7 @@ namespace Tests
                 ErrorDialog = true,
                 WorkingDirectory = Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory,
                     RemoteCommunicationConfigProvider.HostConfig.Get("HostDirRelativePath", string.Empty))),
-                Arguments = $@"{_hostUri.AbsoluteUri}",
+                Arguments = $@"{_hostUri.AbsoluteUri} -l",
                 RedirectStandardInput = true,
                 UseShellExecute = false
             };

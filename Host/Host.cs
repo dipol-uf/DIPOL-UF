@@ -28,6 +28,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Channels;
 using CommandLine;
 
 namespace Host
@@ -55,6 +56,9 @@ namespace Host
 
             [Option("console-height", Default = 80, HelpText = @"Height of the console window")]
             public int ConsoleHeight { get; set; }
+
+            [Option('l', "log", Default = false, HelpText = @"Enable logging")]
+            public bool Log { get; set; }
 
             public static Options MakeDefault()
             {
@@ -89,6 +93,8 @@ namespace Host
             }
         }
 
+        private static string MessageTemplate => $"[{DateTime.Now:yyyy/MM/dd\t HH:mm:ss.fff}] > ";
+
         private static int Main(string[] args)
         {
             var options = HandleArgs(args);
@@ -107,33 +113,24 @@ namespace Host
 
             using (var host = new DIPOL_Remote.Classes.DipolHost(uri))
             {
-                host.Open();
-                host.EventReceived += (sender, message)
-                    =>
+
+                if (options.Log)
                 {
-                    //if (!(sender is ANDOR_CS.Classes.DebugCamera))
-                    //{
-                    //    string senderString;
-                    //    if (sender is ANDOR_CS.Classes.CameraBase cam)
-                    //        senderString = $"{cam.CameraModel}/{cam.SerialNumber}";
-                    //    else
-                    //        senderString = sender.ToString();
+                    host.Opening += (sender, e) => OnHostOpenFired("opening");
+                    host.Opened += (sender, e) => OnHostOpenFired("opened");
 
-                    //    lock (Locker)
-                    //    {
-                    //        Console.ForegroundColor = ConsoleColor.Yellow;
-                    //        Console.Write("[{0,23:yyyy/MM/dd HH-mm-ss.fff}] @", DateTime.Now);
-                    //        Console.ForegroundColor = ConsoleColor.Cyan;
-                    //        Console.Write(" {0, 16}", senderString);
-                    //        Console.ForegroundColor = ConsoleColor.White;
-                    //        Console.WriteLine($": { message}");
-                    //    }
-                    //}
+                    host.Closing += (sender, e) => OnHostCloseFired("closing");
+                    host.Closed += (sender, e) => OnHostCloseFired("closed");
 
-                    Console.WriteLine($"{sender}:\t{message}");
+                    host.Faulted += (sender, e) => OnHostFaultingFired("faulted");
+                    host.UnknownMessageReceived += (sender, e) => OnHostFaultingFired(e.Message.ToString());
 
-                };
+                    host.EventReceived += OnServiceMessageFired;
 
+                }
+
+                host.Open();
+                
 #if DEBUG
                 while (Console.ReadLine() != "exit")
                 {
@@ -148,6 +145,45 @@ namespace Host
 
             return 0;
         }
-        
+
+        private static async void OnHostOpenFired(string message)
+        {
+            if(Output is null)
+                return;
+
+            var str = $"{MessageTemplate} Initialization: {message}";
+            await Output.WriteLineAsync(str);
+            await Output.FlushAsync();
+        }
+
+        private static async void OnHostCloseFired(string message)
+        {
+            if (Output is null)
+                return;
+
+            var str = $"{MessageTemplate} Finalization: {message}";
+            await Output.WriteLineAsync(str);
+            await Output.FlushAsync();
+        }
+
+        private static async void OnHostFaultingFired(string message)
+        {
+            if (Output is null)
+                return;
+
+            var str = $"{MessageTemplate} service failing: {message}";
+            await Output.WriteLineAsync(str);
+            await Output.FlushAsync();
+        }
+
+        private static async void OnServiceMessageFired(object sender, string message)
+        {
+            if (Output is null)
+                return;
+
+            var str = $"{MessageTemplate} [{sender}]: {message}";
+            await Output.WriteLineAsync(str);
+            await Output.FlushAsync();
+        }
     }
 }
