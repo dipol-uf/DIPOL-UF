@@ -120,7 +120,7 @@ namespace ANDOR_CS.Classes
         public virtual bool IsTemperatureMonitored
         {
             get => _isTemperatureMonitored;
-            set
+            protected set
             {
                 if (value != _isTemperatureMonitored)
                 {
@@ -372,7 +372,6 @@ namespace ANDOR_CS.Classes
         /// <returns>Temperature status and temperature in degrees</returns>
         public abstract (TemperatureStatus Status, float Temperature) GetCurrentTemperature();
 
-        public abstract void SetActive();
         public abstract void FanControl(FanMode mode);
         public abstract void CoolerControl(Switch mode);
         public abstract void SetTemperature(int temperature);

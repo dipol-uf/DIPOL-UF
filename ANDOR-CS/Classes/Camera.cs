@@ -746,29 +746,6 @@ namespace ANDOR_CS.Classes
         }
         
 
-        /// <summary>
-        /// Sets current camera active
-        /// </summary>
-        /// <exception cref="AndorSdkException"/>
-        public override void SetActive()
-        {
-            CheckIsDisposed();
-
-            if (!IsActive)
-            {
-                // If camera address is invalid, throws exception
-                if (CameraHandle.SdkPtr == 0)
-                    throw new AndorSdkException($"Camera has invalid private address of {CameraHandle.SdkPtr}.", new NullReferenceException());
-
-                // Tries to make this camera active
-                var result = Call(CameraHandle, SdkInstance.SetCurrentCamera, CameraHandle.SdkPtr);
-                // If it fails, throw an exception
-                if (FailIfError(result, nameof(SdkInstance.SetCurrentCamera), out var except))
-                    throw except;
-
-            }
-        }
-
         /// <inheritdoc />
         /// <summary>
         /// Gets current status of the camera
