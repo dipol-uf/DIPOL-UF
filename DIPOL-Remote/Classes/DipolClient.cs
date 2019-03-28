@@ -117,9 +117,6 @@ namespace DIPOL_Remote.Classes
         public void CreateCamera(int camIndex = 0)
 			=> Channel.CreateCamera(camIndex);
 
-        public void RequestCreateCamera(int camIndex)
-			=> Channel.RequestCreateCamera(camIndex);
-
         public void RemoveCamera(int camIndex)
 			=> Channel.RemoveCamera(camIndex);
 
@@ -235,12 +232,6 @@ namespace DIPOL_Remote.Classes
             Channel.CreateCamera(camIndex);
         }
 
-        public void RequestCreateRemoteCamera(int camIndex = 0)
-        {
-            if (Channel.GetCamerasInUse().Contains(camIndex))
-                throw new ArgumentException($"Camera with index {camIndex} is already in use.");
-            Channel.RequestCreateCamera(camIndex);
-        }
 
         #endregion
         

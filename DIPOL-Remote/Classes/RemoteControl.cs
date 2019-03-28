@@ -45,7 +45,6 @@ using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int,
 
 namespace DIPOL_Remote.Classes
 {
-    /// <inheritdoc />
     /// <summary>
     /// Implementation of <see cref="T:DIPOL_Remote.Interfaces.IRemoteControl" /> service interface.
     /// This class should not be utilized directly.
@@ -75,10 +74,10 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Thread-safe collection of all active instances of AcquisitionSettings.
         /// </summary>
-        private readonly ConcurrentDictionary<string,  SettingsBase> settings
+        private readonly ConcurrentDictionary<string,  SettingsBase> _settings
             = new ConcurrentDictionary<string,  SettingsBase>();
 
-        private readonly ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> activeTasks
+        private readonly ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> _activeTasks
             = new ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>();
 
         private OperationContext Context { get; set; }
@@ -99,23 +98,11 @@ namespace DIPOL_Remote.Classes
         /// Interface to collection of all active <see cref="AcquisitionSettings"/> instances.
         /// </summary>
         public IReadOnlyDictionary<string,  SettingsBase> Settings
-           => settings as IReadOnlyDictionary<string, SettingsBase>;
+           => _settings;
 
         public IReadOnlyDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> ActiveTasks
-            => activeTasks as IReadOnlyDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>;
+            => _activeTasks;
 
-        /// <summary>
-        /// Interface to collection of all active <see cref="RemoteControl"/> service instances.
-        /// </summary>
-        //public static IReadOnlyDictionary<string, RemoteControl> ActiveConnections
-        //    => serviceInstances as IReadOnlyDictionary<string, RemoteControl>;
-
-        /// <summary>
-        /// Interface to collectio of all active cameras of all sessions
-        /// </summary>
-        //public static IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)> ActiveCameras
-        //    => activeCameras as IReadOnlyDictionary<int, (string SessionID, CameraBase Camera)>;
-       
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -279,7 +266,7 @@ namespace DIPOL_Remote.Classes
                                         (old, @new) => old.Append(@new.ToString("X2"))).ToString();
                             
 
-            _host?.OnEventReceived("Host", $"Session {SessionID} established.");
+            _host.OnEventReceived("Host", $"Session {SessionID} established.");
 
         }
         /// <summary>
@@ -312,10 +299,10 @@ namespace DIPOL_Remote.Classes
                 //        // If successful, dispose camera instance
                 //        camInfo.Camera.Dispose();
 
-                foreach (var key in settings.Keys)
+                foreach (var key in _settings.Keys)
                     RemoveSettings(key);
 
-                foreach (var key in activeTasks.Keys)
+                foreach (var key in _activeTasks.Keys)
                     RemoveTask(key);
 
             }
@@ -351,7 +338,9 @@ namespace DIPOL_Remote.Classes
                 }
                 catch (Exception)
                 {
+                    // Ignored for debug purposes
                 }
+
                 return nCams == 0 ? 3 : nCams;
 #else
                 // Tries to retrieve the number of available cameras
@@ -387,6 +376,7 @@ namespace DIPOL_Remote.Classes
         {
             CreateCameraAsync(camIndex).ConfigureAwait(false).GetAwaiter().GetResult();
         }
+
         [OperationBehavior]
         public void RemoveCamera(int camIndex)
         {
@@ -394,14 +384,14 @@ namespace DIPOL_Remote.Classes
             {
                 foreach (var settsKey in
                     from item
-                    in settings
+                    in _settings
                     where item.Value.Camera.CameraIndex == camIndex
                     select item.Key)
                     RemoveSettings(settsKey);
 
                 foreach (var taskKey in
                     from item
-                    in activeTasks
+                    in _activeTasks
                     where item.Value.CameraIndex == camIndex
                     select item.Key)
                     RemoveTask(taskKey);
@@ -434,7 +424,7 @@ namespace DIPOL_Remote.Classes
 
             string settingsID = Guid.NewGuid().ToString("N");
             int counter = 0;
-            while ((counter <= MaxTryAddAttempts) && !settings.TryAdd(settingsID, setts))
+            while ((counter <= MaxTryAddAttempts) && !_settings.TryAdd(settingsID, setts))
                 counter++;
 
             if (counter >= MaxTryAddAttempts)
@@ -443,7 +433,7 @@ namespace DIPOL_Remote.Classes
                     {
                         Message = "Failed to create unique ID for the settings instance.",
                         Details = $"After {MaxTryAddAttempts} sessionID was not generated",
-                        MethodName = nameof(settings.TryAdd)
+                        MethodName = nameof(_settings.TryAdd)
                     },
                     ServiceException.GeneralServiceErrorReason);
 
@@ -454,7 +444,7 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void RemoveSettings(string settingsID)
         {
-            settings.TryRemove(settingsID, out SettingsBase setts);
+            _settings.TryRemove(settingsID, out SettingsBase setts);
             setts?.Dispose();
 
             _host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} removed.");
@@ -490,7 +480,7 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void RemoveTask(string taskID)
         {
-            if (activeTasks.TryRemove(taskID, out (Task Task, CancellationTokenSource Token, int CamIndex) taskInfo))
+            if (_activeTasks.TryRemove(taskID, out (Task Task, CancellationTokenSource Token, int CamIndex) taskInfo))
             {
                 taskInfo.Token.Cancel();
                 taskInfo.Task.Wait();
@@ -600,28 +590,28 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public (int Index, float Speed)[] GetAvailableHSSpeeds(
             string settingsID,
-            int ADConverterIndex,
+            int adConverterIndex,
             int amplifier)
-        => GetSettingsSafe(settingsID).GetAvailableHSSpeeds(ADConverterIndex, amplifier).ToArray();
+        => GetSettingsSafe(settingsID).GetAvailableHSSpeeds(adConverterIndex, amplifier).ToArray();
 
         [OperationBehavior]
         public (int Index, string Name)[] GetAvailablePreAmpGain(
             string settingsID,
-            int ADConverterIndex,
+            int adConverterIndex,
             int amplifier,
-            int HSSpeed)
+            int hsSpeed)
         => GetSettingsSafe(settingsID).GetAvailablePreAmpGain(
-            ADConverterIndex, amplifier, HSSpeed).ToArray();
+            adConverterIndex, amplifier, hsSpeed).ToArray();
 
         [OperationBehavior]
         public (bool IsSupported, float Speed) CallIsHSSpeedSupported(
             string settingsID, 
-            int ADConverter,
+            int adConverter,
             int amplifier,
             int speedIndex)
             => (
             IsSupported: GetSettingsSafe(settingsID)
-                .IsHSSpeedSupported(speedIndex, ADConverter, amplifier, out float speed),
+                .IsHSSpeedSupported(speedIndex, adConverter, amplifier, out float speed),
             Speed: speed);
 
         /// <summary>
@@ -703,47 +693,14 @@ namespace DIPOL_Remote.Classes
                 throw new Exception();
         }
 
-        [Obsolete]
-        private OperationContext GetContext()
-        {
-            return Context?.Channel.State == CommunicationState.Opened ? Context : null;
-        }
 
-
-        public void RequestCreateCamera(int camIndex)
-        {
-            Task.Run(() =>
-            {
-                var result = true;
-                try
-                {
-                    CreateCamera(camIndex);
-                }
-                catch
-                {
-                    result = false;
-                }
-
-
-                var isAccepted = GetContext()
-                    ?.GetCallbackChannel<IRemoteCallback>()
-                    ?.NotifyCameraCreatedAsynchronously(camIndex, SessionID, result);
-
-                if (!isAccepted ?? true)
-                    RemoveCamera(camIndex);
-            });
-
-        }
-
-
-        // Async pattern
+        #region Async methods
         [OperationBehavior]
         public IAsyncResult BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state)
         {
             return new AsyncVoidResult(CreateCameraAsync(camIndex), callback, state);
         }
 
-        //[OperationBehavior]
         public bool EndCreateCameraAsync(IAsyncResult result)
         {
             if (result is AsyncVoidResult res)
@@ -753,6 +710,6 @@ namespace DIPOL_Remote.Classes
             }
             throw new InvalidOperationException($"Incompatible object of type [{typeof(IAsyncResult)}] received.");
         }
-
+        #endregion
     }
 }
