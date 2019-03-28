@@ -287,17 +287,11 @@ namespace DIPOL_Remote.Classes
         {
             try
             {
-                //TODO : Dispose of all cameras
-                // Select all cameras that are created from this session
-                //foreach (var key in
-                //    from item
-                //    in activeCameras
-                //    where item.Value.SessionID == SessionID
-                //    select item.Key)
-                //    // Remove these cameras from te collection
-                //    if (activeCameras.TryRemove(key, out (string SessionID, CameraBase Camera) camInfo))
-                //        // If successful, dispose camera instance
-                //        camInfo.Camera.Dispose();
+                foreach(var cam in _cameras)
+                    cam.Value?.Dispose();
+
+                _cameras.Clear();
+
 
                 foreach (var key in _settings.Keys)
                     RemoveSettings(key);
@@ -396,7 +390,6 @@ namespace DIPOL_Remote.Classes
                     select item.Key)
                     RemoveTask(taskKey);
 
-                //var removedCamera = GetCameraSafe(SessionID, camIndex);
                 if (_cameras.TryRemove(camIndex, out var removedCamera))
                 {
                     _host?.OnEventReceived(removedCamera, "Camera was disposed remotely.");
@@ -705,8 +698,15 @@ namespace DIPOL_Remote.Classes
         {
             if (result is AsyncVoidResult res)
             {
-                res.Task.GetAwaiter().GetResult();
-                return true;
+                try
+                {
+                    res.Task.GetAwaiter().GetResult();
+                    return true;
+                }
+                finally
+                {
+                    res.Dispose();
+                }
             }
             throw new InvalidOperationException($"Incompatible object of type [{typeof(IAsyncResult)}] received.");
         }
