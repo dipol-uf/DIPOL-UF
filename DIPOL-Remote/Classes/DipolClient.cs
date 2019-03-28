@@ -24,26 +24,20 @@
 
 
 using System;
-using System.Collections.Concurrent;
-using System.ComponentModel.Composition;
 using System.Linq;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
-using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_Remote.Interfaces;
+
 
 namespace DIPOL_Remote.Classes
 {
     public class DipolClient : DuplexClientBase<IRemoteControl>, IRemoteControl
     {
         private static readonly int MaxMessageSize = 512 * 512 * 8 * 4;
-
-        internal static ConcurrentDictionary<(string sessionID, int camIndex), (ManualResetEvent Event, bool Success)>
-            CameraCreatedEvents { get; } =
-            new ConcurrentDictionary<(string sessionID, int camIndex), (ManualResetEvent, bool)>();
 
         [Obsolete]
         public IRemoteControl Remote => Channel;
