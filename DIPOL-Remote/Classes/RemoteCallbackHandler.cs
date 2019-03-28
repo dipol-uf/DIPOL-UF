@@ -23,8 +23,6 @@
 //     SOFTWARE.
 
 
-using System;
-using System.Linq;
 using System.ServiceModel;
 
 using ANDOR_CS.Events;
@@ -36,7 +34,7 @@ namespace DIPOL_Remote.Classes
     [CallbackBehavior(
         ConcurrencyMode = ConcurrencyMode.Multiple,
         IncludeExceptionDetailInFaults = true)]
-    class RemoteCallbackHandler : IRemoteCallback
+    internal class RemoteCallbackHandler : IRemoteCallback
     {
 
         public RemoteCallbackHandler(object par = null)

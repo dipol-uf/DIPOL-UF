@@ -290,30 +290,6 @@ namespace DIPOL_Remote.Classes
         public override async Task StartAcquisitionAsync(CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
-            // TODO : ReImplement
-            //_acquiredImages = new ConcurrentQueue<Image>();
-
-            //string taskID = session.CreateAcquisitionTask(CameraIndex, timeout);
-
-            //try
-            //{
-            //   await Task.Run(() =>
-            //   {
-            //       while (!session.IsTaskFinished(taskID))
-            //       {
-            //           Task.Delay(timeout).Wait();
-            //           if (token.IsCancellationRequested)
-            //           {
-            //               session.RequestCancellation(taskID);
-            //               break;
-            //           }
-            //       }
-            //   });
-            //}
-            //finally
-            //{
-            //    session.RemoveTask(taskID);
-            //}
         }
 
         public override Image PullPreviewImage<T>(int index)
@@ -376,7 +352,6 @@ namespace DIPOL_Remote.Classes
         internal static void NotifyRemoteTemperatureStatusChecked(
             int camIndex, TemperatureStatusEventArgs args)
         {
-
             if (RemoteCameras.TryGetValue(camIndex, out var camera))
                 camera.OnTemperatureStatusChecked(args);
         }
