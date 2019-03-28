@@ -252,7 +252,7 @@ namespace DIPOL_Remote.Classes
             }
 
             SubscribeToCameraEvents(camera);
-           
+            
             // TODO: Update Logging
             //camera.AcquisitionStarted += (sender, e)
             //    => host?.OnEventReceived(sender, $"Acq. Started      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
@@ -742,33 +742,6 @@ namespace DIPOL_Remote.Classes
 
         }
 
-        //static RemoteControl()
-        //{
-        //    LoadSettings();
-        //}
-
-        //private static void LoadSettings(in string path = "dipolconfig.json")
-        //{
-        //    JsonSettings settings = new JsonSettings();
-        //    if (File.Exists(Path.Combine(Environment.CurrentDirectory, path)))
-        //        using (var str = new StreamReader(Path.Combine(Environment.CurrentDirectory, path)))
-        //        {
-        //            try
-        //            {
-        //                settings = new JsonSettings(str.ReadToEnd());
-        //            }
-        //            catch (JsonReaderException jre)
-        //            {
-        //                settings = new JsonSettings();
-        //            }
-        //            catch
-        //            {
-        //                //TODO: Add logging system to this level and report other IO errors.
-        //            }
-        //        }
-
-        //    _config = settings;
-        //}
 
         // Async pattern
         [OperationBehavior]
@@ -785,8 +758,7 @@ namespace DIPOL_Remote.Classes
                 res.Task.GetAwaiter().GetResult();
                 return true;
             }
-
-            return false;
+            throw new InvalidOperationException($"Incompatible object of type [{typeof(IAsyncResult)}] received.");
         }
 
     }
