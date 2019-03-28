@@ -32,13 +32,15 @@ using DIPOL_Remote.Enums;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
+using DIPOL_Remote.Classes;
 
 namespace DIPOL_Remote.Interfaces
 {
     /// <summary>
     /// Interface used to communicate with DIPOL service.
     /// </summary>
-    [ServiceContract(SessionMode = SessionMode.Required,
+    [ServiceContract(
+        SessionMode = SessionMode.Required,
         CallbackContract = typeof(IRemoteCallback))]
     [ServiceKnownType(typeof(Version))]
     [ServiceKnownType(typeof(CameraProperties))]
@@ -245,7 +247,9 @@ namespace DIPOL_Remote.Interfaces
         [OperationContract(IsOneWay = false)]
         void RequestCancellation(string taskID);
 
-        //[OperationContract(IsOneWay = false)]
-        //void SaveImageToRemoteDrive()
+        // TODO: Attempting to build Begin/End asynchronous pattern
+        [OperationContract(AsyncPattern = true)]
+        IAsyncResult BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state);
+        bool EndCreateCameraAsync(IAsyncResult result);
     }
 }
