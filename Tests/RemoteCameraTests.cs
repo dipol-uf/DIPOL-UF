@@ -259,6 +259,7 @@ namespace Tests
                     Assert.That(
                         () => cam.ShutterControl(ShutterMode.PermanentlyOpen, ShutterMode.PermanentlyOpen),
                         Throws.Nothing);
+                    
                     Assert.That(cam.Shutter.Internal, Is.EqualTo(ShutterMode.PermanentlyOpen));
                     Assert.That(cam.Shutter.External, Is.EqualTo(ShutterMode.PermanentlyOpen));
 
@@ -267,7 +268,7 @@ namespace Tests
                         var result = false;
                         cam.TemperatureStatusChecked += (sender, e) => result = true;
                         cam.TemperatureMonitor(Switch.Enabled, 100);
-                        Task.Delay(300).GetAwaiter().GetResult();
+                        Task.Delay(150).GetAwaiter().GetResult();
                         result = result && cam.IsTemperatureMonitored;
                         cam.TemperatureMonitor(Switch.Disabled);
 
