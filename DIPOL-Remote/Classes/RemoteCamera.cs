@@ -24,19 +24,15 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
-using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
 using CameraBase = ANDOR_CS.Classes.CameraBase;
-using IRemoteControl = DIPOL_Remote.Interfaces.IRemoteControl;
 using AcquisitionEventType = DIPOL_Remote.Enums.AcquisitionEventType;
 
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
 using ANDOR_CS.Classes;
-using ANDOR_CS.Exceptions;
 using DipolImage;
 using FITS_CS;
 
