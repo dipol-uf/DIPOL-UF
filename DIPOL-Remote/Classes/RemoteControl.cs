@@ -65,7 +65,6 @@ namespace DIPOL_Remote.Classes
         // TODO : Move to settings
         private const int MaxTryAddAttempts = 30;
 
-        private OperationContext _currentContext;
         /// <summary>
         /// A reference to Host instance
         /// </summary>
@@ -82,11 +81,10 @@ namespace DIPOL_Remote.Classes
         private readonly ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> activeTasks
             = new ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>();
 
-        ///// <summary>
-        ///// Thread-safe collection of active remote cameras.
-        ///// </summary>
-        //private static readonly ConcurrentDictionary<int, (string SessionID, CameraBase Camera)> activeCameras
-        //    = new ConcurrentDictionary<int, (string SessionID, CameraBase Camera)>();
+        private OperationContext Context { get; set; }
+
+        private IRemoteCallback Callback => Context?.GetCallbackChannel<IRemoteCallback>()
+            ?? throw new NullReferenceException("Either service context or callback channel are null");
 
         /// <summary>
         /// Unique ID of current session
@@ -128,10 +126,10 @@ namespace DIPOL_Remote.Classes
 
         private void SubscribeToCameraEvents(CameraBase camera)
         {
+            
             // Remotely fires event, informing that some property has changed
             camera.PropertyChanged += (sender, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
+                => Callback
                 .NotifyRemotePropertyChanged(
                     camera.CameraIndex,
                     SessionID,
@@ -139,16 +137,14 @@ namespace DIPOL_Remote.Classes
 
             // Remotely fires event, informing that temperature status was checked.
             camera.TemperatureStatusChecked += (sender, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
+                => Callback
                 .NotifyRemoteTemperatureStatusChecked(
                     camera.CameraIndex,
                     SessionID,
                     e);
             // Remotely fires event, informing that acquisition was started.
             camera.AcquisitionStarted += (snder, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
+                => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -156,8 +152,7 @@ namespace DIPOL_Remote.Classes
                     e);
             // Remotely fires event, informing that acquisition was finished.
             camera.AcquisitionFinished += (snder, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
+                => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -165,8 +160,7 @@ namespace DIPOL_Remote.Classes
                     e);
             // Remotely fires event, informing that acquisition progress was checked.
             camera.AcquisitionStatusChecked += (snder, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
+                => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -174,8 +168,7 @@ namespace DIPOL_Remote.Classes
                     e);
             // Remotely fires event, informing that acquisition was aborted.
             camera.AcquisitionAborted += (snder, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
+                => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -183,8 +176,7 @@ namespace DIPOL_Remote.Classes
                     e);
             // Remotely fires event, informing that an error happened during acquisition process.
             camera.AcquisitionErrorReturned += (snder, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
+                => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -192,8 +184,7 @@ namespace DIPOL_Remote.Classes
                     e);
             // Remotely fires event, informing that new image was acquired
             camera.NewImageReceived += (sndr, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
+                => Callback
                 .NotifyRemoteNewImageReceivedEventHappened(
                     camera.CameraIndex,
                     SessionID,
@@ -204,6 +195,20 @@ namespace DIPOL_Remote.Classes
 
             camera.PropertyChanged += (sender, e)
                 => _host?.OnEventReceived(sender, e.PropertyName);
+
+
+            camera.AcquisitionStarted += (sender, e)
+                => _host?.OnEventReceived(sender, $"Acq. Started      {e.Status}");
+            camera.AcquisitionFinished += (sender, e)
+                => _host?.OnEventReceived(sender, $"Acq. Finished     {e.Status}");
+            camera.AcquisitionStatusChecked += (sender, e)
+                => _host?.OnEventReceived(sender, $"Acq. Stat. Check. {e.Status}");
+            camera.AcquisitionAborted += (sender, e)
+                => _host?.OnEventReceived(sender, $"Acq. Aborted      {e.Status}");
+            camera.AcquisitionErrorReturned += (sender, e)
+                => _host?.OnEventReceived(sender, $"Acq. Err. Ret.    {e.Status}");
+            camera.NewImageReceived += (sender, e)
+                => _host?.OnEventReceived(sender, $"New image [{e.Index}] at {e.EventTime:HH:mm:ss.fff} (sender time)");
         }
 
         private async Task CreateCameraAsync(int camIndex, params object[] @params)
@@ -252,20 +257,6 @@ namespace DIPOL_Remote.Classes
             }
 
             SubscribeToCameraEvents(camera);
-            
-            // TODO: Update Logging
-            //camera.AcquisitionStarted += (sender, e)
-            //    => host?.OnEventReceived(sender, $"Acq. Started      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            //camera.AcquisitionFinished += (sender, e)
-            //    => host?.OnEventReceived(sender, $"Acq. Finished     {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            //camera.AcquisitionStatusChecked += (sender, e)
-            //    => host?.OnEventReceived(sender, $"Acq. Stat. Check. {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            //camera.AcquisitionAborted += (sender, e)
-            //    => host?.OnEventReceived(sender, $"Acq. Aborted      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            //camera.AcquisitionErrorReturned += (sender, e)
-            //    => host?.OnEventReceived(sender, $"Acq. Err. Ret.    {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            //camera.NewImageReceived += (sender, e)
-            //    => host?.OnEventReceived(sender, $"New image:  ({e.First}, {e.Last})");
 
             _host?.OnEventReceived(camera, "Camera was created remotely");
 
@@ -279,7 +270,7 @@ namespace DIPOL_Remote.Classes
         {
             _host = OperationContext.Current.Host as DipolHost ??
                     throw new InvalidOperationException("Unsupported host type.");
-            _currentContext = OperationContext.Current;
+            Context = OperationContext.Current;
 
             var uriHash = _host.BaseAddresses.Select(x => x.ToString().GetHashCode()).DefaultIfEmpty(0).FirstOrDefault();
 
@@ -712,10 +703,12 @@ namespace DIPOL_Remote.Classes
                 throw new Exception();
         }
 
+        [Obsolete]
         private OperationContext GetContext()
         {
-            return _currentContext?.Channel.State == CommunicationState.Opened ? _currentContext : null;
+            return Context?.Channel.State == CommunicationState.Opened ? Context : null;
         }
+
 
         public void RequestCreateCamera(int camIndex)
         {
