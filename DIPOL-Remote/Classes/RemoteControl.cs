@@ -27,9 +27,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -42,9 +40,6 @@ using ANDOR_CS.Exceptions;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_Remote.Interfaces;
-using SettingsManager;
-using Newtonsoft.Json;
-
 using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
 // ReSharper disable InheritdocConsiderUsage
 
@@ -57,9 +52,8 @@ namespace DIPOL_Remote.Classes
     /// Instances are executed on server (service) side.
     /// </summary>
     [ServiceBehavior(
-        ConcurrencyMode = ConcurrencyMode.Multiple, 
-        InstanceContextMode = InstanceContextMode.Single,
-        //InstanceContextMode = InstanceContextMode.PerSession,
+        ConcurrencyMode = ConcurrencyMode.Multiple,
+        InstanceContextMode = InstanceContextMode.PerSession,
         AutomaticSessionShutdown = true,
         //UseSynchronizationContext = true,
         IncludeExceptionDetailInFaults = true)]
@@ -78,7 +72,6 @@ namespace DIPOL_Remote.Classes
         private DipolHost _host;
 
         private readonly CameraDictionary _cameras = new CameraDictionary();
-        //private readonly CameraTaskPool _initalizationPool = new CameraTaskPool();
 
         /// <summary>
         /// Thread-safe collection of all active instances of AcquisitionSettings.
@@ -98,8 +91,10 @@ namespace DIPOL_Remote.Classes
         /// <summary>
         /// Unique ID of current session
         /// </summary>
-        public string SessionID { [OperationBehavior]
-            get; private set;
+        public string SessionID {
+            [OperationBehavior]
+            get;
+            private set;
         }
 
         /// <summary>
@@ -779,19 +774,18 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public IAsyncResult BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state)
         {
-            //return Task.Factory.StartNew(async _ => await CreateCameraAsync(camIndex), state);
-            return new AsyncCameraResult(CreateCameraAsync(camIndex), state);
+            return new AsyncVoidResult(CreateCameraAsync(camIndex), callback, state);
         }
 
         //[OperationBehavior]
         public bool EndCreateCameraAsync(IAsyncResult result)
         {
-            if (result is AsyncCameraResult camResult)
+            if (result is AsyncVoidResult res)
             {
-                if(!camResult.IsCompleted)
-                    camResult.Task.GetAwaiter().GetResult();
-                return camResult.Task.Status == TaskStatus.RanToCompletion;
+                res.Task.GetAwaiter().GetResult();
+                return true;
             }
+
             return false;
         }
 

@@ -477,9 +477,9 @@ namespace DIPOL_Remote.Classes
             {
             }, null);
 
-            Task.Delay(1000).Wait();
+            //Task.Delay(1000).Wait();
 
-            Task.Delay(2000).Wait();
+            //Task.Delay(2000).Wait();
 
             result = commObj.Remote.EndCreateCameraAsync(y);
             if (result)
