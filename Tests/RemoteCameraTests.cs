@@ -35,6 +35,7 @@ using NUnit.Framework;
 #if !HOST_IN_PROCESS
 using System.Diagnostics;
 using System.IO;
+using Switch = ANDOR_CS.Enums.Switch;
 #endif
 
 namespace Tests

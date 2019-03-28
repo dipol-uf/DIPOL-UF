@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -45,7 +46,6 @@ using SettingsManager;
 using Newtonsoft.Json;
 
 using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
-
 // ReSharper disable InheritdocConsiderUsage
 
 namespace DIPOL_Remote.Classes
@@ -58,9 +58,10 @@ namespace DIPOL_Remote.Classes
     /// </summary>
     [ServiceBehavior(
         ConcurrencyMode = ConcurrencyMode.Multiple, 
-        InstanceContextMode = InstanceContextMode.PerSession,
+        InstanceContextMode = InstanceContextMode.Single,
+        //InstanceContextMode = InstanceContextMode.PerSession,
         AutomaticSessionShutdown = true,
-        UseSynchronizationContext = true,
+        //UseSynchronizationContext = true,
         IncludeExceptionDetailInFaults = true)]
     internal sealed class RemoteControl : IRemoteControl, IDisposable
     {
@@ -77,6 +78,7 @@ namespace DIPOL_Remote.Classes
         private DipolHost _host;
 
         private readonly CameraDictionary _cameras = new CameraDictionary();
+        //private readonly CameraTaskPool _initalizationPool = new CameraTaskPool();
 
         /// <summary>
         /// Thread-safe collection of all active instances of AcquisitionSettings.
@@ -128,7 +130,151 @@ namespace DIPOL_Remote.Classes
         {
          
         }
-                   
+
+        private void SubscribeToCameraEvents(CameraBase camera)
+        {
+            // Remotely fires event, informing that some property has changed
+            camera.PropertyChanged += (sender, e)
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemotePropertyChanged(
+                    camera.CameraIndex,
+                    SessionID,
+                    e.PropertyName);
+
+            // Remotely fires event, informing that temperature status was checked.
+            camera.TemperatureStatusChecked += (sender, e)
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteTemperatureStatusChecked(
+                    camera.CameraIndex,
+                    SessionID,
+                    e);
+            // Remotely fires event, informing that acquisition was started.
+            camera.AcquisitionStarted += (snder, e)
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteAcquisitionEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    Enums.AcquisitionEventType.Started,
+                    e);
+            // Remotely fires event, informing that acquisition was finished.
+            camera.AcquisitionFinished += (snder, e)
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteAcquisitionEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    Enums.AcquisitionEventType.Finished,
+                    e);
+            // Remotely fires event, informing that acquisition progress was checked.
+            camera.AcquisitionStatusChecked += (snder, e)
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteAcquisitionEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    Enums.AcquisitionEventType.StatusChecked,
+                    e);
+            // Remotely fires event, informing that acquisition was aborted.
+            camera.AcquisitionAborted += (snder, e)
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteAcquisitionEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    Enums.AcquisitionEventType.Aborted,
+                    e);
+            // Remotely fires event, informing that an error happened during acquisition process.
+            camera.AcquisitionErrorReturned += (snder, e)
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteAcquisitionEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    Enums.AcquisitionEventType.ErrorReturned,
+                    e);
+            // Remotely fires event, informing that new image was acquired
+            camera.NewImageReceived += (sndr, e)
+                => GetContext()
+                ?.GetCallbackChannel<IRemoteCallback>()
+                .NotifyRemoteNewImageReceivedEventHappened(
+                    camera.CameraIndex,
+                    SessionID,
+                    e);
+
+            camera.TemperatureStatusChecked += (sender, e)
+                => _host?.OnEventReceived(sender, $"{e.Status} {e.Temperature}");
+
+            camera.PropertyChanged += (sender, e)
+                => _host?.OnEventReceived(sender, e.PropertyName);
+        }
+
+        private async Task CreateCameraAsync(int camIndex, params object[] @params)
+        {
+            CameraBase camera;
+            try
+            {
+                // Tries to create new remote camera
+#if DEBUG
+                camera = Camera.GetNumberOfCameras() <= 0
+                    ? await DebugCamera.CreateAsync(camIndex, @params)
+                    : await Camera.CreateAsync(camIndex, @params) as CameraBase;
+
+#else
+                camera = await Camera.CreateAsync(camIndex, @params);
+#endif
+            }
+            // Andor-related exception
+            catch (AndorSdkException andorEx)
+            {
+                throw AndorSDKServiceException.WrapAndorSDKException(andorEx, nameof(Camera));
+            }
+            // Other possible exceptions
+            catch (Exception ex)
+            {
+                throw new FaultException<ServiceException>(
+                    new ServiceException()
+                    {
+                        Message = "Failed to create new remote camera.",
+                        Details = ex.Message,
+                        MethodName = nameof(Camera)
+                    },
+                    ServiceException.CameraCommunicationReason);
+            }
+
+            if (!_cameras.TryAdd(camIndex, camera))
+            {
+                camera?.Dispose();
+                throw new FaultException<ServiceException>(
+                    new ServiceException()
+                    {
+                        Message = "Failed to create new remote camera.",
+                        MethodName = nameof(Camera)
+                    },
+                    ServiceException.CameraCommunicationReason);
+            }
+
+            SubscribeToCameraEvents(camera);
+           
+            // TODO: Update Logging
+            //camera.AcquisitionStarted += (sender, e)
+            //    => host?.OnEventReceived(sender, $"Acq. Started      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            //camera.AcquisitionFinished += (sender, e)
+            //    => host?.OnEventReceived(sender, $"Acq. Finished     {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            //camera.AcquisitionStatusChecked += (sender, e)
+            //    => host?.OnEventReceived(sender, $"Acq. Stat. Check. {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            //camera.AcquisitionAborted += (sender, e)
+            //    => host?.OnEventReceived(sender, $"Acq. Aborted      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            //camera.AcquisitionErrorReturned += (sender, e)
+            //    => host?.OnEventReceived(sender, $"Acq. Err. Ret.    {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
+            //camera.NewImageReceived += (sender, e)
+            //    => host?.OnEventReceived(sender, $"New image:  ({e.First}, {e.Last})");
+
+            _host?.OnEventReceived(camera, "Camera was created remotely");
+
+        }
 
         /// <summary>
         /// Entry point of any connection.
@@ -253,140 +399,7 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public void CreateCamera(int camIndex = 0)
         {
-
-            CameraBase camera;
-            try
-            {
-                // Tries to create new remote camera
-#if DEBUG
-                camera = Camera.GetNumberOfCameras() <= 0 ? new DebugCamera(camIndex) as CameraBase : new Camera(camIndex);
-
-#else
-                camera = new Camera(camIndex);
-#endif
-            }
-            // Andor-related exception
-            catch (AndorSdkException andorEx)
-            {
-                throw AndorSDKServiceException.WrapAndorSDKException(andorEx, nameof(Camera));
-            }
-            // Other possible exceptions
-            catch (Exception ex)
-            {
-                throw new FaultException<ServiceException>(
-                    new ServiceException()
-                    {
-                        Message = "Failed to create new remote camera.",
-                        Details = ex.Message,
-                        MethodName = nameof(Camera)
-                    },
-                    ServiceException.CameraCommunicationReason);
-            }
-
-            if (!_cameras.TryAdd(camIndex, camera))
-            {
-                camera.Dispose();
-                throw new FaultException<ServiceException>(
-                    new ServiceException()
-                    {
-                        Message = "Failed to create new remote camera.",
-                        MethodName = nameof(Camera)
-                    },
-                    ServiceException.CameraCommunicationReason);
-            }
-
-            // Remotely fires event, informing that some property has changed
-            camera.PropertyChanged += (sender, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
-                .NotifyRemotePropertyChanged(
-                    camera.CameraIndex,
-                    SessionID,
-                    e.PropertyName);
-
-            // Remotely fires event, informing that temperature status was checked.
-            camera.TemperatureStatusChecked += (sender, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
-                .NotifyRemoteTemperatureStatusChecked(
-                    camera.CameraIndex,
-                    SessionID,
-                    e);
-            // Remotely fires event, informing that acquisition was started.
-            camera.AcquisitionStarted += (snder, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
-                .NotifyRemoteAcquisitionEventHappened(
-                    camera.CameraIndex,
-                    SessionID,
-                    Enums.AcquisitionEventType.Started,
-                    e);
-            // Remotely fires event, informing that acquisition was finished.
-            camera.AcquisitionFinished += (snder, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
-                .NotifyRemoteAcquisitionEventHappened(
-                    camera.CameraIndex,
-                    SessionID,
-                    Enums.AcquisitionEventType.Finished,
-                    e);
-            // Remotely fires event, informing that acquisition progress was checked.
-            camera.AcquisitionStatusChecked += (snder, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
-                .NotifyRemoteAcquisitionEventHappened(
-                    camera.CameraIndex,
-                    SessionID,
-                    Enums.AcquisitionEventType.StatusChecked,
-                    e);
-            // Remotely fires event, informing that acquisition was aborted.
-            camera.AcquisitionAborted += (snder, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
-                .NotifyRemoteAcquisitionEventHappened(
-                    camera.CameraIndex,
-                    SessionID,
-                    Enums.AcquisitionEventType.Aborted,
-                    e);
-            // Remotely fires event, informing that an error happened during acquisition process.
-            camera.AcquisitionErrorReturned += (snder, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
-                .NotifyRemoteAcquisitionEventHappened(
-                    camera.CameraIndex,
-                    SessionID,
-                    Enums.AcquisitionEventType.ErrorReturned,
-                    e);
-            // Remotely fires event, informing that new image was acquired
-            camera.NewImageReceived += (sndr, e)
-                => GetContext()
-                ?.GetCallbackChannel<IRemoteCallback>()
-                .NotifyRemoteNewImageReceivedEventHappened(
-                    camera.CameraIndex,
-                    SessionID,
-                    e);
-
-            camera.TemperatureStatusChecked += (sender, e)
-                => _host?.OnEventReceived(sender, $"{e.Status} {e.Temperature}");
-
-            camera.PropertyChanged += (sender, e)
-                => _host?.OnEventReceived(sender, e.PropertyName);
-
-            // TODO: Update Logging
-            //camera.AcquisitionStarted += (sender, e)
-            //    => host?.OnEventReceived(sender, $"Acq. Started      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            //camera.AcquisitionFinished += (sender, e)
-            //    => host?.OnEventReceived(sender, $"Acq. Finished     {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            //camera.AcquisitionStatusChecked += (sender, e)
-            //    => host?.OnEventReceived(sender, $"Acq. Stat. Check. {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            //camera.AcquisitionAborted += (sender, e)
-            //    => host?.OnEventReceived(sender, $"Acq. Aborted      {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            //camera.AcquisitionErrorReturned += (sender, e)
-            //    => host?.OnEventReceived(sender, $"Acq. Err. Ret.    {e.Status} {(e.IsAsync ? "Async" : "Serial")}");
-            //camera.NewImageReceived += (sender, e)
-            //    => host?.OnEventReceived(sender, $"New image:  ({e.First}, {e.Last})");
-
-            _host?.OnEventReceived(camera, "Camera was created remotely");
+            CreateCameraAsync(camIndex).ConfigureAwait(false).GetAwaiter().GetResult();
         }
         [OperationBehavior]
         public void RemoveCamera(int camIndex)
@@ -554,16 +567,6 @@ namespace DIPOL_Remote.Classes
         [OperationBehavior]
         public (Version PCB, Version Decode, Version CameraFirmware) GetHardware(int camIndex)
             => GetCameraSafe(camIndex).Hardware;
-
-        //[OperationBehavior]
-        //public (byte[] Data, int Width, int Height, TypeCode TypeCode) PullNewImage(int camIndex)
-        //{
-        //    if (GetCameraSafe(sessionID, camIndex).AcquiredImages.TryDequeue(out var im))
-        //        return (im.GetBytes(), im.Width, im.Height, im.UnderlyingType);
-        //    else
-        //        throw new Exception();
-        //}
-        
 
         [OperationBehavior]
         public CameraStatus CallGetStatus(int camIndex)
@@ -771,5 +774,26 @@ namespace DIPOL_Remote.Classes
 
         //    _config = settings;
         //}
+
+        // Async pattern
+        [OperationBehavior]
+        public IAsyncResult BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state)
+        {
+            //return Task.Factory.StartNew(async _ => await CreateCameraAsync(camIndex), state);
+            return new AsyncCameraResult(CreateCameraAsync(camIndex), state);
+        }
+
+        //[OperationBehavior]
+        public bool EndCreateCameraAsync(IAsyncResult result)
+        {
+            if (result is AsyncCameraResult camResult)
+            {
+                if(!camResult.IsCompleted)
+                    camResult.Task.GetAwaiter().GetResult();
+                return camResult.Task.Status == TaskStatus.RanToCompletion;
+            }
+            return false;
+        }
+
     }
 }
