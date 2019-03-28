@@ -51,7 +51,7 @@ namespace DIPOL_Remote.Classes
         private readonly ConcurrentDictionary<string, bool> _changedProperties
             = new ConcurrentDictionary<string, bool>();
 
-        private IRemoteControl _session;
+        private DipolClient _session;
 
         public override bool IsTemperatureMonitored
         {
@@ -231,7 +231,7 @@ namespace DIPOL_Remote.Classes
             }
         }
 
-        private RemoteCamera(int camIndex, IRemoteControl sessionInstance)
+        private RemoteCamera(int camIndex, DipolClient sessionInstance)
         {
             _session = sessionInstance ?? throw new ArgumentNullException(nameof(sessionInstance));
             CameraIndex = camIndex;
@@ -429,26 +429,25 @@ namespace DIPOL_Remote.Classes
 
         public new static RemoteCamera Create(int camIndex = 0, params object[] @params)
         {
-
-            var commObj = @params.OfType<DipolClient>().DefaultIfEmpty(null).FirstOrDefault()
-                          ?? throw new ArgumentException(
+            if (!(@params?.Length == 1 && @params[0] is DipolClient client))
+                throw new ArgumentException(
                               $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.",
                               nameof(@params));
 
-            commObj.CreateRemoteCamera(camIndex);
+            client.CreateRemoteCamera(camIndex);
 
-            return new RemoteCamera(camIndex, commObj.Remote);
+            return new RemoteCamera(camIndex, client);
         }
 
         public new static async Task<RemoteCamera> CreateAsync(int camIndex = 0, params object[] @params)
         {
-            var client = @params.OfType<DipolClient>().DefaultIfEmpty(null).FirstOrDefault()
-                          ?? throw new ArgumentException(
-                              $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.",
-                              nameof(@params));
+            if (!(@params?.Length == 1 && @params[0] is DipolClient client))
+                throw new ArgumentException(
+                    $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.",
+                    nameof(@params));
 
             await client.CreateCameraAsync(camIndex);
-            return new RemoteCamera(camIndex, client.Remote);
+            return new RemoteCamera(camIndex, client);
         }
     }
 }

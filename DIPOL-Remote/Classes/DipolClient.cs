@@ -25,8 +25,10 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
@@ -37,6 +39,8 @@ namespace DIPOL_Remote.Classes
 {
     public class DipolClient : DuplexClientBase<IRemoteControl>, IRemoteControl
     {
+        private static readonly int MaxMessageSize = 512 * 512 * 8 * 4;
+
         internal static ConcurrentDictionary<(string sessionID, int camIndex), (ManualResetEvent Event, bool Success)>
             CameraCreatedEvents { get; } =
             new ConcurrentDictionary<(string sessionID, int camIndex), (ManualResetEvent, bool)>();
@@ -49,50 +53,11 @@ namespace DIPOL_Remote.Classes
         public string SessionID
             => Channel.SessionID;
 
-        public DipolClient(Uri hostUri)
-        : base(new InstanceContext(new RemoteCallbackHandler()),
-                new NetTcpBinding(SecurityMode.None), 
-                new EndpointAddress(hostUri))
+        private DipolClient(InstanceContext context, Binding binding, EndpointAddress endpoint)
+            : base(context, binding, endpoint)
         {
-            //HostAddress = hostUri.ToString();
-            //var bnd = new NetTcpBinding(SecurityMode.None)
-            //{
-            //    MaxReceivedMessageSize = 512 * 512 * 8 * 2
-            //};
-            //// IMPORTANT! Limits the size of SOAP message. For larger images requires another implementation
-            //_remote = new DuplexChannelFactory<IRemoteControl>(
-            //    _context,
-            //    bnd,
-            //    new EndpointAddress(hostUri)).CreateChannel();
 
         }
-
-        public DipolClient(Uri hostUri, 
-            TimeSpan openTimeout, 
-            TimeSpan sendTimeout, 
-            TimeSpan operationTimeout, 
-            TimeSpan closeTimeout) :  this(hostUri)
-        {
-            //HostAddress = hostUri.ToString();
-            //var bnd = new NetTcpBinding(SecurityMode.None)
-            //{
-            //    MaxReceivedMessageSize = 512 * 512 * 8 * 2,
-            //    OpenTimeout = openTimeout,
-            //    SendTimeout = sendTimeout,
-            //    CloseTimeout = closeTimeout
-            //};
-            //// IMPORTANT! Limits the size of SOAP message. For larger images requires another implementation
-
-
-            //_remote = new DuplexChannelFactory<IRemoteControl>(
-            //    _context,
-            //    bnd,
-            //    new EndpointAddress(hostUri)).CreateChannel();
-
-            //// ReSharper disable once SuspiciousTypeConversion.Global
-            //((IDuplexContextChannel) _remote).OperationTimeout = operationTimeout;
-        }
-
 
         public void Connect()
         {
@@ -111,6 +76,38 @@ namespace DIPOL_Remote.Classes
             Close();
         }
 
+
+        public static DipolClient Create(Uri hostUri)
+        {
+            var context = new InstanceContext(new RemoteCallbackHandler());
+            var binding = new NetTcpBinding(SecurityMode.None)
+            {
+                MaxBufferSize = MaxMessageSize,
+                MaxReceivedMessageSize = MaxMessageSize
+            };
+            var endpoint = new EndpointAddress(hostUri);
+
+            return new DipolClient(context, binding, endpoint);
+        }
+
+        public static DipolClient Create(Uri hostUri,
+            TimeSpan openTimeout,
+            TimeSpan sendTimeout,
+            TimeSpan closeTimeout)
+        {
+            var context = new InstanceContext(new RemoteCallbackHandler());
+            var binding = new NetTcpBinding(SecurityMode.None)
+            {
+                MaxBufferSize = MaxMessageSize,
+                MaxReceivedMessageSize = MaxMessageSize,
+                OpenTimeout = openTimeout,
+                SendTimeout = sendTimeout,
+                CloseTimeout = closeTimeout
+            };
+            var endpoint = new EndpointAddress(hostUri);
+
+            return new DipolClient(context, binding, endpoint);
+        }
 
         #region Remote interface implementations
 
@@ -250,12 +247,16 @@ namespace DIPOL_Remote.Classes
         #region Explicit async unused implementations
 
         IAsyncResult IRemoteControl.BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state)
-			=> Channel.BeginCreateCameraAsync(camIndex, callback, state);
+			=> throw new NotSupportedException(
+                $"{nameof(IRemoteControl.BeginCreateCameraAsync)} is not supported directly. " +
+                $"Use {nameof(CreateCameraAsync)} instead.");
         bool IRemoteControl.EndCreateCameraAsync(IAsyncResult result)
-			=> Channel.EndCreateCameraAsync(result);
+            => throw new NotSupportedException(
+                $"{nameof(IRemoteControl.EndCreateCameraAsync)} is not supported directly. " +
+                $"Use {nameof(CreateCameraAsync)} instead.");
 
-#endregion
-        
+        #endregion
+
         #region TAP async implementations
 
         private static void FinalizeAsyncOperation(object eventArgs, TaskCompletionSource<bool> source)

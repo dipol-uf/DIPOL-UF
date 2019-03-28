@@ -55,7 +55,7 @@ namespace DIPOL_Remote.Classes
         ConcurrencyMode = ConcurrencyMode.Multiple,
         InstanceContextMode = InstanceContextMode.PerSession,
         AutomaticSessionShutdown = true,
-        //UseSynchronizationContext = true,
+        UseSynchronizationContext = true,
         IncludeExceptionDetailInFaults = true)]
     internal sealed class RemoteControl : IRemoteControl, IDisposable
     {

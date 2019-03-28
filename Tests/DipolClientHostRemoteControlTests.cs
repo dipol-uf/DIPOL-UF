@@ -112,12 +112,12 @@ namespace Tests
         [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         public void Test_CanConnect()
         {
-            using (var client = new DipolClient(_hostUri))
+            using (var client = DipolClient.Create(_hostUri))
             {
                 client.Connect();
                 Assert.Multiple(() =>
                 {
-                    Assert.That(client.Remote, Is.Not.Null,
+                    Assert.That(client, Is.Not.Null,
                         "Remote connection should be established.");
                     Assert.That(client.GetNumberOfCameras, Is.GreaterThanOrEqualTo(0),
                         "Remote instance should report number of cameras greater than or equal to 0.");
@@ -125,8 +125,7 @@ namespace Tests
                 client.Disconnect();
             }
 
-            using (var client = new DipolClient(_hostUri,
-                TimeSpan.FromSeconds(25),
+            using (var client = DipolClient.Create(_hostUri,
                 TimeSpan.FromSeconds(25),
                 TimeSpan.FromSeconds(25),
                 TimeSpan.FromSeconds(25)))
@@ -134,7 +133,7 @@ namespace Tests
                 client.Connect();
                 Assert.Multiple(() =>
                 {
-                    Assert.That(client.Remote, Is.Not.Null,
+                    Assert.That(client, Is.Not.Null,
                         "Remote connection should be established.");
                     Assert.That(client.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0),
                         "Remote instance should report number of cameras greater than or equal to 0.");
@@ -148,7 +147,7 @@ namespace Tests
 
         public void Test_Properties()
         {
-            using (var client = new DipolClient(_hostUri))
+            using (var client = DipolClient.Create(_hostUri))
             {
                 client.Connect();
                 Assert.Multiple(() =>
@@ -166,7 +165,7 @@ namespace Tests
         [Test]
         public void Test_RemoteActiveCamerasCount()
         {
-            using (var client = new DipolClient(_hostUri))
+            using (var client = DipolClient.Create(_hostUri))
             {
                 client.Connect();
                 CollectionAssert.AreEqual(new int[] {}, client.ActiveRemoteCameras(),
@@ -179,7 +178,7 @@ namespace Tests
         [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         public void Test_CreateRemoteCamera()
         {
-            using (var client = new DipolClient(_hostUri))
+            using (var client = DipolClient.Create(_hostUri))
             {
                 client.Connect();
                 Assume.That(client.GetNumberOfCameras(), Is.GreaterThan(0),
