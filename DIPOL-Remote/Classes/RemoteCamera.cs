@@ -442,51 +442,13 @@ namespace DIPOL_Remote.Classes
 
         public new static async Task<RemoteCamera> CreateAsync(int camIndex = 0, params object[] @params)
         {
-            var commObj = @params.OfType<DipolClient>().DefaultIfEmpty(null).FirstOrDefault()
+            var client = @params.OfType<DipolClient>().DefaultIfEmpty(null).FirstOrDefault()
                           ?? throw new ArgumentException(
                               $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.",
                               nameof(@params));
 
-            //commObj.RequestCreateRemoteCamera(camIndex);
-            //var resetEvent = new ManualResetEvent(false);
-            //if(!DipolClient.CameraCreatedEvents.TryAdd((commObj.SessionID, camIndex), (resetEvent, false)))
-            //    throw new InvalidOperationException($"Cannot add {nameof(ManualResetEvent)} to the listening collection.");
-
-            //// TODO: The timeout for remote camera creation should come as parameter or
-            //// TODO: from settings file.
-            //var isCreated = await Task.Run(() => resetEvent.WaitOne(TimeSpan.FromMinutes(2)));
-
-
-            //if (!DipolClient.CameraCreatedEvents.TryGetValue((commObj.SessionID, camIndex), out var result))
-            //    result.Success = false;
-
-            //DipolClient.CameraCreatedEvents.TryRemove((commObj.SessionID, camIndex), out _);
-
-            //if(!result.Success)
-            //    throw new AndorSdkException("Remote instance failed to create a camera.", null);
-            //if(!isCreated)
-            //    throw new CommunicationException("Response from remote instance was never received.");
-
-            //var result = await Task.Factory.FromAsync(
-            //    commObj.Remote.BeginCreateCameraAsync(camIndex, null, null),
-            //    commObj.Remote.EndCreateCameraAsync).ConfigureAwait(false);
-
-            var result = false;
-
-            var y = commObj.Remote.BeginCreateCameraAsync(camIndex, state =>
-            {
-            }, null);
-
-            //Task.Delay(1000).Wait();
-
-            //Task.Delay(2000).Wait();
-
-            result = commObj.Remote.EndCreateCameraAsync(y);
-            if (result)
-                return new RemoteCamera(camIndex, commObj.Remote);
-            throw new Exception("Async pattern failed");
-
-
+            await client.CreateCameraAsync(camIndex);
+            return new RemoteCamera(camIndex, client.Remote);
         }
     }
 }

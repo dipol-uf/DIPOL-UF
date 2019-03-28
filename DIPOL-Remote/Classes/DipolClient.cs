@@ -28,6 +28,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.ServiceModel;
 using System.Threading;
+using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_Remote.Interfaces;
@@ -257,6 +258,45 @@ namespace DIPOL_Remote.Classes
         
         #region TAP async implementations
 
+        private static void FinalizeAsyncOperation(object eventArgs, TaskCompletionSource<bool> source)
+        {
+            if (eventArgs is InvokeAsyncCompletedEventArgs e)
+            {
+                if (!(e.Error is null))
+                    source.SetException(e.Error);
+                else if(e.Cancelled)
+                    source.SetCanceled();
+                else
+                    source.SetResult(ReferenceEquals(e.Results, Array.Empty<object>()));
+            }
+        }
+
+        private async Task AsyncHelper<TParam>(
+            Func<TParam, AsyncCallback, object, IAsyncResult> beginInvoke,
+            Action<IAsyncResult> endInvoke,
+            TParam value)
+        {
+            var taskSource = new TaskCompletionSource<bool>();
+
+            InvokeAsync(
+                (@params, callback, state) => beginInvoke((TParam) @params[0], callback, state),
+                new object[] {value},
+                result =>
+                {
+                    endInvoke(result);
+                    return Array.Empty<object>();
+                }, state => FinalizeAsyncOperation(state, taskSource), null);
+
+            await taskSource.Task;
+        }
+
+        public async Task CreateCameraAsync(int camIndex)
+        {
+            await AsyncHelper(
+                Channel.BeginCreateCameraAsync,
+                x => Channel.EndCreateCameraAsync(x),
+                camIndex);
+        }
         #endregion
     }
 }
