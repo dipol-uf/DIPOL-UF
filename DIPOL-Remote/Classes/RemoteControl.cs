@@ -119,7 +119,6 @@ namespace DIPOL_Remote.Classes
                 => Callback
                 .NotifyRemotePropertyChanged(
                     camera.CameraIndex,
-                    SessionID,
                     e.PropertyName);
 
             // Remotely fires event, informing that temperature status was checked.
@@ -127,14 +126,12 @@ namespace DIPOL_Remote.Classes
                 => Callback
                 .NotifyRemoteTemperatureStatusChecked(
                     camera.CameraIndex,
-                    SessionID,
                     e);
             // Remotely fires event, informing that acquisition was started.
             camera.AcquisitionStarted += (snder, e)
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
-                    SessionID,
                     Enums.AcquisitionEventType.Started,
                     e);
             // Remotely fires event, informing that acquisition was finished.
@@ -142,7 +139,6 @@ namespace DIPOL_Remote.Classes
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
-                    SessionID,
                     Enums.AcquisitionEventType.Finished,
                     e);
             // Remotely fires event, informing that acquisition progress was checked.
@@ -150,7 +146,6 @@ namespace DIPOL_Remote.Classes
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
-                    SessionID,
                     Enums.AcquisitionEventType.StatusChecked,
                     e);
             // Remotely fires event, informing that acquisition was aborted.
@@ -158,7 +153,6 @@ namespace DIPOL_Remote.Classes
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
-                    SessionID,
                     Enums.AcquisitionEventType.Aborted,
                     e);
             // Remotely fires event, informing that an error happened during acquisition process.
@@ -166,7 +160,6 @@ namespace DIPOL_Remote.Classes
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
-                    SessionID,
                     Enums.AcquisitionEventType.ErrorReturned,
                     e);
             // Remotely fires event, informing that new image was acquired
@@ -174,7 +167,6 @@ namespace DIPOL_Remote.Classes
                 => Callback
                 .NotifyRemoteNewImageReceivedEventHappened(
                     camera.CameraIndex,
-                    SessionID,
                     e);
 
             camera.TemperatureStatusChecked += (sender, e)

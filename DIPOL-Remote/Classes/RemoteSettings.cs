@@ -53,7 +53,7 @@ namespace DIPOL_Remote.Classes
                SettingsID = settingsID;
             this.session = session;
             
-            if (!RemoteCamera.RemoteCameras.TryGetValue((sessionID, cameraIndex), out var cam))
+            if (!RemoteCamera.RemoteCameras.TryGetValue(cameraIndex, out var cam))
                 throw new Exception();
             Camera = cam;
         }

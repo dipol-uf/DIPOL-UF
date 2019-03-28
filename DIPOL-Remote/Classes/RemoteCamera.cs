@@ -40,8 +40,8 @@ namespace DIPOL_Remote.Classes
 {
     public sealed class RemoteCamera : CameraBase
     {
-        internal static readonly ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase> RemoteCameras
-            = new ConcurrentDictionary<(string SessionID, int CameraIndex), CameraBase>();
+        internal static readonly ConcurrentDictionary<int, RemoteCamera> RemoteCameras
+            = new ConcurrentDictionary<int, RemoteCamera>();
 
 
         private readonly ConcurrentDictionary<string, bool> _changedProperties
@@ -232,7 +232,6 @@ namespace DIPOL_Remote.Classes
             _session = sessionInstance ?? throw new ArgumentNullException(nameof(sessionInstance));
             CameraIndex = camIndex;
 
-            RemoteCameras.TryAdd((_session.SessionID, camIndex), this);
 
             CameraModel = _session.GetCameraModel(CameraIndex);
             SerialNumber = _session.GetSerialNumber(CameraIndex);
@@ -246,6 +245,8 @@ namespace DIPOL_Remote.Classes
             Shutter = _session.GetShutter(CameraIndex);
             Software = _session.GetSoftware(CameraIndex);
             Hardware = _session.GetHardware(CameraIndex);
+
+            RemoteCameras.TryAdd(camIndex, this);
         }
 
         public override CameraStatus GetStatus()
@@ -288,6 +289,7 @@ namespace DIPOL_Remote.Classes
 
         public override async Task StartAcquisitionAsync(CancellationToken cancellationToken)
         {
+            await Task.CompletedTask;
             // TODO : ReImplement
             //_acquiredImages = new ConcurrentQueue<Image>();
 
@@ -345,7 +347,7 @@ namespace DIPOL_Remote.Classes
             if (disposing)
             {
                 _session.RemoveCamera(CameraIndex);
-                RemoteCameras.TryRemove((_session.SessionID, CameraIndex), out _);
+                RemoteCameras.TryRemove(CameraIndex, out _);
                 _session = null;
             }
                 base.Dispose(disposing);
@@ -363,61 +365,49 @@ namespace DIPOL_Remote.Classes
                 base.OnPropertyChanged(property);
         }
 
-        internal static void NotifyRemotePropertyChanged(int camIndex, string sessionID, string property)
+        internal static void NotifyRemotePropertyChanged(int camIndex, string property)
         {
-            if (RemoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
+            if (RemoteCameras.TryGetValue(camIndex, out var camera))
             {
-                (camera as RemoteCamera)._changedProperties.AddOrUpdate(property, true, (prop, oldVal) => true);
-                (camera as RemoteCamera).OnPropertyChangedRemotely(property);
+                camera._changedProperties.AddOrUpdate(property, true, (prop, oldVal) => true);
+                camera.OnPropertyChangedRemotely(property);
             }
         }
         internal static void NotifyRemoteTemperatureStatusChecked(
-            int camIndex, string sessionID, TemperatureStatusEventArgs args)
+            int camIndex, TemperatureStatusEventArgs args)
         {
 
-            if (RemoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
-                (camera as RemoteCamera).OnTemperatureStatusChecked(args);
+            if (RemoteCameras.TryGetValue(camIndex, out var camera))
+                camera.OnTemperatureStatusChecked(args);
         }
-        internal static void NotifyRemoteAcquisitionEventHappened(int camIndex, string sessionID, 
+        internal static void NotifyRemoteAcquisitionEventHappened(int camIndex, 
             AcquisitionEventType type, AcquisitionStatusEventArgs args)
         {
-            if (RemoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
+            if (RemoteCameras.TryGetValue(camIndex, out var camera))
             {
-                var remCamera = camera as RemoteCamera;
-
                 switch (type)
                 {
                     case AcquisitionEventType.Started:
-                        remCamera.OnAcquisitionStarted(args);
+                        camera.OnAcquisitionStarted(args);
                         return;
                     case AcquisitionEventType.Finished:
-                        remCamera.OnAcquisitionFinished(args);
+                        camera.OnAcquisitionFinished(args);
                         return;
                     case AcquisitionEventType.StatusChecked:
-                        remCamera.OnAcquisitionStatusChecked(args);
+                        camera.OnAcquisitionStatusChecked(args);
                         return;
                     case AcquisitionEventType.ErrorReturned:
-                        remCamera.OnAcquisitionErrorReturned(args);
+                        camera.OnAcquisitionErrorReturned(args);
                         return;
                     case AcquisitionEventType.Aborted:
-                        remCamera.OnAcquisitionAborted(args);
+                        camera.OnAcquisitionAborted(args);
                         return;
                 }
             }
         }
-        internal static void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string sessionID, NewImageReceivedEventArgs e)
+        internal static void NotifyRemoteNewImageReceivedEventHappened(int camIndex, NewImageReceivedEventArgs e)
         {
             // TODO: ReImplement
-            //if (remoteCameras.TryGetValue((sessionID, camIndex), out CameraBase camera))
-            //{
-            //    var cam = camera as RemoteCamera;
-
-            //    var message = cam.session.PullNewImage(cam.CameraIndex);
-               
-            //    cam.AcquiredImages.Enqueue(new Image(message.Data, message.Width, message.Height, message.TypeCode));
-
-            //    cam.OnNewImageReceived(e);
-            //}
         }
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")

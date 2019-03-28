@@ -33,44 +33,30 @@ using DIPOL_Remote.Interfaces;
 
 namespace DIPOL_Remote.Classes
 {
-    [CallbackBehavior(ConcurrencyMode = ConcurrencyMode.Multiple,
+    [CallbackBehavior(
+        ConcurrencyMode = ConcurrencyMode.Multiple,
         IncludeExceptionDetailInFaults = true)]
     class RemoteCallbackHandler : IRemoteCallback
     {
 
-        public RemoteCallbackHandler()
+        public RemoteCallbackHandler(object par = null)
         {
 
         }
 
-        public void NotifyRemoteAcquisitionEventHappened(int camIndex, string session,
+
+        public void NotifyRemoteAcquisitionEventHappened(int camIndex,
             AcquisitionEventType type, AcquisitionStatusEventArgs args)
-       => RemoteCamera.NotifyRemoteAcquisitionEventHappened(camIndex, session, type, args);
+       => RemoteCamera.NotifyRemoteAcquisitionEventHappened(camIndex, type, args);
 
-        public void NotifyRemotePropertyChanged(int camIndex, string session, string property)
-            => RemoteCamera.NotifyRemotePropertyChanged(camIndex, session, property);
+        public void NotifyRemotePropertyChanged(int camIndex, string property)
+            => RemoteCamera.NotifyRemotePropertyChanged(camIndex, property);
 
-        public void NotifyRemoteTemperatureStatusChecked(
-            int camIndex, string session, TemperatureStatusEventArgs args)
-            => RemoteCamera.NotifyRemoteTemperatureStatusChecked(camIndex, session, args);
+        public void NotifyRemoteTemperatureStatusChecked(int camIndex, TemperatureStatusEventArgs args)
+            => RemoteCamera.NotifyRemoteTemperatureStatusChecked(camIndex, args);
 
-        public void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string session, NewImageReceivedEventArgs e)
-            => RemoteCamera.NotifyRemoteNewImageReceivedEventHappened(camIndex, session, e);
+        public void NotifyRemoteNewImageReceivedEventHappened(int camIndex, NewImageReceivedEventArgs e)
+            => RemoteCamera.NotifyRemoteNewImageReceivedEventHappened(camIndex, e);
 
-        public bool NotifyCameraCreatedAsynchronously(int camIndex, string session, bool success)
-        {
-            var resetEvent = DipolClient.CameraCreatedEvents
-                .FirstOrDefault(x => x.Key.Equals((session, camIndex)))
-                .Value.Event;
-
-            if (resetEvent != null)
-            {
-                DipolClient.CameraCreatedEvents.AddOrUpdate((session, camIndex), (resetEvent, true), (x, y) => (resetEvent, success));
-            }
-
-            resetEvent?.Set();
-
-            return resetEvent != null;
-        }
     }
 }

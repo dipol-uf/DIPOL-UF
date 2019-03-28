@@ -30,24 +30,22 @@ using ANDOR_CS.Events;
 
 namespace DIPOL_Remote.Interfaces
 {
+    [ServiceContract]
     public interface IRemoteCallback
     {
         [OperationContract(IsOneWay = true)]
-        void NotifyRemotePropertyChanged(int camIndex, string session, string property);
+        void NotifyRemotePropertyChanged(int camIndex, string property);
 
         [OperationContract(IsOneWay = true)]
         void NotifyRemoteTemperatureStatusChecked(
-            int camIndex, string session, TemperatureStatusEventArgs args);
+            int camIndex, TemperatureStatusEventArgs args);
 
         [OperationContract(IsOneWay = true)]
         void NotifyRemoteAcquisitionEventHappened(
-            int camIndex, string session, AcquisitionEventType type, AcquisitionStatusEventArgs args);
+            int camIndex,  AcquisitionEventType type, AcquisitionStatusEventArgs args);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyRemoteNewImageReceivedEventHappened(int camIndex, string session, NewImageReceivedEventArgs e);
-
-        [OperationContract(IsOneWay = false)]
-        bool NotifyCameraCreatedAsynchronously(int camIndex, string session, bool success);
-
+        void NotifyRemoteNewImageReceivedEventHappened(int camIndex,NewImageReceivedEventArgs e);
+        
     }
 }
