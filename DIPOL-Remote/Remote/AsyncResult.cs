@@ -29,8 +29,11 @@ using System.Threading.Tasks;
 namespace DIPOL_Remote.Remote
 {
 
-    internal class AsyncVoidResult : IAsyncResult, IDisposable
+    internal class AsyncResult : IAsyncResult, IDisposable
     {
+        private readonly CancellationTokenSource _taskTokenSource;
+        private readonly RemoteCancellationToken _remoteToken;
+
         private readonly ManualResetEventSlim _event;
         public bool IsCompleted => Task?.IsCompleted ?? false;
         public WaitHandle AsyncWaitHandle => _event.WaitHandle;
@@ -39,7 +42,7 @@ namespace DIPOL_Remote.Remote
         public Task Task { get; }
         public AsyncCallback Callback { get; }
 
-        public AsyncVoidResult(Task task, AsyncCallback callback, object state)
+        public AsyncResult(Task task, AsyncCallback callback, object state)
         {
             Task = task ?? throw new ArgumentNullException(nameof(task));
             Callback = callback ?? throw new ArgumentNullException(nameof(callback));
@@ -50,14 +53,52 @@ namespace DIPOL_Remote.Remote
             Task.GetAwaiter().OnCompleted(FinalizeInvocation);
         }
 
+        public AsyncResult(
+            Task task, 
+            CancellationTokenSource tokenSource, 
+            RemoteCancellationToken remoteToken,
+            AsyncCallback callback, object state)
+        {
+            Task = task ?? throw new ArgumentNullException(nameof(task));
+            Callback = callback ?? throw new ArgumentNullException(nameof(callback));
+
+            _taskTokenSource = tokenSource.Token.CanBeCanceled
+                ? tokenSource
+                : throw new ArgumentException("Provided token cannot be cancelled.", nameof(tokenSource));
+
+            AsyncState = state;
+            _remoteToken = remoteToken;
+            _event = new ManualResetEventSlim(false);
+
+            if (_remoteToken != RemoteCancellationToken.None)
+                RemoteControl.CancellationRequested += NotifyCancelled;
+
+            Task.GetAwaiter().OnCompleted(FinalizeInvocation);
+        }
+
         private void FinalizeInvocation()
         {
+            RemoteControl.CancellationRequested -= NotifyCancelled;
             _event.Set();
             Callback.Invoke(this);
         }
 
+        internal void NotifyCancelled(
+            object sender, 
+            RemoteControl.CancellationRequestedEventArgs e)
+        {
+            if (e?.Token == _remoteToken)
+            {
+                RemoteControl.CancellationRequested -= NotifyCancelled;
+                _taskTokenSource?.Cancel();
+            }
+            
+        }
+
+
         public void Dispose()
         {
+            RemoteControl.CancellationRequested -= NotifyCancelled;
             Task?.Dispose();
             _event?.Dispose();
         }
