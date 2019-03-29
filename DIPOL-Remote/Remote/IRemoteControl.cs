@@ -28,9 +28,9 @@ using System.ServiceModel;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
+using DIPOL_Remote.Callback;
 using DIPOL_Remote.Enums;
 using DIPOL_Remote.Faults;
-using DIPOL_Remote.Remote.Callback;
 
 namespace DIPOL_Remote.Remote
 {

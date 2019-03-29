@@ -26,8 +26,9 @@
 using System.ServiceModel;
 using ANDOR_CS.Events;
 using DIPOL_Remote.Enums;
+using DIPOL_Remote.Remote;
 
-namespace DIPOL_Remote.Remote.Callback
+namespace DIPOL_Remote.Callback
 {
     [CallbackBehavior(
         ConcurrencyMode = ConcurrencyMode.Multiple,
