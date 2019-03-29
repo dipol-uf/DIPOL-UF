@@ -206,31 +206,31 @@ namespace DIPOL_Remote.Remote
             // Andor-related exception
             catch (AndorSdkException andorEx)
             {
-                throw AndorSDKServiceException.WrapAndorSDKException(andorEx, nameof(Camera));
+                throw AndorSdkFault.WrapFault(andorEx, nameof(Camera));
             }
             // Other possible exceptions
             catch (Exception ex)
             {
-                throw new FaultException<ServiceException>(
-                    new ServiceException()
+                throw new FaultException<ServiceFault>(
+                    new ServiceFault()
                     {
                         Message = "Failed to create new remote camera.",
                         Details = ex.Message,
                         MethodName = nameof(Camera)
                     },
-                    ServiceException.CameraCommunicationReason);
+                    ServiceFault.CameraCommunicationReason);
             }
 
             if (!_cameras.TryAdd(camIndex, camera))
             {
                 camera?.Dispose();
-                throw new FaultException<ServiceException>(
-                    new ServiceException()
+                throw new FaultException<ServiceFault>(
+                    new ServiceFault()
                     {
                         Message = "Failed to create new remote camera.",
                         MethodName = nameof(Camera)
                     },
-                    ServiceException.CameraCommunicationReason);
+                    ServiceFault.CameraCommunicationReason);
             }
 
             SubscribeToCameraEvents(camera);
@@ -292,13 +292,13 @@ namespace DIPOL_Remote.Remote
             }
             catch (Exception e)
             {
-                throw new FaultException<ServiceException>(
-                    new ServiceException()
+                throw new FaultException<ServiceFault>(
+                    new ServiceFault()
                     {
                         Message = "An exception was thrown while disposing session resources.",
                         Details = e.Message
                     },
-                    ServiceException.GeneralServiceErrorReason);
+                    ServiceFault.GeneralServiceErrorReason);
             }
         }
 
@@ -307,7 +307,7 @@ namespace DIPOL_Remote.Remote
         /// Returns number of available cameras.
         /// </summary>
         /// <exception cref="FaultException{AndorSDKException}"/>
-        /// <exception cref="FaultException{ServiceException}"/>
+        /// <exception cref="FaultException{ServiceFault}"/>
         /// <returns>Number of available remote cameras</returns>
         [OperationBehavior]
         public int GetNumberOfCameras()
@@ -336,21 +336,21 @@ namespace DIPOL_Remote.Remote
             catch (AndorSdkException andorEx)
             {
                 // rethrow it, wrapped in FaultException<>, to the client side
-                throw AndorSDKServiceException.WrapAndorSDKException(andorEx, nameof(Camera.GetNumberOfCameras));
+                throw AndorSdkFault.WrapFault(andorEx, nameof(Camera.GetNumberOfCameras));
           
             }
             // If failure is not realted to Andor API
             catch (Exception ex)
             {
                 // rethrow it, wrapped in FaultException<>, to the client side
-                throw new FaultException<ServiceException>(
-                    new ServiceException()
+                throw new FaultException<ServiceFault>(
+                    new ServiceFault()
                     {
                         Message = "Failed retrieving number of available cameras.",
                         Details = ex.Message,
                         MethodName = nameof(Camera.GetNumberOfCameras)
                     },
-                    ServiceException.CameraCommunicationReason);
+                    ServiceFault.CameraCommunicationReason);
 
             }
             
@@ -390,13 +390,13 @@ namespace DIPOL_Remote.Remote
             }
             catch (Exception e)
             {
-                throw new FaultException<ServiceException>(
-                    new ServiceException()
+                throw new FaultException<ServiceFault>(
+                    new ServiceFault()
                     {
                         Message = "An exception was thrown while disposing Camera resource",
                         Details = e.Message
                     },
-                    ServiceException.GeneralServiceErrorReason);
+                    ServiceFault.GeneralServiceErrorReason);
             }
         }
         [OperationBehavior]
@@ -411,14 +411,14 @@ namespace DIPOL_Remote.Remote
                 counter++;
 
             if (counter >= MaxTryAddAttempts)
-                throw new FaultException<ServiceException>(
-                    new ServiceException()
+                throw new FaultException<ServiceFault>(
+                    new ServiceFault()
                     {
                         Message = "Failed to create unique ID for the settings instance.",
                         Details = $"After {MaxTryAddAttempts} sessionID was not generated",
                         MethodName = nameof(_settings.TryAdd)
                     },
-                    ServiceException.GeneralServiceErrorReason);
+                    ServiceFault.GeneralServiceErrorReason);
 
             _host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} created.");
 
@@ -652,14 +652,14 @@ namespace DIPOL_Remote.Remote
                 out var cam))
                 return cam;
 
-            throw new FaultException<ServiceException>(
-                new ServiceException()
+            throw new FaultException<ServiceFault>(
+                new ServiceFault()
                 {
                     Message = "Specified camera cannot be found among active devices.",
                     Details = "Camera is not found in pool of active cameras. It might have been already disposed.",
                     MethodName = nameof(GetCameraSafe)
                 },
-                ServiceException.GeneralServiceErrorReason);
+                ServiceFault.GeneralServiceErrorReason);
         }
 
         private SettingsBase GetSettingsSafe(string settingsID)

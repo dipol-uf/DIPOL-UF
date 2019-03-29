@@ -81,13 +81,13 @@ namespace DIPOL_Remote.Remote
         /// Entry point of the connection
         /// </summary>
         [OperationContract(IsInitiating = true, IsOneWay = false)]
-        [FaultContract(typeof(ServiceException))]
+        [FaultContract(typeof(ServiceFault))]
         void Connect();
         /// <summary>
         /// Exit point of the connection. Frees resources
         /// </summary>
         [OperationContract(IsTerminating = true, IsOneWay = false)]
-        [FaultContract(typeof(ServiceException))]
+        [FaultContract(typeof(ServiceFault))]
         void Disconnect();
 
         /// <summary>
@@ -95,24 +95,24 @@ namespace DIPOL_Remote.Remote
         /// </summary>
         /// <returns></returns>
         [OperationContract(IsOneWay = false)]
-        [FaultContract(typeof(AndorSDKServiceException))]
-        [FaultContract(typeof(ServiceException))]
+        [FaultContract(typeof(AndorSdkFault))]
+        [FaultContract(typeof(ServiceFault))]
         int GetNumberOfCameras();
 
         [OperationContract(IsOneWay = false)]
-        [FaultContract(typeof(AndorSDKServiceException))]
-        [FaultContract(typeof(ServiceException))]
+        [FaultContract(typeof(AndorSdkFault))]
+        [FaultContract(typeof(ServiceFault))]
         void CreateCamera(int camIndex = 0);
 
         [OperationContract(IsOneWay = false)]
-        [FaultContract(typeof(ServiceException))]
+        [FaultContract(typeof(ServiceFault))]
         void RemoveCamera(int camIndex);
 
         [OperationContract(IsOneWay = false)]
         int[] GetCamerasInUse();
 
         [OperationContract(IsOneWay = false)]
-        [FaultContract(typeof(ServiceException))]
+        [FaultContract(typeof(ServiceFault))]
         string CreateSettings(int camIndex);
 
         [OperationContract(IsOneWay = false)]

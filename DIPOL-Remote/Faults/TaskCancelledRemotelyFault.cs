@@ -22,33 +22,43 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-
-using System.ServiceModel;
-
 using System.Runtime.Serialization;
+using System.ServiceModel;
 
 namespace DIPOL_Remote.Faults
 {
-    [DataContract(IsReference = false)]
-    public class AndorSDKServiceException : ServiceException
+    [DataContract]
+    public class TaskCancelledRemotelyFault : ServiceFault
     {
-        public static FaultException<AndorSDKServiceException> WrapAndorSDKException(
-            ANDOR_CS.Exceptions.AndorSdkException e,
-            string method)
-            => new FaultException<AndorSDKServiceException>(
-                new AndorSDKServiceException()
-                {
-                    Message = "Andor SDK failed to execute operation.",
-                    Details = e.Message,
-                    ErrorCode = e.ErrorCode,
-                    MethodName = method
-                },
-                CameraCommunicationReason); 
-            
+        public static FaultReason FaultReason { get; }
+            = new FaultReason("A service task was cancelled remotely");
 
+        public TaskCancelledRemotelyFault(
+            [System.Runtime.CompilerServices.CallerMemberName]
+            string methodName = null)
+        {
+            Message = FaultReason.ToString();
+            MethodName = methodName;
+        }
 
-        [DataMember(IsRequired = true)]
-        public uint ErrorCode;
-        
+        public TaskCancelledRemotelyFault(
+            string message,
+            [System.Runtime.CompilerServices.CallerMemberName]
+            string methodName = null)
+        {
+            Message = message;
+            MethodName = methodName;
+        }
+
+        public TaskCancelledRemotelyFault(
+            string message,
+            string details,
+            [System.Runtime.CompilerServices.CallerMemberName]
+            string methodName = null)
+        {
+            Message = message;
+            Details = details;
+            MethodName = methodName;
+        }
     }
 }
