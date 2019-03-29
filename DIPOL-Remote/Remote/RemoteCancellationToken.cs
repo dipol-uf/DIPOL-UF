@@ -31,6 +31,7 @@ namespace DIPOL_Remote.Remote
     [DataContract]
     public struct RemoteCancellationToken
     {
+
         public static RemoteCancellationToken None { get; } = default;
 
         [DataMember(Name = "Id")]
@@ -46,6 +47,19 @@ namespace DIPOL_Remote.Remote
             // ReSharper disable once NonReadonlyMemberInGetHashCode
             // [Id] is modified only in deserialization; otherwise, it's immutable.
             => Id.GetHashCode();
+
+        public bool Equals(RemoteCancellationToken other)
+            => this == other;
+
+        public override bool Equals(object obj)
+            => obj is RemoteCancellationToken token && this == token;
+
+
+        public static bool operator ==(RemoteCancellationToken token1, RemoteCancellationToken token2)
+            => token1.Id == token2.Id;
+
+        public static bool operator !=(RemoteCancellationToken token1, RemoteCancellationToken token2) 
+            => !(token1 == token2);
 
         public static RemoteCancellationToken CreateFromToken(CancellationToken token)
             => token == CancellationToken.None
