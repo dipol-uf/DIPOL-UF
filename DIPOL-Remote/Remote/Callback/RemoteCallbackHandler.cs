@@ -22,30 +22,38 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System.ServiceModel;
 
+using System.ServiceModel;
+using ANDOR_CS.Events;
+using DIPOL_Remote.Classes;
 using DIPOL_Remote.Enums;
 
-using ANDOR_CS.Events;
-
-namespace DIPOL_Remote.Interfaces
+namespace DIPOL_Remote.Remote.Callback
 {
-    [ServiceContract]
-    public interface IRemoteCallback
+    [CallbackBehavior(
+        ConcurrencyMode = ConcurrencyMode.Multiple,
+        IncludeExceptionDetailInFaults = true)]
+    internal class RemoteCallbackHandler : IRemoteCallback
     {
-        [OperationContract(IsOneWay = true)]
-        void NotifyRemotePropertyChanged(int camIndex, string property);
 
-        [OperationContract(IsOneWay = true)]
-        void NotifyRemoteTemperatureStatusChecked(
-            int camIndex, TemperatureStatusEventArgs args);
+        public RemoteCallbackHandler(object par = null)
+        {
 
-        [OperationContract(IsOneWay = true)]
-        void NotifyRemoteAcquisitionEventHappened(
-            int camIndex,  AcquisitionEventType type, AcquisitionStatusEventArgs args);
+        }
 
-        [OperationContract(IsOneWay = true)]
-        void NotifyRemoteNewImageReceivedEventHappened(int camIndex,NewImageReceivedEventArgs e);
-        
+
+        public void NotifyRemoteAcquisitionEventHappened(int camIndex,
+            AcquisitionEventType type, AcquisitionStatusEventArgs args)
+       => RemoteCamera.NotifyRemoteAcquisitionEventHappened(camIndex, type, args);
+
+        public void NotifyRemotePropertyChanged(int camIndex, string property)
+            => RemoteCamera.NotifyRemotePropertyChanged(camIndex, property);
+
+        public void NotifyRemoteTemperatureStatusChecked(int camIndex, TemperatureStatusEventArgs args)
+            => RemoteCamera.NotifyRemoteTemperatureStatusChecked(camIndex, args);
+
+        public void NotifyRemoteNewImageReceivedEventHappened(int camIndex, NewImageReceivedEventArgs e)
+            => RemoteCamera.NotifyRemoteNewImageReceivedEventHappened(camIndex, e);
+
     }
 }

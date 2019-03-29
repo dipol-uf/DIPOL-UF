@@ -25,9 +25,9 @@
 using System;
 using System.Collections.Generic;
 using ANDOR_CS.Classes;
-using DIPOL_Remote.Interfaces;
+using DIPOL_Remote.Classes;
 
-namespace DIPOL_Remote.Classes
+namespace DIPOL_Remote.Remote
 {
     public class RemoteSettings : SettingsBase
     {

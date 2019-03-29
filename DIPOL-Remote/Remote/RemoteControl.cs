@@ -25,25 +25,24 @@
 //#define NO_ACTUAL_CAMERA
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Threading;
-
 using System.ServiceModel;
 using System.Text;
-using DIPOL_Remote.Faults;
-
+using System.Threading;
+using System.Threading.Tasks;
 using ANDOR_CS.Classes;
-using ANDOR_CS.Exceptions;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
-using DIPOL_Remote.Interfaces;
+using ANDOR_CS.Exceptions;
+using DIPOL_Remote.Classes;
+using DIPOL_Remote.Faults;
+using DIPOL_Remote.Remote.Callback;
 using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
 // ReSharper disable InheritdocConsiderUsage
 
-namespace DIPOL_Remote.Classes
+namespace DIPOL_Remote.Remote
 {
     /// <summary>
     /// Implementation of <see cref="T:DIPOL_Remote.Interfaces.IRemoteControl" /> service interface.

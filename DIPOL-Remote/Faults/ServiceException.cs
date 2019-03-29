@@ -45,7 +45,7 @@ namespace DIPOL_Remote.Faults
                         new ServiceException()
                         {
                             Message = "Cannot remove camera used in our session.",
-                            Details = "Specified camera is used in anoter session and therefore cannot be controlled from current session.",
+                            Details = "Specified camera is used in another session and therefore cannot be controlled from current session.",
                             MethodName = ""
                         },
                         IllegalSessionReason);

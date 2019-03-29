@@ -26,17 +26,16 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using ANDOR_CS.Classes;
+using ANDOR_CS.DataStructures;
+using ANDOR_CS.Enums;
+using ANDOR_CS.Events;
+using DipolImage;
+using FITS_CS;
 using CameraBase = ANDOR_CS.Classes.CameraBase;
 using AcquisitionEventType = DIPOL_Remote.Enums.AcquisitionEventType;
 
-using ANDOR_CS.Enums;
-using ANDOR_CS.DataStructures;
-using ANDOR_CS.Events;
-using ANDOR_CS.Classes;
-using DipolImage;
-using FITS_CS;
-
-namespace DIPOL_Remote.Classes
+namespace DIPOL_Remote.Remote
 {
     public sealed class RemoteCamera : CameraBase
     {

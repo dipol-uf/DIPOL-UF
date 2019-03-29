@@ -22,39 +22,44 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-using System.ServiceModel;
-
-using ANDOR_CS.Events;
-using DIPOL_Remote.Enums;
-using DIPOL_Remote.Interfaces;
-
-namespace DIPOL_Remote.Classes
+namespace DIPOL_Remote
 {
-    [CallbackBehavior(
-        ConcurrencyMode = ConcurrencyMode.Multiple,
-        IncludeExceptionDetailInFaults = true)]
-    internal class RemoteCallbackHandler : IRemoteCallback
+
+    internal class AsyncVoidResult : IAsyncResult, IDisposable
     {
+        private readonly ManualResetEventSlim _event;
+        public bool IsCompleted => Task?.IsCompleted ?? false;
+        public WaitHandle AsyncWaitHandle => _event.WaitHandle;
+        public object AsyncState { get; }
+        public bool CompletedSynchronously => false;
+        public Task Task { get; }
+        public AsyncCallback Callback { get; }
 
-        public RemoteCallbackHandler(object par = null)
+        public AsyncVoidResult(Task task, AsyncCallback callback, object state)
         {
+            Task = task ?? throw new ArgumentNullException(nameof(task));
+            Callback = callback ?? throw new ArgumentNullException(nameof(callback));
+            
+            _event = new ManualResetEventSlim(false);
+            AsyncState = state;
 
+            Task.GetAwaiter().OnCompleted(FinalizeInvocation);
         }
 
+        private void FinalizeInvocation()
+        {
+            _event.Set();
+            Callback.Invoke(this);
+        }
 
-        public void NotifyRemoteAcquisitionEventHappened(int camIndex,
-            AcquisitionEventType type, AcquisitionStatusEventArgs args)
-       => RemoteCamera.NotifyRemoteAcquisitionEventHappened(camIndex, type, args);
-
-        public void NotifyRemotePropertyChanged(int camIndex, string property)
-            => RemoteCamera.NotifyRemotePropertyChanged(camIndex, property);
-
-        public void NotifyRemoteTemperatureStatusChecked(int camIndex, TemperatureStatusEventArgs args)
-            => RemoteCamera.NotifyRemoteTemperatureStatusChecked(camIndex, args);
-
-        public void NotifyRemoteNewImageReceivedEventHappened(int camIndex, NewImageReceivedEventArgs e)
-            => RemoteCamera.NotifyRemoteNewImageReceivedEventHappened(camIndex, e);
-
+        public void Dispose()
+        {
+            Task?.Dispose();
+            _event?.Dispose();
+        }
     }
 }
