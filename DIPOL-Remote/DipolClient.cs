@@ -31,6 +31,7 @@ using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_Remote.Callback;
+using DIPOL_Remote.Faults;
 using DIPOL_Remote.Remote;
 
 namespace DIPOL_Remote
@@ -248,16 +249,27 @@ namespace DIPOL_Remote
 
         #region TAP async implementations
 
-        private static void FinalizeAsyncOperation(object eventArgs, TaskCompletionSource<bool> source)
+        private static void FinalizeAsyncOperation<T>(object eventArgs, TaskCompletionSource<T> source)
         {
-            if (eventArgs is InvokeAsyncCompletedEventArgs e)
+            if (!(eventArgs is InvokeAsyncCompletedEventArgs e))
+                throw new ArgumentException("Invalid finalization state", nameof(eventArgs));
+            switch (e.Error)
             {
-                if (!(e.Error is null))
-                    source.SetException(e.Error);
-                else if(e.Cancelled)
+                case null when e.Cancelled:
                     source.SetCanceled();
-                else
-                    source.SetResult(ReferenceEquals(e.Results, Array.Empty<object>()));
+                    break;
+                case null when e.Results.Length == 1:
+                    source.SetResult(e.Results[0] is T result ? result : default);
+                    break;
+                case null:
+                    source.SetException(new InvalidOperationException("Inconsistent async operation result"));
+                    break;
+                case FaultException<TaskCancelledRemotelyFault> _:
+                    source.SetCanceled();
+                    break;
+                default:
+                    source.SetException(e.Error);
+                    break;
             }
         }
 
@@ -274,7 +286,7 @@ namespace DIPOL_Remote
                 result =>
                 {
                     endInvoke(result);
-                    return Array.Empty<object>();
+                    return new object[] {true};
                 }, state => FinalizeAsyncOperation(state, taskSource), null);
 
             await taskSource.Task;
