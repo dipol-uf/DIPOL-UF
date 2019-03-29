@@ -645,12 +645,6 @@ namespace DIPOL_Remote.Remote
             else throw new Exception();
         }
 
-        [OperationBehavior]
-        public void CancelAsync(RemoteCancellationToken token)
-        {
-            throw new NotImplementedException();
-        }
-
         private CameraBase GetCameraSafe(int camIndex)
         {
             if (_cameras.TryGetValue(
@@ -684,15 +678,32 @@ namespace DIPOL_Remote.Remote
 
 
         #region Async methods
+
+        internal class CancellationRequestedEventArgs : EventArgs
+        {
+            public RemoteCancellationToken Token { get; }
+
+            public CancellationRequestedEventArgs(RemoteCancellationToken token)
+                => Token = token;
+        }
+        internal static event EventHandler<CancellationRequestedEventArgs> CancellationRequested;
+
+        internal static void OnCancellationRequested(RemoteCancellationToken token)
+            => CancellationRequested?.Invoke(null, new CancellationRequestedEventArgs(token));
+
+        [OperationBehavior]
+        public void CancelAsync(RemoteCancellationToken token)
+            => OnCancellationRequested(token);
+
         [OperationBehavior]
         public IAsyncResult BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state)
         {
-            return new AsyncVoidResult(CreateCameraAsync(camIndex), callback, state);
+            return new AsyncResult(CreateCameraAsync(camIndex), callback, state);
         }
 
         public bool EndCreateCameraAsync(IAsyncResult result)
         {
-            if (result is AsyncVoidResult res)
+            if (result is AsyncResult res)
             {
                 try
                 {
