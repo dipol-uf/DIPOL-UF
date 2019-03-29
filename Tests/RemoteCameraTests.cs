@@ -30,7 +30,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ANDOR_CS.Enums;
 using DIPOL_Remote;
-using DIPOL_Remote.Classes;
+using DIPOL_Remote.Remote;
 using NUnit.Framework;
 
 #if !HOST_IN_PROCESS

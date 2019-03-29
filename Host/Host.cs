@@ -30,6 +30,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Remoting.Channels;
 using CommandLine;
+using DIPOL_Remote;
 
 namespace Host
 {
@@ -111,7 +112,7 @@ namespace Host
             if (options.ConsoleHeight < Console.LargestWindowHeight)
                 Console.WindowHeight = options.ConsoleHeight;
 
-            using (var host = new DIPOL_Remote.Classes.DipolHost(uri))
+            using (var host = new DipolHost(uri))
             {
 
                 if (options.Log)

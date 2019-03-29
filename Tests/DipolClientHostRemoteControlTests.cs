@@ -28,7 +28,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using ANDOR_CS.Classes;
 using DIPOL_Remote;
-using DIPOL_Remote.Classes;
+using DIPOL_Remote.Remote;
 using NUnit.Framework;
 
 #if !HOST_IN_PROCESS
