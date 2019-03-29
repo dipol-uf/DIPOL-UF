@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ANDOR_CS.Enums;
+using DIPOL_Remote;
 using DIPOL_Remote.Classes;
 using NUnit.Framework;
 
