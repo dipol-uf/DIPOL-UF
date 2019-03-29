@@ -26,6 +26,9 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Reflection;
+using System.ServiceModel;
 using ANDOR_CS.Classes;
 using DIPOL_Remote;
 using DIPOL_Remote.Remote;
