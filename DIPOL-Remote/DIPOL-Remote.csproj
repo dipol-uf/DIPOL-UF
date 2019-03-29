@@ -71,8 +71,8 @@
     <Compile Include="Remote\RemoteCamera.cs" />
     <Compile Include="Remote\RemoteSettings.cs" />
     <Compile Include="Enums\AcquisitionEventTypeEnum.cs" />
-    <Compile Include="Faults\AndorSDKServiceException.cs" />
-    <Compile Include="Faults\ServiceException.cs" />
+    <Compile Include="Faults\AndorSdkFault.cs" />
+    <Compile Include="Faults\ServiceFault.cs" />
     <Compile Include="Faults\TaskCancelledRemotelyFault.cs" />
     <Compile Include="Remote\Callback\IRemoteCallback.cs" />
     <Compile Include="Remote\IRemoteControl.cs" />
