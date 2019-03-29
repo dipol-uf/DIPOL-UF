@@ -36,8 +36,8 @@ using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
+using DIPOL_Remote.Callback;
 using DIPOL_Remote.Faults;
-using DIPOL_Remote.Remote.Callback;
 using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
 // ReSharper disable InheritdocConsiderUsage
 

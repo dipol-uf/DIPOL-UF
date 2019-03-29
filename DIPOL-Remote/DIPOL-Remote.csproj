@@ -65,18 +65,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsyncResult.cs" />
+    <Compile Include="Remote\AsyncResult.cs" />
     <Compile Include="DipolClient.cs" />
     <Compile Include="DipolHost.cs" />
-    <Compile Include="Remote\RemoteCamera.cs" />
-    <Compile Include="Remote\RemoteSettings.cs" />
+    <Compile Include="RemoteCamera.cs" />
+    <Compile Include="RemoteSettings.cs" />
     <Compile Include="Enums\AcquisitionEventTypeEnum.cs" />
     <Compile Include="Faults\AndorSdkFault.cs" />
     <Compile Include="Faults\ServiceFault.cs" />
     <Compile Include="Faults\TaskCancelledRemotelyFault.cs" />
-    <Compile Include="Remote\Callback\IRemoteCallback.cs" />
+    <Compile Include="Callback\IRemoteCallback.cs" />
     <Compile Include="Remote\IRemoteControl.cs" />
-    <Compile Include="Remote\Callback\RemoteCallbackHandler.cs" />
+    <Compile Include="Callback\RemoteCallbackHandler.cs" />
     <Compile Include="Remote\RemoteControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
