@@ -226,10 +226,14 @@ namespace DIPOL_Remote
             Channel.CreateCamera(camIndex);
         }
 
-
         #endregion
         
         #region Explicit async unused implementations
+
+        void IRemoteControl.CancelAsync(RemoteCancellationToken token)
+            => throw new NotSupportedException(
+                $"{nameof(IRemoteControl.CancelAsync)} is not supported directly. " +
+                $"Use respective {nameof(RemoteCancellationToken)} to cancel an async operation.");
 
         IAsyncResult IRemoteControl.BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state)
 			=> throw new NotSupportedException(
