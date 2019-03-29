@@ -25,7 +25,6 @@
 
 using System.ServiceModel;
 using ANDOR_CS.Events;
-using DIPOL_Remote.Classes;
 using DIPOL_Remote.Enums;
 
 namespace DIPOL_Remote.Remote.Callback

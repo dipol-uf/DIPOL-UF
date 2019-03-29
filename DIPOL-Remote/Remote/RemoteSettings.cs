@@ -25,7 +25,6 @@
 using System;
 using System.Collections.Generic;
 using ANDOR_CS.Classes;
-using DIPOL_Remote.Classes;
 
 namespace DIPOL_Remote.Remote
 {

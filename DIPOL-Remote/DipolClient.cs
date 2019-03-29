@@ -30,8 +30,8 @@ using System.ServiceModel.Channels;
 using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
-using DIPOL_Remote.Classes;
 using DIPOL_Remote.Remote;
+using DIPOL_Remote.Remote.Callback;
 
 namespace DIPOL_Remote
 {
