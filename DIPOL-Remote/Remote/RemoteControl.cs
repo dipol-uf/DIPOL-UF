@@ -645,6 +645,12 @@ namespace DIPOL_Remote.Remote
             else throw new Exception();
         }
 
+        [OperationBehavior]
+        public void CancelAsync(RemoteCancellationToken token)
+        {
+            throw new NotImplementedException();
+        }
+
         private CameraBase GetCameraSafe(int camIndex)
         {
             if (_cameras.TryGetValue(

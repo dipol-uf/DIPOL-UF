@@ -29,7 +29,7 @@ using System.Threading;
 namespace DIPOL_Remote.Remote
 {
     [DataContract]
-    internal struct RemoteCancellationToken
+    public struct RemoteCancellationToken
     {
         public static RemoteCancellationToken None { get; } = default;
 
