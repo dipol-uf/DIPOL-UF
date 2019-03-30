@@ -200,6 +200,9 @@ namespace DIPOL_Remote
             int speedIndex)
             => Channel.CallIsHsSpeedSupported(settingsID, ADConverter, amplifier, speedIndex);
 
+        public (int Low, int High) CallGetEmGainRange(string settingsId)
+            => Channel.CallGetEmGainRange(settingsId);
+
         // TODO: Fix this
         public ((string Option, bool Success, uint ReturnCode)[] Result, (float ExposureTime, float AccumulationCycleTime, float
             KineticCycleTime, int BufferSize) Timing) CallApplySettings(string settingsID, byte[] data)

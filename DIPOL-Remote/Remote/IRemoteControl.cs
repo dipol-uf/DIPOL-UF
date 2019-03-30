@@ -176,14 +176,19 @@ namespace DIPOL_Remote.Remote
 
         [OperationContract(IsOneWay = false)]
         CameraStatus CallGetStatus(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         (TemperatureStatus Status, float Temperature) CallGetCurrentTemperature(int camIndex);
+
         [OperationContract(IsOneWay = false)]
         void CallFanControl(int camIndex, FanMode mode);
+
         [OperationContract(IsOneWay = false)]
         void CallCoolerControl(int camIndex, Switch mode);
+
         [OperationContract(IsOneWay = false)]
         void CallSetTemperature(int camIndex, int temperature);
+
         [OperationContract(IsOneWay = false)]
         void CallShutterControl(
             int camIndex,
@@ -203,8 +208,7 @@ namespace DIPOL_Remote.Remote
         [OperationContract(IsOneWay = false)]
         void CallAbortAcquisition(int camIndex);
 
-
-
+        
         [OperationContract(IsOneWay = false)]
         (int Index, float Speed)[] GetAvailableHsSpeeds(
             string settingsID,
@@ -226,11 +230,14 @@ namespace DIPOL_Remote.Remote
             int speedIndex);
 
         [OperationContract(IsOneWay = false)]
+        (int Low, int High) CallGetEmGainRange(string settingsId);
+
+        [OperationContract(IsOneWay = false)]
         ((string Option, bool Success, uint ReturnCode)[] Result, 
          (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) Timing)
          CallApplySettings(string settingsID, byte[] data);
 
-
+        // TODO: Review obsolete task management
         [OperationContract(IsOneWay = false)]
         bool IsTaskFinished(string taskID);
 

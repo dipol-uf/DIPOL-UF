@@ -593,6 +593,16 @@ namespace DIPOL_Remote.Remote
                 .IsHSSpeedSupported(speedIndex, adConverter, amplifier, out float speed),
             Speed: speed);
 
+        [OperationBehavior]
+        public (int Low, int High) CallGetEmGainRange(string settingsId)
+            => GetSettingsSafe(settingsId).GetEmGainRange();
+
+        [OperationBehavior]
+        public (int Low, int High) CallGetEmGainRange(string settingsId, OutputAmplification amplifier)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Applies <see cref="RemoteSettings"/> to local instance of <see cref="AcquisitionSettings"/>.
         /// Remote settings are packed into <see cref="byte"/> array and transmitted over network.

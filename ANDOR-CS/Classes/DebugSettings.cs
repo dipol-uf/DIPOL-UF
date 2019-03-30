@@ -42,11 +42,6 @@ namespace ANDOR_CS.Classes
             Camera = camera;
         }
 
-        public override void SetEmCcdGain(int gain)
-        {
-            
-        }
-
         public override bool IsHSSpeedSupported(int speedIndex, int adConverter, int amplifier, out float speed)
         {
             speed = GetAvailableHSSpeeds(adConverter, amplifier)[speedIndex].Speed;
@@ -62,11 +57,7 @@ namespace ANDOR_CS.Classes
 
         public override List<(int Index, string Name)> GetAvailablePreAmpGain(int adConverter, int amplifier,
             int hsSpeed)
-            => new List<(int Index, string Name)>
-            {
-                (Index: 0, Name: "Zero"),
-                (Index: 1, Name: "One")
-            };
+            => Camera.Properties.PreAmpGains.Select((x, i) => (i, x)).ToList();
 
         public override (int Low, int High) GetEmGainRange()
         {
