@@ -75,20 +75,20 @@ namespace DIPOL_Remote.Remote
         /// </summary>
         string SessionID
         {
-            [OperationContract(IsOneWay = false)]
+            [OperationContract]
             get;
         }
 
         /// <summary>
         /// Entry point of the connection
         /// </summary>
-        [OperationContract(IsInitiating = true, IsOneWay = false)]
+        [OperationContract(IsInitiating = true)]
         [FaultContract(typeof(ServiceFault))]
         void Connect();
         /// <summary>
         /// Exit point of the connection. Frees resources
         /// </summary>
-        [OperationContract(IsTerminating = true, IsOneWay = false)]
+        [OperationContract(IsTerminating = true)]
         [FaultContract(typeof(ServiceFault))]
         void Disconnect();
 
@@ -101,12 +101,12 @@ namespace DIPOL_Remote.Remote
         [FaultContract(typeof(ServiceFault))]
         int GetNumberOfCameras();
 
-        [OperationContract(IsOneWay = false)]
+        [OperationContract]
         [FaultContract(typeof(AndorSdkFault))]
         [FaultContract(typeof(ServiceFault))]
         void CreateCamera(int camIndex = 0);
 
-        [OperationContract(IsOneWay = false)]
+        [OperationContract]
         [FaultContract(typeof(ServiceFault))]
         void RemoveCamera(int camIndex);
 
@@ -118,7 +118,7 @@ namespace DIPOL_Remote.Remote
         [FaultContract(typeof(AndorSdkFault))]
         string CreateSettings(int camIndex);
 
-        [OperationContract(IsOneWay = false)]
+        [OperationContract]
         void RemoveSettings(string settingsID);
 
 
@@ -150,10 +150,6 @@ namespace DIPOL_Remote.Remote
         [OperationContract(IsOneWay = false)]
         bool GetIsAcquiring(int camIndex);
 
-        // TODO: Deprecate & Remove
-        //[OperationContract(IsOneWay = false)]
-        //bool GetIsAsyncAcquisition(int camIndex);
-
         [OperationContract(IsOneWay = false)]
         (ShutterMode Internal,
            ShutterMode? External,
@@ -170,26 +166,22 @@ namespace DIPOL_Remote.Remote
         [OperationContract(IsOneWay = false)]
         (Version PCB, Version Decode, Version CameraFirmware) GetHardware(int camIndex);
 
-        //[OperationContract(IsOneWay = false)]
-        //(byte[] Data, int Width, int Height, TypeCode TypeCode) PullNewImage(int camIndex);
-
-
         [OperationContract(IsOneWay = false)]
         CameraStatus CallGetStatus(int camIndex);
 
         [OperationContract(IsOneWay = false)]
         (TemperatureStatus Status, float Temperature) CallGetCurrentTemperature(int camIndex);
 
-        [OperationContract(IsOneWay = false)]
+        [OperationContract]
         void CallFanControl(int camIndex, FanMode mode);
 
-        [OperationContract(IsOneWay = false)]
+        [OperationContract]
         void CallCoolerControl(int camIndex, Switch mode);
 
-        [OperationContract(IsOneWay = false)]
+        [OperationContract]
         void CallSetTemperature(int camIndex, int temperature);
 
-        [OperationContract(IsOneWay = false)]
+        [OperationContract]
         void CallShutterControl(
             int camIndex,
             int clTime,
@@ -198,14 +190,14 @@ namespace DIPOL_Remote.Remote
             ShutterMode exter = ShutterMode.FullyAuto,
             TtlShutterSignal type = TtlShutterSignal.Low);
 
-        [OperationContract(IsOneWay = false)]
+        [OperationContract]
         void CallTemperatureMonitor(int camIndex, Switch mode, int timeout);
 
         // TODO: Update this
         //[OperationContract(IsOneWay = false)]
         //void CallStartAcquisition(int camIndex);
 
-        [OperationContract(IsOneWay = false)]
+        [OperationContract]
         void CallAbortAcquisition(int camIndex);
 
         
@@ -232,10 +224,8 @@ namespace DIPOL_Remote.Remote
         [OperationContract(IsOneWay = false)]
         (int Low, int High) CallGetEmGainRange(string settingsId);
 
-        [OperationContract(IsOneWay = false)]
-        ((string Option, bool Success, uint ReturnCode)[] Result, 
-         (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) Timing)
-         CallApplySettings(string settingsID, byte[] data);
+        [OperationContract]
+        void CallApplySetting(int camIndex, string settingsId, byte[] payload);
 
         // TODO: Review obsolete task management
         [OperationContract(IsOneWay = false)]
@@ -255,7 +245,6 @@ namespace DIPOL_Remote.Remote
         [OperationContract(IsOneWay = true)]
         void CancelAsync(RemoteCancellationToken token);
 
-        // TODO: Attempting to build Begin/End asynchronous pattern
         [OperationContract(AsyncPattern = true)]
         IAsyncResult BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state);
         void EndCreateCameraAsync(IAsyncResult result);

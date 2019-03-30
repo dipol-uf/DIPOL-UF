@@ -22,7 +22,6 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ANDOR_CS.Classes;
@@ -32,8 +31,7 @@ namespace DIPOL_Remote
     public class RemoteSettings : SettingsBase
     {
         private DipolClient _client;
-
-      
+        
         [ANDOR_CS.Attributes.NonSerialized]
         internal string SettingsID
         {
@@ -49,33 +47,6 @@ namespace DIPOL_Remote
             
             Camera = cam;
         }
-
-        // TODO: Migrate to [Camera]
-        //public override List<(string Option, bool Success, uint ReturnCode)> ApplySettings(
-        //    out (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) timing)
-        //{
-        //    // Stores byte representation of settings
-        //    byte[] data;
-
-        //    // Creates MemoryStream and serializes settings into it.
-        //    using (var memStr = new MemoryStream())
-        //    {
-        //        Serialize(memStr);
-                
-        //        // Writes stream bytes to array.
-        //        data = memStr.ToArray();
-        //    }
-
-        //    // Calls remote method.
-        //    var result = _client.CallApplySettings(SettingsID, data);
-
-        //    base.ApplySettings(out _);
-        //    // Assigns out values
-        //    timing = result.Timing;
-
-        //    return result.Result.ToList();
-            
-        //}
 
         public override List<(int Index, float Speed)> GetAvailableHSSpeeds(int adConverter, int amplifier)
             => _client.GetAvailableHsSpeeds(
