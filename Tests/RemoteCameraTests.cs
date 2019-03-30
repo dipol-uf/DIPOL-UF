@@ -300,6 +300,7 @@ namespace Tests
             {
                 using (var setts = camera.GetAcquisitionSettingsTemplate())
                 {
+                    // ReSharper disable AccessToDisposedClosure
                     Assert.Multiple(() =>
                     {
                         Assert.AreEqual(camera, setts.Camera);
@@ -307,10 +308,8 @@ namespace Tests
 #if DEBUG
                         Assert.That(() =>
                         {
-                            // ReSharper disable AccessToDisposedClosure
                             setts.SupportedSettings();
                             setts.AllowedSettings();
-                            // ReSharper restore AccessToDisposedClosure
                         }, Throws.Nothing);
 
                         setts.SetVSSpeed(0);
@@ -320,9 +319,13 @@ namespace Tests
                         setts.SetVSAmplitude(VSAmplitude.Plus3);
                         Assert.AreEqual(VSAmplitude.Plus3, setts.VSAmplitude);
 
-                        var amp = camera.Properties.OutputAmplifiers[0];
+                        var amps = camera.Properties.OutputAmplifiers;
+                        var amp = amps.First(x => x.OutputAmplifier == OutputAmplification.ElectronMultiplication);
+                        var ampIndex = amps.Select(x => x.OutputAmplifier)
+                                           .IndexOf(OutputAmplification.ElectronMultiplication);
+
                         setts.SetOutputAmplifier(amp.OutputAmplifier);
-                        Assert.AreEqual(0, setts.OutputAmplifier?.Index);
+                        Assert.AreEqual(ampIndex, setts.OutputAmplifier?.Index);
                         Assert.AreEqual(amp.OutputAmplifier, setts.OutputAmplifier?.OutputAmplifier);
                         Assert.AreEqual(amp.Name, setts.OutputAmplifier?.Name);
 
@@ -342,9 +345,17 @@ namespace Tests
                         Assert.AreEqual(gain.Index, setts.PreAmpGain?.Index);
                         Assert.AreEqual(gain.Name, setts.PreAmpGain?.Name);
 
-                        setts.SetAcquisitionMode(AcquisitionMode.SingleScan);
-                        Assert.AreEqual(AcquisitionMode.SingleScan, setts.AcquisitionMode);
+                        setts.SetAcquisitionMode(AcquisitionMode.Kinetic);
+                        Assert.AreEqual(AcquisitionMode.Kinetic, setts.AcquisitionMode);
+                        
+                        setts.SetAccumulateCycle(5, 2f);
+                        Assert.AreEqual(5, setts.AccumulateCycle?.Frames);
+                        Assert.AreEqual(2f, setts.AccumulateCycle?.Time);
 
+                        setts.SetKineticCycle(10, 10f);
+                        Assert.AreEqual(10, setts.KineticCycle?.Frames);
+                        Assert.AreEqual(10f, setts.KineticCycle?.Time);
+                        
                         setts.SetTriggerMode(TriggerMode.Internal);
                         Assert.AreEqual(TriggerMode.Internal, setts.TriggerMode);
 
@@ -358,8 +369,14 @@ namespace Tests
                         var imgArea = new Rectangle(1, 1, 100, 200);
                         setts.SetImageArea(imgArea);
                         Assert.AreEqual(imgArea, setts.ImageArea);
-                    #endif
+
+                        var gains = setts.GetEmGainRange();
+                        setts.SetEmCcdGain(gains.Low + 1);
+                        Assert.AreEqual(gains.Low + 1, setts.EMCCDGain);
+                        
+                        #endif
                     });
+                    // ReSharper restore AccessToDisposedClosure
                 }
             }
         }
