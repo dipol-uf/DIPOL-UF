@@ -25,7 +25,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Net.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
@@ -287,10 +286,8 @@ namespace DIPOL_Remote
         public override SettingsBase GetAcquisitionSettingsTemplate()
             => new RemoteSettings(this, _client.CreateSettings(CameraIndex), _client);
 
-        public override async Task StartAcquisitionAsync(CancellationToken cancellationToken)
-        {
-            await Task.CompletedTask;
-        }
+        public override Task StartAcquisitionAsync(CancellationToken cancellationToken)
+            => _client.StartAcquisitionAsync(CameraIndex, cancellationToken);
 
         public override Image PullPreviewImage<T>(int index)
         {
@@ -331,7 +328,7 @@ namespace DIPOL_Remote
             => throw new NotSupportedException();
 
         protected override void AbortAcquisition()
-            => _client.CallAbortAcquisition(CameraIndex);
+            => throw new NotSupportedException();
 
         protected override void Dispose(bool disposing)
         {
@@ -398,6 +395,7 @@ namespace DIPOL_Remote
                 }
             }
         }
+
         internal static void NotifyRemoteNewImageReceivedEventHappened(int camIndex, NewImageReceivedEventArgs e)
         {
             // TODO: ReImplement

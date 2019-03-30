@@ -19,6 +19,7 @@ using System;
 using System.Runtime.Serialization;
 
 using ANDOR_CS.Enums;
+#pragma warning disable 1591
 
 namespace ANDOR_CS.Events
 {
@@ -29,10 +30,16 @@ namespace ANDOR_CS.Events
     [DataContract]
     public class AcquisitionStatusEventArgs : EventArgs
     {
+        [DataMember(Name = "EventTime")]
+        private string EventTimePayload
+        {
+            get => EventTime.ToString("O");
+            set => EventTime = DateTimeOffset.Parse(value);
+        }
+
         /// <summary>
         /// Time stamp of the event
         /// </summary>
-        [DataMember]
         public DateTimeOffset EventTime
         {
             get;
@@ -50,10 +57,10 @@ namespace ANDOR_CS.Events
         }
 
         [DataMember]
-        public int KineticId { get; }
+        public int KineticId { get; private set; }
 
         [DataMember]
-        public int AccumulationId { get; }
+        public int AccumulationId { get; private set; }
 
         /// <summary>
         /// Default constructor

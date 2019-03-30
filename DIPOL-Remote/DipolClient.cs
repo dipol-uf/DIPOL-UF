@@ -41,9 +41,6 @@ namespace DIPOL_Remote
     {
         private static readonly int MaxMessageSize = 512 * 512 * 8 * 4;
 
-        [Obsolete]
-        public IRemoteControl Remote => Channel;
-
         public string HostAddress => Endpoint.Address.ToString();
 
         public string SessionID
@@ -187,8 +184,7 @@ namespace DIPOL_Remote
         public void CallTemperatureMonitor(int camIndex, Switch mode, int timeout)
 			=> Channel.CallTemperatureMonitor(camIndex, mode, timeout);
 
-        public void CallAbortAcquisition(int camIndex)
-			=> Channel.CallAbortAcquisition(camIndex);
+
 
         public (int Index, float Speed)[] GetAvailableHsSpeeds(string settingsID, int adConverterIndex, int amplifier)
             => Channel.GetAvailableHsSpeeds(settingsID, adConverterIndex, amplifier);
@@ -247,15 +243,24 @@ namespace DIPOL_Remote
                 $"{nameof(IRemoteControl.EndCreateCameraAsync)} is not supported directly. " +
                 $"Use {nameof(CreateCameraAsync)} instead.");
 
+        IAsyncResult IRemoteControl.BeginStartAcquisitionAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback,
+            object state)
+            => throw new NotSupportedException(
+                $"{nameof(IRemoteControl.BeginStartAcquisitionAsync)} is not supported directly. " +
+                $"Use {nameof(StartAcquisitionAsync)} instead.");
+        void IRemoteControl.EndStartAcquisitionAsync(IAsyncResult result)
+            => throw new NotSupportedException(
+                $"{nameof(IRemoteControl.EndStartAcquisitionAsync)} is not supported directly. " +
+                $"Use {nameof(StartAcquisitionAsync)} instead.");
+
         IAsyncResult IRemoteControl.BeginDebugMethodAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state)
             => throw new NotSupportedException(
                 $"{nameof(IRemoteControl.BeginDebugMethodAsync)} is not supported directly. " +
-                $"Use {nameof(CreateCameraAsync)} instead.");
-
+                $"Use {nameof(DebugMethodAsync)} instead.");
         int IRemoteControl.EndDebugMethodAsync(IAsyncResult result)
             => throw new NotSupportedException(
                 $"{nameof(IRemoteControl.EndDebugMethodAsync)} is not supported directly. " +
-                $"Use {nameof(CreateCameraAsync)} instead.");
+                $"Use {nameof(DebugMethodAsync)} instead.");
 
         #endregion
 
@@ -328,16 +333,25 @@ namespace DIPOL_Remote
             return await taskSource.Task;
         }
 
-        public async Task CreateCameraAsync(int camIndex)
-        {
-            await AsyncHelper(
+        public Task CreateCameraAsync(int camIndex)
+            => AsyncHelper(
                 Channel.BeginCreateCameraAsync,
                 x => Channel.EndCreateCameraAsync(x),
                 camIndex);
-        }
 
-        public async Task<int> DebugMethodAsync(int i, CancellationToken token)
-            => await AsyncHelper(
+        public Task StartAcquisitionAsync(int camIndex, CancellationToken token)
+            => AsyncHelper(
+                Channel.BeginStartAcquisitionAsync,
+                x =>
+                {
+                    Channel.EndStartAcquisitionAsync(x);
+                    return true;
+                },
+                camIndex,
+                token);
+
+        public Task<int> DebugMethodAsync(int i, CancellationToken token)
+            => AsyncHelper(
                 Channel.BeginDebugMethodAsync,
                 Channel.EndDebugMethodAsync,
                 i,

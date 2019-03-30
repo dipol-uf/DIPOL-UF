@@ -375,6 +375,9 @@ namespace Tests
                         Assert.AreEqual(gains.Low + 1, setts.EMCCDGain);
                         
                         Assert.That(() => camera.ApplySettings(setts), Throws.Nothing);
+
+                        Assert.That(async () => await camera.StartAcquisitionAsync(CancellationToken.None),
+                            Throws.Nothing);
                         #endif
                     });
                     // ReSharper restore AccessToDisposedClosure

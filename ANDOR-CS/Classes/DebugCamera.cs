@@ -185,19 +185,21 @@ namespace ANDOR_CS.Classes
         public override async Task StartAcquisitionAsync(CancellationToken token)
         {
             StartAcquisition();
-            OnAcquisitionStarted(new AcquisitionStatusEventArgs(default));
+            OnAcquisitionStarted(new AcquisitionStatusEventArgs(CameraStatus.Acquiring));
             try
             {
                 await Task.Delay(1500, token);
-                OnNewImageReceived(new NewImageReceivedEventArgs(0, default));
+                token.ThrowIfCancellationRequested();
+
+                OnNewImageReceived(new NewImageReceivedEventArgs(0, DateTimeOffset.Now));
             }
             catch (Exception)
             {
-                OnAcquisitionAborted(new AcquisitionStatusEventArgs(default));
+                OnAcquisitionAborted(new AcquisitionStatusEventArgs(CameraStatus.Idle));
             }
             finally
             {
-                OnAcquisitionFinished(new AcquisitionStatusEventArgs(default));
+                OnAcquisitionFinished(new AcquisitionStatusEventArgs(CameraStatus.Idle));
                 IsAcquiring = false;
             }
         }
