@@ -31,11 +31,12 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DipolImage;
+using DIPOL_Remote.Remote;
 using FITS_CS;
 using CameraBase = ANDOR_CS.Classes.CameraBase;
 using AcquisitionEventType = DIPOL_Remote.Enums.AcquisitionEventType;
 
-namespace DIPOL_Remote.Remote
+namespace DIPOL_Remote
 {
     public sealed class RemoteCamera : CameraBase
     {
