@@ -27,6 +27,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Enums;
 using DIPOL_Remote;
@@ -131,7 +132,6 @@ namespace Tests
         {
             Assert.Multiple(() =>
             {
-                Assert.That(_client.Remote, Is.Not.Null);
                 Assert.That(_client.GetNumberOfCameras(), Is.GreaterThanOrEqualTo(0));
             });
         }
@@ -290,5 +290,32 @@ namespace Tests
                 cam.Dispose();
         }
 
+        #if DEBUG
+
+        [Test]
+        public void Test_CancellationNoCancel()
+        {
+            var src = 123;
+            var res = 0;
+            Assert.That(async () => res = await _client.DebugMethodAsync(src, CancellationToken.None),
+                Throws.Nothing);
+            Assert.That(res, Is.EqualTo(src * src));
+        }
+
+        [Test]
+        public void Test_CancellationCancelled()
+        {
+            var src = 123;
+            var res = 0;
+            Assert.That(async () => 
+                    res = await _client.DebugMethodAsync(
+                        src, 
+                        new CancellationTokenSource(TimeSpan.FromSeconds(1.5)).Token),
+                Throws.InstanceOf<TaskCanceledException>());
+            Assert.That(res, Is.EqualTo(0));
+        }
+
+
+#endif
     }
 }

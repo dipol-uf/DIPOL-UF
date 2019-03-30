@@ -27,6 +27,7 @@ using System;
 using System.Linq;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
@@ -240,9 +241,19 @@ namespace DIPOL_Remote
 			=> throw new NotSupportedException(
                 $"{nameof(IRemoteControl.BeginCreateCameraAsync)} is not supported directly. " +
                 $"Use {nameof(CreateCameraAsync)} instead.");
-        bool IRemoteControl.EndCreateCameraAsync(IAsyncResult result)
+        void IRemoteControl.EndCreateCameraAsync(IAsyncResult result)
             => throw new NotSupportedException(
                 $"{nameof(IRemoteControl.EndCreateCameraAsync)} is not supported directly. " +
+                $"Use {nameof(CreateCameraAsync)} instead.");
+
+        IAsyncResult IRemoteControl.BeginDebugMethodAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state)
+            => throw new NotSupportedException(
+                $"{nameof(IRemoteControl.BeginDebugMethodAsync)} is not supported directly. " +
+                $"Use {nameof(CreateCameraAsync)} instead.");
+
+        int IRemoteControl.EndDebugMethodAsync(IAsyncResult result)
+            => throw new NotSupportedException(
+                $"{nameof(IRemoteControl.EndDebugMethodAsync)} is not supported directly. " +
                 $"Use {nameof(CreateCameraAsync)} instead.");
 
         #endregion
@@ -255,6 +266,7 @@ namespace DIPOL_Remote
                 throw new ArgumentException("Invalid finalization state", nameof(eventArgs));
             switch (e.Error)
             {
+                // e.Cancelled appears to be always false
                 case null when e.Cancelled:
                     source.SetCanceled();
                     break;
@@ -292,6 +304,29 @@ namespace DIPOL_Remote
             await taskSource.Task;
         }
 
+        private async Task<TResult> AsyncHelper<TParam, TResult>(
+            Func<TParam, RemoteCancellationToken, AsyncCallback, object, IAsyncResult> beginInvoke,
+            Func<IAsyncResult, TResult> endInvoke,
+            TParam value,
+            CancellationToken token)
+        {
+            var taskSource = new TaskCompletionSource<TResult>();
+
+            var remoteToken = RemoteCancellationToken.CreateFromToken(token);
+
+            InvokeAsync(
+                (@params, callback, state) => 
+                    beginInvoke((TParam)@params[0], (RemoteCancellationToken)@params[1], callback, state),
+                new object[] { value, remoteToken },
+                result => new object[] { endInvoke(result)}, 
+                state => FinalizeAsyncOperation(state, taskSource),
+                null);
+
+            token.Register(() => Channel.CancelAsync(remoteToken));
+
+            return await taskSource.Task;
+        }
+
         public async Task CreateCameraAsync(int camIndex)
         {
             await AsyncHelper(
@@ -299,6 +334,14 @@ namespace DIPOL_Remote
                 x => Channel.EndCreateCameraAsync(x),
                 camIndex);
         }
+
+        public async Task<int> DebugMethodAsync(int i, CancellationToken token)
+            => await AsyncHelper(
+                Channel.BeginDebugMethodAsync,
+                Channel.EndDebugMethodAsync,
+                i,
+                token);
+
         #endregion
     }
 }
