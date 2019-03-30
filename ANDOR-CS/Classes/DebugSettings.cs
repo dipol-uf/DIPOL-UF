@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ANDOR_CS.Enums;
+#pragma warning disable 1591
 
 
 #if DEBUG
@@ -37,7 +38,6 @@ namespace ANDOR_CS.Classes
         public DebugSettings(DebugCamera camera)
         {
             Console.WriteLine("--> Settings created");
-
 
             Camera = camera;
         }
