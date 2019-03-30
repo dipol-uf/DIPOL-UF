@@ -411,7 +411,7 @@ namespace DIPOL_Remote.Remote
                     new ServiceFault()
                     {
                         Message = "Failed to add instance of acquisition settings to the global collection",
-                        Details = $"Failed to generate unique id or previous settings were not disposed proeprly.",
+                        Details = $"Failed to generate unique id or previous settings were not disposed properly.",
                         MethodName = nameof(_settings.TryAdd)
                     },
                     ServiceFault.GeneralServiceErrorReason);
@@ -567,7 +567,7 @@ namespace DIPOL_Remote.Remote
             => throw new NotImplementedException();
 
         [OperationBehavior]
-        public (int Index, float Speed)[] GetAvailableHSSpeeds(
+        public (int Index, float Speed)[] GetAvailableHsSpeeds(
             string settingsID,
             int adConverterIndex,
             int amplifier)
@@ -583,7 +583,7 @@ namespace DIPOL_Remote.Remote
             adConverterIndex, amplifier, hsSpeed).ToArray();
 
         [OperationBehavior]
-        public (bool IsSupported, float Speed) CallIsHSSpeedSupported(
+        public (bool IsSupported, float Speed) CallIsHsSpeedSupported(
             string settingsID, 
             int adConverter,
             int amplifier,

@@ -53,18 +53,20 @@ namespace ANDOR_CS.Classes
             return true;
         }
 
-        public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int adConverter, int amplifier)
-        {
-            yield return (Index: 0, Speed: 0);
-            yield return (Index: 1, Speed: 10);
+        public override List<(int Index, float Speed)> GetAvailableHSSpeeds(int adConverter, int amplifier)
+            => new List<(int Index, float Speed)>
+            {
+                (Index: 0, Speed: 0),
+                (Index: 1, Speed: 10)
+            };
 
-        }
-
-        public override IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain(int adConverter, int amplifier, int hsSpeed)
-        {
-            yield return (Index: 0, Name: "Zero");
-            yield return (Index: 1, Name: "One");
-        }
+        public override List<(int Index, string Name)> GetAvailablePreAmpGain(int adConverter, int amplifier,
+            int hsSpeed)
+            => new List<(int Index, string Name)>
+            {
+                (Index: 0, Name: "Zero"),
+                (Index: 1, Name: "One")
+            };
 
         public override (int Low, int High) GetEmGainRange()
         {
