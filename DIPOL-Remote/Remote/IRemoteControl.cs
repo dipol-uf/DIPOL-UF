@@ -206,22 +206,22 @@ namespace DIPOL_Remote.Remote
 
 
         [OperationContract(IsOneWay = false)]
-        (int Index, float Speed)[] GetAvailableHSSpeeds(
+        (int Index, float Speed)[] GetAvailableHsSpeeds(
             string settingsID,
-            int ADConverterIndex,
+            int adConverterIndex,
             int amplifier);
 
         [OperationContract(IsOneWay = false)]
         (int Index, string Name)[] GetAvailablePreAmpGain(
             string settingsID,
-            int ADConverterIndex,
+            int adConverterIndex,
             int amplifier,
-            int HSSpeed);
+            int hsSpeed);
 
         [OperationContract(IsOneWay = false)]
-        (bool IsSupported, float Speed) CallIsHSSpeedSupported(
+        (bool IsSupported, float Speed) CallIsHsSpeedSupported(
             string settingsID, 
-            int ADConverter,
+            int adConverter,
             int amplifier,
             int speedIndex);
 
