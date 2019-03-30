@@ -398,7 +398,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="ArgumentOutOfRangeException"/>
         /// <exception cref="NotSupportedException"/>
         /// <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
-        public virtual IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds()
+        public virtual List<(int Index, float Speed)> GetAvailableHSSpeeds()
         { 
             
             // Checks if Camera is OK and is active
@@ -457,7 +457,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="NotSupportedException"/>
         /// <returns>Available PreAmp gains</returns>
-        public virtual IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain()
+        public virtual List<(int Index, string Name)> GetAvailablePreAmpGain()
         {
             // Checks if Camera is OK and is active
             CheckCamera();
