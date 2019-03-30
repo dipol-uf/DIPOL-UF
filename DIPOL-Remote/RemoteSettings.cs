@@ -31,15 +31,9 @@ namespace DIPOL_Remote
 {
     public class RemoteSettings : SettingsBase
     {
-        private IRemoteControl session;
+        private DipolClient _client;
 
-        [ANDOR_CS.Attributes.NonSerialized]
-        public string SessionID
-        {
-            get;
-            private set;
-        }
-
+      
         [ANDOR_CS.Attributes.NonSerialized]
         internal string SettingsID
         {
@@ -47,14 +41,12 @@ namespace DIPOL_Remote
             private set;
         }
 
-        internal RemoteSettings(string sessionID, int cameraIndex, string settingsID, IRemoteControl session)
+        // ReSharper disable once SuggestBaseTypeForParameter
+        internal RemoteSettings(RemoteCamera cam, string settingsID, DipolClient client)
         {
-            SessionID = sessionID;
-               SettingsID = settingsID;
-            this.session = session;
+            SettingsID = settingsID;
+            _client = client;
             
-            if (!RemoteCamera.RemoteCameras.TryGetValue(cameraIndex, out var cam))
-                throw new Exception();
             Camera = cam;
         }
 
@@ -75,7 +67,7 @@ namespace DIPOL_Remote
         //    }
 
         //    // Calls remote method.
-        //    var result = session.CallApplySettings(SettingsID, data);
+        //    var result = _client.CallApplySettings(SettingsID, data);
 
         //    base.ApplySettings(out _);
         //    // Assigns out values
@@ -85,21 +77,21 @@ namespace DIPOL_Remote
             
         //}
 
-        public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int ADConverter, int amplifier)
-            => session.GetAvailableHSSpeeds(
+        public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int adConverter, int amplifier)
+            => _client.GetAvailableHSSpeeds(
                 SettingsID,
-                ADConverter,
+                adConverter,
                 amplifier);
                    
         public override IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain(
-            int ADConverter,
+            int adConverter,
             int amplifier,
-            int HSSpeed)
-            => session.GetAvailablePreAmpGain(
+            int hsSpeed)
+            => _client.GetAvailablePreAmpGain(
                 SettingsID, 
-                ADConverter, 
+                adConverter, 
                 amplifier,
-                HSSpeed);
+                hsSpeed);
 
         public override (int Low, int High) GetEmGainRange()
         {
@@ -113,21 +105,21 @@ namespace DIPOL_Remote
 
         public override bool IsHSSpeedSupported(
             int speedIndex, 
-            int ADConverter,
+            int adConverter,
             int amplifier,
             out float speed)
         {
             speed = 0.0f;
-            (bool isSupported, float locSpeed) = session
-                .CallIsHSSpeedSupported(SettingsID, ADConverter, amplifier, speedIndex);
+            (bool isSupported, float locSpeed) = _client
+                .CallIsHSSpeedSupported(SettingsID, adConverter, amplifier, speedIndex);
              speed = locSpeed;
             return isSupported;
         }
 
         public override void Dispose()
         {
-            session.RemoveSettings(SettingsID);
-            session = null;
+            _client.RemoveSettings(SettingsID);
+            _client = null;
             base.Dispose();
         }
     }
