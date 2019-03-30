@@ -26,7 +26,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
@@ -39,6 +38,7 @@ using ANDOR_CS.Exceptions;
 using DIPOL_Remote.Callback;
 using DIPOL_Remote.Faults;
 using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
+using SettingsDictionary = System.Collections.Concurrent.ConcurrentDictionary<string, ANDOR_CS.Classes.SettingsBase>;
 // ReSharper disable InheritdocConsiderUsage
 
 namespace DIPOL_Remote.Remote
@@ -56,25 +56,15 @@ namespace DIPOL_Remote.Remote
         IncludeExceptionDetailInFaults = true)]
     internal sealed class RemoteControl : IRemoteControl, IDisposable
     {
-        /// <summary>
-        /// Defines max number of attempts to create unique identifier.
-        /// </summary>
         // TODO : Move to settings
         private const int MaxTryAddAttempts = 30;
-
-        /// <summary>
-        /// A reference to Host instance
-        /// </summary>
+        
         private DipolHost _host;
 
         private readonly CameraDictionary _cameras = new CameraDictionary();
+        private readonly SettingsDictionary _settings = new SettingsDictionary();
 
-        /// <summary>
-        /// Thread-safe collection of all active instances of AcquisitionSettings.
-        /// </summary>
-        private readonly ConcurrentDictionary<string,  SettingsBase> _settings
-            = new ConcurrentDictionary<string,  SettingsBase>();
-
+        // TODO : Possibly redundant providing there is now full-blown async interface
         private readonly ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> _activeTasks
             = new ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>();
 
@@ -92,18 +82,6 @@ namespace DIPOL_Remote.Remote
             private set;
         }
 
-        /// <summary>
-        /// Interface to collection of all active <see cref="AcquisitionSettings"/> instances.
-        /// </summary>
-        public IReadOnlyDictionary<string,  SettingsBase> Settings
-           => _settings;
-
-        public IReadOnlyDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> ActiveTasks
-            => _activeTasks;
-
-        /// <summary>
-        /// Default constructor
-        /// </summary>
         private RemoteControl()
         {
          
@@ -402,20 +380,38 @@ namespace DIPOL_Remote.Remote
         [OperationBehavior]
         public string CreateSettings(int camIndex)
         {
-            CameraBase cam = GetCameraSafe(camIndex);
-            SettingsBase setts = cam.GetAcquisitionSettingsTemplate();
+            var cam = GetCameraSafe(camIndex);
 
-            string settingsID = Guid.NewGuid().ToString("N");
-            int counter = 0;
-            while ((counter <= MaxTryAddAttempts) && !_settings.TryAdd(settingsID, setts))
-                counter++;
+            var settingsID = Guid.NewGuid().ToString("N");
 
-            if (counter >= MaxTryAddAttempts)
+            SettingsBase setts;
+            try
+            {
+                setts = cam.GetAcquisitionSettingsTemplate();
+            }
+            catch (AndorSdkException andorEx)
+            {
+                throw AndorSdkFault.WrapFault(andorEx);
+            }
+            catch (Exception e)
+            {
                 throw new FaultException<ServiceFault>(
                     new ServiceFault()
                     {
-                        Message = "Failed to create unique ID for the settings instance.",
-                        Details = $"After {MaxTryAddAttempts} sessionID was not generated",
+                        Details = e.Message,
+                        MethodName = nameof(CameraBase.GetAcquisitionSettingsTemplate),
+                        Message = "Acquisition settings initialization " +
+                                  $"threw exception of type {e.GetType()}"
+                    },
+                    ServiceFault.GeneralServiceErrorReason);
+            }
+
+            if (!_settings.TryAdd(settingsID, setts))
+                throw new FaultException<ServiceFault>(
+                    new ServiceFault()
+                    {
+                        Message = "Failed to add instance of acquisition settings to the global collection",
+                        Details = $"Failed to generate unique id or previous settings were not disposed proeprly.",
                         MethodName = nameof(_settings.TryAdd)
                     },
                     ServiceFault.GeneralServiceErrorReason);
@@ -637,7 +633,7 @@ namespace DIPOL_Remote.Remote
         [OperationBehavior]
         public void RequestCancellation(string taskID)
         {
-            if (ActiveTasks.TryGetValue(taskID, out (Task Task, CancellationTokenSource Token, int CameraIndex) taskInfo))
+            if (_activeTasks.TryGetValue(taskID, out (Task Task, CancellationTokenSource Token, int CameraIndex) taskInfo))
             {
                 taskInfo.Token.Cancel();
                 RemoveTask(taskID);
@@ -664,13 +660,13 @@ namespace DIPOL_Remote.Remote
 
         private SettingsBase GetSettingsSafe(string settingsID)
         {
-            if (Settings.TryGetValue(settingsID, out SettingsBase sets))
+            if (_settings.TryGetValue(settingsID, out var sets))
                 return sets;
             else throw new Exception();
         }
         private (Task Task, CancellationTokenSource Token, int CameraIndex) GetTaskSafe(string taskID)
         {
-            if (ActiveTasks.TryGetValue(taskID, out (Task Task, CancellationTokenSource Token, int CameraIndex) taskInfo))
+            if (_activeTasks.TryGetValue(taskID, out (Task Task, CancellationTokenSource Token, int CameraIndex) taskInfo))
                 return taskInfo;
             else
                 throw new Exception();

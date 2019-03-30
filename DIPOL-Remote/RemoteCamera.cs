@@ -47,7 +47,7 @@ namespace DIPOL_Remote
         private readonly ConcurrentDictionary<string, bool> _changedProperties
             = new ConcurrentDictionary<string, bool>();
 
-        private DipolClient _session;
+        private DipolClient _client;
 
         public override bool IsTemperatureMonitored
         {
@@ -55,7 +55,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    IsTemperatureMonitored = _session.GetIsTemperatureMonitored(CameraIndex);
+                    IsTemperatureMonitored = _client.GetIsTemperatureMonitored(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -68,7 +68,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    CameraModel = _session.GetCameraModel(CameraIndex);
+                    CameraModel = _client.GetCameraModel(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -82,7 +82,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    SerialNumber = _session.GetSerialNumber(CameraIndex);
+                    SerialNumber = _client.GetSerialNumber(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -95,7 +95,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    IsActive = _session.GetIsActive(CameraIndex);
+                    IsActive = _client.GetIsActive(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -108,7 +108,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    Properties = _session.GetProperties(CameraIndex);
+                    Properties = _client.GetProperties(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -121,7 +121,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    IsInitialized = _session.GetIsInitialized(CameraIndex);
+                    IsInitialized = _client.GetIsInitialized(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -134,7 +134,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    FanMode = _session.GetFanMode(CameraIndex);
+                    FanMode = _client.GetFanMode(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -147,7 +147,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    CoolerMode = _session.GetCoolerMode(CameraIndex);
+                    CoolerMode = _client.GetCoolerMode(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -160,7 +160,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    Capabilities = _session.GetCapabilities(CameraIndex);
+                    Capabilities = _client.GetCapabilities(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -173,7 +173,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    IsAcquiring = _session.GetIsAcquiring(CameraIndex);
+                    IsAcquiring = _client.GetIsAcquiring(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -191,7 +191,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    Shutter = _session.GetShutter(CameraIndex);
+                    Shutter = _client.GetShutter(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -205,7 +205,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    Software = _session.GetSoftware(CameraIndex);
+                    Software = _client.GetSoftware(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -219,7 +219,7 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    Hardware = _session.GetHardware(CameraIndex);
+                    Hardware = _client.GetHardware(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
                 }
 
@@ -229,43 +229,43 @@ namespace DIPOL_Remote
 
         private RemoteCamera(int camIndex, DipolClient sessionInstance)
         {
-            _session = sessionInstance ?? throw new ArgumentNullException(nameof(sessionInstance));
+            _client = sessionInstance ?? throw new ArgumentNullException(nameof(sessionInstance));
             CameraIndex = camIndex;
 
 
-            CameraModel = _session.GetCameraModel(CameraIndex);
-            SerialNumber = _session.GetSerialNumber(CameraIndex);
-            IsActive = _session.GetIsActive(CameraIndex);
-            Properties = _session.GetProperties(CameraIndex);
-            IsInitialized = _session.GetIsInitialized(CameraIndex);
-            FanMode = _session.GetFanMode(CameraIndex);
-            CoolerMode = _session.GetCoolerMode(CameraIndex);
-            Capabilities = _session.GetCapabilities(CameraIndex);
-            IsAcquiring = _session.GetIsAcquiring(CameraIndex);
-            Shutter = _session.GetShutter(CameraIndex);
-            Software = _session.GetSoftware(CameraIndex);
-            Hardware = _session.GetHardware(CameraIndex);
+            CameraModel = _client.GetCameraModel(CameraIndex);
+            SerialNumber = _client.GetSerialNumber(CameraIndex);
+            IsActive = _client.GetIsActive(CameraIndex);
+            Properties = _client.GetProperties(CameraIndex);
+            IsInitialized = _client.GetIsInitialized(CameraIndex);
+            FanMode = _client.GetFanMode(CameraIndex);
+            CoolerMode = _client.GetCoolerMode(CameraIndex);
+            Capabilities = _client.GetCapabilities(CameraIndex);
+            IsAcquiring = _client.GetIsAcquiring(CameraIndex);
+            Shutter = _client.GetShutter(CameraIndex);
+            Software = _client.GetSoftware(CameraIndex);
+            Hardware = _client.GetHardware(CameraIndex);
 
             RemoteCameras.TryAdd(camIndex, this);
         }
 
         public override CameraStatus GetStatus()
-            => _session.CallGetStatus(CameraIndex);
+            => _client.CallGetStatus(CameraIndex);
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
-            => _session.CallGetCurrentTemperature(CameraIndex);
+            => _client.CallGetCurrentTemperature(CameraIndex);
         public override void FanControl(FanMode mode)
-            => _session.CallFanControl(CameraIndex, mode);
+            => _client.CallFanControl(CameraIndex, mode);
         public override void CoolerControl(Switch mode)
-            => _session.CallCoolerControl(CameraIndex, mode);
+            => _client.CallCoolerControl(CameraIndex, mode);
         public override void SetTemperature(int temperature)
-            => _session.CallSetTemperature(CameraIndex, temperature);
+            => _client.CallSetTemperature(CameraIndex, temperature);
         public override void ShutterControl(
             ShutterMode shutterMode,
             ShutterMode extrn,
             int opTime,
             int clTime,
             TtlShutterSignal type)
-            => _session.CallShutterControl(
+            => _client.CallShutterControl(
                 CameraIndex,
                 clTime,
                 opTime,
@@ -282,10 +282,10 @@ namespace DIPOL_Remote
         }
 
         public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs)
-            => _session.CallTemperatureMonitor(CameraIndex, mode, timeout);
+            => _client.CallTemperatureMonitor(CameraIndex, mode, timeout);
 
         public override SettingsBase GetAcquisitionSettingsTemplate()
-            => new RemoteSettings(_session.SessionID, CameraIndex, _session.CreateSettings(CameraIndex), _session);
+            => new RemoteSettings(this, _client.CreateSettings(CameraIndex), _client);
 
         public override async Task StartAcquisitionAsync(CancellationToken cancellationToken)
         {
@@ -316,15 +316,15 @@ namespace DIPOL_Remote
             => throw new NotSupportedException();
 
         protected override void AbortAcquisition()
-            => _session.CallAbortAcquisition(CameraIndex);
+            => _client.CallAbortAcquisition(CameraIndex);
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                _session.RemoveCamera(CameraIndex);
+                _client.RemoveCamera(CameraIndex);
                 RemoteCameras.TryRemove(CameraIndex, out _);
-                _session = null;
+                _client = null;
             }
                 base.Dispose(disposing);
         }

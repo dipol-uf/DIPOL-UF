@@ -115,6 +115,7 @@ namespace DIPOL_Remote.Remote
 
         [OperationContract(IsOneWay = false)]
         [FaultContract(typeof(ServiceFault))]
+        [FaultContract(typeof(AndorSdkFault))]
         string CreateSettings(int camIndex);
 
         [OperationContract(IsOneWay = false)]
