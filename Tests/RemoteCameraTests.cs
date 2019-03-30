@@ -29,6 +29,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media.Animation;
+using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_Remote;
 using DIPOL_Remote.Remote;
@@ -290,6 +292,55 @@ namespace Tests
                 cam.Dispose();
         }
 
+        [Test]
+        public async Task Test_AcquisitionSettings()
+        {
+            using (var camera = await RemoteCamera.CreateAsync(0, _client))
+            {
+                using (var setts = camera.GetAcquisitionSettingsTemplate())
+                {
+                    Assert.AreEqual(setts.Camera, camera);
+
+                    #if DEBUG
+                    Assert.That(() =>
+                    {
+                        // ReSharper disable AccessToDisposedClosure
+                        setts.SupportedSettings();
+                        setts.AllowedSettings();
+                        // ReSharper restore AccessToDisposedClosure
+                    }, Throws.Nothing);
+
+                    setts.SetVSSpeed(0);
+                    Assert.AreEqual(setts.VSSpeed?.Index, 0);
+                    Assert.AreEqual(setts.VSSpeed?.Speed, camera.Properties.VSSpeeds[0]);
+
+                    setts.SetVSAmplitude(VSAmplitude.Plus3);
+                    Assert.AreEqual(setts.VSAmplitude, VSAmplitude.Plus3);
+
+                    var amp = camera.Properties.OutputAmplifiers[0];
+                    setts.SetOutputAmplifier(amp.OutputAmplifier);
+                    Assert.AreEqual(setts.OutputAmplifier?.Index, 0);
+                    Assert.AreEqual(setts.OutputAmplifier?.OutputAmplifier, amp.OutputAmplifier);
+                    Assert.AreEqual(setts.OutputAmplifier?.Name, amp.Name);
+
+                    setts.SetADConverter(0);
+                    Assert.AreEqual(setts.ADConverter?.Index, 0);
+                    Assert.AreEqual(setts.ADConverter?.BitDepth, camera.Properties.ADConverters[0]);
+
+
+
+                    var speed = setts.GetAvailableHSSpeeds().Last();
+                    setts.SetHSSpeed(speed.Index);
+                    Assert.AreEqual(setts.HSSpeed?.Index, speed.Index);
+                    Assert.AreEqual(setts.HSSpeed?.Speed, speed.Speed);
+                    
+
+#endif
+                }
+            }
+        }
+
+        #region Temp tests
         #if DEBUG
 
         [Test]
@@ -316,6 +367,7 @@ namespace Tests
         }
 
 
-#endif
+        #endif
+        #endregion
     }
 }
