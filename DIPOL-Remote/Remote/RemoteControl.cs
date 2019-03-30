@@ -677,7 +677,7 @@ namespace DIPOL_Remote.Remote
         }
 
 
-        #region Async methods
+        #region Async methods helpers
 
         internal class CancellationRequestedEventArgs : EventArgs
         {
@@ -691,32 +691,65 @@ namespace DIPOL_Remote.Remote
         internal static void OnCancellationRequested(RemoteCancellationToken token)
             => CancellationRequested?.Invoke(null, new CancellationRequestedEventArgs(token));
 
+        private static Task FinalizeAsyncOperation(IAsyncResult result)
+        {
+            if (!(result is AsyncResult res))
+                throw new FaultException($"Incompatible object of type [{typeof(IAsyncResult)}] received.");
+            try
+            {
+                if (res.Task.IsFaulted)
+                    throw new FaultException(@"Task has failed.");
+                if (res.Task.IsCanceled)
+                    throw new FaultException<TaskCancelledRemotelyFault>(
+                        new TaskCancelledRemotelyFault(),
+                        TaskCancelledRemotelyFault.FaultReason);
+
+                res.Task.GetAwaiter().GetResult();
+                return res.Task;
+            }
+            finally
+            {
+                res.Dispose();
+            }
+        }
+
         [OperationBehavior]
         public void CancelAsync(RemoteCancellationToken token)
             => OnCancellationRequested(token);
+
+
+
 
         [OperationBehavior]
         public IAsyncResult BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state)
         {
             return new AsyncResult(CreateCameraAsync(camIndex), callback, state);
         }
-
-        public bool EndCreateCameraAsync(IAsyncResult result)
+        public void EndCreateCameraAsync(IAsyncResult result)
         {
-            if (result is AsyncResult res)
-            {
-                try
-                {
-                    res.Task.GetAwaiter().GetResult();
-                    return true;
-                }
-                finally
-                {
-                    res.Dispose();
-                }
-            }
-            throw new InvalidOperationException($"Incompatible object of type [{typeof(IAsyncResult)}] received.");
+            FinalizeAsyncOperation(result).GetAwaiter().GetResult();
         }
+
+#if DEBUG
+        [OperationBehavior]
+        public IAsyncResult BeginDebugMethodAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state)
+        {
+            var src = new CancellationTokenSource();
+            return new AsyncResult(
+                Task.Delay(TimeSpan.FromSeconds(5), src.Token)
+                    .ContinueWith(_ => camIndex * camIndex, src.Token),
+                src,
+                token,
+                callback,
+                state);
+        }
+
+        public int EndDebugMethodAsync(IAsyncResult result)
+            => FinalizeAsyncOperation(result) is Task<int> actualTask
+                ? actualTask.Result
+                : throw new FaultException(@"Failed to retrieve asynchronous operation result.");
+        #endif
+
         #endregion
     }
 }

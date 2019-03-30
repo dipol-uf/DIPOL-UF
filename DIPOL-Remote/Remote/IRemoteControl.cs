@@ -67,6 +67,7 @@ namespace DIPOL_Remote.Remote
     [ServiceKnownType(typeof(DipolImage.Image))]
     [ServiceKnownType(typeof(TypeCode))]
     [ServiceKnownType(typeof(RemoteCancellationToken))]
+    [ServiceKnownType(typeof(TaskCancelledRemotelyFault))]
     public interface IRemoteControl
     {
         /// <summary>
@@ -249,7 +250,15 @@ namespace DIPOL_Remote.Remote
         // TODO: Attempting to build Begin/End asynchronous pattern
         [OperationContract(AsyncPattern = true)]
         IAsyncResult BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state);
-        bool EndCreateCameraAsync(IAsyncResult result);
+        void EndCreateCameraAsync(IAsyncResult result);
+
+        #if DEBUG
+        [OperationContract(AsyncPattern = true)]
+        [FaultContract(typeof(TaskCancelledRemotelyFault))]
+        IAsyncResult BeginDebugMethodAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state);
+        int EndDebugMethodAsync(IAsyncResult result);
+        #endif
+
         #endregion
     }
 }
