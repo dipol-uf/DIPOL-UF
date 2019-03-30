@@ -758,11 +758,11 @@ namespace ANDOR_CS.Classes
             int amplifier, 
             out float speed);
 
-        public abstract IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(
+        public abstract List<(int Index, float Speed)> GetAvailableHSSpeeds(
             int adConverter, 
             int amplifier);
 
-        public abstract IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain(
+        public abstract List<(int Index, string Name)> GetAvailablePreAmpGain(
            int adConverter,
            int amplifier,
            int hsSpeed);

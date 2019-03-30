@@ -24,8 +24,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ANDOR_CS.Classes;
-using DIPOL_Remote.Remote;
 
 namespace DIPOL_Remote
 {
@@ -77,13 +77,13 @@ namespace DIPOL_Remote
             
         //}
 
-        public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int adConverter, int amplifier)
-            => _client.GetAvailableHSSpeeds(
+        public override List<(int Index, float Speed)> GetAvailableHSSpeeds(int adConverter, int amplifier)
+            => _client.GetAvailableHsSpeeds(
                 SettingsID,
                 adConverter,
-                amplifier);
+                amplifier).ToList();
                    
-        public override IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain(
+        public override List<(int Index, string Name)> GetAvailablePreAmpGain(
             int adConverter,
             int amplifier,
             int hsSpeed)
@@ -91,7 +91,7 @@ namespace DIPOL_Remote
                 SettingsID, 
                 adConverter, 
                 amplifier,
-                hsSpeed);
+                hsSpeed).ToList();
 
         public override (int Low, int High) GetEmGainRange()
         {
@@ -111,7 +111,7 @@ namespace DIPOL_Remote
         {
             speed = 0.0f;
             (bool isSupported, float locSpeed) = _client
-                .CallIsHSSpeedSupported(SettingsID, adConverter, amplifier, speedIndex);
+                .CallIsHsSpeedSupported(SettingsID, adConverter, amplifier, speedIndex);
              speed = locSpeed;
             return isSupported;
         }

@@ -170,7 +170,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="ArgumentOutOfRangeException" />
         /// <exception cref="NotSupportedException" />
         /// <returns>An enumerable collection of speed indexes and respective speed values available.</returns>
-        public override IEnumerable<(int Index, float Speed)> GetAvailableHSSpeeds(int adConverter, int amplifier)
+        public override List<(int Index, float Speed)> GetAvailableHSSpeeds(int adConverter, int amplifier)
         {
             // Checks if Camera is OK and is active
             CheckCamera();
@@ -180,7 +180,7 @@ namespace ANDOR_CS.Classes
                 throw new NotSupportedException("Camera does not support horizontal readout speed controls.");
             else
             {
-                // Gets the number of availab;e speeds
+                // Gets the number of available speeds
                 var result = Call(Handle, SdkInstance.GetNumberHSSpeeds, adConverter, amplifier, out int nSpeeds);
                 if (FailIfError(result, nameof(SdkInstance.GetNumberHSSpeeds), out var except))
                     throw except;
@@ -189,6 +189,8 @@ namespace ANDOR_CS.Classes
                 if (nSpeeds < 0)
                     throw new ArgumentOutOfRangeException(
                         $"Returned number of available speeds is less than 0 ({nSpeeds}).");
+
+                var list = new List<(int Index, float Speed)>(nSpeeds);
 
                 // Iterates through speed indexes
                 for (var speedIndex = 0; speedIndex < nSpeeds; speedIndex++)
@@ -201,9 +203,11 @@ namespace ANDOR_CS.Classes
                     if (FailIfError(result, nameof(SdkInstance.GetHSSpeed), out except))
                         throw except;
 
-                    // Returns speed index and speed value for evvery subsequent call
-                    yield return (Index: speedIndex, Speed: locSpeed);
+                    // Returns speed index and speed value for every subsequent call
+                    list.Add((Index: speedIndex, Speed: locSpeed));
                 }
+
+                return list;
             }
         }
 
@@ -219,7 +223,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="NullReferenceException" />
         /// <exception cref="NotSupportedException" />
         /// <returns>Available PreAmp gains</returns>
-        public override IEnumerable<(int Index, string Name)> GetAvailablePreAmpGain(
+        public override List<(int Index, string Name)> GetAvailablePreAmpGain(
             int adConverter,
             int amplifier,
             int hsSpeed)
@@ -234,6 +238,8 @@ namespace ANDOR_CS.Classes
                 // Total number of gain settings available
                 var gainNumber = Camera.Properties.PreAmpGains.Length;
 
+                var list = new List<(int Index, string Name)>(gainNumber);
+
                 for (var gainIndex = 0; gainIndex < gainNumber; gainIndex++)
                 {
                     var status = -1;
@@ -246,8 +252,10 @@ namespace ANDOR_CS.Classes
 
                     // If status of a certain combination of settings is 1, return it
                     if (status == 1)
-                        yield return (Index: gainIndex, Name: Camera.Properties.PreAmpGains[gainIndex]);
+                        list.Add((Index: gainIndex, Name: Camera.Properties.PreAmpGains[gainIndex]));
                 }
+
+                return list;
             }
             else
             {

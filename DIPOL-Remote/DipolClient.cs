@@ -190,15 +190,15 @@ namespace DIPOL_Remote
         public void CallAbortAcquisition(int camIndex)
 			=> Channel.CallAbortAcquisition(camIndex);
 
-        public (int Index, float Speed)[] GetAvailableHSSpeeds(string settingsID, int ADConverterIndex, int amplifier)
-            => Channel.GetAvailableHSSpeeds(settingsID, ADConverterIndex, amplifier);
+        public (int Index, float Speed)[] GetAvailableHsSpeeds(string settingsID, int ADConverterIndex, int amplifier)
+            => Channel.GetAvailableHsSpeeds(settingsID, ADConverterIndex, amplifier);
 
         public (int Index, string Name)[] GetAvailablePreAmpGain(string settingsID, int ADConverterIndex, int amplifier, int HSSpeed)
             => Channel.GetAvailablePreAmpGain(settingsID, ADConverterIndex, amplifier, HSSpeed);
 
-        public (bool IsSupported, float Speed) CallIsHSSpeedSupported(string settingsID, int ADConverter, int amplifier,
+        public (bool IsSupported, float Speed) CallIsHsSpeedSupported(string settingsID, int ADConverter, int amplifier,
             int speedIndex)
-            => Channel.CallIsHSSpeedSupported(settingsID, ADConverter, amplifier, speedIndex);
+            => Channel.CallIsHsSpeedSupported(settingsID, ADConverter, amplifier, speedIndex);
 
         // TODO: Fix this
         public ((string Option, bool Success, uint ReturnCode)[] Result, (float ExposureTime, float AccumulationCycleTime, float
