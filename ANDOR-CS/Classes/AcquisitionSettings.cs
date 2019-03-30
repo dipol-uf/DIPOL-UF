@@ -130,33 +130,7 @@ namespace ANDOR_CS.Classes
             }
         }
 
-        public override void SetEmCcdGain(int gain)
-        {
-            if (Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain))
-            {
-
-                if (!OutputAmplifier.HasValue ||
-                    !OutputAmplifier.Value.OutputAmplifier.HasFlag(OutputAmplification.ElectronMultiplication))
-                    throw new NullReferenceException(
-                        $"OutputAmplifier should be set to {OutputAmplification.ElectronMultiplication} before accessing EMCCDGain.");
-
-                var range = (Low: 0, High: 0);
-
-                if (FailIfError(Call(Handle, () => SdkInstance.GetEMGainRange(ref range.Low, ref range.High)),
-                    nameof(SdkInstance.GetEMGainRange),
-                    out var except))
-                    throw except;
-
-                if (gain > range.High || gain < range.Low)
-                    throw new ArgumentOutOfRangeException(
-                        $"Gain is out of range. (Provided value {gain} should be in [{range.Low}, {range.High}].)");
-
-                EMCCDGain = gain;
-            }
-            else
-                throw new NotSupportedException("EM CCD Gain feature is not supported.");
-        }
-
+        
         /// <summary>
         ///     Returns a collection of available Horizonal Readout Speeds for currently selected OutputAmplifier and AD Converter.
         ///     Requires Camera to be active.

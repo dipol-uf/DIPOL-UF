@@ -94,14 +94,7 @@ namespace DIPOL_Remote
                 hsSpeed).ToList();
 
         public override (int Low, int High) GetEmGainRange()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void SetEmCcdGain(int gain)
-        {
-            throw new NotImplementedException();
-        }
+            => _client.CallGetEmGainRange(SettingsID);
 
         public override bool IsHSSpeedSupported(
             int speedIndex, 
@@ -110,7 +103,7 @@ namespace DIPOL_Remote
             out float speed)
         {
             speed = 0.0f;
-            (bool isSupported, float locSpeed) = _client
+            var (isSupported, locSpeed) = _client
                 .CallIsHsSpeedSupported(SettingsID, adConverter, amplifier, speedIndex);
              speed = locSpeed;
             return isSupported;

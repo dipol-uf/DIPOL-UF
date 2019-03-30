@@ -31,6 +31,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Animation;
 using ANDOR_CS.Classes;
+using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_Remote;
 using DIPOL_Remote.Remote;
@@ -299,43 +300,66 @@ namespace Tests
             {
                 using (var setts = camera.GetAcquisitionSettingsTemplate())
                 {
-                    Assert.AreEqual(setts.Camera, camera);
-
-                    #if DEBUG
-                    Assert.That(() =>
+                    Assert.Multiple(() =>
                     {
-                        // ReSharper disable AccessToDisposedClosure
-                        setts.SupportedSettings();
-                        setts.AllowedSettings();
-                        // ReSharper restore AccessToDisposedClosure
-                    }, Throws.Nothing);
+                        Assert.AreEqual(camera, setts.Camera);
 
-                    setts.SetVSSpeed(0);
-                    Assert.AreEqual(setts.VSSpeed?.Index, 0);
-                    Assert.AreEqual(setts.VSSpeed?.Speed, camera.Properties.VSSpeeds[0]);
+#if DEBUG
+                        Assert.That(() =>
+                        {
+                            // ReSharper disable AccessToDisposedClosure
+                            setts.SupportedSettings();
+                            setts.AllowedSettings();
+                            // ReSharper restore AccessToDisposedClosure
+                        }, Throws.Nothing);
 
-                    setts.SetVSAmplitude(VSAmplitude.Plus3);
-                    Assert.AreEqual(setts.VSAmplitude, VSAmplitude.Plus3);
+                        setts.SetVSSpeed(0);
+                        Assert.AreEqual(0, setts.VSSpeed?.Index);
+                        Assert.AreEqual(camera.Properties.VSSpeeds[0], setts.VSSpeed?.Speed);
 
-                    var amp = camera.Properties.OutputAmplifiers[0];
-                    setts.SetOutputAmplifier(amp.OutputAmplifier);
-                    Assert.AreEqual(setts.OutputAmplifier?.Index, 0);
-                    Assert.AreEqual(setts.OutputAmplifier?.OutputAmplifier, amp.OutputAmplifier);
-                    Assert.AreEqual(setts.OutputAmplifier?.Name, amp.Name);
+                        setts.SetVSAmplitude(VSAmplitude.Plus3);
+                        Assert.AreEqual(VSAmplitude.Plus3, setts.VSAmplitude);
 
-                    setts.SetADConverter(0);
-                    Assert.AreEqual(setts.ADConverter?.Index, 0);
-                    Assert.AreEqual(setts.ADConverter?.BitDepth, camera.Properties.ADConverters[0]);
+                        var amp = camera.Properties.OutputAmplifiers[0];
+                        setts.SetOutputAmplifier(amp.OutputAmplifier);
+                        Assert.AreEqual(0, setts.OutputAmplifier?.Index);
+                        Assert.AreEqual(amp.OutputAmplifier, setts.OutputAmplifier?.OutputAmplifier);
+                        Assert.AreEqual(amp.Name, setts.OutputAmplifier?.Name);
+
+                        setts.SetADConverter(0);
+                        Assert.AreEqual(0, setts.ADConverter?.Index);
+                        Assert.AreEqual(camera.Properties.ADConverters[0], setts.ADConverter?.BitDepth);
 
 
 
-                    var speed = setts.GetAvailableHSSpeeds().Last();
-                    setts.SetHSSpeed(speed.Index);
-                    Assert.AreEqual(setts.HSSpeed?.Index, speed.Index);
-                    Assert.AreEqual(setts.HSSpeed?.Speed, speed.Speed);
-                    
+                        var speed = setts.GetAvailableHSSpeeds().Last();
+                        setts.SetHSSpeed(speed.Index);
+                        Assert.AreEqual(speed.Index, setts.HSSpeed?.Index);
+                        Assert.AreEqual(speed.Speed, setts.HSSpeed?.Speed);
 
-#endif
+                        var gain = setts.GetAvailablePreAmpGain().Last();
+                        setts.SetPreAmpGain(gain.Index);
+                        Assert.AreEqual(gain.Index, setts.PreAmpGain?.Index);
+                        Assert.AreEqual(gain.Name, setts.PreAmpGain?.Name);
+
+                        setts.SetAcquisitionMode(AcquisitionMode.SingleScan);
+                        Assert.AreEqual(AcquisitionMode.SingleScan, setts.AcquisitionMode);
+
+                        setts.SetTriggerMode(TriggerMode.Internal);
+                        Assert.AreEqual(TriggerMode.Internal, setts.TriggerMode);
+
+                        setts.SetReadoutMode(ReadMode.FullImage);
+                        Assert.AreEqual(ReadMode.FullImage, setts.ReadoutMode);
+
+                        var expTime = 1.2313f;
+                        setts.SetExposureTime(expTime);
+                        Assert.AreEqual(expTime, setts.ExposureTime);
+
+                        var imgArea = new Rectangle(1, 1, 100, 200);
+                        setts.SetImageArea(imgArea);
+                        Assert.AreEqual(imgArea, setts.ImageArea);
+                    #endif
+                    });
                 }
             }
         }
