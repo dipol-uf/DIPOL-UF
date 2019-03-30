@@ -374,6 +374,7 @@ namespace Tests
                         setts.SetEmCcdGain(gains.Low + 1);
                         Assert.AreEqual(gains.Low + 1, setts.EMCCDGain);
                         
+                        Assert.That(() => camera.ApplySettings(setts), Throws.Nothing);
                         #endif
                     });
                     // ReSharper restore AccessToDisposedClosure

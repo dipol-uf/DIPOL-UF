@@ -24,6 +24,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.IO;
+using System.Net.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
@@ -31,7 +33,6 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DipolImage;
-using DIPOL_Remote.Remote;
 using FITS_CS;
 using CameraBase = ANDOR_CS.Classes.CameraBase;
 using AcquisitionEventType = DIPOL_Remote.Enums.AcquisitionEventType;
@@ -42,7 +43,6 @@ namespace DIPOL_Remote
     {
         internal static readonly ConcurrentDictionary<int, RemoteCamera> RemoteCameras
             = new ConcurrentDictionary<int, RemoteCamera>();
-
 
         private readonly ConcurrentDictionary<string, bool> _changedProperties
             = new ConcurrentDictionary<string, bool>();
@@ -312,6 +312,21 @@ namespace DIPOL_Remote
             throw new NotImplementedException();
         }
 
+        public override void ApplySettings(SettingsBase settings)
+        {
+            if (!(settings is RemoteSettings remoteSetts))
+                throw new ArgumentException(nameof(settings));
+
+            using (var memory = new MemoryStream())
+            {
+                remoteSetts.Serialize(memory);
+                memory.Flush();
+                _client.CallApplySetting(CameraIndex, remoteSetts.SettingsID, memory.GetBuffer());
+            }
+
+            base.ApplySettings(settings);
+        }
+
         protected override void StartAcquisition()
             => throw new NotSupportedException();
 
@@ -341,6 +356,7 @@ namespace DIPOL_Remote
                 base.OnPropertyChanged(property);
         }
 
+
         internal static void NotifyRemotePropertyChanged(int camIndex, string property)
         {
             if (RemoteCameras.TryGetValue(camIndex, out var camera))
@@ -349,12 +365,14 @@ namespace DIPOL_Remote
                 camera.OnPropertyChangedRemotely(property);
             }
         }
+
         internal static void NotifyRemoteTemperatureStatusChecked(
             int camIndex, TemperatureStatusEventArgs args)
         {
             if (RemoteCameras.TryGetValue(camIndex, out var camera))
                 camera.OnTemperatureStatusChecked(args);
         }
+
         internal static void NotifyRemoteAcquisitionEventHappened(int camIndex, 
             AcquisitionEventType type, AcquisitionStatusEventArgs args)
         {

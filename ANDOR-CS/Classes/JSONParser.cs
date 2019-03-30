@@ -89,8 +89,7 @@ namespace ANDOR_CS.Classes
             str.Write(dataString);
             str.Flush();
         }
-
-
+        
         public static Dictionary<string, object> ReadJson(StreamReader str)
             => new JavaScriptSerializer()
                 .DeserializeObject(str.ReadToEnd()) as Dictionary<string, object>;

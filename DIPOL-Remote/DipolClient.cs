@@ -190,23 +190,21 @@ namespace DIPOL_Remote
         public void CallAbortAcquisition(int camIndex)
 			=> Channel.CallAbortAcquisition(camIndex);
 
-        public (int Index, float Speed)[] GetAvailableHsSpeeds(string settingsID, int ADConverterIndex, int amplifier)
-            => Channel.GetAvailableHsSpeeds(settingsID, ADConverterIndex, amplifier);
+        public (int Index, float Speed)[] GetAvailableHsSpeeds(string settingsID, int adConverterIndex, int amplifier)
+            => Channel.GetAvailableHsSpeeds(settingsID, adConverterIndex, amplifier);
 
-        public (int Index, string Name)[] GetAvailablePreAmpGain(string settingsID, int ADConverterIndex, int amplifier, int HSSpeed)
-            => Channel.GetAvailablePreAmpGain(settingsID, ADConverterIndex, amplifier, HSSpeed);
+        public (int Index, string Name)[] GetAvailablePreAmpGain(string settingsID, int adConverterIndex, int amplifier, int hsSpeed)
+            => Channel.GetAvailablePreAmpGain(settingsID, adConverterIndex, amplifier, hsSpeed);
 
-        public (bool IsSupported, float Speed) CallIsHsSpeedSupported(string settingsID, int ADConverter, int amplifier,
+        public (bool IsSupported, float Speed) CallIsHsSpeedSupported(string settingsID, int adConverter, int amplifier,
             int speedIndex)
-            => Channel.CallIsHsSpeedSupported(settingsID, ADConverter, amplifier, speedIndex);
+            => Channel.CallIsHsSpeedSupported(settingsID, adConverter, amplifier, speedIndex);
 
         public (int Low, int High) CallGetEmGainRange(string settingsId)
             => Channel.CallGetEmGainRange(settingsId);
 
-        // TODO: Fix this
-        public ((string Option, bool Success, uint ReturnCode)[] Result, (float ExposureTime, float AccumulationCycleTime, float
-            KineticCycleTime, int BufferSize) Timing) CallApplySettings(string settingsID, byte[] data)
-            => CallApplySettings(settingsID, data);
+        public void CallApplySetting(int camIndex, string settingsId, byte[] payload)
+            => Channel.CallApplySetting(camIndex, settingsId, payload);
 
         public bool IsTaskFinished(string taskID)
 			=> Channel.IsTaskFinished(taskID);

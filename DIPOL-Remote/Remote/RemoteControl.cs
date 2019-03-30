@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
@@ -216,6 +217,8 @@ namespace DIPOL_Remote.Remote
             _host?.OnEventReceived(camera, "Camera was created remotely");
 
         }
+
+
 
         /// <summary>
         /// Entry point of any connection.
@@ -598,42 +601,20 @@ namespace DIPOL_Remote.Remote
             => GetSettingsSafe(settingsId).GetEmGainRange();
 
         [OperationBehavior]
+        public void CallApplySetting(int camIndex, string settingsId, byte[] payload)
+        {
+            var camera = GetCameraSafe(camIndex);
+            var settings = GetSettingsSafe(settingsId);
+            using (var memory = new MemoryStream(payload, false))
+                settings.Deserialize(memory);
+
+            camera.ApplySettings(settings);
+        }
+
+        [OperationBehavior]
         public (int Low, int High) CallGetEmGainRange(string settingsId, OutputAmplification amplifier)
         {
             throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Applies <see cref="RemoteSettings"/> to local instance of <see cref="AcquisitionSettings"/>.
-        /// Remote settings are packed into <see cref="byte"/> array and transmitted over network.
-        /// </summary>
-        /// <param name="settingsID">Unique settings identifier.</param>
-        /// <param name="data">Packed into <see cref="byte"/> array <see cref="RemoteSettings"/>.</param>
-        /// <returns>
-        /// A complex object <see cref="ValueTuple{T1, T2}"/> containing results of settings application (an array) 
-        /// and tuple of timing/frame information that is calculated for this specific settings.
-        /// </returns>
-        [OperationBehavior]
-        public
-        // Output of AcquisitionSettings.ApplySettings()
-        ((string Option, bool Success, uint ReturnCode)[] Result,
-        // Out-result of the same method
-         (float ExposureTime, float AccumulationCycleTime, float KineticCycleTime, int BufferSize) Timing)
-         CallApplySettings(string settingsID, byte[] data)
-        {
-            throw new NotImplementedException();
-            //// Safely retrieves local copy of AcquisitionSettings.
-            //var setts = GetSettingsSafe(settingsID);
-
-            //// Creates MemoryStream from byte array and uses it for deserialization.
-            //using (var memStr = new System.IO.MemoryStream(data))
-            //    setts.Deserialize(memStr);
-
-            //// Applies settings on a local copy of settings.
-            //var result = setts.ApplySettings(out (float, float, float, int) timing);
-
-            //// Returns results.
-            //return (Result: result.ToArray(), Timing: timing);
         }
 
         [OperationBehavior]
