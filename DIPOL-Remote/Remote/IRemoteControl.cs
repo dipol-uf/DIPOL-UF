@@ -193,13 +193,6 @@ namespace DIPOL_Remote.Remote
         [OperationContract]
         void CallTemperatureMonitor(int camIndex, Switch mode, int timeout);
 
-        // TODO: Update this
-        //[OperationContract(IsOneWay = false)]
-        //void CallStartAcquisition(int camIndex);
-
-        [OperationContract]
-        void CallAbortAcquisition(int camIndex);
-
         
         [OperationContract(IsOneWay = false)]
         (int Index, float Speed)[] GetAvailableHsSpeeds(
@@ -248,6 +241,10 @@ namespace DIPOL_Remote.Remote
         [OperationContract(AsyncPattern = true)]
         IAsyncResult BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state);
         void EndCreateCameraAsync(IAsyncResult result);
+
+        [OperationContract(AsyncPattern = true)]
+        IAsyncResult BeginStartAcquisitionAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state);
+        void EndStartAcquisitionAsync(IAsyncResult result);
 
         #if DEBUG
         [OperationContract(AsyncPattern = true)]

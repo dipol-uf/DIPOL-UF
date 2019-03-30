@@ -105,42 +105,42 @@ namespace DIPOL_Remote.Remote
                     camera.CameraIndex,
                     e);
             // Remotely fires event, informing that acquisition was started.
-            camera.AcquisitionStarted += (snder, e)
+            camera.AcquisitionStarted += (sender, e)
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     Enums.AcquisitionEventType.Started,
                     e);
             // Remotely fires event, informing that acquisition was finished.
-            camera.AcquisitionFinished += (snder, e)
+            camera.AcquisitionFinished += (sender, e)
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     Enums.AcquisitionEventType.Finished,
                     e);
             // Remotely fires event, informing that acquisition progress was checked.
-            camera.AcquisitionStatusChecked += (snder, e)
+            camera.AcquisitionStatusChecked += (sender, e)
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     Enums.AcquisitionEventType.StatusChecked,
                     e);
             // Remotely fires event, informing that acquisition was aborted.
-            camera.AcquisitionAborted += (snder, e)
+            camera.AcquisitionAborted += (sender, e)
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     Enums.AcquisitionEventType.Aborted,
                     e);
             // Remotely fires event, informing that an error happened during acquisition process.
-            camera.AcquisitionErrorReturned += (snder, e)
+            camera.AcquisitionErrorReturned += (sender, e)
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
                     camera.CameraIndex,
                     Enums.AcquisitionEventType.ErrorReturned,
                     e);
             // Remotely fires event, informing that new image was acquired
-            camera.NewImageReceived += (sndr, e)
+            camera.NewImageReceived += (sender, e)
                 => Callback
                 .NotifyRemoteNewImageReceivedEventHappened(
                     camera.CameraIndex,
@@ -704,9 +704,6 @@ namespace DIPOL_Remote.Remote
         public void CancelAsync(RemoteCancellationToken token)
             => OnCancellationRequested(token);
 
-
-
-
         [OperationBehavior]
         public IAsyncResult BeginCreateCameraAsync(int camIndex, AsyncCallback callback, object state)
         {
@@ -717,7 +714,19 @@ namespace DIPOL_Remote.Remote
             FinalizeAsyncOperation(result).GetAwaiter().GetResult();
         }
 
-#if DEBUG
+        [OperationBehavior]
+        public IAsyncResult BeginStartAcquisitionAsync(int camIndex, RemoteCancellationToken token,
+            AsyncCallback callback, object state)
+        {
+            var src = new CancellationTokenSource();
+            return new AsyncResult(GetCameraSafe(camIndex).StartAcquisitionAsync(src.Token),
+                src, token, callback, state);
+        }
+        public void EndStartAcquisitionAsync(IAsyncResult result)
+            => FinalizeAsyncOperation(result).GetAwaiter().GetResult();
+        
+
+        #if DEBUG
         [OperationBehavior]
         public IAsyncResult BeginDebugMethodAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state)
         {
@@ -730,7 +739,6 @@ namespace DIPOL_Remote.Remote
                 callback,
                 state);
         }
-
         public int EndDebugMethodAsync(IAsyncResult result)
             => FinalizeAsyncOperation(result) is Task<int> actualTask
                 ? actualTask.Result
