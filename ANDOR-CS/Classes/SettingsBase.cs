@@ -89,6 +89,9 @@ namespace ANDOR_CS.Classes
         public event PropertyChangedEventHandler PropertyChanged;
 
         [Attributes.NonSerialized]
+        public bool IsDisposed { get; private set; }
+
+        [Attributes.NonSerialized]
         public CameraBase Camera { get; protected set; }
 
         /// <summary>
@@ -797,6 +800,7 @@ namespace ANDOR_CS.Classes
         public virtual void Dispose()
         {
             Camera = null;
+            IsDisposed = true;
         }
 
         public XmlSchema GetSchema()
