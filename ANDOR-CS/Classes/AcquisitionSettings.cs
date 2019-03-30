@@ -320,7 +320,7 @@ namespace ANDOR_CS.Classes
             if (!Camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
                 return false;
 
-            // Gets the number of availab;e speeds
+            // Gets the number of availabe speeds
             var result = Call(Handle, SdkInstance.GetNumberHSSpeeds, adConverter, amplifier, out int nSpeeds);
             if (FailIfError(result, nameof(SdkInstance.GetNumberHSSpeeds), out var except))
                 throw except;
