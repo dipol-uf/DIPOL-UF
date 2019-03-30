@@ -49,7 +49,7 @@ namespace ANDOR_CS.Classes
 
         public override bool IsHSSpeedSupported(int speedIndex, int adConverter, int amplifier, out float speed)
         {
-            speed = 1;
+            speed = GetAvailableHSSpeeds(adConverter, amplifier)[speedIndex].Speed;
             return true;
         }
 
