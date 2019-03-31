@@ -398,7 +398,8 @@ namespace DIPOL_Remote
 
         internal static void NotifyRemoteNewImageReceivedEventHappened(int camIndex, NewImageReceivedEventArgs e)
         {
-            // TODO: ReImplement
+            if (RemoteCameras.TryGetValue(camIndex, out var cam))
+                cam.OnNewImageReceived(e);
         }
 
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")

@@ -376,8 +376,15 @@ namespace Tests
                         
                         Assert.That(() => camera.ApplySettings(setts), Throws.Nothing);
 
+                        var counter = 0;
+                        camera.AcquisitionStarted += (sender, args) => Interlocked.Increment(ref counter);
+                        camera.AcquisitionFinished += (sender, args) => Interlocked.Increment(ref counter);
+                        camera.NewImageReceived += (sender, args) => Interlocked.Increment(ref counter);
+
                         Assert.That(async () => await camera.StartAcquisitionAsync(CancellationToken.None),
                             Throws.Nothing);
+
+                        Assert.AreEqual(3, counter);
                         #endif
                     });
                     // ReSharper restore AccessToDisposedClosure

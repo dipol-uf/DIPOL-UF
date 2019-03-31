@@ -57,9 +57,7 @@ namespace DIPOL_Remote.Remote
         IncludeExceptionDetailInFaults = true)]
     internal sealed class RemoteControl : IRemoteControl, IDisposable
     {
-        // TODO : Move to settings
-        private const int MaxTryAddAttempts = 30;
-        
+      
         private DipolHost _host;
 
         private readonly CameraDictionary _cameras = new CameraDictionary();
