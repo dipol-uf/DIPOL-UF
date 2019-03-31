@@ -28,13 +28,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Remoting.Channels;
 using CommandLine;
 using DIPOL_Remote;
 
 namespace Host
 {
-    internal class Host
+    internal static class Host
     {
         [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
         private sealed class Options

@@ -26,7 +26,6 @@
 using System.ServiceModel;
 using ANDOR_CS.Events;
 using DIPOL_Remote.Enums;
-using DIPOL_Remote.Remote;
 
 namespace DIPOL_Remote.Callback
 {
@@ -35,12 +34,6 @@ namespace DIPOL_Remote.Callback
         IncludeExceptionDetailInFaults = true)]
     internal class RemoteCallbackHandler : IRemoteCallback
     {
-
-        public RemoteCallbackHandler(object par = null)
-        {
-
-        }
-
 
         public void NotifyRemoteAcquisitionEventHappened(int camIndex,
             AcquisitionEventType type, AcquisitionStatusEventArgs args)
