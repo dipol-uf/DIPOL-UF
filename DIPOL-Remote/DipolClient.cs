@@ -210,19 +210,6 @@ namespace DIPOL_Remote
             => Channel.CallGetTotalNumberOfAcquiredImages(camIndex);
 
 
-        public bool IsTaskFinished(string taskID)
-			=> Channel.IsTaskFinished(taskID);
-
-        public string CreateAcquisitionTask(int camIndex, int delay)
-			=> Channel.CreateAcquisitionTask(camIndex,  delay);
-
-        public void RemoveTask(string taskID)
-			=> Channel.RemoveTask(taskID);
-
-        public void RequestCancellation(string taskID)
-			=> Channel.RequestCancellation(taskID);
-
-
         public int[] ActiveRemoteCameras()
             => Channel.GetCamerasInUse();
 

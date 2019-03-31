@@ -28,7 +28,6 @@ using System.ServiceModel;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
-using DipolImage;
 using DIPOL_Remote.Callback;
 using DIPOL_Remote.Enums;
 using DIPOL_Remote.Faults;
@@ -68,7 +67,6 @@ namespace DIPOL_Remote.Remote
     [ServiceKnownType(typeof(TypeCode))]
     [ServiceKnownType(typeof(ImageFormat))]
     [ServiceKnownType(typeof(RemoteCancellationToken))]
-    [ServiceKnownType(typeof(TaskCancelledRemotelyFault))]
     public interface IRemoteControl
     {
         /// <summary>
@@ -227,20 +225,6 @@ namespace DIPOL_Remote.Remote
 
         [OperationContract]
         int CallGetTotalNumberOfAcquiredImages(int camIndex);
-
-        // TODO: Review obsolete task management
-        [OperationContract(IsOneWay = false)]
-        bool IsTaskFinished(string taskID);
-
-        [OperationContract(IsOneWay = false)]
-        string CreateAcquisitionTask(int camIndex, int delay);
-
-        [OperationContract(IsOneWay = false)]
-        void RemoveTask(string taskID);
-
-        [OperationContract(IsOneWay = false)]
-        void RequestCancellation(string taskID);
-
 
         #region Async methods
 
