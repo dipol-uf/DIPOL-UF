@@ -93,12 +93,7 @@ namespace ANDOR_CS.Classes
         {
             get;
         }
-        
-        /// <summary>
-        /// Read-only collection of all local cameras in use.
-        /// </summary>
-        //public static IReadOnlyDictionary<int, CameraBase> CamerasInUse
-        //    => CreatedCameras;
+
 
         /// <summary>
         /// Creates a new instance of Camera class to represent a connected Andor device.

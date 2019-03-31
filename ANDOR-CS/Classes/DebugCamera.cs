@@ -233,6 +233,11 @@ namespace ANDOR_CS.Classes
             throw new NotImplementedException();
         }
 
+        public override Task<Image[]> PullAllImagesAsync(ImageFormat format, CancellationToken token)
+        {
+            return Task.FromResult(new[] {PullPreviewImage(0, format), PullPreviewImage(0, format)});
+        }
+
         protected override void StartAcquisition()
         {
             IsAcquiring = true;

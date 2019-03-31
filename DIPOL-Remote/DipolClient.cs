@@ -25,6 +25,7 @@
 
 using System;
 using System.Linq;
+using System.Net.Mime;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
@@ -34,6 +35,7 @@ using ANDOR_CS.Enums;
 using DIPOL_Remote.Callback;
 using DIPOL_Remote.Faults;
 using DIPOL_Remote.Remote;
+using FITS_CS;
 
 namespace DIPOL_Remote
 {
@@ -211,6 +213,12 @@ namespace DIPOL_Remote
         public int CallGetTotalNumberOfAcquiredImages(int camIndex)
             => Channel.CallGetTotalNumberOfAcquiredImages(camIndex);
 
+        public void CallSetAutosave(int camIndex, Switch mode, ImageFormat format)
+            => Channel.CallSetAutosave(camIndex, mode, format);
+
+        public void CallSaveNextAcquisitionAs(int camIndex, string folderPath, string imagePattern, ImageFormat format,
+            FitsKey[] extraKeys)
+            => Channel.CallSaveNextAcquisitionAs(camIndex, folderPath, imagePattern, format, extraKeys);
 
         public int[] ActiveRemoteCameras()
             => Channel.GetCamerasInUse();
@@ -249,6 +257,16 @@ namespace DIPOL_Remote
             => throw new NotSupportedException(
                 $"{nameof(IRemoteControl.EndStartAcquisitionAsync)} is not supported directly. " +
                 $"Use {nameof(StartAcquisitionAsync)} instead.");
+
+        IAsyncResult IRemoteControl.BeginPullAllImagesAsync(int camIndex, ImageFormat format, RemoteCancellationToken token,
+            AsyncCallback callback, object state)
+            => throw new NotSupportedException(
+                $"{nameof(IRemoteControl.BeginPullAllImagesAsync)} is not supported directly. " +
+                $"Use {nameof(PullAllImagesAsync)} instead.");
+        (byte[] Payload, int Width, int Height)[] IRemoteControl.EndPullAllImagesAsync(IAsyncResult result)
+            => throw new NotSupportedException(
+                $"{nameof(IRemoteControl.EndPullAllImagesAsync)} is not supported directly. " +
+                $"Use {nameof(PullAllImagesAsync)} instead.");
 
         IAsyncResult IRemoteControl.BeginDebugMethodAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state)
             => throw new NotSupportedException(
@@ -330,6 +348,32 @@ namespace DIPOL_Remote
             return await taskSource.Task;
         }
 
+        private async Task<TResult> AsyncHelper<TParam1, TParam2, TResult>(
+            Func<TParam1, TParam2, RemoteCancellationToken, AsyncCallback, object, IAsyncResult> beginInvoke,
+            Func<IAsyncResult, TResult> endInvoke,
+            TParam1 param1,
+            TParam2 param2,
+            CancellationToken token)
+        {
+            var taskSource = new TaskCompletionSource<TResult>();
+
+            var remoteToken = RemoteCancellationToken.CreateFromToken(token);
+
+            InvokeAsync(
+                (@params, callback, state) =>
+                    beginInvoke(
+                        (TParam1)@params[0], (TParam2)@params[1], 
+                        (RemoteCancellationToken)@params[2], callback, state),
+                new object[] { param1, param2, remoteToken },
+                result => new object[] { endInvoke(result) },
+                state => FinalizeAsyncOperation(state, taskSource),
+                null);
+
+            token.Register(() => Channel.CancelAsync(remoteToken));
+
+            return await taskSource.Task;
+        }
+
         public Task CreateCameraAsync(int camIndex)
             => AsyncHelper(
                 Channel.BeginCreateCameraAsync,
@@ -346,6 +390,18 @@ namespace DIPOL_Remote
                 },
                 camIndex,
                 token);
+
+        public Task<DipolImage.Image[]> PullAllImagesAsync(int camIndex, ImageFormat format, CancellationToken token)
+            => AsyncHelper(
+                    Channel.BeginPullAllImagesAsync,
+                    Channel.EndPullAllImagesAsync,
+                    camIndex,
+                    format,
+                    token)
+                .ContinueWith(x => x.Result.Select(y => new DipolImage.Image(y.Payload, y.Width, y.Height,
+                                        format == ImageFormat.SignedInt32 ? TypeCode.Int32 : TypeCode.UInt16))
+                                    .ToArray(), token);
+        
 
         public Task<int> DebugMethodAsync(int i, CancellationToken token)
             => AsyncHelper(

@@ -29,12 +29,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Media.Animation;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_Remote;
-using DIPOL_Remote.Remote;
 using NUnit.Framework;
 
 #if !HOST_IN_PROCESS
@@ -302,7 +300,7 @@ namespace Tests
                 using (var setts = camera.GetAcquisitionSettingsTemplate())
                 {
                     // ReSharper disable AccessToDisposedClosure
-                    Assert.Multiple(() =>
+                    Assert.Multiple(async () =>
                     {
                         Assert.AreEqual(camera, setts.Camera);
 
@@ -348,7 +346,7 @@ namespace Tests
 
                         setts.SetAcquisitionMode(AcquisitionMode.Kinetic);
                         Assert.AreEqual(AcquisitionMode.Kinetic, setts.AcquisitionMode);
-                        
+
                         setts.SetAccumulateCycle(5, 2f);
                         Assert.AreEqual(5, setts.AccumulateCycle?.Frames);
                         Assert.AreEqual(2f, setts.AccumulateCycle?.Time);
@@ -356,7 +354,7 @@ namespace Tests
                         setts.SetKineticCycle(10, 10f);
                         Assert.AreEqual(10, setts.KineticCycle?.Frames);
                         Assert.AreEqual(10f, setts.KineticCycle?.Time);
-                        
+
                         setts.SetTriggerMode(TriggerMode.Internal);
                         Assert.AreEqual(TriggerMode.Internal, setts.TriggerMode);
 
@@ -374,7 +372,7 @@ namespace Tests
                         var gains = setts.GetEmGainRange();
                         setts.SetEmCcdGain(gains.Low + 1);
                         Assert.AreEqual(gains.Low + 1, setts.EMCCDGain);
-                        
+
                         Assert.That(() => camera.ApplySettings(setts), Throws.Nothing);
 
                         var counter = 0;
@@ -382,18 +380,25 @@ namespace Tests
                         camera.AcquisitionFinished += (sender, args) => Interlocked.Increment(ref counter);
                         camera.NewImageReceived += (sender, args) => Interlocked.Increment(ref counter);
 
+
                         Assert.That(async () => await camera.StartAcquisitionAsync(CancellationToken.None),
                             Throws.Nothing);
 
                         Assert.AreEqual(3, counter);
 
                         var image = camera.PullPreviewImage<ushort>(0);
-                        Assert.AreEqual( setts.ImageArea?.Width, image.Width);
+                        Assert.AreEqual(setts.ImageArea?.Width, image.Width);
                         Assert.AreEqual(setts.ImageArea?.Height, image.Height);
 
                         Assert.AreEqual(1, camera.GetTotalNumberOfAcquiredImages());
 
-                        #endif
+                        var imgs = await camera.PullAllImagesAsync<int>(CancellationToken.None);
+                        foreach (var img in imgs)
+                        {
+                            Assert.AreEqual(setts.ImageArea?.Width, img.Width);
+                            Assert.AreEqual(setts.ImageArea?.Height, img.Height);
+                        }
+#endif
                     });
                     // ReSharper restore AccessToDisposedClosure
                 }

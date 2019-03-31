@@ -312,15 +312,15 @@ namespace DIPOL_Remote
         public override int GetTotalNumberOfAcquiredImages()
             => _client.CallGetTotalNumberOfAcquiredImages(CameraIndex);
 
-        public override void SaveNextAcquisitionAs(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
-        {
-            throw new NotImplementedException();
-        }
+        public override void SaveNextAcquisitionAs(
+            string folderPath,
+            string imagePattern,
+            ImageFormat format,
+            FitsKey[] extraKeys = null)
+            => _client.CallSaveNextAcquisitionAs(CameraIndex, folderPath, imagePattern, format, extraKeys);
 
         public override void SetAutosave(Switch mode, ImageFormat format = ImageFormat.SignedInt32)
-        {
-            throw new NotImplementedException();
-        }
+            => _client.CallSetAutosave(CameraIndex, mode, format);
 
         public override void ApplySettings(SettingsBase settings)
         {
@@ -335,6 +335,26 @@ namespace DIPOL_Remote
             }
 
             base.ApplySettings(settings);
+        }
+
+        public override Task<Image[]> PullAllImagesAsync(ImageFormat format, CancellationToken token)
+        {
+            switch (format)
+            {
+                case ImageFormat.UnsignedInt16:
+                case ImageFormat.SignedInt32:
+                    return _client.PullAllImagesAsync(CameraIndex, format, token);
+                default:
+                    throw new ArgumentException("Unsupported image type.", nameof(format));
+            }
+        }
+
+        public override Task<Image[]> PullAllImagesAsync<T>(CancellationToken token)
+        {
+            if(!(typeof(T) == typeof(ushort) || typeof(T) == typeof(int)))
+                throw new ArgumentException($"Current SDK only supports {typeof(ushort)} and {typeof(int)} images.");
+            return PullAllImagesAsync(typeof(T) == typeof(int) ? ImageFormat.SignedInt32 : ImageFormat.UnsignedInt16,
+                token);
         }
 
         protected override void StartAcquisition()

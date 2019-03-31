@@ -35,8 +35,10 @@ using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
+using DipolImage;
 using DIPOL_Remote.Callback;
 using DIPOL_Remote.Faults;
+using FITS_CS;
 using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
 using SettingsDictionary = System.Collections.Concurrent.ConcurrentDictionary<string, ANDOR_CS.Classes.SettingsBase>;
 // ReSharper disable InheritdocConsiderUsage
@@ -496,7 +498,7 @@ namespace DIPOL_Remote.Remote
         [OperationBehavior]
         public void CallSetTemperature(int camIndex, int temperature)
             => GetCameraSafe(camIndex).SetTemperature(temperature);
-        // TODO: Take a look at the parameter order
+
         [OperationBehavior]
         public void CallShutterControl(
             int camIndex,
@@ -511,17 +513,10 @@ namespace DIPOL_Remote.Remote
                 clTime,
                 opTime,
                 type);
+
         [OperationBehavior]
         public void CallTemperatureMonitor(int camIndex, Switch mode, int timeout)
             => GetCameraSafe(camIndex).TemperatureMonitor(mode, timeout);
-
-        [OperationBehavior]
-        public void CallStartAcquisition(int camIndex)
-            => throw new NotImplementedException();
-
-        [OperationBehavior]
-        public void CallAbortAcquisition(int camIndex)
-            => throw new NotImplementedException();
 
         [OperationBehavior]
         public (int Index, float Speed)[] GetAvailableHsSpeeds(
@@ -576,7 +571,15 @@ namespace DIPOL_Remote.Remote
         public int CallGetTotalNumberOfAcquiredImages(int camIndex)
             => GetCameraSafe(camIndex).GetTotalNumberOfAcquiredImages();
 
-       
+        [OperationBehavior]
+        public void CallSetAutosave(int camIndex, Switch mode, ImageFormat format)
+            => GetCameraSafe(camIndex).SetAutosave(mode, format);
+
+        public void CallSaveNextAcquisitionAs(int camIndex, string folderPath, string imagePattern, ImageFormat format,
+            FitsKey[] extraKeys)
+            => GetCameraSafe(camIndex).SaveNextAcquisitionAs(folderPath, imagePattern, format);
+
+
         private CameraBase GetCameraSafe(int camIndex)
         {
             if (_cameras.TryGetValue(
@@ -661,9 +664,29 @@ namespace DIPOL_Remote.Remote
         }
         public void EndStartAcquisitionAsync(IAsyncResult result)
             => FinalizeAsyncOperation(result).GetAwaiter().GetResult();
-        
 
-        #if DEBUG
+        public IAsyncResult BeginPullAllImagesAsync(int camIndex, ImageFormat format, RemoteCancellationToken token,
+            AsyncCallback callback, object state)
+        {
+            var src = new CancellationTokenSource();
+            return new AsyncResult(GetCameraSafe(camIndex).PullAllImagesAsync(format, src.Token), src, token, callback,
+                state);
+        }
+        public (byte[] Payload, int Width, int Height)[] EndPullAllImagesAsync(IAsyncResult result)
+        {
+            if (FinalizeAsyncOperation(result) is Task<Image[]> actualTask)
+            {
+                return actualTask.GetAwaiter().GetResult()
+                                 .Select(x => (x.GetBytes(), x.Width, x.Height)).ToArray();
+            }
+
+            throw new FaultException<ServiceFault>(
+                new ServiceFault(){Message = @"Finalized task type mismatch."},
+                ServiceFault.GeneralServiceErrorReason);
+        }
+
+
+#if DEBUG
         [OperationBehavior]
         public IAsyncResult BeginDebugMethodAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state)
         {
