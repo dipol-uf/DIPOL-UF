@@ -294,7 +294,8 @@ namespace Tests
         }
 
         [Test]
-        public async Task Test_AcquisitionSettings()
+        [Retry(3)]
+        public async Task Test_AcquisitionProcess()
         {
             using (var camera = await RemoteCamera.CreateAsync(0, _client))
             {
@@ -385,6 +386,13 @@ namespace Tests
                             Throws.Nothing);
 
                         Assert.AreEqual(3, counter);
+
+                        var image = camera.PullPreviewImage<ushort>(0);
+                        Assert.AreEqual( setts.ImageArea?.Width, image.Width);
+                        Assert.AreEqual(setts.ImageArea?.Height, image.Height);
+
+                        Assert.AreEqual(1, camera.GetTotalNumberOfAcquiredImages());
+
                         #endif
                     });
                     // ReSharper restore AccessToDisposedClosure

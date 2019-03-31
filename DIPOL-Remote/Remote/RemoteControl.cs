@@ -36,6 +36,7 @@ using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
+using DipolImage;
 using DIPOL_Remote.Callback;
 using DIPOL_Remote.Faults;
 using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
@@ -605,15 +606,20 @@ namespace DIPOL_Remote.Remote
             var settings = GetSettingsSafe(settingsId);
             using (var memory = new MemoryStream(payload, false))
                 settings.Deserialize(memory);
-
             camera.ApplySettings(settings);
         }
 
         [OperationBehavior]
-        public (int Low, int High) CallGetEmGainRange(string settingsId, OutputAmplification amplifier)
+        public (byte[] Payload, int Width, int Height) 
+            CallPullPreviewImage(int camIndex, int imageIndex, ImageFormat format)
         {
-            throw new NotImplementedException();
+            var image = GetCameraSafe(camIndex).PullPreviewImage(imageIndex, format);
+            return (image.GetBytes(), image.Width, image.Height);
         }
+
+        [OperationBehavior]
+        public int CallGetTotalNumberOfAcquiredImages(int camIndex)
+            => GetCameraSafe(camIndex).GetTotalNumberOfAcquiredImages();
 
         [OperationBehavior]
         public bool IsTaskFinished(string taskID)

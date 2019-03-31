@@ -202,6 +202,14 @@ namespace DIPOL_Remote
         public void CallApplySetting(int camIndex, string settingsId, byte[] payload)
             => Channel.CallApplySetting(camIndex, settingsId, payload);
 
+        public (byte[] Payload, int Width, int Height) 
+            CallPullPreviewImage(int camIndex, int imageIndex, ImageFormat format)
+            => Channel.CallPullPreviewImage(camIndex, imageIndex, format);
+
+        public int CallGetTotalNumberOfAcquiredImages(int camIndex)
+            => Channel.CallGetTotalNumberOfAcquiredImages(camIndex);
+
+
         public bool IsTaskFinished(string taskID)
 			=> Channel.IsTaskFinished(taskID);
 

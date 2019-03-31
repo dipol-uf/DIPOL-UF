@@ -291,18 +291,26 @@ namespace DIPOL_Remote
 
         public override Image PullPreviewImage<T>(int index)
         {
-            throw new NotImplementedException();
+            if (!(typeof(T) == typeof(ushort) || typeof(T) == typeof(int)))
+                throw new ArgumentException($"Current SDK only supports {typeof(ushort)} and {typeof(int)} images.");
+
+            if (CurrentSettings?.ImageArea is null)
+                throw new NullReferenceException(
+                    "Pulling image requires acquisition settings with specified image area applied to the current camera.");
+
+            return PullPreviewImage(index,
+                typeof(T) == typeof(ushort) ? ImageFormat.UnsignedInt16 : ImageFormat.SignedInt32);
         }
 
         public override Image PullPreviewImage(int index, ImageFormat format)
         {
-            throw new NotImplementedException();
+            var data = _client.CallPullPreviewImage(CameraIndex, index, format);
+            return new Image(data.Payload, data.Width, data.Height,
+                format == ImageFormat.UnsignedInt16 ? TypeCode.UInt16 : TypeCode.Int32);
         }
 
         public override int GetTotalNumberOfAcquiredImages()
-        {
-            throw new NotImplementedException();
-        }
+            => _client.CallGetTotalNumberOfAcquiredImages(CameraIndex);
 
         public override void SaveNextAcquisitionAs(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
         {

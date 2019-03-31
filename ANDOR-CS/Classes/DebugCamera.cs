@@ -206,29 +206,27 @@ namespace ANDOR_CS.Classes
 
         public override Image PullPreviewImage<T>(int index)
         {
-            throw new NotImplementedException();
-        }
+            if (!(typeof(T) == typeof(ushort) || typeof(T) == typeof(int)))
+                throw new ArgumentException($"Current SDK only supports {typeof(ushort)} and {typeof(int)} images.");
 
-        public override Image PullPreviewImage(int index, ImageFormat format)
-        {
+            if (CurrentSettings?.ImageArea is null)
+                throw new NullReferenceException(
+                    "Pulling image requires acquisition settings with specified image area applied to the current camera.");
+
+            var size = CurrentSettings.ImageArea.Value; // -V3125
+            var matrixSize = size.Width * size.Height;
             var r = new Random();
+            var sz = typeof(T) == typeof(ushort) ? sizeof(ushort) : sizeof(int);
 
-            if (r.Next(0, 10) == 5)
-                return null;
+            var data = new byte[matrixSize * sz];
+            r.NextBytes(data);
+            return new Image(data, size.Width, size.Height,
+                typeof(T) == typeof(ushort) ? TypeCode.UInt16 : TypeCode.Int32);
 
-            var imageArr = new ushort[256 * 512];
-            var byteImg = new byte[256 * 512 * sizeof(ushort)];
-            r.NextBytes(byteImg);
-
-            Buffer.BlockCopy(byteImg, 0, imageArr, 0, byteImg.Length);
-
-           return new Image(imageArr, 512, 256);
         }
 
         public override int GetTotalNumberOfAcquiredImages()
-        {
-            throw new NotImplementedException();
-        }
+            => 1;
 
         public override void SaveNextAcquisitionAs(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
         {
