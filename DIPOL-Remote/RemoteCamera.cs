@@ -266,10 +266,10 @@ namespace DIPOL_Remote
             TtlShutterSignal type)
             => _client.CallShutterControl(
                 CameraIndex,
-                clTime,
-                opTime,
                 shutterMode,
                 extrn,
+                clTime,
+                opTime,
                 type);
 
         public override void ShutterControl(ShutterMode inter, ShutterMode extrn)
@@ -313,6 +313,11 @@ namespace DIPOL_Remote
             => _client.CallGetTotalNumberOfAcquiredImages(CameraIndex);
 
         public override void SaveNextAcquisitionAs(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SetAutosave(Switch mode, ImageFormat format = ImageFormat.SignedInt32)
         {
             throw new NotImplementedException();
         }

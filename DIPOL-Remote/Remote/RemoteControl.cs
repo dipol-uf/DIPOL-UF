@@ -62,10 +62,6 @@ namespace DIPOL_Remote.Remote
         private readonly CameraDictionary _cameras = new CameraDictionary();
         private readonly SettingsDictionary _settings = new SettingsDictionary();
 
-        // TODO : Possibly redundant providing there is now full-blown async interface
-        //private readonly ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> _activeTasks
-        //    = new ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>();
-
         private OperationContext Context { get; set; }
 
         private IRemoteCallback Callback => Context?.GetCallbackChannel<IRemoteCallback>()
@@ -255,6 +251,8 @@ namespace DIPOL_Remote.Remote
         {
             try
             {
+                // TODO : Switch to event-based approach
+                // TODO : also check RemoveCamera()
                 foreach(var cam in _cameras)
                     cam.Value?.Dispose();
 
@@ -264,6 +262,7 @@ namespace DIPOL_Remote.Remote
                 foreach (var key in _settings.Keys)
                     RemoveSettings(key);
 
+                // TODO : Check this
                 //foreach (var key in _activeTasks.Keys)
                 //    RemoveTask(key);
 
@@ -462,9 +461,7 @@ namespace DIPOL_Remote.Remote
         [OperationBehavior]
         public bool GetIsAcquiring(int camIndex)
             => GetCameraSafe(camIndex).IsAcquiring;
-        //[OperationBehavior]
-        //public bool GetIsAsyncAcquisition(int camIndex)
-        //    => GetCameraSafe(sessionID, camIndex).IsAsyncAcquisition;
+        
         [OperationBehavior]
         public (
            ShutterMode Internal,
@@ -503,10 +500,10 @@ namespace DIPOL_Remote.Remote
         [OperationBehavior]
         public void CallShutterControl(
             int camIndex,
+            ShutterMode inter,
+            ShutterMode @extern,
             int clTime,
             int opTime,
-            ShutterMode inter,
-            ShutterMode @extern = ShutterMode.FullyAuto,
             TtlShutterSignal type = TtlShutterSignal.Low)
             => GetCameraSafe(camIndex).ShutterControl(
                 inter,
