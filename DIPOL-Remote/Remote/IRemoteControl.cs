@@ -31,6 +31,7 @@ using ANDOR_CS.Events;
 using DIPOL_Remote.Callback;
 using DIPOL_Remote.Enums;
 using DIPOL_Remote.Faults;
+using FITS_CS;
 
 namespace DIPOL_Remote.Remote
 {
@@ -67,6 +68,7 @@ namespace DIPOL_Remote.Remote
     [ServiceKnownType(typeof(TypeCode))]
     [ServiceKnownType(typeof(ImageFormat))]
     [ServiceKnownType(typeof(RemoteCancellationToken))]
+    [ServiceKnownType(typeof(FitsKey))]
     public interface IRemoteControl
     {
         /// <summary>
@@ -226,6 +228,17 @@ namespace DIPOL_Remote.Remote
         [OperationContract]
         int CallGetTotalNumberOfAcquiredImages(int camIndex);
 
+        [OperationContract]
+        void CallSetAutosave(int camIndex, Switch mode, ImageFormat format);
+
+        [OperationContract]
+        void CallSaveNextAcquisitionAs(
+            int camIndex,
+            string folderPath,
+            string imagePattern,
+            ImageFormat format,
+            FitsKey[] extraKeys);
+
         #region Async methods
 
         [OperationContract(IsOneWay = true)]
@@ -238,6 +251,11 @@ namespace DIPOL_Remote.Remote
         [OperationContract(AsyncPattern = true)]
         IAsyncResult BeginStartAcquisitionAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state);
         void EndStartAcquisitionAsync(IAsyncResult result);
+
+        [OperationContract(AsyncPattern = true)]
+        IAsyncResult BeginPullAllImagesAsync(int camIndex, ImageFormat format, RemoteCancellationToken token,
+            AsyncCallback callback, object state);
+        (byte[] Payload, int Width, int Height)[] EndPullAllImagesAsync(IAsyncResult result);
 
         #if DEBUG
         [OperationContract(AsyncPattern = true)]
