@@ -183,10 +183,10 @@ namespace DIPOL_Remote.Remote
         [OperationContract]
         void CallShutterControl(
             int camIndex,
+            ShutterMode inter,
+            ShutterMode exter,
             int clTime,
             int opTime,
-            ShutterMode inter,
-            ShutterMode exter = ShutterMode.FullyAuto,
             TtlShutterSignal type = TtlShutterSignal.Low);
 
         [OperationContract]

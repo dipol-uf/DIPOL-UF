@@ -177,9 +177,11 @@ namespace DIPOL_Remote
         public void CallSetTemperature(int camIndex, int temperature)
 			=> Channel.CallSetTemperature(camIndex, temperature);
 
-        public void CallShutterControl(int camIndex, int clTime, int opTime, ShutterMode inter,
-            ShutterMode exter = ShutterMode.FullyAuto, TtlShutterSignal type = TtlShutterSignal.Low)
-            => Channel.CallShutterControl(camIndex, clTime, opTime, inter, exter, type);
+        public void CallShutterControl(int camIndex,
+            ShutterMode inter, ShutterMode @extern, 
+            int clTime, int opTime,
+            TtlShutterSignal type = TtlShutterSignal.Low)
+            => Channel.CallShutterControl(camIndex, inter, @extern, clTime, opTime, type);
 
         public void CallTemperatureMonitor(int camIndex, Switch mode, int timeout)
 			=> Channel.CallTemperatureMonitor(camIndex, mode, timeout);
