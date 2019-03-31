@@ -367,11 +367,13 @@ namespace DIPOL_Remote
         {
             if (disposing)
             {
+                IsDisposing = true;
                 _client.RemoveCamera(CameraIndex);
                 RemoteCameras.TryRemove(CameraIndex, out _);
                 _client = null;
             }
-                base.Dispose(disposing);
+
+            base.Dispose(disposing);
         }
 
         protected override void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string property = "")

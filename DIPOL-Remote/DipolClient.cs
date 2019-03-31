@@ -25,7 +25,6 @@
 
 using System;
 using System.Linq;
-using System.Net.Mime;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;

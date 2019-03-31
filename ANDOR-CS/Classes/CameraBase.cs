@@ -47,7 +47,6 @@ namespace ANDOR_CS.Classes
     {
         protected const int AmpDescriptorMaxLength = 21;
         protected const int PreAmpGainDescriptorMaxLength = 30;
-        protected const int StatusCheckTimeOutMs = 100;
         protected const int TempCheckTimeOutMs = 5000;
 
         private bool _isDisposed;
@@ -84,11 +83,10 @@ namespace ANDOR_CS.Classes
             private set;
         }
         protected ImageFormat AutosaveFormat { get; private set; }
-        protected bool WasLastAcquisitionOk { get; private set; }
         protected List<FitsKey> SettingsFitsKeys { get; private set; }
 
-        public SettingsBase CurrentSettings { get; private set; }
-        public (float Exposure, float Accumulation, float Kinetic) Timings { get; protected set; }
+        protected SettingsBase CurrentSettings { get; private set; }
+        public (float Exposure, float Accumulation, float Kinetic) Timings { get; set; }
         public bool IsDisposed
         {
             get => _isDisposed;
@@ -353,9 +351,9 @@ namespace ANDOR_CS.Classes
 
         protected CameraBase()
         {
-            AcquisitionStarted += (sender, e) => WasLastAcquisitionOk = true;
-            AcquisitionErrorReturned += (sender, e) => WasLastAcquisitionOk = false;
-            AcquisitionAborted += (sender, e) => WasLastAcquisitionOk = false;
+            AcquisitionStarted += (sender, e) => { };
+            AcquisitionErrorReturned += (sender, e) => { };
+            AcquisitionAborted += (sender, e) => { };
         }
 
         /// <summary>

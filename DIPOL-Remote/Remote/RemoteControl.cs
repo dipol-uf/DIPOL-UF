@@ -253,20 +253,15 @@ namespace DIPOL_Remote.Remote
         {
             try
             {
-                // TODO : Switch to event-based approach
-                // TODO : also check RemoveCamera()
-                foreach(var cam in _cameras)
-                    cam.Value?.Dispose();
+                foreach(var camId in _cameras.Keys)
+                    RemoveCamera(camId);
 
                 _cameras.Clear();
-
 
                 foreach (var key in _settings.Keys)
                     RemoveSettings(key);
 
-                // TODO : Check this
-                //foreach (var key in _activeTasks.Keys)
-                //    RemoveTask(key);
+                _settings.Clear();
 
             }
             catch (Exception e)
@@ -318,7 +313,7 @@ namespace DIPOL_Remote.Remote
                 throw AndorSdkFault.WrapFault(andorEx, nameof(Camera.GetNumberOfCameras));
           
             }
-            // If failure is not realted to Andor API
+            // If failure is not related to Andor API
             catch (Exception ex)
             {
                 // rethrow it, wrapped in FaultException<>, to the client side
@@ -352,15 +347,7 @@ namespace DIPOL_Remote.Remote
                     select item.Key)
                     RemoveSettings(settsKey);
 
-                // TODO: Check this
-                //foreach (var taskKey in
-                //    from item
-                //    in _activeTasks
-                //    where item.Value.CameraIndex == camIndex
-                //    select item.Key)
-                //    RemoveTask(taskKey);
-
-                if (_cameras.TryRemove(camIndex, out var removedCamera))
+               if (_cameras.TryRemove(camIndex, out var removedCamera))
                 {
                     _host?.OnEventReceived(removedCamera, "Camera was disposed remotely.");
                     removedCamera.Dispose();
@@ -414,7 +401,7 @@ namespace DIPOL_Remote.Remote
                     new ServiceFault()
                     {
                         Message = "Failed to add instance of acquisition settings to the global collection",
-                        Details = $"Failed to generate unique id or previous settings were not disposed properly.",
+                        Details = "Failed to generate unique id or previous settings were not disposed properly.",
                         MethodName = nameof(_settings.TryAdd)
                     },
                     ServiceFault.GeneralServiceErrorReason);
@@ -426,7 +413,7 @@ namespace DIPOL_Remote.Remote
         [OperationBehavior]
         public void RemoveSettings(string settingsID)
         {
-            _settings.TryRemove(settingsID, out SettingsBase setts);
+            _settings.TryRemove(settingsID, out var setts);
             setts?.Dispose();
 
             _host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} removed.");

@@ -24,22 +24,17 @@
 
 
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.ServiceModel;
 using DIPOL_Remote.Remote;
 
 namespace DIPOL_Remote
 {
-    public class DipolHost : ServiceHost, IDisposable
+    public sealed class DipolHost : ServiceHost, IDisposable
     {
         //private const string LogName = @"Dipol Event Log";
         // TODO: To resources
         private const string SourceName = @"Dipol Remote Camera Service";
-        // ReSharper disable once InconsistentNaming
-        private static readonly ConcurrentDictionary<int, DipolHost> _OpenedHosts =
-            new ConcurrentDictionary<int, DipolHost>();
-
 
         //public static IReadOnlyDictionary<int, DipolHost> OpenedHosts
         //    => _OpenedHosts;
@@ -67,8 +62,6 @@ namespace DIPOL_Remote
 
             AddServiceEndpoint(typeof(IRemoteControl),bnd, "");
 
-            //_OpenedHosts.TryAdd(_host.BaseAddresses[0].GetHashCode(), this);
-
             EventReceived += (sender, message) =>
             {
                 string senderString;
@@ -83,17 +76,13 @@ namespace DIPOL_Remote
 
             };
         }
-        
-        [Obsolete("Use [ServiceHost.Open] instead")]
-        public void Host() => Open();
-
 
         public void Dispose()
         {
             Close();
         }
 
-        public virtual void OnEventReceived(object sender, string message)
+        public void OnEventReceived(object sender, string message)
             => EventReceived?.Invoke(sender, message);
 
     }
