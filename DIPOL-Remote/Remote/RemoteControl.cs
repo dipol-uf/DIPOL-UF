@@ -25,7 +25,6 @@
 //#define NO_ACTUAL_CAMERA
 
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.ServiceModel;
@@ -36,7 +35,6 @@ using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
-using DipolImage;
 using DIPOL_Remote.Callback;
 using DIPOL_Remote.Faults;
 using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
@@ -65,8 +63,8 @@ namespace DIPOL_Remote.Remote
         private readonly SettingsDictionary _settings = new SettingsDictionary();
 
         // TODO : Possibly redundant providing there is now full-blown async interface
-        private readonly ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> _activeTasks
-            = new ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>();
+        //private readonly ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)> _activeTasks
+        //    = new ConcurrentDictionary<string, (Task Task, CancellationTokenSource Token, int CameraIndex)>();
 
         private OperationContext Context { get; set; }
 
@@ -266,8 +264,8 @@ namespace DIPOL_Remote.Remote
                 foreach (var key in _settings.Keys)
                     RemoveSettings(key);
 
-                foreach (var key in _activeTasks.Keys)
-                    RemoveTask(key);
+                //foreach (var key in _activeTasks.Keys)
+                //    RemoveTask(key);
 
             }
             catch (Exception e)
@@ -335,12 +333,12 @@ namespace DIPOL_Remote.Remote
             }
             
         }
+
         [OperationBehavior]
         public void CreateCamera(int camIndex = 0)
         {
             CreateCameraAsync(camIndex).ConfigureAwait(false).GetAwaiter().GetResult();
         }
-
         [OperationBehavior]
         public void RemoveCamera(int camIndex)
         {
@@ -353,12 +351,13 @@ namespace DIPOL_Remote.Remote
                     select item.Key)
                     RemoveSettings(settsKey);
 
-                foreach (var taskKey in
-                    from item
-                    in _activeTasks
-                    where item.Value.CameraIndex == camIndex
-                    select item.Key)
-                    RemoveTask(taskKey);
+                // TODO: Check this
+                //foreach (var taskKey in
+                //    from item
+                //    in _activeTasks
+                //    where item.Value.CameraIndex == camIndex
+                //    select item.Key)
+                //    RemoveTask(taskKey);
 
                 if (_cameras.TryRemove(camIndex, out var removedCamera))
                 {
@@ -379,6 +378,7 @@ namespace DIPOL_Remote.Remote
                     ServiceFault.GeneralServiceErrorReason);
             }
         }
+
         [OperationBehavior]
         public string CreateSettings(int camIndex)
         {
@@ -430,49 +430,7 @@ namespace DIPOL_Remote.Remote
 
             _host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} removed.");
         }
-        [OperationBehavior]
-        public string CreateAcquisitionTask(int camIndex, int delay)
-        {
-            throw new NotImplementedException();
-            //var cam = GetCameraSafe(sessionID, camIndex);
-            //string taskID = Guid.NewGuid().ToString("N");
-
-            //int counter = 0;
-            //var source = new CancellationTokenSource();
-            //var task = cam.StartAcquisitionAsync(source, delay);
-
-            //while (counter <= MaxTryAddAttempts && !activeTasks.TryAdd(taskID, (Task: task, Token: source, CameraIndex: camIndex)))
-            //    taskID = Guid.NewGuid().ToString("N");
-
-            //if (counter >= MaxTryAddAttempts)
-            //{
-            //    source.Cancel();
-            //    task.Wait();
-            //    task.Dispose();
-            //    source.Dispose();
-
-            //    throw new Exception();
-            //}
-
-            //host?.OnEventReceived("Host", $"AcqTask with ID {taskID} created.");
-
-            //return taskID;
-        }
-        [OperationBehavior]
-        public void RemoveTask(string taskID)
-        {
-            if (_activeTasks.TryRemove(taskID, out (Task Task, CancellationTokenSource Token, int CamIndex) taskInfo))
-            {
-                taskInfo.Token.Cancel();
-                taskInfo.Task.Wait();
-
-                taskInfo.Task.Dispose();
-                taskInfo.Token.Dispose();
-            }
-
-            _host?.OnEventReceived("Host", $"AcqTask with ID {taskID} removed.");
-        }
-
+       
 
         [OperationBehavior]
         public int[] GetCamerasInUse()
@@ -621,21 +579,7 @@ namespace DIPOL_Remote.Remote
         public int CallGetTotalNumberOfAcquiredImages(int camIndex)
             => GetCameraSafe(camIndex).GetTotalNumberOfAcquiredImages();
 
-        [OperationBehavior]
-        public bool IsTaskFinished(string taskID)
-            => GetTaskSafe(taskID).Task.IsCompleted;
-
-        [OperationBehavior]
-        public void RequestCancellation(string taskID)
-        {
-            if (_activeTasks.TryGetValue(taskID, out (Task Task, CancellationTokenSource Token, int CameraIndex) taskInfo))
-            {
-                taskInfo.Token.Cancel();
-                RemoveTask(taskID);
-            }
-            else throw new Exception();
-        }
-
+       
         private CameraBase GetCameraSafe(int camIndex)
         {
             if (_cameras.TryGetValue(
@@ -659,14 +603,6 @@ namespace DIPOL_Remote.Remote
                 return sets;
             else throw new Exception();
         }
-        private (Task Task, CancellationTokenSource Token, int CameraIndex) GetTaskSafe(string taskID)
-        {
-            if (_activeTasks.TryGetValue(taskID, out (Task Task, CancellationTokenSource Token, int CameraIndex) taskInfo))
-                return taskInfo;
-            else
-                throw new Exception();
-        }
-
 
         #region Async methods helpers
 

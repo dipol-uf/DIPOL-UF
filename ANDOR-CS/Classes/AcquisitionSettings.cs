@@ -25,20 +25,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
-using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
 using static ANDOR_CS.Classes.AndorSdkInitialization;
 using static ANDOR_CS.Exceptions.AndorSdkException;
 
-#if X86
-using SDK = ATMCD32CS.AndorSDK;
-#endif
-#if X64
-using SDK = ATMCD64CS.AndorSDK;
-#endif
+//#if X86
+//using SDK = ATMCD32CS.AndorSDK;
+//#endif
+//#if X64
+//using SDK = ATMCD64CS.AndorSDK;
+//#endif
 
 namespace ANDOR_CS.Classes
 {
@@ -57,28 +55,28 @@ namespace ANDOR_CS.Classes
         /// <summary>
         ///     SERIALIZATION TEST CONSTRUCTOR; DO NOT USE
         /// </summary>
-#if DEBUG
-        public AcquisitionSettings(bool empty = false)
-        {
-            if (empty) 
-                return;
+//#if DEBUG
+//        public AcquisitionSettings(bool empty = false)
+//        {
+//            if (empty) 
+//                return;
 
-            AcquisitionMode = Enums.AcquisitionMode.SingleScan;
-            ADConverter = (0, 16);
-            OutputAmplifier = (OutputAmplification.Conventional, "Conventional", 1);
-            ExposureTime = 123;
-            HSSpeed = (0, 3);
-            ImageArea = new Rectangle(1, 1, 128, 256);
+//            AcquisitionMode = Enums.AcquisitionMode.SingleScan;
+//            ADConverter = (0, 16);
+//            OutputAmplifier = (OutputAmplification.Conventional, "Conventional", 1);
+//            ExposureTime = 123;
+//            HSSpeed = (0, 3);
+//            ImageArea = new Rectangle(1, 1, 128, 256);
 
-            KineticCycle = (12, 0.23f);
-            PreAmpGain = (0, "Gain 1");
-            ReadoutMode = ReadMode.FullImage;
+//            KineticCycle = (12, 0.23f);
+//            PreAmpGain = (0, "Gain 1");
+//            ReadoutMode = ReadMode.FullImage;
 
-            TriggerMode = Enums.TriggerMode.Internal;
-            VSAmplitude = Enums.VSAmplitude.Plus2;
-            VSSpeed = (0, 0.3f);
-        }
-#endif
+//            TriggerMode = Enums.TriggerMode.Internal;
+//            VSAmplitude = Enums.VSAmplitude.Plus2;
+//            VSSpeed = (0, 0.3f);
+//        }
+//#endif
         private SafeSdkCameraHandle Handle
             => Camera is Camera cam
                 ? cam.CameraHandle
@@ -132,7 +130,7 @@ namespace ANDOR_CS.Classes
 
         
         /// <summary>
-        ///     Returns a collection of available Horizonal Readout Speeds for currently selected OutputAmplifier and AD Converter.
+        ///     Returns a collection of available Horizontal Readout Speeds for currently selected OutputAmplifier and AD Converter.
         ///     Requires Camera to be active.
         ///     Note: <see cref="SettingsBase.ADConverter" /> and <see cref="SettingsBase.OutputAmplifier" /> should
         ///     be set
@@ -237,6 +235,7 @@ namespace ANDOR_CS.Classes
             }
         }
 
+        /// <inheritdoc />
         public override (int Low, int High) GetEmGainRange()
         {
             // Limit functionality to only default regime
@@ -272,8 +271,8 @@ namespace ANDOR_CS.Classes
         /// <param name="adConverter">AD Converter index.</param>
         /// <param name="amplifier">OutputAmplifier index.</param>
         /// <param name="speed">
-        ///     If call is successfull, assigns float value of HS speed,
-        ///     otherwies, is initialized to 0.0f.
+        ///     If call is successful, assigns float value of HS speed,
+        ///     otherwise, is initialized to 0.0f.
         /// </param>
         /// <exception cref="AndorSdkException" />
         /// <returns>
@@ -294,7 +293,7 @@ namespace ANDOR_CS.Classes
             if (!Camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed))
                 return false;
 
-            // Gets the number of availabe speeds
+            // Gets the number of available speeds
             var result = Call(Handle, SdkInstance.GetNumberHSSpeeds, adConverter, amplifier, out int nSpeeds);
             if (FailIfError(result, nameof(SdkInstance.GetNumberHSSpeeds), out var except))
                 throw except;
