@@ -29,7 +29,6 @@ using ANDOR_CS.Exceptions;
 using DipolImage;
 using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,7 +36,6 @@ using System.Timers;
 using FITS_CS;
 using Timer = System.Timers.Timer;
 using System.Collections.Generic;
-using System.Text;
 
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
@@ -541,6 +539,19 @@ namespace ANDOR_CS.Classes
             SettingsFitsKeys = settings.ConvertToFitsKeys();
         }
 
+        public virtual Image PullPreviewImage(int index, ImageFormat format)
+        {
+            switch (format)
+            {
+                case ImageFormat.UnsignedInt16:
+                    return PullPreviewImage<ushort>(index);
+                case ImageFormat.SignedInt32:
+                    return PullPreviewImage<int>(index);
+                default:
+                    throw new ArgumentException("Unsupported image type.", nameof(format));
+            }
+        }
+        
         public virtual async Task<Image[]> PullAllImagesAsync<T>(CancellationToken token)
             where T : unmanaged
         {
@@ -572,8 +583,7 @@ namespace ANDOR_CS.Classes
         public abstract Task StartAcquisitionAsync(CancellationToken token);
 
         public abstract Image PullPreviewImage<T>(int index) where T : unmanaged;
-
-        public abstract Image PullPreviewImage(int index, ImageFormat format);
+        
 
         public abstract int GetTotalNumberOfAcquiredImages();
 

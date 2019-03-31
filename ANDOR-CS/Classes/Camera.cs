@@ -1331,19 +1331,6 @@ namespace ANDOR_CS.Classes
             return null;
         }
 
-        public override Image PullPreviewImage(int index, ImageFormat format)
-        {
-            switch (format)
-            {
-                case ImageFormat.UnsignedInt16:
-                    return PullPreviewImage<ushort>(index);
-                case ImageFormat.SignedInt32:
-                    return PullPreviewImage<int>(index);
-                default:
-                    throw new ArgumentException("Unsupported image type.", nameof(format));
-            }
-        }
-
         public override int GetTotalNumberOfAcquiredImages()
         {
             if (FailIfError(Call(CameraHandle, SdkInstance.GetTotalNumberImagesAcquired, out int nImages),
