@@ -183,7 +183,7 @@ namespace StepMotor
         AccumulatorToGlobalParameter = 35,
 
         /// <summary>
-        /// CLE: CLears error flags
+        /// CLE: Clears error flags
         /// </summary>
         [EnumMember]
         ClearErrorFlags = 36

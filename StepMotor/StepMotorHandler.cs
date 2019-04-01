@@ -269,12 +269,15 @@ namespace StepMotor
                 };
             }
 
-            var sum = 0;
-            for (var i = 0; i < toSend.Length - 1; i++)
-                sum += toSend[i];
+            byte sum = 0;
+            unchecked
+            {
+                for (var i = 0; i < toSend.Length - 1; i++)
+                    sum += toSend[i];
+            }
 
             // Takes least significant byte
-            toSend[8] = unchecked((byte)sum);
+            toSend[8] = sum;
 
             // Sends data to COM port
             _port.Write(toSend, 0, toSend.Length);

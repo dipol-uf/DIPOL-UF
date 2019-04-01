@@ -23,7 +23,6 @@
 //     SOFTWARE.
 
 using System;
-using System.Collections.ObjectModel;
 using System.IO.Ports;
 using System.Linq;
 using System.Threading;
@@ -51,7 +50,7 @@ namespace Tests
         public async Task Test_Rotation()
         {
 
-            using (var motor = new StepMotorHandler("COM1", 1))
+            using (var motor = new StepMotorHandler("COM1"))
             {
                 // ReSharper disable once RedundantArgumentDefaultValue
                 var reply = await motor.SendCommandAsync(Command.MoveToPosition, 10000, CommandType.Absolute);
@@ -97,25 +96,39 @@ namespace Tests
         }
 
         [Theory]
-        public async Task Test_WaitForPositionReached()
+        [TestCase(200)]
+        [TestCase(3_200)]
+        [TestCase(16_000)]
+        [TestCase(32_000)]
+        [TestCase(64_000)]
+        public async Task Test_WaitForPositionReached(int pos)
         {
             using (var motor = new StepMotorHandler("COM1"))
             {
-                var pos = 270_000;
 
-                var reply = await motor.SendCommandAsync(Command.MoveToPosition, 0, CommandType.Absolute);
+                // Rotates to zero
+                var reply = await motor.SendCommandAsync(Command.MoveToPosition, 0);
                 Assume.That(reply.Status, Is.EqualTo(ReturnStatus.Success));
                 await motor.WaitForPositionReachedAsync(CancellationToken.None);
 
                 Assert.IsTrue(await motor.IsTargetPositionReachedAsync());
                 Assert.AreEqual(0, await motor.GetActualPositionAsync());
 
-                reply = await motor.SendCommandAsync(Command.MoveToPosition, pos, CommandType.Absolute);
+                // Rotates to target position
+                reply = await motor.SendCommandAsync(Command.MoveToPosition, pos);
                 Assume.That(reply.Status, Is.EqualTo(ReturnStatus.Success));
                 await motor.WaitForPositionReachedAsync(CancellationToken.None);
 
                 Assert.IsTrue(await motor.IsTargetPositionReachedAsync());
                 Assert.AreEqual(pos, await motor.GetActualPositionAsync());
+
+                // Returns back to zero
+                reply = await motor.SendCommandAsync(Command.MoveToPosition, 0);
+                Assume.That(reply.Status, Is.EqualTo(ReturnStatus.Success));
+                await motor.WaitForPositionReachedAsync(CancellationToken.None);
+
+                Assert.IsTrue(await motor.IsTargetPositionReachedAsync());
+                Assert.AreEqual(0, await motor.GetActualPositionAsync());
 
             }
         }
