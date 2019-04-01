@@ -221,6 +221,12 @@ namespace DIPOL_Remote.Remote
         [OperationContract]
         void CallApplySetting(int camIndex, string settingsId, byte[] payload);
 
+        [OperationContract]
+        (float Exposure, float Accumulate, float Kinetic)
+            CallGetTimings(int camIndex);
+
+
+
         [OperationContract(IsOneWay = false)]
         (byte[] Payload, int Width, int Height) 
             CallPullPreviewImage(int camIndex, int imageIndex, ImageFormat format);

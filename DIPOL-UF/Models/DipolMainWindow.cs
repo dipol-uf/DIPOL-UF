@@ -24,24 +24,19 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Resources;
-using System.Threading;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using DIPOL_UF.ViewModels;
 
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
-
-using DIPOL_Remote.Classes;
+using DIPOL_Remote;
 using DIPOL_UF.Views;
 using DynamicData;
 using DynamicData.Binding;
@@ -681,10 +676,9 @@ namespace DIPOL_UF.Models
             {
                 try
                 {
-                    var client = new DipolClient(_remoteLocations[i],
+                    var client =DipolClient.Create(new Uri(_remoteLocations[i]),
                         TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")),
                         TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")),
-                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOperationTimeout", "00:00:30")),
                         TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
                     client.Connect();
                     lock(connectedClients)

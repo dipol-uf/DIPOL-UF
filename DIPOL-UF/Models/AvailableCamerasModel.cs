@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
 
-using DIPOL_Remote.Classes;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using DIPOL_Remote;
 using DIPOL_UF.Converters;
 using DynamicData;
 using DynamicData.Binding;
@@ -215,7 +215,7 @@ namespace DIPOL_UF.Models
             {
                 context.AddOrUpdate(
                     Enumerable.Range(0, 4)
-                              .Select(Camera.GetDebugInterface)
+                              .Select(x => DebugCamera.Create(x) as CameraBase)
                               .Select(x => (Id: $"localhost:{x.ToString()}", Camera: x)));
             });
 
