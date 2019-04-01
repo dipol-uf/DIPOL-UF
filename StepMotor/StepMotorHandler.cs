@@ -23,9 +23,9 @@
 //     SOFTWARE.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.IO.Ports;
+using System.Threading.Tasks;
 
 namespace StepMotor
 {
@@ -45,14 +45,13 @@ namespace StepMotor
         /// Backend serial port 
         /// </summary>
         private readonly SerialPort _port;
-        /// <summary>
-        /// Indicates whether a command was sent and no response has been received yet.
-        /// </summary>
-        private volatile bool _commandSent;
+
+        private TaskCompletionSource<Reply> _portResponseTask;
+
         /// <summary>
         /// Used to suppress public events while performing WaitResponse.
         /// </summary>
-        private volatile bool _suppressEvents;
+        private volatile bool _suppressEvents = false;
         
         /// <summary>
         /// Fires when data has been received from COM port.
@@ -95,25 +94,21 @@ namespace StepMotor
         /// <summary>
         /// Waits for response. Waits until commandSent if false, which is set in internal
         /// COM port event handlers. 
-        /// Based on <see cref="System.Threading.SpinWait.SpinUntil(Func{bool}, TimeSpan)"/>.
         /// </summary>
-        /// <param name="timeOutMs">Timeout to wait. -1 is not recommended.</param>
+        /// <param name="timeOut">Wait timeout. If there is no response within this interval, <see cref="TimeoutException"/> is thrown.</param>
         /// <returns>An instance of <see cref="Reply"/> generated from response byte array.</returns>
-        private Reply WaitResponse(int timeOutMs = 200)
+        private async Task<Reply> WaitResponseAsync(TimeSpan timeOut)
         {
-            // Waits for response
-            System.Threading.SpinWait.SpinUntil(() => !_commandSent, timeOutMs);
+            if(_portResponseTask is null)
+                throw new NullReferenceException("The task source object is null.");
 
-            // If response still has not been received, throws
-            if (_commandSent)
-            {
-                _commandSent = false;
-                throw new InvalidOperationException("No response received");
-            }
-
-            return new Reply(LastResponse);
+            var result = await Task.WhenAny(_portResponseTask.Task, Task.Delay(timeOut));
+            if (result is Task<Reply> reply)
+                return await reply;
+            throw new TimeoutException("Serial device did not communicate back within allotted time interval.");
         }
-       
+
+      
         /// <summary>
         /// Handles internal COM port ErrorReceived.
         /// </summary>
@@ -125,7 +120,7 @@ namespace StepMotor
             LastResponse = new byte[_port.BytesToRead];
             _port.Read(LastResponse, 0, LastResponse.Length);
             // Indicates command received response
-            _commandSent = false;
+            _portResponseTask.SetException(new InvalidOperationException("Serial device responded with an error."));
 
             // IF events are not suppressed, fires respective public event
             if (!_suppressEvents)
@@ -146,7 +141,7 @@ namespace StepMotor
                 LastResponse = new byte[_port.BytesToRead];
                 _port.Read(LastResponse, 0, LastResponse.Length);
                 // Indicates command received response
-                _commandSent = false;
+                _portResponseTask?.SetResult(new Reply(LastResponse));
 
                 // IF events are not suppressed, fires respective public event
                 if (!_suppressEvents)
@@ -155,29 +150,19 @@ namespace StepMotor
            
         }
 
-        /// <summary>
-        /// Sends command and waits for a response.
-        /// </summary>
-        /// <param name="command">Command.</param>
-        /// <param name="argument">Command value.</param>
-        /// <param name="type">Type. Depends on the command.</param>
-        /// <param name="address">Address.</param>
-        /// <param name="motorOrBank">Motor or bank. Defaults to 0.</param>
-        /// <param name="waitResponseTimeMs">Wait time out. -1 is not recommended.</param>
-        /// <returns></returns>
-        public Reply SendCommand(Command command, int argument, 
-            byte type = (byte)CommandType.Unused, 
+        public Task<Reply> SendCommandAsync(Command command, int argument,
+            byte type = (byte)CommandType.Unused,
             byte address = 1, byte motorOrBank = 0, int waitResponseTimeMs = 200)
         {
             // Indicates command sending is in process and response have been received yet.
-            _commandSent = true;
+            _portResponseTask = new TaskCompletionSource<Reply>();
 
             // Converts Int32 into byte array. 
             // Motor accepts Most Significant Bit First, so for LittleEndian 
             // array should be reversed.
             var val = BitConverter.GetBytes(argument);
             // Constructs raw command array
-            byte[] toSend = null;
+            byte[] toSend;
             if (BitConverter.IsLittleEndian)
             {
                 toSend = new byte[]
@@ -220,7 +205,7 @@ namespace StepMotor
             _port.Write(toSend, 0, toSend.Length);
 
             // Wait for response
-            return WaitResponse(waitResponseTimeMs);
+            return WaitResponseAsync(TimeSpan.FromMilliseconds(waitResponseTimeMs));
         }
 
         /// <summary>
@@ -241,40 +226,40 @@ namespace StepMotor
         /// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
         /// If false, events are fired for each parameter queried.</param>
         /// <returns>Retrieved values for each AxisParameter queried.</returns>
-        public Dictionary<AxisParameter, int> GetStatus(byte address = 1, byte motorOrBank = 0, bool suppressEvents = true)
-        {
-            // Stores old state
-            var oldState = _suppressEvents;
-            _suppressEvents = suppressEvents;
+        //public Dictionary<AxisParameter, int> GetStatus(byte address = 1, byte motorOrBank = 0, bool suppressEvents = true)
+        //{
+        //    // Stores old state
+        //    var oldState = _suppressEvents;
+        //    _suppressEvents = suppressEvents;
 
-            var status = new Dictionary<AxisParameter, int>();
+        //    var status = new Dictionary<AxisParameter, int>();
 
-            // Ensures state is restored
-            try
-            {
+        //    // Ensures state is restored
+        //    try
+        //    {
 
-                // For each basic Axis Parameter queries its value
-                // Uses explicit conversion of byte to AxisParameter
-                for (byte i = 0; i < 14; i++)
-                {
-                    SendCommand(Command.GetAxisParameter, 0, i, address, motorOrBank);
-                    WaitResponse();
-                    var r = new Reply(LastResponse);
-                    if (r.Status == ReturnStatus.Success)
-                        status[(AxisParameter)i] = r.ReturnValue;
+        //        // For each basic Axis Parameter queries its value
+        //        // Uses explicit conversion of byte to AxisParameter
+        //        for (byte i = 0; i < 14; i++)
+        //        {
+        //            SendCommand(Command.GetAxisParameter, 0, i, address, motorOrBank);
+        //            WaitResponse();
+        //            var r = new Reply(LastResponse);
+        //            if (r.Status == ReturnStatus.Success)
+        //                status[(AxisParameter)i] = r.ReturnValue;
 
-                }
+        //        }
 
-            }
-            finally
-            {
-                // Restores state
-                _suppressEvents = oldState;
-            }
+        //    }
+        //    finally
+        //    {
+        //        // Restores state
+        //        _suppressEvents = oldState;
+        //    }
 
-                // Returns query result
-                return status;
-        }
+        //        // Returns query result
+        //        return status;
+        //}
 
         /// <summary>
         /// Wait for position to be reached. Checks boolean TargetPositionReached parameter.
@@ -285,71 +270,71 @@ namespace StepMotor
         /// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
         /// If false, events are fired for each parameter queried.</param>
         /// <param name="checkIntervalMs">TIme between subsequent checks of the status.</param>
-        public void WaitPositionReached(byte address = 1, byte motorOrBank = 0, 
-            bool suppressEvents = true, int checkIntervalMs = 200)
-        {
-            // Stores old state
-            var oldState = _suppressEvents;
-            _suppressEvents = suppressEvents;
+        //public void WaitPositionReached(byte address = 1, byte motorOrBank = 0, 
+        //    bool suppressEvents = true, int checkIntervalMs = 200)
+        //{
+        //    // Stores old state
+        //    var oldState = _suppressEvents;
+        //    _suppressEvents = suppressEvents;
 
-            try
-            {
-                // Sends GetAxisParameter with TargetPositionReached as parameter.
-                var r = SendCommand(
-                    Command.GetAxisParameter, 
-                    0, 
-                    (byte)AxisParameter.TargetPositionReached, 
-                    address, 
-                    motorOrBank);
+        //    try
+        //    {
+        //        // Sends GetAxisParameter with TargetPositionReached as parameter.
+        //        var r = SendCommand(
+        //            Command.GetAxisParameter, 
+        //            0, 
+        //            (byte)AxisParameter.TargetPositionReached, 
+        //            address, 
+        //            motorOrBank);
                 
 
-                // While status is Success and returned value if 0 (false), continue checks
-                while (r.Status == ReturnStatus.Success && r.ReturnValue == 0)
-                {
-                    // Waits for small amount of time.
-                    System.Threading.Thread.Sleep(checkIntervalMs);
-                    r = SendCommand(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPositionReached, address, motorOrBank);
-                }
+        //        // While status is Success and returned value if 0 (false), continue checks
+        //        while (r.Status == ReturnStatus.Success && r.ReturnValue == 0)
+        //        {
+        //            // Waits for small amount of time.
+        //            System.Threading.Thread.Sleep(checkIntervalMs);
+        //            r = SendCommand(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPositionReached, address, motorOrBank);
+        //        }
 
-            }
-            finally
-            {
-                // Restores old state
-                _suppressEvents = oldState;
-            }
+        //    }
+        //    finally
+        //    {
+        //        // Restores old state
+        //        _suppressEvents = oldState;
+        //    }
 
-        }
+        //}
 
-        public void WaitReferencePositionReached(byte address = 1, byte motorOrBank = 0,
-            bool suppressEvents = true, int checkIntervalMs = 200)
-        {
-            // Stores old state
-            var oldState = _suppressEvents;
-            _suppressEvents = suppressEvents;
+        //public void WaitReferencePositionReached(byte address = 1, byte motorOrBank = 0,
+        //    bool suppressEvents = true, int checkIntervalMs = 200)
+        //{
+        //    // Stores old state
+        //    var oldState = _suppressEvents;
+        //    _suppressEvents = suppressEvents;
 
-            try
-            {
+        //    try
+        //    {
 
-                var r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Start, address, motorOrBank);
-                if (r.Status != ReturnStatus.Success)
-                    throw new Exception();
-                r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Status, address, motorOrBank);
-                // While status is Success and returned value if 0 (false), continue checks
-                while (r.Status == ReturnStatus.Success && r.ReturnValue != 0)
-                {
-                    // Waits for small amount of time.
-                    System.Threading.Thread.Sleep(checkIntervalMs);
-                    r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Status, address, motorOrBank);
-                }
+        //        var r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Start, address, motorOrBank);
+        //        if (r.Status != ReturnStatus.Success)
+        //            throw new Exception();
+        //        r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Status, address, motorOrBank);
+        //        // While status is Success and returned value if 0 (false), continue checks
+        //        while (r.Status == ReturnStatus.Success && r.ReturnValue != 0)
+        //        {
+        //            // Waits for small amount of time.
+        //            System.Threading.Thread.Sleep(checkIntervalMs);
+        //            r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Status, address, motorOrBank);
+        //        }
 
-            }
-            finally
-            {
-                SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Stop, address, motorOrBank);
-                // Restores old state
-                _suppressEvents = oldState;
-            }
-        }
+        //    }
+        //    finally
+        //    {
+        //        SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Stop, address, motorOrBank);
+        //        // Restores old state
+        //        _suppressEvents = oldState;
+        //    }
+        //}
 
         /// <summary>
         /// Used to fire DataReceived event.
