@@ -22,18 +22,17 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+#define HOST_SERVER
+#define IN_PROCESS
+
 using System;
+using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
-using System.Reactive.Linq;
+using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
-using ANDOR_CS.Classes;
-using ANDOR_CS.DataStructures;
-using ANDOR_CS.Enums;
+using DIPOL_Remote;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
-using Tests;
 
 
 namespace DIPOL_UF
@@ -43,13 +42,27 @@ namespace DIPOL_UF
         [STAThread]
         private static int Main(string[] args)
         {
-
-            System.Diagnostics.Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
-            System.Diagnostics.Debug.AutoFlush = true;
-            System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
-            System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
-            //Test2();
-            //return 0;
+#if DEBUG && HOST_SERVER
+#if IN_PROCESS
+            var host = new DipolHost(new Uri("net.tcp://127.0.0.1/400"));
+            host.Open();
+#else
+            var pInfo = new ProcessStartInfo()
+            {
+                FileName = Path.Combine("../../../../Host/bin/x86/Debug/Host.exe"),
+                Arguments = "net.tcp://127.0.0.1/400",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardInput = true
+            };
+            var process = Process.Start(pInfo);
+#endif
+        
+#endif
+            Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
+            Debug.AutoFlush = true;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
 
 
 
@@ -57,73 +70,26 @@ namespace DIPOL_UF
             applicationInstance.InitializeComponent();
 
 
-            using (var mainModel = new Models.DipolMainWindow())
-                using (var view = new ViewModels.DipolMainWindowViewModel(mainModel))
+            using (var mainModel = new DipolMainWindow())
+                using (var view = new DipolMainWindowViewModel(mainModel))
                     applicationInstance.Run(new Views.DipolMainWindow().WithDataContext(view));
 
 
+#if DEBUG && HOST_SERVER
+           
+#if IN_PROCESS
+            host.Close();
+            host.Dispose();
+#else
+            process?.StandardInput.WriteLine("exit");
+            process?.WaitForExit(500);
+            process?.Kill();
+            process?.Dispose();
+#endif 
+    
+#endif
+
             return 0;
         }
-
-        private static void Test()
-        {
-
-            var arr = new byte[256 * 512 * sizeof(ushort)];
-            var r = new Random();
-            r.NextBytes(arr);
-
-            var img = new DipolImage.Image(arr, 512, 256, TypeCode.UInt16);
-
-
-            var app = new App();
-            app.InitializeComponent();
-
-            var model = new DipolImagePresenter();
-            var vm = new DipolImagePresenterViewModel(model);
-            Task.Run(async () =>
-            {
-                await Task.Delay(1000);
-                await model.LoadImageCommand.Execute(img);
-            });
-
-            var view = new DebugWindow() {DataContext = vm};
-
-            app.Run(view);
-
-        }
-
-        private static void Test2()
-        {
-            using (var cam = new Camera())
-            {
-                using (var setts = cam.GetAcquisitionSettingsTemplate())
-                {
-                    setts.SetExposureTime(1e-3f);
-                    setts.SetImageArea(new Rectangle(1, 1, 512, 512));
-                    setts.SetAcquisitionMode(AcquisitionMode.Kinetic | AcquisitionMode.FrameTransfer);
-                    setts.SetKineticCycle(15, 0.0f);
-                    setts.SetAccumulateCycle(3, 0.0f);
-                    setts.SetReadoutMode(ReadMode.FullImage);
-                    setts.SetTriggerMode(TriggerMode.Internal);
-                    setts.SetOutputAmplifier(OutputAmplification.Conventional);
-                    setts.SetADConverter(0);
-                    var speed = setts.GetAvailableHSSpeeds().OrderByDescending(x => x.Speed).First();
-                    setts.SetHSSpeed(speed.Index);
-                    var vsSpeed = Array.IndexOf(cam.Properties.VSSpeeds, cam.Properties.VSSpeeds.Max());
-                    setts.SetVSSpeed(vsSpeed);
-                    cam.ApplySettings(setts);
-                    Console.WriteLine(cam.Timings);
-
-                    cam.SetAutosave(Switch.Enabled, ImageFormat.UnsignedInt16);
-                    cam.SaveNextAcquisitionAs("TestSeries", "test_i32_{0:0000}_F.fits", ImageFormat.SignedInt32);
-                    var src = new CancellationTokenSource();
-                    cam.StartAcquisitionAsync(src.Token).Wait();
-                    cam.StartAcquisitionAsync(CancellationToken.None).Wait();
-                    Console.WriteLine("Done");
-
-                    Console.ReadKey();
-                }
-            }
-        }
-    }
+   }
 }

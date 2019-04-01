@@ -252,8 +252,6 @@ namespace ANDOR_CS.Classes
         {
             Timings = (1.5f, 1.5f, 1.5f);
             base.ApplySettings(settings);
-            //throw new AndorSdkException("Failed", SDK.DRV_P1INVALID,
-            //    nameof(AndorSdkInitialization.SdkInstance.SetImage));
         }
 
         public new static DebugCamera Create(int camIndex = 0, params object[] @params)

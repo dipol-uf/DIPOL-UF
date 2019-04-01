@@ -85,7 +85,7 @@ namespace ANDOR_CS.Classes
         protected ImageFormat AutosaveFormat { get; private set; }
         protected List<FitsKey> SettingsFitsKeys { get; private set; }
 
-        protected SettingsBase CurrentSettings { get; private set; }
+        public SettingsBase CurrentSettings { get; private set; }
         public (float Exposure, float Accumulation, float Kinetic) Timings { get; set; }
         public bool IsDisposed
         {

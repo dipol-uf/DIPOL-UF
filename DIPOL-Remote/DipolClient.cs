@@ -205,6 +205,9 @@ namespace DIPOL_Remote
         public void CallApplySetting(int camIndex, string settingsId, byte[] payload)
             => Channel.CallApplySetting(camIndex, settingsId, payload);
 
+        public (float Exposure, float Accumulate, float Kinetic) CallGetTimings(int camIndex)
+            => Channel.CallGetTimings(camIndex);
+
         public (byte[] Payload, int Width, int Height) 
             CallPullPreviewImage(int camIndex, int imageIndex, ImageFormat format)
             => Channel.CallPullPreviewImage(camIndex, imageIndex, format);

@@ -334,6 +334,8 @@ namespace DIPOL_Remote
                 _client.CallApplySetting(CameraIndex, remoteSetts.SettingsID, memory.GetBuffer());
             }
 
+            Timings = _client.CallGetTimings(CameraIndex);
+
             base.ApplySettings(settings);
         }
 

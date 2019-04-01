@@ -547,6 +547,10 @@ namespace DIPOL_Remote.Remote
         }
 
         [OperationBehavior]
+        public (float Exposure, float Accumulate, float Kinetic) CallGetTimings(int camIndex)
+            => GetCameraSafe(camIndex).Timings;
+
+        [OperationBehavior]
         public (byte[] Payload, int Width, int Height) 
             CallPullPreviewImage(int camIndex, int imageIndex, ImageFormat format)
         {
