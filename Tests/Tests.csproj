@@ -97,6 +97,7 @@
     <Compile Include="RemoteCameraTests.cs" />
     <Compile Include="RemoteCommunicationConfigProvider.cs" />
     <Compile Include="OutOfProcessHostingTests.cs" />
+    <Compile Include="StepMotorTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ANDOR-CS\ANDOR-CS.csproj">
@@ -122,6 +123,10 @@
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj">
       <Project>{f9a3b5ae-04c0-43cc-a0b7-7e03924b6698}</Project>
       <Name>SettingsManager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\StepMotor\StepMotor.csproj">
+      <Project>{27a3f774-a7b6-43d9-baba-29a36aa0bfe1}</Project>
+      <Name>StepMotor</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
