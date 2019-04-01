@@ -28,6 +28,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace StepMotor
@@ -39,6 +40,8 @@ namespace StepMotor
     {
         private static readonly Regex Regex = new Regex(@"[a-z]([a-z])\s*(\d{1,3})\s*(.*)\r",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly int SpeedFactor = 30;
 
         /// <summary>
         /// Delegate that handles Data/Error received events.
@@ -104,6 +107,7 @@ namespace StepMotor
 
         private async Task<bool> PokeAddressInBinary(byte address)
         {
+            var oldStatus = _suppressEvents;
             try
             {
                 _suppressEvents = true;
@@ -119,13 +123,15 @@ namespace StepMotor
             }
             finally
             {
-                _suppressEvents = false;
+                _suppressEvents = oldStatus;
             }
 
         }
 
         private async Task SwitchToBinary(byte address)
         {
+            var oldStatus = _suppressEvents;
+
             try
             {
                 _suppressEvents = true;
@@ -155,7 +161,7 @@ namespace StepMotor
             }
             finally
             {
-                _suppressEvents = false;
+                _suppressEvents = oldStatus;
             }
 
         }
@@ -218,9 +224,10 @@ namespace StepMotor
            
         }
 
-        public Task<Reply> SendCommandAsync(Command command, int argument,
+        protected Task<Reply> SendCommandAsync(Command command, int argument,
             byte type,
-            byte address, byte motorOrBank, TimeSpan timeOut)
+            byte address,
+            byte motorOrBank, TimeSpan timeOut)
         {
             // Indicates command sending is in process and response have been received yet.
             _portResponseTask = new TaskCompletionSource<Reply>();
@@ -279,14 +286,14 @@ namespace StepMotor
         public Task<Reply> SendCommandAsync(
             Command command, int argument,
             CommandType type = CommandType.Unused,
-            byte address = 0, byte motorOrBank = 0)
+            byte motorOrBank = 0)
             => SendCommandAsync(
                 command, 
                 argument, 
                 (byte) type,
-                address == 0 ? Address : address, 
+                Address,
                 motorOrBank, 
-                TimeSpan.FromMilliseconds(250));
+                TimeSpan.FromMilliseconds(100));
 
         /// <summary>
         /// Implements interface and frees resources
@@ -297,124 +304,119 @@ namespace StepMotor
             _port.Dispose();
         }
 
-        ///// <summary>
-        ///// Queries status of all Axis parameters.
-        ///// </summary>
-        ///// <param name="address">Address.</param>
-        ///// <param name="motorOrBank">Motor or bank, defaults to 0.</param>
-        ///// <param name="suppressEvents">If true, no standard events are thrown,
-        ///// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
-        ///// If false, events are fired for each parameter queried.</param>
-        ///// <returns>Retrieved values for each AxisParameter queried.</returns>
-        //public Dictionary<AxisParameter, int> GetStatus(byte address = 1, byte motorOrBank = 0, bool suppressEvents = true)
-        //{
-        //    // Stores old state
-        //    var oldState = _suppressEvents;
-        //    _suppressEvents = suppressEvents;
+        /// <summary>
+        /// Queries status of all Axis parameters.
+        /// </summary>
+        /// <param name="motorOrBank">Motor or bank, defaults to 0.</param>
+        /// <returns>Retrieved values for each AxisParameter queried.</returns>
+        public async Task<ReadOnlyDictionary<AxisParameter, int>> GetStatusAsync(
+            byte motorOrBank = 0)
+        {
+            // Stores old state
+            var oldState = _suppressEvents;
+            _suppressEvents = true;
 
-        //    var status = new Dictionary<AxisParameter, int>();
+            var status = new Dictionary<AxisParameter, int>();
 
-        //    // Ensures state is restored
-        //    try
-        //    {
-
-        //        // For each basic Axis Parameter queries its value
-        //        // Uses explicit conversion of byte to AxisParameter
-        //        for (byte i = 0; i < 14; i++)
-        //        {
-        //            SendCommand(Command.GetAxisParameter, 0, i, address, motorOrBank);
-        //            WaitResponse();
-        //            var r = new Reply(LastResponse);
-        //            if (r.Status == ReturnStatus.Success)
-        //                status[(AxisParameter)i] = r.ReturnValue;
-
-        //        }
-
-        //    }
-        //    finally
-        //    {
-        //        // Restores state
-        //        _suppressEvents = oldState;
-        //    }
-
-        //        // Returns query result
-        //        return status;
-        //}
-
-        ///// <summary>
-        ///// Wait for position to be reached. Checks boolean TargetPositionReached parameter.
-        ///// </summary>
-        ///// <param name="address">Address.</param>
-        ///// <param name="motorOrBank">Motor or bank. Defaults to 0.</param>
-        ///// <param name="suppressEvents">If true, no standard events are thrown,
-        ///// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
-        ///// If false, events are fired for each parameter queried.</param>
-        ///// <param name="checkIntervalMs">TIme between subsequent checks of the status.</param>
-        //public void WaitPositionReached(byte address = 1, byte motorOrBank = 0, 
-        //    bool suppressEvents = true, int checkIntervalMs = 200)
-        //{
-        //    // Stores old state
-        //    var oldState = _suppressEvents;
-        //    _suppressEvents = suppressEvents;
-
-        //    try
-        //    {
-        //        // Sends GetAxisParameter with TargetPositionReached as parameter.
-        //        var r = SendCommand(
-        //            Command.GetAxisParameter, 
-        //            0, 
-        //            (byte)AxisParameter.TargetPositionReached, 
-        //            address, 
-        //            motorOrBank);
+            // Ensures state is restored
+            try
+            {
                 
+                // For each basic Axis Parameter queries its value
+                // Uses explicit conversion of byte to AxisParameter
+                for (byte i = 0; i < 14; i++)
+                {
+                    var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType) i);
+                    if(reply.Status == ReturnStatus.Success)
+                        status.Add((AxisParameter)i, reply.ReturnValue);
+                }
+                
+            }
+            finally
+            {
+                // Restores state
+                _suppressEvents = oldState;
+            }
 
-        //        // While status is Success and returned value if 0 (false), continue checks
-        //        while (r.Status == ReturnStatus.Success && r.ReturnValue == 0)
-        //        {
-        //            // Waits for small amount of time.
-        //            System.Threading.Thread.Sleep(checkIntervalMs);
-        //            r = SendCommand(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPositionReached, address, motorOrBank);
-        //        }
+            // Returns query result
+            return new ReadOnlyDictionary<AxisParameter, int>(status);
+        }
 
-        //    }
-        //    finally
-        //    {
-        //        // Restores old state
-        //        _suppressEvents = oldState;
-        //    }
 
-        //}
+        /// <summary>
+        /// Queries status of essential Axis parameters.
+        /// </summary>
+        /// <param name="motorOrBank">Motor or bank, defaults to 0.</param>
+        /// <returns>Retrieved values for each AxisParameter queried.</returns>
+        public async Task<ReadOnlyDictionary<AxisParameter, int>> GetRotationStatusAsync(
+            byte motorOrBank = 0)
+        {
+            // Stores old state
+            var oldState = _suppressEvents;
+            _suppressEvents = true;
 
-        //public void WaitReferencePositionReached(byte address = 1, byte motorOrBank = 0,
-        //    bool suppressEvents = true, int checkIntervalMs = 200)
-        //{
-        //    // Stores old state
-        //    var oldState = _suppressEvents;
-        //    _suppressEvents = suppressEvents;
+            var status = new Dictionary<AxisParameter, int>();
 
-        //    try
-        //    {
+            // Ensures state is restored
+            try
+            {
 
-        //        var r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Start, address, motorOrBank);
-        //        if (r.Status != ReturnStatus.Success)
-        //            throw new Exception();
-        //        r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Status, address, motorOrBank);
-        //        // While status is Success and returned value if 0 (false), continue checks
-        //        while (r.Status == ReturnStatus.Success && r.ReturnValue != 0)
-        //        {
-        //            // Waits for small amount of time.
-        //            System.Threading.Thread.Sleep(checkIntervalMs);
-        //            r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Status, address, motorOrBank);
-        //        }
+                // For each basic Axis Parameter queries its value
+                // Uses explicit conversion of byte to AxisParameter
+                for (byte i = 0; i < 6; i++)
+                {
+                    var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType)i);
+                    if (reply.Status == ReturnStatus.Success)
+                        status.Add((AxisParameter)i, reply.ReturnValue);
+                }
 
-        //    }
-        //    finally
-        //    {
-        //        SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Stop, address, motorOrBank);
-        //        // Restores old state
-        //        _suppressEvents = oldState;
-        //    }
-        //}
+            }
+            finally
+            {
+                // Restores state
+                _suppressEvents = oldState;
+            }
+
+            // Returns query result
+            return new ReadOnlyDictionary<AxisParameter, int>(status);
+        }
+
+        public async Task<int> GetActualPositionAsync(byte motorOrBank = 0)
+        {
+            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType) AxisParameter.ActualPosition,
+                motorOrBank);
+            if (reply.Status == ReturnStatus.Success)
+                return reply.ReturnValue;
+            throw new InvalidOperationException("Failed to retrieve position.");
+        }
+
+        public async Task<bool> IsTargetPositionReachedAsync(byte motorOrBank = 0)
+        {
+            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType)AxisParameter.TargetPositionReached,
+                motorOrBank);
+            if (reply.Status == ReturnStatus.Success)
+                return reply.ReturnValue == 1;
+            throw new InvalidOperationException("Failed to retrieve position.");
+        }
+
+        public async Task WaitForPositionReachedAsync(CancellationToken token, byte motorOrBank = 0)
+        {
+            if(!await IsTargetPositionReachedAsync(motorOrBank))
+            {
+                token.ThrowIfCancellationRequested();
+                var status = await GetRotationStatusAsync(motorOrBank);
+                var timeInSec = 0.25 * (status[AxisParameter.TargetPosition] - status[AxisParameter.ActualPosition]) /
+                                (SpeedFactor * status[AxisParameter.MaximumSpeed]);
+                var timeOut = TimeSpan.FromSeconds(Math.Max(Math.Abs(timeInSec), 0.025));
+
+                token.ThrowIfCancellationRequested();
+                while (!await IsTargetPositionReachedAsync(motorOrBank))
+                {
+                    await Task.Delay(timeOut, token);
+                    token.ThrowIfCancellationRequested();
+                }
+            }
+        }
 
         /// <summary>
         /// Used to fire DataReceived event.
@@ -430,7 +432,7 @@ namespace StepMotor
         protected virtual void OnErrorReceived(StepMotorEventArgs e)
             => ErrorReceived?.Invoke(this, e);
 
-        public static async Task<Collection<byte>> FindDevice(string port, byte startAddress = 1, byte endAddress = 16)
+        public static async Task<ReadOnlyCollection<byte>> FindDevice(string port, byte startAddress = 1, byte endAddress = 16)
         {
             var result = new Collection<byte>();
             using (var motor = new StepMotorHandler(port))
@@ -455,7 +457,7 @@ namespace StepMotor
                 }
             }
 
-            return result;
+            return new ReadOnlyCollection<byte>(result);
         }
     }
 
