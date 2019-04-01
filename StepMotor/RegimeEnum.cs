@@ -22,23 +22,16 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System.Threading.Tasks;
-using NUnit.Framework;
-using StepMotor;
+using System.Runtime.Serialization;
 
-namespace Tests
+namespace StepMotor
 {
-    [TestFixture]
-    public class StepMotorTests
+    [DataContract]
+    public enum Regime
     {
-        [Test]
-        public async Task Test_SimpleCommand()
-        {
-            using (var motor = new StepMotor.StepMotorHandler("COM1"))
-            {
-                var reply = await motor.SendCommandAsync(Command.GetAxisParameter, 1);
-            }
-        }
-
+        [EnumMember]
+        Binary = 0,
+        [EnumMember]
+        Ascii = 1
     }
 }
