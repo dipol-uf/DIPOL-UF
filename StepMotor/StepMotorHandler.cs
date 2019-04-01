@@ -86,51 +86,10 @@ namespace StepMotor
             // Creates port
             _port = new SerialPort(portName, 9600, Parity.None, 8, StopBits.One);
             // Event listeners
-            _port.DataReceived += Port_DataReceived;
-            _port.ErrorReceived += Port_ErrorReceived;
+            _port.DataReceived += OnPortDataReceived;
+            _port.ErrorReceived += OnPortErrorReceived;
             // Opens port
             _port.Open();
-        }
-
-        /// <summary>
-        /// Handles internal COM port ErrorReceived.
-        /// </summary>
-        /// <param name="sender">COM port.</param>
-        /// <param name="e">Event arguments.</param>
-        private void Port_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
-        {
-            // Reads last response
-            LastResponse = new byte[_port.BytesToRead];
-            _port.Read(LastResponse, 0, LastResponse.Length);
-            // Indicates command received response
-            _commandSent = false;
-
-            // IF events are not suppressed, fires respective public event
-            if (!_suppressEvents)
-                OnErrorReceived(new StepMotorEventArgs(LastResponse));
-        }
-
-        /// <summary>
-        /// Handles internal COM port DataReceived.
-        /// </summary>
-        /// <param name="sender">COM port.</param>
-        /// <param name="e">Event arguments.</param>
-        private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            // If port buffer is not empty
-            if (_port.BytesToRead == 9)
-            {
-                //Reads last response
-                LastResponse = new byte[_port.BytesToRead];
-                _port.Read(LastResponse, 0, LastResponse.Length);
-                // Indicates command received response
-                _commandSent = false;
-
-                // IF events are not suppressed, fires respective public event
-                if (!_suppressEvents)
-                    OnDataReceived(new StepMotorEventArgs(LastResponse));
-            }
-           
         }
 
         /// <summary>
@@ -154,6 +113,47 @@ namespace StepMotor
 
             return new Reply(LastResponse);
         }
+       
+        /// <summary>
+        /// Handles internal COM port ErrorReceived.
+        /// </summary>
+        /// <param name="sender">COM port.</param>
+        /// <param name="e">Event arguments.</param>
+        protected void OnPortErrorReceived(object sender, SerialErrorReceivedEventArgs e)
+        {
+            // Reads last response
+            LastResponse = new byte[_port.BytesToRead];
+            _port.Read(LastResponse, 0, LastResponse.Length);
+            // Indicates command received response
+            _commandSent = false;
+
+            // IF events are not suppressed, fires respective public event
+            if (!_suppressEvents)
+                OnErrorReceived(new StepMotorEventArgs(LastResponse));
+        }
+
+        /// <summary>
+        /// Handles internal COM port DataReceived.
+        /// </summary>
+        /// <param name="sender">COM port.</param>
+        /// <param name="e">Event arguments.</param>
+        protected void OnPortDataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            // If port buffer is not empty
+            if (_port.BytesToRead == 9)
+            {
+                //Reads last response
+                LastResponse = new byte[_port.BytesToRead];
+                _port.Read(LastResponse, 0, LastResponse.Length);
+                // Indicates command received response
+                _commandSent = false;
+
+                // IF events are not suppressed, fires respective public event
+                if (!_suppressEvents)
+                    OnDataReceived(new StepMotorEventArgs(LastResponse));
+            }
+           
+        }
 
         /// <summary>
         /// Sends command and waits for a response.
@@ -175,29 +175,46 @@ namespace StepMotor
             // Converts Int32 into byte array. 
             // Motor accepts Most Significant Bit First, so for LittleEndian 
             // array should be reversed.
-            byte[] val = BitConverter.GetBytes(argument);
-            val = BitConverter.IsLittleEndian ? val.Reverse().ToArray() : val;
-
+            var val = BitConverter.GetBytes(argument);
             // Constructs raw command array
-            byte[] toSend = new byte[]
+            byte[] toSend = null;
+            if (BitConverter.IsLittleEndian)
             {
-                address,
-                (byte) command,
-                type,
-                motorOrBank,
-                val[0],
-                val[1],
-                val[2],
-                val[3], 
-                0 // Reserved for checksum
-            };
+                toSend = new byte[]
+                {
+                    address,
+                    (byte) command,
+                    type,
+                    motorOrBank,
+                    val[3],
+                    val[2],
+                    val[1],
+                    val[0],
+                    0 // Reserved for checksum
+                };
+            }
+            else
+            {
+                toSend = new byte[]
+                {
+                    address,
+                    (byte) command,
+                    type,
+                    motorOrBank,
+                    val[0],
+                    val[1],
+                    val[2],
+                    val[3],
+                    0 // Reserved for checksum
+                };
+            }
 
-            int sum = 0;
-            for (int i = 0; i < toSend.Length - 1; i++)
+            var sum = 0;
+            for (var i = 0; i < toSend.Length - 1; i++)
                 sum += toSend[i];
 
             // Takes least significant byte
-            toSend[8] = Convert.ToByte(sum & 0xFF);
+            toSend[8] = unchecked((byte)sum);
 
             // Sends data to COM port
             _port.Write(toSend, 0, toSend.Length);
@@ -281,7 +298,7 @@ namespace StepMotor
                 var r = SendCommand(
                     Command.GetAxisParameter, 
                     0, 
-                    (byte)AxisParameter.TargetPoisitionReached, 
+                    (byte)AxisParameter.TargetPositionReached, 
                     address, 
                     motorOrBank);
                 
@@ -291,7 +308,7 @@ namespace StepMotor
                 {
                     // Waits for small amount of time.
                     System.Threading.Thread.Sleep(checkIntervalMs);
-                    r = SendCommand(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPoisitionReached, address, motorOrBank);
+                    r = SendCommand(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPositionReached, address, motorOrBank);
                 }
 
             }
