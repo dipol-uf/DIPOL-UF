@@ -390,7 +390,7 @@ namespace StepMotor
                 motorOrBank);
             if (reply.Status == ReturnStatus.Success)
                 return reply.ReturnValue;
-            throw new InvalidOperationException("Failed to retrieve position.");
+            throw new InvalidOperationException("Failed to retrieve value.");
         }
 
         public async Task<bool> IsTargetPositionReachedAsync(byte motorOrBank = 0)
@@ -399,12 +399,14 @@ namespace StepMotor
                 motorOrBank);
             if (reply.Status == ReturnStatus.Success)
                 return reply.ReturnValue == 1;
-            throw new InvalidOperationException("Failed to retrieve position.");
+            throw new InvalidOperationException("Failed to retrieve value.");
         }
 
         public async Task WaitForPositionReachedAsync(CancellationToken token, byte motorOrBank = 0)
         {
-            if(!await IsTargetPositionReachedAsync(motorOrBank))
+            token.ThrowIfCancellationRequested();
+
+            if (!await IsTargetPositionReachedAsync(motorOrBank))
             {
                 token.ThrowIfCancellationRequested();
                 var status = await GetRotationStatusAsync(motorOrBank);
@@ -419,6 +421,35 @@ namespace StepMotor
                     token.ThrowIfCancellationRequested();
                 }
             }
+        }
+
+        public async Task<bool> IsInMotionAsync(byte motorOrBank = 0)
+        {
+            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType)AxisParameter.ActualSpeed,
+                motorOrBank);
+            if (reply.Status == ReturnStatus.Success)
+                return reply.ReturnValue != 0;
+            throw new InvalidOperationException("Failed to retrieve value.");
+        }
+
+        public async Task StopAsync(byte motorOrBank = 0)
+        {
+            var reply = await SendCommandAsync(Command.MotorStop, 0, motorOrBank: motorOrBank);
+            if (reply.Status != ReturnStatus.Success)
+                throw new InvalidOperationException("Failed to retrieve value.");
+        }
+
+        public async Task ReturnToOriginAsync(CancellationToken token, byte motorOrBank = 0)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var reply = await SendCommandAsync(Command.MoveToPosition, 0, CommandType.Absolute, motorOrBank);
+            if (reply.Status != ReturnStatus.Success)
+                throw new InvalidOperationException("Failed to return to the origin.");
+
+            token.ThrowIfCancellationRequested();
+
+            await WaitForPositionReachedAsync(token);
         }
 
         /// <summary>
