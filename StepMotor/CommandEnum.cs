@@ -187,5 +187,6 @@ namespace StepMotor
         /// </summary>
         [EnumMember]
         ClearErrorFlags = 36
+
     }
 }

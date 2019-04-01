@@ -22,6 +22,9 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System;
+using System.IO.Ports;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using StepMotor;
@@ -34,9 +37,42 @@ namespace Tests
         [Test]
         public async Task Test_SimpleCommand()
         {
-            using (var motor = new StepMotor.StepMotorHandler("COM1"))
+            var ports = SerialPort.GetPortNames();
+
+            var devices = await Task.WhenAll(ports.Select(async x => (Port: x, Addresses: await StepMotorHandler.FindDevice(x))));
+
+            Assert.IsTrue(devices.Any(x => x.Addresses.Count > 0));
+
+        }
+
+        [Theory]
+        public async Task Test_Rotation()
+        {
+            var deviceAddresses = await StepMotorHandler.FindDevice("COM1");
+            Assume.That(deviceAddresses.Count, Is.EqualTo(1));
+
+            using (var motor = new StepMotorHandler("COM1", deviceAddresses[0]))
             {
-                var reply = await motor.SendCommandAsync(Command.GetAxisParameter, 1);
+                var reply = await motor.SendCommandAsync(Command.MoveToPosition, 10000, CommandType.Absolute);
+                Assert.AreEqual(ReturnStatus.Success, reply.Status);
+
+                await Task.Delay(TimeSpan.FromMilliseconds(500));
+
+                reply = await motor.SendCommandAsync(Command.GetAxisParameter, 1);
+                Assert.AreEqual(ReturnStatus.Success, reply.Status);
+                Assert.AreEqual(10000, reply.ReturnValue);
+
+                reply = await motor.SendCommandAsync(Command.MoveToPosition, 0, CommandType.Absolute);
+                Assert.AreEqual(ReturnStatus.Success, reply.Status);
+
+                await Task.Delay(TimeSpan.FromMilliseconds(500));
+
+
+                reply = await motor.SendCommandAsync(Command.GetAxisParameter, 1);
+                Assert.AreEqual(ReturnStatus.Success, reply.Status);
+                Assert.AreEqual(0, reply.ReturnValue);
+
+
             }
         }
 
