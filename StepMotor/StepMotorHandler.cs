@@ -1,26 +1,30 @@
 ﻿//    This file is part of Dipol-3 Camera Manager.
 
-//    Dipol-3 Camera Manager is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-
-//    Dipol-3 Camera Manager is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//    GNU General Public License for more details.
-
-//    You should have received a copy of the GNU General Public License
-//    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
-//
-//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+//     MIT License
+//     
+//     Copyright(c) 2018-2019 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using System.IO.Ports;
 
 namespace StepMotor
@@ -40,24 +44,24 @@ namespace StepMotor
         /// <summary>
         /// Backend serial port 
         /// </summary>
-        private SerialPort port = null;
+        private readonly SerialPort _port;
         /// <summary>
         /// Indicates whether a command was sent and no response has been received yet.
         /// </summary>
-        private volatile bool commandSent = false;
+        private volatile bool _commandSent;
         /// <summary>
         /// Used to suppress public events while performing WaitResponse.
         /// </summary>
-        private volatile bool suppressEvents = false;
+        private volatile bool _suppressEvents;
         
         /// <summary>
         /// Fires when data has been received from COM port.
         /// </summary>
-        public event StepMotorEventHandler DataRecieved;
+        public event StepMotorEventHandler DataReceived;
         /// <summary>
         /// Fires when error data has been received from COM port.
         /// </summary>
-        public event StepMotorEventHandler ErrorRecieved;
+        public event StepMotorEventHandler ErrorReceived;
 
         /// <summary>
         /// Stores last raw response from the COM port.
@@ -66,7 +70,7 @@ namespace StepMotor
         {
             get;
             private set;
-        } = null;
+        }
 
         /// <summary>
         /// Default constructor
@@ -80,12 +84,12 @@ namespace StepMotor
                 throw new ArgumentOutOfRangeException($"Provided {nameof(portName)} ({portName}) is either illegal or not present on the sstem.");
 
             // Creates port
-            port = new SerialPort(portName, 9600, Parity.None, 8, StopBits.One);
+            _port = new SerialPort(portName, 9600, Parity.None, 8, StopBits.One);
             // Event listeners
-            port.DataReceived += Port_DataReceived;
-            port.ErrorReceived += Port_ErrorReceived;
+            _port.DataReceived += Port_DataReceived;
+            _port.ErrorReceived += Port_ErrorReceived;
             // Opens port
-            port.Open();
+            _port.Open();
         }
 
         /// <summary>
@@ -96,13 +100,13 @@ namespace StepMotor
         private void Port_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
             // Reads last response
-            LastResponse = new byte[port.BytesToRead];
-            port.Read(LastResponse, 0, LastResponse.Length);
+            LastResponse = new byte[_port.BytesToRead];
+            _port.Read(LastResponse, 0, LastResponse.Length);
             // Indicates command received response
-            commandSent = false;
+            _commandSent = false;
 
             // IF events are not suppressed, fires respective public event
-            if (!suppressEvents)
+            if (!_suppressEvents)
                 OnErrorReceived(new StepMotorEventArgs(LastResponse));
         }
 
@@ -114,16 +118,16 @@ namespace StepMotor
         private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             // If port buffer is not empty
-            if (port.BytesToRead == 9)
+            if (_port.BytesToRead == 9)
             {
                 //Reads last response
-                LastResponse = new byte[port.BytesToRead];
-                port.Read(LastResponse, 0, LastResponse.Length);
+                LastResponse = new byte[_port.BytesToRead];
+                _port.Read(LastResponse, 0, LastResponse.Length);
                 // Indicates command received response
-                commandSent = false;
+                _commandSent = false;
 
                 // IF events are not suppressed, fires respective public event
-                if (!suppressEvents)
+                if (!_suppressEvents)
                     OnDataReceived(new StepMotorEventArgs(LastResponse));
             }
            
@@ -134,17 +138,17 @@ namespace StepMotor
         /// COM port event handlers. 
         /// Based on <see cref="System.Threading.SpinWait.SpinUntil(Func{bool}, TimeSpan)"/>.
         /// </summary>
-        /// <param name="timeOutMS">Timeout to wait. -1 is not recommended.</param>
-        /// <returns>An isntance of <see cref="Reply"/> generated from response byte array.</returns>
-        private Reply WaitResponse(int timeOutMS = 200)
+        /// <param name="timeOutMs">Timeout to wait. -1 is not recommended.</param>
+        /// <returns>An instance of <see cref="Reply"/> generated from response byte array.</returns>
+        private Reply WaitResponse(int timeOutMs = 200)
         {
             // Waits for response
-            System.Threading.SpinWait.SpinUntil(() => !commandSent, timeOutMS);
+            System.Threading.SpinWait.SpinUntil(() => !_commandSent, timeOutMs);
 
             // If response still has not been received, throws
-            if (commandSent)
+            if (_commandSent)
             {
-                commandSent = false;
+                _commandSent = false;
                 throw new InvalidOperationException("No response received");
             }
 
@@ -159,14 +163,14 @@ namespace StepMotor
         /// <param name="type">Type. Depends on the command.</param>
         /// <param name="address">Address.</param>
         /// <param name="motorOrBank">Motor or bank. Defaults to 0.</param>
-        /// <param name="waitResponseTimeMS">Wait time out. -1 is not recommended.</param>
+        /// <param name="waitResponseTimeMs">Wait time out. -1 is not recommended.</param>
         /// <returns></returns>
         public Reply SendCommand(Command command, int argument, 
             byte type = (byte)CommandType.Unused, 
-            byte address = 1, byte motorOrBank = 0, int waitResponseTimeMS = 200)
+            byte address = 1, byte motorOrBank = 0, int waitResponseTimeMs = 200)
         {
             // Indicates command sending is in process and response have been received yet.
-            commandSent = true;
+            _commandSent = true;
 
             // Converts Int32 into byte array. 
             // Motor accepts Most Significant Bit First, so for LittleEndian 
@@ -196,10 +200,10 @@ namespace StepMotor
             toSend[8] = Convert.ToByte(sum & 0xFF);
 
             // Sends data to COM port
-            port.Write(toSend, 0, toSend.Length);
+            _port.Write(toSend, 0, toSend.Length);
 
             // Wait for response
-            return WaitResponse(waitResponseTimeMS);
+            return WaitResponse(waitResponseTimeMs);
         }
 
         /// <summary>
@@ -207,8 +211,8 @@ namespace StepMotor
         /// </summary>
         public void Dispose()
         {
-            port.Close();
-            port.Dispose();
+            _port.Close();
+            _port.Dispose();
         }
 
         /// <summary>
@@ -219,26 +223,26 @@ namespace StepMotor
         /// <param name="suppressEvents">If true, no standard events are thrown,
         /// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
         /// If false, events are fired for each parameter queried.</param>
-        /// <returns>Retrieved values for each AxisParameter quieried.</returns>
+        /// <returns>Retrieved values for each AxisParameter queried.</returns>
         public Dictionary<AxisParameter, int> GetStatus(byte address = 1, byte motorOrBank = 0, bool suppressEvents = true)
         {
             // Stores old state
-            var oldState = this.suppressEvents;
-            this.suppressEvents = suppressEvents;
+            var oldState = _suppressEvents;
+            _suppressEvents = suppressEvents;
 
-            Dictionary<AxisParameter, int> status = new Dictionary<AxisParameter, int>();
+            var status = new Dictionary<AxisParameter, int>();
 
             // Ensures state is restored
             try
             {
 
-                // For each basic Axis Parameter quieries its value
-                // Uses explicit convertion of byte to AxisParameter
+                // For each basic Axis Parameter queries its value
+                // Uses explicit conversion of byte to AxisParameter
                 for (byte i = 0; i < 14; i++)
                 {
                     SendCommand(Command.GetAxisParameter, 0, i, address, motorOrBank);
                     WaitResponse();
-                    Reply r = new Reply(LastResponse);
+                    var r = new Reply(LastResponse);
                     if (r.Status == ReturnStatus.Success)
                         status[(AxisParameter)i] = r.ReturnValue;
 
@@ -248,7 +252,7 @@ namespace StepMotor
             finally
             {
                 // Restores state
-                this.suppressEvents = oldState;
+                _suppressEvents = oldState;
             }
 
                 // Returns query result
@@ -256,25 +260,25 @@ namespace StepMotor
         }
 
         /// <summary>
-        /// Wwait for position to be reached. Checks boolean TargetPositionReached parameter.
+        /// Wait for position to be reached. Checks boolean TargetPositionReached parameter.
         /// </summary>
         /// <param name="address">Address.</param>
         /// <param name="motorOrBank">Motor or bank. Defaults to 0.</param>
         /// <param name="suppressEvents">If true, no standard events are thrown,
         /// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
         /// If false, events are fired for each parameter queried.</param>
-        /// <param name="checkIntervalMS">TIme between subsequent checks of the status.</param>
+        /// <param name="checkIntervalMs">TIme between subsequent checks of the status.</param>
         public void WaitPositionReached(byte address = 1, byte motorOrBank = 0, 
-            bool suppressEvents = true, int checkIntervalMS = 200)
+            bool suppressEvents = true, int checkIntervalMs = 200)
         {
             // Stores old state
-            bool oldState = this.suppressEvents;
-            this.suppressEvents = suppressEvents;
+            var oldState = _suppressEvents;
+            _suppressEvents = suppressEvents;
 
             try
             {
                 // Sends GetAxisParameter with TargetPositionReached as parameter.
-                Reply r = SendCommand(
+                var r = SendCommand(
                     Command.GetAxisParameter, 
                     0, 
                     (byte)AxisParameter.TargetPoisitionReached, 
@@ -286,30 +290,30 @@ namespace StepMotor
                 while (r.Status == ReturnStatus.Success && r.ReturnValue == 0)
                 {
                     // Waits for small amount of time.
-                    System.Threading.Thread.Sleep(checkIntervalMS);
+                    System.Threading.Thread.Sleep(checkIntervalMs);
                     r = SendCommand(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPoisitionReached, address, motorOrBank);
                 }
 
             }
             finally
             {
-                // Restores old staate
-                this.suppressEvents = oldState;
+                // Restores old state
+                _suppressEvents = oldState;
             }
 
         }
 
         public void WaitReferencePositionReached(byte address = 1, byte motorOrBank = 0,
-            bool suppressEvents = true, int checkIntervalMS = 200)
+            bool suppressEvents = true, int checkIntervalMs = 200)
         {
             // Stores old state
-            bool oldState = this.suppressEvents;
-            this.suppressEvents = suppressEvents;
+            var oldState = _suppressEvents;
+            _suppressEvents = suppressEvents;
 
             try
             {
 
-                Reply r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Start, address, motorOrBank);
+                var r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Start, address, motorOrBank);
                 if (r.Status != ReturnStatus.Success)
                     throw new Exception();
                 r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Status, address, motorOrBank);
@@ -317,7 +321,7 @@ namespace StepMotor
                 while (r.Status == ReturnStatus.Success && r.ReturnValue != 0)
                 {
                     // Waits for small amount of time.
-                    System.Threading.Thread.Sleep(checkIntervalMS);
+                    System.Threading.Thread.Sleep(checkIntervalMs);
                     r = SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Status, address, motorOrBank);
                 }
 
@@ -325,8 +329,8 @@ namespace StepMotor
             finally
             {
                 SendCommand(Command.ReferenceSearch, 0, (byte)CommandType.Stop, address, motorOrBank);
-                // Restores old staate
-                this.suppressEvents = oldState;
+                // Restores old state
+                _suppressEvents = oldState;
             }
         }
 
@@ -335,14 +339,14 @@ namespace StepMotor
         /// </summary>
         /// <param name="e">Event arguments.</param>
         protected virtual void OnDataReceived(StepMotorEventArgs e)
-            => DataRecieved?.Invoke(this, e);
+            => DataReceived?.Invoke(this, e);
 
         /// <summary>
         /// Used to fire ErrorReceived event.
         /// </summary>
         /// <param name="e">Event arguments.</param>
         protected virtual void OnErrorReceived(StepMotorEventArgs e)
-            => ErrorRecieved?.Invoke(this, e);
+            => ErrorReceived?.Invoke(this, e);
     }
 
 }
