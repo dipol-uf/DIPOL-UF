@@ -151,8 +151,8 @@ namespace StepMotor
         }
 
         public Task<Reply> SendCommandAsync(Command command, int argument,
-            byte type = (byte)CommandType.Unused,
-            byte address = 1, byte motorOrBank = 0, int waitResponseTimeMs = 200)
+            byte type,
+            byte address, byte motorOrBank, TimeSpan timeOut)
         {
             // Indicates command sending is in process and response have been received yet.
             _portResponseTask = new TaskCompletionSource<Reply>();
@@ -205,8 +205,14 @@ namespace StepMotor
             _port.Write(toSend, 0, toSend.Length);
 
             // Wait for response
-            return WaitResponseAsync(TimeSpan.FromMilliseconds(waitResponseTimeMs));
+            return WaitResponseAsync(timeOut);
         }
+
+        public Task<Reply> SendCommandAsync(
+            Command command, int argument,
+            CommandType type = CommandType.Unused,
+            byte address = 1, byte motorOrBank = 0)
+            => SendCommandAsync(command, argument, (byte) type, address, motorOrBank, TimeSpan.FromMilliseconds(500));
 
         /// <summary>
         /// Implements interface and frees resources
@@ -217,15 +223,15 @@ namespace StepMotor
             _port.Dispose();
         }
 
-        /// <summary>
-        /// Queries status of all Axis parameters.
-        /// </summary>
-        /// <param name="address">Address.</param>
-        /// <param name="motorOrBank">Motor or bank, defaults to 0.</param>
-        /// <param name="suppressEvents">If true, no standard events are thrown,
-        /// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
-        /// If false, events are fired for each parameter queried.</param>
-        /// <returns>Retrieved values for each AxisParameter queried.</returns>
+        ///// <summary>
+        ///// Queries status of all Axis parameters.
+        ///// </summary>
+        ///// <param name="address">Address.</param>
+        ///// <param name="motorOrBank">Motor or bank, defaults to 0.</param>
+        ///// <param name="suppressEvents">If true, no standard events are thrown,
+        ///// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
+        ///// If false, events are fired for each parameter queried.</param>
+        ///// <returns>Retrieved values for each AxisParameter queried.</returns>
         //public Dictionary<AxisParameter, int> GetStatus(byte address = 1, byte motorOrBank = 0, bool suppressEvents = true)
         //{
         //    // Stores old state
@@ -261,15 +267,15 @@ namespace StepMotor
         //        return status;
         //}
 
-        /// <summary>
-        /// Wait for position to be reached. Checks boolean TargetPositionReached parameter.
-        /// </summary>
-        /// <param name="address">Address.</param>
-        /// <param name="motorOrBank">Motor or bank. Defaults to 0.</param>
-        /// <param name="suppressEvents">If true, no standard events are thrown,
-        /// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
-        /// If false, events are fired for each parameter queried.</param>
-        /// <param name="checkIntervalMs">TIme between subsequent checks of the status.</param>
+        ///// <summary>
+        ///// Wait for position to be reached. Checks boolean TargetPositionReached parameter.
+        ///// </summary>
+        ///// <param name="address">Address.</param>
+        ///// <param name="motorOrBank">Motor or bank. Defaults to 0.</param>
+        ///// <param name="suppressEvents">If true, no standard events are thrown,
+        ///// but <see cref="StepMotorHandler.LastResponse"/> is updated anyway. 
+        ///// If false, events are fired for each parameter queried.</param>
+        ///// <param name="checkIntervalMs">TIme between subsequent checks of the status.</param>
         //public void WaitPositionReached(byte address = 1, byte motorOrBank = 0, 
         //    bool suppressEvents = true, int checkIntervalMs = 200)
         //{
