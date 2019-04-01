@@ -23,8 +23,11 @@
 //     SOFTWARE.
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.IO.Ports;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace StepMotor
@@ -34,6 +37,9 @@ namespace StepMotor
     /// </summary>
     public class StepMotorHandler : IDisposable
     {
+        private static readonly Regex Regex = new Regex(@"[a-z]([a-z])\s*(\d{1,3})\s*(.*)\r",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         /// <summary>
         /// Delegate that handles Data/Error received events.
         /// </summary>
@@ -51,8 +57,10 @@ namespace StepMotor
         /// <summary>
         /// Used to suppress public events while performing WaitResponse.
         /// </summary>
-        private volatile bool _suppressEvents = false;
-        
+        private volatile bool _suppressEvents;
+
+        public byte Address { get; }
+
         /// <summary>
         /// Fires when data has been received from COM port.
         /// </summary>
@@ -75,9 +83,11 @@ namespace StepMotor
         /// Default constructor
         /// </summary>
         /// <param name="portName">COM port name.</param>
+        /// <param name="address">Device address.</param>
         /// <exception cref="ArgumentOutOfRangeException"/>
-        public StepMotorHandler(string portName)
+        public StepMotorHandler(string portName, byte address = 1)
         {
+            Address = address;
             // Checks if port name is legal
             if (!SerialPort.GetPortNames().Contains(portName))
                 throw new ArgumentOutOfRangeException($"Provided {nameof(portName)} ({portName}) is either illegal or not present on the sstem.");
@@ -87,8 +97,67 @@ namespace StepMotor
             // Event listeners
             _port.DataReceived += OnPortDataReceived;
             _port.ErrorReceived += OnPortErrorReceived;
+            _port.NewLine = "\r";
             // Opens port
             _port.Open();
+        }
+
+        private async Task<bool> PokeAddressInBinary(byte address)
+        {
+            try
+            {
+                _suppressEvents = true;
+
+                var result = await SendCommandAsync(Command.GetAxisParameter, 1, (byte) CommandType.Unused, address, 0,
+                    TimeSpan.FromMilliseconds(100));
+
+                return result.Status == ReturnStatus.Success;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                _suppressEvents = false;
+            }
+
+        }
+
+        private async Task SwitchToBinary(byte address)
+        {
+            try
+            {
+                _suppressEvents = true;
+                _portResponseTask = null;
+                _port.WriteLine("");
+                await Task.Delay(TimeSpan.FromMilliseconds(100));
+
+                var addrStr = ((char) (address - 1 + 'A')).ToString();
+
+                var command = $"{addrStr} BIN";
+                _portResponseTask = new TaskCompletionSource<Reply>();
+                _port.WriteLine(command);
+                await Task.WhenAny(_portResponseTask.Task, Task.Delay(TimeSpan.FromMilliseconds(100)));
+                if (_port.BytesToRead != 0)
+                {
+                    var buffer = new byte[_port.BytesToRead];
+                    _port.Read(buffer, 0, buffer.Length);
+                    var result = Regex.Match(_port.Encoding.GetString(buffer));
+
+                    if (result.Groups.Count == 4
+                        && result.Groups[1].Value == addrStr
+                        && result.Groups[2].Value == "100")
+                        return;
+
+                }
+                throw new InvalidOperationException("Failed to switch from ASCII to Binary.");
+            }
+            finally
+            {
+                _suppressEvents = false;
+            }
+
         }
 
         /// <summary>
@@ -108,7 +177,6 @@ namespace StepMotor
             throw new TimeoutException("Serial device did not communicate back within allotted time interval.");
         }
 
-      
         /// <summary>
         /// Handles internal COM port ErrorReceived.
         /// </summary>
@@ -120,7 +188,7 @@ namespace StepMotor
             LastResponse = new byte[_port.BytesToRead];
             _port.Read(LastResponse, 0, LastResponse.Length);
             // Indicates command received response
-            _portResponseTask.SetException(new InvalidOperationException("Serial device responded with an error."));
+            _portResponseTask?.SetException(new InvalidOperationException("Serial device responded with an error."));
 
             // IF events are not suppressed, fires respective public event
             if (!_suppressEvents)
@@ -211,8 +279,14 @@ namespace StepMotor
         public Task<Reply> SendCommandAsync(
             Command command, int argument,
             CommandType type = CommandType.Unused,
-            byte address = 1, byte motorOrBank = 0)
-            => SendCommandAsync(command, argument, (byte) type, address, motorOrBank, TimeSpan.FromMilliseconds(500));
+            byte address = 0, byte motorOrBank = 0)
+            => SendCommandAsync(
+                command, 
+                argument, 
+                (byte) type,
+                address == 0 ? Address : address, 
+                motorOrBank, 
+                TimeSpan.FromMilliseconds(250));
 
         /// <summary>
         /// Implements interface and frees resources
@@ -355,6 +429,34 @@ namespace StepMotor
         /// <param name="e">Event arguments.</param>
         protected virtual void OnErrorReceived(StepMotorEventArgs e)
             => ErrorReceived?.Invoke(this, e);
+
+        public static async Task<Collection<byte>> FindDevice(string port, byte startAddress = 1, byte endAddress = 16)
+        {
+            var result = new Collection<byte>();
+            using (var motor = new StepMotorHandler(port))
+            {
+                for (var i = startAddress; i <= endAddress; i++)
+                {
+                    try
+                    {
+                        if (await motor.PokeAddressInBinary(i))
+                            result.Add(i);
+                        else
+                        {
+                            await motor.SwitchToBinary(i);
+                            if(await motor.PokeAddressInBinary(i))
+                                result.Add(i);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Ignored
+                    }
+                }
+            }
+
+            return result;
+        }
     }
 
 }

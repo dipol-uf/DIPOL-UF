@@ -68,6 +68,7 @@
     <Compile Include="CommandEnum.cs" />
     <Compile Include="CommandTypeEnum.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RegimeEnum.cs" />
     <Compile Include="Reply.cs" />
     <Compile Include="ReturnStatusEnum.cs" />
     <Compile Include="StepMotorHandler.cs" />

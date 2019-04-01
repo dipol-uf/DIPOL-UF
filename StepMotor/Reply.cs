@@ -101,7 +101,7 @@ namespace StepMotor
             if (replyData == null)
                 throw new ArgumentNullException($"Input parameter ({nameof(replyData)}) is null.");
             // If replyData has proper (expected) length
-            else if (replyData.Length == ReplyLength)
+            if (replyData.Length == ReplyLength)
             {
                 // Calculates checksum
                 int checkSum = 0;
