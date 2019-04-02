@@ -28,6 +28,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using DIPOL_Remote;
 using DIPOL_UF.Models;
@@ -43,20 +44,24 @@ namespace DIPOL_UF
         {
 #if DEBUG && HOST_SERVER
 #if IN_PROCESS
-            var host = new DipolHost(new Uri("net.tcp://127.0.0.1/400"));
-            host.Open();
+
+            var connStr = UiSettingsProvider.Settings.GetArray<string>("RemoteLocations")?.FirstOrDefault();
+            var host = connStr is null ? null : new DipolHost(new Uri(connStr));
+            host?.Open();
 #else
+            var connStr = UiSettingsProvider.Settings.GetArray<string>("RemoteLocations")?.FirstOrDefault();
+
             var pInfo = new ProcessStartInfo()
             {
                 FileName = Path.Combine("../../../../Host/bin/x86/Debug/Host.exe"),
-                Arguments = "net.tcp://127.0.0.1/400",
+                Arguments = connStr,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardInput = true
             };
-            var process = Process.Start(pInfo);
+            var process = connStr is null ? null : Process.Start(pInfo);
 #endif
-        
+
 #endif
             Debug.Listeners.Add(new TextWriterTraceListener(Console.Out));
             Debug.AutoFlush = true;
@@ -77,8 +82,8 @@ namespace DIPOL_UF
 #if DEBUG && HOST_SERVER
            
 #if IN_PROCESS
-            host.Close();
-            host.Dispose();
+            host?.Close();
+            host?.Dispose();
 #else
             process?.StandardInput.WriteLine("exit");
             process?.WaitForExit(500);

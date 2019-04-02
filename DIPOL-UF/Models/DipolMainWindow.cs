@@ -36,17 +36,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO.Ports;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using System.Web.UI.WebControls.Expressions;
 using System.Windows;
 using System.Windows.Input;
 using DynamicData.Kernel;
 using StepMotor;
-using Expression = System.Linq.Expressions.Expression;
 
 namespace DIPOL_UF.Models
 {
@@ -427,6 +424,7 @@ namespace DIPOL_UF.Models
             if (!IsDisposed)
                 if (disposing)
                 {
+                    base.Dispose(true);
                     _connectedCameras.Clear();
 
                     if (!(_remoteClients is null))
@@ -444,7 +442,6 @@ namespace DIPOL_UF.Models
                             }
                         });
                 }
-            base.Dispose(disposing);
         }
 
         private static async Task<AvailableCamerasModel> QueryCamerasAsync(AvailableCamerasModel model)
