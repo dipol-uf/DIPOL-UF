@@ -145,7 +145,8 @@
                         BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
                     <DockPanel>
                     <Button DockPanel.Dock="Left"
-                        HorizontalAlignment="Center" IsEnabled="True">
+                        HorizontalAlignment="Center" IsEnabled="True"
+                        Command="{Binding PolarimeterMotorButtonCommand}">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource BasicButtonStyle}">
                                 <Style.Triggers>
