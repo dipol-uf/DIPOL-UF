@@ -22,26 +22,28 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System;
-using System.Collections.Generic;
-using System.IO.Ports;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Windows.Input;
-using DIPOL_UF.ViewModels;
-
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_Remote;
+using DIPOL_UF.ViewModels;
 using DIPOL_UF.Views;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO.Ports;
+using System.Linq;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+using DynamicData.Kernel;
+using StepMotor;
 
 namespace DIPOL_UF.Models
 {
@@ -53,10 +55,14 @@ namespace DIPOL_UF.Models
 
         private DipolClient[] _remoteClients;
 
-        private StepMotor.StepMotorHandler _polMotor;
+        private (string Port, ReadOnlyCollection<byte> Devices)[] _foundSerialDevices;
 
         private readonly SourceCache<(string Id, CameraBase Camera), string> _connectedCameras;
 
+
+        [Reactive]
+        // ReSharper disable once UnusedAutoPropertyAccessor.Local
+        public StepMotorHandler PolarimeterMotor { get; private set; }
 
         public DescendantProvider ProgressBarProvider { get; private set; }
         public DescendantProvider AvailableCamerasProvider { get; private set; }
@@ -80,6 +86,8 @@ namespace DIPOL_UF.Models
 
         public DipolMainWindow()
         {
+            CheckStepMotors();
+
             _connectedCameras = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
                 .DisposeWith(Subscriptions);
 
@@ -91,10 +99,36 @@ namespace DIPOL_UF.Models
             HookValidators();
         }
 
-        private async Task CheckStepMotor()
+        private void CheckStepMotors()
         {
-            var comPorts = SerialPort.GetPortNames();
+           Task.Run(async () =>
+            {
+                try
+                {
+                    var comPorts = SerialPort.GetPortNames();
+                    _foundSerialDevices =
+                        await Task.WhenAll(comPorts.Select(async x =>
+                            (Port: x, Devices: await StepMotorHandler.FindDevice(x))));
+                    var preferredPortName =
+                        UiSettingsProvider.Settings.Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant();
 
+                    if (_foundSerialDevices.FirstOrOptional(x => x.Port.ToUpperInvariant() == preferredPortName) is
+                            var
+                            ports
+                        && ports.HasValue
+                        && ports.Value.Devices.Count > 0)
+                    {
+                        var address = ports.Value.Devices.First();
+                        PolarimeterMotor = new StepMotorHandler(preferredPortName, address);
+                    }
+
+                }
+                catch (Exception)
+                {
+                    // TODO: maybe handle
+                    // Ignored
+                }
+            });
         }
 
         private void InitializeCommands()

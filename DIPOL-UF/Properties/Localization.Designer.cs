@@ -930,6 +930,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No motor.
+        /// </summary>
+        public static string MainWindow_PolarimeterButton_None {
+            get {
+                return ResourceManager.GetString("MainWindow_PolarimeterButton_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Motor OK.
+        /// </summary>
+        public static string MainWindow_PolarimeterButton_Present {
+            get {
+                return ResourceManager.GetString("MainWindow_PolarimeterButton_Present", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Properties.
         /// </summary>
         public static string Menu_MainWindow_CameraProperties {

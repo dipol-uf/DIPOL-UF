@@ -91,7 +91,8 @@
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto" x:Name="GridButtonRowHeight"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
                 
                 <Border Grid.Row="0" 
@@ -142,10 +143,29 @@
                          Grid.Row="3" 
                         Style="{StaticResource ResourceKey=BorderStyle}"
                         BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
-                    <Button 
-                        Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                        Content="Remote Sessions"
-                        Width="auto" HorizontalAlignment="Center" IsEnabled="True"/>
+                    <DockPanel>
+                    <Button DockPanel.Dock="Left"
+                        HorizontalAlignment="Center" IsEnabled="True">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource BasicButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasPolarimeterMotor}" Value="True">
+                                        <Setter Property="Content" Value="{extensions:Text Key=MainWindow_PolarimeterButton_Present}"/>
+                                        <Setter Property="Background" Value="{StaticResource PositiveEffectButtonBackgroundColor}"></Setter>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding HasPolarimeterMotor}" Value="False">
+                                        <Setter Property="Content" Value="{extensions:Text Key=MainWindow_PolarimeterButton_None}"/>
+                                        <Setter Property="Background" Value="{StaticResource NegativeEffectButtonBackgroundColor}"></Setter>
+                                    </DataTrigger>
+                                    </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button DockPanel.Dock="Right"
+                            Style="{StaticResource ResourceKey=BasicButtonStyle}"
+                            Content="Remote Sessions"
+                            HorizontalAlignment="Center" IsEnabled="False"/>
+                    </DockPanel>
                 </Border>
             </Grid>
         </Border>
