@@ -23,7 +23,9 @@
 //     SOFTWARE.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -32,6 +34,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Serializers
 {
@@ -87,9 +91,34 @@ namespace Serializers
             str.Flush();
         }
 
-        public static Dictionary<string, object> ReadJson(StreamReader str)
-            => new JavaScriptSerializer()
-                .DeserializeObject(str.ReadToEnd()) as Dictionary<string, object>;
+        public static ReadOnlyDictionary<string, object> ReadJson(StreamReader str)
+        {
+
+            object Process( object token)
+            {
+                if (token is JObject obj)
+                    return obj.Properties().ToDictionary(x => x.Name, x => Process(x.Value));
+                if (token is JValue val)
+                    return val.Value;
+                if (token is JArray array)
+                {
+                    return array.Select(Process).ToArray();
+                }
+
+
+                return token;
+            }
+
+            var line = str.ReadToEnd();
+
+            var result = JsonConvert.DeserializeObject<Dictionary<string, object>>(line)
+                                    .ToDictionary(x => x.Key, x => Process(x.Value));
+
+            return new ReadOnlyDictionary<string, object>(result);
+
+            return new ReadOnlyDictionary<string, object>(
+                new JavaScriptSerializer().DeserializeObject(line) as Dictionary<string, object>);
+        }
 
         public static async Task WriteJsonAsync(this object settings, Stream str, Encoding enc, CancellationToken token)
         {
