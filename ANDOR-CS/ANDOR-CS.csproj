@@ -112,7 +112,6 @@
     <Compile Include="Classes\SafeSDKCameraHandle.cs" />
     <Compile Include="Classes\SettingsBase.cs" />
     <Compile Include="Classes\SettingsProvider.cs" />
-    <Compile Include="Classes\XmlParser.cs" />
     <Compile Include="DataStructures\CameraProperties.cs" />
     <Compile Include="Classes\Extensions.cs" />
     <Compile Include="DataStructures\Size.cs" />
