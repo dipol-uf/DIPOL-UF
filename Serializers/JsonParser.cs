@@ -32,12 +32,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
-using ANDOR_CS.Attributes;
-using NonSerializedAttribute = ANDOR_CS.Attributes.NonSerializedAttribute;
 
-namespace ANDOR_CS.Classes
+namespace Serializers
 {
-    internal static class JsonParser
+    public static class JsonParser
     {
         private const int WriteChunkSize = 64;
 
@@ -64,57 +62,54 @@ namespace ANDOR_CS.Classes
                 : result;
         }
 
-        public static void WriteJson(StreamWriter str, SettingsBase settings)
+        public static void WriteJson(StreamWriter str, object settings)
         {
             var props = settings.GetType()
                         .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                         .Where(p =>
-                            p.GetCustomAttribute<NonSerializedAttribute>(true) == null &&
+                            p.GetCustomAttribute<SerializationOrderAttribute>() != null &&
                             p.SetMethod != null &&
                             p.GetMethod != null)
                         .OrderBy(p =>
-                            p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0);
+                            p.GetCustomAttribute<SerializationOrderAttribute>().Index);
 
             var data = props.Select(p => new
-                            {
-                                p.Name,
-                                Value = Converter(p.GetValue(settings), p.GetCustomAttribute<SerializationOrderAttribute>(true)?.All ?? false)
-                            })
+            {
+                p.Name,
+                Value = Converter(p.GetValue(settings), p.GetCustomAttribute<SerializationOrderAttribute>(true)?.All ?? false)
+            })
                             .Where(item => item.Value != null)
                             .ToDictionary(item => item.Name, item => item.Value);
-            data.Add("CompatibleDevice", settings.Camera?.Capabilities.CameraType.ToString());
 
             var dataString = TabifyNestedNodes(new JavaScriptSerializer().Serialize(data));
 
             str.Write(dataString);
             str.Flush();
         }
-        
+
         public static Dictionary<string, object> ReadJson(StreamReader str)
             => new JavaScriptSerializer()
                 .DeserializeObject(str.ReadToEnd()) as Dictionary<string, object>;
-        
-        public static async Task WriteJsonAsync(this SettingsBase settings, Stream str, Encoding enc, CancellationToken token)
+
+        public static async Task WriteJsonAsync(this object settings, Stream str, Encoding enc, CancellationToken token)
         {
-            if(!str.CanWrite)
+            if (!str.CanWrite)
                 throw new ArgumentException("Stream does not support writing.", nameof(str));
             var props = settings.GetType()
                                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                                 .Where(p =>
-                                    p.GetCustomAttribute<NonSerializedAttribute>(true) == null &&
-                                    p.SetMethod != null &&
+                                    p.GetCustomAttribute<SerializationOrderAttribute>() != null &&
                                     p.GetMethod != null)
                                 .OrderBy(p =>
                                     p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0);
 
             var data = props.Select(p => new
-                            {
-                                p.Name,
-                                Value = Converter(p.GetValue(settings), p.GetCustomAttribute<SerializationOrderAttribute>(true)?.All ?? false)
-                            })
+            {
+                p.Name,
+                Value = Converter(p.GetValue(settings), p.GetCustomAttribute<SerializationOrderAttribute>(true)?.All ?? false)
+            })
                             .Where(item => item.Value != null)
                             .ToDictionary(item => item.Name, item => item.Value);
-            data.Add("CompatibleDevice", settings.Camera?.Capabilities.CameraType.ToString());
 
             var byteRep = enc.GetBytes(TabifyNestedNodes(new JavaScriptSerializer().Serialize(data)));
 

@@ -24,20 +24,28 @@
 
 using System;
 
-namespace ANDOR_CS.Attributes
+namespace Serializers
 {
-    [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
-    internal class FitsKeyAttribute : Attribute
+    /// <inheritdoc />
+    [AttributeUsage(AttributeTargets.Property)]
+    public class SerializationOrderAttribute : Attribute
     {
-        public string Header { get; }
-        public string Comment { get; }
-        public int? Index { get; }
+        /// <summary>
+        /// Serialization index.
+        /// </summary>
+        public int Index { get; }
 
-        public FitsKeyAttribute(string header, string comment = "", int index = -1)
+        public bool All { get; }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="serializeAll"></param>
+        public SerializationOrderAttribute(int index, bool serializeAll = false)
         {
-            Header = header;
-            Index = index == -1 ? null : (int?)index;
-            Comment = comment;
+            Index = index;
+            All = serializeAll;
         }
     }
 }
