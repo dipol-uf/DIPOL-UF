@@ -213,9 +213,6 @@
     <Compile Include="Converters\ValueTupleToValueValueConverter.cs" />
     <Compile Include="Converters\TypeValueConverter.cs" />
     <Compile Include="DebugTracer.cs" />
-    <Compile Include="DebugWindow.xaml.cs">
-      <DependentUpon>DebugWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Enums\ControlStateEnum.cs" />
     <Compile Include="Extensions\EventToCommandAction.cs" />
     <Compile Include="Extensions\FileDialogAction.cs" />
@@ -285,10 +282,6 @@
     <Page Include="Controls\DipolImagePresenter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="DebugWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="Resources\ControlTemplates.xaml">
       <SubType>Designer</SubType>

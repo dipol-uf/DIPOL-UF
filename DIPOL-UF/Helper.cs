@@ -33,6 +33,7 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -46,6 +47,7 @@ namespace DIPOL_UF
 {
     public static class Helper
     {
+
         public static Dispatcher UiDispatcher =>
             Application.Current?.Dispatcher
             ?? throw new InvalidOperationException("Dispatcher is unavailable.");
@@ -74,14 +76,21 @@ namespace DIPOL_UF
 
         public static string GetCameraHostName(string input)
         {
-            var splits = input.Split(':');
+            var splits = input.Split(';');
             if (splits.Length > 0)
             {
                 var host = splits[0];
                 if (!string.IsNullOrWhiteSpace(host))
-                    return host.ToLowerInvariant().Trim() == "localhost"
-                        ? Properties.Localization.General_LocalHostName
-                        : host;
+                {
+                    if (!host.Contains("://"))
+                        host = @"net.tcp://" + host;
+                    if (Uri.TryCreate(host, UriKind.RelativeOrAbsolute, out var uri)
+                        && uri.Host.ToLowerInvariant() is var invariantHost)
+                        return invariantHost == "localhost" || invariantHost == "127.0.0.1"
+                            ? Properties.Localization.General_LocalHostName
+                            : uri.Host;
+
+                }
             }
             return string.Empty;
         }
