@@ -1150,7 +1150,7 @@ namespace DIPOL_UF.ViewModels
             try
             {
                 using (var fl = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.Read))
-                    await Model.Object.SerializeAsync(fl, Encoding.Unicode, token)
+                    await Model.Object.SerializeAsync(fl, Encoding.ASCII, token)
                                .ExpectCancellationAsync()
                                .ConfigureAwait(false);
             }

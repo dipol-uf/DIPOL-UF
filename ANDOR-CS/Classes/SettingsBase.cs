@@ -804,7 +804,7 @@ namespace ANDOR_CS.Classes
 
         public virtual void Serialize(Stream stream)
         {
-            var str = new StreamWriter(stream, Encoding.Unicode);
+            var str = new StreamWriter(stream, Encoding.ASCII);
             WriteJson(str);
         }
 
@@ -813,7 +813,7 @@ namespace ANDOR_CS.Classes
 
         public virtual List<string> Deserialize(Stream stream)
         {
-            return ReadJson(new StreamReader(stream, Encoding.Unicode));
+            return ReadJson(new StreamReader(stream, Encoding.ASCII, true));
         }
 
         public virtual void Dispose()
