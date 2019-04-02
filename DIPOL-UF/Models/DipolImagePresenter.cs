@@ -334,17 +334,21 @@ namespace DIPOL_UF.Models
                 .BindTo(this, x => x.SamplerGeometry)
                 .DisposeWith(Subscriptions);
 
+            // Watch : solves issue by subscribing to [DisplayedImage] and clamping sampler position
             this.WhenAnyPropertyChanged(
+                    nameof(DisplayedImage),
                     nameof(ApertureGeometry),
                     nameof(GapGeometry),
                     nameof(SamplerGeometry))
                 .Subscribe(_ => UpdateSamplerPosition(LastKnownImageControlSize, SamplerCenterPos))
                 .DisposeWith(Subscriptions);
 
+            // Watch bug fix : throws because is triggered by [DisplayedImage] assignment
             this.WhenAnyPropertyChanged(nameof(SamplerCenterPos), nameof(DisplayedImage))
                 .Where(x =>
                     !LastKnownImageControlSize.IsEmpty
                     && !(_sourceImage is null))
+                // Watch bug fix: may throw if image size changes
                 .Select(x => 1.0 * _sourceImage.Get<float>(
                                  Convert.ToInt32(x.SamplerCenterPosInPix.Y),
                                  Convert.ToInt32(x.SamplerCenterPosInPix.X)))
@@ -390,7 +394,7 @@ namespace DIPOL_UF.Models
 
         private async Task CopyImageAsync(Image image)
         {
-            var isFirstLoad = DisplayedImage == null;
+            var isFirstLoad = DisplayedImage is null;
             Image temp = null;
             switch (image.UnderlyingType)
             {
@@ -418,7 +422,7 @@ namespace DIPOL_UF.Models
                     break;
                 }
                 default:
-                    // TODO : Fix this
+                    // TODO : Implement more image types. (Even though sdk never generates other)
                     throw new NotSupportedException($"Image type {image.UnderlyingType} is not supported.");
             }
 
@@ -426,6 +430,7 @@ namespace DIPOL_UF.Models
                 throw new NullReferenceException("Image cannot be null.");
 
             temp.Scale(ImageScaleMin, ImageScaleMax);
+            // Bug: Provokes out of range exception if image size changes
             SamplerCenterPosInPix = isFirstLoad
                 // ReSharper disable PossibleLossOfFraction
                 ? new Point(temp.Width / 2, temp.Height / 2)
