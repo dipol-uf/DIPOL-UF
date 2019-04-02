@@ -22,35 +22,16 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System;
 using System.Runtime.Serialization;
 
 namespace StepMotor
 {
     [DataContract]
-    public class StepMotorEventArgs : EventArgs
+    public enum Regime
     {
-        [DataMember]
-        public DateTime EventTime
-        {
-            get;
-            private set;
-        }
-
-        [DataMember]
-        public Reply Reply
-        {
-            get;
-            private set;
-        }
-
-        public StepMotorEventArgs(byte[] message)
-        {
-            Reply = new Reply(message);
-
-            EventTime = DateTime.Now;
-        }
-
-
+        [EnumMember]
+        Binary = 0,
+        [EnumMember]
+        Ascii = 1
     }
 }
