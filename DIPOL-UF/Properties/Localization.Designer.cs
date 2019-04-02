@@ -930,6 +930,60 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorFailure_Caption {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorFailure_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A failure is detected in either hardware or software. Step motor cannot be connected. Make sure it is powered on and accessible, restart the program and try again..
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorFailure_Text {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorFailure_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Step motor is unavailable.
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorNotFound_Caption {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorNotFound_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Step motor on preferred port {0} is not found. Make sure the polariemter is connected and turned on. If you want to rescan, press [Yes]..
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorNotFound_Text {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorNotFound_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Step motor is OK.
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorOK_Caption {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorOK_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Step motor on port {0} at address {1:00} is healthy and responding..
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorOK_Text {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorOK_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No motor.
         /// </summary>
         public static string MainWindow_PolarimeterButton_None {

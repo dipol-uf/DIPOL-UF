@@ -36,14 +36,17 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO.Ports;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using System.Web.UI.WebControls.Expressions;
 using System.Windows;
 using System.Windows.Input;
 using DynamicData.Kernel;
 using StepMotor;
+using Expression = System.Linq.Expressions.Expression;
 
 namespace DIPOL_UF.Models
 {
@@ -59,6 +62,9 @@ namespace DIPOL_UF.Models
 
         private readonly SourceCache<(string Id, CameraBase Camera), string> _connectedCameras;
 
+        private Task _serialPortScanningTask;
+        [Reactive]
+        private bool IsSerialPortTaskCompleted { get; set; }
 
         [Reactive]
         // ReSharper disable once UnusedAutoPropertyAccessor.Local
@@ -84,9 +90,11 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<string, Unit> SelectCameraCommand { get; private set; }
         public ReactiveCommand<string, Unit> ContextMenuCommand { get; private set; }
 
+        public ReactiveCommand<Unit, Unit> PolarimeterMotorButtonCommand { get; private set; }
+
         public DipolMainWindow()
         {
-            CheckStepMotors();
+            _serialPortScanningTask = CheckStepMotors();
 
             _connectedCameras = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
                 .DisposeWith(Subscriptions);
@@ -99,35 +107,41 @@ namespace DIPOL_UF.Models
             HookValidators();
         }
 
-        private void CheckStepMotors()
+        private Task CheckStepMotors()
         {
-           Task.Run(async () =>
-            {
-                try
-                {
-                    var comPorts = SerialPort.GetPortNames();
-                    _foundSerialDevices =
-                        await Task.WhenAll(comPorts.Select(async x =>
-                            (Port: x, Devices: await StepMotorHandler.FindDevice(x))));
-                    var preferredPortName =
-                        UiSettingsProvider.Settings.Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant();
+           return Task.Run(async () =>
+           {
+               Application.Current?.Dispatcher.InvokeAsync(() => IsSerialPortTaskCompleted = false);
 
-                    if (_foundSerialDevices.FirstOrOptional(x => x.Port.ToUpperInvariant() == preferredPortName) is
-                            var
-                            ports
-                        && ports.HasValue
-                        && ports.Value.Devices.Count > 0)
-                    {
-                        var address = ports.Value.Devices.First();
-                        PolarimeterMotor = new StepMotorHandler(preferredPortName, address);
-                    }
+               try
+               {
+                   var comPorts = SerialPort.GetPortNames();
+                   _foundSerialDevices =
+                       await Task.WhenAll(comPorts.Select(async x =>
+                           (Port: x, Devices: await StepMotorHandler.FindDevice(x))));
+                   var preferredPortName =
+                       UiSettingsProvider.Settings.Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant();
 
-                }
-                catch (Exception)
-                {
-                    // TODO: maybe handle
-                    // Ignored
-                }
+                   if (_foundSerialDevices.FirstOrOptional(x => x.Port.ToUpperInvariant() == preferredPortName) is
+                           var
+                           ports
+                       && ports.HasValue
+                       && ports.Value.Devices.Count > 0)
+                   {
+                       var address = ports.Value.Devices.First();
+                       PolarimeterMotor = new StepMotorHandler(preferredPortName, address).DisposeWith(Subscriptions);
+                   }
+
+               }
+               catch (Exception)
+               {
+                   // TODO: maybe handle
+                   // Ignored
+               }
+               finally
+               {
+                   Application.Current?.Dispatcher.InvokeAsync(() => IsSerialPortTaskCompleted = true);
+               }
             });
         }
 
@@ -212,6 +226,14 @@ namespace DIPOL_UF.Models
                         x.Dispose();
                     }))
                 .DisposeWith(Subscriptions);
+
+                
+
+            PolarimeterMotorButtonCommand =
+                ReactiveCommand.CreateFromTask(CheckStepMotorStatus,
+                                   this.WhenPropertyChanged(x => x.IsSerialPortTaskCompleted)
+                                       .Select(x => x.Value))
+                               .DisposeWith(Subscriptions);
         }
 
         private void HookObservables()
@@ -352,6 +374,43 @@ namespace DIPOL_UF.Models
                 });
 
             await PrepareCamerasAsync(cams.Select(x => x.Camera));
+        }
+
+        private async Task CheckStepMotorStatus()
+        {
+            if (!(PolarimeterMotor is null))
+            {
+                var reply = await PolarimeterMotor.SendCommandAsync(Command.GetAxisParameter, 1);
+                if (reply.Status == ReturnStatus.Success)
+                    MessageBox.Show(
+                        string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
+                            PolarimeterMotor.PortName,
+                            PolarimeterMotor.Address),
+                        Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                if (!(_serialPortScanningTask is null)
+                    && !_serialPortScanningTask.IsFaulted
+                    && (_foundSerialDevices?.Any() ?? false))
+                {
+                    var response = MessageBox.Show(
+                        string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
+                            UiSettingsProvider.Settings.Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant()),
+                        Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (response == MessageBoxResult.Yes)
+                        _serialPortScanningTask = CheckStepMotors();
+                }
+                else
+                {
+                    MessageBox.Show(
+                        Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
+                        Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         private void DisconnectButtonCommandExecute()

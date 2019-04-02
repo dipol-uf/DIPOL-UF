@@ -62,6 +62,7 @@ namespace StepMotor
         /// </summary>
         private volatile bool _suppressEvents;
 
+        public string PortName => _port.PortName;
         public byte Address { get; }
 
         /// <summary>

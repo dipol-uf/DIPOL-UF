@@ -27,6 +27,7 @@ namespace DIPOL_UF.ViewModels
         public ICommand ConnectButtonCommand => Model.ConnectButtonCommand;
         public ICommand DisconnectButtonCommand => Model.DisconnectButtonCommand;
         public ICommand WindowLoadedCommand => Model.WindowLoadedCommand;
+        public ICommand PolarimeterMotorButtonCommand => Model.PolarimeterMotorButtonCommand;
 
         public DescendantProxy ProgressBarProxy { get; }
         public DescendantProxy AvailableCamerasProxy { get; }
@@ -50,8 +51,8 @@ namespace DIPOL_UF.ViewModels
 
         private void HookObservables()
         {
-            Model.WhenPropertyChanged(x => x.ProgressBarProvider)
-                 .Select(x => x != null)
+            Model.WhenPropertyChanged(x => x.PolarimeterMotor)
+                 .Select(x => x.Value != null)
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.HasPolarimeterMotor);
            

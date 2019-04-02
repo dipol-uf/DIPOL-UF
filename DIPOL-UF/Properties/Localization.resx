@@ -466,4 +466,22 @@ The following settings produced this error:
   <data name="MainWindow_PolarimeterButton_None" xml:space="preserve">
     <value>No motor</value>
   </data>
+  <data name="MainWindow_MB_PolarimeterMotorFailure_Caption" xml:space="preserve">
+    <value />
+  </data>
+  <data name="MainWindow_MB_PolarimeterMotorFailure_Text" xml:space="preserve">
+    <value>A failure is detected in either hardware or software. Step motor cannot be connected. Make sure it is powered on and accessible, restart the program and try again.</value>
+  </data>
+  <data name="MainWindow_MB_PolarimeterMotorNotFound_Caption" xml:space="preserve">
+    <value>Step motor is unavailable</value>
+  </data>
+  <data name="MainWindow_MB_PolarimeterMotorNotFound_Text" xml:space="preserve">
+    <value>Step motor on preferred port {0} is not found. Make sure the polariemter is connected and turned on. If you want to rescan, press [Yes].</value>
+  </data>
+  <data name="MainWindow_MB_PolarimeterMotorOK_Caption" xml:space="preserve">
+    <value>Step motor is OK</value>
+  </data>
+  <data name="MainWindow_MB_PolarimeterMotorOK_Text" xml:space="preserve">
+    <value>Step motor on port {0} at address {1:00} is healthy and responding.</value>
+  </data>
 </root>
