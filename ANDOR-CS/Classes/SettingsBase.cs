@@ -26,10 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Xml.Serialization;
 using System.IO;
-using System.Xml;
-using System.Xml.Schema;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
@@ -831,7 +828,7 @@ namespace ANDOR_CS.Classes
             => await JsonParser.WriteJsonAsync(this, str, enc, token);
 
         private ReadOnlyDictionary<string, object> ReadJson(StreamReader str)
-            => new ReadOnlyDictionary<string, object>(JsonParser.ReadJson(str));
+            => JsonParser.ReadJson(str);
 
         private Collection<string> Load(IReadOnlyDictionary<string, object> result)
         {
@@ -885,12 +882,11 @@ namespace ANDOR_CS.Classes
                         var endColl = dict["End"] as Dictionary<string, object>;
                         var area = new Rectangle(
                             new Point2D(
-                                (int)startColl["X"],
-                                (int)startColl["Y"]
-                                ), 
+                                Convert.ToInt32(startColl["X"]),
+                                Convert.ToInt32(startColl["Y"])), 
                             new Point2D(
-                                (int)endColl["X"],
-                                (int)endColl["Y"])
+                                Convert.ToInt32(endColl["X"]),
+                                Convert.ToInt32(endColl["Y"]))
                             );
 
                         item.Method.Invoke(this, new object[] {area});
