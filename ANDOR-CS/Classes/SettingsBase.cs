@@ -43,6 +43,8 @@ using ANDOR_CS.Attributes;
 using FITS_CS;
 using SettingsManager;
 
+using Serializers;
+
 // ReSharper disable InconsistentNaming
 #pragma warning disable 1591
 
@@ -57,10 +59,10 @@ namespace ANDOR_CS.Classes
             typeof(SettingsBase)
                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                 .Where(p =>
-                    p.GetCustomAttribute<Attributes.NonSerializedAttribute>(true) == null &&
+                    p.GetCustomAttribute<SerializationOrderAttribute>() != null &&
                     p.SetMethod != null &&
                     p.GetMethod != null)
-                .OrderBy(p => p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0)
+                .OrderBy(p => p.GetCustomAttribute<SerializationOrderAttribute>(true).Index)
                 .ToArray();
 
         private static readonly MethodInfo[] DeserializationSetMethods =
@@ -88,10 +90,8 @@ namespace ANDOR_CS.Classes
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        [Attributes.NonSerialized]
         public bool IsDisposed { get; private set; }
 
-        [Attributes.NonSerialized]
         public CameraBase Camera { get; protected set; }
 
         /// <summary>

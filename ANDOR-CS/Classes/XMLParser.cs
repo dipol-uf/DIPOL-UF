@@ -9,8 +9,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 
 using ANDOR_CS.Attributes;
-using ANDOR_CS.Enums;
-using NonSerializedAttribute = ANDOR_CS.Attributes.NonSerializedAttribute;
+using Serializers;
 
 namespace ANDOR_CS.Classes
 {
@@ -46,17 +45,13 @@ namespace ANDOR_CS.Classes
             var props = settings.GetType()
                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                 .Where(p => 
-                    p.GetCustomAttribute<NonSerializedAttribute>(true) == null &&
+                    p.GetCustomAttribute<SerializationOrderAttribute>() != null &&
                     p.SetMethod != null &&
                     p.GetMethod != null)
-                .OrderBy(p => p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0);
+                .OrderBy(p => p.GetCustomAttribute<SerializationOrderAttribute>().Index);
 
             writer.WriteStartDocument();
             writer.WriteStartElement("Settings");
-#if DEBUG
-            if(settings.Camera != null)
-#endif
-                writer.WriteAttributeString("CompatibleDevice", settings.Camera.Capabilities.CameraType.ToString());
 
             object value;
 
@@ -148,10 +143,7 @@ namespace ANDOR_CS.Classes
             }
             else if (reader.AttributeCount == 1)
             {
-                if (name == @"Settings")
-                    return new KeyValuePair<string, object>(@"CompatibleDevice",
-                        Enum.Parse(typeof(CameraType), reader.GetAttribute(0) ?? ""));
-
+                // ReSharper disable once AssignNullToNotNullAttribute
                 var match = TupleTypeParser.Match(typeStr);
                 if (match.Success && match.Groups.Count == 2)
                 {

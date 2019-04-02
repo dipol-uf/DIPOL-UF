@@ -32,7 +32,6 @@ namespace DIPOL_Remote
     {
         private DipolClient _client;
         
-        [ANDOR_CS.Attributes.NonSerialized]
         internal string SettingsID
         {
             get;
