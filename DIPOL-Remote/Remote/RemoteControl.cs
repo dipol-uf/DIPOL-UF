@@ -350,7 +350,7 @@ namespace DIPOL_Remote.Remote
                if (_cameras.TryRemove(camIndex, out var removedCamera))
                 {
                     _host?.OnEventReceived(removedCamera, "Camera was disposed remotely.");
-                    removedCamera.Dispose();
+                    removedCamera?.Dispose();
                 }
                 else throw new InvalidOperationException("Camera handle is unavailable.");
 

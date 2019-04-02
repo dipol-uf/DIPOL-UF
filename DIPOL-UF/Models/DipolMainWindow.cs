@@ -330,8 +330,16 @@ namespace DIPOL_UF.Models
                     if (!(_remoteClients is null))
                         Parallel.ForEach(_remoteClients, (client) =>
                         {
-                            client?.Disconnect();
-                            client?.Dispose();
+                            try
+                            {
+                                client?.Disconnect();
+                                client?.Dispose();
+                            }
+                            catch (Exception)
+                            {
+                                // TODO : may be important
+                                // Ignored
+                            }
                         });
                 }
             base.Dispose(disposing);
