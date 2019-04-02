@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml.Serialization;
 using System.IO;
@@ -53,7 +54,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Base class for all the settings profiles
     /// </summary>
-    public abstract class SettingsBase : IDisposable, IXmlSerializable, INotifyPropertyChanged
+    public abstract class SettingsBase : IDisposable, INotifyPropertyChanged
     {
         private static readonly PropertyInfo[] SerializedProperties =
             typeof(SettingsBase)
@@ -811,9 +812,10 @@ namespace ANDOR_CS.Classes
         public virtual async Task SerializeAsync(Stream stream, Encoding enc, CancellationToken token)
             => await WriteJsonAsync(stream, enc, token);
 
-        public virtual List<string> Deserialize(Stream stream)
+        public virtual Collection<string> Deserialize(Stream stream)
         {
-            return ReadJson(new StreamReader(stream, Encoding.ASCII, true));
+            var data = ReadJson(new StreamReader(stream, Encoding.ASCII, true));
+            return Load(data);
         }
 
         public virtual void Dispose()
@@ -822,74 +824,18 @@ namespace ANDOR_CS.Classes
             IsDisposed = true;
         }
 
-        public XmlSchema GetSchema()
-            => null;
-
-        public List<string> ReadXml(XmlReader reader)
-        {
-            var output = new List<string>(SerializedProperties.Length);
-
-            var result = XmlParser.ReadXml(reader);
-
-            if (result.Any(x => 
-                x.Key == @"CompatibleDevice" &&
-                (CameraType)x.Value != Camera.Capabilities.CameraType))
-                throw new AndorSdkException("Failed to deserialize acquisition settings: " +
-                    "device type mismatch. Check attribute \"CompatibleDevice\" of Settings node", null);
-
-            foreach (var item in
-                    from r in SerializedProperties
-                        .Join(result, x => x.Name, y => y.Key, (x, y) => y)
-                    from m in DeserializationSetMethods
-                    let regexName = new {Method = m, Regex = SetFunctionNameParser.Match(m.Name)}
-                    where regexName.Regex.Success && regexName.Regex.Groups.Count == 2
-                    where r.Key == regexName.Regex.Groups[1].Value
-                    select new {regexName.Method, r.Key, r.Value})
-                     
-            {
-                try
-                {
-                    var pars = item.Method.GetParameters();
-                    if (item.Value is ITuple tuple &&
-                        pars.Length <= tuple.Length)
-                    {
-                        var tupleVals = new object[pars.Length];
-
-                        if (pars.Where((t, i) => (tupleVals[i] = tuple[i]).GetType() != t.ParameterType).Any())
-                            throw new TargetParameterCountException(@"Setter method argument type does not match type of provided item.");
-
-                        item.Method.Invoke(this, tupleVals);
-
-                    }
-                    else if (pars.Length == 1 && pars[0].ParameterType == item.Value.GetType())
-                        item.Method.Invoke(this, new[] { item.Value });
-                    else
-                        throw new TargetParameterCountException(@"Setter method signature does not match provided parameters.");
-                }
-                catch (TargetInvocationException)
-                { 
-                }
-
-                output.Add(item.Key);
-            }
-
-            return output;
-
-        }
-
-        public void WriteXml(XmlWriter writer)
-            => XmlParser.WriteXml(writer, this);
-
-        public void WriteJson(StreamWriter writer)
+        private void WriteJson(StreamWriter writer)
             => JsonParser.WriteJson(writer, this);
 
-        public async Task WriteJsonAsync(Stream str, Encoding enc, CancellationToken token)
+        private async Task WriteJsonAsync(Stream str, Encoding enc, CancellationToken token)
             => await JsonParser.WriteJsonAsync(this, str, enc, token);
 
-        public List<string> ReadJson(StreamReader str)
+        private ReadOnlyDictionary<string, object> ReadJson(StreamReader str)
+            => new ReadOnlyDictionary<string, object>(JsonParser.ReadJson(str));
+
+        private Collection<string> Load(IReadOnlyDictionary<string, object> result)
         {
-            var result = JsonParser.ReadJson(str);
-            var props = new List<string>();
+            var props = new Collection<string>();
             
             foreach (var item in
                 from r in SerializedProperties
@@ -1017,11 +963,6 @@ namespace ANDOR_CS.Classes
 
             return values;
         }
-
-        void IXmlSerializable.ReadXml(XmlReader reader)
-        {
-            ReadXml(reader);
-        }
-
+        
     }   
 }
