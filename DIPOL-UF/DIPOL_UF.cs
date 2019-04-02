@@ -37,7 +37,7 @@ using DIPOL_UF.ViewModels;
 
 namespace DIPOL_UF
 {
-    public static class DIPOL_UF_App
+    public static class DipolUfApp
     {
         [STAThread]
         private static int Main()
