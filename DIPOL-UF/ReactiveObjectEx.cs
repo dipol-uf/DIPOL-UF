@@ -28,8 +28,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net.Mime;
-using System.Net.Sockets;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData;

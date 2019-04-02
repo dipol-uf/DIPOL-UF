@@ -572,14 +572,14 @@ namespace DIPOL_UF.Models
                         DisplayedImage.Width - 1)));
                 var aperturePixelYLims = (Min: Convert.ToInt32(Math.Max(centerPix.Y - apertureHalfSizePix.Height, 0)),
                     Max: Convert.ToInt32(Math.Min(centerPix.Y + apertureHalfSizePix.Height,
-                        DisplayedImage.Width - 1)));
+                        DisplayedImage.Height - 1)));
 
                 var gapPixelXLims = (Min: Convert.ToInt32(Math.Max(centerPix.X - gapHalfSizePix.Width, 0)),
                     Max: Convert.ToInt32(Math.Min(centerPix.X + gapHalfSizePix.Width,
                         DisplayedImage.Width - 1)));
                 var gapPixelYLims = (Min: Convert.ToInt32(Math.Max(centerPix.Y - gapHalfSizePix.Height, 0)),
                     Max: Convert.ToInt32(Math.Min(centerPix.Y + gapHalfSizePix.Height,
-                        DisplayedImage.Width - 1)));
+                        DisplayedImage.Height - 1)));
 
                 switch (layer)
                 {

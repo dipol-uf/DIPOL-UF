@@ -26,7 +26,7 @@ namespace DIPOL_UF.Models
 
         private readonly DipolClient[] _remoteClients;
 
-        private readonly SourceCache<(string Id, CameraBase Camera), string> FoundDevices;
+        private readonly SourceCache<(string Id, CameraBase Camera), string> _foundDevices;
 
         private bool _isClosed;
         private bool _isSelected;
@@ -54,7 +54,7 @@ namespace DIPOL_UF.Models
             IsInteractive = true;
             SelectedIds = new SourceList<string>().DisposeWith(Subscriptions);
 
-            FoundDevices =
+            _foundDevices =
                 new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
                     .DisposeWith(Subscriptions);
 
@@ -74,7 +74,7 @@ namespace DIPOL_UF.Models
                 ReactiveCommand.Create<object>(
                                    ClickCommandExecute,
                                    interactivitySrc.CombineLatest(
-                                                       FoundDevices.CountChanged.Select(x => x != 0),
+                                                       _foundDevices.CountChanged.Select(x => x != 0),
                                                        (x, y) => x && y)
                                                    .ObserveOnUi())
                                .DisposeWith(Subscriptions);
@@ -93,7 +93,7 @@ namespace DIPOL_UF.Models
             ConnectAllButtonCommand
                 = ReactiveCommand.Create<Window>(ConnectAllButtonCommandExecute,
                                      interactivitySrc.CombineLatest(
-                                                         FoundDevices.CountChanged.Select(x => x != 0),
+                                                         _foundDevices.CountChanged.Select(x => x != 0),
                                                          (x, y) => x && y)
                                                      .ObserveOnUi())
                                  .DisposeWith(Subscriptions);
@@ -137,9 +137,9 @@ namespace DIPOL_UF.Models
         private void HookObservables()
         {
             // Binding source collection to the public read-only interface
-            FoundCameras = FoundDevices.AsObservableCache().DisposeWith(Subscriptions);
+            FoundCameras = _foundDevices.AsObservableCache().DisposeWith(Subscriptions);
 
-            FoundDevices.Connect().DisposeManyEx(x =>
+            _foundDevices.Connect().DisposeManyEx(x =>
             {
                 var (id, camera) = x;
                 if (!SelectedIds.Items.Contains(id))
@@ -211,7 +211,7 @@ namespace DIPOL_UF.Models
             }
 #if DEBUG
 
-            FoundDevices.Edit(context =>
+            _foundDevices.Edit(context =>
             {
                 context.AddOrUpdate(
                     Enumerable.Range(0, 4)
@@ -257,15 +257,15 @@ namespace DIPOL_UF.Models
                     // If camera is OK, add it to the list
                     if (cam != null)
                     {
-                        var id = $"localhost:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}";
-                        if (FoundDevices.Lookup(id).HasValue)
+                        var id = $"localhost;{cam.CameraIndex};{cam.CameraModel};{cam.SerialNumber}";
+                        if (_foundDevices.Lookup(id).HasValue)
                         {
                             cam.Dispose();
                             cam = null;
                         }
                         else
                         {
-                            FoundDevices.Edit(context => { context.AddOrUpdate((Id: id, Camera: cam)); });
+                            _foundDevices.Edit(context => { context.AddOrUpdate((Id: id, Camera: cam)); });
                             Interlocked.Increment(ref counter);
                         }
                     }
@@ -330,15 +330,15 @@ namespace DIPOL_UF.Models
                             // Add to collection
                             if (cam != null)
                             {
-                                var id = $"{client.HostAddress}:{cam.CameraIndex}:{cam.CameraModel}:{cam.SerialNumber}";
-                                if (FoundDevices.Lookup(id).HasValue)
+                                var id = $"{client.HostAddress};{cam.CameraIndex};{cam.CameraModel};{cam.SerialNumber}";
+                                if (_foundDevices.Lookup(id).HasValue)
                                 {
                                     cam.Dispose();
                                     cam = null;
                                 }
                                 else
                                 {
-                                    FoundDevices.Edit(context => { context.AddOrUpdate((Id: id, Camera: cam)); });
+                                    _foundDevices.Edit(context => { context.AddOrUpdate((Id: id, Camera: cam)); });
                                     Interlocked.Increment(ref counter);
                                 }
                             }
@@ -456,7 +456,7 @@ namespace DIPOL_UF.Models
         {
             var result = new List<(string Id, CameraBase Camera)>();
 
-            FoundDevices.Edit(context =>
+            _foundDevices.Edit(context =>
             {
                 foreach (var id in SelectedIds.Items)
                 {

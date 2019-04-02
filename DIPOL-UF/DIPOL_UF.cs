@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,6 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Threading;
 using DIPOL_Remote;
 using DIPOL_UF.Models;
@@ -40,7 +39,7 @@ namespace DIPOL_UF
     public static class DIPOL_UF_App
     {
         [STAThread]
-        private static int Main(string[] args)
+        private static int Main()
         {
 #if DEBUG && HOST_SERVER
 #if IN_PROCESS
@@ -59,7 +58,7 @@ namespace DIPOL_UF
 #endif
         
 #endif
-            Debug.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Console.Out));
+            Debug.Listeners.Add(new TextWriterTraceListener(Console.Out));
             Debug.AutoFlush = true;
             Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");

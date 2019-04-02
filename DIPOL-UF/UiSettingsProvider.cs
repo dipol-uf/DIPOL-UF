@@ -34,7 +34,7 @@ namespace DIPOL_UF
     /// </summary>
     public class UiSettingsProvider
     {
-        private static TimeSpan _uiThrottlingDelay = default;
+        private static TimeSpan _uiThrottlingDelay;
         /// <summary>
         /// 
         /// </summary>
