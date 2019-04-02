@@ -19,6 +19,8 @@ namespace DIPOL_UF.ViewModels
         public IObservableCollection<CameraTabViewModel> CameraTabs { get; }
             = new ObservableCollectionExtended<CameraTabViewModel>();
 
+        public bool HasPolarimeterMotor { [ObservableAsProperty] get; }
+
         public bool AnyCameraConnected { [ObservableAsProperty] get; }
         public bool? AllCamerasSelected { [ObservableAsProperty] get; }
         public ICommand SelectAllCamerasCommand => Model.SelectAllCamerasCommand;
@@ -48,6 +50,12 @@ namespace DIPOL_UF.ViewModels
 
         private void HookObservables()
         {
+            Model.WhenPropertyChanged(x => x.ProgressBarProvider)
+                 .Select(x => x != null)
+                 .ObserveOnUi()
+                 .ToPropertyEx(this, x => x.HasPolarimeterMotor);
+           
+
             Model.ConnectedCameras.CountChanged
                  .Select(x => x != 0)
                  .ObserveOnUi()
