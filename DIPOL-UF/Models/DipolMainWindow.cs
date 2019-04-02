@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO.Ports;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Linq;
@@ -51,6 +52,8 @@ namespace DIPOL_UF.Models
               ?? new string[0];
 
         private DipolClient[] _remoteClients;
+
+        private StepMotor.StepMotorHandler _polMotor;
 
         private readonly SourceCache<(string Id, CameraBase Camera), string> _connectedCameras;
 
@@ -86,6 +89,12 @@ namespace DIPOL_UF.Models
             InitializeCommands();
             HookObservables();
             HookValidators();
+        }
+
+        private async Task CheckStepMotor()
+        {
+            var comPorts = SerialPort.GetPortNames();
+
         }
 
         private void InitializeCommands()
