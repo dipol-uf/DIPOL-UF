@@ -27,7 +27,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Documents;
 
 namespace DIPOL_UF.Jobs
 {

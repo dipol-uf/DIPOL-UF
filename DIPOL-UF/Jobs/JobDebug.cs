@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ServiceModel.Configuration;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading.Tasks;
-using DIPOL_UF.Jobs;
+using Serializers;
 
 namespace DIPOL_UF
 {
@@ -11,20 +11,11 @@ namespace DIPOL_UF
     {
         public static async Task Main()
         {
-            var job = new Jobs.Job
-            {
-                _actions = new List<JobAction>
-                {
-                    new MotorAction(),
-                    new RepeatAction(
-                        new List<JobAction>
-                        {
-                            new CameraAction(@"camera/expose 1,3"),
-                            new MotorAction(@"motor/rotate -3.5")
-                        }, 4),
-                    new MotorAction()
-                }
-            };
+            ReadOnlyDictionary<string, object> json;
+            using (var str = new StreamReader(@"polarimetry_job.json"))
+                json = JsonParser.ReadJson(str);
+
+            var job = new Jobs.Job(json);
 
             await job.Run();
 

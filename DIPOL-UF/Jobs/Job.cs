@@ -22,19 +22,59 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
+using Microsoft.Xaml.Behaviors.Media;
 
 namespace DIPOL_UF.Jobs
 {
     class Job
     {
         public string SettingsPath { get; private set; }
+        
+        private readonly List<JobAction> _actions;
 
-        public Dictionary<CameraBase, float> _exposureTimes;
+        public ReadOnlyCollection<JobAction> Actions => _actions.AsReadOnly();
 
-        public List<JobAction> _actions;
+
+        public Job(ReadOnlyDictionary<string, object> input, string path = null)
+        {
+            if (input is null)
+                throw new ArgumentNullException(nameof(input));
+
+            _actions = input.Select(ItemToJob).ToList();
+            SettingsPath = path;
+        }
+        private JobAction ItemToJob(KeyValuePair<string, object> obj)
+        {
+            var name = obj.Key.ToLowerInvariant();
+            if(name.StartsWith(@"motor") && obj.Value is string motorStr)
+                return new MotorAction(motorStr);
+            if(name.StartsWith(@"camera") && obj.Value is string camStr)
+                return new CameraAction(camStr);
+            if (name.StartsWith(@"repeat") && obj.Value is Dictionary<string, object> innerActions)
+            {
+                var list = (innerActions["Actions"] as object[])
+                    ?.Select(x => x is Dictionary<string, object> d && d.Count == 1 
+                                 ? ItemToJob(d.First())
+                                 : null).ToList();
+
+                return list?.Count != 0
+                    ? new RepeatAction(
+                        list,
+                        innerActions.TryGetValue("Repeats", out var tempVal)
+                            ? (int) Convert.ChangeType(tempVal, TypeCode.Int32)
+                            : 1)
+                    : null;
+            }
+
+            return null;
+        }
+
 
         public async Task Prepare()
         {
