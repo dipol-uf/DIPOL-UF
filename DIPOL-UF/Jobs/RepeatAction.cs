@@ -30,20 +30,20 @@ namespace DIPOL_UF.Jobs
 {
     class RepeatAction : JobAction
     {
-        public int Number { get; private set; }
+        public int Repeats { get; private set; }
 
         private readonly List<JobAction> _actions;
 
-        public RepeatAction(List<JobAction> actions, int number)
+        public RepeatAction(List<JobAction> actions, int repeats)
         {
             // WATCH : Prototyping constructor
             _actions = actions;
-            Number = number;
+            Repeats = repeats;
         }
 
         public override async Task Execute()
         {
-            for (var i = 0; i < Number; i++)
+            for (var i = 0; i < Repeats; i++)
             {
                 Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} starts");
                 foreach (var action in _actions)
