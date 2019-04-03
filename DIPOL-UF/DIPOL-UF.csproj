@@ -212,9 +212,9 @@
     <Compile Include="Jobs\CameraAction.cs" />
     <Compile Include="Jobs\Job.cs" />
     <Compile Include="Jobs\JobAction.cs" />
-    <Compile Include="Jobs\JobDebug.cs" />
     <Compile Include="Jobs\MotorAction.cs" />
     <Compile Include="Jobs\RepeatAction.cs" />
+    <Compile Include="Jobs\Target.cs" />
     <Compile Include="MappedNameAttribute.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
     <Compile Include="Models\CameraTab.cs" />
@@ -339,6 +339,9 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="sample_star.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="polarimetry_job.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
