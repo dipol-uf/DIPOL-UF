@@ -23,7 +23,6 @@
 //     SOFTWARE.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -33,7 +32,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -78,14 +76,14 @@ namespace Serializers
                             p.GetCustomAttribute<SerializationOrderAttribute>().Index);
 
             var data = props.Select(p => new
-            {
-                p.Name,
-                Value = Converter(p.GetValue(settings), p.GetCustomAttribute<SerializationOrderAttribute>(true)?.All ?? false)
-            })
-                            .Where(item => item.Value != null)
+                            {
+                                p.Name,
+                                Value = Converter(p.GetValue(settings),
+                                    p.GetCustomAttribute<SerializationOrderAttribute>(true)?.All ?? false)
+                            }).Where(item => item.Value != null)
                             .ToDictionary(item => item.Name, item => item.Value);
 
-            var dataString = TabifyNestedNodes(new JavaScriptSerializer().Serialize(data));
+            var dataString = JsonConvert.SerializeObject(data, Formatting.Indented);
 
             str.Write(dataString);
             str.Flush();
@@ -115,9 +113,6 @@ namespace Serializers
                                     .ToDictionary(x => x.Key, x => Process(x.Value));
 
             return new ReadOnlyDictionary<string, object>(result);
-
-            return new ReadOnlyDictionary<string, object>(
-                new JavaScriptSerializer().DeserializeObject(line) as Dictionary<string, object>);
         }
 
         public static async Task WriteJsonAsync(this object settings, Stream str, Encoding enc, CancellationToken token)
@@ -140,7 +135,9 @@ namespace Serializers
                             .Where(item => item.Value != null)
                             .ToDictionary(item => item.Name, item => item.Value);
 
-            var byteRep = enc.GetBytes(TabifyNestedNodes(new JavaScriptSerializer().Serialize(data)));
+            var dataString = JsonConvert.SerializeObject(data, Formatting.Indented);
+
+            var byteRep = enc.GetBytes(dataString);
 
             var nStep = byteRep.Length / WriteChunkSize;
 
@@ -157,6 +154,7 @@ namespace Serializers
             }
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static string TabifyNestedNodes(string nodeVal)
         {
             var tabIndex = 0;

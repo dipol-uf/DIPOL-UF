@@ -425,7 +425,7 @@ namespace DIPOL_UF.Models
                     // TODO : Implement more image types. (Even though sdk never generates other)
                     throw new NotSupportedException($"Image type {image.UnderlyingType} is not supported.");
             }
-
+            
             if (temp is null)
                 throw new NullReferenceException("Image cannot be null.");
 
