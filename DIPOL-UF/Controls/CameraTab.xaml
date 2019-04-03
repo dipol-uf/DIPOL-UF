@@ -79,6 +79,7 @@
                     <RowDefinition Height="auto"/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <!--Cooler slider/bar-->
                 <Grid Grid.Column="0" Grid.Row="0" Margin="2">
@@ -345,19 +346,26 @@
                         </Style>
                     </Button.Style>
                 </Button>
+
+                <!-- Job settings -->
+                <Button  Grid.Column="1" Grid.Row="3" 
+                         VerticalAlignment="Center" HorizontalAlignment="Center"
+                         Style="{StaticResource ResourceKey=BasicButtonStyle}"
+                         Content="{extensions:Text Key=CameraTab_JobSettings}"/>
+
                 <!-- Timing table -->
-                <StackPanel Grid.Column="1" Grid.Row="3" Grid.RowSpan="2" Orientation="Vertical">
-                    <TextBlock HorizontalAlignment="Stretch"
-                               Style="{StaticResource ContentFont_TextBlock}"
-                               Text="{extensions:Text Key=CameraTab_EstimatedTime}"/>
-                    <TextBox Style="{StaticResource TextBoxStyle}" 
-                             IsReadOnly="True" Focusable="False" 
-                             HorizontalContentAlignment="Right"
-                             HorizontalAlignment="Stretch"
-                             Text="{Binding ExposureTime, 
-                                Mode=OneWay,
-                                StringFormat={extensions:Text Key=General_ExposureFloatFormat}}"/>
-                </StackPanel>
+                <TextBlock HorizontalAlignment="Stretch"
+                           Grid.Column="0" Grid.Row="5"
+                           Style="{StaticResource ContentFont_TextBlock}"
+                           Text="{extensions:Text Key=CameraTab_EstimatedTime}"/>
+                <TextBox Style="{StaticResource TextBoxStyle}" 
+                         Grid.Column="1" Grid.Row="5"
+                         IsReadOnly="True" Focusable="False" 
+                         HorizontalContentAlignment="Right"
+                         HorizontalAlignment="Stretch"
+                         Text="{Binding ExposureTime, 
+                            Mode=OneWay,
+                            StringFormat={extensions:Text Key=General_ExposureFloatFormat}}"/>
             </Grid>
             <ProgressBar Grid.Row="2" Grid.Column="0"
                          Style="{StaticResource ProgressBarStyle}"
