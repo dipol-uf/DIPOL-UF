@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
+using DIPOL_UF.Jobs;
 using Serializers;
 
 namespace DIPOL_UF
@@ -11,11 +12,10 @@ namespace DIPOL_UF
     {
         public static async Task Main()
         {
-            ReadOnlyDictionary<string, object> json;
-            using (var str = new StreamReader(@"polarimetry_job.json"))
-                json = JsonParser.ReadJson(str);
+            Job job;
+            using (var str = new FileStream(@"polarimetry_job.json", FileMode.Open, FileAccess.Read))
+                job = Job.Create(str);
 
-            var job = new Jobs.Job(json);
 
             await job.Run();
 

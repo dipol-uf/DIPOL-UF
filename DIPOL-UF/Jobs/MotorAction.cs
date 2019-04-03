@@ -57,7 +57,7 @@ namespace DIPOL_UF.Jobs
             if(command is null)
                 throw new ArgumentNullException(nameof(command));
 
-            var match = Regex.Match(command);
+            var match = Regex.Match(command.ToLowerInvariant());
             if(!match.Success)
                 throw new ArgumentException(@"Motor command is invalid.", nameof(command));
 
