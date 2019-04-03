@@ -875,11 +875,11 @@ namespace ANDOR_CS.Classes
                         });
                     }
                     else if (item.Key == nameof(ImageArea) &&
-                             item.Value is Dictionary<string, object> dict &&
+                             item.Value is ReadOnlyDictionary<string, object> dict &&
                              dict.Count == 2)
                     {
-                        var startColl = dict["Start"] as Dictionary<string, object>;
-                        var endColl = dict["End"] as Dictionary<string, object>;
+                        var startColl = dict["Start"] as ReadOnlyDictionary<string, object>;
+                        var endColl = dict["End"] as ReadOnlyDictionary<string, object>;
                         var area = new Rectangle(
                             new Point2D(
                                 Convert.ToInt32(startColl["X"]),

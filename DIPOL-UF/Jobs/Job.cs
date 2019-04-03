@@ -25,29 +25,30 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
 using Microsoft.Xaml.Behaviors.Media;
+using Serializers;
 
 namespace DIPOL_UF.Jobs
 {
     class Job
     {
-        public string SettingsPath { get; private set; }
+        public string SettingsPath { get; private set; } = ".";
         
         private readonly List<JobAction> _actions;
 
         public ReadOnlyCollection<JobAction> Actions => _actions.AsReadOnly();
 
 
-        public Job(ReadOnlyDictionary<string, object> input, string path = null)
+        private Job(ReadOnlyDictionary<string, object> input)
         {
             if (input is null)
                 throw new ArgumentNullException(nameof(input));
 
             _actions = input.Select(ItemToJob).ToList();
-            SettingsPath = path;
         }
         private JobAction ItemToJob(KeyValuePair<string, object> obj)
         {
@@ -56,10 +57,10 @@ namespace DIPOL_UF.Jobs
                 return new MotorAction(motorStr);
             if(name.StartsWith(@"camera") && obj.Value is string camStr)
                 return new CameraAction(camStr);
-            if (name.StartsWith(@"repeat") && obj.Value is Dictionary<string, object> innerActions)
+            if (name.StartsWith(@"repeat") && obj.Value is ReadOnlyDictionary<string, object> innerActions)
             {
                 var list = (innerActions["Actions"] as object[])
-                    ?.Select(x => x is Dictionary<string, object> d && d.Count == 1 
+                    ?.Select(x => x is ReadOnlyDictionary<string, object> d && d.Count == 1 
                                  ? ItemToJob(d.First())
                                  : null).ToList();
 
@@ -99,6 +100,26 @@ namespace DIPOL_UF.Jobs
                 await action.Execute();
             }
         }
-        
+
+        public static Job Create(ReadOnlyDictionary<string, object> input, string path = null)
+        {
+            var job = new Job(input) {SettingsPath = path};
+            return job;
+        }
+
+        public static Job Create(Stream stream, string path = null)
+        {
+            if (!stream.CanRead)
+                throw new IOException(@"Stream does not support reading.");
+
+            ReadOnlyDictionary<string, object> json = null;
+            using (var str = new StreamReader(stream))
+                json = JsonParser.ReadJson(str);
+
+            var job = new Job(json) {SettingsPath = path};
+
+            return job;
+        }
+
     }
 }

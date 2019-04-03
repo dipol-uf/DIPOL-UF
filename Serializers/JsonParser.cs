@@ -95,7 +95,7 @@ namespace Serializers
             object Process( object token)
             {
                 if (token is JObject obj)
-                    return obj.Properties().ToDictionary(x => x.Name, x => Process(x.Value));
+                    return new ReadOnlyDictionary<string, object>(obj.Properties().ToDictionary(x => x.Name, x => Process(x.Value)));
                 if (token is JValue val)
                     return val.Value;
                 if (token is JArray array)
