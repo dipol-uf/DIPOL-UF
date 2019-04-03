@@ -31,6 +31,7 @@ namespace DIPOL_UF
             Save,
             Load
         }
+
         public string DefaultExtenstion;
         public string FileName;
         public string InitialDirectory;

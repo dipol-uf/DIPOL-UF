@@ -30,6 +30,7 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
+using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DIPOL_UF.Properties;
 using DynamicData.Binding;
@@ -56,6 +57,7 @@ namespace DIPOL_UF.ViewModels
 
         public DipolImagePresenterViewModel DipolImagePresenter { get; }
         public DescendantProxy AcquisitionSettingsWindow { get; private set; }
+        public DescendantProxy JobSettingsWindow { get; private set; }
 
         public float ExposureTime { [ObservableAsProperty] get; }
         public int AcquisitionPbMax { [ObservableAsProperty] get; }
@@ -82,7 +84,7 @@ namespace DIPOL_UF.ViewModels
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
         public ICommand SetUpAcquisitionCommand => Model.SetUpAcquisitionCommand;
         public ICommand StartAcquisitionCommand => Model.StartAcquisitionCommand;
-
+        public ICommand SetUpJobCommand => Model.SetUpJobCommand;
         public CameraTabViewModel(CameraTab model) : base(model)
         {
 
@@ -108,8 +110,15 @@ namespace DIPOL_UF.ViewModels
 
             CoolerCommand.Select(_ => (int)TargetTemperature).InvokeCommand(Model.CoolerCommand).DisposeWith(Subscriptions);
 
-            AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow,
-                x => new AcquisitionSettingsViewModel((ReactiveWrapper<SettingsBase>) x)).DisposeWith(Subscriptions);
+            AcquisitionSettingsWindow =
+                new DescendantProxy(Model.AcquisitionSettingsWindow,
+                        x => new AcquisitionSettingsViewModel((ReactiveWrapper<SettingsBase>) x))
+                    .DisposeWith(Subscriptions);
+            
+            JobSettingsWindow
+                = new DescendantProxy(Model.JobSettingsWindow,
+                    x => new JobSettingsViewModel((ReactiveWrapper<Target>)x))
+                    .DisposeWith(Subscriptions);
 
             if (CanControlExternalShutter)
                 ExternalShutterMode = ShutterMode.PermanentlyClosed;

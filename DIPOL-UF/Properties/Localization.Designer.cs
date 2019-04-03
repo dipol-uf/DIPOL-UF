@@ -687,6 +687,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Browse.
+        /// </summary>
+        public static string General_Browse {
+            get {
+                return ResourceManager.GetString("General_Browse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string General_Cancel {
@@ -899,6 +908,33 @@ namespace DIPOL_UF.Properties {
         public static string General_TemperatureStatus_Stabilized {
             get {
                 return ResourceManager.GetString("General_TemperatureStatus_Stabilized", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exp. times (s):.
+        /// </summary>
+        public static string JobSettings_ExposureTime {
+            get {
+                return ResourceManager.GetString("JobSettings_ExposureTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Job file:.
+        /// </summary>
+        public static string JobSettings_JobFile {
+            get {
+                return ResourceManager.GetString("JobSettings_JobFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Star name:.
+        /// </summary>
+        public static string JobSettings_TargetName {
+            get {
+                return ResourceManager.GetString("JobSettings_TargetName", resourceCulture);
             }
         }
         

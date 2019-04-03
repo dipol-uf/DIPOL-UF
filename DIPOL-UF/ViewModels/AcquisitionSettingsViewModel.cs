@@ -1039,7 +1039,6 @@ namespace DIPOL_UF.ViewModels
                                    {
                                        Mode = FileDialogDescriptor.DialogMode.Save,
                                        Title = Properties.Localization.AcquisitionSettings_Dialog_Save_Title,
-                                       InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                                        FileName = Camera.ToString(),
                                        DefaultExtenstion = ".acq"
                                    }, isValid)
@@ -1051,7 +1050,6 @@ namespace DIPOL_UF.ViewModels
                                    {
                                        Mode = FileDialogDescriptor.DialogMode.Load,
                                        Title = Properties.Localization.AcquisitionSettings_Dialog_Load_Title,
-                                       InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                                        FileName = Camera.ToString(),
                                        DefaultExtenstion = ".acq"
                                    })
