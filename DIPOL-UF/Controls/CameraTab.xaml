@@ -350,7 +350,9 @@
                     <TextBlock HorizontalAlignment="Stretch"
                                Style="{StaticResource ContentFont_TextBlock}"
                                Text="{extensions:Text Key=CameraTab_EstimatedTime}"/>
-                    <TextBox Style="{StaticResource TextBoxStyle}" IsReadOnly="True"
+                    <TextBox Style="{StaticResource TextBoxStyle}" 
+                             IsReadOnly="True" Focusable="False" 
+                             HorizontalContentAlignment="Right"
                              HorizontalAlignment="Stretch"
                              Text="{Binding ExposureTime, 
                                 Mode=OneWay,
