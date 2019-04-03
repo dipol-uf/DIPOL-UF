@@ -28,8 +28,6 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using ANDOR_CS.Classes;
-using Microsoft.Xaml.Behaviors.Media;
 using Serializers;
 
 namespace DIPOL_UF.Jobs
