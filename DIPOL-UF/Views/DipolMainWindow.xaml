@@ -59,7 +59,7 @@
                 Type ="{x:Type vs:AvailableCameraView}"/>
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
-    <Grid x:Name="MainWindowGrid" DockPanel.Dock="Top">
+    <Grid DockPanel.Dock="Top">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
