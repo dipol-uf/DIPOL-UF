@@ -484,4 +484,7 @@ The following settings produced this error:
   <data name="MainWindow_MB_PolarimeterMotorOK_Text" xml:space="preserve">
     <value>Step motor on port {0} at address {1:00} is healthy and responding.</value>
   </data>
+  <data name="CameraTab_JobSettings" xml:space="preserve">
+    <value>Job Settings</value>
+  </data>
 </root>
