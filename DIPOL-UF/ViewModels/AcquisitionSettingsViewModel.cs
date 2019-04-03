@@ -58,16 +58,8 @@ using Window = System.Windows.Window;
 
 namespace DIPOL_UF.ViewModels
 {
-    internal sealed class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<SettingsBase>>
+    internal sealed partial class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<SettingsBase>>
     {
-        public class DialogRequestedEventArgs : EventArgs
-        {
-            public FileDialogDescriptor Descriptor { get; }
-
-            public DialogRequestedEventArgs(FileDialogDescriptor desc)
-                => Descriptor = desc;
-        }
-
         private static List<(PropertyInfo Property, string EquivalentName)> InteractiveSettings { get; }
             = typeof(AcquisitionSettingsViewModel)
               .GetProperties(BindingFlags.Public | BindingFlags.Instance)

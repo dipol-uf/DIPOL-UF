@@ -226,6 +226,7 @@
     <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
     <Compile Include="ViewModels\CameraTabViewModel.cs" />
     <Compile Include="ViewModels\DescendantProxy.cs" />
+    <Compile Include="DialogRequestedEventArgs.cs" />
     <Compile Include="ViewModels\JobSettingsViewModel.cs" />
     <Compile Include="ViewModels\ReactiveViewModelBase.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />

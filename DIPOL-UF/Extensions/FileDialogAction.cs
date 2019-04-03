@@ -73,7 +73,7 @@ namespace DIPOL_UF.Extensions
                     InitialDirectory = initialDirectory,
                     Title = desc.Title,
                     Filter =
-                        $@"Acquisition settings (*{desc.DefaultExtenstion})|*{desc.DefaultExtenstion}|All files (*.*)|*.*"
+                        $@"Dipol files (*{desc.DefaultExtenstion})|*{desc.DefaultExtenstion}|All files (*.*)|*.*"
                 };
                 var result = dialog.ShowDialog() == true;
 
@@ -99,7 +99,7 @@ namespace DIPOL_UF.Extensions
                     InitialDirectory = initialDirectory,
                     Title = desc.Title,
                     Filter =
-                        $@"Acquisition settings (*{desc.DefaultExtenstion})|*{desc.DefaultExtenstion}|All files (*.*)|*.*"
+                        $@"Dipol files (*{desc.DefaultExtenstion})|*{desc.DefaultExtenstion}|All files (*.*)|*.*"
                 };
                 var result = dialog.ShowDialog() == true;
 

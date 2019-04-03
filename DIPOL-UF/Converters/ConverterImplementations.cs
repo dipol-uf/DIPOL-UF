@@ -59,7 +59,7 @@ namespace DIPOL_UF.Converters
                    && result.HasValue 
                    && !string.IsNullOrWhiteSpace(result.Value.Alias)
                 ? result.Value.Alias
-                : camString;
+                : cam.SerialNumber;
         }
 
         public static string CameraKeyToHostConversion(string input)

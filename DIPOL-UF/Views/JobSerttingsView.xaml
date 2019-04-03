@@ -37,16 +37,28 @@
         Style="{StaticResource ResourceKey=ContentFont}"
         d:DataContext="{d:DesignInstance viewModels:JobSettingsViewModel}"
         ResizeMode="NoResize">
-    <!--<behavior:Interaction.Triggers>
-        <behavior:EventTrigger
+    <behavior:Interaction.Triggers>
+        <!--<behavior:EventTrigger
             EventName="FileDialogRequested"
             SourceObject="{Binding}">
             <extensions:FileDialogAction
                 SaveCommand="{Binding SaveActionCommand}"
                 LoadCommand="{Binding LoadActionCommand}"/>
+        </behavior:EventTrigger>-->
+        <behavior:EventTrigger
+            EventName="BrowseJobSettingsRequested"
+            SourceObject="{Binding}">
+            <extensions:FileDialogAction
+                LoadCommand="{Binding JobReceivedCommand}"/>
         </behavior:EventTrigger>
-    </behavior:Interaction.Triggers>-->
-    <Grid>
+        <behavior:EventTrigger
+            EventName="BrowseAcquisitionSettingsRequested"
+            SourceObject="{Binding}">
+            <extensions:FileDialogAction
+                LoadCommand="{Binding AcquisitionReceivedCommand}"/>
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
+    <Grid Margin="0, 20, 0, 0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition/>
@@ -66,6 +78,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
 
@@ -76,34 +89,56 @@
                            HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <TextBlock Grid.Row="1" Grid.Column="0"
                             Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                            Text="{extensions:Text Key=JobSettings_JobFile}" 
+                            Text="{extensions:Text Key=JobSettings_SettingsFile}" 
                             HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <TextBlock Grid.Row="2" Grid.Column="0"
+                           Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
+                           Text="{extensions:Text Key=JobSettings_JobFile}" 
+                           HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="3" Grid.Column="0"
                            Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
                            Text="{extensions:Text Key=JobSettings_ExposureTime}" 
                            HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
                 <!--Right-hand side controls-->
+                <!-- Object name-->
                 <TextBox Grid.Row="0" Grid.Column="1"
-                         IsEnabled="{Binding IsAvailable.ExposureTimeText}"
+                         Text="{extensions:ValidationBinding Path=ObjectName}"
                          Style="{StaticResource TextBoxWithErrors}"/>
-                
-                <TextBox  Grid.Row="1" Grid.Column="1"
-                         IsEnabled="{Binding IsAvailable.ExposureTimeText}"
+
+                <!--Settings path-->
+                <TextBox Grid.Row="1" Grid.Column="1"
+                         Text="{extensions:ValidationBinding Path=SettingsPath}"
                          Style="{StaticResource TextBoxWithErrors}"/>
-                
-                <ListView Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2">
+
+                <!--Job path-->
+                <TextBox  Grid.Row="2" Grid.Column="1"
+                          Text="{extensions:ValidationBinding Path=JobPath}"
+                          Style="{StaticResource TextBoxWithErrors}"/>
+
+                <ListView Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
+                          Style="{StaticResource ListViewStyle}"
+                          Margin="5">
 
                 </ListView>
 
-
+                <!--Acquisition browsing-->
                 <Button Grid.Row="1" Grid.Column="2"
                         Style="{StaticResource BasicButtonStyle}"
                         Width="auto" Height="auto"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Content="{extensions:Text Key=General_Browse}"
-                        />
+                        Command="{Binding BrowseAcquisitionCommand}"/>
+
+                <!--Job browsing-->
+                <Button Grid.Row="2" Grid.Column="2"
+                        Style="{StaticResource BasicButtonStyle}"
+                        Width="auto" Height="auto"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Command="{Binding BrowseJobCommand}"
+                        Content="{extensions:Text Key=General_Browse}"/>
                 
 
             </Grid>
