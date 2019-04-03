@@ -912,6 +912,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chose file with acquisition settings.
+        /// </summary>
+        public static string JobSettings_Dialog_Acquisition {
+            get {
+                return ResourceManager.GetString("JobSettings_Dialog_Acquisition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chose file with job settings.
+        /// </summary>
+        public static string JobSettings_Dialog_Job {
+            get {
+                return ResourceManager.GetString("JobSettings_Dialog_Job", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exp. times (s):.
         /// </summary>
         public static string JobSettings_ExposureTime {
@@ -930,11 +948,29 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Acq. file.
+        /// </summary>
+        public static string JobSettings_SettingsFile {
+            get {
+                return ResourceManager.GetString("JobSettings_SettingsFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Star name:.
         /// </summary>
         public static string JobSettings_TargetName {
             get {
                 return ResourceManager.GetString("JobSettings_TargetName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set up job.
+        /// </summary>
+        public static string JobSettings_WindowName {
+            get {
+                return ResourceManager.GetString("JobSettings_WindowName", resourceCulture);
             }
         }
         
