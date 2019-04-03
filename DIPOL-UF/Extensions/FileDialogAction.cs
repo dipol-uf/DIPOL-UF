@@ -22,6 +22,8 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
@@ -53,6 +55,13 @@ namespace DIPOL_UF.Extensions
             if (!(parameter is DialogRequestedEventArgs args && 
                 args.Descriptor is FileDialogDescriptor desc)) return;
 
+            var initialDirectory = desc.InitialDirectory;
+
+            if(string.IsNullOrEmpty(initialDirectory))
+                initialDirectory = string.IsNullOrEmpty(Properties.Settings.Default.DefaultFolder) 
+                    ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) 
+                    : Properties.Settings.Default.DefaultFolder;
+
             if (desc.Mode == FileDialogDescriptor.DialogMode.Save)
             {
                 var dialog = new SaveFileDialog
@@ -61,12 +70,19 @@ namespace DIPOL_UF.Extensions
                     DefaultExt = desc.DefaultExtenstion,
                     FileName = desc.FileName,
                     FilterIndex = 0,
-                    InitialDirectory = desc.InitialDirectory,
+                    InitialDirectory = initialDirectory,
                     Title = desc.Title,
                     Filter =
                         $@"Acquisition settings (*{desc.DefaultExtenstion})|*{desc.DefaultExtenstion}|All files (*.*)|*.*"
                 };
                 var result = dialog.ShowDialog() == true;
+
+                if (result)
+                {
+                    Properties.Settings.Default.DefaultFolder = Path.GetDirectoryName(dialog.FileName);
+                    Properties.Settings.Default.Save();
+                }
+                
                 SaveCommand?.Execute(result 
                     ? dialog.FileName
                     : null);
@@ -80,12 +96,19 @@ namespace DIPOL_UF.Extensions
                     DefaultExt = desc.DefaultExtenstion,
                     FileName = desc.FileName,
                     FilterIndex = 0,
-                    InitialDirectory = desc.InitialDirectory,
+                    InitialDirectory = initialDirectory,
                     Title = desc.Title,
                     Filter =
                         $@"Acquisition settings (*{desc.DefaultExtenstion})|*{desc.DefaultExtenstion}|All files (*.*)|*.*"
                 };
                 var result = dialog.ShowDialog() == true;
+
+                if (result)
+                {
+                    Properties.Settings.Default.DefaultFolder = Path.GetDirectoryName(dialog.FileName);
+                    Properties.Settings.Default.Save();
+                }
+
                 LoadCommand?.Execute(result
                     ? dialog.FileName
                     : null);

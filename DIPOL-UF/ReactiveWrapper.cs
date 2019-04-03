@@ -27,7 +27,7 @@ using System.ComponentModel;
 
 namespace DIPOL_UF
 {
-    internal class ReactiveWrapper<T> : ReactiveObjectEx where T : INotifyPropertyChanged, IDisposable
+    internal class ReactiveWrapper<T> : ReactiveObjectEx //where T// : INotifyPropertyChanged, IDisposable
     {
         public T Object { get; set; }
 
@@ -39,8 +39,8 @@ namespace DIPOL_UF
         protected override void Dispose(bool disposing)
         {
             if(!IsDisposed)
-                if(disposing)
-                    Object?.Dispose();
+                if(disposing && Object is IDisposable disposable)
+                    disposable.Dispose();
 
             base.Dispose(disposing);
         }

@@ -34,6 +34,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DipolImage;
 using DIPOL_UF.Converters;
+using DIPOL_UF.Jobs;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Timer = System.Timers.Timer;
@@ -65,6 +66,7 @@ namespace DIPOL_UF.Models
         public IObservable<Image> WhenNewPreviewArrives { get; private set; }
         public DipolImagePresenter ImagePresenter { get; }
         public DescendantProvider AcquisitionSettingsWindow { get; private set; }
+        public DescendantProvider JobSettingsWindow { get; private set; }
         public IObservable<TemperatureStatusEventArgs> WhenTemperatureChecked { get; private set; }
 
         public ReactiveCommand<int, Unit> CoolerCommand { get; private set; }
@@ -74,11 +76,12 @@ namespace DIPOL_UF.Models
         
         public ReactiveCommand<Unit, object> SetUpAcquisitionCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> StartAcquisitionCommand { get; private set; }
+        public ReactiveCommand<Unit, object> SetUpJobCommand { get; private set; }
 
         public CameraTab(CameraBase camera)
         {
             Camera = camera;
-
+            
             TemperatureRange = camera.Capabilities.GetFunctions.HasFlag(GetFunction.TemperatureRange)
                 ? camera.Properties.AllowedTemperatures
                 : default;
@@ -200,6 +203,25 @@ namespace DIPOL_UF.Models
                 .DisposeWith(Subscriptions);
 
             SetUpAcquisitionCommand.InvokeCommand(AcquisitionSettingsWindow.ViewRequested).DisposeWith(Subscriptions);
+
+
+            SetUpJobCommand =
+                ReactiveCommand.Create<Unit, object>(x => x)
+                               .DisposeWith(Subscriptions);
+
+            JobSettingsWindow = new DescendantProvider(
+                    ReactiveCommand.Create<object, ReactiveObjectEx>(
+                        _ => new ReactiveWrapper<Target>(new Target())),
+                    ReactiveCommand.Create<Unit>(_ => { }),
+                    null,
+                    ReactiveCommand.Create<ReactiveObjectEx>(x =>
+                    {
+                        
+                    }))
+                .DisposeWith(Subscriptions);
+
+            SetUpJobCommand.InvokeCommand(JobSettingsWindow.ViewRequested).DisposeWith(Subscriptions);
+
 
             var hasValidSettings = AcquisitionSettingsWindow
                                 .ViewFinished

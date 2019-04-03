@@ -226,6 +226,7 @@
     <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
     <Compile Include="ViewModels\CameraTabViewModel.cs" />
     <Compile Include="ViewModels\DescendantProxy.cs" />
+    <Compile Include="ViewModels\JobSettingsViewModel.cs" />
     <Compile Include="ViewModels\ReactiveViewModelBase.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="Models\ProgressBar.cs" />
@@ -252,6 +253,9 @@
     <Compile Include="ViewModels\MainWindowTreeViewModel.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
     <Compile Include="ViewModels\ReactiveViewModel.cs" />
+    <Compile Include="Views\JobSerttingsView.xaml.cs">
+      <DependentUpon>JobSerttingsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\AcquisitionSettingsView.xaml.cs">
       <DependentUpon>AcquisitionSettingsView.xaml</DependentUpon>
     </Compile>
@@ -295,6 +299,10 @@
     <Page Include="Resources\StaticConverters.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\JobSerttingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\AcquisitionSettingsView.xaml">
       <SubType>Designer</SubType>

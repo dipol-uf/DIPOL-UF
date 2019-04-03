@@ -34,7 +34,7 @@
              xmlns:props="clr-namespace:DIPOL_UF.Properties"
              xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
              mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
-             d:DesignHeight="900" d:DesignWidth="1200"
+             d:DesignHeight="800" d:DesignWidth="1000"
              d:DataContext="{d:DesignInstance Type=dvms:CameraTabViewModel}">
     <behaviors:Interaction.Triggers>
         <behaviors:EventTrigger
@@ -44,6 +44,14 @@
                 Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
                 Proxy="{Binding AcquisitionSettingsWindow}"
                 Type="{x:Type vs:AcquisitionSettingsView}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="ViewRequested"
+            SourceObject="{Binding JobSettingsWindow}">
+            <extensions:ShowViewAction
+                Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                Proxy="{Binding JobSettingsWindow}"
+                Type="{x:Type vs:JobSettingsView}"/>
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
     <ScrollViewer
@@ -56,22 +64,22 @@
                 <RowDefinition Height="50"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto" MinWidth="430"/>
-                <ColumnDefinition Width="auto" MinWidth="200"/>
+                <ColumnDefinition Width="Auto" MinWidth="330"/>
+                <ColumnDefinition Width="Auto" MinWidth="200"/>
             </Grid.ColumnDefinitions>
             <!--Custom Image Presenter-->
             <cntr:DipolImagePresenter Grid.Row="1" Grid.Column="0" 
                                        Height="700"
-                                       VerticalAlignment="Top" HorizontalAlignment="Stretch" 
-                                       Width="600"
-                                       MaxWidth="600"
+                                       VerticalAlignment="Top" HorizontalAlignment="Left" 
+                                       Width="600" MaxWidth="600"
+                                       Margin="5,5,30,5"
                                        DataContext="{Binding DipolImagePresenter}"/>
             <!--RHS Controls grid-->
             <Grid Column ="1" Grid.Row="1" HorizontalAlignment="Right" 
                   VerticalAlignment="Top" MinHeight="500">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="135"/>
-                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="135"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="5.5*" MinHeight="250"/>
@@ -351,7 +359,8 @@
                 <Button  Grid.Column="1" Grid.Row="3" 
                          VerticalAlignment="Center" HorizontalAlignment="Center"
                          Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                         Content="{extensions:Text Key=CameraTab_JobSettings}"/>
+                         Content="{extensions:Text Key=CameraTab_JobSettings}"
+                         Command="{Binding SetUpJobCommand}"/>
 
                 <!-- Timing table -->
                 <TextBlock HorizontalAlignment="Stretch"
@@ -368,6 +377,7 @@
                             StringFormat={extensions:Text Key=General_ExposureFloatFormat}}"/>
             </Grid>
             <ProgressBar Grid.Row="2" Grid.Column="0"
+                         MaxWidth="450"
                          Style="{StaticResource ProgressBarStyle}"
                          Minimum="{Binding AcquisitionPbMin}"
                          Maximum="{Binding AcquisitionPbMax}"
