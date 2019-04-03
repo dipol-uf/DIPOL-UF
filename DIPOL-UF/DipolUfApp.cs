@@ -37,10 +37,10 @@ using DIPOL_UF.ViewModels;
 
 namespace DIPOL_UF
 {
-    public static class DipolUfApp
+    public static partial class DipolUfApp
     {
-        [STAThread]
-        private static int Main()
+        //[STAThread]
+        private static int _Main()
         {
 #if DEBUG && HOST_SERVER
 #if IN_PROCESS

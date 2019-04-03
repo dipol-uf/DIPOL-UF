@@ -222,6 +222,12 @@
     <Compile Include="FileDialogDescriptor.cs" />
     <Compile Include="GeometryDescriptor.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="Jobs\CameraAction.cs" />
+    <Compile Include="Jobs\Job.cs" />
+    <Compile Include="Jobs\JobAction.cs" />
+    <Compile Include="Jobs\JobDebug.cs" />
+    <Compile Include="Jobs\MotorAction.cs" />
+    <Compile Include="Jobs\RepeatAction.cs" />
     <Compile Include="MappedNameAttribute.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
     <Compile Include="Models\CameraTab.cs" />
@@ -323,7 +329,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DIPOL_UF.cs" />
+    <Compile Include="DipolUfApp.cs" />
     <Compile Include="Views\DipolMainWindow.xaml.cs">
       <DependentUpon>DipolMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -346,6 +352,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="polarimetrey_job.json" />
     <None Include="user-allowed-setts.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
