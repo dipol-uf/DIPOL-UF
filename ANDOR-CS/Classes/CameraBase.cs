@@ -469,6 +469,17 @@ namespace ANDOR_CS.Classes
                 TemperatureStatusChecked?.Invoke(this, e);
         }
 
+        protected virtual void RaisePropertyChanged<T>(
+            T value, ref T target,
+            [CallerMemberName] string propertyName = null)
+        {
+            if (!EqualityComparer<T>.Default.Equals(value, target))
+            {
+                target = value;
+                OnPropertyChanged(propertyName);
+            }
+        }
+
         protected virtual void OnNewImageReceived(NewImageReceivedEventArgs e)
         {
             if (!IsDisposed && !IsDisposing)
