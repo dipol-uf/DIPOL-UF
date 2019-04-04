@@ -334,7 +334,7 @@
     <value>Save</value>
   </data>
   <data name="General_ShouldNotHappen" xml:space="preserve">
-    <value>An unexpected error has happened. This is indicates a likely unrecoverable error in the software. Consider reporting it.</value>
+    <value>An unexpected error has happened. This indicates a likely unrecoverable error in the software. Consider reporting it.</value>
   </data>
   <data name="General_Submit" xml:space="preserve">
     <value>Submit</value>

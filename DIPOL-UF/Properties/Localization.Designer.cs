@@ -840,7 +840,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unexpected error has happened. This is indicates a likely unrecoverable error in the software. Consider reporting it..
+        ///   Looks up a localized string similar to An unexpected error has happened. This indicates a likely unrecoverable error in the software. Consider reporting it..
         /// </summary>
         public static string General_ShouldNotHappen {
             get {
