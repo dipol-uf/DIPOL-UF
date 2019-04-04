@@ -83,8 +83,6 @@ namespace ANDOR_CS.Classes
                 throw new Exception();
 
             }
-
-            protected set => throw new NotSupportedException();
         }
         /// <summary>
         /// A safe handle that stores native SDK pointer to the current <see cref="Camera"/> resource.
