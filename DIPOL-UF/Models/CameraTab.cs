@@ -26,6 +26,7 @@ using System;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -63,6 +64,8 @@ namespace DIPOL_UF.Models
         [Reactive]
         public (int Min, int Max) AcquisitionProgressRange { get; private set; }
 
+        public IObservable<AcquisitionStatusEventArgs> WhenAcquisitionStarted { get; private set; }
+        public IObservable<AcquisitionStatusEventArgs> WhenAcquisitionFinished { get; private set; }
         public IObservable<(float Exposure, float Accumulation, float Kinetic)> WhenTimingCalculated { get; private set; }
         public IObservable<Image> WhenNewPreviewArrives { get; private set; }
         public DipolImagePresenter ImagePresenter { get; }
@@ -77,6 +80,7 @@ namespace DIPOL_UF.Models
         
         public ReactiveCommand<Unit, object> SetUpAcquisitionCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> StartAcquisitionCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit> StartJobCommand { get; private set; }
         public ReactiveCommand<Unit, object> SetUpJobCommand { get; private set; }
 
         public CameraTab(CameraBase camera)
@@ -142,6 +146,20 @@ namespace DIPOL_UF.Models
             Camera.AcquisitionFinished += (_, e) => ResetTimer(AcquisitionProgressRange.Min);
 
             Camera.NewImageReceived += (_, e) => ResetTimer(AcquisitionProgressRange.Max);
+
+            WhenAcquisitionStarted =
+                Observable
+                    .FromEventPattern<AcquisitionStatusEventHandler, AcquisitionStatusEventArgs>(
+                        x => Camera.AcquisitionStarted += x,
+                        x => Camera.AcquisitionStarted -= x)
+                    .Select(x => x.EventArgs);
+
+            WhenAcquisitionFinished =
+                Observable
+                    .FromEventPattern<AcquisitionStatusEventHandler, AcquisitionStatusEventArgs>(
+                        x => Camera.AcquisitionFinished += x,
+                        x => Camera.AcquisitionFinished -= x)
+                    .Select(x => x.EventArgs);
         }
 
         private void InitializeCommands()
@@ -233,7 +251,11 @@ namespace DIPOL_UF.Models
                                          .Select(x => !(x.Value is null))
                                          .ObserveOnUi();
 
-            WhenTimingCalculated = AcquisitionSettingsWindow.ViewFinished.Select(_ => Camera.Timings);
+            WhenTimingCalculated =
+                AcquisitionSettingsWindow.ViewFinished
+                                         .CombineLatest(JobSettingsWindow.ViewFinished,
+                                             (x, y) => Unit.Default)
+                                         .Select(_ => Camera.Timings);
 
             StartAcquisitionCommand =
                 ReactiveCommand.Create(() =>
@@ -260,6 +282,20 @@ namespace DIPOL_UF.Models
                                        _acquisitionTokenSource = null;
                                    }
                                }, hasValidSettings)
+                               .DisposeWith(Subscriptions);
+
+            var jobAvailableObs = JobManager.Manager.WhenPropertyChanged(x => x.AnyCameraIsAcquiring)
+                                            .CombineLatest(JobManager.Manager.WhenPropertyChanged(y => y.ReadyToRun),
+                                                // NOT any camera acquiring AND ready to run
+                                                (x, y) => !x.Value && y.Value);
+
+            StartJobCommand =
+                ReactiveCommand.Create(() =>
+                                   {
+                                       if (JobManager.Manager.ReadyToRun)
+                                           JobManager.Manager.StartJobAsync(default);
+                                   },
+                                   jobAvailableObs)
                                .DisposeWith(Subscriptions);
         }
 

@@ -189,7 +189,7 @@ namespace ANDOR_CS.Classes
             OnAcquisitionStarted(new AcquisitionStatusEventArgs(CameraStatus.Acquiring));
             try
             {
-                await Task.Delay(1500, token);
+                await Task.Delay(1500 + CameraIndex * 500, token);
                 token.ThrowIfCancellationRequested();
 
                 OnNewImageReceived(new NewImageReceivedEventArgs(0, DateTimeOffset.Now));
@@ -251,7 +251,8 @@ namespace ANDOR_CS.Classes
 
         public override void ApplySettings(SettingsBase settings)
         {
-            Timings = (1.5f, 1.5f, 1.5f);
+            var delta = 0.5f * CameraIndex;
+            Timings = (1.5f + delta, 1.5f + delta, 1.5f + delta);
             base.ApplySettings(settings);
         }
 

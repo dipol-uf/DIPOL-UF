@@ -84,6 +84,7 @@ namespace DIPOL_UF.ViewModels
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
         public ICommand SetUpAcquisitionCommand => Model.SetUpAcquisitionCommand;
         public ICommand StartAcquisitionCommand => Model.StartAcquisitionCommand;
+        public ICommand StartJobCommand => Model.StartJobCommand;
         public ICommand SetUpJobCommand => Model.SetUpJobCommand;
         public CameraTabViewModel(CameraTab model) : base(model)
         {
