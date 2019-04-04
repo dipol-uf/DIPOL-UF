@@ -73,7 +73,7 @@ namespace ANDOR_CS.Classes
         private (Version EPROM, Version COFFile, Version Driver, Version Dll) _software;
         private (Version PCB, Version Decode, Version CameraFirmware) _hardware;
         private bool _isTemperatureMonitored;
-        private volatile bool _isAcquiring;
+        private bool _isAcquiring;
 
 
         protected Switch Autosave
@@ -89,26 +89,12 @@ namespace ANDOR_CS.Classes
         public bool IsDisposed
         {
             get => _isDisposed;
-            protected set
-            {
-                if (value != _isDisposed)
-                {
-                    _isDisposed = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _isDisposed);
         }
         public bool IsDisposing
         {
             get => _isDisposing;
-            protected set
-            {
-                if (value != _isDisposing)
-                {
-                    _isDisposing = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _isDisposing);
         }
 
 
@@ -117,107 +103,50 @@ namespace ANDOR_CS.Classes
         public virtual bool IsTemperatureMonitored
         {
             get => _isTemperatureMonitored;
-            protected set
-            {
-                if (value != _isTemperatureMonitored)
-                {
-                    _isTemperatureMonitored = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _isTemperatureMonitored);
 
         }
 
         public virtual DeviceCapabilities Capabilities
         {
             get => _capabilities;
-            protected set
-            {
-                if (!(value as ValueType).Equals(_capabilities))
-                {
-                    _capabilities = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _capabilities);
         }
 
         public virtual CameraProperties Properties
         {
             get => _properties;
-            protected set
-            {
-                if (!(value as ValueType).Equals(_properties))
-                {
-                    _properties = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _properties);
         }
 
         public virtual bool IsInitialized
         {
             get => _isInitialized;
-            protected set
-            {
-                if (value != _isInitialized)
-                {
-                    _isInitialized = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _isInitialized);
         }
 
         public virtual string SerialNumber
         {
             get => _serialNumber;
-            protected set
-            {
-                if (value != _serialNumber)
-                {
-                    _serialNumber = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _serialNumber);
         }
 
         public virtual string CameraModel
         {
             get => _cameraModel;
-            set
-            {
-                if (value != _cameraModel)
-                {
-                    _cameraModel = value;
-                    OnPropertyChanged();
-                }
-            }
+            set => RaisePropertyChanged(value, ref _cameraModel);
         }
 
         public virtual FanMode FanMode
         {
             get => _fanMode;
-            protected set
-            {
-                if (value != _fanMode)
-                {
-                    _fanMode = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _fanMode);
         }
 
         public virtual Switch CoolerMode
         {
             get => _coolerMode;
-            protected set
-            {
-                if (value != _coolerMode)
-                {
-                    _coolerMode = value;
-                    OnPropertyChanged();
-                }
-
-            }
+            protected set => RaisePropertyChanged(value, ref _coolerMode);
         }
 
         /// <summary>
@@ -226,14 +155,7 @@ namespace ANDOR_CS.Classes
         public virtual int CameraIndex
         {
             get => _cameraIndex;
-            protected set
-            {
-                if (value != _cameraIndex)
-                {
-                    _cameraIndex = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _cameraIndex);
         }
 
         /// <summary>
@@ -242,14 +164,7 @@ namespace ANDOR_CS.Classes
         public virtual bool IsAcquiring
         {
             get => _isAcquiring;
-            protected set
-            {
-                if (value != _isAcquiring)
-                {
-                    _isAcquiring = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _isAcquiring);
         }
         
         public virtual (
@@ -260,42 +175,21 @@ namespace ANDOR_CS.Classes
             int CloseTime) Shutter
         {
             get => _shutter;
-            protected set
-            {
-                if (!value.Equals(_shutter))
-                {
-                    _shutter = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _shutter);
         }
 
         public virtual (Version EPROM, Version COFFile, Version Driver, Version Dll)
             Software
         {
             get => _software;
-            protected set
-            {
-                if (!value.Equals(_software))
-                {
-                    _software = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _software);
         }
 
         public virtual (Version PCB, Version Decode, Version CameraFirmware)
             Hardware
         {
             get => _hardware;
-            protected set
-            {
-                if (!value.Equals(_hardware))
-                {
-                    _hardware = value;
-                    OnPropertyChanged();
-                }
-            }
+            protected set => RaisePropertyChanged(value, ref _hardware);
         }
         
         
