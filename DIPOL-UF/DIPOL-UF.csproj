@@ -212,6 +212,7 @@
     <Compile Include="Jobs\CameraAction.cs" />
     <Compile Include="Jobs\Job.cs" />
     <Compile Include="Jobs\JobAction.cs" />
+    <Compile Include="Jobs\JobManager.cs" />
     <Compile Include="Jobs\MotorAction.cs" />
     <Compile Include="Jobs\RepeatAction.cs" />
     <Compile Include="Jobs\Target.cs" />
