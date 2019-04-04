@@ -72,6 +72,7 @@ namespace DIPOL_UF.Models
         public DescendantProvider ProgressBarProvider { get; private set; }
         public DescendantProvider AvailableCamerasProvider { get; private set; }
 
+        public bool IsDisposing { get; private set; }
 
         // ReSharper disable UnassignedGetOnlyAutoProperty
         public bool CanConnect { [ObservableAsProperty] get; }
@@ -421,11 +422,27 @@ namespace DIPOL_UF.Models
 
         protected override void Dispose(bool disposing)
         {
-            if (!IsDisposed)
+            if (!IsDisposed && !IsDisposing)
                 if (disposing)
                 {
-                    base.Dispose(true);
-                    _connectedCameras.Clear();
+                    // This one overrides on [Disconnect] disposal,
+                    // as it is "fire & forget", and time-consuming.
+                    // When window is closed, the unobserved disposals take some time
+                    // and can use client infrastructure when client has been disconnected.
+                    // [IsDisposing] overrides that behaviour, and each camera is removed & disposed
+                    // individually and synchronously.
+                    IsDisposing = true;
+                    var keys = _connectedCameras.Keys.ToList();
+                    foreach (var key in keys)
+                    {
+                        var val = _connectedCameras.Lookup(key);
+                        if (val.HasValue)
+                        {
+                            _connectedCameras.Remove(val.Value.Id);
+                            if(!val.Value.Camera.IsDisposed)
+                                val.Value.Camera.Dispose();
+                        }
+                    }
 
                     if (!(_remoteClients is null))
                         Parallel.ForEach(_remoteClients, (client) =>
@@ -441,6 +458,8 @@ namespace DIPOL_UF.Models
                                 // Ignored
                             }
                         });
+                    IsDisposing = false;
+                    base.Dispose(true);
                 }
         }
 
@@ -467,10 +486,12 @@ namespace DIPOL_UF.Models
             });
         }
 
-        private static async Task DisposeCamera(CameraBase cam)
+        private async Task DisposeCamera(CameraBase cam)
             => await Helper.RunNoMarshall(() =>
             {
-                if (cam?.IsDisposed == false)
+                // This one only works if a camera is disposed through 
+                // removal from collection - as in "user pressed Disconnect"
+                if (cam?.IsDisposed == false && !IsDisposing)
                 {
                     cam.CoolerControl(Switch.Disabled);
                     cam.TemperatureMonitor(Switch.Disabled);
