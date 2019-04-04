@@ -27,26 +27,32 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
 using DIPOL_UF.Models;
+using DynamicData;
+using DynamicData.Aggregation;
+using DynamicData.Binding;
+using MathNet.Numerics;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using Serializers;
 
 namespace DIPOL_UF.Jobs
 {
-    internal sealed class JobManager : ReactiveObject
+    internal sealed class JobManager : ReactiveObjectEx
     {
         private DipolMainWindow _windowRef;
-        private ReadOnlyDictionary<string, object> _settingsTemplateStr;
-        //private 
+        private byte[] _settingsRep;
         public static JobManager Manager { get; } = new JobManager();
 
         [Reactive]
         public bool ReadyToRun { get; private set; }
+        // ReSharper disable once UnassignedGetOnlyAutoProperty
+        public bool AnyCameraIsAcquiring { [ObservableAsProperty] get; }
 
         // TODO : return a copy of a target
         public Target CurrentTarget { get; private set; } = new Target();
@@ -58,12 +64,31 @@ namespace DIPOL_UF.Jobs
                 _windowRef = window ?? throw new ArgumentNullException(nameof(window));
             else
                 throw new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
+
+            var observer =
+                _windowRef.ConnectedCameras.Connect()
+                          .Transform(x => x.Camera)
+                          .TrueForAny(x => x.WhenPropertyChanged(y => y.IsAcquiring).Select(y => y.Value),
+                              z => z)
+                          .ToPropertyEx(this, x => x.AnyCameraIsAcquiring)
+                          .DisposeWith(Subscriptions);
+
+
         }
 
         public async Task StartJobAsync(CancellationToken token)
         {
-            //var cams = _windowRef.ConnectedCameras.Items.Select(x => x.Camera).ToList();
-            //foreach(var vam in cams)
+            var camModels = _windowRef.CameraTabs.Items.ToList();
+            if(camModels.Any(x => x.Tab?.Camera?.CurrentSettings is null))
+                throw new InvalidOperationException("At least one camera has no settings applied to it.");
+
+            var tasks = camModels.Select(async x =>
+            {
+                await x.Tab.StartAcquisitionCommand.Execute();
+                return await x.Tab.WhenAcquisitionFinished.FirstAsync();
+            }).ToList();
+
+            var result = await Task.WhenAll(tasks);
         }
 
         public Task SubmitNewTarget(Target target)
@@ -81,12 +106,14 @@ namespace DIPOL_UF.Jobs
             {
                 await ConstructJob();
                 await LoadSettingsTemplate();
+                await ApplySettingsTemplate();
                 ReadyToRun = true;
             }
             catch (Exception)
             {
                 CurrentTarget = new Target();
                 AcquisitionJob = null;
+                _settingsRep = null;
                 throw;
             }
         }
@@ -101,16 +128,32 @@ namespace DIPOL_UF.Jobs
 
 
             using (var str = new FileStream(CurrentTarget.SettingsPath, FileMode.Open, FileAccess.Read))
-                _settingsTemplateStr = await JsonParser.ReadJsonAsync(str, Encoding.ASCII, CancellationToken.None);
+            {
+                _settingsRep = new byte[str.Length];
+                await str.ReadAsync(_settingsRep, 0, _settingsRep.Length);
+            }
         }
 
         private async Task ApplySettingsTemplate()
         {
+            if (_settingsRep is null)
+                throw new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
+
             var cameras = _windowRef.ConnectedCameras.Items.Select(x => x.Camera).ToList();
+
+            if (cameras.Count < 1)
+                throw new InvalidOperationException("No connected cameras to work with.");
+
+            using (var memory = new MemoryStream(_settingsRep, false))
             foreach (var cam in cameras)
             {
+                memory.Position = 0;
                 var template = cam.GetAcquisitionSettingsTemplate();
-                //template.D
+                await template.DeserializeAsync(memory, Encoding.ASCII, CancellationToken.None);
+
+                // TODO : Modify individual settings here
+
+                cam.ApplySettings(template);
             }
         }
 

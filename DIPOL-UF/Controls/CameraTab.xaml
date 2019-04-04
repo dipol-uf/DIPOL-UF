@@ -362,6 +362,32 @@
                          Content="{extensions:Text Key=CameraTab_JobSettings}"
                          Command="{Binding SetUpJobCommand}"/>
 
+                <!-- Job button -->
+                <Button Grid.Column="1" Grid.Row="4"
+                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Command="{Binding StartJobCommand}">
+                    <Button.Style>
+                        <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsAcquiring, Mode=OneWay}" Value="True">
+                                    <Setter Property="Content" Value="{extensions:Text Key=CameraTab_Job_Stop}"/>
+                                    <Setter Property="Button.Background" 
+                                            Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
+                                    <Setter Property="Button.Foreground" 
+                                            Value="{StaticResource ResourceKey=NegativeEffectButtonForegroundColor}"/>
+                                </DataTrigger>
+                                <DataTrigger  Binding="{Binding IsAcquiring, Mode=OneWay}" Value="False" >
+                                    <Setter Property="Content" Value="{extensions:Text Key=CameraTab_Job_Start}"/>
+                                    <Setter Property="Button.Background" 
+                                            Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>
+                                    <Setter Property="Button.Foreground" 
+                                            Value="{StaticResource ResourceKey=PositiveEffectButtonForegroundColor}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
                 <!-- Timing table -->
                 <TextBlock HorizontalAlignment="Stretch"
                            Grid.Column="0" Grid.Row="5"

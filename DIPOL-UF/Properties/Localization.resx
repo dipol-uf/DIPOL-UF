@@ -532,4 +532,10 @@ The following settings produced this error:
   <data name="JobSettings_WindowName" xml:space="preserve">
     <value>Set up job</value>
   </data>
+  <data name="CameraTab_Job_Start" xml:space="preserve">
+    <value>Start Cycle</value>
+  </data>
+  <data name="CameraTab_Job_Stop" xml:space="preserve">
+    <value>Stop Cycle</value>
+  </data>
 </root>

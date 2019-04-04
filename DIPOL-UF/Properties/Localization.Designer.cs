@@ -498,6 +498,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Start Cycle.
+        /// </summary>
+        public static string CameraTab_Job_Start {
+            get {
+                return ResourceManager.GetString("CameraTab_Job_Start", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop Cycle.
+        /// </summary>
+        public static string CameraTab_Job_Stop {
+            get {
+                return ResourceManager.GetString("CameraTab_Job_Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Job Settings.
         /// </summary>
         public static string CameraTab_JobSettings {
