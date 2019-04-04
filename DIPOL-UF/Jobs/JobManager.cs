@@ -24,30 +24,54 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
 using DIPOL_UF.Models;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
+using Serializers;
 
 namespace DIPOL_UF.Jobs
 {
     internal sealed class JobManager : ReactiveObject
     {
         private DipolMainWindow _windowRef;
-
+        private ReadOnlyDictionary<string, object> _settingsTemplateStr;
+        //private 
         public static JobManager Manager { get; } = new JobManager();
+
+        [Reactive]
+        public bool ReadyToRun { get; private set; }
 
         // TODO : return a copy of a target
         public Target CurrentTarget { get; private set; } = new Target();
         public Job AcquisitionJob { get; private set; }
+
         public void AttachToMainWindow(DipolMainWindow window)
-            => _windowRef = window ?? throw new ArgumentNullException(nameof(window));
+        {
+            if(_windowRef is null)
+                _windowRef = window ?? throw new ArgumentNullException(nameof(window));
+            else
+                throw new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
+        }
+
+        public async Task StartJobAsync(CancellationToken token)
+        {
+            //var cams = _windowRef.ConnectedCameras.Items.Select(x => x.Camera).ToList();
+            //foreach(var vam in cams)
+        }
 
         public Task SubmitNewTarget(Target target)
         {
-            CurrentTarget = target ?? throw new ArgumentNullException(nameof(target));
+            ReadyToRun = false;
+            CurrentTarget = target ?? throw new ArgumentNullException(
+                                Properties.Localization.General_ShouldNotHappen,
+                                nameof(target));
             return SetupNewTarget();
         }
 
@@ -56,7 +80,8 @@ namespace DIPOL_UF.Jobs
             try
             {
                 await ConstructJob();
-                await ApplySettingsTemplate();
+                await LoadSettingsTemplate();
+                ReadyToRun = true;
             }
             catch (Exception)
             {
@@ -66,7 +91,7 @@ namespace DIPOL_UF.Jobs
             }
         }
 
-        private async Task ApplySettingsTemplate()
+        private async Task LoadSettingsTemplate()
         {
             if(!File.Exists(CurrentTarget.SettingsPath))
                 throw new FileNotFoundException("Settings file is not found", CurrentTarget.SettingsPath);
@@ -75,31 +100,17 @@ namespace DIPOL_UF.Jobs
                 throw new InvalidOperationException("No connected cameras to work with.");
 
 
-            byte[] settingsByteRep;
-
             using (var str = new FileStream(CurrentTarget.SettingsPath, FileMode.Open, FileAccess.Read))
+                _settingsTemplateStr = await JsonParser.ReadJsonAsync(str, Encoding.ASCII, CancellationToken.None);
+        }
+
+        private async Task ApplySettingsTemplate()
+        {
+            var cameras = _windowRef.ConnectedCameras.Items.Select(x => x.Camera).ToList();
+            foreach (var cam in cameras)
             {
-                settingsByteRep = new byte[str.Length];
-                await str.ReadAsync(settingsByteRep, 0, settingsByteRep.Length);
-            }
-
-            var cams = _windowRef.ConnectedCameras.Items.Select(x => x.Camera).ToList();
-
-            List<SettingsBase> setts;
-            using (var memory = new MemoryStream(settingsByteRep, false))
-                setts = cams.Select(x =>
-                {
-                    memory.Position = 0;
-                    var template = x.GetAcquisitionSettingsTemplate();
-                    template.Deserialize(memory);
-                    return template;
-                }).ToList();
-
-            // TODO : here, update settings of each camera individually
-
-            for (var i = 0; i < cams.Count; i++)
-            {
-                cams[i].ApplySettings(setts[i]);
+                var template = cam.GetAcquisitionSettingsTemplate();
+                //template.D
             }
         }
 
