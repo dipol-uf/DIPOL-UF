@@ -38,13 +38,13 @@
         d:DataContext="{d:DesignInstance viewModels:JobSettingsViewModel}"
         ResizeMode="NoResize">
     <behavior:Interaction.Triggers>
-        <!--<behavior:EventTrigger
+        <behavior:EventTrigger
             EventName="FileDialogRequested"
             SourceObject="{Binding}">
             <extensions:FileDialogAction
                 SaveCommand="{Binding SaveActionCommand}"
                 LoadCommand="{Binding LoadActionCommand}"/>
-        </behavior:EventTrigger>-->
+        </behavior:EventTrigger>
         <behavior:EventTrigger
             EventName="BrowseJobSettingsRequested"
             SourceObject="{Binding}">
