@@ -74,6 +74,8 @@ namespace ANDOR_CS.Classes
         private bool _isTemperatureMonitored;
         private bool _isAcquiring;
 
+        private SettingsBase _currentSettings;
+
 
         protected Switch Autosave
         {
@@ -83,7 +85,12 @@ namespace ANDOR_CS.Classes
         protected ImageFormat AutosaveFormat { get; private set; }
         protected List<FitsKey> SettingsFitsKeys { get; private set; }
 
-        public SettingsBase CurrentSettings { get; private set; }
+        public SettingsBase CurrentSettings
+        {
+            get => _currentSettings;
+            protected set => RaisePropertyChanged(value, ref _currentSettings);
+        }
+
         public (float Exposure, float Accumulation, float Kinetic) Timings { get; set; }
         public bool IsDisposed
         {
@@ -95,7 +102,6 @@ namespace ANDOR_CS.Classes
             get => _isDisposing;
             protected set => RaisePropertyChanged(value, ref _isDisposing);
         }
-
 
         public abstract bool IsActive { get; }
 
