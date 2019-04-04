@@ -42,6 +42,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using DIPOL_UF.Jobs;
 using DynamicData.Kernel;
 using StepMotor;
 
@@ -60,6 +61,7 @@ namespace DIPOL_UF.Models
         private readonly SourceCache<(string Id, CameraBase Camera), string> _connectedCameras;
 
         private Task _serialPortScanningTask;
+
         [Reactive]
         private bool IsSerialPortTaskCompleted { get; set; }
 
@@ -70,7 +72,7 @@ namespace DIPOL_UF.Models
         public DescendantProvider ProgressBarProvider { get; private set; }
         public DescendantProvider AvailableCamerasProvider { get; private set; }
 
-        
+
         // ReSharper disable UnassignedGetOnlyAutoProperty
         public bool CanConnect { [ObservableAsProperty] get; }
         // ReSharper restore UnassignedGetOnlyAutoProperty
@@ -102,43 +104,44 @@ namespace DIPOL_UF.Models
             InitializeCommands();
             HookObservables();
             HookValidators();
+            JobManager.Manager.AttachToMainWindow(this);
         }
 
         private Task CheckStepMotors()
         {
-           return Task.Run(async () =>
-           {
-               Application.Current?.Dispatcher.InvokeAsync(() => IsSerialPortTaskCompleted = false);
+            return Task.Run(async () =>
+            {
+                Application.Current?.Dispatcher.InvokeAsync(() => IsSerialPortTaskCompleted = false);
 
-               try
-               {
-                   var comPorts = SerialPort.GetPortNames();
-                   _foundSerialDevices =
-                       await Task.WhenAll(comPorts.Select(async x =>
-                           (Port: x, Devices: await StepMotorHandler.FindDevice(x))));
-                   var preferredPortName =
-                       UiSettingsProvider.Settings.Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant();
+                try
+                {
+                    var comPorts = SerialPort.GetPortNames();
+                    _foundSerialDevices =
+                        await Task.WhenAll(comPorts.Select(async x =>
+                            (Port: x, Devices: await StepMotorHandler.FindDevice(x))));
+                    var preferredPortName =
+                        UiSettingsProvider.Settings.Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant();
 
-                   if (_foundSerialDevices.FirstOrOptional(x => x.Port.ToUpperInvariant() == preferredPortName) is
-                           var
-                           ports
-                       && ports.HasValue
-                       && ports.Value.Devices.Count > 0)
-                   {
-                       var address = ports.Value.Devices.First();
-                       PolarimeterMotor = new StepMotorHandler(preferredPortName, address).DisposeWith(Subscriptions);
-                   }
+                    if (_foundSerialDevices.FirstOrOptional(x => x.Port.ToUpperInvariant() == preferredPortName) is
+                            var
+                            ports
+                        && ports.HasValue
+                        && ports.Value.Devices.Count > 0)
+                    {
+                        var address = ports.Value.Devices.First();
+                        PolarimeterMotor = new StepMotorHandler(preferredPortName, address).DisposeWith(Subscriptions);
+                    }
 
-               }
-               catch (Exception)
-               {
-                   // TODO: maybe handle
-                   // Ignored
-               }
-               finally
-               {
-                   Application.Current?.Dispatcher.InvokeAsync(() => IsSerialPortTaskCompleted = true);
-               }
+                }
+                catch (Exception)
+                {
+                    // TODO: maybe handle
+                    // Ignored
+                }
+                finally
+                {
+                    Application.Current?.Dispatcher.InvokeAsync(() => IsSerialPortTaskCompleted = true);
+                }
             });
         }
 
@@ -149,16 +152,16 @@ namespace DIPOL_UF.Models
                 ReactiveCommand.CreateFromObservable<string, Unit>(
                                    x => Observable.FromAsync(_ => ContextMenuCommandExecuteAsync(x)),
                                    _connectedCameras.CountChanged.Select(x => x != 0)
-                                                   .DistinctUntilChanged()
-                                                   .ObserveOnUi())
+                                                    .DistinctUntilChanged()
+                                                    .ObserveOnUi())
                                .DisposeWith(Subscriptions);
 
             SelectCameraCommand =
                 ReactiveCommand.Create<string>(
                                    SelectCameraCommandExecute,
                                    _connectedCameras.CountChanged.Select(x => x != 0)
-                                                   .DistinctUntilChanged()
-                                                   .ObserveOnUi())
+                                                    .DistinctUntilChanged()
+                                                    .ObserveOnUi())
                                .DisposeWith(Subscriptions);
 
             WindowLoadedCommand =
@@ -192,8 +195,8 @@ namespace DIPOL_UF.Models
                 ReactiveCommand.Create(
                                    SelectAllCamerasCommandExecute,
                                    _connectedCameras.CountChanged.Select(x => x != 0)
-                                                   .DistinctUntilChanged()
-                                                   .ObserveOnUi())
+                                                    .DistinctUntilChanged()
+                                                    .ObserveOnUi())
                                .DisposeWith(Subscriptions);
 
             ProgressBarProvider = new DescendantProvider(
@@ -214,17 +217,17 @@ namespace DIPOL_UF.Models
                 .DisposeWith(Subscriptions);
 
             AvailableCamerasProvider = new DescendantProvider(
-                ReactiveCommand.Create<object, ReactiveObjectEx>(x => (ReactiveObjectEx)x), 
-                null,
-                null, 
-                ReactiveCommand.CreateFromTask<ReactiveObjectEx>(async x =>
+                    ReactiveCommand.Create<object, ReactiveObjectEx>(x => (ReactiveObjectEx) x),
+                    null,
+                    null,
+                    ReactiveCommand.CreateFromTask<ReactiveObjectEx>(async x =>
                     {
                         await ReceiveConnectedCameras((AvailableCamerasModel) x).ExpectCancellation();
                         x.Dispose();
                     }))
                 .DisposeWith(Subscriptions);
 
-                
+
 
             PolarimeterMotorButtonCommand =
                 ReactiveCommand.CreateFromTask(CheckStepMotorStatus,
@@ -244,54 +247,54 @@ namespace DIPOL_UF.Models
                       .DisposeWith(Subscriptions);
 
 
-           _connectedCameras.Connect()
-                            .DisposeManyEx(async x => await DisposeCamera(x.Camera))
-                            .Subscribe()
-                            .DisposeWith(Subscriptions);
+            _connectedCameras.Connect()
+                             .DisposeManyEx(async x => await DisposeCamera(x.Camera))
+                             .Subscribe()
+                             .DisposeWith(Subscriptions);
 
-           ConnectedCameras = _connectedCameras
-                              .AsObservableCache()
-                              .DisposeWith(Subscriptions);
-
-
-
-           CameraTabs = _connectedCameras.Connect()
-                                         .Transform(x => (x.Id, Tab: new CameraTab(x.Camera)))
-                                         .DisposeManyEx(x => x.Tab?.Dispose())
-                                         .AsObservableCache()
-                                         .DisposeWith(Subscriptions);
-
-           WindowLoadedCommand
-               .InvokeCommand(ProgressBarProvider.ViewRequested)
-               .DisposeWith(Subscriptions);
-
-           ProgressBarProvider.ViewRequested.Select(async x =>
-                              {
-                                  await InitializeRemoteSessionsAsync((ProgressBar) x);
-                                  return Unit.Default;
-                              })
-                              .CombineLatest(ProgressBarProvider.WindowShown,
-                                  (x, y) => Unit.Default)
-                              .Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")))
-                              .InvokeCommand(ProgressBarProvider.ClosingRequested)
-                              .DisposeWith(Subscriptions);
-
-           ConnectButtonCommand.InvokeCommand(AvailableCamerasProvider.ViewRequested as ICommand)
+            ConnectedCameras = _connectedCameras
+                               .AsObservableCache()
                                .DisposeWith(Subscriptions);
 
-           AvailableCamerasProvider.WindowShown.WithLatestFrom(
-                                       AvailableCamerasProvider.ViewRequested,
-                                       (x, y) => y)
-                                   .Subscribe(async x =>
-                                       await QueryCamerasAsync((AvailableCamerasModel) x)
-                                           .ExpectCancellation())
-                                   .DisposeWith(Subscriptions);
+
+
+            CameraTabs = _connectedCameras.Connect()
+                                          .Transform(x => (x.Id, Tab: new CameraTab(x.Camera)))
+                                          .DisposeManyEx(x => x.Tab?.Dispose())
+                                          .AsObservableCache()
+                                          .DisposeWith(Subscriptions);
+
+            WindowLoadedCommand
+                .InvokeCommand(ProgressBarProvider.ViewRequested)
+                .DisposeWith(Subscriptions);
+
+            ProgressBarProvider.ViewRequested.Select(async x =>
+                               {
+                                   await InitializeRemoteSessionsAsync((ProgressBar) x);
+                                   return Unit.Default;
+                               })
+                               .CombineLatest(ProgressBarProvider.WindowShown,
+                                   (x, y) => Unit.Default)
+                               .Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")))
+                               .InvokeCommand(ProgressBarProvider.ClosingRequested)
+                               .DisposeWith(Subscriptions);
+
+            ConnectButtonCommand.InvokeCommand(AvailableCamerasProvider.ViewRequested as ICommand)
+                                .DisposeWith(Subscriptions);
+
+            AvailableCamerasProvider.WindowShown.WithLatestFrom(
+                                        AvailableCamerasProvider.ViewRequested,
+                                        (x, y) => y)
+                                    .Subscribe(async x =>
+                                        await QueryCamerasAsync((AvailableCamerasModel) x)
+                                            .ExpectCancellation())
+                                    .DisposeWith(Subscriptions);
 
         }
 
         private void SelectAllCamerasCommandExecute()
         {
-            if(SelectedDevices.Count < ConnectedCameras.Count)
+            if (SelectedDevices.Count < ConnectedCameras.Count)
                 SelectedDevices.Edit(context =>
                 {
                     context.Clear();
@@ -336,12 +339,12 @@ namespace DIPOL_UF.Models
             {
                 try
                 {
-                    var client =DipolClient.Create(new Uri(_remoteLocations[i]),
+                    var client = DipolClient.Create(new Uri(_remoteLocations[i]),
                         TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")),
                         TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")),
                         TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
                     client.Connect();
-                    lock(connectedClients)
+                    lock (connectedClients)
                         connectedClients.Add(client);
                 }
                 catch (System.ServiceModel.EndpointNotFoundException endpointException)
@@ -359,16 +362,13 @@ namespace DIPOL_UF.Models
             _remoteClients = connectedClients.ToArray();
             pb.BarComment = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
         }
-        
+
         private async Task ReceiveConnectedCameras(AvailableCamerasModel model)
         {
             var cams = model.RetrieveSelectedDevices();
 
             if (cams.Count > 0)
-                _connectedCameras.Edit(context =>
-                {
-                    context.AddOrUpdate(cams);
-                });
+                _connectedCameras.Edit(context => { context.AddOrUpdate(cams); });
 
             await PrepareCamerasAsync(cams.Select(x => x.Camera));
         }
@@ -447,11 +447,12 @@ namespace DIPOL_UF.Models
         private static async Task<AvailableCamerasModel> QueryCamerasAsync(AvailableCamerasModel model)
         {
             (await Helper.RunNoMarshall(() => model
-                                             .QueryCamerasCommand.Execute()))
-                    .Subscribe(_ => { }, () => { });
+                                              .QueryCamerasCommand.Execute()))
+                .Subscribe(_ => { }, () => { });
 
             return model;
         }
+
         private static async Task PrepareCamerasAsync(IEnumerable<CameraBase> cams)
         {
             await Helper.RunNoMarshall(() =>
@@ -459,17 +460,22 @@ namespace DIPOL_UF.Models
                 foreach (var cam in cams)
                 {
                     if (cam.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature))
-                        cam.TemperatureMonitor(Switch.Enabled, 
-                            (int)(TimeSpan.Parse(UiSettingsProvider.Settings.Get("UICamStatusUpdateDelay", "00:00:01")).TotalMilliseconds));
+                        cam.TemperatureMonitor(Switch.Enabled,
+                            (int) (TimeSpan.Parse(UiSettingsProvider.Settings.Get("UICamStatusUpdateDelay", "00:00:01"))
+                                           .TotalMilliseconds));
                 }
             });
         }
+
         private static async Task DisposeCamera(CameraBase cam)
             => await Helper.RunNoMarshall(() =>
             {
-                cam?.CoolerControl(Switch.Disabled);
-                cam?.TemperatureMonitor(Switch.Disabled);
-                cam?.Dispose();
+                if (cam?.IsDisposed == false)
+                {
+                    cam.CoolerControl(Switch.Disabled);
+                    cam.TemperatureMonitor(Switch.Disabled);
+                    cam.Dispose();
+                }
             });
     }
 }

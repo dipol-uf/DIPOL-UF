@@ -85,7 +85,7 @@ namespace ANDOR_CS.Classes
         protected ImageFormat AutosaveFormat { get; private set; }
         protected List<FitsKey> SettingsFitsKeys { get; private set; }
 
-        public SettingsBase CurrentSettings
+        public virtual SettingsBase CurrentSettings
         {
             get => _currentSettings;
             protected set => RaisePropertyChanged(value, ref _currentSettings);
