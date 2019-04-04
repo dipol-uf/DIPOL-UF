@@ -505,6 +505,12 @@ The following settings produced this error:
   <data name="JobSettings_Dialog_Job" xml:space="preserve">
     <value>Chose file with job settings</value>
   </data>
+  <data name="JobSettings_Dialog_Load" xml:space="preserve">
+    <value>Load observation target</value>
+  </data>
+  <data name="JobSettings_Dialog_Save" xml:space="preserve">
+    <value>Save current observation target</value>
+  </data>
   <data name="JobSettings_SettingsFile" xml:space="preserve">
     <value>Acq. file</value>
   </data>

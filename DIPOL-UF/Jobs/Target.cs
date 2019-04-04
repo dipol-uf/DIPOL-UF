@@ -22,20 +22,52 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace DIPOL_UF.Jobs
 {
-    class Target
+    internal class Target
     {
         public string SettingsPath { get; set; }
         public string JobPath { get; set; }
         public string TargetName { get; set; }
 
         public Dictionary<string, Dictionary<string, object>> CustomParameters { get; set; }
+
+        private void InitializeFromAnother(Target other)
+        {
+            SettingsPath = other.SettingsPath;
+            JobPath = other.JobPath;
+            TargetName = other.TargetName;
+        }
+
+        public async Task Deserialize(Stream stream)
+        {
+            if(!stream.CanRead)
+                throw new IOException("Stream does not support reading.");
+            // WATCH : using [leaveOpen = true] in conjunction with [using] closure
+            using (var reader = new StreamReader(stream, Encoding.ASCII, true, 512, true))
+            {
+                var str = await reader.ReadToEndAsync();
+                var json = JsonConvert.DeserializeObject<Target>(str);
+                InitializeFromAnother(json);
+            }
+        }
+
+        public async Task Serialize(Stream stream)
+        {
+            if (!stream.CanWrite)
+                throw new IOException("Stream does not support writing.");
+            // WATCH : using [leaveOpen = true] in conjunction with [using] closure
+            using (var writer = new StreamWriter(stream, Encoding.ASCII, 512, true))
+            {
+                var str = JsonConvert.SerializeObject(this, Formatting.Indented);
+                await writer.WriteAsync(str);
+            }
+        }
     }
 }

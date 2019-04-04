@@ -930,6 +930,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Load observation target.
+        /// </summary>
+        public static string JobSettings_Dialog_Load {
+            get {
+                return ResourceManager.GetString("JobSettings_Dialog_Load", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save current observation target.
+        /// </summary>
+        public static string JobSettings_Dialog_Save {
+            get {
+                return ResourceManager.GetString("JobSettings_Dialog_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exp. times (s):.
         /// </summary>
         public static string JobSettings_ExposureTime {
