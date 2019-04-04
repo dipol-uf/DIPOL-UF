@@ -51,7 +51,6 @@ namespace ANDOR_CS.Classes
 
         private bool _isDisposed;
         private bool _isDisposing;
-        // TODO : check this
         private Timer _temperatureMonitorTimer;
         private bool _isInitialized;
         private DeviceCapabilities _capabilities;
