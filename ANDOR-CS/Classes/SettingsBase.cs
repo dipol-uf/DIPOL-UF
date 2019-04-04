@@ -809,9 +809,15 @@ namespace ANDOR_CS.Classes
         public virtual async Task SerializeAsync(Stream stream, Encoding enc, CancellationToken token)
             => await WriteJsonAsync(stream, enc, token);
 
-        public virtual Collection<string> Deserialize(Stream stream)
+        public virtual ReadOnlyCollection<string> Deserialize(Stream stream)
         {
             var data = ReadJson(new StreamReader(stream, Encoding.ASCII, true, 512, true));
+            return Load(data);
+        }
+
+        public virtual async Task<ReadOnlyCollection<string>> DeserializeAsync(Stream stream, Encoding enc, CancellationToken token)
+        {
+            var data = await ReadJsonAsync(stream, enc, token);
             return Load(data);
         }
 
@@ -830,7 +836,11 @@ namespace ANDOR_CS.Classes
         private ReadOnlyDictionary<string, object> ReadJson(StreamReader str)
             => JsonParser.ReadJson(str);
 
-        private Collection<string> Load(IReadOnlyDictionary<string, object> result)
+        private Task<ReadOnlyDictionary<string, object>> ReadJsonAsync(Stream str, Encoding enc,
+            CancellationToken token)
+            => JsonParser.ReadJsonAsync(str, enc, token);
+
+        private ReadOnlyCollection<string> Load(IReadOnlyDictionary<string, object> result)
         {
             var props = new Collection<string>();
             
@@ -901,7 +911,7 @@ namespace ANDOR_CS.Classes
                 props.Add(item.Key);
             }
 
-            return props;
+            return new ReadOnlyCollection<string>(props);
         }
 
         public List<FitsKey> ConvertToFitsKeys()
