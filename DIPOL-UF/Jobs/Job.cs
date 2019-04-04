@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Automation.Peers;
 using Serializers;
 
 namespace DIPOL_UF.Jobs
@@ -45,8 +46,15 @@ namespace DIPOL_UF.Jobs
             if (input is null)
                 throw new ArgumentNullException(nameof(input));
 
-            _actions = input.Select(ItemToJob).ToList();
+            _actions = (input["Actions"] as object[])
+                       ?.Select(x => x is ReadOnlyDictionary<string, object> dict
+                                     && dict?.Count == 1
+                           ? dict.FirstOrDefault()
+                           : new KeyValuePair<string, object>())
+                       .Select(ItemToJob).ToList();
         }
+
+       
         private JobAction ItemToJob(KeyValuePair<string, object> obj)
         {
             var name = obj.Key.ToLowerInvariant();
@@ -71,18 +79,6 @@ namespace DIPOL_UF.Jobs
             }
 
             return null;
-        }
-
-
-        public async Task Prepare()
-        {
-            await Task.Delay(1);
-            // TODO : If present, step motor goes to 0
-            // TODO : If [MotorAction] in [_actions], but no motor -> throw
-            // TODO : Wait for camera acquisitions to finish
-            // TODO : Use settings template to create new settings
-            // TODO : Update exposure times if necessary
-            // TODO : Apply settings
         }
 
         public async Task Run()
