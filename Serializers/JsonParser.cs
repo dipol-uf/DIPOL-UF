@@ -39,8 +39,6 @@ namespace Serializers
 {
     public static class JsonParser
     {
-        private const int WriteChunkSize = 64;
-
         internal static object Converter(object inp, bool convertAll = false)
         {
             var result = inp;
@@ -92,20 +90,6 @@ namespace Serializers
         public static ReadOnlyDictionary<string, object> ReadJson(StreamReader str)
         {
 
-            object Process( object token)
-            {
-                if (token is JObject obj)
-                    return new ReadOnlyDictionary<string, object>(obj.Properties().ToDictionary(x => x.Name, x => Process(x.Value)));
-                if (token is JValue val)
-                    return val.Value;
-                if (token is JArray array)
-                {
-                    return array.Select(Process).ToArray();
-                }
-
-
-                return token;
-            }
 
             var line = str.ReadToEnd();
 
@@ -115,7 +99,24 @@ namespace Serializers
             return new ReadOnlyDictionary<string, object>(result);
         }
 
-        public static async Task WriteJsonAsync(this object settings, Stream str, Encoding enc, CancellationToken token)
+        public static async Task<ReadOnlyDictionary<string, object>> ReadJsonAsync(Stream str, Encoding enc, CancellationToken token)
+        {
+            if (!str.CanRead)
+                throw new ArgumentException("Stream does not support writing.", nameof(str));
+
+            var buffer = new byte[str.Length];
+
+            await str.ReadAsync(buffer, 0, buffer.Length, token);
+
+            var @string = enc.GetString(buffer);
+
+            var result = JsonConvert.DeserializeObject<Dictionary<string, object>>(@string)
+                                    .ToDictionary(x => x.Key, x => Process(x.Value));
+            return new ReadOnlyDictionary<string, object>(result);
+
+        }
+
+        public static Task WriteJsonAsync(this object settings, Stream str, Encoding enc, CancellationToken token)
         {
             if (!str.CanWrite)
                 throw new ArgumentException("Stream does not support writing.", nameof(str));
@@ -128,67 +129,34 @@ namespace Serializers
                                     p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0);
 
             var data = props.Select(p => new
-            {
-                p.Name,
-                Value = Converter(p.GetValue(settings), p.GetCustomAttribute<SerializationOrderAttribute>(true)?.All ?? false)
-            })
-                            .Where(item => item.Value != null)
+                            {
+                                p.Name,
+                                Value = Converter(p.GetValue(settings),
+                                    p.GetCustomAttribute<SerializationOrderAttribute>(true)?.All ?? false)
+                            }).Where(item => item.Value != null)
                             .ToDictionary(item => item.Name, item => item.Value);
 
             var dataString = JsonConvert.SerializeObject(data, Formatting.Indented);
 
             var byteRep = enc.GetBytes(dataString);
 
-            var nStep = byteRep.Length / WriteChunkSize;
-
-            try
-            {
-                for (var i = 0; i < nStep; i++, token.ThrowIfCancellationRequested())
-                    await str.WriteAsync(byteRep, WriteChunkSize * i, WriteChunkSize, token);
-                token.ThrowIfCancellationRequested();
-                await str.WriteAsync(byteRep, nStep * WriteChunkSize, byteRep.Length - nStep * WriteChunkSize, token);
-            }
-            finally
-            {
-                await str.FlushAsync(token);
-            }
+            return str.WriteAsync(byteRep, 0, byteRep.Length, token);
         }
 
-        // ReSharper disable once UnusedMember.Local
-        private static string TabifyNestedNodes(string nodeVal)
+        private static object Process( object token)
         {
-            var tabIndex = 0;
-            var sb = new StringBuilder(nodeVal.Length + 16);
+            if (token is JObject obj)
+                return new ReadOnlyDictionary<string, object>(obj.Properties().ToDictionary(x => x.Name, x => Process(x.Value)));
+            if (token is JValue val)
+                return val.Value;
+            if (token is JArray array)
+            {
+                return array.Select(Process).ToArray();
+            }
 
-            foreach (var t in nodeVal)
-                switch (t)
-                {
-                    case '[':
-                    case '{':
-                        sb.Append(t);
-                        sb.Append("\r\n");
-                        sb.Append('\t', ++tabIndex);
-                        break;
-                    case ']':
-                    case '}':
-                        sb.Append("\r\n");
-                        sb.Append('\t', --tabIndex);
-                        sb.Append(t);
-                        break;
-                    case ',':
-                        sb.Append(t);
-                        sb.Append("\r\n");
-                        sb.Append('\t', tabIndex);
-                        break;
-                    case ':':
-                        sb.Append(" : ");
-                        break;
-                    default:
-                        sb.Append(t);
-                        break;
-                }
 
-            return sb.ToString();
+            return token;
         }
+
     }
 }
