@@ -24,15 +24,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
 using DIPOL_UF.Models;
 using ReactiveUI;
-using Serializers;
 
 namespace DIPOL_UF.Jobs
 {
@@ -48,16 +45,25 @@ namespace DIPOL_UF.Jobs
         public void AttachToMainWindow(DipolMainWindow window)
             => _windowRef = window ?? throw new ArgumentNullException(nameof(window));
 
-        public void SubmitNewTarget(Target target)
+        public Task SubmitNewTarget(Target target)
         {
             CurrentTarget = target ?? throw new ArgumentNullException(nameof(target));
-            SetupNewTarget().ContinueWith(task => { }).ConfigureAwait(false);
+            return SetupNewTarget();
         }
 
         private async Task SetupNewTarget()
         {
-            await ApplySettingsTemplate();
-            await ConstructJob();
+            try
+            {
+                await ApplySettingsTemplate();
+                await ConstructJob();
+            }
+            catch (Exception)
+            {
+                CurrentTarget = new Target();
+                AcquisitionJob = null;
+                throw;
+            }
         }
 
         private async Task ApplySettingsTemplate()
@@ -69,7 +75,7 @@ namespace DIPOL_UF.Jobs
                 throw new InvalidOperationException("No connected cameras to work with.");
 
 
-            byte[] settingsByteRep = null;
+            byte[] settingsByteRep;
 
             using (var str = new FileStream(CurrentTarget.SettingsPath, FileMode.Open, FileAccess.Read))
             {
@@ -104,6 +110,10 @@ namespace DIPOL_UF.Jobs
 
             using (var str = new FileStream(CurrentTarget.JobPath, FileMode.Open, FileAccess.Read))
                 AcquisitionJob = Job.Create(str);
+
+            if (AcquisitionJob.ContainsActionOfType<MotorAction>()
+                && _windowRef.PolarimeterMotor is null)
+                throw new InvalidOperationException("Cannot execute current job with no motor connected.");
         }
 
         private JobManager() { }

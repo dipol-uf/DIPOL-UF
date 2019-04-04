@@ -29,5 +29,8 @@ namespace DIPOL_UF.Jobs
     abstract class JobAction
     {
         public abstract Task Execute();
+
+        public abstract bool ContainsActionOfType<T>() where T : JobAction;
+
     }
 }
