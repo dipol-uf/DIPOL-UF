@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
@@ -374,7 +375,8 @@ namespace DIPOL_Remote
             if (disposing)
             {
                 IsDisposing = true;
-                _client.RemoveCamera(CameraIndex);
+                if(_client.State == CommunicationState.Opened)
+                    _client.RemoveCamera(CameraIndex);
                 RemoteCameras.TryRemove(CameraIndex, out _);
             }
 
