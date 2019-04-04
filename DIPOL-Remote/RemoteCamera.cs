@@ -46,6 +46,7 @@ namespace DIPOL_Remote
         private readonly ConcurrentDictionary<string, bool> _changedProperties
             = new ConcurrentDictionary<string, bool>();
 
+        private bool _isActive;
         private DipolClient _client;
 
         public override bool IsTemperatureMonitored
@@ -94,11 +95,12 @@ namespace DIPOL_Remote
             {
                 if (_changedProperties.TryGetValue(NameofProperty(), out var hasChanged) && hasChanged)
                 {
-                    IsActive = _client.GetIsActive(CameraIndex);
+                    _isActive = _client.GetIsActive(CameraIndex);
                     _changedProperties.TryUpdate(NameofProperty(), false, true);
+                    
                 }
 
-                return base.IsActive;
+                return _isActive;
             }
         }
         public override CameraProperties Properties
@@ -232,9 +234,9 @@ namespace DIPOL_Remote
             CameraIndex = camIndex;
 
 
+            _isActive = _client.GetIsActive(CameraIndex);
             CameraModel = _client.GetCameraModel(CameraIndex);
             SerialNumber = _client.GetSerialNumber(CameraIndex);
-            IsActive = _client.GetIsActive(CameraIndex);
             Properties = _client.GetProperties(CameraIndex);
             IsInitialized = _client.GetIsInitialized(CameraIndex);
             FanMode = _client.GetFanMode(CameraIndex);

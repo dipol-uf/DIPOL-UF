@@ -51,9 +51,8 @@ namespace ANDOR_CS.Classes
 
         private bool _isDisposed;
         private bool _isDisposing;
-
+        // TODO : check this
         private Timer _temperatureMonitorTimer;
-        private bool _isActive;
         private bool _isInitialized;
         private DeviceCapabilities _capabilities;
         private CameraProperties _properties;
@@ -113,6 +112,8 @@ namespace ANDOR_CS.Classes
         }
 
 
+        public abstract bool IsActive { get; }
+
         public virtual bool IsTemperatureMonitored
         {
             get => _isTemperatureMonitored;
@@ -148,19 +149,6 @@ namespace ANDOR_CS.Classes
                 if (!(value as ValueType).Equals(_properties))
                 {
                     _properties = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public virtual bool IsActive
-        {
-            get => _isActive;
-            protected set
-            {
-                if (value != _isActive)
-                {
-                    _isActive = value;
                     OnPropertyChanged();
                 }
             }

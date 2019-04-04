@@ -45,6 +45,8 @@ namespace ANDOR_CS.Classes
         private const ConsoleColor Blue = ConsoleColor.Blue;
         private const ConsoleColor Yellow = ConsoleColor.DarkYellow;
 
+        public override bool IsActive => true;
+
         public override CameraStatus GetStatus()
         {
             WriteMessage("Status checked.", Blue);
@@ -133,7 +135,6 @@ namespace ANDOR_CS.Classes
                 },
                 PreAmpGains = new []{"Gain1", "Gain2"}
             };
-            IsActive = true;
             IsInitialized = true;
             CameraModel = "DEBUG-CAMERA-INTERFACE";
             FanMode = FanMode.Off;
