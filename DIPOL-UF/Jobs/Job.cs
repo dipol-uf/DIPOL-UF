@@ -29,7 +29,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Automation.Peers;
 using Serializers;
 
 namespace DIPOL_UF.Jobs
@@ -40,7 +39,6 @@ namespace DIPOL_UF.Jobs
 
         public ReadOnlyCollection<JobAction> Actions => _actions.AsReadOnly();
 
-
         private Job(ReadOnlyDictionary<string, object> input)
         {
             if (input is null)
@@ -49,7 +47,7 @@ namespace DIPOL_UF.Jobs
             _actions = input.ContainsKey("Actions")
                 ? (input["Actions"] as object[])
                   ?.Select(x => x is ReadOnlyDictionary<string, object> dict
-                                && dict?.Count == 1
+                                && dict.Count == 1
                       ? dict.FirstOrDefault()
                       : new KeyValuePair<string, object>())
                   .Select(ItemToJob).ToList()
@@ -85,15 +83,8 @@ namespace DIPOL_UF.Jobs
 
         public async Task Run()
         {
-            // TODO : check motor is in 0
-            // TODO : check cameras idle
-
-            // TODO : run job
-
             foreach (var action in _actions)
-            {
                 await action.Execute();
-            }
         }
 
         public static Job Create(ReadOnlyDictionary<string, object> input)
