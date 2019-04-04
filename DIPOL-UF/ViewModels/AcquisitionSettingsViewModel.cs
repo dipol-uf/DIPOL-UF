@@ -58,7 +58,7 @@ using Window = System.Windows.Window;
 
 namespace DIPOL_UF.ViewModels
 {
-    internal sealed partial class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<SettingsBase>>
+    internal sealed class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<SettingsBase>>
     {
         private static List<(PropertyInfo Property, string EquivalentName)> InteractiveSettings { get; }
             = typeof(AcquisitionSettingsViewModel)

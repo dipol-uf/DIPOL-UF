@@ -212,12 +212,12 @@ namespace DIPOL_UF.Models
 
             JobSettingsWindow = new DescendantProvider(
                     ReactiveCommand.Create<object, ReactiveObjectEx>(
-                        _ => new ReactiveWrapper<Target>(new Target())),
+                        _ => new ReactiveWrapper<Target>(JobManager.Manager.CurrentTarget)),
                     ReactiveCommand.Create<Unit>(_ => { }),
                     null,
                     ReactiveCommand.Create<ReactiveObjectEx>(x =>
                     {
-                        
+                        // TODO : assign updated target
                     }))
                 .DisposeWith(Subscriptions);
 

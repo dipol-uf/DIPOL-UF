@@ -1,4 +1,28 @@
-﻿using System;
+﻿//    This file is part of Dipol-3 Camera Manager.
+
+//     MIT License
+//     
+//     Copyright(c) 2018-2019 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
+
+using System;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -22,6 +46,7 @@ namespace DIPOL_UF.ViewModels
         public ReactiveCommand<Unit, FileDialogDescriptor> SaveButtonCommand { get; private set; }
         public ReactiveCommand<Unit, FileDialogDescriptor> LoadButtonCommand { get; private set; }
 
+        public ReactiveCommand<Window, Window> SubmitCommand { get; private set; }
         public ReactiveCommand<string, Unit> SaveActionCommand { get; private set; }
         public ReactiveCommand<string, Unit> LoadActionCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
@@ -43,6 +68,7 @@ namespace DIPOL_UF.ViewModels
 
         public JobSettingsViewModel(ReactiveWrapper<Target> model) : base(model)
         {
+            UpdateBindingsFromModel();
             InitializeCommands();
             HookObservables();
         }
@@ -63,7 +89,14 @@ namespace DIPOL_UF.ViewModels
 
         private void InitializeCommands()
         {
-            CancelCommand = new ActionCommand(x => (x as Window)?.Close());
+            SubmitCommand =
+                ReactiveCommand.Create<Window, Window>(x => x)
+                               .DisposeWith(Subscriptions);
+
+            CancelCommand = new ActionCommand(x =>
+            {   
+                (x as Window)?.Close();
+            });
 
             SaveButtonCommand= ReactiveCommand.Create(() => new FileDialogDescriptor()
             {
@@ -139,6 +172,15 @@ namespace DIPOL_UF.ViewModels
             
             BrowseJobCommand.Subscribe(OnBrowseJobSettingsRequested).DisposeWith(Subscriptions);
             BrowseAcquisitionCommand.Subscribe(OnBrowseAcquisitionSettingsRequested).DisposeWith(Subscriptions);
+
+            SubmitCommand.Subscribe(Submit).DisposeWith(Subscriptions);
+        }
+
+        private void Submit(Window w)
+        {
+            UpdateBindingsToModel();
+            JobManager.Manager.SubmitNewTarget(Model.Object);
+            Helper.ExecuteOnUi(() => w?.Close());
         }
 
         private void OnBrowseJobSettingsRequested(FileDialogDescriptor e)
