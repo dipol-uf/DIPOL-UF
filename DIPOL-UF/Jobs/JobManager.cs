@@ -24,27 +24,27 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
-using ANDOR_CS.Enums;
 using DIPOL_UF.Models;
+using ReactiveUI;
+using Serializers;
 
 namespace DIPOL_UF.Jobs
 {
-    internal sealed class JobManager
+    internal sealed class JobManager : ReactiveObject
     {
         private DipolMainWindow _windowRef;
 
         public static JobManager Manager { get; } = new JobManager();
 
-
-
+        // TODO : return a copy of a target
         public Target CurrentTarget { get; private set; } = new Target();
-        public SettingsBase SettingsTemplate { get; private set; }
+        public Job AcquisitionJob { get; private set; }
         public void AttachToMainWindow(DipolMainWindow window)
             => _windowRef = window ?? throw new ArgumentNullException(nameof(window));
 
@@ -55,6 +55,12 @@ namespace DIPOL_UF.Jobs
         }
 
         private async Task SetupNewTarget()
+        {
+            await ApplySettingsTemplate();
+            await ConstructJob();
+        }
+
+        private async Task ApplySettingsTemplate()
         {
             if(!File.Exists(CurrentTarget.SettingsPath))
                 throw new FileNotFoundException("Settings file is not found", CurrentTarget.SettingsPath);
@@ -72,7 +78,8 @@ namespace DIPOL_UF.Jobs
             }
 
             var cams = _windowRef.ConnectedCameras.Items.Select(x => x.Camera).ToList();
-            List<SettingsBase> setts = null;
+
+            List<SettingsBase> setts;
             using (var memory = new MemoryStream(settingsByteRep, false))
                 setts = cams.Select(x =>
                 {
@@ -82,12 +89,22 @@ namespace DIPOL_UF.Jobs
                     return template;
                 }).ToList();
 
+            // TODO : here, update settings of each camera individually
+
             for (var i = 0; i < cams.Count; i++)
             {
                 cams[i].ApplySettings(setts[i]);
             }
         }
 
+        private async Task ConstructJob()
+        {
+            if (!File.Exists(CurrentTarget.JobPath))
+                throw new FileNotFoundException("Job file is not found", CurrentTarget.JobPath);
+
+            using (var str = new FileStream(CurrentTarget.JobPath, FileMode.Open, FileAccess.Read))
+                AcquisitionJob = Job.Create(str);
+        }
 
         private JobManager() { }
 

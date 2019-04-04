@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Serializers;
 
@@ -34,8 +35,6 @@ namespace DIPOL_UF.Jobs
 {
     class Job
     {
-        public string SettingsPath { get; private set; } = ".";
-        
         private readonly List<JobAction> _actions;
 
         public ReadOnlyCollection<JobAction> Actions => _actions.AsReadOnly();
@@ -99,22 +98,22 @@ namespace DIPOL_UF.Jobs
             }
         }
 
-        public static Job Create(ReadOnlyDictionary<string, object> input, string path = null)
+        public static Job Create(ReadOnlyDictionary<string, object> input)
         {
-            var job = new Job(input) {SettingsPath = path};
+            var job = new Job(input);
             return job;
         }
 
-        public static Job Create(Stream stream, string path = null)
+        public static Job Create(Stream stream)
         {
             if (!stream.CanRead)
                 throw new IOException(@"Stream does not support reading.");
 
-            ReadOnlyDictionary<string, object> json = null;
-            using (var str = new StreamReader(stream))
+            ReadOnlyDictionary<string, object> json;
+            using (var str = new StreamReader(stream, Encoding.ASCII, true, 512, true))
                 json = JsonParser.ReadJson(str);
 
-            var job = new Job(json) {SettingsPath = path};
+            var job = new Job(json);
 
             return job;
         }
