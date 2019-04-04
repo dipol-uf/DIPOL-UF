@@ -77,6 +77,7 @@ namespace DIPOL_UF.ViewModels
         [Reactive]
         public ShutterMode? ExternalShutterMode { get; set; }
 
+        public bool IsJobInProgress { [ObservableAsProperty] get; }
         public bool IsAcquiring { [ObservableAsProperty]get; }
         public float CurrentTemperature { [ObservableAsProperty] get; }
         public Switch CoolerMode { [ObservableAsProperty] get; }
@@ -251,6 +252,8 @@ namespace DIPOL_UF.ViewModels
                  .ObserveOnUi()
                  .ToPropertyEx(this, x => x.AcquisitionPbMax)
                  .DisposeWith(Subscriptions);
+
+            PropagateReadOnlyProperty(this, x => x.IsJobInProgress, y => y.IsJobInProgress);
         }
 
         public string Name => Model.ToString();

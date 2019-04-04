@@ -64,6 +64,9 @@ namespace DIPOL_UF.Models
         [Reactive]
         public (int Min, int Max) AcquisitionProgressRange { get; private set; }
 
+        // ReSharper disable once UnassignedGetOnlyAutoProperty
+        public bool IsJobInProgress { [ObservableAsProperty] get; }
+
         public IObservable<AcquisitionStatusEventArgs> WhenAcquisitionStarted { get; private set; }
         public IObservable<AcquisitionStatusEventArgs> WhenAcquisitionFinished { get; private set; }
         public IObservable<(float Exposure, float Accumulation, float Kinetic)> WhenTimingCalculated { get; private set; }
@@ -160,6 +163,11 @@ namespace DIPOL_UF.Models
                         x => Camera.AcquisitionFinished += x,
                         x => Camera.AcquisitionFinished -= x)
                     .Select(x => x.EventArgs);
+
+            JobManager.Manager.WhenPropertyChanged(x => x.IsInProcess)
+                      .Select(x => x.Value)
+                      .ToPropertyEx(this, x => x.IsJobInProgress)
+                      .DisposeWith(Subscriptions);
         }
 
         private void InitializeCommands()
@@ -200,8 +208,14 @@ namespace DIPOL_UF.Models
                                    Observable.Return(CanControlShutter.External))
                                .DisposeWith(Subscriptions);
 
+            var canSetup =
+                this.WhenPropertyChanged(x => x.IsJobInProgress)
+                    .CombineLatest(Camera.WhenPropertyChanged(y => y.IsAcquiring),
+                        (x, y) => !x.Value && !y.Value)
+                    .ObserveOnUi();
+
             SetUpAcquisitionCommand =
-                ReactiveCommand.Create<Unit, object>(x => x)
+                ReactiveCommand.Create<Unit, object>(x => x, canSetup)
                                .DisposeWith(Subscriptions);
 
             AcquisitionSettingsWindow = new DescendantProvider(
@@ -225,7 +239,7 @@ namespace DIPOL_UF.Models
 
 
             SetUpJobCommand =
-                ReactiveCommand.Create<Unit, object>(x => x)
+                ReactiveCommand.Create<Unit, object>(x => x, canSetup)
                                .DisposeWith(Subscriptions);
 
             JobSettingsWindow = new DescendantProvider(
@@ -248,7 +262,8 @@ namespace DIPOL_UF.Models
             // WATCH : switched to [INotifyPropertyChanged] behavior
             // WATCH : [PropertyValue<T>] spoils all [is null] checks
             var hasValidSettings = Camera.WhenPropertyChanged(x => x.CurrentSettings)
-                                         .Select(x => !(x.Value is null))
+                                         .CombineLatest(this.WhenPropertyChanged(y => y.IsJobInProgress),
+                                             (x, y) => !(x.Value is null) && !y.Value)
                                          .ObserveOnUi();
 
             WhenTimingCalculated =
@@ -284,16 +299,31 @@ namespace DIPOL_UF.Models
                                }, hasValidSettings)
                                .DisposeWith(Subscriptions);
 
-            var jobAvailableObs = JobManager.Manager.WhenPropertyChanged(x => x.AnyCameraIsAcquiring)
-                                            .CombineLatest(JobManager.Manager.WhenPropertyChanged(y => y.ReadyToRun),
+            var jobAvailableObs = 
+                JobManager.Manager.WhenPropertyChanged(x => x.AnyCameraIsAcquiring)
+                                            .CombineLatest(
+                                                JobManager.Manager.WhenPropertyChanged(y => y.ReadyToRun),
+                                                JobManager.Manager.WhenPropertyChanged(z => z.IsInProcess),
                                                 // NOT any camera acquiring AND ready to run
-                                                (x, y) => !x.Value && y.Value);
+                                                (x, y, z) => z.Value || (!x.Value && y.Value))
+                                            .ObserveOnUi();
 
             StartJobCommand =
                 ReactiveCommand.Create(() =>
                                    {
-                                       if (JobManager.Manager.ReadyToRun)
-                                           JobManager.Manager.StartJobAsync(default);
+                                       if (!JobManager.Manager.IsInProcess)
+                                       {
+                                           if(JobManager.Manager.ReadyToRun)
+                                               JobManager.Manager.StartJob();
+                                           else
+                                           {
+                                               // TODO : Inform something is wrong
+                                           }
+                                       }
+                                       else
+                                       {
+                                           JobManager.Manager.StopJob();
+                                       }
                                    },
                                    jobAvailableObs)
                                .DisposeWith(Subscriptions);
