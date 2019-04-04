@@ -49,6 +49,8 @@ namespace DIPOL_Remote
         private bool _isActive;
         private DipolClient _client;
 
+        public override SettingsBase CurrentSettings { get; protected set; }
+
         public override bool IsTemperatureMonitored
         {
             get
@@ -328,7 +330,8 @@ namespace DIPOL_Remote
         {
             if (!(settings is RemoteSettings remoteSetts))
                 throw new ArgumentException(nameof(settings));
-
+            
+            base.ApplySettings(settings);
             using (var memory = new MemoryStream())
             {
                 remoteSetts.Serialize(memory);
@@ -338,7 +341,6 @@ namespace DIPOL_Remote
 
             Timings = _client.CallGetTimings(CameraIndex);
 
-            base.ApplySettings(settings);
         }
 
         public override Task<Image[]> PullAllImagesAsync(ImageFormat format, CancellationToken token)

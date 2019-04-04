@@ -24,22 +24,70 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using ANDOR_CS.Classes;
+using ANDOR_CS.Enums;
+using DIPOL_UF.Models;
 
 namespace DIPOL_UF.Jobs
 {
     internal sealed class JobManager
     {
+        private DipolMainWindow _windowRef;
+
         public static JobManager Manager { get; } = new JobManager();
 
+
+
         public Target CurrentTarget { get; private set; } = new Target();
+        public SettingsBase SettingsTemplate { get; private set; }
+        public void AttachToMainWindow(DipolMainWindow window)
+            => _windowRef = window ?? throw new ArgumentNullException(nameof(window));
 
         public void SubmitNewTarget(Target target)
         {
-            CurrentTarget = target;
+            CurrentTarget = target ?? throw new ArgumentNullException(nameof(target));
+            SetupNewTarget().ContinueWith(task => { }).ConfigureAwait(false);
         }
+
+        private async Task SetupNewTarget()
+        {
+            if(!File.Exists(CurrentTarget.SettingsPath))
+                throw new FileNotFoundException("Settings file is not found", CurrentTarget.SettingsPath);
+
+            if(_windowRef.ConnectedCameras.Count < 1)
+                throw new InvalidOperationException("No connected cameras to work with.");
+
+
+            byte[] settingsByteRep = null;
+
+            using (var str = new FileStream(CurrentTarget.SettingsPath, FileMode.Open, FileAccess.Read))
+            {
+                settingsByteRep = new byte[str.Length];
+                await str.ReadAsync(settingsByteRep, 0, settingsByteRep.Length);
+            }
+
+            var cams = _windowRef.ConnectedCameras.Items.Select(x => x.Camera).ToList();
+            List<SettingsBase> setts = null;
+            using (var memory = new MemoryStream(settingsByteRep, false))
+                setts = cams.Select(x =>
+                {
+                    memory.Position = 0;
+                    var template = x.GetAcquisitionSettingsTemplate();
+                    template.Deserialize(memory);
+                    return template;
+                }).ToList();
+
+            for (var i = 0; i < cams.Count; i++)
+            {
+                cams[i].ApplySettings(setts[i]);
+            }
+        }
+
 
         private JobManager() { }
 

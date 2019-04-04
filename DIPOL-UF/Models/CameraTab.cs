@@ -228,19 +228,22 @@ namespace DIPOL_UF.Models
             //                    .ViewFinished
             //                    .Select(_ => !(Camera.CurrentSettings is null));
             // WATCH : switched to [INotifyPropertyChanged] behavior
+            // WATCH : [PropertyValue<T>] spoils all [is null] checks
             var hasValidSettings = Camera.WhenPropertyChanged(x => x.CurrentSettings)
-                                         .Select(x => !(x is null));
+                                         .Select(x => !(x.Value is null))
+                                         .ObserveOnUi();
 
             WhenTimingCalculated = AcquisitionSettingsWindow.ViewFinished.Select(_ => Camera.Timings);
 
             StartAcquisitionCommand =
                 ReactiveCommand.Create(() =>
                                {
-                                   if (!Camera.IsAcquiring 
+                                   if (!Camera.IsAcquiring
                                        && !(Camera.CurrentSettings is null))
                                    {
                                        _pbTimer.Interval = Camera.Timings.Kinetic /
-                                                  (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min);
+                                                           (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min
+                                                           );
                                        AcquisitionProgress = AcquisitionProgressRange.Min;
                                        _pbTimer.Start();
                                        _acquisitionTokenSource = new CancellationTokenSource();
