@@ -24,13 +24,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DIPOL_UF.Jobs
 {
     class RepeatAction : JobAction
     {
-        public int Repeats { get; private set; }
+        public int Repeats { get; }
 
         private readonly List<JobAction> _actions;
 
@@ -52,5 +53,8 @@ namespace DIPOL_UF.Jobs
             }
 
         }
+
+        public override bool ContainsActionOfType<T>()
+            => _actions.Any(x => x.ContainsActionOfType<T>());
     }
 }

@@ -84,5 +84,8 @@ namespace DIPOL_UF.Jobs
             await Task.Delay(TimeSpan.FromMilliseconds(1000));
             Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Motor finishes {ActionType}  with parameter {Parameter}");
         }
+
+        public override bool ContainsActionOfType<T>()
+            => this is T;
     }
 }

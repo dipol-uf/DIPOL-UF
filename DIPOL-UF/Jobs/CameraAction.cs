@@ -75,5 +75,8 @@ namespace DIPOL_UF.Jobs
             await Task.Delay(TimeSpan.FromMilliseconds(2500));
             Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) finish exposure");
         }
+
+        public override bool ContainsActionOfType<T>()
+            => this is T;
     }
 }

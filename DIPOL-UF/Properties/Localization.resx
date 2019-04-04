@@ -499,6 +499,21 @@ The following settings produced this error:
   <data name="JobSettings_TargetName" xml:space="preserve">
     <value>Star name:</value>
   </data>
+  <data name="JobManager_Error_Caption" xml:space="preserve">
+    <value>Failed to load job description</value>
+  </data>
+  <data name="JobManager_Error_FileNotFound" xml:space="preserve">
+    <value>Requested file was not found:
+{0}</value>
+  </data>
+  <data name="JobManager_Error_InvalidOp" xml:space="preserve">
+    <value>Job configuration failed:
+{0}</value>
+  </data>
+  <data name="JobManager_Error_Other" xml:space="preserve">
+    <value>An undefined error happened:
+{0}</value>
+  </data>
   <data name="JobSettings_Dialog_Acquisition" xml:space="preserve">
     <value>Chose file with acquisition settings</value>
   </data>

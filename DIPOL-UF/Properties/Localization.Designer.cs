@@ -912,6 +912,45 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to load job description.
+        /// </summary>
+        public static string JobManager_Error_Caption {
+            get {
+                return ResourceManager.GetString("JobManager_Error_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Requested file was not found:
+        ///{0}.
+        /// </summary>
+        public static string JobManager_Error_FileNotFound {
+            get {
+                return ResourceManager.GetString("JobManager_Error_FileNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Job configuration failed:
+        ///{0}.
+        /// </summary>
+        public static string JobManager_Error_InvalidOp {
+            get {
+                return ResourceManager.GetString("JobManager_Error_InvalidOp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An undefined error happened:
+        ///{0}.
+        /// </summary>
+        public static string JobManager_Error_Other {
+            get {
+                return ResourceManager.GetString("JobManager_Error_Other", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chose file with acquisition settings.
         /// </summary>
         public static string JobSettings_Dialog_Acquisition {

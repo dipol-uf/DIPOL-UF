@@ -87,6 +87,9 @@ namespace DIPOL_UF.Jobs
                 await action.Execute();
         }
 
+        public bool ContainsActionOfType<T>() where T : JobAction
+            => _actions.Any(x => x.ContainsActionOfType<T>());
+
         public static Job Create(ReadOnlyDictionary<string, object> input)
         {
             var job = new Job(input);

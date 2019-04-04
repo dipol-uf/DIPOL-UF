@@ -26,6 +26,7 @@ using System;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Disposables;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using DIPOL_UF.Jobs;
@@ -46,7 +47,7 @@ namespace DIPOL_UF.ViewModels
         public ReactiveCommand<Unit, FileDialogDescriptor> SaveButtonCommand { get; private set; }
         public ReactiveCommand<Unit, FileDialogDescriptor> LoadButtonCommand { get; private set; }
 
-        public ReactiveCommand<Window, Window> SubmitCommand { get; private set; }
+        public ReactiveCommand<Window, Unit> SubmitCommand { get; private set; }
         public ReactiveCommand<string, Unit> SaveActionCommand { get; private set; }
         public ReactiveCommand<string, Unit> LoadActionCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
@@ -90,7 +91,7 @@ namespace DIPOL_UF.ViewModels
         private void InitializeCommands()
         {
             SubmitCommand =
-                ReactiveCommand.Create<Window, Window>(x => x)
+                ReactiveCommand.CreateFromTask<Window>(Submit)
                                .DisposeWith(Subscriptions);
 
             CancelCommand = new ActionCommand(x =>
@@ -172,15 +173,40 @@ namespace DIPOL_UF.ViewModels
             
             BrowseJobCommand.Subscribe(OnBrowseJobSettingsRequested).DisposeWith(Subscriptions);
             BrowseAcquisitionCommand.Subscribe(OnBrowseAcquisitionSettingsRequested).DisposeWith(Subscriptions);
-
-            SubmitCommand.Subscribe(Submit).DisposeWith(Subscriptions);
         }
 
-        private void Submit(Window w)
+        private async Task Submit(Window w)
         {
-            UpdateBindingsToModel();
-            JobManager.Manager.SubmitNewTarget(Model.Object);
-            Helper.ExecuteOnUi(() => w?.Close());
+            try
+            {
+                UpdateBindingsToModel();
+                await JobManager.Manager.SubmitNewTarget(Model.Object);
+                Helper.ExecuteOnUi(() => w?.Close());
+            }
+            catch (FileNotFoundException fileExcept)
+            {
+                MessageBox.Show(
+                    string.Format(Properties.Localization.JobManager_Error_FileNotFound, fileExcept.FileName),
+                    Properties.Localization.JobManager_Error_Caption,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            catch (InvalidOperationException invalidExcept)
+            {
+                MessageBox.Show(
+                    string.Format(Properties.Localization.JobManager_Error_InvalidOp, invalidExcept.Message),
+                    Properties.Localization.JobManager_Error_Caption,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(
+                    string.Format(Properties.Localization.JobManager_Error_Other, e.Message),
+                    Properties.Localization.JobManager_Error_Caption,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
 
         private void OnBrowseJobSettingsRequested(FileDialogDescriptor e)
