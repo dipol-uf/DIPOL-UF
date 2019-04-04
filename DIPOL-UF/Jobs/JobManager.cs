@@ -109,7 +109,7 @@ namespace DIPOL_UF.Jobs
                 throw new FileNotFoundException("Job file is not found", CurrentTarget.JobPath);
 
             using (var str = new FileStream(CurrentTarget.JobPath, FileMode.Open, FileAccess.Read))
-                AcquisitionJob = Job.Create(str);
+                AcquisitionJob = await Job.CreateAsync(str);
 
             if (AcquisitionJob.ContainsActionOfType<MotorAction>()
                 && _windowRef.PolarimeterMotor is null)

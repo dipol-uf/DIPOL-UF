@@ -28,6 +28,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Serializers;
 
@@ -104,6 +105,18 @@ namespace DIPOL_UF.Jobs
             ReadOnlyDictionary<string, object> json;
             using (var str = new StreamReader(stream, Encoding.ASCII, true, 512, true))
                 json = JsonParser.ReadJson(str);
+
+            var job = new Job(json);
+
+            return job;
+        }
+
+        public static async Task<Job> CreateAsync(Stream stream)
+        {
+            if (!stream.CanRead)
+                throw new IOException(@"Stream does not support reading.");
+
+            var json = await JsonParser.ReadJsonAsync(stream, Encoding.ASCII, CancellationToken.None);
 
             var job = new Job(json);
 
