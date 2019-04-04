@@ -369,14 +369,14 @@
                     <Button.Style>
                         <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsAcquiring, Mode=OneWay}" Value="True">
+                                <DataTrigger Binding="{Binding IsJobInProgress, Mode=OneWay}" Value="True">
                                     <Setter Property="Content" Value="{extensions:Text Key=CameraTab_Job_Stop}"/>
                                     <Setter Property="Button.Background" 
                                             Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
                                     <Setter Property="Button.Foreground" 
                                             Value="{StaticResource ResourceKey=NegativeEffectButtonForegroundColor}"/>
                                 </DataTrigger>
-                                <DataTrigger  Binding="{Binding IsAcquiring, Mode=OneWay}" Value="False" >
+                                <DataTrigger  Binding="{Binding IsJobInProgress, Mode=OneWay}" Value="False" >
                                     <Setter Property="Content" Value="{extensions:Text Key=CameraTab_Job_Start}"/>
                                     <Setter Property="Button.Background" 
                                             Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>

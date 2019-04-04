@@ -47,8 +47,14 @@ namespace DIPOL_UF.Jobs
     {
         private DipolMainWindow _windowRef;
         private byte[] _settingsRep;
+        private List<CameraTab> _jobControls;
+        private Task _jobTask;
+        private CancellationTokenSource _tokenSource;
+
         public static JobManager Manager { get; } = new JobManager();
 
+        [Reactive]
+        public bool IsInProcess { get; private set; }
         [Reactive]
         public bool ReadyToRun { get; private set; }
         // ReSharper disable once UnassignedGetOnlyAutoProperty
@@ -76,19 +82,23 @@ namespace DIPOL_UF.Jobs
 
         }
 
-        public async Task StartJobAsync(CancellationToken token)
+        public void StartJob()
         {
-            var camModels = _windowRef.CameraTabs.Items.ToList();
-            if(camModels.Any(x => x.Tab?.Camera?.CurrentSettings is null))
-                throw new InvalidOperationException("At least one camera has no settings applied to it.");
+            IsInProcess = true;
+            ReadyToRun = false;
+            _tokenSource?.Dispose();
+            _tokenSource = new CancellationTokenSource();
+            _jobTask = StartJobAsync(_tokenSource.Token);
+        }
 
-            var tasks = camModels.Select(async x =>
-            {
-                await x.Tab.StartAcquisitionCommand.Execute();
-                return await x.Tab.WhenAcquisitionFinished.FirstAsync();
-            }).ToList();
+        public void StopJob()
+        {
+            if (_jobTask is null)
+                return;
+            if(!_jobTask.IsCompleted)
+                _tokenSource?.Cancel();
+            _tokenSource?.Dispose();
 
-            var result = await Task.WhenAll(tasks);
         }
 
         public Task SubmitNewTarget(Target target)
@@ -98,6 +108,33 @@ namespace DIPOL_UF.Jobs
                                 Properties.Localization.General_ShouldNotHappen,
                                 nameof(target));
             return SetupNewTarget();
+        }
+
+        private async Task StartJobAsync(CancellationToken token)
+        {
+            try
+            {
+                _jobControls = _windowRef.CameraTabs.Items.Select(x => x.Tab).ToList();
+                if (_jobControls.Any(x => x.Camera?.CurrentSettings is null))
+                    throw new InvalidOperationException("At least one camera has no settings applied to it.");
+
+                var tasks = _jobControls.Select(async x =>
+                {
+                    await x.StartAcquisitionCommand.Execute();
+                    return await x.WhenAcquisitionFinished.FirstAsync();
+                }).ToList();
+
+                var result = await Task.WhenAll(tasks);
+            }
+            catch (Exception e)
+            {
+                // TODO : Handle various exceptions
+            }
+            finally
+            {
+                ReadyToRun = true;
+                IsInProcess = false;
+            }
         }
 
         private async Task SetupNewTarget()
