@@ -55,8 +55,8 @@ namespace DIPOL_UF.Jobs
         {
             try
             {
-                await ApplySettingsTemplate();
                 await ConstructJob();
+                await ApplySettingsTemplate();
             }
             catch (Exception)
             {
@@ -111,9 +111,12 @@ namespace DIPOL_UF.Jobs
             using (var str = new FileStream(CurrentTarget.JobPath, FileMode.Open, FileAccess.Read))
                 AcquisitionJob = await Job.CreateAsync(str);
 
+            // INFO : Disabled to test on local environment
+#if !DEBUG
             if (AcquisitionJob.ContainsActionOfType<MotorAction>()
                 && _windowRef.PolarimeterMotor is null)
                 throw new InvalidOperationException("Cannot execute current job with no motor connected.");
+#endif
         }
 
         private JobManager() { }
