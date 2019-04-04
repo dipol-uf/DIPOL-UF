@@ -35,6 +35,7 @@ using ANDOR_CS.Events;
 using DipolImage;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Jobs;
+using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Timer = System.Timers.Timer;
@@ -223,9 +224,12 @@ namespace DIPOL_UF.Models
             SetUpJobCommand.InvokeCommand(JobSettingsWindow.ViewRequested).DisposeWith(Subscriptions);
 
 
-            var hasValidSettings = AcquisitionSettingsWindow
-                                .ViewFinished
-                                .Select(_ => !(Camera.CurrentSettings is null));
+            //var hasValidSettings = AcquisitionSettingsWindow
+            //                    .ViewFinished
+            //                    .Select(_ => !(Camera.CurrentSettings is null));
+            // WATCH : switched to [INotifyPropertyChanged] behavior
+            var hasValidSettings = Camera.WhenPropertyChanged(x => x.CurrentSettings)
+                                         .Select(x => !(x is null));
 
             WhenTimingCalculated = AcquisitionSettingsWindow.ViewFinished.Select(_ => Camera.Timings);
 
