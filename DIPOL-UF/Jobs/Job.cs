@@ -46,12 +46,14 @@ namespace DIPOL_UF.Jobs
             if (input is null)
                 throw new ArgumentNullException(nameof(input));
 
-            _actions = (input["Actions"] as object[])
-                       ?.Select(x => x is ReadOnlyDictionary<string, object> dict
-                                     && dict?.Count == 1
-                           ? dict.FirstOrDefault()
-                           : new KeyValuePair<string, object>())
-                       .Select(ItemToJob).ToList();
+            _actions = input.ContainsKey("Actions")
+                ? (input["Actions"] as object[])
+                  ?.Select(x => x is ReadOnlyDictionary<string, object> dict
+                                && dict?.Count == 1
+                      ? dict.FirstOrDefault()
+                      : new KeyValuePair<string, object>())
+                  .Select(ItemToJob).ToList()
+                : new List<JobAction>(0);
         }
 
        
