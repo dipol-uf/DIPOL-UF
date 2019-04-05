@@ -297,15 +297,20 @@ namespace DIPOL_UF.Models
                                }, hasValidSettings)
                                .DisposeWith(Subscriptions);
 
-            // BUG : Does not respect whether current settings are applied
-            var jobAvailableObs = 
-                JobManager.Manager.WhenPropertyChanged(x => x.AnyCameraIsAcquiring)
-                                            .CombineLatest(
-                                                JobManager.Manager.WhenPropertyChanged(y => y.ReadyToRun),
-                                                JobManager.Manager.WhenPropertyChanged(z => z.IsInProcess),
-                                                // NOT any camera acquiring AND ready to run
-                                                (x, y, z) => z.Value || (!x.Value && y.Value))
-                                            .ObserveOnUi();
+
+            var jobAvailableObs =
+                JobManager.Manager.WhenAnyPropertyChanged(
+                              nameof(JobManager.AnyCameraIsAcquiring),
+                              nameof(JobManager.ReadyToRun),
+                              nameof(JobManager.IsInProcess))
+                          // NOT camera individual acq OR (NOT job in process AND job is ready)
+                          .Select(x => !x.AnyCameraIsAcquiring || !x.IsInProcess && x.ReadyToRun)
+                          .CombineLatest(
+                              Camera.WhenPropertyChanged(y => y.CurrentSettings).Select(y => y.Value is null),
+                              // job is ready AND settings are applied
+                              (x, y) => x && !y)
+                          .ObserveOnUi();
+
 
             StartJobCommand =
                 ReactiveCommand.Create(() =>
