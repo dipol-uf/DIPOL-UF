@@ -120,27 +120,31 @@ namespace DIPOL_UF.Models
             _pbTimer.Elapsed += TimerTick;
         }
 
-        public void StartAcquisition()
+        public void StartAcquisition(CancellationToken token)
         {
             // TODO : use linked cancellation token source
-            var tm = Camera.Timings;
-            _pbTimer.Interval = (tm.Kinetic /
+            var (_, _, kinetic) = Camera.Timings;
+            _pbTimer.Interval = (kinetic /
                                 (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min + 1)) * 1000;
             AcquisitionProgress = AcquisitionProgressRange.Min;
-            _acquisitionTokenSource = new CancellationTokenSource();
+            _acquisitionTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
 
             _acqStartTime = DateTime.Now;
             _acquisitionTask = Camera
                                .StartAcquisitionAsync(_acquisitionTokenSource.Token)
                                .ExpectCancellationAsync();
-            _acqEndTime = _acqStartTime + TimeSpan.FromSeconds(tm.Kinetic);
+            _acqEndTime = _acqStartTime + TimeSpan.FromSeconds(kinetic);
 
             _pbTimer.Start();
         }
 
         public void StopAcquisition()
         {
-
+            if (Camera.IsAcquiring)
+                _acquisitionTokenSource.Cancel();
+            _acquisitionTask = null;
+            _acquisitionTokenSource.Dispose();
+            _acquisitionTokenSource = null;
         }
 
         private void HookObservables()
@@ -285,11 +289,6 @@ namespace DIPOL_UF.Models
                                              (x, y) => !(x.Value is null) && !y.Value)
                                          .ObserveOnUi();
 
-            // BUG : JobSettingsWindow.ViewFinished does not inform other tabs
-            //WhenTimingCalculated = this.WhenAnyObservable(
-            //        x => x.AcquisitionSettingsWindow.ViewFinished,
-            //        y => y.JobSettingsWindow.ViewFinished)
-            //    .Select(_ => Camera.Timings);
             WhenTimingCalculated = Camera.WhenPropertyChanged(x => x.CurrentSettings)
                                        .Select(_ => Camera.Timings);
 
@@ -298,16 +297,9 @@ namespace DIPOL_UF.Models
                                {
                                    if (!Camera.IsAcquiring
                                        && !(Camera.CurrentSettings is null))
-                                       StartAcquisition();
+                                       StartAcquisition(CancellationToken.None);
                                    else if (!(_acquisitionTask is null) && !(_acquisitionTokenSource is null))
-                                   {
-                                       // TODO : Move to a separate method
-                                       if (Camera.IsAcquiring)
-                                           _acquisitionTokenSource.Cancel();
-                                       _acquisitionTask = null;
-                                       _acquisitionTokenSource.Dispose();
-                                       _acquisitionTokenSource = null;
-                                   }
+                                       StopAcquisition();
                                }, hasValidSettings)
                                .DisposeWith(Subscriptions);
 

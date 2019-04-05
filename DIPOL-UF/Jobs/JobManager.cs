@@ -120,7 +120,7 @@ namespace DIPOL_UF.Jobs
 
                 var tasks = _jobControls.Select(async x =>
                 {
-                    await x.StartAcquisitionCommand.Execute();
+                    x.StartAcquisition(token);
                     return await x.WhenAcquisitionFinished.FirstAsync();
                 }).ToList();
 
