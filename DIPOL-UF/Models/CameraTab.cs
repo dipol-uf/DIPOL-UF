@@ -48,6 +48,9 @@ namespace DIPOL_UF.Models
         private Task _acquisitionTask;
         private CancellationTokenSource _acquisitionTokenSource;
 
+        private DateTime _acqStartTime;
+        private DateTime _acqEndTime;
+
         private readonly Timer _pbTimer = new Timer();
 
         public CameraBase Camera { get; }
@@ -120,16 +123,19 @@ namespace DIPOL_UF.Models
         public void StartAcquisition()
         {
             // TODO : use linked cancellation token source
-            _pbTimer.Interval = Camera.Timings.Kinetic /
-                                (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min
-                                );
+            var tm = Camera.Timings;
+            _pbTimer.Interval = (tm.Kinetic /
+                                (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min + 1)) * 1000;
             AcquisitionProgress = AcquisitionProgressRange.Min;
-            _pbTimer.Start();
             _acquisitionTokenSource = new CancellationTokenSource();
-            
+
+            _acqStartTime = DateTime.Now;
             _acquisitionTask = Camera
                                .StartAcquisitionAsync(_acquisitionTokenSource.Token)
                                .ExpectCancellationAsync();
+            _acqEndTime = _acqStartTime + TimeSpan.FromSeconds(tm.Kinetic);
+
+            _pbTimer.Start();
         }
 
         public void StopAcquisition()
@@ -167,8 +173,6 @@ namespace DIPOL_UF.Models
             }
 
             Camera.AcquisitionFinished += (_, e) => ResetTimer(AcquisitionProgressRange.Min);
-
-            Camera.NewImageReceived += (_, e) => ResetTimer(AcquisitionProgressRange.Max);
 
             WhenAcquisitionStarted =
                 Observable
@@ -294,18 +298,7 @@ namespace DIPOL_UF.Models
                                {
                                    if (!Camera.IsAcquiring
                                        && !(Camera.CurrentSettings is null))
-                                   {
-                                       // TODO : Move to a separate method
-                                       _pbTimer.Interval = Camera.Timings.Kinetic /
-                                                           (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min
-                                                           );
-                                       AcquisitionProgress = AcquisitionProgressRange.Min;
-                                       _pbTimer.Start();
-                                       _acquisitionTokenSource = new CancellationTokenSource();
-                                       _acquisitionTask = Camera
-                                                          .StartAcquisitionAsync(_acquisitionTokenSource.Token)
-                                                          .ExpectCancellationAsync();
-                                   }
+                                       StartAcquisition();
                                    else if (!(_acquisitionTask is null) && !(_acquisitionTokenSource is null))
                                    {
                                        // TODO : Move to a separate method
@@ -351,10 +344,15 @@ namespace DIPOL_UF.Models
 
         private void TimerTick(object sender, ElapsedEventArgs e)
         {
+            // WATCH : Modified here
             if (sender is Timer t && t.Enabled && _acquisitionTask != null
                 && AcquisitionProgress <= AcquisitionProgressRange.Max)
-                AcquisitionProgress +=
-                    Math.Floor((AcquisitionProgressRange.Max - AcquisitionProgressRange.Min) * t.Interval);
+            {
+                var frac = (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min) 
+                           * (e.SignalTime - _acqStartTime).TotalSeconds 
+                           / (_acqEndTime - _acqStartTime).TotalSeconds;
+                AcquisitionProgress = frac;
+            }
         }
 
         protected override void Dispose(bool disposing)
