@@ -1,5 +1,5 @@
 ﻿//    This file is part of Dipol-3 Camera Manager.
-
+//
 //     MIT License
 //     
 //     Copyright(c) 2018-2019 Ilia Kosenkov
@@ -22,15 +22,42 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DIPOL_UF.Jobs
 {
-    abstract class JobAction
+    internal sealed partial class JobManager
     {
-        public abstract Task Execute();
+        private class RepeatAction : JobAction
+        {
+            private int Repeats { get; }
 
-        public abstract bool ContainsActionOfType<T>() where T : JobAction;
+            private readonly List<JobAction> _actions;
 
+            public RepeatAction(List<JobAction> actions, int repeats)
+            {
+                // WATCH : Prototyping constructor
+                _actions = actions;
+                Repeats = repeats;
+            }
+
+            public override async Task Execute()
+            {
+                for (var i = 0; i < Repeats; i++)
+                {
+                    Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} starts");
+                    foreach (var action in _actions)
+                        await action.Execute();
+                    Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} ends\r\n");
+                }
+
+            }
+
+            public override bool ContainsActionOfType<T>()
+                => _actions.Any(x => x.ContainsActionOfType<T>());
+        }
     }
 }

@@ -24,7 +24,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -32,18 +31,14 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ANDOR_CS.Classes;
 using DIPOL_UF.Models;
 using DynamicData;
-using DynamicData.Aggregation;
 using DynamicData.Binding;
-using MathNet.Numerics;
-using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace DIPOL_UF.Jobs
 {
-    internal sealed class JobManager : ReactiveObjectEx
+    internal sealed partial class JobManager : ReactiveObjectEx
     {
         private DipolMainWindow _windowRef;
         private byte[] _settingsRep;

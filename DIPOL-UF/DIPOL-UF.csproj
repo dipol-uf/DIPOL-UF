@@ -209,12 +209,12 @@
     <Compile Include="FileDialogDescriptor.cs" />
     <Compile Include="GeometryDescriptor.cs" />
     <Compile Include="Helper.cs" />
-    <Compile Include="Jobs\CameraAction.cs" />
-    <Compile Include="Jobs\Job.cs" />
-    <Compile Include="Jobs\JobAction.cs" />
+    <Compile Include="Jobs\JobManager.CameraAction.cs" />
+    <Compile Include="Jobs\JobManager.Job.cs" />
+    <Compile Include="Jobs\JobManager.JobAction.cs" />
     <Compile Include="Jobs\JobManager.cs" />
-    <Compile Include="Jobs\MotorAction.cs" />
-    <Compile Include="Jobs\RepeatAction.cs" />
+    <Compile Include="Jobs\JobManager.MotorAction.cs" />
+    <Compile Include="Jobs\JobManager.RepeatAction.cs" />
     <Compile Include="Jobs\Target.cs" />
     <Compile Include="MappedNameAttribute.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
