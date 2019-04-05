@@ -189,7 +189,7 @@ namespace ANDOR_CS.Classes
             OnAcquisitionStarted(new AcquisitionStatusEventArgs(CameraStatus.Acquiring));
             try
             {
-                await Task.Delay(1500 + CameraIndex * 500, token);
+                await Task.Delay(TimeSpan.FromSeconds(Timings.Kinetic), token);
                 token.ThrowIfCancellationRequested();
 
                 OnNewImageReceived(new NewImageReceivedEventArgs(0, DateTimeOffset.Now));

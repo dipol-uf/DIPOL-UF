@@ -88,10 +88,16 @@ namespace ANDOR_CS.Classes
         public virtual SettingsBase CurrentSettings
         {
             get => _currentSettings;
-            protected set => RaisePropertyChanged(value, ref _currentSettings);
+            // TODO : Update this
+            //protected set => RaisePropertyChanged(value, ref _currentSettings);
+            protected set
+            {
+                _currentSettings = value;
+                OnPropertyChanged();
+            }
         }
+        public virtual (float Exposure, float Accumulation, float Kinetic) Timings { get; protected set; }
 
-        public (float Exposure, float Accumulation, float Kinetic) Timings { get; set; }
         public bool IsDisposed
         {
             get => _isDisposed;
