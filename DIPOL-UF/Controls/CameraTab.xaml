@@ -304,6 +304,7 @@
                         <ComboBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                                 <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
+                                <Binding Path="IsJobInProgress" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
                                 <Binding Path="CanControlInternalShutter" Mode="OneWay"/>
                             </MultiBinding>
                         </ComboBox.IsEnabled>
@@ -316,6 +317,7 @@
                         <ComboBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
                                 <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
+                                <Binding Path="IsJobInProgress" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
                                 <Binding Path="CanControlExternalShutter" Mode="OneWay"/>
                             </MultiBinding>
                         </ComboBox.IsEnabled>
