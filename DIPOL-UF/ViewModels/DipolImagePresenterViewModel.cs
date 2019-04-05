@@ -219,9 +219,9 @@ namespace DIPOL_UF.ViewModels
                      nameof(Model.LeftScale),
                      nameof(Model.RightScale))
                  .Where(x => !(x.DisplayedImage is null))
-                 .Select(x => Observable.FromAsync(() => UpdateBitmapAsync(x.DisplayedImage)))
-                 .Merge()
+                 //.Select(x => Observable.FromAsync(() => UpdateBitmapAsync(x.DisplayedImage)))
                  .ObserveOnUi()
+                 .Select(x => UpdateBitmap(x.DisplayedImage))
                  .ToPropertyEx(this, x => x.BitmapSource)
                  .DisposeWith(Subscriptions);
 
@@ -286,6 +286,42 @@ namespace DIPOL_UF.ViewModels
                  .ToPropertyEx(this, x => x.PixValue)
                  .DisposeWith(Subscriptions);
 
+        }
+
+        private WriteableBitmap UpdateBitmap(DipolImage.Image image)
+        {
+            
+                var temp = image.Copy();
+                temp.Clamp(Model.LeftScale, Model.RightScale);
+                temp.Scale(Model.ImageScaleMin, Model.ImageScaleMax);
+
+            var bytes = temp.GetBytes();
+            var bitmap = BitmapSource;
+            if (bitmap is null ||
+                bitmap.PixelWidth != Model.DisplayedImage.Width ||
+                bitmap.PixelHeight != Model.DisplayedImage.Height)
+                bitmap = new WriteableBitmap(image.Width,
+                    image.Height,
+                    96, 96, PixelFormats.Gray32Float, null);
+
+
+
+            try
+            {
+                bitmap.Lock();
+                System.Runtime.InteropServices.Marshal.Copy(
+                    bytes, 0, bitmap.BackBuffer, bytes.Length);
+            }
+            finally
+            {
+                bitmap.AddDirtyRect(
+                    new Int32Rect(0, 0,
+                        bitmap.PixelWidth,
+                        bitmap.PixelHeight));
+                bitmap.Unlock();
+            }
+
+            return bitmap;
         }
 
         private async Task<WriteableBitmap> UpdateBitmapAsync(DipolImage.Image image)

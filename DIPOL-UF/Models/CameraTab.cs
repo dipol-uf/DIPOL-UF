@@ -162,7 +162,8 @@ namespace DIPOL_UF.Models
                               x => Camera.NewImageReceived -= x)
                           .Sample(TimeSpan.Parse(UiSettingsProvider.Settings.Get("NewImagePollDelay", "00:00:00.500")))
                           .Select(x => Camera.PullPreviewImage(x.EventArgs.Index, ImageFormat.UnsignedInt16))
-                          .Where(x => !(x is null));
+                          .Where(x => !(x is null))
+                          .LogObservable("NEW IMAGE", Subscriptions);
             //TODO : ImageFormat for displaying
 
             WhenNewPreviewArrives

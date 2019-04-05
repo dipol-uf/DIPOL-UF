@@ -22,7 +22,7 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-#define HOST_SERVER
+//#define HOST_SERVER
 #define IN_PROCESS
 
 using System;
@@ -75,8 +75,8 @@ namespace DIPOL_UF
 
 
             using (var mainModel = new DipolMainWindow())
-                using (var view = new DipolMainWindowViewModel(mainModel))
-                    applicationInstance.Run(new Views.DipolMainWindow().WithDataContext(view));
+            using (var view = new DipolMainWindowViewModel(mainModel))
+                applicationInstance.Run(new Views.DipolMainWindow().WithDataContext(view));
 
 
 #if DEBUG && HOST_SERVER

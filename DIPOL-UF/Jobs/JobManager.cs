@@ -66,13 +66,12 @@ namespace DIPOL_UF.Jobs
             else
                 throw new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
 
-            var observer =
-                _windowRef.ConnectedCameras.Connect()
-                          .Transform(x => x.Camera)
-                          .TrueForAny(x => x.WhenPropertyChanged(y => y.IsAcquiring).Select(y => y.Value),
-                              z => z)
-                          .ToPropertyEx(this, x => x.AnyCameraIsAcquiring)
-                          .DisposeWith(Subscriptions);
+            _windowRef.ConnectedCameras.Connect()
+                .Transform(x => x.Camera)
+                .TrueForAny(x => x.WhenPropertyChanged(y => y.IsAcquiring).Select(y => y.Value),
+                    z => z)
+                .ToPropertyEx(this, x => x.AnyCameraIsAcquiring)
+                .DisposeWith(Subscriptions);
 
 
         }
@@ -121,7 +120,7 @@ namespace DIPOL_UF.Jobs
 
                 //var result = await Task.WhenAll(tasks);
 
-               await AcquisitionJob.Run();
+               await Task.Run(AcquisitionJob.Run);
             }
             catch (Exception e)
             {
