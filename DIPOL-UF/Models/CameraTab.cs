@@ -117,6 +117,26 @@ namespace DIPOL_UF.Models
             _pbTimer.Elapsed += TimerTick;
         }
 
+        public void StartAcquisition()
+        {
+            // TODO : use linked cancellation token source
+            _pbTimer.Interval = Camera.Timings.Kinetic /
+                                (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min
+                                );
+            AcquisitionProgress = AcquisitionProgressRange.Min;
+            _pbTimer.Start();
+            _acquisitionTokenSource = new CancellationTokenSource();
+            
+            _acquisitionTask = Camera
+                               .StartAcquisitionAsync(_acquisitionTokenSource.Token)
+                               .ExpectCancellationAsync();
+        }
+
+        public void StopAcquisition()
+        {
+
+        }
+
         private void HookObservables()
         {
             WhenTemperatureChecked =
@@ -256,21 +276,18 @@ namespace DIPOL_UF.Models
             SetUpJobCommand.InvokeCommand(JobSettingsWindow.ViewRequested).DisposeWith(Subscriptions);
 
 
-            //var hasValidSettings = AcquisitionSettingsWindow
-            //                    .ViewFinished
-            //                    .Select(_ => !(Camera.CurrentSettings is null));
-            // WATCH : switched to [INotifyPropertyChanged] behavior
-            // WATCH : [PropertyValue<T>] spoils all [is null] checks
             var hasValidSettings = Camera.WhenPropertyChanged(x => x.CurrentSettings)
                                          .CombineLatest(this.WhenPropertyChanged(y => y.IsJobInProgress),
                                              (x, y) => !(x.Value is null) && !y.Value)
                                          .ObserveOnUi();
 
-            WhenTimingCalculated =
-                AcquisitionSettingsWindow.ViewFinished
-                                         .CombineLatest(JobSettingsWindow.ViewFinished,
-                                             (x, y) => Unit.Default)
-                                         .Select(_ => Camera.Timings);
+            // BUG : JobSettingsWindow.ViewFinished does not inform other tabs
+            //WhenTimingCalculated = this.WhenAnyObservable(
+            //        x => x.AcquisitionSettingsWindow.ViewFinished,
+            //        y => y.JobSettingsWindow.ViewFinished)
+            //    .Select(_ => Camera.Timings);
+            WhenTimingCalculated = Camera.WhenPropertyChanged(x => x.CurrentSettings)
+                                       .Select(_ => Camera.Timings);
 
             StartAcquisitionCommand =
                 ReactiveCommand.Create(() =>
@@ -278,6 +295,7 @@ namespace DIPOL_UF.Models
                                    if (!Camera.IsAcquiring
                                        && !(Camera.CurrentSettings is null))
                                    {
+                                       // TODO : Move to a separate method
                                        _pbTimer.Interval = Camera.Timings.Kinetic /
                                                            (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min
                                                            );
@@ -290,6 +308,7 @@ namespace DIPOL_UF.Models
                                    }
                                    else if (!(_acquisitionTask is null) && !(_acquisitionTokenSource is null))
                                    {
+                                       // TODO : Move to a separate method
                                        if (Camera.IsAcquiring)
                                            _acquisitionTokenSource.Cancel();
                                        _acquisitionTask = null;
@@ -299,6 +318,7 @@ namespace DIPOL_UF.Models
                                }, hasValidSettings)
                                .DisposeWith(Subscriptions);
 
+            // BUG : Does not respects whether current settings are applied
             var jobAvailableObs = 
                 JobManager.Manager.WhenPropertyChanged(x => x.AnyCameraIsAcquiring)
                                             .CombineLatest(
