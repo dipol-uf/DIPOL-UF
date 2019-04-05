@@ -250,8 +250,7 @@ namespace DIPOL_UF.Models
                     ReactiveCommand.Create<object, ReactiveObjectEx>(
                         _ => new ReactiveWrapper<SettingsBase>(
                             Camera.CurrentSettings ?? Camera.GetAcquisitionSettingsTemplate())),
-                    ReactiveCommand.Create<Unit>(_ => { }),
-                    null,
+                    null, null,
                     ReactiveCommand.Create<ReactiveObjectEx>(x =>
                     {
                         if (x is ReactiveWrapper<SettingsBase> wrapper
@@ -273,12 +272,7 @@ namespace DIPOL_UF.Models
             JobSettingsWindow = new DescendantProvider(
                     ReactiveCommand.Create<object, ReactiveObjectEx>(
                         _ => new ReactiveWrapper<Target>(JobManager.Manager.CurrentTarget)),
-                    ReactiveCommand.Create<Unit>(_ => { }),
-                    null,
-                    ReactiveCommand.Create<ReactiveObjectEx>(x =>
-                    {
-                        // TODO : assign updated target
-                    }))
+                    null, null, null)
                 .DisposeWith(Subscriptions);
 
             SetUpJobCommand.InvokeCommand(JobSettingsWindow.ViewRequested).DisposeWith(Subscriptions);
@@ -303,7 +297,7 @@ namespace DIPOL_UF.Models
                                }, hasValidSettings)
                                .DisposeWith(Subscriptions);
 
-            // BUG : Does not respects whether current settings are applied
+            // BUG : Does not respect whether current settings are applied
             var jobAvailableObs = 
                 JobManager.Manager.WhenPropertyChanged(x => x.AnyCameraIsAcquiring)
                                             .CombineLatest(
@@ -336,15 +330,13 @@ namespace DIPOL_UF.Models
 
         private void TimerTick(object sender, ElapsedEventArgs e)
         {
-            // WATCH : Modified here
-            if (sender is Timer t && t.Enabled && _acquisitionTask != null
-                && AcquisitionProgress <= AcquisitionProgressRange.Max)
-            {
-                var frac = (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min) 
-                           * (e.SignalTime - _acqStartTime).TotalSeconds 
-                           / (_acqEndTime - _acqStartTime).TotalSeconds;
-                AcquisitionProgress = frac;
-            }
+            if (!(sender is Timer t) || !t.Enabled || _acquisitionTask == null ||
+                !(AcquisitionProgress <= AcquisitionProgressRange.Max)) return;
+
+            var frac = (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min) 
+                       * (e.SignalTime - _acqStartTime).TotalSeconds 
+                       / (_acqEndTime - _acqStartTime).TotalSeconds;
+            AcquisitionProgress = frac;
         }
 
         protected override void Dispose(bool disposing)
