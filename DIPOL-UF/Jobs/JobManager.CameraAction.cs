@@ -25,8 +25,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ANDOR_CS.Enums;
 
 namespace DIPOL_UF.Jobs
 {
@@ -74,7 +76,21 @@ namespace DIPOL_UF.Jobs
                         : SpecificCameras.EnumerableToString();
 
                 Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) start exposure");
-                await Task.Delay(TimeSpan.FromMilliseconds(2500));
+                
+                // TODO : add support for the specific cameras
+                var tasks = JobManager.Manager._jobControls.Select(async x =>
+                {
+                    // TODO : Add cancellation support
+                    x.Camera.SaveNextAcquisitionAs(
+                        JobManager.Manager.CurrentTarget.TargetName,
+                        x.Camera.SerialNumber,
+                        ImageFormat.SignedInt32);
+                    x.StartAcquisition(default);
+                    return await x.WhenAcquisitionFinished.FirstAsync();
+                }).ToList();
+
+                await Task.WhenAll(tasks);
+
                 Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) finish exposure");
             }
 

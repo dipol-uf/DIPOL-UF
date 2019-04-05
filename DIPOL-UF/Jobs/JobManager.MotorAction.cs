@@ -26,6 +26,7 @@ using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using StepMotor;
 
 namespace DIPOL_UF.Jobs
 {
@@ -37,7 +38,7 @@ namespace DIPOL_UF.Jobs
                 new Regex(@"^(?:motor/)?(rotate|reset)\s*?([+-]?[0-9]+\.?[0-9]*)?$",
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-            public enum MotorActionType
+            private enum MotorActionType
             {
                 Rotate,
                 Reset
@@ -71,8 +72,8 @@ namespace DIPOL_UF.Jobs
                 if (double.TryParse(
                     match.Groups[2].Value,
                     NumberStyles.Any, NumberFormatInfo.InvariantInfo,
-                    out var @param))
-                    Parameter = @param;
+                    out var param))
+                    Parameter = param;
                 else
                     Parameter =
                         ActionType == MotorActionType.Rotate
@@ -82,8 +83,26 @@ namespace DIPOL_UF.Jobs
 
             public override async Task Execute()
             {
+                // TODO : move to settings
+                const int angle = 3200;
+
                 Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Motor starts {ActionType} with parameter {Parameter}");
-                await Task.Delay(TimeSpan.FromMilliseconds(1000));
+
+                if(Manager._windowRef.PolarimeterMotor is null)
+                    await Task.Delay(TimeSpan.FromMilliseconds(1000));
+                else
+                {
+                    // TODO : Add cancellation support
+                    if (ActionType == MotorActionType.Reset)
+                        await Manager._windowRef.PolarimeterMotor.ReturnToOriginAsync(default);
+                    else
+                    {
+                        await Manager._windowRef.PolarimeterMotor.SendCommandAsync(Command.MoveToPosition,
+                            (int) (angle * Parameter), CommandType.Absolute);
+                        await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(default);
+                    }
+                }
+            
                 Console.WriteLine(
                     $@"{DateTime.Now:HH:mm:ss.fff} Motor finishes {ActionType}  with parameter {Parameter}");
             }

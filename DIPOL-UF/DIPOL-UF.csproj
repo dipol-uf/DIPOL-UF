@@ -386,6 +386,10 @@
       <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
       <Name>DipolImage</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FITS-CS\FITS-CS.csproj">
+      <Project>{89516F86-17D4-4ED3-89F2-D20DF612C7DE}</Project>
+      <Name>FITS-CS</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Serializers\Serializers.csproj">
       <Project>{0ffbf38f-e75e-46c9-ad9c-78926e7dac89}</Project>
       <Name>Serializers</Name>
