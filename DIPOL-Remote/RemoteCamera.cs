@@ -51,8 +51,13 @@ namespace DIPOL_Remote
         private DipolClient _client;
 
         public override SettingsBase CurrentSettings { get; protected set; }
+        public override (float Exposure, float Accumulation, float Kinetic) Timings
+        {
+            get => _client.CallGetTimings(CameraIndex);
+            protected set => throw new NotSupportedException();
+        }
 
-        public override bool IsTemperatureMonitored
+    public override bool IsTemperatureMonitored
         {
             get
             {
@@ -339,8 +344,7 @@ namespace DIPOL_Remote
                 memory.Flush();
                 _client.CallApplySetting(CameraIndex, remoteSetts.SettingsID, memory.GetBuffer());
             }
-
-            Timings = _client.CallGetTimings(CameraIndex);
+            
 
         }
 
