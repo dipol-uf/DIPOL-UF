@@ -44,15 +44,19 @@ namespace DIPOL_UF.Jobs
                 Repeats = repeats;
             }
 
-            public override async Task Execute()
+            public override Task Execute()
             {
-                for (var i = 0; i < Repeats; i++)
+                return Task.Run(async () =>
                 {
-                    Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} starts");
-                    foreach (var action in _actions)
-                        await action.Execute();
-                    Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} ends\r\n");
-                }
+                    Console.WriteLine(App.Current.Dispatcher.CheckAccess() + " In repeat");
+                    for (var i = 0; i < Repeats; i++)
+                    {
+                        Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} starts");
+                        foreach (var action in _actions)
+                            await action.Execute();
+                        Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} ends\r\n");
+                    }
+                });
 
             }
 
