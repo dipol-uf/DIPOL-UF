@@ -231,7 +231,6 @@ namespace ANDOR_CS.Classes
 
         public override void SaveNextAcquisitionAs(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
         {
-            throw new NotImplementedException();
         }
 
         public override Task<Image[]> PullAllImagesAsync(ImageFormat format, CancellationToken token)
