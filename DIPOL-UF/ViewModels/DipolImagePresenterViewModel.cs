@@ -49,7 +49,8 @@ namespace DIPOL_UF.ViewModels
         public static Brush[] ColorPickerColor { get; }
             = Application.Current?.Resources["ColorPickerColors"] as Brush[];
 
-        public WriteableBitmap BitmapSource { [ObservableAsProperty] get; }
+        [Reactive]
+        public WriteableBitmap BitmapSource { get; private set; }
 
         public int ThumbScaleMin => Model.ThumbScaleMin;
         public int ThumbScaleMax => Model.ThumbScaleMax;
@@ -219,11 +220,13 @@ namespace DIPOL_UF.ViewModels
                      nameof(Model.LeftScale),
                      nameof(Model.RightScale))
                  .Where(x => !(x.DisplayedImage is null))
-                 //.Select(x => Observable.FromAsync(() => UpdateBitmapAsync(x.DisplayedImage)))
                  .ObserveOnUi()
-                 .Select(x => UpdateBitmap(x.DisplayedImage))
-                 .ToPropertyEx(this, x => x.BitmapSource)
+                 .Subscribe(x => UpdateBitmap(x.DisplayedImage))
                  .DisposeWith(Subscriptions);
+            
+            //.Select(x => Observable.FromAsync(() => UpdateBitmapAsync(x.DisplayedImage)))
+                 //.ToPropertyEx(this, x => x.BitmapSource)
+                 //.DisposeWith(Subscriptions);
 
             Model.WhenPropertyChanged(x => x.DisplayedImage)
                  .Select(x => !(x.Value is null))
@@ -288,40 +291,36 @@ namespace DIPOL_UF.ViewModels
 
         }
 
-        private WriteableBitmap UpdateBitmap(DipolImage.Image image)
+        private void UpdateBitmap(DipolImage.Image image)
         {
             
-                var temp = image.Copy();
-                temp.Clamp(Model.LeftScale, Model.RightScale);
-                temp.Scale(Model.ImageScaleMin, Model.ImageScaleMax);
+            var temp = image.Copy();
+            temp.Clamp(Model.LeftScale, Model.RightScale);
+            temp.Scale(Model.ImageScaleMin, Model.ImageScaleMax);
 
             var bytes = temp.GetBytes();
-            var bitmap = BitmapSource;
-            if (bitmap is null ||
-                bitmap.PixelWidth != Model.DisplayedImage.Width ||
-                bitmap.PixelHeight != Model.DisplayedImage.Height)
-                bitmap = new WriteableBitmap(image.Width,
+            if (BitmapSource is null ||
+                BitmapSource.PixelWidth != Model.DisplayedImage.Width ||
+                BitmapSource.PixelHeight != Model.DisplayedImage.Height)
+                BitmapSource = new WriteableBitmap(image.Width,
                     image.Height,
                     96, 96, PixelFormats.Gray32Float, null);
 
-
-
             try
             {
-                bitmap.Lock();
+                BitmapSource.Lock();
                 System.Runtime.InteropServices.Marshal.Copy(
-                    bytes, 0, bitmap.BackBuffer, bytes.Length);
+                    bytes, 0, BitmapSource.BackBuffer, bytes.Length);
             }
             finally
             {
-                bitmap.AddDirtyRect(
+                BitmapSource.AddDirtyRect(
                     new Int32Rect(0, 0,
-                        bitmap.PixelWidth,
-                        bitmap.PixelHeight));
-                bitmap.Unlock();
+                        BitmapSource.PixelWidth,
+                        BitmapSource.PixelHeight));
+                BitmapSource.Unlock();
             }
 
-            return bitmap;
         }
 
         private async Task<WriteableBitmap> UpdateBitmapAsync(DipolImage.Image image)
