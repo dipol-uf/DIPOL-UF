@@ -113,13 +113,15 @@ namespace DIPOL_UF.Jobs
                 if (_jobControls.Any(x => x.Camera?.CurrentSettings is null))
                     throw new InvalidOperationException("At least one camera has no settings applied to it.");
 
-                var tasks = _jobControls.Select(async x =>
-                {
-                    x.StartAcquisition(token);
-                    return await x.WhenAcquisitionFinished.FirstAsync();
-                }).ToList();
+                //var tasks = _jobControls.Select(async x =>
+                //{
+                //    x.StartAcquisition(token);
+                //    return await x.WhenAcquisitionFinished.FirstAsync();
+                //}).ToList();
 
-                var result = await Task.WhenAll(tasks);
+                //var result = await Task.WhenAll(tasks);
+
+               await AcquisitionJob.Run();
             }
             catch (Exception e)
             {
