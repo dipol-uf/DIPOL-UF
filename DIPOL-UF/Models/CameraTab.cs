@@ -167,8 +167,14 @@ namespace DIPOL_UF.Models
             //TODO : ImageFormat for displaying
 
             WhenNewPreviewArrives
-                .Select(x => Observable.FromAsync(_ => ImagePresenter.LoadImageAsync(x)))
-                .Merge()
+                //.Select(x => Observable.FromAsync(_ => ImagePresenter.LoadImageAsync(x)))
+                //.Merge()
+                .Select(x =>
+                {
+                    ImagePresenter.LoadImage(x);
+                    return Unit.Default;
+                })
+                .LogObservable("IN MODEL", Subscriptions)
                 .SubscribeDispose(Subscriptions);
 
             void ResetTimer(double val)

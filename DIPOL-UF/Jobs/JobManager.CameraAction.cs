@@ -75,8 +75,8 @@ namespace DIPOL_UF.Jobs
                         ? "all"
                         : SpecificCameras.EnumerableToString();
 
-                Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) start exposure");
-                Console.WriteLine(App.Current.Dispatcher.CheckAccess());
+                //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) start exposure");
+                
                 // TODO : add support for the specific cameras
                 var tasks = JobManager.Manager._jobControls.Select(async x =>
                 {
@@ -91,7 +91,7 @@ namespace DIPOL_UF.Jobs
 
                 await Task.WhenAll(tasks);
 
-                Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) finish exposure");
+                //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) finish exposure");
             }
 
             public override bool ContainsActionOfType<T>()

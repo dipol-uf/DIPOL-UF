@@ -220,7 +220,9 @@ namespace DIPOL_UF.ViewModels
                      nameof(Model.LeftScale),
                      nameof(Model.RightScale))
                  .Where(x => !(x.DisplayedImage is null))
+                 .LogObservable("BEFORE UI", Subscriptions)
                  .ObserveOnUi()
+                 .LogObservable("AFTER UI", Subscriptions)
                  .Subscribe(x => UpdateBitmap(x.DisplayedImage))
                  .DisposeWith(Subscriptions);
             
@@ -293,7 +295,7 @@ namespace DIPOL_UF.ViewModels
 
         private void UpdateBitmap(DipolImage.Image image)
         {
-            
+            Console.WriteLine("In updater");
             var temp = image.Copy();
             temp.Clamp(Model.LeftScale, Model.RightScale);
             temp.Scale(Model.ImageScaleMin, Model.ImageScaleMax);
@@ -308,6 +310,7 @@ namespace DIPOL_UF.ViewModels
 
             try
             {
+                Console.WriteLine($"Before is downloading: {BitmapSource.IsDownloading}");
                 BitmapSource.Lock();
                 System.Runtime.InteropServices.Marshal.Copy(
                     bytes, 0, BitmapSource.BackBuffer, bytes.Length);
@@ -319,6 +322,8 @@ namespace DIPOL_UF.ViewModels
                         BitmapSource.PixelWidth,
                         BitmapSource.PixelHeight));
                 BitmapSource.Unlock();
+                Console.WriteLine($"After is downloading: {BitmapSource.IsDownloading}");
+
             }
 
         }
@@ -359,6 +364,7 @@ namespace DIPOL_UF.ViewModels
                             bitmap.PixelWidth,
                             bitmap.PixelHeight));
                     bitmap.Unlock();
+
                 }
             });
 

@@ -120,7 +120,7 @@ namespace DIPOL_UF.Jobs
 
                 //var result = await Task.WhenAll(tasks);
 
-               await Task.Run(AcquisitionJob.Run);
+               await Task.Run(AcquisitionJob.Run, token);
             }
             catch (Exception e)
             {
