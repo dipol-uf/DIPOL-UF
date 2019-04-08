@@ -28,6 +28,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
 using ANDOR_CS.Enums;
 
 namespace DIPOL_UF.Jobs
@@ -82,7 +83,7 @@ namespace DIPOL_UF.Jobs
                     // TODO : Add cancellation support
                     x.Camera.SaveNextAcquisitionAs(
                         JobManager.Manager.CurrentTarget.TargetName,
-                        $"{x.Camera.SerialNumber}_{{0:000}}.fits",
+                        x.Camera.SerialNumber,
                         ImageFormat.SignedInt32);
                     x.StartAcquisition(default);
                     await x.WhenAcquisitionFinished.FirstAsync();
