@@ -180,14 +180,14 @@ namespace DIPOL_UF.Models
                                    })
                                .DisposeWith(Subscriptions);
 
-            LoadImageCommand =
-                ReactiveCommand.CreateFromTask<Image, Image>(
-                                   async x =>
-                                   {
-                                       await LoadImageAsync(x);
-                                       return DisplayedImage;
-                                   })
-                               .DisposeWith(Subscriptions);
+            //LoadImageCommand =
+            //    ReactiveCommand.CreateFromTask<Image, Image>(
+            //                       async x =>
+            //                       {
+            //                           await LoadImageAsync(x);
+            //                           return DisplayedImage;
+            //                       })
+            //                   .DisposeWith(Subscriptions);
 
             ImageClickCommand =
                 ReactiveCommand.Create<MouseButtonEventArgs, MouseButtonEventArgs>(
@@ -383,7 +383,10 @@ namespace DIPOL_UF.Models
 
         public void LoadImage(Image image)
         {
-            Helper.RunNoMarshall(async () => await CopyImageAsync(image));
+            // WATCH : Modified this call
+            //Helper.RunNoMarshall(async () => await CopyImageAsync(image));
+
+            CopyImageAsync(image).ConfigureAwait(true).GetAwaiter().GetResult();
         }
 
         public async Task LoadImageAsync(Image image)

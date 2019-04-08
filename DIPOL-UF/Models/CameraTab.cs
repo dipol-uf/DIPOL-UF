@@ -45,6 +45,12 @@ namespace DIPOL_UF.Models
 {
     internal sealed class CameraTab: ReactiveObjectEx
     {
+#if DEBUG
+        private volatile int _counter;
+#endif
+
+        private Image _cachedPreview = null;
+
         private Task _acquisitionTask;
         private CancellationTokenSource _acquisitionTokenSource;
 
@@ -149,6 +155,24 @@ namespace DIPOL_UF.Models
 
         private void HookObservables()
         {
+#if DEBUG
+
+            Camera.NewImageReceived += (sender, args) =>
+            {
+                _cachedPreview = Camera.PullPreviewImage(args.Index, ImageFormat.UnsignedInt16);
+            };
+            Camera.NewImageReceived += (sender, args) =>
+            {
+                if(!(_cachedPreview is null))
+                    ImagePresenter.LoadImage(_cachedPreview);
+            };
+
+            Observable.FromEventPattern<NewImageReceivedHandler, NewImageReceivedEventArgs>(
+                    x => Camera.NewImageReceived += x,
+                    x => Camera.NewImageReceived -= x)
+                .Subscribe(_ => Interlocked.Increment(ref _counter));
+
+#endif
             WhenTemperatureChecked =
                 Observable.FromEventPattern<TemperatureStatusEventHandler, TemperatureStatusEventArgs>(
                               x => Camera.TemperatureStatusChecked += x,
@@ -156,26 +180,20 @@ namespace DIPOL_UF.Models
                           .Select(x => x.EventArgs)
                           .DistinctUntilChanged();
 
-           WhenNewPreviewArrives =
-                Observable.FromEventPattern<NewImageReceivedHandler, NewImageReceivedEventArgs>(
-                              x => Camera.NewImageReceived += x,
-                              x => Camera.NewImageReceived -= x)
-                          .Sample(TimeSpan.Parse(UiSettingsProvider.Settings.Get("NewImagePollDelay", "00:00:00.500")))
-                          .Select(x => Camera.PullPreviewImage(x.EventArgs.Index, ImageFormat.UnsignedInt16))
-                          .Where(x => !(x is null))
-                          .LogTask("NEW IMAGE");
-            //TODO : ImageFormat for displaying
 
-            WhenNewPreviewArrives
-                //.Select(x => Observable.FromAsync(_ => ImagePresenter.LoadImageAsync(x)))
-                //.Merge()
-                .Select(x =>
-                {
-                    ImagePresenter.LoadImage(x);
-                    return Unit.Default;
-                })
-                .LogTask("IN MODEL")
-                .SubscribeDispose(Subscriptions);
+            //WhenNewPreviewArrives =
+            //    Observable.FromEventPattern<NewImageReceivedHandler, NewImageReceivedEventArgs>(
+            //            x => Camera.NewImageReceived += x,
+            //            x => Camera.NewImageReceived -= x)
+            //        .Select(x => _cachedPreview)
+            //        .Where(x => !(x is null));
+
+            //WhenNewPreviewArrives
+            //    .Select(x =>
+            //    {
+            //        ImagePresenter.LoadImage(x);
+            //        return Unit.Default;
+            //    });
 
             void ResetTimer(double val)
             {
