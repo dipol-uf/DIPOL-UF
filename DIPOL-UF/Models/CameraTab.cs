@@ -163,7 +163,7 @@ namespace DIPOL_UF.Models
                           .Sample(TimeSpan.Parse(UiSettingsProvider.Settings.Get("NewImagePollDelay", "00:00:00.500")))
                           .Select(x => Camera.PullPreviewImage(x.EventArgs.Index, ImageFormat.UnsignedInt16))
                           .Where(x => !(x is null))
-                          .LogObservable("NEW IMAGE", Subscriptions);
+                          .LogTask("NEW IMAGE");
             //TODO : ImageFormat for displaying
 
             WhenNewPreviewArrives
@@ -174,7 +174,7 @@ namespace DIPOL_UF.Models
                     ImagePresenter.LoadImage(x);
                     return Unit.Default;
                 })
-                .LogObservable("IN MODEL", Subscriptions)
+                .LogTask("IN MODEL")
                 .SubscribeDispose(Subscriptions);
 
             void ResetTimer(double val)

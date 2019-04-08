@@ -86,7 +86,7 @@ namespace DIPOL_UF.Jobs
                 // TODO : move to settings
                 const int angle = 3200;
 
-                Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Motor starts {ActionType} with parameter {Parameter}");
+                //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Motor starts {ActionType} with parameter {Parameter}");
 
                 if(Manager._windowRef.PolarimeterMotor is null)
                     await Task.Delay(TimeSpan.FromMilliseconds(1000));
@@ -103,8 +103,8 @@ namespace DIPOL_UF.Jobs
                     }
                 }
             
-                Console.WriteLine(
-                    $@"{DateTime.Now:HH:mm:ss.fff} Motor finishes {ActionType}  with parameter {Parameter}");
+                //Console.WriteLine(
+                //    $@"{DateTime.Now:HH:mm:ss.fff} Motor finishes {ActionType}  with parameter {Parameter}");
             }
 
             public override bool ContainsActionOfType<T>()
