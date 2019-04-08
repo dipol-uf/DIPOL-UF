@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.DataStructures;
@@ -1279,27 +1280,24 @@ namespace ANDOR_CS.Classes
                 OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus()));
             }
         }
-
-        private volatile int _counter = 0;
         public override Image PullPreviewImage<T>(int index)
         {
-            Interlocked.Increment(ref _counter);
             if(!(typeof(T) == typeof(ushort) || typeof(T) == typeof(int)))
                 throw new ArgumentException($"Current SDK only supports {typeof(ushort)} and {typeof(int)} images.");
 
             if(CurrentSettings?.ImageArea is null)
                 throw new NullReferenceException(
                     "Pulling image requires acquisition settings with specified image area applied to the current camera.");
-            var testResult = SDK.DRV_SUCCESS;
+
             var indices = (First: 0, Last: 0);
-            if (FailIfError(
-                testResult = Call(CameraHandle, () => SdkInstance.GetNumberAvailableImages(ref indices.First, ref indices.Last)),
+            if (FailIfError(Call(CameraHandle, () => SdkInstance.GetNumberAvailableImages(ref indices.First, ref indices.Last)),
                 nameof(SdkInstance.GetNumberAvailableImages),
                 out var except))
                 throw except;
-            Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId}\t{_counter}\t{testResult}\t{index}");
+            
             if (indices.First <= index && indices.Last <= index)
             {
+                var testResult = SDK.DRV_SUCCESS;
 
                 var size = CurrentSettings.ImageArea.Value; // -V3125
                 var matrixSize = size.Width * size.Height;
@@ -1328,9 +1326,6 @@ namespace ANDOR_CS.Classes
                     return null;
 
                 var image = new Image(data, size.Width, size.Height, false);
-
-                var test = Math.Abs(image.Min()) + Math.Abs(image.Max());
-
                 return image;
             }
             return null;
@@ -1354,11 +1349,20 @@ namespace ANDOR_CS.Classes
                 throw new InvalidOperationException(
                     "Configuration file does not contain required key \"RootDirectory\".");
 
-            var path = Path.GetFullPath(Path.Combine(root, folderPath));
+            var dateStr = DateTime.Now.ToString("yyyyMMdd");
+            var path = Path.GetFullPath(Path.Combine(root, dateStr, folderPath));
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
-            var index = Directory.EnumerateFiles(path).Count() + 1;
+            var regex = new Regex($@"{imagePattern}_?\d{{1,4}}\.fits",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+            var index = Directory.EnumerateFiles(path)
+                                 .Select(x =>
+                                 {
+                                     var m = regex.Match(x);
+                                     return m.Success ? new int?(int.Parse(m.Groups[1].Value)) : null;
+                                 }).Max() + 1;
 
             var fitsType = format == ImageFormat.UnsignedInt16 ? FitsImageType.Int16 : FitsImageType.Int32;
 
@@ -1391,7 +1395,7 @@ namespace ANDOR_CS.Classes
                         keys.AddRange(SettingsProvider.MetaFitsKeys);
 
                         var imgPath = Path.Combine(path,
-                            string.Format(imagePattern, index + i));
+                            $"{imagePattern}_{index + i,0}.fits");
                         
 
                         FitsStream.WriteImage(im, fitsType, imgPath, keys);
