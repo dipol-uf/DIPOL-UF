@@ -26,7 +26,6 @@ using System;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -45,11 +44,8 @@ namespace DIPOL_UF.Models
 {
     internal sealed class CameraTab: ReactiveObjectEx
     {
-#if DEBUG
-        private volatile int _counter;
-#endif
 
-        private Image _cachedPreview = null;
+        private Image _cachedPreview;
 
         private Task _acquisitionTask;
         private CancellationTokenSource _acquisitionTokenSource;
@@ -79,7 +75,6 @@ namespace DIPOL_UF.Models
         public IObservable<AcquisitionStatusEventArgs> WhenAcquisitionStarted { get; private set; }
         public IObservable<AcquisitionStatusEventArgs> WhenAcquisitionFinished { get; private set; }
         public IObservable<(float Exposure, float Accumulation, float Kinetic)> WhenTimingCalculated { get; private set; }
-        public IObservable<Image> WhenNewPreviewArrives { get; private set; }
         public DipolImagePresenter ImagePresenter { get; }
         public DescendantProvider AcquisitionSettingsWindow { get; private set; }
         public DescendantProvider JobSettingsWindow { get; private set; }
@@ -155,8 +150,6 @@ namespace DIPOL_UF.Models
 
         private void HookObservables()
         {
-#if DEBUG
-
             Camera.NewImageReceived += (sender, args) =>
             {
                 _cachedPreview = Camera.PullPreviewImage(args.Index, ImageFormat.UnsignedInt16);
@@ -167,33 +160,13 @@ namespace DIPOL_UF.Models
                     ImagePresenter.LoadImage(_cachedPreview);
             };
 
-            Observable.FromEventPattern<NewImageReceivedHandler, NewImageReceivedEventArgs>(
-                    x => Camera.NewImageReceived += x,
-                    x => Camera.NewImageReceived -= x)
-                .Subscribe(_ => Interlocked.Increment(ref _counter));
 
-#endif
             WhenTemperatureChecked =
                 Observable.FromEventPattern<TemperatureStatusEventHandler, TemperatureStatusEventArgs>(
                               x => Camera.TemperatureStatusChecked += x,
                               x => Camera.TemperatureStatusChecked -= x)
                           .Select(x => x.EventArgs)
                           .DistinctUntilChanged();
-
-
-            //WhenNewPreviewArrives =
-            //    Observable.FromEventPattern<NewImageReceivedHandler, NewImageReceivedEventArgs>(
-            //            x => Camera.NewImageReceived += x,
-            //            x => Camera.NewImageReceived -= x)
-            //        .Select(x => _cachedPreview)
-            //        .Where(x => !(x is null));
-
-            //WhenNewPreviewArrives
-            //    .Select(x =>
-            //    {
-            //        ImagePresenter.LoadImage(x);
-            //        return Unit.Default;
-            //    });
 
             void ResetTimer(double val)
             {

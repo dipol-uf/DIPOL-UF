@@ -180,14 +180,14 @@ namespace DIPOL_UF.Models
                                    })
                                .DisposeWith(Subscriptions);
 
-            //LoadImageCommand =
-            //    ReactiveCommand.CreateFromTask<Image, Image>(
-            //                       async x =>
-            //                       {
-            //                           await LoadImageAsync(x);
-            //                           return DisplayedImage;
-            //                       })
-            //                   .DisposeWith(Subscriptions);
+            LoadImageCommand =
+                ReactiveCommand.CreateFromTask<Image, Image>(
+                                   async x =>
+                                   {
+                                       await LoadImageAsync(x);
+                                       return DisplayedImage;
+                                   })
+                               .DisposeWith(Subscriptions);
 
             ImageClickCommand =
                 ReactiveCommand.Create<MouseButtonEventArgs, MouseButtonEventArgs>(
@@ -384,15 +384,14 @@ namespace DIPOL_UF.Models
         public void LoadImage(Image image)
         {
             // WATCH : Modified this call
-            //Helper.RunNoMarshall(async () => await CopyImageAsync(image));
+            Helper.RunNoMarshall(async () => await CopyImageAsync(image));
 
-            CopyImageAsync(image).ConfigureAwait(true).GetAwaiter().GetResult();
+            //CopyImageAsync(image).ConfigureAwait(true).GetAwaiter().GetResult();
         }
 
         public async Task LoadImageAsync(Image image)
         {
             await CopyImageAsync(image);
-            //await UpdateBitmapAsync();
         }
 
         private async Task CopyImageAsync(Image image)
@@ -433,7 +432,6 @@ namespace DIPOL_UF.Models
                 throw new NullReferenceException("Image cannot be null.");
 
             temp.Scale(ImageScaleMin, ImageScaleMax);
-            // Bug: Provokes out of range exception if image size changes
             SamplerCenterPosInPix = isFirstLoad
                 // ReSharper disable PossibleLossOfFraction
                 ? new Point(temp.Width / 2, temp.Height / 2)

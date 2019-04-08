@@ -38,6 +38,8 @@ namespace DIPOL_UF.Jobs
                 new Regex(@"^(?:motor/)?(rotate|reset)\s*?([+-]?[0-9]+\.?[0-9]*)?$",
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+            private int _oldPos;
+
             private enum MotorActionType
             {
                 Rotate,
@@ -47,12 +49,6 @@ namespace DIPOL_UF.Jobs
             private double Parameter { get; }
 
             private MotorActionType ActionType { get; }
-
-            public MotorAction()
-            {
-                ActionType = MotorActionType.Reset;
-                Parameter = 0;
-            }
 
             public MotorAction(string command)
             {
@@ -93,22 +89,20 @@ namespace DIPOL_UF.Jobs
                     await Task.Delay(TimeSpan.FromMilliseconds(1000));
                 else
                 {
-                    var pos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
                     // TODO : Add cancellation support
                     if (ActionType == MotorActionType.Reset)
                         await Manager._windowRef.PolarimeterMotor.ReturnToOriginAsync(default);
                     else
                     {
                         await Manager._windowRef.PolarimeterMotor.SendCommandAsync(Command.MoveToPosition,
-                            pos + (int) (angle * Parameter), CommandType.Absolute);
+                            _oldPos + (int) (angle * Parameter), CommandType.Absolute);
                         await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(default);
                     }
-                    pos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
-                    Console.WriteLine($"Motor at: {pos}");
+
+                    _oldPos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
+                    // WATCH : console logging
+                    Console.WriteLine($"Motor at: {_oldPos}");
                 }
-            
-                //Console.WriteLine(
-                //    $@"{DateTime.Now:HH:mm:ss.fff} Motor finishes {ActionType}  with parameter {Parameter}");
             }
 
             public override bool ContainsActionOfType<T>()

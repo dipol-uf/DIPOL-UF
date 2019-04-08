@@ -48,7 +48,6 @@ namespace DIPOL_UF.Jobs
             {
                 return Task.Run(async () =>
                 {
-                    Console.WriteLine(App.Current.Dispatcher.CheckAccess() + " In repeat");
                     for (var i = 0; i < Repeats; i++)
                     {
                         //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} starts");
