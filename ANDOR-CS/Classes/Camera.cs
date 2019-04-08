@@ -1354,15 +1354,17 @@ namespace ANDOR_CS.Classes
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
-            var regex = new Regex($@"{imagePattern}_?\d{{1,4}}\.fits",
+            var regex = new Regex($@"{imagePattern}_?(\d{{1,4}})\.fits",
                 RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-            var index = Directory.EnumerateFiles(path)
-                                 .Select(x =>
-                                 {
-                                     var m = regex.Match(x);
-                                     return m.Success ? new int?(int.Parse(m.Groups[1].Value)) : null;
-                                 }).Max() + 1;
+
+            var index = Directory.EnumerateFiles(path, $"{imagePattern}_????.fits")
+                            .Reverse()
+                            .Select(x =>
+                            {
+                                var m = regex.Match(x);
+                                return m.Success ? int.Parse(m.Groups[1].Value) : 0;
+                            }).FirstOrDefault() + 1;
 
             var fitsType = format == ImageFormat.UnsignedInt16 ? FitsImageType.Int16 : FitsImageType.Int32;
 
@@ -1394,8 +1396,7 @@ namespace ANDOR_CS.Classes
 
                         keys.AddRange(SettingsProvider.MetaFitsKeys);
 
-                        var imgPath = Path.Combine(path,
-                            $"{imagePattern}_{index + i,0}.fits");
+                        var imgPath = Path.Combine(path, $"{imagePattern}_{index + i:0000}.fits");
                         
 
                         FitsStream.WriteImage(im, fitsType, imgPath, keys);
