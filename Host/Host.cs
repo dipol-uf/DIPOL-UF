@@ -131,16 +131,16 @@ namespace Host
 
                 host.Open();
                 
-#if DEBUG
-                while (Console.ReadLine() != "exit")
-                {
-                }
-#else
+//#if !DEBUG
+//                while (Console.ReadLine() != "exit")
+//                {
+//                }
+//#else
                 while (Console.ReadKey().Key is var key 
                 && key != ConsoleKey.Escape
                 && key != ConsoleKey.Q)
                 { }
-#endif
+//#endif
             }
 
             return 0;

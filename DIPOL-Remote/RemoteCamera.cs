@@ -41,7 +41,7 @@ namespace DIPOL_Remote
 {
     public sealed class RemoteCamera : CameraBase
     {
-        internal static readonly ConcurrentDictionary<int, RemoteCamera> RemoteCameras
+        private static readonly ConcurrentDictionary<int, RemoteCamera> RemoteCameras
             = new ConcurrentDictionary<int, RemoteCamera>();
 
         private readonly ConcurrentDictionary<string, bool> _changedProperties
@@ -255,7 +255,7 @@ namespace DIPOL_Remote
             Software = _client.GetSoftware(CameraIndex);
             Hardware = _client.GetHardware(CameraIndex);
 
-            RemoteCameras.TryAdd(camIndex, this);
+            RemoteCameras.TryAdd((_client.SessionID + CameraIndex).GetHashCode(), this);
         }
 
         public override CameraStatus GetStatus()
@@ -401,9 +401,9 @@ namespace DIPOL_Remote
         }
 
 
-        internal static void NotifyRemotePropertyChanged(int camIndex, string property)
+        internal static void NotifyRemotePropertyChanged(int globalId, string property)
         {
-            if (RemoteCameras.TryGetValue(camIndex, out var camera))
+            if (RemoteCameras.TryGetValue(globalId, out var camera))
             {
                 camera._changedProperties.AddOrUpdate(property, true, (prop, oldVal) => true);
                 camera.OnPropertyChangedRemotely(property);
@@ -411,16 +411,16 @@ namespace DIPOL_Remote
         }
 
         internal static void NotifyRemoteTemperatureStatusChecked(
-            int camIndex, TemperatureStatusEventArgs args)
+            int globalId, TemperatureStatusEventArgs args)
         {
-            if (RemoteCameras.TryGetValue(camIndex, out var camera))
+            if (RemoteCameras.TryGetValue(globalId, out var camera))
                 camera.OnTemperatureStatusChecked(args);
         }
 
-        internal static void NotifyRemoteAcquisitionEventHappened(int camIndex, 
+        internal static void NotifyRemoteAcquisitionEventHappened(int globalId, 
             AcquisitionEventType type, AcquisitionStatusEventArgs args)
         {
-            if (RemoteCameras.TryGetValue(camIndex, out var camera))
+            if (RemoteCameras.TryGetValue(globalId, out var camera))
             {
                 switch (type)
                 {
@@ -443,9 +443,9 @@ namespace DIPOL_Remote
             }
         }
 
-        internal static void NotifyRemoteNewImageReceivedEventHappened(int camIndex, NewImageReceivedEventArgs e)
+        internal static void NotifyRemoteNewImageReceivedEventHappened(int globalId, NewImageReceivedEventArgs e)
         {
-            if (RemoteCameras.TryGetValue(camIndex, out var cam))
+            if (RemoteCameras.TryGetValue(globalId, out var cam))
                 cam.OnNewImageReceived(e);
         }
 

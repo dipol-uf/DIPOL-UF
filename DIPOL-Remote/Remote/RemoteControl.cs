@@ -90,55 +90,55 @@ namespace DIPOL_Remote.Remote
             camera.PropertyChanged += (sender, e)
                 => Callback
                 .NotifyRemotePropertyChanged(
-                    camera.CameraIndex,
+                    (SessionID + camera.CameraIndex).GetHashCode(),
                     e.PropertyName);
 
             // Remotely fires event, informing that temperature status was checked.
             camera.TemperatureStatusChecked += (sender, e)
                 => Callback
                 .NotifyRemoteTemperatureStatusChecked(
-                    camera.CameraIndex,
+                    (SessionID + camera.CameraIndex).GetHashCode(),
                     e);
             // Remotely fires event, informing that acquisition was started.
             camera.AcquisitionStarted += (sender, e)
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
-                    camera.CameraIndex,
+                    (SessionID+camera.CameraIndex).GetHashCode(),
                     Enums.AcquisitionEventType.Started,
                     e);
             // Remotely fires event, informing that acquisition was finished.
             camera.AcquisitionFinished += (sender, e)
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
-                    camera.CameraIndex,
+                    (SessionID + camera.CameraIndex).GetHashCode(),
                     Enums.AcquisitionEventType.Finished,
                     e);
             // Remotely fires event, informing that acquisition progress was checked.
             camera.AcquisitionStatusChecked += (sender, e)
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
-                    camera.CameraIndex,
+                    (SessionID + camera.CameraIndex).GetHashCode(),
                     Enums.AcquisitionEventType.StatusChecked,
                     e);
             // Remotely fires event, informing that acquisition was aborted.
             camera.AcquisitionAborted += (sender, e)
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
-                    camera.CameraIndex,
+                    (SessionID + camera.CameraIndex).GetHashCode(),
                     Enums.AcquisitionEventType.Aborted,
                     e);
             // Remotely fires event, informing that an error happened during acquisition process.
             camera.AcquisitionErrorReturned += (sender, e)
                 => Callback
                 .NotifyRemoteAcquisitionEventHappened(
-                    camera.CameraIndex,
+                    (SessionID + camera.CameraIndex).GetHashCode(),
                     Enums.AcquisitionEventType.ErrorReturned,
                     e);
             // Remotely fires event, informing that new image was acquired
             camera.NewImageReceived += (sender, e)
                 => Callback
                 .NotifyRemoteNewImageReceivedEventHappened(
-                    camera.CameraIndex,
+                    (SessionID + camera.CameraIndex).GetHashCode(),
                     e);
 
             camera.TemperatureStatusChecked += (sender, e)
