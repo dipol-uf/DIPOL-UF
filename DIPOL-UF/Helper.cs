@@ -422,7 +422,7 @@ namespace DIPOL_UF
 
         public static void LogTask([CallerMemberName] string name = null)
         {
-            Helper.WriteLog($"{name,25} : task: {Task.CurrentId,3}; thread : {Thread.CurrentThread.ManagedThreadId,3}; dispatch : {Application.Current?.Dispatcher?.CheckAccess()}");
+            Helper.WriteLog($"{name,25} : task: {Task.CurrentId,7}; thread : {Thread.CurrentThread.ManagedThreadId,3}; dispatch : {Application.Current?.Dispatcher?.CheckAccess()}");
         }
 
         public static IObservable<T> LogTask<T>(

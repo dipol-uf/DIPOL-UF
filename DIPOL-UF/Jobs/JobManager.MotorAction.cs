@@ -79,6 +79,7 @@ namespace DIPOL_UF.Jobs
                         ActionType == MotorActionType.Rotate
                             ? 1
                             : 0;
+
             }
 
             public override async Task Execute()
@@ -92,15 +93,18 @@ namespace DIPOL_UF.Jobs
                     await Task.Delay(TimeSpan.FromMilliseconds(1000));
                 else
                 {
+                    var pos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
                     // TODO : Add cancellation support
                     if (ActionType == MotorActionType.Reset)
                         await Manager._windowRef.PolarimeterMotor.ReturnToOriginAsync(default);
                     else
                     {
                         await Manager._windowRef.PolarimeterMotor.SendCommandAsync(Command.MoveToPosition,
-                            (int) (angle * Parameter), CommandType.Absolute);
+                            pos + (int) (angle * Parameter), CommandType.Absolute);
                         await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(default);
                     }
+                    pos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
+                    Console.WriteLine($"Motor at: {pos}");
                 }
             
                 //Console.WriteLine(

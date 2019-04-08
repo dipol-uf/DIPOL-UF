@@ -165,7 +165,7 @@ namespace DIPOL_UF.Models
             {
                 Helper.WriteLog(aExp);
             }
-
+            if(!(_remoteClients is null))
             foreach (var client in _remoteClients)
                 try
                 {
@@ -206,22 +206,25 @@ namespace DIPOL_UF.Models
                     }
 
                 var result = await Task.WhenAll(queryTasks).ExpectCancellation();
-
+#if !DEBUG
                 return result.Sum();
             }
-#if DEBUG
-            if (_foundDevices.Count == 0)
-                _foundDevices.Edit(context =>
-                {
-                    context.AddOrUpdate(
-                        Enumerable.Range(0, 2)
-                                  .Select(x => DebugCamera.Create(x) as CameraBase)
-                                  .Select(x => (Id: $"localhost:{x.ToString()}", Camera: x)));
-                });
-
-#endif
             return 0;
+#else
+            }
+
+            _foundDevices.Edit(context =>
+            {
+                context.AddOrUpdate(
+                    Enumerable.Range(0, 2)
+                        .Select(x => DebugCamera.Create(x) as CameraBase)
+                        .Select(x => (Id: $"localhost:{x.ToString()}", Camera: x)));
+            });
+
+            return _foundDevices.Count;
+#endif
         }
+
         private async Task<int> QueryLocalCamerasAsync(int nLocal, CancellationToken token, ProgressBar pb)
         {
             // Number of cameras

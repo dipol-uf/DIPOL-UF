@@ -1203,8 +1203,10 @@ namespace ANDOR_CS.Classes
                 void WatchImages(object sender, EventArgs e)
                 {
                     var totalImg = (First: 0, Last: 0);
-                    Call(CameraHandle,
+                    var result = Call(CameraHandle,
                         () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
+
+                    Console.WriteLine($"IMAGES: {totalImg}; {result}; {Thread.CurrentThread.ManagedThreadId}");
 
                     if (totalImg.First > 0)
                     {
@@ -1278,22 +1280,24 @@ namespace ANDOR_CS.Classes
             }
         }
 
+        private volatile int _counter = 0;
         public override Image PullPreviewImage<T>(int index)
         {
+            Interlocked.Increment(ref _counter);
             if(!(typeof(T) == typeof(ushort) || typeof(T) == typeof(int)))
                 throw new ArgumentException($"Current SDK only supports {typeof(ushort)} and {typeof(int)} images.");
 
             if(CurrentSettings?.ImageArea is null)
                 throw new NullReferenceException(
                     "Pulling image requires acquisition settings with specified image area applied to the current camera.");
-
+            var testResult = SDK.DRV_SUCCESS;
             var indices = (First: 0, Last: 0);
             if (FailIfError(
-                Call(CameraHandle, () => SdkInstance.GetNumberAvailableImages(ref indices.First, ref indices.Last)),
+                testResult = Call(CameraHandle, () => SdkInstance.GetNumberAvailableImages(ref indices.First, ref indices.Last)),
                 nameof(SdkInstance.GetNumberAvailableImages),
                 out var except))
                 throw except;
-
+            Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId}\t{_counter}\t{testResult}\t{index}");
             if (indices.First <= index && indices.Last <= index)
             {
 
@@ -1305,7 +1309,7 @@ namespace ANDOR_CS.Classes
 
                 if (typeof(T) == typeof(ushort))
                 {
-                    if (FailIfError(Call(CameraHandle,
+                    if (FailIfError(testResult = Call(CameraHandle,
                         () => SdkInstance.GetImages16(index, index, (ushort[]) data, (uint) matrixSize,
                             ref validInds.First,
                             ref validInds.Last)), nameof(SdkInstance.GetImages16), out except))
@@ -1313,13 +1317,21 @@ namespace ANDOR_CS.Classes
                 }
                 else if (typeof(T) == typeof(int))
                 {
-                    if (FailIfError(Call(CameraHandle,
+                    if (FailIfError(testResult = Call(CameraHandle,
                         () => SdkInstance.GetImages(index, index, (int[])data, (uint)matrixSize,
                             ref validInds.First,
                             ref validInds.Last)), nameof(SdkInstance.GetImages), out except))
                         throw except;
                 }
-                return new Image(data, size.Width, size.Height, false);
+
+                if (testResult != SDK.DRV_SUCCESS)
+                    return null;
+
+                var image = new Image(data, size.Width, size.Height, false);
+
+                var test = Math.Abs(image.Min()) + Math.Abs(image.Max());
+
+                return image;
             }
             return null;
         }
