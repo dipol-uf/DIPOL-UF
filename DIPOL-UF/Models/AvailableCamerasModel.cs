@@ -210,14 +210,14 @@ namespace DIPOL_UF.Models
                 return result.Sum();
             }
 #if DEBUG
-
-            //_foundDevices.Edit(context =>
-            //{
-            //    context.AddOrUpdate(
-            //        Enumerable.Range(0, 4)
-            //                  .Select(x => DebugCamera.Create(x) as CameraBase)
-            //                  .Select(x => (Id: $"localhost:{x.ToString()}", Camera: x)));
-            //});
+            if (_foundDevices.Count == 0)
+                _foundDevices.Edit(context =>
+                {
+                    context.AddOrUpdate(
+                        Enumerable.Range(0, 2)
+                                  .Select(x => DebugCamera.Create(x) as CameraBase)
+                                  .Select(x => (Id: $"localhost:{x.ToString()}", Camera: x)));
+                });
 
 #endif
             return 0;
