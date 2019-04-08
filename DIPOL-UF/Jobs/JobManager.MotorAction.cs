@@ -38,8 +38,6 @@ namespace DIPOL_UF.Jobs
                 new Regex(@"^(?:motor/)?(rotate|reset)\s*?([+-]?[0-9]+\.?[0-9]*)?$",
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-            private int _oldPos;
-
             private enum MotorActionType
             {
                 Rotate,
@@ -89,19 +87,20 @@ namespace DIPOL_UF.Jobs
                     await Task.Delay(TimeSpan.FromMilliseconds(1000));
                 else
                 {
+
                     // TODO : Add cancellation support
                     if (ActionType == MotorActionType.Reset)
                         await Manager._windowRef.PolarimeterMotor.ReturnToOriginAsync(default);
                     else
                     {
                         await Manager._windowRef.PolarimeterMotor.SendCommandAsync(Command.MoveToPosition,
-                            _oldPos + (int) (angle * Parameter), CommandType.Absolute);
+                           (int) (angle * Parameter), CommandType.Relative);
                         await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(default);
                     }
 
-                    _oldPos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
+                    var pos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
                     // WATCH : console logging
-                    Console.WriteLine($"Motor at: {_oldPos}");
+                    Console.WriteLine($"Motor at: {pos}");
                 }
             }
 
