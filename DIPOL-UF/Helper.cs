@@ -419,6 +419,21 @@ namespace DIPOL_UF
 
             return source;
         }
+
+        public static void LogTask([CallerMemberName] string name = null)
+        {
+            Helper.WriteLog($"{name,25} : task: {Task.CurrentId,3}; thread : {Thread.CurrentThread.ManagedThreadId,3}; dispatch : {Application.Current?.Dispatcher?.CheckAccess()}");
+        }
+
+        public static IObservable<T> LogTask<T>(
+            this IObservable<T> @this,
+            [CallerMemberName]
+            string name = null)
+        {
+            @this.Subscribe(x => LogTask(name));
+            return @this;
+        }
+
     }
 #endif
 }

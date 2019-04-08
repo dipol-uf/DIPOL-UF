@@ -51,10 +51,10 @@ namespace DIPOL_UF.Jobs
                     Console.WriteLine(App.Current.Dispatcher.CheckAccess() + " In repeat");
                     for (var i = 0; i < Repeats; i++)
                     {
-                        Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} starts");
+                        //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} starts");
                         foreach (var action in _actions)
                             await action.Execute();
-                        Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} ends\r\n");
+                        //Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} ends\r\n");
                     }
                 });
 
