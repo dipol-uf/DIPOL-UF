@@ -301,7 +301,7 @@ namespace DIPOL_UF.Models
                               nameof(JobManager.AnyCameraIsAcquiring),
                               nameof(JobManager.ReadyToRun),
                               nameof(JobManager.IsInProcess))
-                           // (Ready AND NOT Acq) OR (Acq AND Job)
+                           // (Ready AND NOT Acq) OR Job
                           .Select(x => (!x.AnyCameraIsAcquiring && x.ReadyToRun)
                                        || x.IsInProcess)
                           .CombineLatest(

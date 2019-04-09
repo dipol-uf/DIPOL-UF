@@ -39,18 +39,17 @@ namespace DIPOL_UF.Converters
             bool GetBool(object val)
                 => val is bool b && b;
 
-            if (targetType == typeof(bool))
-                return ConverterImplementations.BoolToBoolConversion(
-                    values.Select(GetBool).ToList(),
-                    parameter as string);
-
+           
             if (parameter is IValueConverter outerConverter && targetType == typeof(Visibility))
             {
                 return outerConverter.Convert(ConverterImplementations.BoolToBoolConversion(
                     values.Select(GetBool).ToList()), targetType, null, culture);
             }
 
-            return null;
+            return ConverterImplementations.BoolToBoolConversion(
+                values.Select(GetBool).ToList(),
+                parameter as string);
+
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

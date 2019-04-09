@@ -341,14 +341,26 @@
                     <Button.Style>
                         <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsAcquiring, Mode=OneWay}" Value="True">
+                                <DataTrigger Value="True">
+                                    <DataTrigger.Binding>
+                                        <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}" ConverterParameter="any">
+                                            <Binding Path="IsAcquiring" Mode="OneWay"/>
+                                            <Binding Path="IsJobInProgress" Mode="OneWay"/>
+                                        </MultiBinding>
+                                    </DataTrigger.Binding>
                                     <Setter Property="Content" Value="{extensions:Text Key=CameraTab_Imaging_Stop}"/>
                                     <Setter Property="Button.Background" 
                                         Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
                                     <Setter Property="Button.Foreground" 
                                         Value="{StaticResource ResourceKey=NegativeEffectButtonForegroundColor}"/>
                                 </DataTrigger>
-                                <DataTrigger  Binding="{Binding IsAcquiring, Mode=OneWay}" Value="False" >
+                                <DataTrigger Value="True" >
+                                    <DataTrigger.Binding>
+                                        <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}" ConverterParameter="all">
+                                            <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
+                                            <Binding Path="IsJobInProgress" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
+                                        </MultiBinding>
+                                    </DataTrigger.Binding>
                                     <Setter Property="Content" Value="{extensions:Text Key=CameraTab_Imaging_Start}"/>
                                     <Setter Property="Button.Background" 
                                         Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>
