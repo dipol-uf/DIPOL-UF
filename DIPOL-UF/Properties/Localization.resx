@@ -538,4 +538,7 @@ The following settings produced this error:
   <data name="CameraTab_Job_Stop" xml:space="preserve">
     <value>Stop Cycle</value>
   </data>
+  <data name="MainWindow_RemoteConnection_ClientCount" xml:space="preserve">
+    <value>Connected to {0} out of {1}</value>
+  </data>
 </root>

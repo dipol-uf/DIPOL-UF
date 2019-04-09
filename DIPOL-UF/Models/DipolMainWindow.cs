@@ -45,6 +45,7 @@ using System.Windows.Input;
 using DIPOL_UF.Jobs;
 using DynamicData.Kernel;
 using StepMotor;
+using Exception = System.Exception;
 
 namespace DIPOL_UF.Models
 {
@@ -206,7 +207,7 @@ namespace DIPOL_UF.Models
                             new ProgressBar()
                             {
                                 Minimum = 0,
-                                Maximum = 1,
+                                Maximum = _remoteClients?.Length ?? 1,
                                 Value = 0,
                                 IsIndeterminate = true,
                                 CanAbort = false,
@@ -269,16 +270,18 @@ namespace DIPOL_UF.Models
                 .InvokeCommand(ProgressBarProvider.ViewRequested)
                 .DisposeWith(Subscriptions);
 
-            ProgressBarProvider.ViewRequested.Select(async x =>
-                               {
-                                   await InitializeRemoteSessionsAsync((ProgressBar) x);
-                                   return Unit.Default;
-                               })
-                               .CombineLatest(ProgressBarProvider.WindowShown,
-                                   (x, y) => Unit.Default)
-                               .Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")))
-                               .InvokeCommand(ProgressBarProvider.ClosingRequested)
-                               .DisposeWith(Subscriptions);
+            ProgressBarProvider.ViewRequested.Select(x =>
+                    Observable.FromAsync(async () =>
+                    {
+                        await InitializeRemoteSessionsAsync((ProgressBar) x);
+                        return Unit.Default;
+                    }))
+                .Merge()
+                .CombineLatest(ProgressBarProvider.WindowShown,
+                    (x, y) => Unit.Default)
+                .Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")))
+                .InvokeCommand(ProgressBarProvider.ClosingRequested)
+                .DisposeWith(Subscriptions);
 
             ConnectButtonCommand.InvokeCommand(AvailableCamerasProvider.ViewRequested as ICommand)
                                 .DisposeWith(Subscriptions);
@@ -334,34 +337,47 @@ namespace DIPOL_UF.Models
 
         private async Task InitializeRemoteSessionsAsync(ProgressBar pb)
         {
-            var connectedClients = new List<DipolClient>(_remoteLocations.Length);
-
-            void ConnectToClient() => Parallel.For(0, _remoteLocations.Length, (i) =>
-            {
-                try
+            var tasks = _remoteLocations.Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => Task.Run(() =>
                 {
-                    var client = DipolClient.Create(new Uri(_remoteLocations[i]),
-                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")),
-                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")),
-                        TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
-                    client.Connect();
-                    lock (connectedClients)
-                        connectedClients.Add(client);
-                }
-                catch (System.ServiceModel.EndpointNotFoundException endpointException)
-                {
-                    Helper.WriteLog(endpointException.Message);
-                    Helper.ExecuteOnUi(() => MessageBox.Show(
-                        endpointException.Message,
-                        Properties.Localization.RemoteConnection_UnreachableHostTitle,
-                        MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
-                }
-            });
+                    try
+                    {
+                        var client = DipolClient.Create(new Uri(x),
+                            TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")),
+                            TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")),
+                            TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
+                        client.Connect();
 
-            await Task.Factory.StartNew(ConnectToClient).ConfigureAwait(false);
+                        pb.TryIncrement();
+                        pb.BarComment = string.Format(Properties.Localization.MainWindow_RemoteConnection_ClientCount,
+                            pb.Value, _remoteLocations.Length);
 
-            _remoteClients = connectedClients.ToArray();
-            pb.BarComment = $"Connected to {_remoteClients.Length} out of {_remoteLocations.Length} locations.";
+                        return client;
+                    }
+                    catch (System.ServiceModel.EndpointNotFoundException endpointException)
+                    {
+                        Helper.WriteLog(endpointException.Message);
+                        Helper.ExecuteOnUi(() => MessageBox.Show(
+                            endpointException.Message,
+                            Properties.Localization.RemoteConnection_UnreachableHostTitle,
+                            MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
+                    }
+                    catch (Exception e)
+                    {
+                        Helper.WriteLog(e.Message);
+                        Helper.ExecuteOnUi(() => MessageBox.Show(
+                            e.Message,
+                            Properties.Localization.RemoteConnection_UnreachableHostTitle,
+                            MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
+                    }
+
+                    return null;
+                }));
+
+
+            _remoteClients = (await Task.WhenAll(tasks)).Where(x => !(x is null)).ToArray();
+            pb.BarComment = string.Format(Properties.Localization.MainWindow_RemoteConnection_ClientCount,
+                _remoteClients.Length, _remoteLocations.Length);
         }
 
         private async Task ReceiveConnectedCameras(AvailableCamerasModel model)
