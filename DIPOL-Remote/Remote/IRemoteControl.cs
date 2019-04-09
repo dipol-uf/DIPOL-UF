@@ -122,6 +122,8 @@ namespace DIPOL_Remote.Remote
         [OperationContract]
         void RemoveSettings(string settingsID);
 
+        [OperationContract(IsOneWay = false)]
+        string CallMakeCopy(string settingsId);
 
 
         [OperationContract(IsOneWay = false)]

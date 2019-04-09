@@ -73,12 +73,15 @@ namespace ANDOR_CS.Classes
             return (0, 255);
         }
 
-        public override HashSet<string> SupportedSettings()
+       public override HashSet<string> SupportedSettings()
         {
             return AllowedSettings();
         }
 
-        public override void Dispose()
+       protected override SettingsBase MakeEmptyCopy()
+           => new DebugSettings(Camera as DebugCamera);
+
+       public override void Dispose()
         {
             base.Dispose();
             Console.WriteLine("--> Settings disposed");

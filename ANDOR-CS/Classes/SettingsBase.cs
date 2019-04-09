@@ -787,7 +787,18 @@ namespace ANDOR_CS.Classes
            int hsSpeed);
 
         public abstract (int Low, int High) GetEmGainRange();
-        
+
+        public virtual SettingsBase MakeCopy()
+        {
+            var copy = MakeEmptyCopy();
+            foreach (var prop in SerializedProperties)
+                if (prop.GetValue(this) is var val && !(val is null))
+                    prop.SetValue(copy, val);
+
+            return copy;
+        }
+    
+
 
         protected virtual void CheckCamera()
         {
@@ -820,6 +831,9 @@ namespace ANDOR_CS.Classes
             var data = await ReadJsonAsync(stream, enc, token);
             return Load(data);
         }
+
+
+        protected abstract SettingsBase MakeEmptyCopy();
 
         public virtual void Dispose()
         {

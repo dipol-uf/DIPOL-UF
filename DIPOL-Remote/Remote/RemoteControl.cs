@@ -418,7 +418,50 @@ namespace DIPOL_Remote.Remote
 
             _host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} removed.");
         }
-       
+
+        public string CallMakeCopy(string settingsId)
+        {
+            var srcSetts = GetSettingsSafe(settingsId);
+
+            var newId = Guid.NewGuid().ToString("N");
+
+            SettingsBase setts;
+            try
+            {
+                setts = srcSetts.MakeCopy();
+            }
+            catch (AndorSdkException andorEx)
+            {
+                throw AndorSdkFault.WrapFault(andorEx);
+            }
+            catch (Exception e)
+            {
+                throw new FaultException<ServiceFault>(
+                    new ServiceFault()
+                    {
+                        Details = e.Message,
+                        MethodName = nameof(CameraBase.GetAcquisitionSettingsTemplate),
+                        Message = "Acquisition settings initialization " +
+                                  $"threw exception of type {e.GetType()}"
+                    },
+                    ServiceFault.GeneralServiceErrorReason);
+            }
+
+            if (!_settings.TryAdd(newId, setts))
+                throw new FaultException<ServiceFault>(
+                    new ServiceFault()
+                    {
+                        Message = "Failed to add instance of acquisition settings to the global collection",
+                        Details = "Failed to generate unique id or previous settings were not disposed properly.",
+                        MethodName = nameof(_settings.TryAdd)
+                    },
+                    ServiceFault.GeneralServiceErrorReason);
+
+            _host?.OnEventReceived("Host", $"AcqSettings with ID {newId} created.");
+
+            return newId;
+        }
+
 
         [OperationBehavior]
         public int[] GetCamerasInUse()
