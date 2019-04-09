@@ -129,6 +129,7 @@
                                 ValidatesOnNotifyDataErrors=True}">
                         <Slider.IsEnabled>
                             <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}">
+                                <Binding Path="IsJobInProgress" Converter="{StaticResource NotConverter}"/>
                                 <Binding Path="IsAcquiring" Converter="{StaticResource NotConverter}"/>
                                 <Binding Path="CanControlTemperature"/>
                             </MultiBinding>
@@ -158,6 +159,7 @@
                             Text="{extensions:ValidationBinding TargetTemperatureText}">
                         <TextBox.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                                <Binding Path="IsJobInProgress" Converter="{StaticResource NotConverter}"/>
                                 <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
                                 <Binding Path="CanControlTemperature" Mode="OneWay"/>
                             </MultiBinding>
@@ -246,6 +248,7 @@
                             Value="{Binding FanMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                         <Slider.IsEnabled>
                             <MultiBinding Converter="{StaticResource ResourceKey=BoolToBoolMultiConverter}">
+                                <Binding Path="IsJobInProgress" Converter="{StaticResource NotConverter}"/>
                                 <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
                                 <Binding Path="CanControlFan" Mode="OneWay"/>
                             </MultiBinding>
