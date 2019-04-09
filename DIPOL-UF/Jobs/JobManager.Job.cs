@@ -65,6 +65,10 @@ namespace DIPOL_UF.Jobs
                     return new MotorAction(motorStr);
                 if (name.StartsWith(@"camera") && obj.Value is string camStr)
                     return new CameraAction(camStr);
+                if(name.StartsWith(@"shutter") && obj.Value is string shutterStr)
+                    return new ShutterAction(shutterStr);
+                if(name.StartsWith(@"delay") && obj.Value is string delayStr)
+                    return new DelayAction(delayStr);
                 if (name.StartsWith(@"repeat") && obj.Value is ReadOnlyDictionary<string, object> innerActions)
                 {
                     var list = (innerActions["Actions"] as object[])
