@@ -28,9 +28,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ANDOR_CS.Enums;
-using ReactiveUI;
 
 namespace DIPOL_UF.Jobs
 {
