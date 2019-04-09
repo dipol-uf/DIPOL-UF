@@ -32,8 +32,8 @@ namespace DIPOL_UF.Jobs
         {
             public abstract Task Execute();
 
-            public abstract bool ContainsActionOfType<T>() where T : JobAction;
-
+            public virtual bool ContainsActionOfType<T>() where T : JobAction
+                => this is T;
         }
     }
 }

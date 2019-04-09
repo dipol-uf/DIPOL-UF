@@ -28,7 +28,6 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Media.Media3D;
 using ANDOR_CS.Enums;
 
 namespace DIPOL_UF.Jobs
@@ -43,11 +42,6 @@ namespace DIPOL_UF.Jobs
 
             private List<int> SpecificCameras { get; }
 
-
-            public CameraAction()
-            {
-                SpecificCameras = new List<int>(0);
-            }
 
             public CameraAction(string command)
             {
@@ -93,9 +87,6 @@ namespace DIPOL_UF.Jobs
 
                 //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) finish exposure");
             }
-
-            public override bool ContainsActionOfType<T>()
-                => this is T;
         }
     }
 }

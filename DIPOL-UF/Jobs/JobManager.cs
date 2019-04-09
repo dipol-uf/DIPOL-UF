@@ -112,15 +112,7 @@ namespace DIPOL_UF.Jobs
                 if (_jobControls.Any(x => x.Camera?.CurrentSettings is null))
                     throw new InvalidOperationException("At least one camera has no settings applied to it.");
 
-                //var tasks = _jobControls.Select(async x =>
-                //{
-                //    x.StartAcquisition(token);
-                //    return await x.WhenAcquisitionFinished.FirstAsync();
-                //}).ToList();
-
-                //var result = await Task.WhenAll(tasks);
-
-               await Task.Run(AcquisitionJob.Run, token);
+                await Task.Run(AcquisitionJob.Run, token);
             }
             catch (Exception e)
             {
@@ -198,6 +190,7 @@ namespace DIPOL_UF.Jobs
             using (var str = new FileStream(CurrentTarget.JobPath, FileMode.Open, FileAccess.Read))
                 AcquisitionJob = await Job.CreateAsync(str);
 
+            // TODO : Enable for alpha tests
             // INFO : Disabled to test on local environment
 #if !DEBUG
             if (AcquisitionJob.ContainsActionOfType<MotorAction>()

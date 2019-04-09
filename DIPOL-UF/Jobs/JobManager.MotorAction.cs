@@ -103,9 +103,7 @@ namespace DIPOL_UF.Jobs
                     Console.WriteLine($"Motor at: {pos}");
                 }
             }
-
-            public override bool ContainsActionOfType<T>()
-                => this is T;
+           
         }
     }
 }
