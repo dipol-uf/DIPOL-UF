@@ -462,7 +462,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exposure (s):.
+        ///   Looks up a localized string similar to Act. time (s):.
         /// </summary>
         public static string CameraTab_EstimatedTime {
             get {

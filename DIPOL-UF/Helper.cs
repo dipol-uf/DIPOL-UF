@@ -118,7 +118,7 @@ namespace DIPOL_UF
         /// <returns>Either item associated with key, or null, if not present.</returns>
         public static object GetValueOrNullSafe(this Dictionary<string, object> settings, string key)
             => (settings ?? throw new ArgumentNullException($"{nameof(settings)} argument cannot be null."))
-                .TryGetValue(key, out object item)
+                .TryGetValue(key, out var item)
                     ? item
                     : null;
 
@@ -183,7 +183,7 @@ namespace DIPOL_UF
             // If any present
             if (values.Length > 0)
             {
-                // Itereates through values, retrieves description for each
+                // Iterates through values, retrieves description for each
                 for (var i = 0; i < values.Length; i++)
                 {
                     var local = values.GetValue(i);
@@ -204,7 +204,7 @@ namespace DIPOL_UF
         /// <typeparam name="T"><see cref="Enum"/> type. If not, throws <see cref="ArgumentException"/></typeparam>
         /// <param name="enum">Flags to convert to array.</param>
         /// <exception cref="ArgumentException"/>
-        /// <returns>An array of flags found in input parameter, one flag per each aray item.</returns>
+        /// <returns>An array of flags found in input parameter, one flag per each array item.</returns>
         public static List<T> EnumFlagsToArray<T>(Enum @enum) where T :Enum
         {
             return Enum
@@ -393,6 +393,10 @@ namespace DIPOL_UF
 
         public static void SubscribeDispose<T>(this IObservable<T> @this, CompositeDisposable disposedWith)
             => @this.Subscribe().DisposeWith(disposedWith);
+
+
+        public static IObservable<T> StartWith<T>(this IObservable<T> @this, T value)
+            => Observable.Return(value).Concat(@this);
 
         private static string GetEnumString(string key, Type type)
             => Properties.Localization.ResourceManager
