@@ -303,7 +303,7 @@ namespace DIPOL_UF.Models
                               nameof(JobManager.IsInProcess))
                            // (Ready AND NOT Acq) OR (Acq AND Job)
                           .Select(x => (!x.AnyCameraIsAcquiring && x.ReadyToRun)
-                                       || (x.AnyCameraIsAcquiring && x.IsInProcess))
+                                       || x.IsInProcess)
                           .CombineLatest(
                               Camera.WhenPropertyChanged(y => y.CurrentSettings).Select(y => y.Value is null),
                               // job is ready AND settings are applied
