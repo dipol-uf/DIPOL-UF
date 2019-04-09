@@ -193,6 +193,7 @@ namespace DIPOL_UF.Jobs
             // TODO : Enable for alpha tests
             // INFO : Disabled to test on local environment
 #if !DEBUG
+            // TODO : Consider checking shutter support in advance
             if (AcquisitionJob.ContainsActionOfType<MotorAction>()
                 && _windowRef.PolarimeterMotor is null)
                 throw new InvalidOperationException("Cannot execute current job with no motor connected.");
