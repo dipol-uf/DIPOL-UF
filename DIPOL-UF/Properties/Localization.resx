@@ -458,7 +458,7 @@ The following settings produced this error:
     <value>Unable to save file</value>
   </data>
   <data name="CameraTab_EstimatedTime" xml:space="preserve">
-    <value>Exposure (s):</value>
+    <value>Act. time (s):</value>
   </data>
   <data name="MainWindow_PolarimeterButton_Present" xml:space="preserve">
     <value>Motor OK</value>

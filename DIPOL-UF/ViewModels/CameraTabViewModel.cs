@@ -102,12 +102,13 @@ namespace DIPOL_UF.ViewModels
 
         private void InitializeCommands()
         {
-            var canUseCooler = 
-            Observable.Return(true).Concat(this.WhenAnyPropertyChanged(nameof(IsJobInProgress), nameof(IsAcquiring))
-                    .Select(x => !x.IsAcquiring && !x.IsJobInProgress))
-                .CombineLatest(ObserveSpecificErrors(nameof(TargetTemperatureText)),
-                    Model.CoolerCommand.CanExecute,
-                    (x, y, z) => x && !y && z);
+            var canUseCooler =
+                this.WhenAnyPropertyChanged(nameof(IsJobInProgress), nameof(IsAcquiring))
+                    .Select(x => !x.IsAcquiring && !x.IsJobInProgress)
+                    .StartWith(true)
+                    .CombineLatest(ObserveSpecificErrors(nameof(TargetTemperatureText)),
+                        Model.CoolerCommand.CanExecute,
+                        (x, y, z) => x && !y && z);
 
             CoolerCommand =
                 ReactiveCommand.Create(() => Unit.Default,
