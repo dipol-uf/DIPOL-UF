@@ -123,6 +123,9 @@ namespace DIPOL_Remote
         public void RemoveSettings(string settingsID)
 			=> Channel.RemoveSettings(settingsID);
 
+        public string CallMakeCopy(string settingsId)
+            => Channel.CallMakeCopy(settingsId);
+
         public string GetCameraModel(int camIndex)
 			=> Channel.GetCameraModel(camIndex);
 

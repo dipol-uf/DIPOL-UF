@@ -52,31 +52,6 @@ namespace ANDOR_CS.Classes
         internal AcquisitionSettings(CameraBase camera) 
             => Camera = camera;
 
-        /// <summary>
-        ///     SERIALIZATION TEST CONSTRUCTOR; DO NOT USE
-        /// </summary>
-//#if DEBUG
-//        public AcquisitionSettings(bool empty = false)
-//        {
-//            if (empty) 
-//                return;
-
-//            AcquisitionMode = Enums.AcquisitionMode.SingleScan;
-//            ADConverter = (0, 16);
-//            OutputAmplifier = (OutputAmplification.Conventional, "Conventional", 1);
-//            ExposureTime = 123;
-//            HSSpeed = (0, 3);
-//            ImageArea = new Rectangle(1, 1, 128, 256);
-
-//            KineticCycle = (12, 0.23f);
-//            PreAmpGain = (0, "Gain 1");
-//            ReadoutMode = ReadMode.FullImage;
-
-//            TriggerMode = Enums.TriggerMode.Internal;
-//            VSAmplitude = Enums.VSAmplitude.Plus2;
-//            VSSpeed = (0, 0.3f);
-//        }
-//#endif
         private SafeSdkCameraHandle Handle
             => Camera is Camera cam
                 ? cam.CameraHandle
@@ -263,6 +238,7 @@ namespace ANDOR_CS.Classes
         }
 
 
+
         /// <summary>
         ///     Checks if HS Speed is supported in current configuration.
         ///     Throws exceptions if SDK communication fails.
@@ -312,5 +288,7 @@ namespace ANDOR_CS.Classes
             return true;
 
         }
+        protected override SettingsBase MakeEmptyCopy()
+            => new AcquisitionSettings(Camera);
     }
 }

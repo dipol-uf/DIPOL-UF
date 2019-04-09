@@ -31,6 +31,7 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ANDOR_CS.Classes;
 using DIPOL_UF.Models;
 using DIPOL_UF.Properties;
 using DynamicData;
@@ -44,6 +45,7 @@ namespace DIPOL_UF.Jobs
         private DipolMainWindow _windowRef;
         private byte[] _settingsRep;
         private List<CameraTab> _jobControls;
+        private List<SettingsBase> _settingsCache;
         private Task _jobTask;
         private CancellationTokenSource _tokenSource;
 
@@ -110,6 +112,7 @@ namespace DIPOL_UF.Jobs
             try
             {
                 _jobControls = _windowRef.CameraTabs.Items.Select(x => x.Tab).ToList();
+                _settingsCache = _jobControls.Select(x => x.Camera.CurrentSettings.MakeCopy()).ToList();
                 if (_jobControls.Any(x => x.Camera?.CurrentSettings is null))
                     throw new InvalidOperationException("At least one camera has no settings applied to it.");
 
@@ -123,6 +126,12 @@ namespace DIPOL_UF.Jobs
             {
                 ReadyToRun = true;
                 IsInProcess = false;
+                _jobControls.Clear();
+                _jobControls = null;
+                foreach( var sett in _settingsCache)
+                    sett.Dispose();
+                _settingsCache.Clear();
+                _settingsCache = null;
             }
         }
 
