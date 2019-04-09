@@ -111,11 +111,6 @@ namespace DIPOL_UF.ViewModels
 
             CoolerCommand =
                 ReactiveCommand.Create(() => Unit.Default,
-                                   //Model.CoolerCommand.CanExecute
-                                   //     .CombineLatest(
-                                   //    ObserveSpecificErrors(nameof(TargetTemperatureText)),
-                                   //    this.WhenAnyPropertyChanged(nameof(IsAcquiring), an),
-                                   //  (x, y) => x && !y))
                                   canUseCooler)
                                .DisposeWith(Subscriptions);
 
