@@ -32,6 +32,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DIPOL_UF.Models;
+using DIPOL_UF.Properties;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI.Fody.Helpers;
@@ -64,7 +65,7 @@ namespace DIPOL_UF.Jobs
             if(_windowRef is null)
                 _windowRef = window ?? throw new ArgumentNullException(nameof(window));
             else
-                throw new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
+                throw new InvalidOperationException(Localization.General_ShouldNotHappen);
 
             _windowRef.ConnectedCameras.Connect()
                 .Transform(x => x.Camera)
@@ -99,7 +100,7 @@ namespace DIPOL_UF.Jobs
         {
             ReadyToRun = false;
             CurrentTarget = target ?? throw new ArgumentNullException(
-                                Properties.Localization.General_ShouldNotHappen,
+                                Localization.General_ShouldNotHappen,
                                 nameof(target));
             return SetupNewTarget();
         }
@@ -162,7 +163,7 @@ namespace DIPOL_UF.Jobs
         private async Task ApplySettingsTemplate()
         {
             if (_settingsRep is null)
-                throw new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
+                throw new InvalidOperationException(Localization.General_ShouldNotHappen);
 
             var cameras = _windowRef.ConnectedCameras.Items.Select(x => x.Camera).ToList();
 
