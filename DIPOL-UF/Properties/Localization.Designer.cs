@@ -19,7 +19,7 @@ namespace DIPOL_UF.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Localization {
@@ -1154,6 +1154,15 @@ namespace DIPOL_UF.Properties {
         public static string MainWindow_PolarimeterButton_Present {
             get {
                 return ResourceManager.GetString("MainWindow_PolarimeterButton_Present", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connected to {0} out of {1}.
+        /// </summary>
+        public static string MainWindow_RemoteConnection_ClientCount {
+            get {
+                return ResourceManager.GetString("MainWindow_RemoteConnection_ClientCount", resourceCulture);
             }
         }
         
