@@ -45,7 +45,7 @@ namespace DIPOL_UF.Jobs
         private DipolMainWindow _windowRef;
         private byte[] _settingsRep;
         private List<CameraTab> _jobControls;
-        private List<SettingsBase> _settingsCache;
+        private Dictionary<int, SettingsBase> _settingsCache;
         private Task _jobTask;
         private CancellationTokenSource _tokenSource;
 
@@ -112,7 +112,8 @@ namespace DIPOL_UF.Jobs
             try
             {
                 _jobControls = _windowRef.CameraTabs.Items.Select(x => x.Tab).ToList();
-                _settingsCache = _jobControls.Select(x => x.Camera.CurrentSettings.MakeCopy()).ToList();
+                _settingsCache = _jobControls.ToDictionary(x => x.Camera.GetHashCode(),
+                    y => y.Camera.CurrentSettings.MakeCopy());
                 if (_jobControls.Any(x => x.Camera?.CurrentSettings is null))
                     throw new InvalidOperationException("At least one camera has no settings applied to it.");
 
@@ -129,7 +130,7 @@ namespace DIPOL_UF.Jobs
                 _jobControls.Clear();
                 _jobControls = null;
                 foreach( var sett in _settingsCache)
-                    sett.Dispose();
+                    sett.Value.Dispose();
                 _settingsCache.Clear();
                 _settingsCache = null;
             }
