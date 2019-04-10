@@ -25,6 +25,7 @@
 using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DIPOL_UF.Jobs
@@ -60,8 +61,8 @@ namespace DIPOL_UF.Jobs
 
             }
 
-            public override Task Execute()
-                => Task.Delay(Delay);
+            public override Task Execute(CancellationToken token)
+                => Task.Delay(Delay, token);
         }
     }
 }

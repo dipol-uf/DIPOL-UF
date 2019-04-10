@@ -26,6 +26,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DIPOL_UF.Jobs
@@ -76,7 +77,7 @@ namespace DIPOL_UF.Jobs
                 }
             }
 
-            public override Task Execute()
+            public override Task Execute(CancellationToken token)
             {
                 if (IsReset)
                 {

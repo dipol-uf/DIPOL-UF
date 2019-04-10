@@ -99,8 +99,6 @@ namespace DIPOL_UF.Jobs
                 return;
             if(!_jobTask.IsCompleted)
                 _tokenSource?.Cancel();
-            _tokenSource?.Dispose();
-
         }
 
         public Task SubmitNewTarget(Target target)
@@ -126,12 +124,12 @@ namespace DIPOL_UF.Jobs
                 {
                     _fileName = CurrentTarget.TargetName;
                     for (var i = 0; i < AcquisitionRuns; i++)
-                        await AcquisitionJob.Run();
+                        await AcquisitionJob.Run(token);
 
                     _fileName = $"{CurrentTarget.TargetName}_bias";
-                    await (BiasJob?.Run() ?? Task.CompletedTask);
+                    await (BiasJob?.Run(token) ?? Task.CompletedTask);
                     _fileName = $"{CurrentTarget.TargetName}_dark";
-                    await (DarkJob?.Run() ?? Task.CompletedTask);
+                    await (DarkJob?.Run(token) ?? Task.CompletedTask);
                 }, token);
             }
             catch (Exception e)

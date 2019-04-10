@@ -25,6 +25,7 @@
 using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using StepMotor;
 
@@ -76,7 +77,7 @@ namespace DIPOL_UF.Jobs
 
             }
 
-            public override async Task Execute()
+            public override async Task Execute(CancellationToken token)
             {
                 // TODO : move to settings
                 const int angle = 3200;
@@ -84,18 +85,18 @@ namespace DIPOL_UF.Jobs
                 //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Motor starts {ActionType} with parameter {Parameter}");
 
                 if(Manager._windowRef.PolarimeterMotor is null)
-                    await Task.Delay(TimeSpan.FromMilliseconds(1000));
+                    await Task.Delay(TimeSpan.FromMilliseconds(1000), token);
                 else
                 {
 
                     // TODO : Add cancellation support
                     if (ActionType == MotorActionType.Reset)
-                        await Manager._windowRef.PolarimeterMotor.ReturnToOriginAsync(default);
+                        await Manager._windowRef.PolarimeterMotor.ReturnToOriginAsync(token);
                     else
                     {
                         await Manager._windowRef.PolarimeterMotor.SendCommandAsync(Command.MoveToPosition,
                            (int) (angle * Parameter), CommandType.Relative);
-                        await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(default);
+                        await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token);
                     }
 
                     var pos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();

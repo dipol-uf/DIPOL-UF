@@ -27,6 +27,7 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Enums;
 
@@ -80,7 +81,7 @@ namespace DIPOL_UF.Jobs
                     throw new ArgumentException(@"Shutter command is invalid.", nameof(command));
             }
 
-            public override Task Execute()
+            public override Task Execute(CancellationToken token)
             {
                 var tasks = Manager._jobControls.Select(tab =>
                     Task.Run(async () =>
@@ -91,7 +92,7 @@ namespace DIPOL_UF.Jobs
                         if (!(External is null) &&
                             await tab.ExternalShutterCommand.CanExecute.FirstAsync())
                             await tab.ExternalShutterCommand.Execute(External.Value);
-                    }));
+                    }, token));
 
                 return Task.WhenAll(tasks);
             }

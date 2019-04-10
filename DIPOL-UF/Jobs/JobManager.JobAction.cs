@@ -22,6 +22,7 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DIPOL_UF.Jobs
@@ -30,7 +31,7 @@ namespace DIPOL_UF.Jobs
     {
         internal abstract class JobAction
         {
-            public abstract Task Execute();
+            public abstract Task Execute(CancellationToken token);
 
             public virtual bool ContainsActionOfType<T>() where T : JobAction
                 => this is T;
