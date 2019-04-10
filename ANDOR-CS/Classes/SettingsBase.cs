@@ -63,13 +63,14 @@ namespace ANDOR_CS.Classes
                 .OrderBy(p => p.GetCustomAttribute<SerializationOrderAttribute>(true).Index)
                 .ToArray();
 
-        private static readonly MethodInfo[] DeserializationSetMethods =
+        private static readonly Dictionary<string, MethodInfo> DeserializationSetMethods =
             typeof(SettingsBase)
                 .GetMethods(BindingFlags.Instance | BindingFlags.Public)
                 .Where(mi => mi.Name.Contains("Set") && mi.ReturnType == typeof(void))
-                .ToArray();
+                .ToDictionary(x => x.Name.ToLowerInvariant(), y => y);
 
-        private static readonly Regex SetFunctionNameParser = new Regex(@"Set(.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex SetFunctionNameParser = new Regex(@"Set(.+)$", 
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private (int Index, float Speed)? _VSSpeed;
         private (int Index, float Speed)? _HSSpeed;
@@ -854,75 +855,91 @@ namespace ANDOR_CS.Classes
             CancellationToken token)
             => JsonParser.ReadJsonAsync(str, enc, token);
 
-        private ReadOnlyCollection<string> Load(IReadOnlyDictionary<string, object> result)
+        private ReadOnlyCollection<string> Load(IReadOnlyDictionary<string, object> input)
         {
             var props = new Collection<string>();
             
-            foreach (var item in
-                from r in SerializedProperties
-                    .Join(result, x => x.Name, y => y.Key, (x, y) => y)
-                from m in DeserializationSetMethods
-                let regexName = new {Method = m, Regex = SetFunctionNameParser.Match(m.Name)}
-                where regexName.Regex.Success && regexName.Regex.Groups.Count == 2
-                where r.Key == regexName.Regex.Groups[1].Value
-                select new {regexName.Method, r.Key, r.Value})
+            //foreach (var item in
+            //    from r in SerializedProperties
+            //        .Join(result, x => x.Name, y => y.Key, (x, y) => y)
+            //    from m in DeserializationSetMethods
+            //    let regexName = new {Method = m, Regex = SetFunctionNameParser.Match(m.Name)}
+            //    where regexName.Regex.Success && regexName.Regex.Groups.Count == 2
+            //    where r.Key == regexName.Regex.Groups[1].Value
+            //    select new {regexName.Method, r.Key, r.Value})
+            foreach (var (key, val) in input)
             {
-                var pars = item.Method.GetParameters();
-                try
+                if (!DeserializationSetMethods.TryGetValue(key.ToLowerInvariant(), out var method))
+                    throw new InvalidOperationException($"The settings item [{key}] is not supported.");
+
+                var pars = method.GetParameters();
+                //try
+                //{
+
+                if (val is object[] coll)
                 {
-                    if (item.Value is object[] coll)
+                    if (pars.Length == coll.Length)
                     {
-                        if (pars.Length == coll.Length)
-                        {
-                            for (var i = 0; i < pars.Length; i++)
-                                coll[i] = Convert.ChangeType(coll[i], pars[i].ParameterType);
+                        for (var i = 0; i < pars.Length; i++)
+                            coll[i] = Convert.ChangeType(coll[i], pars[i].ParameterType);
 
-                            item.Method.Invoke(this, coll);
-                        }
-                        else
-                            throw new TargetParameterCountException(
-                                @"Setter method signature does not match types of provided items.");
-                    }
-                    else if (pars.Length == 1 && pars[0].ParameterType.IsEnum)
-                    {
-                        if (item.Value is string enumStr)
-                        {
-                            var enumResult = Enum.Parse(pars[0].ParameterType, enumStr);
-                            item.Method.Invoke(this, new[] { enumResult });
-                        }
-                    }
-                    else if (pars.Length == 1 && item.Value.GetType().IsValueType)
-                    {
-                        item.Method.Invoke(this, new[]
-                        {
-                            Convert.ChangeType(item.Value, pars[0].ParameterType)
-                        });
-                    }
-                    else if (item.Key == nameof(ImageArea) &&
-                             item.Value is ReadOnlyDictionary<string, object> dict &&
-                             dict.Count == 2)
-                    {
-                        var startColl = dict["Start"] as ReadOnlyDictionary<string, object>;
-                        var endColl = dict["End"] as ReadOnlyDictionary<string, object>;
-                        var area = new Rectangle(
-                            new Point2D(
-                                Convert.ToInt32(startColl["X"]),
-                                Convert.ToInt32(startColl["Y"])), 
-                            new Point2D(
-                                Convert.ToInt32(endColl["X"]),
-                                Convert.ToInt32(endColl["Y"]))
-                            );
-
-                        item.Method.Invoke(this, new object[] {area});
+                        method.Invoke(this, coll);
                     }
                     else
-                        throw  new ArgumentException("Deserialized value cannot be parsed.");
+                        throw new TargetParameterCountException(
+                            @"Setter method signature does not match types of provided items.");
                 }
-                catch (TargetInvocationException)
+                else switch (pars.Length)
                 {
-                }
+                    case 1 when pars[0].ParameterType.IsEnum:
+                    {
+                        if (val is string enumStr)
+                        {
+                            var enumResult = Enum.Parse(pars[0].ParameterType, enumStr);
+                            method.Invoke(this, new[] {enumResult});
+                        }
 
-                props.Add(item.Key);
+                        break;
+                    }
+                    case 1 when val.GetType().IsValueType:
+                        method.Invoke(this, new[]
+                        {
+                            Convert.ChangeType(val, pars[0].ParameterType)
+                        });
+                        break;
+                    default:
+                    {
+                        if (string.Equals(key, nameof(ImageArea), StringComparison.OrdinalIgnoreCase) &&
+                            val is ReadOnlyDictionary<string, object> dict &&
+                            dict.Count == 2)
+                        {
+                            var startColl = dict["Start"] as ReadOnlyDictionary<string, object>
+                                ?? throw new NullReferenceException("Deserialized value cannot be parsed.");
+                            var endColl = dict["End"] as ReadOnlyDictionary<string, object>
+                                          ?? throw new NullReferenceException("Deserialized value cannot be parsed.");
+                            var area = new Rectangle(
+                                new Point2D(
+                                    Convert.ToInt32(startColl["X"]),
+                                    Convert.ToInt32(startColl["Y"])),
+                                new Point2D(
+                                    Convert.ToInt32(endColl["X"]),
+                                    Convert.ToInt32(endColl["Y"]))
+                            );
+
+                            method.Invoke(this, new object[] {area});
+                        }
+                        else
+                            throw new ArgumentException("Deserialized value cannot be parsed.");
+
+                        break;
+                    }
+                }
+                //}
+                //catch (TargetInvocationException)
+                //{
+                //}
+
+                props.Add(key);
             }
 
             return new ReadOnlyCollection<string>(props);
