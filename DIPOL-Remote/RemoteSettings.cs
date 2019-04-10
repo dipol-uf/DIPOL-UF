@@ -22,10 +22,8 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.ServiceModel;
 using ANDOR_CS.Classes;
 
 namespace DIPOL_Remote
@@ -89,7 +87,11 @@ namespace DIPOL_Remote
         }
 
         protected sealed override SettingsBase MakeEmptyCopy()
-            => new RemoteSettings(Camera as RemoteCamera, _client.CallMakeCopy(SettingsID), _client);
+            => new RemoteSettings(Camera as RemoteCamera, 
+                // Here [CallMakeCopy] makes a full server-side copy, but returns empty client side copy.
+                // It should be used only in conjunction with [this.MakeCopy], otherwise behavior is undefined
+                _client.CallMakeCopy(SettingsID), 
+                _client);
         
 
     }
