@@ -34,6 +34,8 @@ namespace DIPOL_UF.Jobs
     {
         public string SettingsPath { get; set; }
         public string JobPath { get; set; }
+        public string BiasPath { get; set; }
+        public string DarkPath { get; set; }
         public string TargetName { get; set; }
 
         public Dictionary<string, Dictionary<string, object>> CustomParameters { get; set; }
@@ -43,6 +45,8 @@ namespace DIPOL_UF.Jobs
             SettingsPath = other.SettingsPath;
             JobPath = other.JobPath;
             TargetName = other.TargetName;
+            BiasPath = other.BiasPath;
+            DarkPath = other.DarkPath;
         }
 
         public async Task Deserialize(Stream stream)
@@ -65,7 +69,10 @@ namespace DIPOL_UF.Jobs
             // WATCH : using [leaveOpen = true] in conjunction with [using] closure
             using (var writer = new StreamWriter(stream, Encoding.ASCII, 512, true))
             {
-                var str = JsonConvert.SerializeObject(this, Formatting.Indented);
+                var str = JsonConvert.SerializeObject(this, Formatting.Indented, new JsonSerializerSettings()
+                {
+                    NullValueHandling = NullValueHandling.Ignore
+                });
                 await writer.WriteAsync(str);
             }
         }
