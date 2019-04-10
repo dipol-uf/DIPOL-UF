@@ -1184,7 +1184,7 @@ namespace ANDOR_CS.Classes
                 var imageIndex = 1;
                 var completionSrc = new TaskCompletionSource<bool>();
 
-                void ListenToStatusUpdates(object sender, EventArgs e)
+                void ListenAndCheckImages(object sender, EventArgs e)
                 {
                     var status = GetStatus();
                     var acc = 0;
@@ -1192,6 +1192,35 @@ namespace ANDOR_CS.Classes
                     Call(CameraHandle, () => SdkInstance.GetAcquisitionProgress(ref acc, ref kin));
                     OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, DateTime.UtcNow, kin, acc));
 
+                    var totalImg = (First: 0, Last: 0);
+                    var result = Call(CameraHandle,
+                        () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
+
+                    Console.WriteLine($"IMAGES: {totalImg} : {GetStatus()}; {result}; {Thread.CurrentThread.ManagedThreadId}");
+
+                    if (totalImg.First > 0)
+                    {
+                        for (; imageIndex <= totalImg.Last; imageIndex++)
+                            OnNewImageReceived(new NewImageReceivedEventArgs(imageIndex, GetImageTiming(imageIndex)));
+                    }
+
+                    if (token.IsCancellationRequested
+                        && !completionSrc.Task.IsCompleted)
+                        completionSrc.SetCanceled();
+
+                    if (status != CameraStatus.Acquiring
+                        && !completionSrc.Task.IsCompleted)
+                        completionSrc.SetResult(true);
+                }
+
+                void ListenToStatusUpdates(object sender, EventArgs e)
+                {
+                    var status = GetStatus();
+                    var acc = 0;
+                    var kin = 0;
+                    Call(CameraHandle, () => SdkInstance.GetAcquisitionProgress(ref acc, ref kin));
+                    OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, DateTime.UtcNow, kin, acc));
+                    
                     if (token.IsCancellationRequested
                         && !completionSrc.Task.IsCompleted)
                         completionSrc.SetCanceled();
@@ -1207,7 +1236,7 @@ namespace ANDOR_CS.Classes
                     var result = Call(CameraHandle,
                         () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
 
-                    Console.WriteLine($"IMAGES: {totalImg}; {result}; {Thread.CurrentThread.ManagedThreadId}");
+                    Console.WriteLine($"IMAGES: {totalImg} : {GetStatus()}; {result}; {Thread.CurrentThread.ManagedThreadId}");
 
                     if (totalImg.First > 0)
                     {
@@ -1218,8 +1247,9 @@ namespace ANDOR_CS.Classes
 
                 if (_useSdkEvents)
                 {
-                    SdkEventFired += ListenToStatusUpdates;
-                    SdkEventFired += WatchImages;
+                    SdkEventFired += ListenAndCheckImages;
+                    //SdkEventFired += ListenToStatusUpdates;
+                    //SdkEventFired += WatchImages;
                     try
                     {
                         StartAcquisition();
@@ -1227,8 +1257,9 @@ namespace ANDOR_CS.Classes
                     }
                     finally
                     {
-                        SdkEventFired -= ListenToStatusUpdates;
-                        SdkEventFired -= WatchImages;
+                        SdkEventFired -= ListenAndCheckImages;
+                        //SdkEventFired -= ListenToStatusUpdates;
+                        //SdkEventFired -= WatchImages;
                     }
                 }
                 else
