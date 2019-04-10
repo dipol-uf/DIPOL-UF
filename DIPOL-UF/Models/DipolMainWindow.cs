@@ -375,8 +375,8 @@ namespace DIPOL_UF.Models
                 }));
 
 
-            _remoteClients = (await Task.WhenAll(tasks)).Where(x => !(x is null)).ToArray();
-            pb.BarComment = string.Format(Properties.Localization.MainWindow_RemoteConnection_ClientCount,
+            _remoteClients = (await Task.WhenAll(tasks).ConfigureAwait(false)).Where(x => !(x is null)).ToArray();
+             pb.BarComment = string.Format(Properties.Localization.MainWindow_RemoteConnection_ClientCount,
                 _remoteClients.Length, _remoteLocations.Length);
         }
 
