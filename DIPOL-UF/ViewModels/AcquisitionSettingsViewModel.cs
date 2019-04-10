@@ -610,15 +610,18 @@ namespace DIPOL_UF.ViewModels
                 Func<TSrc, TTarget> selector,
                 Expression<Func<AcquisitionSettingsViewModel, TTarget>> targetAccessor,
                 Func<TSrc, TTarget, bool> comparator = null)
-                => Model.Object.WhenPropertyChanged(sourceAccessor)
-                        .ModifyIf(!(comparator is null),
-                            // ReSharper disable once PossibleNullReferenceException
-                            x => x.Where(y => comparator(y.Value, targetAccessor.Compile()(this))))
-                        .Select(x => selector(x.Value))
-                        .DistinctUntilChanged()
-                        .ObserveOnUi()
-                        .BindTo(this, targetAccessor)
-                        .DisposeWith(Subscriptions);
+            {
+                var accessor = targetAccessor.Compile();
+                Model.Object.WhenPropertyChanged(sourceAccessor)
+                    .ModifyIf(!(comparator is null),
+                        // ReSharper disable once PossibleNullReferenceException
+                        x => x.Where(y => comparator(y.Value, accessor(this))))
+                    .Select(x => selector(x.Value))
+                    .DistinctUntilChanged()
+                    .ObserveOnUi()
+                    .BindTo(this, targetAccessor)
+                    .DisposeWith(Subscriptions);
+            }
 
             CreateGetter(x => x.VSSpeed, y => y?.Index ?? -1, z => z.VsSpeed, (src, tar) => src?.Index != tar);
             CreateGetter(x => x.VSAmplitude, y => y, z => z.VsAmplitude, (src, tar) => src != tar);
@@ -1226,7 +1229,7 @@ namespace DIPOL_UF.ViewModels
         public bool FrameTransfer { get; set; }
 
         [Reactive]
-        [UnderlyingCameraSettings(@"SetReadMode")]
+        [UnderlyingCameraSettings(@"SetReadoutMode")]
         public ReadMode? ReadMode { get; set; }
 
         [Reactive]
@@ -1234,7 +1237,7 @@ namespace DIPOL_UF.ViewModels
         public TriggerMode? TriggerMode { get; set; }
 
         [Reactive]
-        [UnderlyingCameraSettings(@"SetEMCCDGain")]
+        [UnderlyingCameraSettings(@"SetEmCcdGain")]
         public string EmCcdGainText { get; set; }
 
         // ReSharper disable InconsistentNaming

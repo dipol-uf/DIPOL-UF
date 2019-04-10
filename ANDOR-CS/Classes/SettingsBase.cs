@@ -53,6 +53,9 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public abstract class SettingsBase : IDisposable, INotifyPropertyChanged
     {
+        private static readonly Regex SetFunctionNameParser = new Regex(@"^set(.+)$", 
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         private static readonly PropertyInfo[] SerializedProperties =
             typeof(SettingsBase)
                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
@@ -66,11 +69,10 @@ namespace ANDOR_CS.Classes
         private static readonly Dictionary<string, MethodInfo> DeserializationSetMethods =
             typeof(SettingsBase)
                 .GetMethods(BindingFlags.Instance | BindingFlags.Public)
-                .Where(mi => mi.Name.Contains("Set") && mi.ReturnType == typeof(void))
-                .ToDictionary(x => x.Name.ToLowerInvariant(), y => y);
+                .Select(x => (Name: SetFunctionNameParser.Match(x.Name).Groups[1].Value, Method: x))
+                .Where(x => !string.IsNullOrWhiteSpace(x.Name))
+                .ToDictionary(x => x.Name.ToLowerInvariant(), y => y.Method);
 
-        private static readonly Regex SetFunctionNameParser = new Regex(@"Set(.+)$", 
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private (int Index, float Speed)? _VSSpeed;
         private (int Index, float Speed)? _HSSpeed;
@@ -870,76 +872,94 @@ namespace ANDOR_CS.Classes
             foreach (var (key, val) in input)
             {
                 if (!DeserializationSetMethods.TryGetValue(key.ToLowerInvariant(), out var method))
-                    throw new InvalidOperationException($"The settings item [{key}] is not supported.");
+                    continue;
 
                 var pars = method.GetParameters();
-                //try
-                //{
-
-                if (val is object[] coll)
+                try
                 {
-                    if (pars.Length == coll.Length)
-                    {
-                        for (var i = 0; i < pars.Length; i++)
-                            coll[i] = Convert.ChangeType(coll[i], pars[i].ParameterType);
 
-                        method.Invoke(this, coll);
+                    //if (val is object[] coll)
+                    //{
+                    //    if (pars.Length == coll.Length)
+                    //    {
+                    //        for (var i = 0; i < pars.Length; i++)
+                    //            coll[i] = Convert.ChangeType(coll[i], pars[i].ParameterType);
+
+                    //        method.Invoke(this, coll);
+                    //    }
+                    //    else
+                    //        throw new TargetParameterCountException(
+                    //            @"Setter method signature does not match types of provided items.");
+                    //}
+                    //else
+                    switch (pars.Length)
+                    {
+                        case 1 when pars[0].ParameterType.IsEnum:
+                        {
+                            if (val is string enumStr)
+                            {
+                                var enumResult = Enum.Parse(pars[0].ParameterType, enumStr);
+                                method.Invoke(this, new[] {enumResult});
+                            }
+
+                            break;
+                        }
+                        case 1 when val.GetType().IsValueType:
+                            method.Invoke(this, new[]
+                            {
+                                Convert.ChangeType(val, pars[0].ParameterType)
+                            });
+                            break;
+                        default:
+                        {
+                            if (string.Equals(key, nameof(ImageArea), StringComparison.OrdinalIgnoreCase) &&
+                                val is ReadOnlyDictionary<string, object> dict &&
+                                dict.Count == 2)
+                            {
+                                var startColl = dict["Start"] as ReadOnlyDictionary<string, object>
+                                                ?? throw new NullReferenceException(
+                                                    "Deserialized value cannot be parsed.");
+                                var endColl = dict["End"] as ReadOnlyDictionary<string, object>
+                                              ?? throw new NullReferenceException(
+                                                  "Deserialized value cannot be parsed.");
+                                var area = new Rectangle(
+                                    new Point2D(
+                                        Convert.ToInt32(startColl["X"]),
+                                        Convert.ToInt32(startColl["Y"])),
+                                    new Point2D(
+                                        Convert.ToInt32(endColl["X"]),
+                                        Convert.ToInt32(endColl["Y"]))
+                                );
+
+                                method.Invoke(this, new object[] {area});
+                            }
+                            else if (val is object[] coll)
+                            {
+                                if (pars.Length == coll.Length)
+                                {
+                                    for (var i = 0; i < pars.Length; i++)
+                                        coll[i] = Convert.ChangeType(coll[i], pars[i].ParameterType);
+
+                                    method.Invoke(this, coll);
+                                }
+                                else
+                                    throw new TargetParameterCountException(
+                                        @"Setter method signature does not match types of provided items.");
+                            }
+                            else
+                                throw new ArgumentException("Deserialized value cannot be parsed.");
+
+                            break;
+                        }
                     }
-                    else
-                        throw new TargetParameterCountException(
-                            @"Setter method signature does not match types of provided items.");
+
+                    props.Add(key);
                 }
-                else switch (pars.Length)
+                catch (TargetInvocationException)
                 {
-                    case 1 when pars[0].ParameterType.IsEnum:
-                    {
-                        if (val is string enumStr)
-                        {
-                            var enumResult = Enum.Parse(pars[0].ParameterType, enumStr);
-                            method.Invoke(this, new[] {enumResult});
-                        }
-
-                        break;
-                    }
-                    case 1 when val.GetType().IsValueType:
-                        method.Invoke(this, new[]
-                        {
-                            Convert.ChangeType(val, pars[0].ParameterType)
-                        });
-                        break;
-                    default:
-                    {
-                        if (string.Equals(key, nameof(ImageArea), StringComparison.OrdinalIgnoreCase) &&
-                            val is ReadOnlyDictionary<string, object> dict &&
-                            dict.Count == 2)
-                        {
-                            var startColl = dict["Start"] as ReadOnlyDictionary<string, object>
-                                ?? throw new NullReferenceException("Deserialized value cannot be parsed.");
-                            var endColl = dict["End"] as ReadOnlyDictionary<string, object>
-                                          ?? throw new NullReferenceException("Deserialized value cannot be parsed.");
-                            var area = new Rectangle(
-                                new Point2D(
-                                    Convert.ToInt32(startColl["X"]),
-                                    Convert.ToInt32(startColl["Y"])),
-                                new Point2D(
-                                    Convert.ToInt32(endColl["X"]),
-                                    Convert.ToInt32(endColl["Y"]))
-                            );
-
-                            method.Invoke(this, new object[] {area});
-                        }
-                        else
-                            throw new ArgumentException("Deserialized value cannot be parsed.");
-
-                        break;
-                    }
+                    // Ignore 
                 }
-                //}
-                //catch (TargetInvocationException)
-                //{
-                //}
 
-                props.Add(key);
             }
 
             return new ReadOnlyCollection<string>(props);
