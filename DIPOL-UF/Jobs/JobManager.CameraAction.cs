@@ -72,12 +72,12 @@ namespace DIPOL_UF.Jobs
 
                 //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) start exposure");
                 // TODO : add support for the specific cameras
-                var tasks = JobManager.Manager._jobControls.Select(async x =>
+                var tasks = Manager._jobControls.Select(async x =>
                 {
                     // TODO : Add cancellation support
                     x.Camera.SaveNextAcquisitionAs(
-                        JobManager.Manager.CurrentTarget.TargetName,
-                        x.Camera.SerialNumber,
+                        Manager.CurrentTarget.TargetName,
+                        Manager._fileName,
                         ImageFormat.SignedInt32);
                     x.StartAcquisition(default);
                     await x.WhenAcquisitionFinished.FirstAsync();
