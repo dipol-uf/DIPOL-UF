@@ -40,6 +40,8 @@ namespace DIPOL_UF.ViewModels
     {
         public event EventHandler FileDialogRequested;
 
+        public event EventHandler BrowseDarkSettingsRequested;
+        public event EventHandler BrowseBiasSettingsRequested;
         public event EventHandler BrowseJobSettingsRequested;
         public event EventHandler BrowseAcquisitionSettingsRequested;
 
@@ -54,7 +56,14 @@ namespace DIPOL_UF.ViewModels
 
         public ReactiveCommand<Unit, FileDialogDescriptor> BrowseAcquisitionCommand { get; private set; }
         public ReactiveCommand<Unit, FileDialogDescriptor> BrowseJobCommand { get; private set; }
+        public ReactiveCommand<Unit, FileDialogDescriptor> BrowseBiasCommand { get; private set; }
+        public ReactiveCommand<Unit, FileDialogDescriptor> BrowseDarkCommand { get; private set; }
+
         public ReactiveCommand<string, Unit> JobReceivedCommand { get; private set; }
+        public ReactiveCommand<string, Unit> BiasReceivedCommand { get; private set; }
+        public ReactiveCommand<string, Unit> DarkReceivedCommand { get; private set; }
+
+
         public ReactiveCommand<string, Unit> AcquisitionReceivedCommand { get; private set; }
 
 
@@ -63,6 +72,10 @@ namespace DIPOL_UF.ViewModels
 
         [Reactive]
         public string JobPath { get; set; }
+        [Reactive]
+        public string BiasPath { get; set; }
+        [Reactive]
+        public string DarkPath { get; set; }
 
         [Reactive]
         public string SettingsPath { get; set; }
@@ -79,6 +92,8 @@ namespace DIPOL_UF.ViewModels
             SettingsPath = Model.Object.SettingsPath;
             ObjectName = Model.Object.TargetName;
             JobPath = Model.Object.JobPath;
+            BiasPath = Model.Object.BiasPath ?? string.Empty;
+            DarkPath = Model.Object.DarkPath ?? string.Empty;
         }
 
         private void UpdateBindingsToModel()
@@ -86,6 +101,8 @@ namespace DIPOL_UF.ViewModels
             Model.Object.SettingsPath = SettingsPath;
             Model.Object.TargetName = ObjectName;
             Model.Object.JobPath = JobPath;
+            Model.Object.BiasPath = string.IsNullOrWhiteSpace(BiasPath) ? null : BiasPath;
+            Model.Object.DarkPath = string.IsNullOrWhiteSpace(DarkPath) ? null : DarkPath;
         }
 
         private void InitializeCommands()
@@ -126,6 +143,24 @@ namespace DIPOL_UF.ViewModels
                 FileName = string.Empty
             }).DisposeWith(Subscriptions);
 
+            BrowseBiasCommand = ReactiveCommand.Create(() => new FileDialogDescriptor()
+            {
+                DefaultExtenstion = @".bias",
+                InitialDirectory = null,
+                Mode = FileDialogDescriptor.DialogMode.Load,
+                Title = Properties.Localization.JobSettings_Dialog_Job,
+                FileName = string.Empty
+            }).DisposeWith(Subscriptions);
+
+            BrowseDarkCommand = ReactiveCommand.Create(() => new FileDialogDescriptor()
+            {
+                DefaultExtenstion = @".dark",
+                InitialDirectory = null,
+                Mode = FileDialogDescriptor.DialogMode.Load,
+                Title = Properties.Localization.JobSettings_Dialog_Job,
+                FileName = string.Empty
+            }).DisposeWith(Subscriptions);
+
             BrowseAcquisitionCommand = ReactiveCommand.Create(() => new FileDialogDescriptor()
             {
                 DefaultExtenstion = @".acq",
@@ -140,6 +175,18 @@ namespace DIPOL_UF.ViewModels
             {
                 if (File.Exists(x))
                     JobPath = Path.GetFullPath(x);
+            }).DisposeWith(Subscriptions);
+
+            BiasReceivedCommand = ReactiveCommand.Create<string>(x =>
+            {
+                if (File.Exists(x))
+                    BiasPath = Path.GetFullPath(x);
+            }).DisposeWith(Subscriptions);
+
+            DarkReceivedCommand = ReactiveCommand.Create<string>(x =>
+            {
+                if (File.Exists(x))
+                    DarkPath = Path.GetFullPath(x);
             }).DisposeWith(Subscriptions);
 
             AcquisitionReceivedCommand = ReactiveCommand.Create<string>(x =>
@@ -174,6 +221,9 @@ namespace DIPOL_UF.ViewModels
             LoadButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
             
             BrowseJobCommand.Subscribe(OnBrowseJobSettingsRequested).DisposeWith(Subscriptions);
+            BrowseBiasCommand.Subscribe(OnBrowseBiasSettingsRequested).DisposeWith(Subscriptions);
+            BrowseDarkCommand.Subscribe(OnBrowseDarkSettingsRequested).DisposeWith(Subscriptions);
+
             BrowseAcquisitionCommand.Subscribe(OnBrowseAcquisitionSettingsRequested).DisposeWith(Subscriptions);
         }
 
@@ -213,7 +263,10 @@ namespace DIPOL_UF.ViewModels
 
         private void OnBrowseJobSettingsRequested(FileDialogDescriptor e)
             => BrowseJobSettingsRequested?.Invoke(this, new DialogRequestedEventArgs(e));
-
+        private void OnBrowseBiasSettingsRequested(FileDialogDescriptor e)
+            => BrowseBiasSettingsRequested?.Invoke(this, new DialogRequestedEventArgs(e));
+        private void OnBrowseDarkSettingsRequested(FileDialogDescriptor e)
+            => BrowseDarkSettingsRequested?.Invoke(this, new DialogRequestedEventArgs(e));
         private void OnBrowseAcquisitionSettingsRequested(FileDialogDescriptor e)
             => BrowseAcquisitionSettingsRequested?.Invoke(this, new DialogRequestedEventArgs(e));
 
