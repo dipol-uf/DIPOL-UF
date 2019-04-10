@@ -109,6 +109,7 @@ namespace DIPOL_UF.Extensions
                     Properties.Settings.Default.Save();
                 }
 
+                // BUG : can be disposed
                 LoadCommand?.Execute(result
                     ? dialog.FileName
                     : null);

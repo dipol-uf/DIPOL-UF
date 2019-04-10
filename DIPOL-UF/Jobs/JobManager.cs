@@ -48,7 +48,7 @@ namespace DIPOL_UF.Jobs
         private Dictionary<int, SettingsBase> _settingsCache;
         private Task _jobTask;
         private CancellationTokenSource _tokenSource;
-
+        private string _fileName;
         public static JobManager Manager { get; } = new JobManager();
 
         [Reactive]
@@ -61,6 +61,11 @@ namespace DIPOL_UF.Jobs
         // TODO : return a copy of a target
         public Target CurrentTarget { get; private set; } = new Target();
         public Job AcquisitionJob { get; private set; }
+        public Job BiasJob { get; private set; }
+        public Job DarkJob { get; private set; }
+        public int AcquisitionRuns { get; }
+        // TODO : 1 is default while there is no UI for this
+            = 1;
 
         public void AttachToMainWindow(DipolMainWindow window)
         {
@@ -117,7 +122,17 @@ namespace DIPOL_UF.Jobs
                 if (_jobControls.Any(x => x.Camera?.CurrentSettings is null))
                     throw new InvalidOperationException("At least one camera has no settings applied to it.");
 
-                await Task.Run(AcquisitionJob.Run, token);
+                await Task.Run(async ()  =>
+                {
+                    _fileName = CurrentTarget.TargetName;
+                    for (var i = 0; i < AcquisitionRuns; i++)
+                        await AcquisitionJob.Run();
+
+                    _fileName = $"{CurrentTarget.TargetName}_bias";
+                    await (BiasJob?.Run() ?? Task.CompletedTask);
+                    _fileName = $"{CurrentTarget.TargetName}_dark";
+                    await (DarkJob?.Run() ?? Task.CompletedTask);
+                }, token);
             }
             catch (Exception e)
             {
@@ -133,6 +148,7 @@ namespace DIPOL_UF.Jobs
                     sett.Value.Dispose();
                 _settingsCache.Clear();
                 _settingsCache = null;
+                _fileName = null;
             }
         }
 
@@ -140,7 +156,13 @@ namespace DIPOL_UF.Jobs
         {
             try
             {
-                await ConstructJob();
+                AcquisitionJob = await ConstructJob(CurrentTarget.JobPath);
+                BiasJob = CurrentTarget.BiasPath is null
+                    ? null
+                    : await ConstructJob(CurrentTarget.BiasPath);
+                DarkJob = CurrentTarget.DarkPath is null
+                    ? null
+                    : await ConstructJob(CurrentTarget.DarkPath);
                 await LoadSettingsTemplate();
                 await ApplySettingsTemplate();
                 ReadyToRun = true;
@@ -149,6 +171,8 @@ namespace DIPOL_UF.Jobs
             {
                 CurrentTarget = new Target();
                 AcquisitionJob = null;
+                BiasJob = null;
+                DarkJob = null;
                 _settingsRep = null;
                 throw;
             }
@@ -193,13 +217,14 @@ namespace DIPOL_UF.Jobs
             }
         }
 
-        private async Task ConstructJob()
+        private async Task<Job> ConstructJob(string path)
         {
-            if (!File.Exists(CurrentTarget.JobPath))
-                throw new FileNotFoundException("Job file is not found", CurrentTarget.JobPath);
+            Job job;
+            if (!File.Exists(path))
+                throw new FileNotFoundException("Job file is not found", path);
 
-            using (var str = new FileStream(CurrentTarget.JobPath, FileMode.Open, FileAccess.Read))
-                AcquisitionJob = await Job.CreateAsync(str);
+            using (var str = new FileStream(path, FileMode.Open, FileAccess.Read))
+                job = await Job.CreateAsync(str);
 
             // TODO : Enable for alpha tests
             // INFO : Disabled to test on local environment
@@ -209,7 +234,9 @@ namespace DIPOL_UF.Jobs
                 && _windowRef.PolarimeterMotor is null)
                 throw new InvalidOperationException("Cannot execute current job with no motor connected.");
 #endif
+            return job;
         }
+
 
         private JobManager() { }
 

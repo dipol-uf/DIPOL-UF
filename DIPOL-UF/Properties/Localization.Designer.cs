@@ -982,6 +982,7 @@ namespace DIPOL_UF.Properties {
         /// </summary>
         public static string JobSettings_DarkFile {
             get {
+                return ResourceManager.GetString("JobSettings_DarkFile", resourceCulture);
             }
         }
         
