@@ -159,8 +159,6 @@ namespace DIPOL_UF.ViewModels
         public bool Group1ContainsErrors { [ObservableAsProperty] get; }
         public bool Group2ContainsErrors { [ObservableAsProperty] get; }
         public bool Group3ContainsErrors { [ObservableAsProperty] get; }
-        [Reactive]
-        public string AllowedGain {  get; private set; }
 
         public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model)
             : base(model)
@@ -258,12 +256,16 @@ namespace DIPOL_UF.ViewModels
                 AllowedGain = string.Format(Properties.Localization.AcquisitionSetttings_AvailableGainFormat,
                     low, high);
             }
+
+            // TODO : Remove logging
+
+            PropertyChanged += (sender, e) => Helper.WriteLog($"{e.PropertyName}\t{GetType().GetProperty(e.PropertyName)?.GetValue(this)}");
         }
 
         private void HookObservables()
         {
-            WatchAvailableSettings();
             AttachAccessors();
+            WatchAvailableSettings();
 
             _availableHsSpeeds
                 .Connect()
@@ -398,18 +400,18 @@ namespace DIPOL_UF.ViewModels
             // ReSharper disable PossibleInvalidOperationException
             CreateSetter(x => x.VsSpeed, y => y >= 0, z => z, Model.Object.SetVSSpeed);
             CreateSetter(x => x.VsAmplitude, y => y.HasValue, z => z.Value, Model.Object.SetVSAmplitude);
-            CreateSetter(x => x.AdcBitDepth, y => y >= 0, z => z, Model.Object.SetADConverter);
-            CreateSetter(x => x.Amplifier, y => y.HasValue, z => z.Value, Model.Object.SetOutputAmplifier);
-            CreateSetter(x => x.HsSpeed, y => y >= 0 && y < AvailableHsSpeeds.Count,
-                z => z, Model.Object.SetHSSpeed);
+            CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain, y => y.EmCcdGainText);
             CreateSetter(x => x.PreAmpGain, y => y >= 0 && y < AvailablePreAmpGains.Count,
                 z => z, Model.Object.SetPreAmpGain);
+            CreateSetter(x => x.HsSpeed, y => y >= 0 && y < AvailableHsSpeeds.Count,
+                z => z, Model.Object.SetHSSpeed);
+            CreateSetter(x => x.AdcBitDepth, y => y >= 0, z => z, Model.Object.SetADConverter);
+            CreateSetter(x => x.Amplifier, y => y.HasValue, z => z.Value, Model.Object.SetOutputAmplifier);
             CreateSetter(x => x.TriggerMode, y => y.HasValue, z => z.Value, Model.Object.SetTriggerMode);
             CreateSetter(x => x.ReadMode, y => y.HasValue, z => z.Value, Model.Object.SetReadoutMode);
 
             CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime, 
                 y => y.ExposureTimeText);
-            CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain, y => y.EmCcdGainText);
 
             this.NotifyWhenAnyPropertyChanged(
                     nameof(ImageArea_X1), nameof(ImageArea_X2),
@@ -626,10 +628,10 @@ namespace DIPOL_UF.ViewModels
             CreateGetter(x => x.VSSpeed, y => y?.Index ?? -1, z => z.VsSpeed, (src, tar) => src?.Index != tar);
             CreateGetter(x => x.VSAmplitude, y => y, z => z.VsAmplitude, (src, tar) => src != tar);
             CreateGetter(x => x.ADConverter, y => y?.Index ?? -1, z => z.AdcBitDepth, (src, tar) => src?.Index != tar);
+            CreateGetter(x => x.PreAmpGain, y => y?.Index ?? -1, z => z.PreAmpGain, (src, tar) => src?.Index != tar);
+            CreateGetter(x => x.HSSpeed, y => y?.Index ?? -1, z => z.HsSpeed, (src, tar) => src?.Index != tar);
             CreateGetter(x => x.OutputAmplifier, y => y?.OutputAmplifier, 
                 z => z.Amplifier, (src, tar) => src?.OutputAmplifier != tar);
-            CreateGetter(x => x.HSSpeed, y => y?.Index ?? -1, z => z.HsSpeed, (src, tar) => src?.Index != tar);
-            CreateGetter(x => x.PreAmpGain, y => y?.Index ?? -1, z => z.PreAmpGain, (src, tar) => src?.Index != tar);
             CreateGetter(x => x.TriggerMode, y => y, z => z.TriggerMode, (src, tar) => src != tar);
             CreateGetter(x => x.ReadoutMode, y => y, z => z.ReadMode, (src, tar) => src != tar);
 
@@ -1189,6 +1191,9 @@ namespace DIPOL_UF.ViewModels
 
 
         #region V2
+
+        [Reactive]
+        public string AllowedGain {  get; private set; }
 
         [Reactive]
         [UnderlyingCameraSettings(@"SetExposureTime")]
