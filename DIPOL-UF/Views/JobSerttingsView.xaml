@@ -70,6 +70,21 @@
                 LoadCommand="{Binding AcquisitionReceivedCommand}"/>
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
+    <Window.Resources>
+        <Style x:Key="TextBlockStyle" TargetType="TextBlock" BasedOn="{StaticResource ContentFont_TextBlock}">
+            <Setter Property="Grid.Column" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="BrowseButtonStyle" TargetType="Button" BasedOn="{StaticResource BasicButtonStyle}">
+            <Setter Property="Grid.Column" Value="2"/>
+            <Setter Property="Width" Value="auto"/>
+            <Setter Property="Height" Value="auto"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="Content" Value="{extensions:Text Key=General_Browse}"/>
+        </Style>
+    </Window.Resources>
     <Grid Margin="0, 20, 0, 0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -97,30 +112,20 @@
                 </Grid.RowDefinitions>
 
                 <!--Left-hand side labels-->
-                <TextBlock Grid.Row="0" Grid.Column="0"
-                           Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                           Text="{extensions:Text Key=JobSettings_TargetName}" 
-                           HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="1" Grid.Column="0"
-                            Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                            Text="{extensions:Text Key=JobSettings_SettingsFile}" 
-                            HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="2" Grid.Column="0"
-                           Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                           Text="{extensions:Text Key=JobSettings_JobFile}" 
-                           HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="3" Grid.Column="0"
-                           Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                           Text="{extensions:Text Key=JobSettings_BiasFile}" 
-                           HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="4" Grid.Column="0"
-                           Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                           Text="{extensions:Text Key=JobSettings_DarkFile}" 
-                           HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="5" Grid.Column="0"
-                           Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-                           Text="{extensions:Text Key=JobSettings_ExposureTime}" 
-                           HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <TextBlock Style="{StaticResource TextBlockStyle}"
+                           Grid.Row="0" Text="{extensions:Text Key=JobSettings_TargetName}" />
+                <TextBlock Style="{StaticResource TextBlockStyle}"
+                           Grid.Row="1" Text="{extensions:Text Key=JobSettings_SettingsFile}"/>
+                <TextBlock Style="{StaticResource TextBlockStyle}"
+                           Grid.Row="2" Text="{extensions:Text Key=JobSettings_JobFile}"/>
+                <TextBlock Style="{StaticResource TextBlockStyle}"
+                           Grid.Row="3" Text="{extensions:Text Key=JobSettings_BiasFile}" />
+                <TextBlock Style="{StaticResource TextBlockStyle}"
+                           Grid.Row="4" Text="{extensions:Text Key=JobSettings_DarkFile}" />
+                <TextBlock Style="{StaticResource TextBlockStyle}"
+                           VerticalAlignment="Top"
+                           Grid.Row="5" Text="{extensions:Text Key=JobSettings_ExposureTime}" />
+                
 
                 <!--Right-hand side controls-->
                 <!-- Object name-->
@@ -157,40 +162,24 @@
                 </ListView>
 
                 <!--Acquisition browsing-->
-                <Button Grid.Row="1" Grid.Column="2"
-                        Style="{StaticResource BasicButtonStyle}"
-                        Width="auto" Height="auto"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Command="{Binding BrowseAcquisitionCommand}"
-                        Content="{extensions:Text Key=General_Browse}"/>
+                <Button Grid.Row="1"
+                        Style="{StaticResource BrowseButtonStyle}"
+                        Command="{Binding BrowseAcquisitionCommand}"/>
 
                 <!--Job browsing-->
-                <Button Grid.Row="2" Grid.Column="2"
-                        Style="{StaticResource BasicButtonStyle}"
-                        Width="auto" Height="auto"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Command="{Binding BrowseJobCommand}"
-                        Content="{extensions:Text Key=General_Browse}"/>
-               
+                <Button Grid.Row="2"
+                        Style="{StaticResource BrowseButtonStyle}"
+                        Command="{Binding BrowseJobCommand}"/>
+
                 <!--Bias browsing-->
-                <Button Grid.Row="3" Grid.Column="2"
-                        Style="{StaticResource BasicButtonStyle}"
-                        Width="auto" Height="auto"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Command="{Binding BrowseBiasCommand}"
-                        Content="{extensions:Text Key=General_Browse}"/>
+                <Button Grid.Row="3"
+                        Style="{StaticResource BrowseButtonStyle}"
+                        Command="{Binding BrowseBiasCommand}"/>
 
                 <!--Dark browsing-->
-                <Button Grid.Row="4" Grid.Column="2"
-                        Style="{StaticResource BasicButtonStyle}"
-                        Width="auto" Height="auto"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Command="{Binding BrowseDarkCommand}"
-                        Content="{extensions:Text Key=General_Browse}"/>
+                <Button Grid.Row="4"
+                        Style="{StaticResource BrowseButtonStyle}"
+                        Command="{Binding BrowseDarkCommand}"/>
             </Grid>
         </AdornerDecorator>
            
