@@ -150,6 +150,8 @@ namespace DIPOL_UF.ViewModels
 
             SaveActionCommand = ReactiveCommand.CreateFromTask<string>(async x =>
             {
+                if (string.IsNullOrEmpty(x))
+                    return;
                 UpdateBindingsToModel();
                 using (var str = new FileStream(x, FileMode.OpenOrCreate, FileAccess.Write))
                     await Model.Object.Serialize(str);

@@ -69,6 +69,8 @@ namespace DIPOL_UF.Jobs
                     return new ShutterAction(shutterStr);
                 if(name.StartsWith(@"delay") && obj.Value is string delayStr)
                     return new DelayAction(delayStr);
+                if (name.StartsWith(@"settings") && obj.Value is string settsStr)
+                    return new SettingsAction(settsStr);
                 if (name.StartsWith(@"repeat") && obj.Value is ReadOnlyDictionary<string, object> innerActions)
                 {
                     var list = (innerActions["Actions"] as object[])

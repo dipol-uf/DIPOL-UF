@@ -23,15 +23,10 @@
 //     SOFTWARE.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using ANDOR_CS.Classes;
-using DIPOL_UF.Properties;
 
 namespace DIPOL_UF.Jobs
 {
@@ -39,12 +34,14 @@ namespace DIPOL_UF.Jobs
     {
         private class SettingsAction : JobAction
         {
-            private static string[] SupportedSettings = {
+            private static readonly string[] SupportedSettings =
+            {
                 @"exposuretime"
             };
+
             private static readonly Regex Regex =
-                    new Regex(@"^(?:settings\/)?(set|reset)\s*?(?:(\w+)\s?(.*))?$",
-                        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                new Regex(@"^(?:settings\/)?(set|reset)\s*?(?:(\w+)\s?(.*))?$",
+                    RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 
             private bool IsReset { get; }
@@ -67,21 +64,53 @@ namespace DIPOL_UF.Jobs
                     ? match.Groups[2].Value
                     : throw new ArgumentException(@"Settings command is invalid.", nameof(command));
 
-                if (!IsReset && String.IsNullOrWhiteSpace(match.Groups[3].Value))
-                    throw new ArgumentException(@"Settings command is invalid.", nameof(command));
-                
                 // INFO : Currently support only exposure time, entered manually
-                if (SettingsName == "exposuretime" &&
-                    float.TryParse(match.Groups[3].Value, NumberStyles.Any,
-                        NumberFormatInfo.InvariantInfo, out var expVal))
-                    ReplacingValue = expVal;
-                else throw new ArgumentException(@"Settings command is invalid.", nameof(command));
+                if (!IsReset && SettingsName == "exposuretime")
+                {
+                    if (float.TryParse(match.Groups[3].Value, 
+                        NumberStyles.Any, NumberFormatInfo.InvariantInfo, 
+                        out var expVal))
+                        ReplacingValue = expVal;
 
+                    else throw new ArgumentException(@"Settings command is invalid.", nameof(command));
+                }
             }
 
             public override Task Execute()
             {
-                throw new NotImplementedException();
+                if (IsReset)
+                {
+                    foreach (var cam in Manager._jobControls.Select(x => x.Camera))
+                    {
+                        if (Manager._settingsCache.TryGetValue(cam.GetHashCode(), out var setts))
+                        {
+                            switch (SettingsName)
+                            {
+                                case @"exposuretime":
+                                    cam.CurrentSettings.SetExposureTime(setts.ExposureTime ?? 0f);
+                                    break;
+                            }
+                        }
+
+                        cam.ApplySettings(cam.CurrentSettings);
+                    }
+                }
+                else
+                {
+                    foreach (var cam in Manager._jobControls.Select(x => x.Camera))
+                    {
+                        switch (SettingsName)
+                        {
+                            case @"exposuretime":
+                                cam.CurrentSettings.SetExposureTime((float) ReplacingValue);
+                                break;
+                        }
+
+                        cam.ApplySettings(cam.CurrentSettings);
+                    }
+                }
+
+                return Task.CompletedTask;
             }
         }
     }
