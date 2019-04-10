@@ -543,9 +543,11 @@ The following settings produced this error:
   </data>
   <data name="JobSettings_BiasFile" xml:space="preserve">
     <value>Bias file</value>
-    <comment> </comment>
   </data>
   <data name="JobSettings_DarkFile" xml:space="preserve">
     <value>Dark file</value>
+  </data>
+  <data name="MB_MoreLeft" xml:space="preserve">
+    <value>There are {0} more errors that were not shown.</value>
   </data>
 </root>
