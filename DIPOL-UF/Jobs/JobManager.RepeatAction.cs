@@ -22,9 +22,9 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DIPOL_UF.Jobs
@@ -44,7 +44,7 @@ namespace DIPOL_UF.Jobs
                 Repeats = repeats;
             }
 
-            public override Task Execute()
+            public override Task Execute(CancellationToken token)
             {
                 return Task.Run(async () =>
                 {
@@ -52,10 +52,10 @@ namespace DIPOL_UF.Jobs
                     {
                         //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} starts");
                         foreach (var action in _actions)
-                            await action.Execute();
+                            await action.Execute(token);
                         //Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} Repeat block {i:00} ends\r\n");
                     }
-                });
+                }, token);
 
             }
 

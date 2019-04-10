@@ -27,6 +27,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Enums;
 
@@ -63,7 +64,7 @@ namespace DIPOL_UF.Jobs
                                        .ToList();
             }
 
-            public override async Task Execute()
+            public override async Task Execute(CancellationToken token)
             {
                 var info =
                     SpecificCameras.Count == 0
@@ -75,11 +76,12 @@ namespace DIPOL_UF.Jobs
                 var tasks = Manager._jobControls.Select(async x =>
                 {
                     // TODO : Add cancellation support
-                    x.Camera.SaveNextAcquisitionAs(
-                        Manager.CurrentTarget.TargetName,
-                        Manager._fileName,
-                        ImageFormat.SignedInt32);
-                    x.StartAcquisition(default);
+                    // WATCH : Disabled saving
+                    //x.Camera.SaveNextAcquisitionAs(
+                        //Manager.CurrentTarget.TargetName,
+                        //Manager._fileName,
+                        //ImageFormat.SignedInt32);
+                    x.StartAcquisition(token);
                     await x.WhenAcquisitionFinished.FirstAsync();
                 }).ToList();
 
