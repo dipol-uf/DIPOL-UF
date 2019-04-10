@@ -541,4 +541,11 @@ The following settings produced this error:
   <data name="MainWindow_RemoteConnection_ClientCount" xml:space="preserve">
     <value>Connected to {0} out of {1}</value>
   </data>
+  <data name="JobSettings_BiasFile" xml:space="preserve">
+    <value>Bias file</value>
+    <comment> </comment>
+  </data>
+  <data name="JobSettings_DarkFile" xml:space="preserve">
+    <value>Dark file</value>
+  </data>
 </root>
