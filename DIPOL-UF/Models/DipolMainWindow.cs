@@ -271,16 +271,28 @@ namespace DIPOL_UF.Models
                 .DisposeWith(Subscriptions);
 
             ProgressBarProvider.ViewRequested.Select(x =>
-                    Observable.FromAsync(async () =>
-                    {
-                        await InitializeRemoteSessionsAsync((ProgressBar) x);
-                        return Unit.Default;
-                    }))
+                    Observable.FromAsync(async () => await InitializeRemoteSessionsAsync((ProgressBar) x)))
                 .Merge()
                 .CombineLatest(ProgressBarProvider.WindowShown,
-                    (x, y) => Unit.Default)
+                    (x, y) => x)
                 .Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")))
-                .InvokeCommand(ProgressBarProvider.ClosingRequested)
+                .Subscribe(async x =>
+                {
+                    await ProgressBarProvider.ClosingRequested.Execute();
+
+                    foreach (var ex in x.Take(3))
+                    {
+                        Helper.ExecuteOnUi(() => MessageBox.Show(
+                            ex.Message,
+                            Properties.Localization.RemoteConnection_UnreachableHostTitle,
+                            MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK));
+                    }
+                    if (x.Count > 3)
+                        Helper.ExecuteOnUi(() => MessageBox.Show(
+                            string.Format(Properties.Localization.MB_MoreLeft, x.Count - 3),
+                            Properties.Localization.RemoteConnection_UnreachableHostTitle,
+                            MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK));
+                })
                 .DisposeWith(Subscriptions);
 
             ConnectButtonCommand.InvokeCommand(AvailableCamerasProvider.ViewRequested as ICommand)
@@ -335,7 +347,7 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private async Task InitializeRemoteSessionsAsync(ProgressBar pb)
+        private async Task<List<Exception>> InitializeRemoteSessionsAsync(ProgressBar pb)
         {
             var tasks = _remoteLocations.Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => Task.Run(() =>
@@ -354,30 +366,36 @@ namespace DIPOL_UF.Models
 
                         return client;
                     }
-                    catch (System.ServiceModel.EndpointNotFoundException endpointException)
-                    {
-                        Helper.WriteLog(endpointException.Message);
-                        Helper.ExecuteOnUi(() => MessageBox.Show(
-                            endpointException.Message,
-                            Properties.Localization.RemoteConnection_UnreachableHostTitle,
-                            MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
-                    }
+                    //catch (System.ServiceModel.EndpointNotFoundException endpointException)
+                    //{
+                    //    Helper.WriteLog(endpointException.Message);
+                    //    Helper.ExecuteOnUi(() => MessageBox.Show(
+                    //        endpointException.Message,
+                    //        Properties.Localization.RemoteConnection_UnreachableHostTitle,
+                    //        MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
+                    //}
                     catch (Exception e)
                     {
                         Helper.WriteLog(e.Message);
-                        Helper.ExecuteOnUi(() => MessageBox.Show(
-                            e.Message,
-                            Properties.Localization.RemoteConnection_UnreachableHostTitle,
-                            MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
+                        //Helper.ExecuteOnUi(() => MessageBox.Show(
+                        //    e.Message,
+                        //    Properties.Localization.RemoteConnection_UnreachableHostTitle,
+                        //    MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
+                        return (object)e;
                     }
 
-                    return null;
                 }));
 
 
-            _remoteClients = (await Task.WhenAll(tasks).ConfigureAwait(false)).Where(x => !(x is null)).ToArray();
+            var result = await Task.WhenAll(tasks).ConfigureAwait(false);
+            _remoteClients = result.OfType<DipolClient>().ToArray();
+
+            var exceptions = result.OfType<Exception>().ToList();
+
              pb.BarComment = string.Format(Properties.Localization.MainWindow_RemoteConnection_ClientCount,
                 _remoteClients.Length, _remoteLocations.Length);
+
+             return exceptions;
         }
 
         private async Task ReceiveConnectedCameras(AvailableCamerasModel model)
