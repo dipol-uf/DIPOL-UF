@@ -69,7 +69,7 @@ namespace ANDOR_CS.Classes
                 .Where(mi => mi.Name.Contains("Set") && mi.ReturnType == typeof(void))
                 .ToArray();
 
-        private static readonly Regex SetFunctionNameParser = new Regex(@"Set(.+)$");
+        private static readonly Regex SetFunctionNameParser = new Regex(@"Set(.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private (int Index, float Speed)? _VSSpeed;
         private (int Index, float Speed)? _HSSpeed;
