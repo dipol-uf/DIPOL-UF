@@ -28,6 +28,7 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -400,24 +401,27 @@ namespace DIPOL_UF
             => Observable.Return(value).Concat(@this);
 
 
-        public static IObservable<IChangeSet<(TKey, TValue), TKey>> BindTo<TKey, TValue>(
+        public static IDisposable GracefullyBindTo<TKey, TValue>(
             this IObservable<IChangeSet<(TKey, TValue), TKey>> @this,
-                ObservableCollection<(TKey, TValue)> target)
+                IObservableCollection<(TKey, TValue)> target,
+                IEqualityComparer<TValue> comparer = null)
         {
 
-            var comparer = EqualityComparer<TValue>.Default;
+            comparer = comparer ?? EqualityComparer<TValue>.Default;
+
             void Updater(IChangeSet<(TKey, TValue), TKey> batch)
             {
                 target.AddRange(batch.Where(x => x.Reason == ChangeReason.Add).Select(x => x.Current));
 
-                foreach (var update in batch.Where(x => x.Reason == ChangeReason.Update
-                                                        && !comparer.Equals(x.Current.Item2,
-                                                                x.Previous.Value.Item2)))
+                foreach (
+                    var update in
+                    from upd in batch
+                    where upd.Reason == ChangeReason.Update && !comparer.Equals(upd.Current.Item2, upd.Previous.Value.Item2)
+                    select upd)
                 {
-
                     var index = target.IndexOf(update.Previous.Value);
                     target.Add(update.Current);
-                    if(index >= 0)
+                    if (index >= 0)
                         target.RemoveAt(index);
                 }
 
@@ -425,9 +429,38 @@ namespace DIPOL_UF
 
             }
 
-            @this.Subscribe(Updater);
+            return @this.Subscribe(Updater);
+        }
 
-            return @this;
+        public static IDisposable GracefullyBindTo<TKey, TValue, TTarget>(
+            this IObservable<IChangeSet<TValue, TKey>> @this,
+            IObservableCollection<TTarget> target,
+            Func<TValue, TTarget> selector,
+            IEqualityComparer<TValue> comparer = null)
+        {
+            comparer = comparer ?? EqualityComparer<TValue>.Default;
+
+            void Updater(IChangeSet<TValue, TKey> batch)
+            {
+                target.AddRange(batch.Where(x => x.Reason == ChangeReason.Add).Select(x => selector(x.Current)));
+
+                foreach (
+                    var update in
+                    from upd in batch
+                    where upd.Reason == ChangeReason.Update && !comparer.Equals(upd.Current, upd.Previous.Value)
+                    select upd)
+                {
+                    var index = target.IndexOf(selector(update.Previous.Value));
+                    target.Add(selector(update.Current));
+                    if (index >= 0)
+                        target.RemoveAt(index);
+                }
+
+                target.Remove(batch.Where(x => x.Reason == ChangeReason.Remove).Select(x => selector(x.Current)));
+
+            }
+
+            return @this.Subscribe(Updater);
         }
 
         private static string GetEnumString(string key, Type type)
