@@ -73,7 +73,7 @@ namespace ANDOR_CS.Classes
                 .Where(x => !string.IsNullOrWhiteSpace(x.Name))
                 .ToDictionary(x => x.Name.ToLowerInvariant(), y => y.Method);
 
-        private bool _suppressNotifications;
+        private bool _suppressNotification;
 
         private (int Index, float Speed)? _VSSpeed;
         private (int Index, float Speed)? _HSSpeed;
@@ -117,7 +117,7 @@ namespace ANDOR_CS.Classes
             get => _HSSpeed;
             protected set
             {
-                if (RaisePropertyChanged(ref _HSSpeed, value))
+                if (RaisePropertyChanged(ref _HSSpeed, value) && !_suppressNotification)
                     PreAmpGain = null;
             }
         }
@@ -133,7 +133,7 @@ namespace ANDOR_CS.Classes
             get => _ADConverter;
             protected set
             {
-                if (RaisePropertyChanged(ref _ADConverter, value))
+                if (RaisePropertyChanged(ref _ADConverter, value) && !_suppressNotification)
                     HSSpeed = null;
             }
         }
@@ -160,7 +160,7 @@ namespace ANDOR_CS.Classes
             get => _OutputAmplifier;
             protected set
             {
-                if (RaisePropertyChanged(ref _OutputAmplifier, value))
+                if (RaisePropertyChanged(ref _OutputAmplifier, value) && !_suppressNotification)
                 {
                     HSSpeed = null;
                     EMCCDGain = null;
@@ -269,8 +269,7 @@ namespace ANDOR_CS.Classes
 
         protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if(!(PropertyChanged is null) && !_suppressNotifications)
-                PropertyChanged.Invoke(sender, e);
+            PropertyChanged?.Invoke(sender, e);
         }
 
         protected virtual bool RaisePropertyChanged<T>(
@@ -770,7 +769,6 @@ namespace ANDOR_CS.Classes
             return settings;
         }
 
-
         public abstract bool IsHSSpeedSupported(
             int speedIndex, 
             int adConverter,
@@ -856,12 +854,12 @@ namespace ANDOR_CS.Classes
 
         private ReadOnlyCollection<string> Load(IReadOnlyDictionary<string, object> input)
         {
-            var oldValue = _suppressNotifications;
+            var props = new Collection<string>();
+            var oldValue = _suppressNotification;
+
             try
             {
-                _suppressNotifications = true;
-                var props = new Collection<string>();
-
+                _suppressNotification = true;
                 foreach (var (key, val) in input)
                 {
                     if (!DeserializationSetMethods.TryGetValue(key.ToLowerInvariant(), out var method))
@@ -944,9 +942,7 @@ namespace ANDOR_CS.Classes
             }
             finally
             {
-                _suppressNotifications = oldValue;
-                foreach(var pi in SerializedProperties)
-                    OnPropertyChanged(this, new PropertyChangedEventArgs(pi.Name));
+                _suppressNotification = oldValue;
             }
         }
 
