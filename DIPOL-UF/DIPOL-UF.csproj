@@ -201,6 +201,7 @@
     <Compile Include="Converters\TypeValueConverter.cs" />
     <Compile Include="DebugTracer.cs" />
     <Compile Include="Enums\ControlStateEnum.cs" />
+    <Compile Include="EqualityComparer.cs" />
     <Compile Include="Extensions\EventToCommandAction.cs" />
     <Compile Include="Extensions\FileDialogAction.cs" />
     <Compile Include="Extensions\ShowViewAction.cs" />
