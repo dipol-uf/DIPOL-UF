@@ -26,6 +26,7 @@ using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -398,6 +399,37 @@ namespace DIPOL_UF
         public static IObservable<T> StartWith<T>(this IObservable<T> @this, T value)
             => Observable.Return(value).Concat(@this);
 
+
+        public static IObservable<IChangeSet<(TKey, TValue), TKey>> BindTo<TKey, TValue>(
+            this IObservable<IChangeSet<(TKey, TValue), TKey>> @this,
+                ObservableCollection<(TKey, TValue)> target)
+        {
+
+            var comparer = EqualityComparer<TValue>.Default;
+            void Updater(IChangeSet<(TKey, TValue), TKey> batch)
+            {
+                target.AddRange(batch.Where(x => x.Reason == ChangeReason.Add).Select(x => x.Current));
+
+                foreach (var update in batch.Where(x => x.Reason == ChangeReason.Update
+                                                        && !comparer.Equals(x.Current.Item2,
+                                                                x.Previous.Value.Item2)))
+                {
+
+                    var index = target.IndexOf(update.Previous.Value);
+                    target.Add(update.Current);
+                    if(index >= 0)
+                        target.RemoveAt(index);
+                }
+
+                target.Remove(batch.Where(x => x.Reason == ChangeReason.Remove).Select(x => x.Current));
+
+            }
+
+            @this.Subscribe(Updater);
+
+            return @this;
+        }
+
         private static string GetEnumString(string key, Type type)
             => Properties.Localization.ResourceManager
                          .GetString($"General_{type.Name}_{key}")
@@ -406,6 +438,7 @@ namespace DIPOL_UF
                    DescriptionAttribute attr
                    ? attr.Description
                    : key);
+
 
         
     }
