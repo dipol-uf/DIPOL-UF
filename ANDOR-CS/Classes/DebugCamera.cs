@@ -49,12 +49,12 @@ namespace ANDOR_CS.Classes
 
         public override CameraStatus GetStatus()
         {
-            WriteMessage("Status checked.", Blue);
+            //WriteMessage("Status checked.", Blue);
             return CameraStatus.Idle;
         }
         public override (TemperatureStatus Status, float Temperature) GetCurrentTemperature()
         {
-            WriteMessage("Current temperature returned.", Blue);
+            //WriteMessage("Current temperature returned.", Blue);
             return (Status: TemperatureStatus.Stabilized, Temperature: R.Next(-40, 25));
         }
         //public override void SetActive()
@@ -143,7 +143,7 @@ namespace ANDOR_CS.Classes
             PropertyChanged += (sender, prop) =>
                 WriteMessage($"{prop.PropertyName} was changed to " +
                              $"{GetType().GetProperty(prop.PropertyName)?.GetValue(this)}.", Yellow);
-            TemperatureStatusChecked += (sender, args) => WriteMessage($"Temperature: {args.Temperature}\tStatus: {args.Status}", Blue);
+            //TemperatureStatusChecked += (sender, args) => WriteMessage($"Temperature: {args.Temperature}\tStatus: {args.Status}", Blue);
 
             ShutterControl(ShutterMode.PermanentlyClosed, ShutterMode.PermanentlyClosed,
                 SettingsProvider.Settings.Get("ShutterOpenTimeMS", 27),
