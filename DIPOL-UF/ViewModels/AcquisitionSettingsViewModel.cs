@@ -144,7 +144,7 @@ namespace DIPOL_UF.ViewModels
             Helper.EnumFlagsToArray<TriggerMode>(Model.Object.Camera.Capabilities.TriggerModes)
             .Where(EnumConverter.IsTriggerModeSupported)
             .ToArray();
-        public IObservableCollection<(int Index, float Speed)> AvailableHsSpeeds { get; }
+        public IObservableCollection<(int Index, float Speed)> AvailableHsSpeeds { get;}
             = new ObservableCollectionExtended<(int Index, float Speed)>();
         public IObservableCollection<(int Index, string Name)> AvailablePreAmpGains { get; }
             = new ObservableCollectionExtended<(int Index, string Name)>();
@@ -163,7 +163,8 @@ namespace DIPOL_UF.ViewModels
         public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model)
             : base(model)
         {
-#if DEBUG
+            // TODO : Remove logging
+
             Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
                           x => Model.Object.PropertyChanged += x,
                           x => Model.Object.PropertyChanged -= x)
@@ -173,8 +174,8 @@ namespace DIPOL_UF.ViewModels
                           var val = x.Sender.GetType().GetProperty(name)?.GetValue(x.Sender);
                           return $"{name}\t{val?.ToString()}";
                       })
-                      .LogObservable("SETTINGS", Subscriptions);
-#endif
+                      .LogObservable("MODEL", Subscriptions);
+
             SupportedSettings = Model.Object.SupportedSettings();
             AllowedSettings = Model.Object.AllowedSettings();
 
@@ -257,9 +258,6 @@ namespace DIPOL_UF.ViewModels
                     low, high);
             }
 
-            // TODO : Remove logging
-
-            PropertyChanged += (sender, e) => Helper.WriteLog($"{e.PropertyName}\t{GetType().GetProperty(e.PropertyName)?.GetValue(this)}");
         }
 
         private void HookObservables()
@@ -270,20 +268,21 @@ namespace DIPOL_UF.ViewModels
             _availableHsSpeeds
                 .Connect()
                 .ObserveOnUi()
-                .Bind(AvailableHsSpeeds)
-                .SubscribeDispose(Subscriptions);
+                .GracefullyBindTo(AvailableHsSpeeds)
+                .DisposeWith(Subscriptions);
+
 
             _availablePreAmpGains
                 .Connect()
                 .ObserveOnUi()
-                .Bind(AvailablePreAmpGains)
-                .SubscribeDispose(Subscriptions);
+                .GracefullyBindTo(AvailablePreAmpGains)
+                .DisposeWith(Subscriptions);
 
             _availableReadModes
                 .Connect()
                 .ObserveOnUi()
-                .Bind(AvailableReadModes)
-                .SubscribeDispose(Subscriptions);
+                .GracefullyBindTo(AvailableReadModes, x => x)
+                .DisposeWith(Subscriptions);
 
             this.WhenAnyPropertyChanged(nameof(Amplifier))
                 .Select(x => x.Amplifier)
@@ -619,7 +618,7 @@ namespace DIPOL_UF.ViewModels
                         // ReSharper disable once PossibleNullReferenceException
                         x => x.Where(y => comparator(y.Value, accessor(this))))
                     .Select(x => selector(x.Value))
-                    .DistinctUntilChanged()
+                    //.DistinctUntilChanged()
                     .ObserveOnUi()
                     .BindTo(this, targetAccessor)
                     .DisposeWith(Subscriptions);
@@ -945,8 +944,8 @@ namespace DIPOL_UF.ViewModels
                  .ObserveOnUi()
                  .Subscribe(x =>
                  {
-                     HsSpeed = -1;
-                     _availableHsSpeeds.Edit(context => context.Load(x));
+                     //HsSpeed = -1;
+                     _availableHsSpeeds.Edit(context => context.AddOrUpdate(x));
                  })
                  .DisposeWith(Subscriptions);
 
@@ -963,11 +962,11 @@ namespace DIPOL_UF.ViewModels
                          x.ADConverter?.Index ?? -1,
                          x.OutputAmplifier?.Index ?? -1,
                          x.HSSpeed?.Index ?? -1))
-                 .ObserveOnUi()
+                 //.ObserveOnUi()
                  .Subscribe(x =>
                  {
-                     PreAmpGain = -1;
-                     _availablePreAmpGains.Edit(context => context.Load(x));
+                     //PreAmpGain = -1;
+                     _availablePreAmpGains.Edit(context => context.AddOrUpdate(x));
                  })
                  .DisposeWith(Subscriptions);
 
@@ -1053,7 +1052,10 @@ namespace DIPOL_UF.ViewModels
                                .DisposeWith(Subscriptions);
 
             SaveButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
-            LoadButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
+            LoadButtonCommand.Subscribe(x =>
+            {
+                OnFileDialogRequested(x);
+            }).DisposeWith(Subscriptions);
 
             SaveActionCommand =
                 ReactiveCommand.CreateFromTask<string>(
@@ -1189,15 +1191,25 @@ namespace DIPOL_UF.ViewModels
         private void OnFileDialogRequested(FileDialogDescriptor e)
             => FileDialogRequested?.Invoke(this, new DialogRequestedEventArgs(e));
 
-
         #region V2
 
         [Reactive]
         public string AllowedGain {  get; private set; }
 
-        [Reactive]
+        //[Reactive]
+        //[UnderlyingCameraSettings(@"SetExposureTime")]
+        //public string ExposureTimeText { get; set; }
+
+
+        // WATCH : Anon-reactive property for debugging
+        private string _exposureTimeText;
+
         [UnderlyingCameraSettings(@"SetExposureTime")]
-        public string ExposureTimeText { get; set; }
+        public string ExposureTimeText
+        {
+            get => _exposureTimeText;
+            set => this.RaiseAndSetIfChanged(ref _exposureTimeText, value);
+        }
 
         // -1 is the default selected index in the list, equivalent to
         // [SelectedItem] = null in case of nullable properties

@@ -211,7 +211,7 @@
                                   ItemsSource="{Binding
                                     Path=AvailableHsSpeeds,
                                     Mode=OneWay}"
-                                  SelectedIndex="{extensions:ValidationBinding Path=HsSpeed, Mode=TwoWay}"
+                                  SelectedIndex="{extensions:ValidationBinding Path=HsSpeed}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.HsSpeed}">
                             <ComboBox.ItemTemplate>
@@ -228,9 +228,8 @@
                                   ItemsSource="{Binding
                                     Path=AvailablePreAmpGains,
                                     Mode=OneWay}"
-                                  SelectedIndex="{extensions:ValidationBinding
-                                    Path=PreAmpGain, 
-                                    Mode=TwoWay}"
+                                  IsSynchronizedWithCurrentItem="True"
+                                  SelectedIndex="{extensions:ValidationBinding Path=PreAmpGain}"
                                   Style="{StaticResource ComboBoxWithErrors}"
                                   IsEnabled="{Binding IsAvailable.PreAmpGain}">
                             <ComboBox.ItemTemplate>
