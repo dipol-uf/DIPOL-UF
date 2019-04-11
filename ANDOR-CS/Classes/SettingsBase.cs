@@ -73,8 +73,6 @@ namespace ANDOR_CS.Classes
                 .Where(x => !string.IsNullOrWhiteSpace(x.Name))
                 .ToDictionary(x => x.Name.ToLowerInvariant(), y => y.Method);
 
-        private bool _suppressNotification;
-
         private (int Index, float Speed)? _VSSpeed;
         private (int Index, float Speed)? _HSSpeed;
         private (int Index, int BitDepth)? _ADConverter;
@@ -117,7 +115,7 @@ namespace ANDOR_CS.Classes
             get => _HSSpeed;
             protected set
             {
-                if (RaisePropertyChanged(ref _HSSpeed, value) && !_suppressNotification)
+                if (RaisePropertyChanged(ref _HSSpeed, value))
                     PreAmpGain = null;
             }
         }
@@ -133,7 +131,7 @@ namespace ANDOR_CS.Classes
             get => _ADConverter;
             protected set
             {
-                if (RaisePropertyChanged(ref _ADConverter, value) && !_suppressNotification)
+                if (RaisePropertyChanged(ref _ADConverter, value))
                     HSSpeed = null;
             }
         }
@@ -160,7 +158,7 @@ namespace ANDOR_CS.Classes
             get => _OutputAmplifier;
             protected set
             {
-                if (RaisePropertyChanged(ref _OutputAmplifier, value) && !_suppressNotification)
+                if (RaisePropertyChanged(ref _OutputAmplifier, value))
                 {
                     HSSpeed = null;
                     EMCCDGain = null;
@@ -855,95 +853,85 @@ namespace ANDOR_CS.Classes
         private ReadOnlyCollection<string> Load(IReadOnlyDictionary<string, object> input)
         {
             var props = new Collection<string>();
-            var oldValue = _suppressNotification;
-
-            try
+            foreach (var (key, val) in input)
             {
-                _suppressNotification = true;
-                foreach (var (key, val) in input)
+                if (!DeserializationSetMethods.TryGetValue(key.ToLowerInvariant(), out var method))
+                    continue;
+
+                var pars = method.GetParameters();
+                try
                 {
-                    if (!DeserializationSetMethods.TryGetValue(key.ToLowerInvariant(), out var method))
-                        continue;
-
-                    var pars = method.GetParameters();
-                    try
+                    switch (pars.Length)
                     {
-                        switch (pars.Length)
+                        case 1 when pars[0].ParameterType.IsEnum:
                         {
-                            case 1 when pars[0].ParameterType.IsEnum:
+                            if (val is string enumStr)
                             {
-                                if (val is string enumStr)
-                                {
-                                    var enumResult = Enum.Parse(pars[0].ParameterType, enumStr);
-                                    method.Invoke(this, new[] {enumResult});
-                                }
-
-                                break;
+                                var enumResult = Enum.Parse(pars[0].ParameterType, enumStr);
+                                method.Invoke(this, new[] {enumResult});
                             }
-                            case 1 when val.GetType().IsValueType:
-                                method.Invoke(this, new[]
-                                {
-                                    Convert.ChangeType(val, pars[0].ParameterType)
-                                });
-                                break;
-                            default:
+
+                            break;
+                        }
+                        case 1 when val.GetType().IsValueType:
+                            method.Invoke(this, new[]
                             {
-                                if (string.Equals(key, nameof(ImageArea), StringComparison.OrdinalIgnoreCase) &&
-                                    val is ReadOnlyDictionary<string, object> dict &&
-                                    dict.Count == 2)
-                                {
-                                    var startColl = dict["Start"] as ReadOnlyDictionary<string, object>
-                                                    ?? throw new NullReferenceException(
-                                                        "Deserialized value cannot be parsed.");
-                                    var endColl = dict["End"] as ReadOnlyDictionary<string, object>
-                                                  ?? throw new NullReferenceException(
-                                                      "Deserialized value cannot be parsed.");
-                                    var area = new Rectangle(
-                                        new Point2D(
-                                            Convert.ToInt32(startColl["X"]),
-                                            Convert.ToInt32(startColl["Y"])),
-                                        new Point2D(
-                                            Convert.ToInt32(endColl["X"]),
-                                            Convert.ToInt32(endColl["Y"]))
-                                    );
+                                Convert.ChangeType(val, pars[0].ParameterType)
+                            });
+                            break;
+                        default:
+                        {
+                            if (string.Equals(key, nameof(ImageArea), StringComparison.OrdinalIgnoreCase) &&
+                                val is ReadOnlyDictionary<string, object> dict &&
+                                dict.Count == 2)
+                            {
+                                var startColl = dict["Start"] as ReadOnlyDictionary<string, object>
+                                                ?? throw new NullReferenceException(
+                                                    "Deserialized value cannot be parsed.");
+                                var endColl = dict["End"] as ReadOnlyDictionary<string, object>
+                                              ?? throw new NullReferenceException(
+                                                  "Deserialized value cannot be parsed.");
+                                var area = new Rectangle(
+                                    new Point2D(
+                                        Convert.ToInt32(startColl["X"]),
+                                        Convert.ToInt32(startColl["Y"])),
+                                    new Point2D(
+                                        Convert.ToInt32(endColl["X"]),
+                                        Convert.ToInt32(endColl["Y"]))
+                                );
 
-                                    method.Invoke(this, new object[] {area});
-                                }
-                                else if (val is object[] coll)
+                                method.Invoke(this, new object[] {area});
+                            }
+                            else if (val is object[] coll)
+                            {
+                                if (pars.Length == coll.Length)
                                 {
-                                    if (pars.Length == coll.Length)
-                                    {
-                                        for (var i = 0; i < pars.Length; i++)
-                                            coll[i] = Convert.ChangeType(coll[i], pars[i].ParameterType);
+                                    for (var i = 0; i < pars.Length; i++)
+                                        coll[i] = Convert.ChangeType(coll[i], pars[i].ParameterType);
 
-                                        method.Invoke(this, coll);
-                                    }
-                                    else
-                                        throw new TargetParameterCountException(
-                                            @"Setter method signature does not match types of provided items.");
+                                    method.Invoke(this, coll);
                                 }
                                 else
-                                    throw new ArgumentException("Deserialized value cannot be parsed.");
-
-                                break;
+                                    throw new TargetParameterCountException(
+                                        @"Setter method signature does not match types of provided items.");
                             }
+                            else
+                                throw new ArgumentException("Deserialized value cannot be parsed.");
+
+                            break;
                         }
-
-                        props.Add(key);
-                    }
-                    catch (TargetInvocationException)
-                    {
-                        // Ignore 
                     }
 
+                    props.Add(key);
+                }
+                catch (TargetInvocationException)
+                {
+                    // Ignore 
                 }
 
-                return new ReadOnlyCollection<string>(props);
             }
-            finally
-            {
-                _suppressNotification = oldValue;
-            }
+
+            return new ReadOnlyCollection<string>(props);
         }
 
         public List<FitsKey> ConvertToFitsKeys()
