@@ -197,6 +197,7 @@
                                     Path=Amplifier, 
                                     Mode=TwoWay}"
                                   Style="{StaticResource ComboBoxWithErrors}"
+                                  IsSynchronizedWithCurrentItem="True"
                                   IsEnabled="{Binding IsAvailable.Amplifier}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate DataType="ComboBoxItem">
@@ -208,6 +209,7 @@
                         </ComboBox>
                         <!--HS Speed-->
                         <ComboBox Grid.Row="5" Grid.Column="1"
+                                  IsSynchronizedWithCurrentItem="True"
                                   ItemsSource="{Binding
                                     Path=AvailableHsSpeeds,
                                     Mode=OneWay}"
