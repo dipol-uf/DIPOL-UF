@@ -463,6 +463,18 @@ namespace DIPOL_UF
             return @this.Subscribe(Updater);
         }
 
+        public static void GracefullyLoad<T>(this IObservableCollection<T> @this, 
+            IEnumerable<T> newItems)
+        {
+            
+
+            var countSuspender = @this.SuspendCount();
+            var notificationSuspender = @this.SuspendNotifications();
+            @this.Load(newItems);
+            countSuspender.Dispose();
+            notificationSuspender.Dispose();
+        }
+
         private static string GetEnumString(string key, Type type)
             => Properties.Localization.ResourceManager
                          .GetString($"General_{type.Name}_{key}")
