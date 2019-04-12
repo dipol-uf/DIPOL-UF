@@ -271,6 +271,7 @@
                                     Mode=OneWay}"
                                   SelectedItem="{extensions:ValidationBinding Path=ReadMode}"
                                   IsEnabled="{Binding IsAvailable.ReadMode}"
+                                  IsSynchronizedWithCurrentItem="True"
                                   Style="{StaticResource ComboBoxWithErrors}">
                            <ComboBox.ItemTemplate>
                                <DataTemplate DataType="ComboBoxItem">

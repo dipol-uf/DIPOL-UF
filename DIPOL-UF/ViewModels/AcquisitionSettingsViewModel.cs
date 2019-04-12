@@ -93,14 +93,6 @@ namespace DIPOL_UF.ViewModels
             public bool KineticCycleBlock { [ObservableAsProperty] get; }
         }
 
-        private readonly SourceCache<(int Index, float Speed), int> _availableHsSpeeds
-            = new SourceCache<(int Index, float Speed), int>(x => x.Index);
-
-        private readonly  SourceCache<(int Index, string Name), int> _availablePreAmpGains
-            = new SourceCache<(int Index, string Name), int>(x => x.Index);
-
-        private readonly SourceCache<ReadMode, ReadMode> _availableReadModes
-            = new SourceCache<ReadMode, ReadMode>(x => x);
 
         private string[] Group1Names { get; }
         private string[] Group2Names { get; }
@@ -183,9 +175,17 @@ namespace DIPOL_UF.ViewModels
                         $"\tVIEW\t{e.PropertyName}\t{typeof(AcquisitionSettingsViewModel).GetProperty(e.PropertyName)?.GetValue(this)}");
             };
 
+            AvailableReadModes.CollectionChanged += (sender, e) =>
+            {
+                Helper.WriteLog($"\tREADMODES: {e.Action} \t {e.NewItems?.Count} \t {AvailableReadModes.Count}");
+            };
             AvailableHsSpeeds.CollectionChanged += (sender, e) =>
             {
-                Helper.WriteLog($"HSSPEEDS: {e.Action} \t {e.NewItems?.Count} \t {AvailableHsSpeeds.Count}");
+                Helper.WriteLog($"\tHSSPEEDS: {e.Action} \t {e.NewItems?.Count} \t {AvailableHsSpeeds.Count}");
+            };
+            AvailablePreAmpGains.CollectionChanged += (sender, e) =>
+            {
+                Helper.WriteLog($"\tPREAMPS: {e.Action} \t {e.NewItems?.Count} \t {AvailablePreAmpGains.Count}");
             };
 
 
@@ -233,10 +233,6 @@ namespace DIPOL_UF.ViewModels
             WatchItemSources();
             HookObservables();
             HookValidators();
-
-            _availableHsSpeeds.DisposeWith(Subscriptions);
-            _availablePreAmpGains.DisposeWith(Subscriptions);
-            _availableReadModes.DisposeWith(Subscriptions);
         }
 
         private void PreloadSettings()
@@ -262,8 +258,10 @@ namespace DIPOL_UF.ViewModels
             if (Model.Object?.AcquisitionMode.HasValue == true)
             {
                 var isFmt = Model.Object.AcquisitionMode.Value.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer);
-                _availableReadModes.Edit(context => context.Load(
-                    Helper.EnumFlagsToArray<ReadMode>(isFmt ? Camera.Capabilities.FtReadModes : Camera.Capabilities.ReadModes)));
+                AvailableReadModes.Load(
+                    Helper.EnumFlagsToArray<ReadMode>(isFmt
+                        ? Camera.Capabilities.FtReadModes
+                        : Camera.Capabilities.ReadModes).Where(EnumConverter.IsReadModeSupported));
             }
 
             if (Model.Object?.OutputAmplifier.HasValue == true
@@ -279,25 +277,6 @@ namespace DIPOL_UF.ViewModels
         {
             AttachAccessors();
             WatchAvailableSettings();
-
-            _availableHsSpeeds
-                .Connect()
-                .ObserveOnUi()
-                .GracefullyBindTo(AvailableHsSpeeds)
-                .DisposeWith(Subscriptions);
-
-
-            _availablePreAmpGains
-                .Connect()
-                .ObserveOnUi()
-                .GracefullyBindTo(AvailablePreAmpGains)
-                .DisposeWith(Subscriptions);
-
-            _availableReadModes
-                .Connect()
-                .ObserveOnUi()
-                .GracefullyBindTo(AvailableReadModes, x => x)
-                .DisposeWith(Subscriptions);
 
             this.WhenAnyPropertyChanged(nameof(Amplifier))
                 .Select(x => x.Amplifier)
@@ -950,29 +929,16 @@ namespace DIPOL_UF.ViewModels
 
         private void WatchItemSources()
         {
-            // Watches ADConverter & Amplifier and updates HsSpeeds
-            //Model.Object.WhenAnyPropertyChanged(
-            //         nameof(Model.Object.ADConverter),
-            //         nameof(Model.Object.OutputAmplifier))
-            //this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
-            //    .Select(x => x.Model.Object)
-            //     .Where(x => x.ADConverter.HasValue && x.OutputAmplifier.HasValue)
-            //     .Select(x => x.GetAvailableHSSpeeds(x.ADConverter?.Index ?? -1, x.OutputAmplifier?.Index ?? -1))
-            //.ObserveOnUi()
-            //     .Subscribe(x =>
-            //     {
-            //         //HsSpeed = -1;
-            //         _availableHsSpeeds.Edit(context => context.Load(x));
-            //     })
-            //     .DisposeWith(Subscriptions);
-
             Model.Object.WhenAnyPropertyChanged(
                      nameof(Model.Object.ADConverter),
                      nameof(Model.Object.OutputAmplifier))
                  .Where(x => x.ADConverter.HasValue && x.OutputAmplifier.HasValue)
                  .Select(x => x.GetAvailableHSSpeeds(x.ADConverter?.Index ?? -1, x.OutputAmplifier?.Index ?? -1))
                  .ObserveOnUi()
-                 .Subscribe(x => { AvailableHsSpeeds.Load(x); }).DisposeWith(Subscriptions);
+                 .Subscribe(x =>
+                 {
+                     AvailableHsSpeeds.GracefullyLoad(x);
+                 }).DisposeWith(Subscriptions);
             
 
             Model.Object.WhenAnyPropertyChanged(
@@ -991,14 +957,15 @@ namespace DIPOL_UF.ViewModels
                  .ObserveOnUi()
                  .Subscribe(x =>
                  {
-                     AvailablePreAmpGains.Load(x);
-                     //_availablePreAmpGains.Edit(context => context.Load(x));
+                     AvailablePreAmpGains.GracefullyLoad(x);
                  })
                  .DisposeWith(Subscriptions);
 
             // Read mode changes if FrameTransfer is enabled
             Model.Object.WhenAnyPropertyChanged(nameof(Model.Object.AcquisitionMode))
-                 .Select(x => x.AcquisitionMode?.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer) ?? false)
+                    .Where(x => x.AcquisitionMode.HasValue)
+                    // ReSharper disable once PossibleInvalidOperationException
+                    .Select(x => x.AcquisitionMode.Value.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer))
                  .DistinctUntilChanged()
                  .Select(x => Helper.EnumFlagsToArray<ReadMode>(x
                                         ? Camera.Capabilities.FtReadModes
@@ -1007,9 +974,7 @@ namespace DIPOL_UF.ViewModels
                  .ObserveOnUi()
                  .Subscribe(x =>
                  {
-                     //ReadMode = null;
-                     //_availableReadModes.Edit(context => context.Load(x));
-                     AvailableReadModes.Load(x);
+                    AvailableReadModes.GracefullyLoad(x);
                  })
                  .DisposeWith(Subscriptions);
 
@@ -1027,6 +992,7 @@ namespace DIPOL_UF.ViewModels
 
         }
         
+
         private void InitializeCommands()
         {
             ViewLoadedCommand = 
@@ -1104,13 +1070,6 @@ namespace DIPOL_UF.ViewModels
                                    })
                                .DisposeWith(Subscriptions);
 
-        }
-
-        private void ResetCollections()
-        {
-            //_availableHsSpeeds?.Clear();
-            //_avsilablePreAmpGains?.Clear();
-            //_availableReadModes?.Clear();
         }
 
         private void Submit(Window w)
@@ -1200,7 +1159,6 @@ namespace DIPOL_UF.ViewModels
 
         private async Task LoadFrom(string fileName, CancellationToken token)
         {
-            ResetCollections();
 
             try
             {
