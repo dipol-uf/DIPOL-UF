@@ -226,25 +226,38 @@ namespace DIPOL_UF.ViewModels
 
 
 
-            //if (Model.Object?.ADConverter.HasValue == true
-            //    && Model.Object.OutputAmplifier.HasValue)
-            //{
-            //    _availableHsSpeeds.Edit(context =>
-            //        context.Load(Model.Object.GetAvailableHSSpeeds(
-            //            Model.Object.ADConverter.Value.Index,
-            //            Model.Object.OutputAmplifier.Value.Index)));
-            //}
+            PreloadSettings();
 
-            //if (Model.Object?.ADConverter.HasValue == true
-            //    && Model.Object.OutputAmplifier.HasValue
-            //    && Model.Object.HSSpeed.HasValue)
-            //{
-            //    _availablePreAmpGains.Edit(context =>
-            //        context.Load(Model.Object.GetAvailablePreAmpGain(
-            //            Model.Object.ADConverter.Value.Index,
-            //            Model.Object.OutputAmplifier.Value.Index,
-            //            Model.Object.HSSpeed.Value.Index)));
-            //}
+            InitializeCommands();
+
+            WatchItemSources();
+            HookObservables();
+            HookValidators();
+
+            _availableHsSpeeds.DisposeWith(Subscriptions);
+            _availablePreAmpGains.DisposeWith(Subscriptions);
+            _availableReadModes.DisposeWith(Subscriptions);
+        }
+
+        private void PreloadSettings()
+        {
+            if (Model.Object?.ADConverter.HasValue == true
+                && Model.Object.OutputAmplifier.HasValue)
+            {
+                AvailableHsSpeeds.Load(Model.Object.GetAvailableHSSpeeds(
+                    Model.Object.ADConverter.Value.Index,
+                    Model.Object.OutputAmplifier.Value.Index));
+            }
+
+            if (Model.Object?.ADConverter.HasValue == true
+                && Model.Object.OutputAmplifier.HasValue
+                && Model.Object.HSSpeed.HasValue)
+            {
+                AvailablePreAmpGains.Load(Model.Object.GetAvailablePreAmpGain(
+                    Model.Object.ADConverter.Value.Index,
+                    Model.Object.OutputAmplifier.Value.Index,
+                    Model.Object.HSSpeed.Value.Index));
+            }
 
             if (Model.Object?.AcquisitionMode.HasValue == true)
             {
@@ -261,18 +274,7 @@ namespace DIPOL_UF.ViewModels
                 AllowedGain = string.Format(Properties.Localization.AcquisitionSetttings_AvailableGainFormat,
                     low, high);
             }
-
-            InitializeCommands();
-
-            WatchItemSources();
-            HookObservables();
-            HookValidators();
-
-            _availableHsSpeeds.DisposeWith(Subscriptions);
-            _availablePreAmpGains.DisposeWith(Subscriptions);
-            _availableReadModes.DisposeWith(Subscriptions);
         }
-
         private void HookObservables()
         {
             AttachAccessors();
@@ -952,23 +954,32 @@ namespace DIPOL_UF.ViewModels
             //Model.Object.WhenAnyPropertyChanged(
             //         nameof(Model.Object.ADConverter),
             //         nameof(Model.Object.OutputAmplifier))
-            this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
-                .Select(x => x.Model.Object)
+            //this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
+            //    .Select(x => x.Model.Object)
+            //     .Where(x => x.ADConverter.HasValue && x.OutputAmplifier.HasValue)
+            //     .Select(x => x.GetAvailableHSSpeeds(x.ADConverter?.Index ?? -1, x.OutputAmplifier?.Index ?? -1))
+            //.ObserveOnUi()
+            //     .Subscribe(x =>
+            //     {
+            //         //HsSpeed = -1;
+            //         _availableHsSpeeds.Edit(context => context.Load(x));
+            //     })
+            //     .DisposeWith(Subscriptions);
+
+            Model.Object.WhenAnyPropertyChanged(
+                     nameof(Model.Object.ADConverter),
+                     nameof(Model.Object.OutputAmplifier))
                  .Where(x => x.ADConverter.HasValue && x.OutputAmplifier.HasValue)
                  .Select(x => x.GetAvailableHSSpeeds(x.ADConverter?.Index ?? -1, x.OutputAmplifier?.Index ?? -1))
-                 //.ObserveOnUi()
-                 .Subscribe(x =>
-                 {
-                     //HsSpeed = -1;
-                     _availableHsSpeeds.Edit(context => context.Load(x));
-                 })
-                 .DisposeWith(Subscriptions);
+                 .ObserveOnUi()
+                 .Subscribe(x => { AvailableHsSpeeds.Load(x); }).DisposeWith(Subscriptions);
+            
 
             Model.Object.WhenAnyPropertyChanged(
                      nameof(Model.Object.ADConverter),
                      nameof(Model.Object.OutputAmplifier),
                      nameof(Model.Object.HSSpeed))
-                 .Where(x =>
+                .Where(x =>
                      x.ADConverter.HasValue
                      && x.OutputAmplifier.HasValue
                      && x.HSSpeed.HasValue)
@@ -977,11 +988,11 @@ namespace DIPOL_UF.ViewModels
                          x.ADConverter?.Index ?? -1,
                          x.OutputAmplifier?.Index ?? -1,
                          x.HSSpeed?.Index ?? -1))
-                 //.ObserveOnUi()
+                 .ObserveOnUi()
                  .Subscribe(x =>
                  {
-                     //PreAmpGain = -1;
-                     _availablePreAmpGains.Edit(context => context.Load(x));
+                     AvailablePreAmpGains.Load(x);
+                     //_availablePreAmpGains.Edit(context => context.Load(x));
                  })
                  .DisposeWith(Subscriptions);
 
@@ -996,8 +1007,9 @@ namespace DIPOL_UF.ViewModels
                  .ObserveOnUi()
                  .Subscribe(x =>
                  {
-                     ReadMode = null;
-                     _availableReadModes.Edit(context => context.Load(x));
+                     //ReadMode = null;
+                     //_availableReadModes.Edit(context => context.Load(x));
+                     AvailableReadModes.Load(x);
                  })
                  .DisposeWith(Subscriptions);
 
@@ -1096,9 +1108,9 @@ namespace DIPOL_UF.ViewModels
 
         private void ResetCollections()
         {
-            _availableHsSpeeds?.Clear();
-            _availablePreAmpGains?.Clear();
-            _availableReadModes?.Clear();
+            //_availableHsSpeeds?.Clear();
+            //_avsilablePreAmpGains?.Clear();
+            //_availableReadModes?.Clear();
         }
 
         private void Submit(Window w)
