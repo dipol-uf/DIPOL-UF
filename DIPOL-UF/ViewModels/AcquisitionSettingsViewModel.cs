@@ -501,7 +501,9 @@ namespace DIPOL_UF.ViewModels
 
                         BatchUpdateErrors(
                             (nameof(AccumulateCycleTime), nameof(CanBeParsed), firstTest),
-                            (nameof(AccumulateCycleTime), nameof(DoesNotThrow), secondTest));
+                            (nameof(AccumulateCycleTime), nameof(DoesNotThrow), secondTest),
+                            (nameof(AccumulateCycleNumber), nameof(CanBeParsed), null),
+                            (nameof(AccumulateCycleNumber), nameof(DoesNotThrow), null));
                     }
                     else if (IsAvailable.AccumulateCycleNumber)
                     {
@@ -515,6 +517,8 @@ namespace DIPOL_UF.ViewModels
                                 frames, Model.Object.AccumulateCycle?.Time ?? 0f);
 
                         BatchUpdateErrors(
+                            (nameof(AccumulateCycleTime), nameof(CanBeParsed), null),
+                            (nameof(AccumulateCycleTime), nameof(DoesNotThrow), null),
                             (nameof(AccumulateCycleNumber), nameof(CanBeParsed), firstTest),
                             (nameof(AccumulateCycleNumber), nameof(DoesNotThrow), secondTest));
                     }
@@ -566,7 +570,9 @@ namespace DIPOL_UF.ViewModels
 
                         BatchUpdateErrors(
                             (nameof(KineticCycleTime), nameof(CanBeParsed), firstTest),
-                            (nameof(KineticCycleTime), nameof(DoesNotThrow), secondTest));
+                            (nameof(KineticCycleTime), nameof(DoesNotThrow), secondTest),
+                            (nameof(KineticCycleNumber), nameof(CanBeParsed), null),
+                            (nameof(KineticCycleNumber), nameof(DoesNotThrow), null));
                     }
                     else if (IsAvailable.KineticCycleNumber)
                     {
@@ -580,6 +586,8 @@ namespace DIPOL_UF.ViewModels
                                 frames, Model.Object.KineticCycle?.Time ?? 0f);
 
                         BatchUpdateErrors(
+                            (nameof(KineticCycleTime), nameof(CanBeParsed), null),
+                            (nameof(KineticCycleTime), nameof(DoesNotThrow), null),
                             (nameof(KineticCycleNumber), nameof(CanBeParsed), firstTest),
                             (nameof(KineticCycleNumber), nameof(DoesNotThrow), secondTest));
                     }
