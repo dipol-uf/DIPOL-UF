@@ -13,10 +13,10 @@ Software is being developed as part of a scientific project done at the [**@Tuor
 
 - [**FITS-CS**](./FITS-CS) provides IO support for FITS images (only one-image per file, no other extensions).
 
-- [**StepMotor**](./StepMotor) provides tools for interaction with Step Motor - device responsible for plate rotation durin polarimetric observations.
+- [**StepMotor**](./StepMotor) provides tools for interaction with Step Motor - device responsible for phase plate rotation during polarimetric observations.
 
 - [**DipolImage**](./Image) contains Image class that handles all image transport in a project.
 
-- [**Client**](./Client), [**Host**](./Host), are test projects used at debug phase.
+- [**Host**](./Host) is a standalone application (.exe) that is launched on each of the secondary PC and allows over-the-network communication with the cameras.
 
 - [**Tests**](./Tests) contains several tests and other debug phase instruments
