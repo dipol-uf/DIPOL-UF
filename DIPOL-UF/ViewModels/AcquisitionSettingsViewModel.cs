@@ -42,7 +42,6 @@ using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
-using DynamicData;
 using DynamicData.Binding;
 using MathNet.Numerics;
 using Microsoft.Xaml.Behaviors.Core;
