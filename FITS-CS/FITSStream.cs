@@ -26,6 +26,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using DipolImage;
 
 
@@ -77,10 +79,15 @@ namespace FITS_CS
             Flush();
         }
 
+        public async Task WriteUnitAsync(FitsUnit unit, CancellationToken token = default)
+        {
+            await WriteAsync(unit._data, 0, unit._data.Length, token);
+            await FlushAsync(token);
+        }
+
         public FitsStream(Stream str)
             =>  _baseStream = str ?? throw new ArgumentNullException($"{nameof(str)} is null");
                     
-
         public new void Dispose()
         {
             Dispose(true);
@@ -162,9 +169,53 @@ namespace FITS_CS
 
         public static void WriteImage(Image image, FitsImageType type, string path, IEnumerable<FitsKey> extraKeys = null)
         {
-            using (var str = new FileStream(path, FileMode.Create))
+            using (var str = new FileStream(path, FileMode.Create, FileAccess.Write))
                 WriteImage(image, type, str, extraKeys);
         }
+
+        public static async Task WriteImageAsync(Image image, FitsImageType type, Stream stream,
+            IEnumerable<FitsKey> extraKeys = null, CancellationToken token = default)
+        {
+            List<FitsUnit> keyUnits = null;
+            List<FitsUnit> dataUnits = null;
+            await Task.Run(() =>
+            {
+                var keys = new List<FitsKey>
+                {
+                    new FitsKey("SIMPLE", FitsKeywordType.Logical, true),
+                    new FitsKey("BITPIX", FitsKeywordType.Integer, (int) (short) type),
+                    new FitsKey("NAXIS", FitsKeywordType.Integer, 2),
+                    new FitsKey("NAXIS1", FitsKeywordType.Integer, image.Width),
+                    new FitsKey("NAXIS2", FitsKeywordType.Integer, image.Height),
+                    new FitsKey("NAXIS", FitsKeywordType.Integer, 2)
+                };
+
+                if (extraKeys != null)
+                    keys.AddRange(extraKeys);
+
+                keys.Add(FitsKey.End);
+
+                keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
+                dataUnits = FitsUnit.GenerateFromDataArray(image.GetBytes(), type);
+            }, token);
+
+            if (keyUnits is null || dataUnits is null)
+                throw new NullReferenceException();
+
+            var str = new FitsStream(stream);
+            foreach (var unit in keyUnits)
+                await str.WriteUnitAsync(unit, token);
+            foreach (var unit in dataUnits)
+                await str.WriteUnitAsync(unit, token);
+        }
+
+        public static async Task WriteImageAsync(Image image, FitsImageType type, string path,
+            IEnumerable<FitsKey> extraKeys = null, CancellationToken token = default)
+        {
+            using (var str = new FileStream(path, FileMode.Create, FileAccess.Write))
+                await WriteImageAsync(image, type, str, extraKeys, token);
+        }
+
 
         public static Image ReadImage(Stream stream, out List<FitsKey> keywords)
         {
