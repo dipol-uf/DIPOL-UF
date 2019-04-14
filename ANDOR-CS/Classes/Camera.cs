@@ -27,6 +27,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -71,6 +73,13 @@ namespace ANDOR_CS.Classes
         private string _autosavePath;
 
         private event EventHandler SdkEventFired;
+
+        // WATCH : this is the image 
+        private bool _sessionImageFlag;
+        private Task _sessionSubscription;
+        private ImageFormat _imageFormat;
+        private Subject<(Image Image, DateTimeOffset Time)> _sessionImageSource;
+        private CancellationTokenSource _sessionImageCancellation;
 
         /// <summary>
         /// Indicates if this camera is currently active
@@ -1208,8 +1217,18 @@ namespace ANDOR_CS.Classes
 
                     if (totalImg.First >= 0)
                     {
-                        for (; imageIndex <= totalImg.Last; imageIndex++)
-                            OnNewImageReceived(new NewImageReceivedEventArgs(imageIndex, GetImageTiming(imageIndex)));
+                        if (_sessionImageFlag)
+                            for (; imageIndex <= totalImg.Last; imageIndex++)
+                            {
+                                var timing = GetImageTiming(imageIndex);
+                                _sessionImageSource.OnNext((PullPreviewImage(imageIndex, _imageFormat), timing));
+                                OnNewImageReceived(
+                                    new NewImageReceivedEventArgs(imageIndex, timing));
+                            }
+                        else
+                            for (; imageIndex <= totalImg.Last; imageIndex++)
+                                OnNewImageReceived(
+                                    new NewImageReceivedEventArgs(imageIndex, GetImageTiming(imageIndex)));
                     }
 
                     if (token.IsCancellationRequested
@@ -1221,37 +1240,37 @@ namespace ANDOR_CS.Classes
                         completionSrc.SetResult(true);
                 }
 
-                void ListenToStatusUpdates(object sender, EventArgs e)
-                {
-                    var status = GetStatus();
-                    var acc = 0;
-                    var kin = 0;
-                    Call(CameraHandle, () => SdkInstance.GetAcquisitionProgress(ref acc, ref kin));
-                    OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, DateTime.UtcNow, kin, acc));
+                //void ListenToStatusUpdates(object sender, EventArgs e)
+                //{
+                //    var status = GetStatus();
+                //    var acc = 0;
+                //    var kin = 0;
+                //    Call(CameraHandle, () => SdkInstance.GetAcquisitionProgress(ref acc, ref kin));
+                //    OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, DateTime.UtcNow, kin, acc));
                     
-                    if (token.IsCancellationRequested
-                        && !completionSrc.Task.IsCompleted)
-                        completionSrc.SetCanceled();
+                //    if (token.IsCancellationRequested
+                //        && !completionSrc.Task.IsCompleted)
+                //        completionSrc.SetCanceled();
 
-                    if (status != CameraStatus.Acquiring
-                        && !completionSrc.Task.IsCompleted)
-                        completionSrc.SetResult(true);
-                }
+                //    if (status != CameraStatus.Acquiring
+                //        && !completionSrc.Task.IsCompleted)
+                //        completionSrc.SetResult(true);
+                //}
 
-                void WatchImages(object sender, EventArgs e)
-                {
-                    var totalImg = (First: 0, Last: 0);
-                    var result = Call(CameraHandle,
-                        () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
+                //void WatchImages(object sender, EventArgs e)
+                //{
+                //    var totalImg = (First: 0, Last: 0);
+                //    var result = Call(CameraHandle,
+                //        () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
 
-                    Console.WriteLine($"IMAGES: {totalImg} : {GetStatus()}; {result}; {Thread.CurrentThread.ManagedThreadId}");
+                //    Console.WriteLine($"IMAGES: {totalImg} : {GetStatus()}; {result}; {Thread.CurrentThread.ManagedThreadId}");
 
-                    if (totalImg.First > 0)
-                    {
-                        for (; imageIndex <= totalImg.Last; imageIndex++)
-                            OnNewImageReceived(new NewImageReceivedEventArgs(imageIndex,GetImageTiming(imageIndex)));
-                    }
-                }
+                //    if (totalImg.First > 0)
+                //    {
+                //        for (; imageIndex <= totalImg.Last; imageIndex++)
+                //            OnNewImageReceived(new NewImageReceivedEventArgs(imageIndex,GetImageTiming(imageIndex)));
+                //    }
+                //}
 
                 if (_useSdkEvents)
                 {
@@ -1281,8 +1300,9 @@ namespace ANDOR_CS.Classes
                     intervalMs = intervalMs > 1000 || intervalMs < 10 ? 100 : intervalMs;
                     timer.Interval = intervalMs;
 
-                    timer.Elapsed += ListenToStatusUpdates;
-                    timer.Elapsed += WatchImages;
+                    SdkEventFired += ListenAndCheckImages;
+                    //timer.Elapsed += ListenToStatusUpdates;
+                    //timer.Elapsed += WatchImages;
                     try
                     {
                         timer.Start();
@@ -1291,9 +1311,12 @@ namespace ANDOR_CS.Classes
                     }
                     finally
                     {
+                    
+                        SdkEventFired -= ListenAndCheckImages;
+
                         timer.Stop();
-                        timer.Elapsed -= ListenToStatusUpdates;
-                        timer.Elapsed -= WatchImages;
+                        //timer.Elapsed -= ListenToStatusUpdates;
+                        //timer.Elapsed -= WatchImages;
                     }
                 }
 
@@ -1379,7 +1402,6 @@ namespace ANDOR_CS.Classes
 
             return nImages;
         }
-
         public override void SaveNextAcquisitionAs(
             string folderPath, string imagePattern, ImageFormat format, 
             FitsKey[] extraKeys = null)
@@ -1449,6 +1471,83 @@ namespace ANDOR_CS.Classes
             }
 
             AcquisitionFinished += SaverAsync;
+        }
+
+        // TODO : move to base class and implement on other derived classes
+        public override void StartImageSavingSequence(
+            string folderPath, string imagePattern, 
+            ImageFormat format, FitsKey[] extraKeys = null)
+        {
+            if (!SettingsProvider.Settings.TryGet("RootDirectory", out string root))
+                throw new InvalidOperationException(
+                    "Configuration file does not contain required key \"RootDirectory\".");
+
+            var dateStr = DateTime.Now.ToString("yyyyMMdd");
+            var path = Path.GetFullPath(Path.Combine(root, dateStr, folderPath));
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            var regex = new Regex($@"{imagePattern}_?(\d{{1,4}})\.fits",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+
+            var index = Directory.EnumerateFiles(path, $"{imagePattern}_????.fits")
+                                 .Reverse()
+                                 .Select(x =>
+                                 {
+                                     var m = regex.Match(x);
+                                     return m.Success ? int.Parse(m.Groups[1].Value) : 0;
+                                 }).FirstOrDefault() + 1;
+
+            var fitsType = format == ImageFormat.UnsignedInt16 ? FitsImageType.Int16 : FitsImageType.Int32;
+
+            _sessionImageCancellation = new CancellationTokenSource();
+            _sessionImageFlag = true;
+            async Task SaveAsync(Image im, DateTimeOffset time, int i, CancellationToken token = default)
+            {
+                var imgPath = Path.Combine(path, $"{imagePattern}_{index + i:0000}.fits");
+                List<FitsKey> keys = null;
+                await Task.Run(() =>
+                {
+                    keys = new List<FitsKey>(extraKeys?.Length ?? 10)
+                    {
+                        new FitsKey("CAMERA", FitsKeywordType.String, ToString()),
+                        FitsKey.CreateDate("DATE", time.UtcDateTime),
+                        new FitsKey("ACTEXPT", FitsKeywordType.Float, Timings.Exposure, "sec"),
+                        new FitsKey("ACTACCT", FitsKeywordType.Float, Timings.Accumulation, "sec"),
+                        new FitsKey("ACTKINT", FitsKeywordType.Float, Timings.Kinetic, "sec")
+                    };
+
+                    if (!(extraKeys is null))
+                        keys.AddRange(extraKeys);
+
+                    if (!(CurrentSettings is null) &&
+                        SettingsFitsKeys?.Count > 0)
+                        keys.AddRange(SettingsFitsKeys);
+
+                    keys.AddRange(SettingsProvider.MetaFitsKeys);
+
+
+                });
+                await FitsStream.WriteImageAsync(im, fitsType, imgPath, keys, token);
+            }
+
+
+            _imageFormat = format;
+
+            _sessionImageSource = new Subject<(Image Image, DateTimeOffset Time)>();
+
+            _sessionSubscription = _sessionImageSource.ForEachAsync(
+                async (data, ind) =>
+                    await SaveAsync(data.Image, data.Time, ind, _sessionImageCancellation.Token), _sessionImageCancellation.Token);
+        }
+        
+        // TODO : move to base class and implement on other derived classes
+        public override async Task FinishImageSavingSequenceAsync()
+        {
+            _sessionImageSource.OnCompleted();
+            _sessionImageFlag = false;
+            await _sessionSubscription;
         }
 
         public override void ApplySettings(SettingsBase settings)

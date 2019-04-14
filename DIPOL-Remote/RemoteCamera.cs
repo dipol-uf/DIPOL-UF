@@ -293,6 +293,8 @@ namespace DIPOL_Remote
         public override void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs)
             => _client.CallTemperatureMonitor(CameraIndex, mode, timeout);
 
+       
+
         public override SettingsBase GetAcquisitionSettingsTemplate()
             => new RemoteSettings(this, _client.CreateSettings(CameraIndex), _client);
 
@@ -358,6 +360,16 @@ namespace DIPOL_Remote
                 default:
                     throw new ArgumentException("Unsupported image type.", nameof(format));
             }
+        }
+
+        public override void StartImageSavingSequence(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
+        {
+            _client.StartImageSavingSequence(CameraIndex, folderPath, imagePattern, format, extraKeys);
+        }
+
+        public override Task FinishImageSavingSequenceAsync()
+        {
+            return _client.FinishImageSavingSequenceAsync(CameraIndex);
         }
 
         public override Task<Image[]> PullAllImagesAsync<T>(CancellationToken token)

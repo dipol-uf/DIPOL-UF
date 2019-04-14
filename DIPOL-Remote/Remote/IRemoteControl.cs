@@ -247,6 +247,12 @@ namespace DIPOL_Remote.Remote
             ImageFormat format,
             FitsKey[] extraKeys);
 
+        [OperationContract]
+        void StartImageSavingSequence(
+            int camIndex,
+            string folderPath, string imagePattern,
+            ImageFormat format, FitsKey[] extraKeys = null);
+
         #region Async methods
 
         [OperationContract(IsOneWay = true)]
@@ -264,6 +270,11 @@ namespace DIPOL_Remote.Remote
         IAsyncResult BeginPullAllImagesAsync(int camIndex, ImageFormat format, RemoteCancellationToken token,
             AsyncCallback callback, object state);
         (byte[] Payload, int Width, int Height)[] EndPullAllImagesAsync(IAsyncResult result);
+
+
+        [OperationContract(AsyncPattern = true)]
+        IAsyncResult BeginFinishImageSavingSequence(int camIndex, AsyncCallback callback, object state);
+        void EndFinishImageSavingSequence(IAsyncResult result);
 
         #if DEBUG
         [OperationContract(AsyncPattern = true)]

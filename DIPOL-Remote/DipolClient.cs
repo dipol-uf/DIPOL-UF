@@ -225,6 +225,10 @@ namespace DIPOL_Remote
             FitsKey[] extraKeys)
             => Channel.CallSaveNextAcquisitionAs(camIndex, folderPath, imagePattern, format, extraKeys);
 
+        public void StartImageSavingSequence(int camIndex, string folderPath, string imagePattern, ImageFormat format,
+            FitsKey[] extraKeys = null)
+            => Channel.StartImageSavingSequence(camIndex, folderPath, imagePattern, format, extraKeys);
+
         public int[] ActiveRemoteCameras()
             => Channel.GetCamerasInUse();
 
@@ -272,6 +276,16 @@ namespace DIPOL_Remote
             => throw new NotSupportedException(
                 $"{nameof(IRemoteControl.EndPullAllImagesAsync)} is not supported directly. " +
                 $"Use {nameof(PullAllImagesAsync)} instead.");
+
+        public IAsyncResult BeginFinishImageSavingSequence(int camIndex, AsyncCallback callback, object state)
+            => throw new NotSupportedException(
+                $"{nameof(IRemoteControl.BeginFinishImageSavingSequence)} is not supported directly. " +
+                $"Use {nameof(FinishImageSavingSequenceAsync)} instead.");
+
+        public void EndFinishImageSavingSequence(IAsyncResult result)
+            => throw new NotSupportedException(
+                $"{nameof(IRemoteControl.EndFinishImageSavingSequence)} is not supported directly. " +
+                $"Use {nameof(FinishImageSavingSequenceAsync)} instead.");
 
         IAsyncResult IRemoteControl.BeginDebugMethodAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state)
             => throw new NotSupportedException(
@@ -378,6 +392,11 @@ namespace DIPOL_Remote
 
             return await taskSource.Task;
         }
+
+        public Task FinishImageSavingSequenceAsync(int camIndex)
+            => AsyncHelper(Channel.BeginFinishImageSavingSequence,
+                Channel.EndFinishImageSavingSequence,
+                camIndex);
 
         public Task CreateCameraAsync(int camIndex)
             => AsyncHelper(

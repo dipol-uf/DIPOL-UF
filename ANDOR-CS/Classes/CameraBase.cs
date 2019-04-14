@@ -467,6 +467,9 @@ namespace ANDOR_CS.Classes
             return null;
         }
 
+        public abstract void StartImageSavingSequence(string folderPath, string imagePattern,
+            ImageFormat format, FitsKey[] extraKeys = null);
+        public abstract Task FinishImageSavingSequenceAsync();
 
         public abstract SettingsBase GetAcquisitionSettingsTemplate();
 
