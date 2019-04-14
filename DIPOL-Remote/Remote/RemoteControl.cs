@@ -613,6 +613,10 @@ namespace DIPOL_Remote.Remote
             FitsKey[] extraKeys)
             => GetCameraSafe(camIndex).SaveNextAcquisitionAs(folderPath, imagePattern, format);
 
+        public void StartImageSavingSequence(int camIndex, string folderPath, string imagePattern, ImageFormat format,
+            FitsKey[] extraKeys = null)
+            => GetCameraSafe(camIndex).StartImageSavingSequence(folderPath, imagePattern, format, extraKeys);
+
 
         private CameraBase GetCameraSafe(int camIndex)
         {
@@ -717,6 +721,21 @@ namespace DIPOL_Remote.Remote
             throw new FaultException<ServiceFault>(
                 new ServiceFault(){Message = @"Finalized task type mismatch."},
                 ServiceFault.GeneralServiceErrorReason);
+        }
+
+        public IAsyncResult BeginFinishImageSavingSequence(int camIndex, AsyncCallback callback, object state)
+        {
+            return new AsyncResult(GetCameraSafe(camIndex).FinishImageSavingSequenceAsync(), callback, state);
+        }
+
+        public void EndFinishImageSavingSequence(IAsyncResult result)
+        {
+            if (FinalizeAsyncOperation(result) is Task task)
+                task.GetAwaiter().GetResult();
+            else
+                throw new FaultException<ServiceFault>(
+                    new ServiceFault() {Message = @"Finalized task type mismatch."},
+                    ServiceFault.GeneralServiceErrorReason);
         }
 
 

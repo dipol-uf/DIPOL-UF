@@ -151,6 +151,9 @@ namespace ANDOR_CS.Classes
                 (TtlShutterSignal)SettingsProvider.Settings.Get("TTLShutterSignal", 1));
             WriteMessage("Camera created.", Green);
         }
+
+       
+
         public override SettingsBase GetAcquisitionSettingsTemplate()
         {
             return new DebugSettings(this);
@@ -236,6 +239,16 @@ namespace ANDOR_CS.Classes
         public override Task<Image[]> PullAllImagesAsync(ImageFormat format, CancellationToken token)
         {
             return Task.FromResult(new[] {PullPreviewImage(0, format), PullPreviewImage(0, format)});
+        }
+
+        public override void StartImageSavingSequence(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
+        {
+            Console.WriteLine(@"Start saving sequence");
+        }
+        public override Task FinishImageSavingSequenceAsync()
+        {
+            Console.WriteLine(@"Stopped saving sequence");
+            return Task.CompletedTask;
         }
 
         protected override void StartAcquisition()
