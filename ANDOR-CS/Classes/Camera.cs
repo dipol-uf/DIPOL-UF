@@ -1206,14 +1206,11 @@ namespace ANDOR_CS.Classes
                     OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, DateTime.UtcNow, kin, acc));
 
                     var totalImg = (First: 0, Last: 0);
-                    var newImg = (First: 0, Last: 0);
                     var result = Call(CameraHandle,
                         () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
 
-                    var result2 = Call(CameraHandle,
-                        () => SdkInstance.GetNumberAvailableImages(ref newImg.First, ref newImg.Last));
 
-                    Console.WriteLine($"IMAGES: {totalImg} {result} {newImg} {result2} {GetStatus()}");
+                    Console.WriteLine($"IMAGES: {totalImg} {result} {GetStatus()}");
 
                     if (totalImg.First >= 0)
                     {
@@ -1538,8 +1535,8 @@ namespace ANDOR_CS.Classes
             _sessionImageSource = new Subject<(Image Image, DateTimeOffset Time)>();
 
             _sessionSubscription = _sessionImageSource.ForEachAsync(
-                async (data, ind) =>
-                    await SaveAsync(data.Image, data.Time, ind, _sessionImageCancellation.Token), _sessionImageCancellation.Token);
+                (data, ind) => Task.Run(async () => 
+                    await SaveAsync(data.Image, data.Time, ind, _sessionImageCancellation.Token), _sessionImageCancellation.Token));
         }
         
         // TODO : move to base class and implement on other derived classes
