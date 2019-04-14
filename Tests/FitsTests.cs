@@ -887,7 +887,10 @@ namespace Tests
         private static void CleanupFile(in string path)
         {
             if (File.Exists(GetPath(path)))
+            {
+                Task.Delay(TimeSpan.FromMilliseconds(150)).GetAwaiter().GetResult();
                 File.Delete(GetPath(path));
+            }
         }
             
 
