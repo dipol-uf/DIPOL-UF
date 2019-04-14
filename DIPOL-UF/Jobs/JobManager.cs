@@ -28,10 +28,12 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Runtime.Remoting;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.Classes;
+using ANDOR_CS.Enums;
 using DIPOL_UF.Models;
 using DIPOL_UF.Properties;
 using DynamicData;
@@ -48,7 +50,6 @@ namespace DIPOL_UF.Jobs
         private Dictionary<int, SettingsBase> _settingsCache;
         private Task _jobTask;
         private CancellationTokenSource _tokenSource;
-        private string _fileName;
         public static JobManager Manager { get; } = new JobManager();
 
         [Reactive]
@@ -122,14 +123,38 @@ namespace DIPOL_UF.Jobs
 
                 await Task.Run(async ()  =>
                 {
-                    _fileName = CurrentTarget.TargetName;
+                    var fileName = CurrentTarget.TargetName;
+                    if (AcquisitionJob.ContainsActionOfType<CameraAction>())
+                        foreach (var control in _jobControls)
+                            control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, fileName,
+                                ImageFormat.SignedInt32);
                     for (var i = 0; i < AcquisitionRuns; i++)
                         await AcquisitionJob.Run(token);
 
-                    _fileName = $"{CurrentTarget.TargetName}_bias";
+                    if (AcquisitionJob.ContainsActionOfType<CameraAction>())
+                        foreach (var control in _jobControls)
+                            await control.Camera.FinishImageSavingSequenceAsync();
+
+
+                    fileName = $"{CurrentTarget.TargetName}_bias";
+                    if (BiasJob?.ContainsActionOfType<CameraAction>() == true)
+                        foreach (var control in _jobControls)
+                            control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, fileName,
+                                ImageFormat.SignedInt32);
                     await (BiasJob?.Run(token) ?? Task.CompletedTask);
-                    _fileName = $"{CurrentTarget.TargetName}_dark";
+                    if (BiasJob?.ContainsActionOfType<CameraAction>() == true)
+                        foreach (var control in _jobControls)
+                            await control.Camera.FinishImageSavingSequenceAsync();
+
+                    fileName = $"{CurrentTarget.TargetName}_dark";
+                    if (DarkJob?.ContainsActionOfType<CameraAction>() == true)
+                        foreach (var control in _jobControls)
+                            control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, fileName,
+                                ImageFormat.SignedInt32);
                     await (DarkJob?.Run(token) ?? Task.CompletedTask);
+                    if (DarkJob?.ContainsActionOfType<CameraAction>() == true)
+                        foreach (var control in _jobControls)
+                            await control.Camera.FinishImageSavingSequenceAsync();
                 }, token);
             }
             catch (Exception e)
@@ -146,7 +171,6 @@ namespace DIPOL_UF.Jobs
                     sett.Value.Dispose();
                 _settingsCache.Clear();
                 _settingsCache = null;
-                _fileName = null;
             }
         }
 
@@ -217,12 +241,12 @@ namespace DIPOL_UF.Jobs
 
         private async Task<Job> ConstructJob(string path)
         {
-            Job job;
+            Job control;
             if (!File.Exists(path))
                 throw new FileNotFoundException("Job file is not found", path);
 
             using (var str = new FileStream(path, FileMode.Open, FileAccess.Read))
-                job = await Job.CreateAsync(str);
+                control = await Job.CreateAsync(str);
 
             // TODO : Enable for alpha tests
             // INFO : Disabled to test on local environment
@@ -230,9 +254,9 @@ namespace DIPOL_UF.Jobs
             // TODO : Consider checking shutter support in advance
             if (AcquisitionJob.ContainsActionOfType<MotorAction>()
                 && _windowRef.PolarimeterMotor is null)
-                throw new InvalidOperationException("Cannot execute current job with no motor connected.");
+                throw new InvalidOperationException("Cannot execute current control with no motor connected.");
 #endif
-            return job;
+            return control;
         }
 
 

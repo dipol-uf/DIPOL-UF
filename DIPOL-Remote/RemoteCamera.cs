@@ -57,7 +57,7 @@ namespace DIPOL_Remote
             protected set => throw new NotSupportedException();
         }
 
-    public override bool IsTemperatureMonitored
+        public override bool IsTemperatureMonitored
         {
             get
             {
