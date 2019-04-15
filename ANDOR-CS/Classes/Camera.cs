@@ -1512,7 +1512,8 @@ namespace ANDOR_CS.Classes
                         FitsKey.CreateDate("DATE", time.UtcDateTime),
                         new FitsKey("ACTEXPT", FitsKeywordType.Float, Timings.Exposure, "sec"),
                         new FitsKey("ACTACCT", FitsKeywordType.Float, Timings.Accumulation, "sec"),
-                        new FitsKey("ACTKINT", FitsKeywordType.Float, Timings.Kinetic, "sec")
+                        new FitsKey("ACTKINT", FitsKeywordType.Float, Timings.Kinetic, "sec"),
+                        new FitsKey(@"INDEX", FitsKeywordType.Integer, i, "Frame index in cycle")
                     };
                     var camStr = $"{CameraModel}_{SerialNumber}";
                     if(SettingsProvider.Filters.ContainsKey(camStr))
