@@ -209,7 +209,12 @@ namespace DIPOL_UF.Jobs
             }
             catch (Exception e)
             {
-                // TODO : Handle various exceptions
+                MessageBox.Show(
+                    string.Format(Localization.JobManager_MB_Failed_Text, e.Message),
+                    Localization.JobManager_MB_Failed_Header,
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+
+                // TODO : Deal with the failed state if possible
             }
             finally
             {
