@@ -317,6 +317,8 @@ namespace DIPOL_Remote
         public override Image PullPreviewImage(int index, ImageFormat format)
         {
             var data = _client.CallPullPreviewImage(CameraIndex, index, format);
+            if (data.Payload is null)
+                return null;
             return new Image(data.Payload, data.Width, data.Height,
                 format == ImageFormat.UnsignedInt16 ? TypeCode.UInt16 : TypeCode.Int32);
         }
