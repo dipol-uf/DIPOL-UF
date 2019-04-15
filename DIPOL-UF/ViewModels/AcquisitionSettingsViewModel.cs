@@ -1113,11 +1113,7 @@ namespace DIPOL_UF.ViewModels
                         Helper.ExecuteOnUi(() => MessageBox.Show(
                             string.Format(Properties.Localization.AcquisitionSettings_ApplicationFailed_Message,
                                 andorExcept.Message,
-                                errorStrings.EnumerableToString(",\r\n") is var message
-                                && UiSettingsProvider.Settings.Get(@"MessageBoxMessageMaxLength", 200) is var maxLength
-                                && message.Length > maxLength
-                                    ? message.Substring(0, maxLength) + "..."
-                                    : message),
+                                errorStrings.EnumerableToString(",\r\n")),
                             Properties.Localization.AcquisitionSettings_ApplicationFailed,
                             MessageBoxButton.OK,
                             MessageBoxImage.Error));
