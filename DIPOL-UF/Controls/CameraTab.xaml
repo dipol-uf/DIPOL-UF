@@ -276,6 +276,16 @@
                                     Key=General_FanMode_Off,
                                     Format='- {0}'}"/>
                 </Grid>
+                <StackPanel Grid.Column="1" Grid.Row="1" Margin="2">
+                    <Label Style="{StaticResource ContentFont_Label}"
+                           Content="{Binding JobName}"
+                           MinHeight="20"
+                           Visibility="{Binding IsJobInProgress, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <Label Style="{StaticResource ContentFont_Label}"
+                           MinHeight="20"
+                           Content="{Binding JobProgressString}"
+                           Visibility="{Binding IsJobInProgress, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                </StackPanel>
                 <!--Shutters-->
                 <Grid Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2"
                       VerticalAlignment="Top">
@@ -425,6 +435,7 @@
                          Minimum="{Binding AcquisitionPbMin}"
                          Maximum="{Binding AcquisitionPbMax}"
                          Value="{Binding AcquisitionPbVal, Mode=OneWay}"/>
+           
         </Grid>
     </ScrollViewer>
 </UserControl>

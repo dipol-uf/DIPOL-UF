@@ -550,6 +550,9 @@ The following settings produced this error:
   <data name="MB_MoreLeft" xml:space="preserve">
     <value>There are {0} more errors that were not shown.</value>
   </data>
+  <data name="CameraTab_JobProgressFormat" xml:space="preserve">
+    <value>{0:d4}/{1:d4}</value>
+  </data>
   <data name="JobManager_AcquisitionJobName" xml:space="preserve">
     <value>Imaging</value>
   </data>
