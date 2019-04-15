@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -73,19 +74,24 @@ namespace DIPOL_UF.Jobs
 
                 //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) start exposure");
                 // TODO : add support for the specific cameras
-                var tasks = Manager._jobControls.Select(async x =>
-                {
-                    // TODO : Add cancellation support
-                    // WATCH : Disabled saving
-                    //x.Camera.SaveNextAcquisitionAs(
+                var tasks = Manager._jobControls.Select(async x => {
+                    
+                        // TODO : Add cancellation support
+                        // WATCH : Disabled saving
+                        //x.Camera.SaveNextAcquisitionAs(
                         //Manager.CurrentTarget.TargetName,
                         //Manager._fileName,
                         //ImageFormat.SignedInt32);
-                    x.StartAcquisition(token);
-                    await x.WhenAcquisitionFinished.FirstAsync();
+                        // In order to capture extremely fast acquisitions, first capture a task from observable,
+                        // then start acquisition through the command interface
+                        // and then await initial task
+
+                        var task = x.WhenAcquisitionFinished.FirstAsync().ToTask(token);
+                        x.StartAcquisition(token);
+                        await task;
                 }).ToList();
 
-                await Task.WhenAll(tasks);
+                await Task.WhenAll(tasks).ConfigureAwait(false);
 
                 //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) finish exposure");
             }
