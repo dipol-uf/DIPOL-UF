@@ -269,6 +269,8 @@ namespace DIPOL_UF
             {
                 case null:
                     throw new ArgumentNullException(nameof(@this));
+                case string s:
+                    return s;
                 case Enum @enum:
                 {
                     var coll = @enum.GetEnumStringEx();
