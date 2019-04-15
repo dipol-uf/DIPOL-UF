@@ -23,8 +23,11 @@
 //     SOFTWARE.
 
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using FITS_CS;
+using Newtonsoft.Json.Linq;
 using SettingsManager;
 using StreamReader = System.IO.StreamReader;
 
@@ -35,10 +38,12 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public class SettingsProvider
     {
+        public static ReadOnlyDictionary<string, string> Filters { get; }
         /// <summary>
         /// 
         /// </summary>
         private const string Path = "config.json";
+
 
         /// <summary>
         /// 
@@ -62,6 +67,14 @@ namespace ANDOR_CS.Classes
                 foreach(var key in array)
                     MetaFitsKeys.Add(FitsKey.CreateComment(key));
             }
+
+            if (Settings.HasKey(@"CameraDescriptors")
+                && Settings.GetArray<JToken>(@"CameraDescriptors") is JToken[] jArr)
+                Filters = new ReadOnlyDictionary<string, string>(jArr.ToDictionary(
+                    x => x.Value<string>(@"Name"),
+                    x => x.Value<string>(@"Filter")));
+            else
+                Filters = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>());
         }
     }
 }
