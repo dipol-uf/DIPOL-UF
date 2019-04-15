@@ -33,7 +33,6 @@ using System.Windows.Controls;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Properties;
-using DynamicData.Kernel;
 using Newtonsoft.Json.Linq;
 
 namespace DIPOL_UF.Converters
