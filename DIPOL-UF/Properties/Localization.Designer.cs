@@ -1014,7 +1014,8 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Acquisition cycled was interrupted with the following error: {0}.
+        ///   Looks up a localized string similar to Acquisition cycled was interrupted with the following error: 
+        ///{0}.
         /// </summary>
         public static string JobManager_MB_Failed_Text {
             get {

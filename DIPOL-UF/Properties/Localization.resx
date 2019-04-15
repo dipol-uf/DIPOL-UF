@@ -566,7 +566,8 @@ The following settings produced this error:
     <value>Acquisition cycle failed!</value>
   </data>
   <data name="JobManager_MB_Failed_Text" xml:space="preserve">
-    <value>Acquisition cycled was interrupted with the following error: {0}</value>
+    <value>Acquisition cycled was interrupted with the following error: 
+{0}</value>
   </data>
   <data name="JobManager_MB_Finished_Header" xml:space="preserve">
     <value>Acquisition cycle finished</value>
