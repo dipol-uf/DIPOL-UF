@@ -56,8 +56,7 @@ namespace DIPOL_Remote
                 SendTimeout = TimeSpan.FromHours(12),
                 ReceiveTimeout = TimeSpan.FromHours(12)
             };
-
-            
+           
             InitializeDescription(typeof(RemoteControl), new UriSchemeKeyedCollection(endpoint));
 
             AddServiceEndpoint(typeof(IRemoteControl),bnd, "");

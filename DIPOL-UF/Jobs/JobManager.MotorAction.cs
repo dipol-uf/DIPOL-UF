@@ -39,6 +39,8 @@ namespace DIPOL_UF.Jobs
                 new Regex(@"^(?:motor/)?(rotate|reset)\s*?([+-]?[0-9]+\.?[0-9]*)?$",
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+            private const int Angle = 3200;
+
             private enum MotorActionType
             {
                 Rotate,
@@ -80,8 +82,7 @@ namespace DIPOL_UF.Jobs
             public override async Task Execute(CancellationToken token)
             {
                 // TODO : move to settings
-                const int angle = 3200;
-
+               
                 //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Motor starts {ActionType} with parameter {Parameter}");
 
                 if(Manager._windowRef.PolarimeterMotor is null)
@@ -95,12 +96,14 @@ namespace DIPOL_UF.Jobs
                     else
                     {
                         await Manager._windowRef.PolarimeterMotor.SendCommandAsync(Command.MoveToPosition,
-                           (int) (angle * Parameter), CommandType.Relative);
+                           (int) (Angle * Parameter), CommandType.Relative);
                         await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token);
                     }
 
-
                     var pos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
+
+                    // TODO : deal with constant
+                    Manager.MotorPosition = 22.5f * pos / Angle;
                     // WATCH : console logging
                     Console.WriteLine($@"Motor at: {pos}");
                 }

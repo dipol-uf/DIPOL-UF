@@ -1268,10 +1268,10 @@ namespace ANDOR_CS.Classes
                 //            OnNewImageReceived(new NewImageReceivedEventArgs(imageIndex,GetImageTiming(imageIndex)));
                 //    }
                 //}
-
                 if (_useSdkEvents)
                 {
                     SdkEventFired += ListenAndCheckImages;
+                    var reg = token.Register(() => ListenAndCheckImages(this, default));
                     //SdkEventFired += ListenToStatusUpdates;
                     //SdkEventFired += WatchImages;
                     try
@@ -1281,6 +1281,7 @@ namespace ANDOR_CS.Classes
                     }
                     finally
                     {
+                        reg.Dispose();
                         SdkEventFired -= ListenAndCheckImages;
                         //SdkEventFired -= ListenToStatusUpdates;
                         //SdkEventFired -= WatchImages;
@@ -1298,6 +1299,7 @@ namespace ANDOR_CS.Classes
                     timer.Interval = intervalMs;
 
                     SdkEventFired += ListenAndCheckImages;
+                    var reg = token.Register(() => ListenAndCheckImages(this, default));
                     //timer.Elapsed += ListenToStatusUpdates;
                     //timer.Elapsed += WatchImages;
                     try
@@ -1308,9 +1310,8 @@ namespace ANDOR_CS.Classes
                     }
                     finally
                     {
-                    
+                        reg.Dispose();
                         SdkEventFired -= ListenAndCheckImages;
-
                         timer.Stop();
                         //timer.Elapsed -= ListenToStatusUpdates;
                         //timer.Elapsed -= WatchImages;
@@ -1511,8 +1512,11 @@ namespace ANDOR_CS.Classes
             {
                 var imgPath = Path.Combine(path, $"{imagePattern}_{index + i:0000}.fits");
                 List<FitsKey> keys = null;
+                var tempStatus = GetCurrentTemperature();
                 await Task.Run(() =>
                 {
+
+
                     keys = new List<FitsKey>(extraKeys?.Length ?? 10)
                     {
                         new FitsKey("CAMERA", FitsKeywordType.String, ToString()),
@@ -1520,7 +1524,9 @@ namespace ANDOR_CS.Classes
                         new FitsKey("ACTEXPT", FitsKeywordType.Float, Timings.Exposure, "sec"),
                         new FitsKey("ACTACCT", FitsKeywordType.Float, Timings.Accumulation, "sec"),
                         new FitsKey("ACTKINT", FitsKeywordType.Float, Timings.Kinetic, "sec"),
-                        new FitsKey(@"INDEX", FitsKeywordType.Integer, i, "Frame index in cycle")
+                        new FitsKey(@"INDEX", FitsKeywordType.Integer, i, "Frame index in cycle"),
+                        new FitsKey(@"TEMPC", FitsKeywordType.Float, tempStatus.Temperature, "Temperature in C"),
+                        new FitsKey(@"TEMPST", FitsKeywordType.String, tempStatus.Status.ToString(), "Temperature status")
                     };
                     
                     if(!string.IsNullOrWhiteSpace(filter))
