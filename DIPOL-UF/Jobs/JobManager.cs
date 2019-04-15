@@ -64,9 +64,7 @@ namespace DIPOL_UF.Jobs
         public Job AcquisitionJob { get; private set; }
         public Job BiasJob { get; private set; }
         public Job DarkJob { get; private set; }
-        public int AcquisitionRuns { get; }
-        // TODO : 1 is default while there is no UI for this
-            = 1;
+        public int AcquisitionRuns { get; private set; }
 
         public void AttachToMainWindow(DipolMainWindow window)
         {
@@ -186,6 +184,9 @@ namespace DIPOL_UF.Jobs
             try
             {
                 AcquisitionJob = await ConstructJob(CurrentTarget.JobPath);
+                AcquisitionRuns = CurrentTarget.Repeats > 0 
+                    ? CurrentTarget.Repeats
+                    : throw new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
                 BiasJob = CurrentTarget.BiasPath is null
                     ? null
                     : await ConstructJob(CurrentTarget.BiasPath);
