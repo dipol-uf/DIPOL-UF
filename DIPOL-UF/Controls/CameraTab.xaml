@@ -34,7 +34,7 @@
              xmlns:props="clr-namespace:DIPOL_UF.Properties"
              xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
              mc:Ignorable="d" Style="{StaticResource ResourceKey=ContentFont}"
-             d:DesignHeight="800" d:DesignWidth="1000"
+             d:DesignHeight="860" d:DesignWidth="1000"
              d:DataContext="{d:DesignInstance Type=dvms:CameraTabViewModel}">
     <behaviors:Interaction.Triggers>
         <behaviors:EventTrigger
@@ -61,7 +61,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="50"/>
                 <RowDefinition Height="auto"/>
-                <RowDefinition Height="50"/>
+                <RowDefinition Height="60"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" MinWidth="330"/>
@@ -429,13 +429,22 @@
                             Mode=OneWay,
                             StringFormat={extensions:Text Key=General_ExposureFloatFormat}}"/>
             </Grid>
-            <ProgressBar Grid.Row="2" Grid.Column="0"
-                         MaxWidth="450"
-                         Style="{StaticResource ProgressBarStyle}"
-                         Minimum="{Binding AcquisitionPbMin}"
-                         Maximum="{Binding AcquisitionPbMax}"
-                         Value="{Binding AcquisitionPbVal, Mode=OneWay}"/>
-           
+            <StackPanel Grid.Row="2" Grid.Column="0">
+                <ProgressBar 
+                     MaxWidth="450"
+                     Style="{StaticResource ProgressBarStyle}"
+                     Minimum="{Binding AcquisitionPbMin}"
+                     Maximum="{Binding AcquisitionPbMax}"
+                     Value="{Binding AcquisitionPbVal, Mode=OneWay}"/>
+                <ProgressBar 
+                    MaxWidth="450"
+                    Style="{StaticResource ProgressBarStyle}"
+                    Minimum="0"
+                    Maximum="{Binding JobCumulativeTotal}"
+                    Value="{Binding JobCumulativeCurrent, Mode=OneWay}"
+                    Foreground="{StaticResource JobProgressBarColor}"
+                    Visibility="{Binding IsJobInProgress, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            </StackPanel>
         </Grid>
     </ScrollViewer>
 </UserControl>

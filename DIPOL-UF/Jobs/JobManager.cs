@@ -63,6 +63,8 @@ namespace DIPOL_UF.Jobs
         [Reactive]
         public int Progress { get; private set; }
         [Reactive]
+        public int CumulativeProgress { get; private set; }
+        [Reactive]
         public int Total { get; private set; }
         [Reactive]
         public string CurrentJobName { get; private set; }
@@ -93,7 +95,6 @@ namespace DIPOL_UF.Jobs
                     z => z)
                 .ToPropertyEx(this, x => x.AnyCameraIsAcquiring)
                 .DisposeWith(Subscriptions);
-
         }
 
         public void StartJob()
@@ -157,6 +158,7 @@ namespace DIPOL_UF.Jobs
                     var fileName = CurrentTarget.TargetName;
                     Progress = 0;
                     Total = TotalAcquisitionActionCount;
+                    CumulativeProgress = 0;
                     CurrentJobName = Localization.JobManager_AcquisitionJobName;
                     try
                     {

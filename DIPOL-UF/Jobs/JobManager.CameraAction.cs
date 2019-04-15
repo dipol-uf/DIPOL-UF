@@ -93,6 +93,7 @@ namespace DIPOL_UF.Jobs
 
                 await Task.WhenAll(tasks).ConfigureAwait(false);
                 Manager.Progress++;
+                Manager.CumulativeProgress++;
                 //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) finish exposure");
             }
         }

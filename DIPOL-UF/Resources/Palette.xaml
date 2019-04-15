@@ -122,6 +122,7 @@
     <SolidColorBrush x:Key="Background_3" Color="{StaticResource BackgroundColor_3}"/>
 
 
+    <SolidColorBrush x:Key="JobProgressBarColor" Color="#ff7b25"/>
     <!--Enum text representations-->
     <x:Array x:Key="SwitchEnumTextRepresentation" Type="{x:Type sys:String}">
         <sys:String>Cooling</sys:String>
