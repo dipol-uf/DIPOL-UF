@@ -33,6 +33,9 @@ namespace DIPOL_UF.Jobs
         {
             public abstract Task Execute(CancellationToken token);
 
+            public virtual int NumberOfActions<T>() where T : JobAction
+                => ContainsActionOfType<T>() ? 1 : 0;
+
             public virtual bool ContainsActionOfType<T>() where T : JobAction
                 => this is T;
         }

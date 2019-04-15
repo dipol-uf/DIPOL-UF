@@ -99,6 +99,9 @@ namespace DIPOL_UF.Jobs
             public bool ContainsActionOfType<T>() where T : JobAction
                 => _actions.Any(x => x.ContainsActionOfType<T>());
 
+            public int NumberOfActions<T>() where T : JobAction
+                => _actions.Select(x => x.NumberOfActions<T>()).Sum();
+
             public static Job Create(ReadOnlyDictionary<string, object> input)
             {
                 var job = new Job(input);

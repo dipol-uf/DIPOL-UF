@@ -550,6 +550,15 @@ The following settings produced this error:
   <data name="MB_MoreLeft" xml:space="preserve">
     <value>There are {0} more errors that were not shown.</value>
   </data>
+  <data name="JobManager_AcquisitionJobName" xml:space="preserve">
+    <value>Imaging</value>
+  </data>
+  <data name="JobManager_BiasJobName" xml:space="preserve">
+    <value>Bias</value>
+  </data>
+  <data name="JobManager_DarkJobName" xml:space="preserve">
+    <value>Dark</value>
+  </data>
   <data name="JobSettings_N_repeats" xml:space="preserve">
     <value># of cycles</value>
   </data>

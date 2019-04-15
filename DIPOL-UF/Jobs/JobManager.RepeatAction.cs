@@ -59,6 +59,9 @@ namespace DIPOL_UF.Jobs
 
             }
 
+            public override int NumberOfActions<T>()
+                => _actions.Select(x => x.NumberOfActions<T>()).Sum() * Repeats;
+
             public override bool ContainsActionOfType<T>()
                 => _actions.Any(x => x.ContainsActionOfType<T>());
         }
