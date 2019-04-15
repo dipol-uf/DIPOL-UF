@@ -109,19 +109,6 @@ namespace DIPOL_UF
             return Application.Current.Dispatcher.Invoke(action);
         }
 
-        /// <summary>
-        /// Retrieves an item from a dictionary if specified key is present; otherwise, returns null.
-        /// </summary>
-        /// <param name="settings">The dictionary.</param>
-        /// <param name="key">Key.</param>
-        /// <exception cref="ArgumentNullException"/>
-        /// <returns>Either item associated with key, or null, if not present.</returns>
-        public static object GetValueOrNullSafe(this Dictionary<string, object> settings, string key)
-            => (settings ?? throw new ArgumentNullException($"{nameof(settings)} argument cannot be null."))
-                .TryGetValue(key, out var item)
-                    ? item
-                    : null;
-
         public static string EnumerableToString<T>(this IEnumerable<T> input, string separator = ", ")
             =>  input.ToList() is var list && list.Count != 0
                 ? list.Select(x => x.ToString()).Aggregate((old, @new) => old + separator + @new)
