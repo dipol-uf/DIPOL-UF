@@ -220,6 +220,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     using (var str = new FileStream(x, FileMode.Open, FileAccess.Read))
                         await Model.Object.Deserialize(str);
+                    Model.Object.Repeats = 0;
                     UpdateBindingsFromModel();
                 }
             }).DisposeWith(Subscriptions);
