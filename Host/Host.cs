@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -97,6 +98,9 @@ namespace Host
 
         private static int Main(string[] args)
         {
+            System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(@"en-US");
+            System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(@"en-US");
+
             var options = HandleArgs(args);
 
             if (options.Uri is null || !Uri.TryCreate(options.Uri, UriKind.RelativeOrAbsolute, out var uri))
