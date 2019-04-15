@@ -11,18 +11,20 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class CameraPropertiesViewModel : ReactiveObjectEx
     {
-        private static readonly PropertyInfo[] capabilitiesAccessors;
-        private static readonly PropertyInfo[] propertiesAccessors;
+        private static readonly PropertyInfo[] CapabilitiesAccessors;
+        private static readonly PropertyInfo[] PropertiesAccessors;
 
         public IObservableCollection<Tuple<string, string>> AllProperties { get; }
+
         [Reactive]
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
         public string CameraAlias { get; private set; }
 
-    static CameraPropertiesViewModel()
+        static CameraPropertiesViewModel()
         {
-            capabilitiesAccessors = typeof(DeviceCapabilities).GetProperties(BindingFlags.Instance | BindingFlags.Public);
-            propertiesAccessors = typeof(CameraProperties).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            CapabilitiesAccessors =
+                typeof(DeviceCapabilities).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            PropertiesAccessors = typeof(CameraProperties).GetProperties(BindingFlags.Instance | BindingFlags.Public);
         }
 
         public CameraPropertiesViewModel(CameraBase model)
@@ -30,26 +32,30 @@ namespace DIPOL_UF.ViewModels
             string GetStringRep(object value)
                 => value?.ToStringEx() ?? Properties.Localization.CameraProperties_UnknownValue;
 
-            var capabilities = capabilitiesAccessors.Select(x => new Tuple<string, string>(
+            var capabilities = CapabilitiesAccessors.Select(x => new Tuple<string, string>(
                 x.Name,
                 GetStringRep(x.GetValue(model.Capabilities))));
 
-            var properties = propertiesAccessors.Select(x => new Tuple<string, string>(
+            var properties = PropertiesAccessors.Select(x => new Tuple<string, string>(
                 x.Name,
                 GetStringRep(x.GetValue(model.Properties))));
 
             var additionalInfo = new[]
             {
                 new Tuple<string, string>(
-                    Properties.Localization.CameraProperties_Alias, 
+                    Properties.Localization.CameraProperties_Alias,
                     ConverterImplementations.CameraToStringAliasConversion(model)),
                 new Tuple<string, string>(Properties.Localization.CameraProperties_CamModel, model.CameraModel),
                 new Tuple<string, string>(Properties.Localization.CameraProperties_SerialNumber, model.SerialNumber),
-                new Tuple<string, string>(Properties.Localization.CameraProperties_SoftwareVers, model.Software.ToString()),
-                new Tuple<string, string>(Properties.Localization.CameraProperties_HardwareVers, model.Hardware.ToString())
+                new Tuple<string, string>(Properties.Localization.CameraProperties_SoftwareVers,
+                    model.Software.ToString()),
+                new Tuple<string, string>(Properties.Localization.CameraProperties_HardwareVers,
+                    model.Hardware.ToString())
             };
 
-            AllProperties = new ObservableCollectionExtended<Tuple<string, string>>(additionalInfo.Concat(capabilities).Concat(properties));
+            AllProperties =
+                new ObservableCollectionExtended<Tuple<string, string>>(additionalInfo
+                                                                        .Concat(capabilities).Concat(properties));
             CameraAlias = ConverterImplementations.CameraToStringAliasConversion(model);
         }
     }
