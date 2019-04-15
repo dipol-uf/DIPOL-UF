@@ -85,7 +85,7 @@ namespace DIPOL_UF.Jobs
                 //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Motor starts {ActionType} with parameter {Parameter}");
 
                 if(Manager._windowRef.PolarimeterMotor is null)
-                    await Task.Delay(TimeSpan.FromMilliseconds(1000), token);
+                    await Task.Delay(TimeSpan.FromMilliseconds(50), token);
                 else
                 {
 
@@ -99,9 +99,10 @@ namespace DIPOL_UF.Jobs
                         await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token);
                     }
 
+
                     var pos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
                     // WATCH : console logging
-                    Console.WriteLine($"Motor at: {pos}");
+                    Console.WriteLine($@"Motor at: {pos}");
                 }
             }
            
