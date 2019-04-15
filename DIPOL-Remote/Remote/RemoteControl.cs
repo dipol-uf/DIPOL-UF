@@ -372,7 +372,7 @@ namespace DIPOL_Remote.Remote
         {
             var cam = GetCameraSafe(camIndex);
 
-            var settingsID = Guid.NewGuid().ToString("N");
+            var settingsId = Guid.NewGuid().ToString("N");
 
             SettingsBase setts;
             try
@@ -396,7 +396,7 @@ namespace DIPOL_Remote.Remote
                     ServiceFault.GeneralServiceErrorReason);
             }
 
-            if (!_settings.TryAdd(settingsID, setts))
+            if (!_settings.TryAdd(settingsId, setts))
                 throw new FaultException<ServiceFault>(
                     new ServiceFault()
                     {
@@ -406,17 +406,17 @@ namespace DIPOL_Remote.Remote
                     },
                     ServiceFault.GeneralServiceErrorReason);
 
-            _host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} created.");
+            _host?.OnEventReceived("Host", $"AcqSettings with ID {settingsId} created.");
 
-            return settingsID;
+            return settingsId;
         }
         [OperationBehavior]
-        public void RemoveSettings(string settingsID)
+        public void RemoveSettings(string settingsId)
         {
-            _settings.TryRemove(settingsID, out var setts);
+            _settings.TryRemove(settingsId, out var setts);
             setts?.Dispose();
 
-            _host?.OnEventReceived("Host", $"AcqSettings with ID {settingsID} removed.");
+            _host?.OnEventReceived("Host", $"AcqSettings with ID {settingsId} removed.");
         }
 
         public string CallMakeCopy(string settingsId)
@@ -550,28 +550,28 @@ namespace DIPOL_Remote.Remote
 
         [OperationBehavior]
         public (int Index, float Speed)[] GetAvailableHsSpeeds(
-            string settingsID,
+            string settingsId,
             int adConverterIndex,
             int amplifier)
-        => GetSettingsSafe(settingsID).GetAvailableHSSpeeds(adConverterIndex, amplifier).ToArray();
+        => GetSettingsSafe(settingsId).GetAvailableHSSpeeds(adConverterIndex, amplifier).ToArray();
 
         [OperationBehavior]
         public (int Index, string Name)[] GetAvailablePreAmpGain(
-            string settingsID,
+            string settingsId,
             int adConverterIndex,
             int amplifier,
             int hsSpeed)
-        => GetSettingsSafe(settingsID).GetAvailablePreAmpGain(
+        => GetSettingsSafe(settingsId).GetAvailablePreAmpGain(
             adConverterIndex, amplifier, hsSpeed).ToArray();
 
         [OperationBehavior]
         public (bool IsSupported, float Speed) CallIsHsSpeedSupported(
-            string settingsID, 
+            string settingsId, 
             int adConverter,
             int amplifier,
             int speedIndex)
             => (
-            IsSupported: GetSettingsSafe(settingsID)
+            IsSupported: GetSettingsSafe(settingsId)
                 .IsHSSpeedSupported(speedIndex, adConverter, amplifier, out float speed),
             Speed: speed);
 
@@ -598,7 +598,7 @@ namespace DIPOL_Remote.Remote
             CallPullPreviewImage(int camIndex, int imageIndex, ImageFormat format)
         {
             var image = GetCameraSafe(camIndex).PullPreviewImage(imageIndex, format);
-            return (image.GetBytes(), image.Width, image.Height);
+            return (image?.GetBytes(), image?.Width ?? 0, image?.Height ?? 0);
         }
 
         [OperationBehavior]
@@ -635,9 +635,9 @@ namespace DIPOL_Remote.Remote
                 ServiceFault.GeneralServiceErrorReason);
         }
 
-        private SettingsBase GetSettingsSafe(string settingsID)
+        private SettingsBase GetSettingsSafe(string settingsId)
         {
-            if (_settings.TryGetValue(settingsID, out var sets))
+            if (_settings.TryGetValue(settingsId, out var sets))
                 return sets;
             else throw new Exception();
         }
