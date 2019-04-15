@@ -72,6 +72,8 @@ namespace DIPOL_UF.Jobs
         public static JobManager Manager { get; } = new JobManager();
 
         [Reactive]
+        public float MotorPosition { get; private set; }
+        [Reactive]
         public int Progress { get; private set; }
         [Reactive]
         public int CumulativeProgress { get; private set; }
