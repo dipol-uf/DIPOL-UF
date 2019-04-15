@@ -939,7 +939,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imaging.
+        ///   Looks up a localized string similar to Images.
         /// </summary>
         public static string JobManager_AcquisitionJobName {
             get {
@@ -1001,6 +1001,24 @@ namespace DIPOL_UF.Properties {
         public static string JobManager_Error_Other {
             get {
                 return ResourceManager.GetString("JobManager_Error_Other", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acquisition cycle finished.
+        /// </summary>
+        public static string JobManager_MB_Finished_Header {
+            get {
+                return ResourceManager.GetString("JobManager_MB_Finished_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acquired {0} frames..
+        /// </summary>
+        public static string JobManager_MB_Finished_Text {
+            get {
+                return ResourceManager.GetString("JobManager_MB_Finished_Text", resourceCulture);
             }
         }
         

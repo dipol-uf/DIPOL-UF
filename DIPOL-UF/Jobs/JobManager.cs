@@ -28,17 +28,17 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.Remoting;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Models;
-using DIPOL_UF.Properties;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI.Fody.Helpers;
+using Localization = DIPOL_UF.Properties.Localization;
 
 namespace DIPOL_UF.Jobs
 {
@@ -99,6 +99,7 @@ namespace DIPOL_UF.Jobs
 
         public void StartJob()
         {
+            CumulativeProgress = 0;
             IsInProcess = true;
             ReadyToRun = false;
             _tokenSource?.Dispose();
@@ -158,7 +159,6 @@ namespace DIPOL_UF.Jobs
                     var fileName = CurrentTarget.TargetName;
                     Progress = 0;
                     Total = TotalAcquisitionActionCount;
-                    CumulativeProgress = 0;
                     CurrentJobName = Localization.JobManager_AcquisitionJobName;
                     try
                     {
@@ -194,6 +194,18 @@ namespace DIPOL_UF.Jobs
                     }
 
                 }, token);
+
+                var report = $"{Environment.NewLine}{TotalAcquisitionActionCount} {Localization.JobManager_AcquisitionJobName}";
+                if (!(BiasJob is null))
+                    report += $",{Environment.NewLine}{BiasActionCount} {Localization.JobManager_BiasJobName}";
+
+                if (!(DarkJob is null))
+                    report += $",{Environment.NewLine}{BiasActionCount} {Localization.JobManager_DarkJobName}";
+                
+                MessageBox.Show(
+                    string.Format(Localization.JobManager_MB_Finished_Text, report),
+                    Localization.JobManager_MB_Finished_Header,
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception e)
             {

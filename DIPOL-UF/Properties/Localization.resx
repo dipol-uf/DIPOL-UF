@@ -554,13 +554,19 @@ The following settings produced this error:
     <value>{0:d4}/{1:d4}</value>
   </data>
   <data name="JobManager_AcquisitionJobName" xml:space="preserve">
-    <value>Imaging</value>
+    <value>Images</value>
   </data>
   <data name="JobManager_BiasJobName" xml:space="preserve">
     <value>Bias</value>
   </data>
   <data name="JobManager_DarkJobName" xml:space="preserve">
     <value>Dark</value>
+  </data>
+  <data name="JobManager_MB_Finished_Header" xml:space="preserve">
+    <value>Acquisition cycle finished</value>
+  </data>
+  <data name="JobManager_MB_Finished_Text" xml:space="preserve">
+    <value>Acquired {0} frames.</value>
   </data>
   <data name="JobSettings_N_repeats" xml:space="preserve">
     <value># of cycles</value>
