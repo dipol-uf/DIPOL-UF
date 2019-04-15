@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -44,13 +45,23 @@ namespace DIPOL_UF.Jobs
 {
     internal sealed partial class JobManager : ReactiveObjectEx
     {
+        // These regimes might produce data that will overflow uint16 format,
+        // therefore images should be save as int32
+        private static readonly AcquisitionMode[] LongFormatModes =
+        {
+            AcquisitionMode.Accumulation,
+            AcquisitionMode.Kinetic,
+            AcquisitionMode.FastKinetics
+        };
+
+
         private DipolMainWindow _windowRef;
         private byte[] _settingsRep;
         private List<CameraTab> _jobControls;
         private Dictionary<int, SettingsBase> _settingsCache;
         private Task _jobTask;
         private CancellationTokenSource _tokenSource;
-
+        private Dictionary<int, ImageFormat> _imageFormatMap;
 
         public int AcquisitionActionCount { get; private set; }
         public int TotalAcquisitionActionCount { get; private set; }
@@ -135,7 +146,7 @@ namespace DIPOL_UF.Jobs
                     if (job.ContainsActionOfType<CameraAction>())
                         foreach (var control in _jobControls)
                             control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, file,
-                                ImageFormat.SignedInt32);
+                                _imageFormatMap[control.Camera.GetHashCode()]);
                     await job.Run(token);
                 }
                 finally
@@ -154,6 +165,12 @@ namespace DIPOL_UF.Jobs
                 if (_jobControls.Any(x => x.Camera?.CurrentSettings is null))
                     throw new InvalidOperationException("At least one camera has no settings applied to it.");
 
+                _imageFormatMap = _jobControls.ToDictionary(
+                    x => x.Camera.GetHashCode(),
+                    y => LongFormatModes.Any(z => y.Camera?.CurrentSettings.AcquisitionMode?.HasFlag(z) == true)
+                        ? ImageFormat.SignedInt32
+                        : ImageFormat.UnsignedInt16);
+
                 await Task.Run(async ()  =>
                 {
                     var fileName = CurrentTarget.TargetName;
@@ -165,7 +182,7 @@ namespace DIPOL_UF.Jobs
                         if (AcquisitionJob.ContainsActionOfType<CameraAction>())
                             foreach (var control in _jobControls)
                                 control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, fileName,
-                                    ImageFormat.SignedInt32);
+                                    _imageFormatMap[control.Camera.GetHashCode()]);
                         for (var i = 0; i < AcquisitionRuns; i++)
                             await AcquisitionJob.Run(token);
                     }
