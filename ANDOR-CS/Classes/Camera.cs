@@ -1475,6 +1475,13 @@ namespace ANDOR_CS.Classes
             string folderPath, string imagePattern, 
             ImageFormat format, FitsKey[] extraKeys = null)
         {
+            var camStr = $"{CameraModel}_{SerialNumber}";
+            if (!SettingsProvider.Filters.TryGetValue(camStr, out var filter))
+                filter = string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(filter))
+                imagePattern += $"_{filter}";
+
             if (!SettingsProvider.Settings.TryGet("RootDirectory", out string root))
                 throw new InvalidOperationException(
                     "Configuration file does not contain required key \"RootDirectory\".");
@@ -1515,9 +1522,9 @@ namespace ANDOR_CS.Classes
                         new FitsKey("ACTKINT", FitsKeywordType.Float, Timings.Kinetic, "sec"),
                         new FitsKey(@"INDEX", FitsKeywordType.Integer, i, "Frame index in cycle")
                     };
-                    var camStr = $"{CameraModel}_{SerialNumber}";
-                    if(SettingsProvider.Filters.ContainsKey(camStr))
-                        keys.Add(new FitsKey(@"FILTER", FitsKeywordType.String, SettingsProvider.Filters[camStr]));
+                    
+                    if(!string.IsNullOrWhiteSpace(filter))
+                        keys.Add(new FitsKey(@"FILTER", FitsKeywordType.String, filter));
 
                     if (!(extraKeys is null))
                         keys.AddRange(extraKeys);
