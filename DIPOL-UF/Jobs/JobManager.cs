@@ -50,8 +50,22 @@ namespace DIPOL_UF.Jobs
         private Dictionary<int, SettingsBase> _settingsCache;
         private Task _jobTask;
         private CancellationTokenSource _tokenSource;
+
+
+        public int AcquisitionActionCount { get; private set; }
+        public int TotalAcquisitionActionCount { get; private set; }
+        public int BiasActionCount { get; private set; }
+        public int DarkActionCount { get; private set; }
+
+
         public static JobManager Manager { get; } = new JobManager();
 
+        [Reactive]
+        public int Progress { get; private set; }
+        [Reactive]
+        public int Total { get; private set; }
+        [Reactive]
+        public string CurrentJobName { get; private set; }
         [Reactive]
         public bool IsInProcess { get; private set; }
         [Reactive]
@@ -80,6 +94,10 @@ namespace DIPOL_UF.Jobs
                 .ToPropertyEx(this, x => x.AnyCameraIsAcquiring)
                 .DisposeWith(Subscriptions);
 
+            // TODO : Remove logging
+            this.WhenAnyPropertyChanged(nameof(Progress), nameof(Total), nameof(CurrentJobName))
+                .Select(x => $"{x.CurrentJobName}:\t{x.Progress:000}:{x.Total:000}")
+                .LogObservable(">", Subscriptions);
 
         }
 
@@ -142,6 +160,9 @@ namespace DIPOL_UF.Jobs
                 await Task.Run(async ()  =>
                 {
                     var fileName = CurrentTarget.TargetName;
+                    Progress = 0;
+                    Total = TotalAcquisitionActionCount;
+                    CurrentJobName = Localization.JobManager_AcquisitionJobName;
                     try
                     {
                         if (AcquisitionJob.ContainsActionOfType<CameraAction>())
@@ -158,8 +179,23 @@ namespace DIPOL_UF.Jobs
                                 await control.Camera.FinishImageSavingSequenceAsync();
                     }
 
-                    await DoCameraJobAsync(BiasJob, $"{CurrentTarget.TargetName}_bias");
-                    await DoCameraJobAsync(DarkJob, $"{CurrentTarget.TargetName}_dark");
+                    // TODO : Remove logging
+                    if (!(BiasJob is null))
+                    {
+                        Progress = 0;
+                        Total = BiasActionCount;
+                        CurrentJobName = Localization.JobManager_BiasJobName;
+                        await DoCameraJobAsync(BiasJob, $"{CurrentTarget.TargetName}_bias");
+                    }
+
+                    if (!(DarkJob is null))
+                    {
+                        Progress = 0;
+                        Total = DarkActionCount;
+                        CurrentJobName = Localization.JobManager_DarkJobName;
+                        await DoCameraJobAsync(DarkJob, $"{CurrentTarget.TargetName}_dark");
+                    }
+
                 }, token);
             }
             catch (Exception e)
@@ -170,6 +206,9 @@ namespace DIPOL_UF.Jobs
             {
                 ReadyToRun = true;
                 IsInProcess = false;
+                Progress = 0;
+                CurrentJobName = string.Empty;
+                Total = 0;
                 _jobControls.Clear();
                 _jobControls = null;
                 foreach( var sett in _settingsCache)
@@ -186,13 +225,21 @@ namespace DIPOL_UF.Jobs
                 AcquisitionJob = await ConstructJob(CurrentTarget.JobPath);
                 AcquisitionRuns = CurrentTarget.Repeats > 0 
                     ? CurrentTarget.Repeats
-                    : throw new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
+                    : throw new InvalidOperationException(Localization.General_ShouldNotHappen);
+                AcquisitionActionCount = AcquisitionJob.NumberOfActions<CameraAction>();
+                TotalAcquisitionActionCount = AcquisitionActionCount * AcquisitionRuns;
+
                 BiasJob = CurrentTarget.BiasPath is null
                     ? null
                     : await ConstructJob(CurrentTarget.BiasPath);
+                BiasActionCount = BiasJob?.NumberOfActions<CameraAction>() ?? 0;  
+
                 DarkJob = CurrentTarget.DarkPath is null
                     ? null
                     : await ConstructJob(CurrentTarget.DarkPath);
+                DarkActionCount = DarkJob?.NumberOfActions<CameraAction>() ?? 0;
+
+
                 await LoadSettingsTemplate();
                 await ApplySettingsTemplate();
                 ReadyToRun = true;

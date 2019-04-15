@@ -930,6 +930,33 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Imaging.
+        /// </summary>
+        public static string JobManager_AcquisitionJobName {
+            get {
+                return ResourceManager.GetString("JobManager_AcquisitionJobName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bias.
+        /// </summary>
+        public static string JobManager_BiasJobName {
+            get {
+                return ResourceManager.GetString("JobManager_BiasJobName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dark.
+        /// </summary>
+        public static string JobManager_DarkJobName {
+            get {
+                return ResourceManager.GetString("JobManager_DarkJobName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to load job description.
         /// </summary>
         public static string JobManager_Error_Caption {
