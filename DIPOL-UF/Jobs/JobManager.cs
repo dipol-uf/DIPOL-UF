@@ -37,6 +37,7 @@ using ANDOR_CS.Enums;
 using DIPOL_UF.Models;
 using DynamicData;
 using DynamicData.Binding;
+using FITS_CS;
 using ReactiveUI.Fody.Helpers;
 using Localization = DIPOL_UF.Properties.Localization;
 
@@ -145,7 +146,8 @@ namespace DIPOL_UF.Jobs
                     if (job.ContainsActionOfType<CameraAction>())
                         foreach (var control in _jobControls)
                             control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, file,
-                                _imageFormatMap[control.Camera.GetHashCode()]);
+                                _imageFormatMap[control.Camera.GetHashCode()],
+                                new[] { FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime) });
                     await job.Run(token);
                 }
                 finally
@@ -180,8 +182,10 @@ namespace DIPOL_UF.Jobs
                     {
                         if (AcquisitionJob.ContainsActionOfType<CameraAction>())
                             foreach (var control in _jobControls)
-                                control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, fileName,
-                                    _imageFormatMap[control.Camera.GetHashCode()]);
+                                control.Camera.StartImageSavingSequence(
+                                    CurrentTarget.TargetName, fileName,
+                                    _imageFormatMap[control.Camera.GetHashCode()],
+                                    new [] {  FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime) });
                         for (var i = 0; i < AcquisitionRuns; i++)
                             await AcquisitionJob.Run(token);
                     }
