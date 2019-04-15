@@ -83,6 +83,8 @@ namespace DIPOL_UF.ViewModels
         public Switch CoolerMode { [ObservableAsProperty] get; }
         public string JobName { [ObservableAsProperty] get; }
         public string JobProgressString { [ObservableAsProperty] get; }
+        public int JobCumulativeTotal { [ObservableAsProperty] get; }
+        public int JobCumulativeCurrent { [ObservableAsProperty] get; }
 
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
         public ICommand SetUpAcquisitionCommand => Model.SetUpAcquisitionCommand;
@@ -141,11 +143,33 @@ namespace DIPOL_UF.ViewModels
                       .Sample(UiSettingsProvider.UiThrottlingDelay)
                       .Select(x => string.Format(Localization.CameraTab_JobProgressFormat, x.Progress, x.Total))
                       .ObserveOnUi()
-                      .ToPropertyEx(this, x => x.JobProgressString);
+                      .ToPropertyEx(this, x => x.JobProgressString)
+                      .DisposeWith(Subscriptions);
+
             JobManager.Manager.WhenPropertyChanged(x => x.CurrentJobName).Select(x => x.Value)
                       .Sample(UiSettingsProvider.UiThrottlingDelay)
                       .ObserveOnUi()
-                      .ToPropertyEx(this, x => x.JobName);
+                      .ToPropertyEx(this, x => x.JobName)
+                      .DisposeWith(Subscriptions);
+
+            JobManager.Manager.WhenAnyPropertyChanged(nameof(JobManager.IsInProcess))
+                      .Sample(UiSettingsProvider.UiThrottlingDelay)
+                      .Select(x => x.IsInProcess
+                          ? x.TotalAcquisitionActionCount + x.BiasActionCount + x.DarkActionCount
+                          : 0)
+                      .ObserveOnUi()
+                      .ToPropertyEx(this, x => x.JobCumulativeTotal)
+                      .DisposeWith(Subscriptions);
+                      
+            JobManager.Manager.WhenPropertyChanged(x => x.CumulativeProgress)
+                      .Select(x => x.Value)
+                      .Sample(UiSettingsProvider.UiThrottlingDelay)
+                      .ObserveOnUi()
+                      .ToPropertyEx(this, x => x.JobCumulativeCurrent)
+                      .DisposeWith(Subscriptions);
+
+
+
             Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.IsAcquiring))
                  .Select(x => x.IsAcquiring)
                  .ObserveOnUi()
