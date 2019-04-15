@@ -23,13 +23,16 @@
 //     SOFTWARE.
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using DIPOL_UF.Jobs;
+using DynamicData.Binding;
 using Microsoft.Xaml.Behaviors.Core;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -76,15 +79,16 @@ namespace DIPOL_UF.ViewModels
         public string BiasPath { get; set; }
         [Reactive]
         public string DarkPath { get; set; }
-
         [Reactive]
         public string SettingsPath { get; set; }
+        [Reactive]
+        public string Repeats { get; set; }
 
         public JobSettingsViewModel(ReactiveWrapper<Target> model) : base(model)
         {
-            UpdateBindingsFromModel();
             InitializeCommands();
             HookObservables();
+            UpdateBindingsFromModel();
         }
 
         private void UpdateBindingsFromModel()
@@ -94,6 +98,7 @@ namespace DIPOL_UF.ViewModels
             JobPath = Model.Object.JobPath;
             BiasPath = Model.Object.BiasPath ?? string.Empty;
             DarkPath = Model.Object.DarkPath ?? string.Empty;
+            Repeats = Model.Object.Repeats.ToString(Properties.Localization.General_IntegerFormat);
         }
 
         private void UpdateBindingsToModel()
@@ -103,12 +108,17 @@ namespace DIPOL_UF.ViewModels
             Model.Object.JobPath = JobPath;
             Model.Object.BiasPath = string.IsNullOrWhiteSpace(BiasPath) ? null : BiasPath;
             Model.Object.DarkPath = string.IsNullOrWhiteSpace(DarkPath) ? null : DarkPath;
+            Model.Object.Repeats = int.TryParse(Repeats, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var rep)
+                ? rep
+                : 1;
         }
 
         private void InitializeCommands()
         {
             SubmitCommand =
-                ReactiveCommand.CreateFromTask<Window>(Submit)
+                ReactiveCommand.CreateFromTask<Window>(
+                                   Submit,
+                                   ObserveHasErrors.Select(x => !x))
                                .DisposeWith(Subscriptions);
 
             CancelCommand = new ActionCommand(x =>
@@ -217,6 +227,8 @@ namespace DIPOL_UF.ViewModels
 
         private void HookObservables()
         {
+            HandleInputOfRepeats();
+
             SaveButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
             LoadButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
             
@@ -225,6 +237,30 @@ namespace DIPOL_UF.ViewModels
             BrowseDarkCommand.Subscribe(OnBrowseDarkSettingsRequested).DisposeWith(Subscriptions);
 
             BrowseAcquisitionCommand.Subscribe(OnBrowseAcquisitionSettingsRequested).DisposeWith(Subscriptions);
+        }
+
+        private void HandleInputOfRepeats()
+        {
+            var source = this.WhenAnyPropertyChanged(nameof(Repeats)).Select(x => x.Repeats);
+
+            CreateValidator(
+                source.Select(x => (
+                        Type: nameof(Validators.Validate.CannotBeDefault),
+                        Message: Validators.Validate.CannotBeDefault(x))),
+                nameof(Repeats));
+
+            source.Subscribe(x =>
+            {
+                var canBeParsed = Validators.Validate.CanBeParsed(x, out int val);
+                var isWithin = canBeParsed is null ? 
+                    // WATCH : constant probably should be moved to settings
+                    Validators.Validate.ShouldFallWithinRange(val, 1, 16)
+                    : null;
+                BatchUpdateErrors(
+                    (nameof(Repeats), nameof(Validators.Validate.CanBeParsed), canBeParsed),
+                    (nameof(Repeats), nameof(Validators.Validate.ShouldFallWithinRange), isWithin));
+                
+            }).DisposeWith(Subscriptions);
         }
 
         private async Task Submit(Window w)

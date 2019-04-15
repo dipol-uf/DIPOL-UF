@@ -37,6 +37,8 @@ namespace DIPOL_UF.Jobs
         public string BiasPath { get; set; }
         public string DarkPath { get; set; }
         public string TargetName { get; set; }
+        [JsonIgnore]
+        public int Repeats { get; set; }
 
         public Dictionary<string, Dictionary<string, object>> CustomParameters { get; set; }
 
@@ -47,6 +49,7 @@ namespace DIPOL_UF.Jobs
             TargetName = other.TargetName;
             BiasPath = other.BiasPath;
             DarkPath = other.DarkPath;
+            Repeats = other.Repeats;
         }
 
         public async Task Deserialize(Stream stream)

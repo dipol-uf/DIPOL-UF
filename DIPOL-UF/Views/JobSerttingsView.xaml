@@ -108,6 +108,7 @@
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
 
@@ -123,8 +124,10 @@
                 <TextBlock Style="{StaticResource TextBlockStyle}"
                            Grid.Row="4" Text="{extensions:Text Key=JobSettings_DarkFile}" />
                 <TextBlock Style="{StaticResource TextBlockStyle}"
+                           Grid.Row="5" Text="{extensions:Text Key=JobSettings_N_repeats}" />
+                <TextBlock Style="{StaticResource TextBlockStyle}"
                            VerticalAlignment="Top"
-                           Grid.Row="5" Text="{extensions:Text Key=JobSettings_ExposureTime}" />
+                           Grid.Row="6" Text="{extensions:Text Key=JobSettings_ExposureTime}" />
                 
 
                 <!--Right-hand side controls-->
@@ -153,9 +156,14 @@
                           Text="{extensions:ValidationBinding Path=DarkPath}"
                           Style="{StaticResource TextBoxWithErrors}"/>
 
+                <!--Dark path-->
+                <TextBox  Grid.Row="5" Grid.Column="1"
+                          Text="{extensions:ValidationBinding Path=Repeats}"
+                          Style="{StaticResource TextBoxWithErrors}"/>
 
 
-                <ListView Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2"
+
+                <ListView Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2"
                           Style="{StaticResource ListViewStyle}"
                           Margin="5">
 
