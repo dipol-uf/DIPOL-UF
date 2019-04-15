@@ -113,6 +113,26 @@ namespace DIPOL_UF.Jobs
 
         private async Task StartJobAsync(CancellationToken token)
         {
+            async Task DoCameraJobAsync(Job job, string file)
+            {
+                if (job is null)
+                    return;
+                try
+                {
+                    if (job.ContainsActionOfType<CameraAction>())
+                        foreach (var control in _jobControls)
+                            control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, file,
+                                ImageFormat.SignedInt32);
+                    await job.Run(token);
+                }
+                finally
+                {
+                    if (job.ContainsActionOfType<CameraAction>())
+                        foreach (var control in _jobControls)
+                            await control.Camera.FinishImageSavingSequenceAsync();
+                }
+            }
+
             try
             {
                 _jobControls = _windowRef.CameraTabs.Items.Select(x => x.Tab).ToList();
@@ -140,37 +160,8 @@ namespace DIPOL_UF.Jobs
                                 await control.Camera.FinishImageSavingSequenceAsync();
                     }
 
-                    fileName = $"{CurrentTarget.TargetName}_bias";
-                    try
-                    {
-                        if (BiasJob?.ContainsActionOfType<CameraAction>() == true)
-                            foreach (var control in _jobControls)
-                                control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, fileName,
-                                    ImageFormat.SignedInt32);
-                        await (BiasJob?.Run(token) ?? Task.CompletedTask);
-                    }
-                    finally
-                    {
-                        if (BiasJob?.ContainsActionOfType<CameraAction>() == true)
-                            foreach (var control in _jobControls)
-                                await control.Camera.FinishImageSavingSequenceAsync();
-                    }
-
-                    fileName = $"{CurrentTarget.TargetName}_dark";
-                    try
-                    {
-                        if (DarkJob?.ContainsActionOfType<CameraAction>() == true)
-                            foreach (var control in _jobControls)
-                                control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, fileName,
-                                    ImageFormat.SignedInt32);
-                        await (DarkJob?.Run(token) ?? Task.CompletedTask);
-                    }
-                    finally
-                    {
-                        if (DarkJob?.ContainsActionOfType<CameraAction>() == true)
-                            foreach (var control in _jobControls)
-                                await control.Camera.FinishImageSavingSequenceAsync();
-                    }
+                    await DoCameraJobAsync(BiasJob, $"{CurrentTarget.TargetName}_bias");
+                    await DoCameraJobAsync(DarkJob, $"{CurrentTarget.TargetName}_dark");
                 }, token);
             }
             catch (Exception e)
