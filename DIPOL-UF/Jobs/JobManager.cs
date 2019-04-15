@@ -94,11 +94,6 @@ namespace DIPOL_UF.Jobs
                 .ToPropertyEx(this, x => x.AnyCameraIsAcquiring)
                 .DisposeWith(Subscriptions);
 
-            // TODO : Remove logging
-            this.WhenAnyPropertyChanged(nameof(Progress), nameof(Total), nameof(CurrentJobName))
-                .Select(x => $"{x.CurrentJobName}:\t{x.Progress:000}:{x.Total:000}")
-                .LogObservable(">", Subscriptions);
-
         }
 
         public void StartJob()

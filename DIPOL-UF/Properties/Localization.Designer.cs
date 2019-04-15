@@ -516,6 +516,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0:d4}/{1:d4}.
+        /// </summary>
+        public static string CameraTab_JobProgressFormat {
+            get {
+                return ResourceManager.GetString("CameraTab_JobProgressFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Job Settings.
         /// </summary>
         public static string CameraTab_JobSettings {

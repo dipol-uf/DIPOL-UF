@@ -81,6 +81,8 @@ namespace DIPOL_UF.ViewModels
         public bool IsAcquiring { [ObservableAsProperty]get; }
         public float CurrentTemperature { [ObservableAsProperty] get; }
         public Switch CoolerMode { [ObservableAsProperty] get; }
+        public string JobName { [ObservableAsProperty] get; }
+        public string JobProgressString { [ObservableAsProperty] get; }
 
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
         public ICommand SetUpAcquisitionCommand => Model.SetUpAcquisitionCommand;
@@ -135,7 +137,15 @@ namespace DIPOL_UF.ViewModels
 
         private void HookObservables()
         {
-
+            JobManager.Manager.WhenAnyPropertyChanged(nameof(JobManager.Progress), nameof(JobManager.Total))
+                      .Sample(UiSettingsProvider.UiThrottlingDelay)
+                      .Select(x => string.Format(Localization.CameraTab_JobProgressFormat, x.Progress, x.Total))
+                      .ObserveOnUi()
+                      .ToPropertyEx(this, x => x.JobProgressString);
+            JobManager.Manager.WhenPropertyChanged(x => x.CurrentJobName).Select(x => x.Value)
+                      .Sample(UiSettingsProvider.UiThrottlingDelay)
+                      .ObserveOnUi()
+                      .ToPropertyEx(this, x => x.JobName);
             Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.IsAcquiring))
                  .Select(x => x.IsAcquiring)
                  .ObserveOnUi()
