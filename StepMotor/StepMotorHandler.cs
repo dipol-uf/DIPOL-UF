@@ -43,6 +43,8 @@ namespace StepMotor
 
         private static readonly int SpeedFactor = 30;
 
+        // TODO : add default timeout
+
         /// <summary>
         /// Delegate that handles Data/Error received events.
         /// </summary>
@@ -114,7 +116,7 @@ namespace StepMotor
                 _suppressEvents = true;
 
                 var result = await SendCommandAsync(Command.GetAxisParameter, 1, (byte) CommandType.Unused, address, 0,
-                    TimeSpan.FromMilliseconds(100));
+                    TimeSpan.FromMilliseconds(100)); // TODO : Increase timeout
 
                 return result.Status == ReturnStatus.Success;
             }
@@ -297,7 +299,7 @@ namespace StepMotor
                 (byte) type,
                 Address,
                 motorOrBank, 
-                TimeSpan.FromMilliseconds(100));
+                TimeSpan.FromMilliseconds(100)); // TODO : Increase timeout
 
         /// <summary>
         /// Implements interface and frees resources
@@ -403,7 +405,7 @@ namespace StepMotor
             throw new InvalidOperationException("Failed to retrieve value.");
         }
 
-        public async Task WaitForPositionReachedAsync(CancellationToken token, byte motorOrBank = 0)
+        public async Task WaitForPositionReachedAsync(CancellationToken token = default, byte motorOrBank = 0)
         {
             token.ThrowIfCancellationRequested();
 
@@ -414,7 +416,7 @@ namespace StepMotor
                 var timeInSec = 0.25 * (status[AxisParameter.TargetPosition] - status[AxisParameter.ActualPosition]) /
                                 (SpeedFactor * status[AxisParameter.MaximumSpeed]);
                 var timeOut = TimeSpan.FromSeconds(Math.Max(Math.Abs(timeInSec), 0.025));
-
+                
                 token.ThrowIfCancellationRequested();
                 while (!await IsTargetPositionReachedAsync(motorOrBank))
                 {
@@ -440,7 +442,7 @@ namespace StepMotor
                 throw new InvalidOperationException("Failed to retrieve value.");
         }
 
-        public async Task ReturnToOriginAsync(CancellationToken token, byte motorOrBank = 0)
+        public async Task ReturnToOriginAsync(CancellationToken token = default, byte motorOrBank = 0)
         {
             token.ThrowIfCancellationRequested();
 
@@ -451,6 +453,23 @@ namespace StepMotor
             token.ThrowIfCancellationRequested();
 
             await WaitForPositionReachedAsync(token);
+        }
+
+        public async Task ReturnToOriginAsyncEx(CancellationToken token = default, byte motorOrBank = 0)
+        {
+            await Task.Yield();
+            //var reply = await SendCommandAsync(Command.ReferenceSearch, 0, CommandType.Start, motorOrBank);
+            //if(reply.Status != ReturnStatus.Success)
+            //    throw new InvalidOperationException("Failed to start reference search.");
+
+            //token.ThrowIfCancellationRequested();
+
+            //var status = await GetRotationStatusAsync(motorOrBank);
+            //var timeInSec = 0.25 * (status[AxisParameter.TargetPosition] - status[AxisParameter.ActualPosition]) /
+            //                (SpeedFactor * status[AxisParameter.MaximumSpeed]);
+            //var timeOut = TimeSpan.FromSeconds(Math.Max(Math.Abs(timeInSec), 0.025));
+            //token.ThrowIfCancellationRequested();
+
         }
 
         /// <summary>
