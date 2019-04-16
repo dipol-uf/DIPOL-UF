@@ -57,6 +57,7 @@ namespace Tests
         public void SetUp()
         {
             _motor = new StepMotorHandler("COM1");
+            _motor.ReturnToOriginAsync().GetAwaiter().GetResult();
         }
 
         [TearDown]
@@ -201,6 +202,26 @@ namespace Tests
             Assert.IsTrue(await _motor.IsTargetPositionReachedAsync());
             Assert.AreEqual(0, await _motor.GetActualPositionAsync());
 
+        }
+
+        [Test]
+        [TestCase(200)]
+        public async Task StressTestMotor(int n)
+        {
+            const int step = 3200;
+            var timeout = TimeSpan.FromMilliseconds(100);
+            await _motor.ReturnToOriginAsync();
+
+            for (var i = 0; i < n; i++)
+            {
+                await _motor.SendCommandAsync(Command.MoveToPosition, step, CommandType.Relative);
+                await _motor.WaitForPositionReachedAsync();
+                await Task.Delay(timeout);
+            }
+
+            Assert.AreEqual(step * n, await _motor.GetActualPositionAsync());
+
+            await _motor.ReturnToOriginAsync();
         }
 
     }
