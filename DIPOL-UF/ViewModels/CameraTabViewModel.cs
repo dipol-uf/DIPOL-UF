@@ -131,10 +131,11 @@ namespace DIPOL_UF.ViewModels
                     x => new JobSettingsViewModel((ReactiveWrapper<Target>)x))
                     .DisposeWith(Subscriptions);
 
+            // WATCH : opening shutters
             if (CanControlExternalShutter)
-                ExternalShutterMode = ShutterMode.PermanentlyClosed;
+                ExternalShutterMode = ShutterMode.PermanentlyOpen;
             if (CanControlInternalShutter)
-                InternalShutterState = ShutterMode.PermanentlyClosed;
+                InternalShutterState = ShutterMode.PermanentlyOpen;
         }
 
         private void HookObservables()
