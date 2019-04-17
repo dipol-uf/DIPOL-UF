@@ -24,6 +24,8 @@
 
 using System;
 using System.Runtime.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace StepMotor
 {
@@ -147,6 +149,42 @@ namespace StepMotor
                 Command = Command.Unknown;
                 ReturnValue = 0;
             }
+        }
+
+        public Reply(Span<byte> replyData)
+        {
+            if(replyData.IsEmpty || replyData.Length < ReplyLength)
+                throw new ArgumentException(nameof(replyData));
+
+            byte checkSum = 0;
+            unchecked
+            {
+                // Calculates checksum
+                for (var i = 0; i < ReplyLength - 1; i++)
+                    checkSum += replyData[i];
+            }
+
+            if (checkSum != replyData[ReplyLength - 1])
+                throw new ArgumentException("Wrong checksum in the reply.");
+
+            ReplyAddress = replyData[0];
+
+            // 1-st is module address
+            ModuleAddress = replyData[1];
+
+            // 2-nd is status (coerced to enum)
+            Status = Enum.IsDefined(typeof(ReturnStatus), replyData[2])
+                ? (ReturnStatus)replyData[2]
+                : ReturnStatus.UnknownError;
+
+            // 3-rd is command for which respond is received (coerced to enum)
+            Command = Enum.IsDefined(typeof(Command), replyData[3])
+                ? (Command)replyData[3]
+                : Command.Unknown;
+
+            // Bytes 4 to 7 are Int32 return value. 
+            // Step motor returns it in Most Significant Bit First format
+            ReturnValue = System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(replyData.Slice(4, 4));
         }
 
         /// <summary>
