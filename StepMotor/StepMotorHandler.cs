@@ -91,7 +91,7 @@ namespace StepMotor
         public StepMotorHandler(string portName, byte address = 1, TimeSpan defaultTimeOut = default)
         {
             _timeOut = defaultTimeOut == default
-                ? TimeSpan.FromMilliseconds(200)
+                ? TimeSpan.FromMilliseconds(300)
                 : defaultTimeOut;
 
             Address = address;
@@ -332,7 +332,7 @@ namespace StepMotor
                 (byte) type,
                 Address,
                 motorOrBank, 
-                TimeSpan.FromMilliseconds(200));
+                _timeOut);
 
         /// <summary>
         /// Implements interface and frees resources

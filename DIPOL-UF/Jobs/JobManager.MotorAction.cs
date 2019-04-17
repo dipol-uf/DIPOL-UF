@@ -84,24 +84,75 @@ namespace DIPOL_UF.Jobs
                 if (Manager._windowRef.PolarimeterMotor is null)
                     throw new NotSupportedException(@"No step motor found");
 
-
+                var retry = false;
                 // TODO : Add cancellation support
                 if (ActionType == MotorActionType.Reset)
-                    await Manager._windowRef.PolarimeterMotor.ReturnToOriginAsyncEx(token);
+                {
+                    try
+                    {
+                        await Manager._windowRef.PolarimeterMotor.ReturnToOriginAsyncEx(token);
+                    }
+                    catch (Exception)
+                    {
+                        retry = true;
+                    }
+
+                    if (retry)
+                    {
+                        retry = false;
+                        await Manager._windowRef.PolarimeterMotor.ReturnToOriginAsyncEx(token);
+                    }
+                }
                 else
                 {
-                    await Manager._windowRef.PolarimeterMotor.SendCommandAsync(Command.MoveToPosition,
-                        (int) (Angle * Parameter), CommandType.Relative);
-                    await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token);
+                    try
+                    {
+                        await Manager._windowRef.PolarimeterMotor.SendCommandAsync(Command.MoveToPosition,
+                            (int) (Angle * Parameter), CommandType.Relative);
+                    }
+                    catch (Exception)
+                    {
+                        retry = true;
+                    }
+
+                    if (retry)
+                    {
+                        retry = false;
+                        var tempPos = await  Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
+                        var oldPos = (int) (Manager.MotorPosition ?? 0 / 22.5f * Angle);
+
+                        if(tempPos == oldPos)
+                            
+                        await Manager._windowRef.PolarimeterMotor.SendCommandAsync(Command.MoveToPosition,
+                            tempPos + Angle, CommandType.Absolute);
+                    }
+
+                    try
+                    {
+                        await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token);
+                    }
+                    catch (Exception)
+                    {
+                        retry = true;
+                    }
+
+                    if (retry)
+                    {
+                        retry = false;
+                        await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token);
+                    }
                 }
 
-                var pos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
-
-                // TODO : deal with constant
-                Manager.MotorPosition = 22.5f * pos / Angle;
-                // WATCH : console logging
-                Console.WriteLine($@"Motor at: {pos}");
-
+                try
+                {
+                    var pos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
+                    // TODO : deal with constant
+                    Manager.MotorPosition = 22.5f * pos / Angle;
+                }
+                catch (Exception)
+                {
+                    // Ignore
+                }
             }
 
         }
