@@ -288,7 +288,7 @@
                                Visibility="{Binding IsJobInProgress, Converter={StaticResource BoolToVisibilityConverter}}"/>
                         <Label Style="{StaticResource ContentFont_Label}"
                                MinHeight="15"
-                               Content="{Binding JobMotorProgress}">
+                               Content="{Binding JobMotorProgress, StringFormat=A: {0}}">
                             <Label.Visibility>
                                 <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}"
                                                ConverterParameter="{StaticResource BoolToVisibilityConverter}">

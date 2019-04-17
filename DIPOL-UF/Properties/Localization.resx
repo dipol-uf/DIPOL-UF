@@ -551,7 +551,7 @@ The following settings produced this error:
     <value>There are {0} more errors that were not shown.</value>
   </data>
   <data name="CameraTab_JobProgressFormat" xml:space="preserve">
-    <value>{0:d4}/{1:d4}</value>
+    <value>{0:d3}/{1:d3}</value>
   </data>
   <data name="JobManager_AcquisitionJobName" xml:space="preserve">
     <value>Images</value>
