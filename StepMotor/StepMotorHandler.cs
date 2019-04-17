@@ -23,6 +23,8 @@
 //     SOFTWARE.
 
 using System;
+using System.Buffers;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -41,9 +43,9 @@ namespace StepMotor
         private static readonly Regex Regex = new Regex(@"[a-z]([a-z])\s*(\d{1,3})\s*(.*)\r",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private static readonly int SpeedFactor = 30;
+        private static readonly int ResponseSizeInBytes = 9;
 
-        // TODO : add default timeout
+        private static readonly int SpeedFactor = 30;
 
         /// <summary>
         /// Delegate that handles Data/Error received events.
@@ -57,7 +59,10 @@ namespace StepMotor
         /// </summary>
         private readonly SerialPort _port;
 
-        private TaskCompletionSource<Reply> _portResponseTask;
+        private readonly TimeSpan _timeOut;
+
+        private readonly ConcurrentQueue<TaskCompletionSource<Reply>> _responseWaitQueue 
+            = new ConcurrentQueue<TaskCompletionSource<Reply>>();
 
         /// <summary>
         /// Used to suppress public events while performing WaitResponse.
@@ -77,22 +82,18 @@ namespace StepMotor
         public event StepMotorEventHandler ErrorReceived;
 
         /// <summary>
-        /// Stores last raw response from the COM port.
-        /// </summary>
-        public byte[] LastResponse
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
         /// Default constructor
         /// </summary>
         /// <param name="portName">COM port name.</param>
+        /// <param name="defaultTimeOut">Default response timeout.</param>
         /// <param name="address">Device address.</param>
         /// <exception cref="ArgumentOutOfRangeException"/>
-        public StepMotorHandler(string portName, byte address = 1)
+        public StepMotorHandler(string portName, byte address = 1, TimeSpan defaultTimeOut = default)
         {
+            _timeOut = defaultTimeOut == default
+                ? TimeSpan.FromMilliseconds(200)
+                : defaultTimeOut;
+
             Address = address;
             // Checks if port name is legal
             if (!SerialPort.GetPortNames().Contains(portName))
@@ -108,6 +109,7 @@ namespace StepMotor
             _port.Open();
         }
 
+
         private async Task<bool> PokeAddressInBinary(byte address)
         {
             var oldStatus = _suppressEvents;
@@ -115,8 +117,10 @@ namespace StepMotor
             {
                 _suppressEvents = true;
 
-                var result = await SendCommandAsync(Command.GetAxisParameter, 1, (byte) CommandType.Unused, address, 0,
-                    TimeSpan.FromMilliseconds(100)); // TODO : Increase timeout
+                var result = await SendCommandAsync(
+                    Command.GetAxisParameter, 
+                    1, (byte) CommandType.Unused, 
+                    address, 0, _timeOut);
 
                 return result.Status == ReturnStatus.Success;
             }
@@ -131,36 +135,45 @@ namespace StepMotor
 
         }
 
-        private async Task SwitchToBinary(byte address)
+        private async Task<bool> SwitchToBinary(byte address)
         {
             var oldStatus = _suppressEvents;
 
             try
             {
                 _suppressEvents = true;
-                _portResponseTask = null;
                 _port.WriteLine("");
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
+                await Task.Delay(_timeOut);
 
-                var addrStr = ((char) (address - 1 + 'A')).ToString();
+                var addrStr = ((char)(address - 1 + 'A')).ToString();
 
                 var command = $"{addrStr} BIN";
-                _portResponseTask = new TaskCompletionSource<Reply>();
+                var taskSrc = new TaskCompletionSource<Reply>();
+                _responseWaitQueue.Enqueue(taskSrc);
                 _port.WriteLine(command);
-                await Task.WhenAny(_portResponseTask.Task, Task.Delay(TimeSpan.FromMilliseconds(100)));
-                if (_port.BytesToRead != 0)
+                try
                 {
-                    var buffer = new byte[_port.BytesToRead];
-                    _port.Read(buffer, 0, buffer.Length);
-                    var result = Regex.Match(_port.Encoding.GetString(buffer));
+                    await WaitTimeOut(taskSrc.Task, _timeOut);
+                }
+                catch (StepMotorException exept)
+                {
+                    if (exept.RawData != null && exept.RawData.Length > 0)
+                    {
+                        var result = Regex.Match(_port.Encoding.GetString(exept.RawData));
 
-                    if (result.Groups.Count == 4
-                        && result.Groups[1].Value == addrStr
-                        && result.Groups[2].Value == "100")
-                        return;
+                        if (result.Groups.Count == 4
+                            && result.Groups[1].Value == addrStr
+                            && result.Groups[2].Value == "100")
+                            return true;
+                    }
 
                 }
-                throw new InvalidOperationException("Failed to switch from ASCII to Binary.");
+                catch (TimeoutException)
+                {
+                    taskSrc.SetCanceled();
+                }
+
+                return false;
             }
             finally
             {
@@ -169,22 +182,7 @@ namespace StepMotor
 
         }
 
-        /// <summary>
-        /// Waits for response. Waits until commandSent if false, which is set in internal
-        /// COM port event handlers. 
-        /// </summary>
-        /// <param name="timeOut">Wait timeout. If there is no response within this interval, <see cref="TimeoutException"/> is thrown.</param>
-        /// <returns>An instance of <see cref="Reply"/> generated from response byte array.</returns>
-        private async Task<Reply> WaitResponseAsync(TimeSpan timeOut)
-        {
-            if(_portResponseTask is null)
-                throw new NullReferenceException("The task source object is null.");
-
-            var result = await Task.WhenAny(_portResponseTask.Task, Task.Delay(timeOut));
-            if (result is Task<Reply> reply)
-                return await reply;
-            throw new TimeoutException("Serial device did not communicate back within allotted time interval.");
-        }
+       
 
         /// <summary>
         /// Handles internal COM port ErrorReceived.
@@ -194,14 +192,15 @@ namespace StepMotor
         protected void OnPortErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
             // Reads last response
-            LastResponse = new byte[_port.BytesToRead];
-            _port.Read(LastResponse, 0, LastResponse.Length);
-            // Indicates command received response
-            _portResponseTask?.SetException(new InvalidOperationException("Serial device responded with an error."));
+            byte[] buffer = null;
 
-            // IF events are not suppressed, fires respective public event
-            if (!_suppressEvents)
-                OnErrorReceived(new StepMotorEventArgs(LastResponse));
+            if (_port.BytesToRead > 0)
+                buffer = new byte[_port.BytesToRead];
+            
+            while(_responseWaitQueue.TryDequeue(out var taskSrc))
+                taskSrc.SetException(new InvalidOperationException(@"Step motor returned an error."));
+
+            OnErrorReceived(new StepMotorEventArgs(buffer ?? Array.Empty<byte>()));
         }
 
         /// <summary>
@@ -211,29 +210,61 @@ namespace StepMotor
         /// <param name="e">Event arguments.</param>
         protected void OnPortDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            // If port buffer is not empty
-            if (_port.BytesToRead == 9)
-            {
-                //Reads last response
-                LastResponse = new byte[_port.BytesToRead];
-                _port.Read(LastResponse, 0, LastResponse.Length);
-                // Indicates command received response
-                _portResponseTask?.SetResult(new Reply(LastResponse));
+            if (_port.BytesToRead <= 0) return;
 
-                // IF events are not suppressed, fires respective public event
-                if (!_suppressEvents)
-                    OnDataReceived(new StepMotorEventArgs(LastResponse));
+            var len = _port.BytesToRead;
+            var pool = ArrayPool<byte>.Shared.Rent(len);
+            TaskCompletionSource<Reply> taskSrc;
+
+            while (_responseWaitQueue.TryDequeue(out taskSrc) &&
+                   taskSrc.Task.IsCanceled)
+            {
             }
-           
+
+            try
+            {
+                _port.Read(pool, 0, len);
+                
+                if (len == ResponseSizeInBytes)
+                {
+                    var reply = new Reply(pool.AsSpan(0, ResponseSizeInBytes));
+                    taskSrc?.SetResult(reply);
+                    OnDataReceived(new StepMotorEventArgs(pool.AsSpan(0, ResponseSizeInBytes).ToArray()));
+                }
+                else if (len % ResponseSizeInBytes == 0)
+                {
+                    var reply = new Reply(pool.AsSpan(0, ResponseSizeInBytes));
+                    taskSrc.SetResult(reply);
+                    OnDataReceived(new StepMotorEventArgs(pool.AsSpan(0, ResponseSizeInBytes).ToArray()));
+
+                    for (var i = 0; i < len / ResponseSizeInBytes; i++)
+                    {
+                        reply = new Reply(pool.AsSpan(0, ResponseSizeInBytes));
+                        while (_responseWaitQueue.TryDequeue(out taskSrc) && taskSrc.Task.IsCanceled)
+                        {
+                        }
+
+                        taskSrc?.SetResult(reply);
+                        OnDataReceived(new StepMotorEventArgs(pool.AsSpan(0, ResponseSizeInBytes).ToArray()));
+                    }
+                }
+                else
+                {
+                    taskSrc?.SetException(new StepMotorException("Step motor response is inconsistent", pool));
+                    OnDataReceived(new StepMotorEventArgs(pool.ToArray()));
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(pool, true);
+            }
         }
 
-        protected Task<Reply> SendCommandAsync(Command command, int argument,
+        protected async Task<Reply> SendCommandAsync(Command command, int argument,
             byte type,
             byte address,
             byte motorOrBank, TimeSpan timeOut)
         {
-            // Indicates command sending is in process and response have been received yet.
-            _portResponseTask = new TaskCompletionSource<Reply>();
 
             // Converts Int32 into byte array. 
             // Motor accepts Most Significant Bit First, so for LittleEndian 
@@ -282,11 +313,13 @@ namespace StepMotor
             // Takes least significant byte
             toSend[8] = sum;
 
+            var responseTaskSource = new TaskCompletionSource<Reply>();
+            _responseWaitQueue.Enqueue(responseTaskSource);
             // Sends data to COM port
             _port.Write(toSend, 0, toSend.Length);
 
             // Wait for response
-            return WaitResponseAsync(timeOut);
+            return await WaitResponseAsync(responseTaskSource.Task, command, timeOut);
         }
 
         public Task<Reply> SendCommandAsync(
@@ -299,13 +332,16 @@ namespace StepMotor
                 (byte) type,
                 Address,
                 motorOrBank, 
-                TimeSpan.FromMilliseconds(100)); // TODO : Increase timeout
+                TimeSpan.FromMilliseconds(200));
 
         /// <summary>
         /// Implements interface and frees resources
         /// </summary>
         public void Dispose()
         {
+            while(_responseWaitQueue.TryDequeue(out var taskSrc) && taskSrc?.Task.IsCanceled == false)
+                taskSrc.SetException(new ObjectDisposedException(nameof(StepMotorHandler)));
+
             _port.Close();
             _port.Dispose();
         }
@@ -405,25 +441,30 @@ namespace StepMotor
             throw new InvalidOperationException("Failed to retrieve value.");
         }
 
-        public async Task WaitForPositionReachedAsync(CancellationToken token = default, byte motorOrBank = 0)
+        public async Task WaitForPositionReachedAsync(CancellationToken token = default, TimeSpan timeOut = default, byte motorOrBank = 0)
         {
             token.ThrowIfCancellationRequested();
+            var startTime = DateTime.Now;
 
             if (!await IsTargetPositionReachedAsync(motorOrBank))
             {
                 token.ThrowIfCancellationRequested();
                 var status = await GetRotationStatusAsync(motorOrBank);
-                var timeInSec = 0.25 * (status[AxisParameter.TargetPosition] - status[AxisParameter.ActualPosition]) /
-                                (SpeedFactor * status[AxisParameter.MaximumSpeed]);
-                var timeOut = TimeSpan.FromSeconds(Math.Max(Math.Abs(timeInSec), 0.025));
-                
-                token.ThrowIfCancellationRequested();
+                var delayMs = Math.Max(
+                    250 * Math.Abs(status[AxisParameter.TargetPosition] - status[AxisParameter.ActualPosition]) /
+                    (SpeedFactor * status[AxisParameter.MaximumSpeed]),
+                    500);
+
                 while (!await IsTargetPositionReachedAsync(motorOrBank))
                 {
-                    await Task.Delay(timeOut, token);
                     token.ThrowIfCancellationRequested();
+                    if(timeOut != default && (DateTime.Now - startTime) > timeOut)
+                        throw new TimeoutException();
+                    await Task.Delay(delayMs, token);
                 }
+
             }
+                
         }
 
         public async Task<bool> IsInMotionAsync(byte motorOrBank = 0)
@@ -457,18 +498,28 @@ namespace StepMotor
 
         public async Task ReturnToOriginAsyncEx(CancellationToken token = default, byte motorOrBank = 0)
         {
-            await Task.Yield();
-            //var reply = await SendCommandAsync(Command.ReferenceSearch, 0, CommandType.Start, motorOrBank);
-            //if(reply.Status != ReturnStatus.Success)
-            //    throw new InvalidOperationException("Failed to start reference search.");
+            var reply = await SendCommandAsync(Command.ReferenceSearch, 0, CommandType.Start, motorOrBank);
+            if (reply.Status != ReturnStatus.Success)
+                throw new InvalidOperationException("Failed to start reference search.");
 
-            //token.ThrowIfCancellationRequested();
+            if (token.IsCancellationRequested)
+            {
+                await SendCommandAsync(Command.ReferenceSearch, 0, CommandType.Stop, motorOrBank);
+                token.ThrowIfCancellationRequested();
+            }
+            var deltaMs = 200;
 
-            //var status = await GetRotationStatusAsync(motorOrBank);
-            //var timeInSec = 0.25 * (status[AxisParameter.TargetPosition] - status[AxisParameter.ActualPosition]) /
-            //                (SpeedFactor * status[AxisParameter.MaximumSpeed]);
-            //var timeOut = TimeSpan.FromSeconds(Math.Max(Math.Abs(timeInSec), 0.025));
-            //token.ThrowIfCancellationRequested();
+            while ((reply = await SendCommandAsync(Command.ReferenceSearch, 0, CommandType.Status, motorOrBank))
+                   .Status == ReturnStatus.Success
+                   && reply.ReturnValue != 0)
+            {
+                if (token.IsCancellationRequested)
+                {
+                    await SendCommandAsync(Command.ReferenceSearch, 0, CommandType.Stop, motorOrBank);
+                    token.ThrowIfCancellationRequested();
+                }
+                await Task.Delay(deltaMs, token);
+            }
 
         }
 
@@ -477,14 +528,76 @@ namespace StepMotor
         /// </summary>
         /// <param name="e">Event arguments.</param>
         protected virtual void OnDataReceived(StepMotorEventArgs e)
-            => DataReceived?.Invoke(this, e);
-
+        {
+            if (!_suppressEvents)
+                DataReceived?.Invoke(this, e);
+        }
         /// <summary>
         /// Used to fire ErrorReceived event.
         /// </summary>
         /// <param name="e">Event arguments.</param>
         protected virtual void OnErrorReceived(StepMotorEventArgs e)
-            => ErrorReceived?.Invoke(this, e);
+        {
+            if (!_suppressEvents)
+                ErrorReceived?.Invoke(this, e);
+        }
+
+        private static Task WaitTimeOut(Task task, TimeSpan timeOut = default, CancellationToken token = default)
+        {
+            if (timeOut == default)
+                return task;
+            var src = CancellationTokenSource.CreateLinkedTokenSource(token);
+
+            var result = Task.WaitAll(
+                new[]
+                {
+                    task.ContinueWith(t =>
+                    {
+                        if (t.IsFaulted)
+                            src.Cancel();
+                    }, src.Token)
+                }, (int)timeOut.TotalMilliseconds, src.Token);
+
+            if (result)
+                return task;
+
+            if (src.IsCancellationRequested && task.IsFaulted)
+                return task;
+            if (src.IsCancellationRequested)
+                return Task.FromCanceled(src.Token);
+            return Task.FromException<TimeoutException>(new TimeoutException());
+
+
+
+        }
+        private static async Task<Reply> WaitResponseAsync(Task<Reply> source, Command command, TimeSpan timeOut = default)
+        {
+            if (source is null)
+                throw new NullReferenceException(nameof(source));
+            if (timeOut == default)
+                return await source;
+
+            //try
+            //{
+                await WaitTimeOut(source, timeOut);
+
+                if (source.IsCompleted)
+                {
+                    var result = await source;
+                    if (result.Command == command)
+                        return result;
+                    throw new InvalidOperationException(@"Sent/received command mismatch.");
+                }
+            //}
+            //// WATCH : no exception handling
+            //catch (Exception e)
+            //{
+
+            //}
+            throw new TimeoutException();
+
+
+        }
 
         public static async Task<ReadOnlyCollection<byte>> FindDevice(string port, byte startAddress = 1, byte endAddress = 16)
         {
@@ -500,7 +613,7 @@ namespace StepMotor
                         else
                         {
                             await motor.SwitchToBinary(i);
-                            if(await motor.PokeAddressInBinary(i))
+                            if (await motor.PokeAddressInBinary(i))
                                 result.Add(i);
                         }
                     }
