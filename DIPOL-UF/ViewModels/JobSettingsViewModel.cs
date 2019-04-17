@@ -210,7 +210,8 @@ namespace DIPOL_UF.ViewModels
                 if (string.IsNullOrEmpty(x))
                     return;
                 UpdateBindingsToModel();
-                using (var str = new FileStream(x, FileMode.OpenOrCreate, FileAccess.Write))
+                // WATCH : Fixed overwriting issue
+                using (var str = new FileStream(x, FileMode.Create, FileAccess.Write))
                     await Model.Object.Serialize(str);
             }).DisposeWith(Subscriptions);
 
