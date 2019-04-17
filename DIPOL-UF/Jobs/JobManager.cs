@@ -72,7 +72,7 @@ namespace DIPOL_UF.Jobs
         public static JobManager Manager { get; } = new JobManager();
 
         [Reactive]
-        public float MotorPosition { get; private set; }
+        public float? MotorPosition { get; private set; }
         [Reactive]
         public int Progress { get; private set; }
         [Reactive]
@@ -150,6 +150,9 @@ namespace DIPOL_UF.Jobs
                             control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, file,
                                 _imageFormatMap[control.Camera.GetHashCode()],
                                 new[] { FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime) });
+                    MotorPosition = job.ContainsActionOfType<MotorAction>()
+                        ? new float?(0)
+                        : null;
                     await job.Run(token);
                 }
                 finally
@@ -157,6 +160,8 @@ namespace DIPOL_UF.Jobs
                     if (job.ContainsActionOfType<CameraAction>())
                         foreach (var control in _jobControls)
                             await control.Camera.FinishImageSavingSequenceAsync();
+
+                    MotorPosition = null;
                 }
             }
 
@@ -188,6 +193,10 @@ namespace DIPOL_UF.Jobs
                                     CurrentTarget.TargetName, fileName,
                                     _imageFormatMap[control.Camera.GetHashCode()],
                                     new [] {  FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime) });
+
+                        MotorPosition = AcquisitionJob.ContainsActionOfType<MotorAction>()
+                            ? new float?(0)
+                            : null;
                         for (var i = 0; i < AcquisitionRuns; i++)
                             await AcquisitionJob.Run(token);
                     }
@@ -196,6 +205,7 @@ namespace DIPOL_UF.Jobs
                         if (AcquisitionJob.ContainsActionOfType<CameraAction>())
                             foreach (var control in _jobControls)
                                 await control.Camera.FinishImageSavingSequenceAsync();
+                        MotorPosition = null;
                     }
 
                     // TODO : Remove logging
@@ -264,6 +274,11 @@ namespace DIPOL_UF.Jobs
                     : throw new InvalidOperationException(Localization.General_ShouldNotHappen);
                 AcquisitionActionCount = AcquisitionJob.NumberOfActions<CameraAction>();
                 TotalAcquisitionActionCount = AcquisitionActionCount * AcquisitionRuns;
+
+                // TODO : Consider checking shutter support in advance
+                if (AcquisitionJob.ContainsActionOfType<MotorAction>()
+                    && _windowRef.PolarimeterMotor is null)
+                    throw new InvalidOperationException("Cannot execute current control with no motor connected.");
 
                 BiasJob = CurrentTarget.BiasPath is null
                     ? null
@@ -341,12 +356,7 @@ namespace DIPOL_UF.Jobs
 
             // TODO : Enable for alpha tests
             // INFO : Disabled to test on local environment
-#if !DEBUG
-            // TODO : Consider checking shutter support in advance
-            if (AcquisitionJob.ContainsActionOfType<MotorAction>()
-                && _windowRef.PolarimeterMotor is null)
-                throw new InvalidOperationException("Cannot execute current control with no motor connected.");
-#endif
+           
             return control;
         }
 

@@ -85,6 +85,9 @@ namespace DIPOL_UF.ViewModels
         public string JobProgressString { [ObservableAsProperty] get; }
         public int JobCumulativeTotal { [ObservableAsProperty] get; }
         public int JobCumulativeCurrent { [ObservableAsProperty] get; }
+        public float JobMotorProgress { [ObservableAsProperty] get; }
+        public bool IsPolarimeryJob { [ObservableAsProperty] get; }
+        // TODO :Make this prettier
 
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
         public ICommand SetUpAcquisitionCommand => Model.SetUpAcquisitionCommand;
@@ -140,6 +143,18 @@ namespace DIPOL_UF.ViewModels
 
         private void HookObservables()
         {
+            JobManager.Manager.WhenPropertyChanged(x => x.MotorPosition).Select(x => x.Value.HasValue)
+                .DistinctUntilChanged()
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.IsPolarimeryJob)
+                .DisposeWith(Subscriptions);
+
+            JobManager.Manager.WhenPropertyChanged(x => x.MotorPosition).Select(x => x.Value ?? 0f)
+                .Sample(UiSettingsProvider.UiThrottlingDelay)
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.JobMotorProgress)
+                .DisposeWith(Subscriptions);
+
             JobManager.Manager.WhenAnyPropertyChanged(nameof(JobManager.Progress), nameof(JobManager.Total))
                       .Sample(UiSettingsProvider.UiThrottlingDelay)
                       .Select(x => string.Format(Localization.CameraTab_JobProgressFormat, x.Progress, x.Total))

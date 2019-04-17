@@ -279,12 +279,25 @@
                 <StackPanel Grid.Column="1" Grid.Row="1" Margin="2">
                     <Label Style="{StaticResource ContentFont_Label}"
                            Content="{Binding JobName}"
-                           MinHeight="20"
+                           MinHeight="15"
                            Visibility="{Binding IsJobInProgress, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                    <Label Style="{StaticResource ContentFont_Label}"
-                           MinHeight="20"
-                           Content="{Binding JobProgressString}"
-                           Visibility="{Binding IsJobInProgress, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Style="{StaticResource ContentFont_Label}"
+                               MinHeight="15"
+                               Content="{Binding JobProgressString}"
+                               Visibility="{Binding IsJobInProgress, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        <Label Style="{StaticResource ContentFont_Label}"
+                               MinHeight="15"
+                               Content="{Binding JobMotorProgress}">
+                            <Label.Visibility>
+                                <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}"
+                                               ConverterParameter="{StaticResource BoolToVisibilityConverter}">
+                                    <Binding Path="IsJobInProgress"/>
+                                    <Binding Path="IsPolarimeryJob"/>
+                                </MultiBinding>
+                            </Label.Visibility>
+                        </Label>
+                    </StackPanel>
                 </StackPanel>
                 <!--Shutters-->
                 <Grid Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2"
