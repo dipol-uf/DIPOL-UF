@@ -19,7 +19,7 @@ namespace DIPOL_UF.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Localization {
@@ -516,7 +516,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0:d4}/{1:d4}.
+        ///   Looks up a localized string similar to {0:d3}/{1:d3}.
         /// </summary>
         public static string CameraTab_JobProgressFormat {
             get {
