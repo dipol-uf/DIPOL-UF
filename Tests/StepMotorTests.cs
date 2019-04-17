@@ -92,7 +92,7 @@ namespace Tests
         [Theory]
         public async Task Test_Status()
         {
-            await _motor.WaitForPositionReachedAsync(default);
+            await _motor.WaitForPositionReachedAsync();
 
             var status = await _motor.GetStatusAsync();
             var axisStatus = await _motor.GetRotationStatusAsync();
@@ -123,7 +123,7 @@ namespace Tests
             // Rotates to target position
             var reply = await _motor.SendCommandAsync(Command.MoveToPosition, pos);
             Assume.That(reply.Status, Is.EqualTo(ReturnStatus.Success));
-            await _motor.WaitForPositionReachedAsync(CancellationToken.None);
+            Assert.That(async() => await _motor.WaitForPositionReachedAsync(CancellationToken.None), Throws.Nothing);
 
             Assert.IsTrue(await _motor.IsTargetPositionReachedAsync());
             Assert.AreEqual(pos, await _motor.GetActualPositionAsync());
@@ -134,6 +134,28 @@ namespace Tests
 
             Assert.IsTrue(await _motor.IsTargetPositionReachedAsync());
             Assert.AreEqual(0, await _motor.GetActualPositionAsync());
+
+        }
+
+        [Theory]
+        [TestCase(32_000)]
+        [TestCase(64_000)]
+        public async Task Test_WaitForPositionReached_TimeOut(int pos)
+        {
+
+            // Rotates to zero
+            Assume.That(await _motor.GetActualPositionAsync(), Is.EqualTo(0));
+
+            // Rotates to target position
+            var reply = await _motor.SendCommandAsync(Command.MoveToPosition, pos);
+            Assume.That(reply.Status, Is.EqualTo(ReturnStatus.Success));
+            Assert.ThrowsAsync<TimeoutException>(() =>
+                _motor.WaitForPositionReachedAsync(timeOut: TimeSpan.FromMilliseconds(350)));
+
+            Assert.That(() => _motor.WaitForPositionReachedAsync().GetAwaiter().GetResult(), Throws.Nothing);
+
+            Assert.IsTrue(await _motor.IsTargetPositionReachedAsync());
+            Assert.AreEqual(pos, await _motor.GetActualPositionAsync());
 
         }
 
@@ -205,7 +227,7 @@ namespace Tests
         }
 
         [Test]
-        [TestCase(200)]
+        [TestCase(100)]
         public async Task StressTestMotor(int n)
         {
             const int step = 3200;
