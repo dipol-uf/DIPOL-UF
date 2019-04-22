@@ -1487,8 +1487,11 @@ namespace ANDOR_CS.Classes
                 throw new InvalidOperationException(
                     "Configuration file does not contain required key \"RootDirectory\".");
 
-            var dateStr = DateTime.Now.ToString("yyyyMMdd");
+            var dateStr = DateTime.Now.Add(TimeSpan.Parse(
+                                      SettingsProvider.Settings.Get(@"RootDirectoryTimeOffset", "-12:00:00")))
+                                  .ToString("yyyyMMdd");
             var path = Path.GetFullPath(Path.Combine(root, dateStr, folderPath));
+
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
