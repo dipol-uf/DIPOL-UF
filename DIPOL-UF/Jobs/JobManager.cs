@@ -32,6 +32,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Models;
@@ -61,7 +62,7 @@ namespace DIPOL_UF.Jobs
         private Dictionary<int, SettingsBase> _settingsCache;
         private Task _jobTask;
         private CancellationTokenSource _tokenSource;
-        private Dictionary<int, ImageFormat> _imageFormatMap;
+        private Dictionary<int, Request> _requestMap;
 
         public int AcquisitionActionCount { get; private set; }
         public int TotalAcquisitionActionCount { get; private set; }
@@ -148,7 +149,7 @@ namespace DIPOL_UF.Jobs
                     if (job.ContainsActionOfType<CameraAction>())
                         foreach (var control in _jobControls)
                             control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, file,
-                                _imageFormatMap[control.Camera.GetHashCode()],
+                                Converters.ConverterImplementations.CameraToFilterConversion(control.Camera),
                                 new[] { FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime) });
                     MotorPosition = job.ContainsActionOfType<MotorAction>()
                         ? new float?(0)
@@ -173,11 +174,11 @@ namespace DIPOL_UF.Jobs
                 if (_jobControls.Any(x => x.Camera?.CurrentSettings is null))
                     throw new InvalidOperationException("At least one camera has no settings applied to it.");
 
-                _imageFormatMap = _jobControls.ToDictionary(
+                _requestMap = _jobControls.ToDictionary(
                     x => x.Camera.GetHashCode(),
-                    y => LongFormatModes.Any(z => y.Camera?.CurrentSettings.AcquisitionMode?.HasFlag(z) == true)
+                    y => new Request(LongFormatModes.Any(z => y.Camera?.CurrentSettings.AcquisitionMode?.HasFlag(z) == true)
                         ? ImageFormat.SignedInt32
-                        : ImageFormat.UnsignedInt16);
+                        : ImageFormat.UnsignedInt16));
 
                 if (AcquisitionJob.ContainsActionOfType<MotorAction>()
                     && _windowRef.PolarimeterMotor is null)
@@ -198,7 +199,7 @@ namespace DIPOL_UF.Jobs
                             foreach (var control in _jobControls)
                                 control.Camera.StartImageSavingSequence(
                                     CurrentTarget.TargetName, fileName,
-                                    _imageFormatMap[control.Camera.GetHashCode()],
+                                    Converters.ConverterImplementations.CameraToFilterConversion(control.Camera),
                                     new [] {  FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime) });
 
                         MotorPosition = AcquisitionJob.ContainsActionOfType<MotorAction>()
