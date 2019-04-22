@@ -36,6 +36,7 @@ using System.Timers;
 using FITS_CS;
 using Timer = System.Timers.Timer;
 using System.Collections.Generic;
+using ANDOR_CS.AcquisitionMetadata;
 
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
@@ -485,7 +486,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="TaskCanceledException"/>
         protected abstract void AbortAcquisition();
 
-        public abstract Task StartAcquisitionAsync(CancellationToken token);
+        public abstract Task<Response> StartAcquisitionAsync(Request metadata = default, CancellationToken token = default);
 
         public abstract Image PullPreviewImage<T>(int index) where T : unmanaged;
         
