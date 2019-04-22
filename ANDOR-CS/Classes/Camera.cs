@@ -33,6 +33,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
@@ -1169,11 +1170,12 @@ namespace ANDOR_CS.Classes
         /// This is the preferred way to acquire images from camera.
         /// To run synchronously, call i.e. <see cref="Task.Wait()"/> on the returned task.
         /// </summary>
+        /// <param name="metadata">Metadata to be utilized when images are saved.</param>
         /// <param name="token">Cancellation token that can be used to abort process.</param>
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSdkException"/>
         /// <returns>Task that can be queried for execution status.</returns>
-        public override async Task StartAcquisitionAsync(CancellationToken token)
+        public override async Task<Response> StartAcquisitionAsync(Request metadata = default, CancellationToken token = default)
         {
             CheckIsDisposed();
             try
@@ -1237,43 +1239,10 @@ namespace ANDOR_CS.Classes
                         completionSrc.SetResult(true);
                 }
 
-                //void ListenToStatusUpdates(object sender, EventArgs e)
-                //{
-                //    var status = GetStatus();
-                //    var acc = 0;
-                //    var kin = 0;
-                //    Call(CameraHandle, () => SdkInstance.GetAcquisitionProgress(ref acc, ref kin));
-                //    OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, DateTime.UtcNow, kin, acc));
-                    
-                //    if (token.IsCancellationRequested
-                //        && !completionSrc.Task.IsCompleted)
-                //        completionSrc.SetCanceled();
-
-                //    if (status != CameraStatus.Acquiring
-                //        && !completionSrc.Task.IsCompleted)
-                //        completionSrc.SetResult(true);
-                //}
-
-                //void WatchImages(object sender, EventArgs e)
-                //{
-                //    var totalImg = (First: 0, Last: 0);
-                //    var result = Call(CameraHandle,
-                //        () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
-
-                //    Console.WriteLine($"IMAGES: {totalImg} : {GetStatus()}; {result}; {Thread.CurrentThread.ManagedThreadId}");
-
-                //    if (totalImg.First > 0)
-                //    {
-                //        for (; imageIndex <= totalImg.Last; imageIndex++)
-                //            OnNewImageReceived(new NewImageReceivedEventArgs(imageIndex,GetImageTiming(imageIndex)));
-                //    }
-                //}
                 if (_useSdkEvents)
                 {
                     SdkEventFired += ListenAndCheckImages;
                     var reg = token.Register(() => ListenAndCheckImages(this, default));
-                    //SdkEventFired += ListenToStatusUpdates;
-                    //SdkEventFired += WatchImages;
                     try
                     {
                         StartAcquisition();
@@ -1283,8 +1252,6 @@ namespace ANDOR_CS.Classes
                     {
                         reg.Dispose();
                         SdkEventFired -= ListenAndCheckImages;
-                        //SdkEventFired -= ListenToStatusUpdates;
-                        //SdkEventFired -= WatchImages;
                     }
                 }
                 else
@@ -1300,8 +1267,6 @@ namespace ANDOR_CS.Classes
 
                     SdkEventFired += ListenAndCheckImages;
                     var reg = token.Register(() => ListenAndCheckImages(this, default));
-                    //timer.Elapsed += ListenToStatusUpdates;
-                    //timer.Elapsed += WatchImages;
                     try
                     {
                         timer.Start();
@@ -1313,8 +1278,6 @@ namespace ANDOR_CS.Classes
                         reg.Dispose();
                         SdkEventFired -= ListenAndCheckImages;
                         timer.Stop();
-                        //timer.Elapsed -= ListenToStatusUpdates;
-                        //timer.Elapsed -= WatchImages;
                     }
                 }
 
@@ -1339,6 +1302,9 @@ namespace ANDOR_CS.Classes
                 IsAcquiring = false;
                 OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus()));
             }
+
+            // TODO : Create response
+            return default;
         }
         public override Image PullPreviewImage<T>(int index)
         {
