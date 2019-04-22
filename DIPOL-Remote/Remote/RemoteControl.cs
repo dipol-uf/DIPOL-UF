@@ -175,7 +175,11 @@ namespace DIPOL_Remote.Remote
             try
             {
                 // Tries to create new remote camera
+#if DEBUG_REMOTE
+                camera = await DebugCamera.CreateAsync(camIndex);
+#else
                 camera = await Camera.CreateAsync(camIndex, @params);
+#endif
             }
             // Andor-related exception
             catch (AndorSdkException andorEx)
@@ -288,9 +292,13 @@ namespace DIPOL_Remote.Remote
         {
             try
             {
-
                 // Tries to retrieve the number of available cameras
+#if DEBUG_REMOTE
+                return 1;
+#else 
                 return Camera.GetNumberOfCameras();
+#endif
+
             }
             // If method fails and Andor-related exception is thrown
             catch (AndorSdkException andorEx)
