@@ -22,10 +22,12 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.Serialization;
+using ANDOR_CS.Enums;
 using FITS_CS;
 
 namespace ANDOR_CS.AcquisitionMetadata
@@ -35,12 +37,17 @@ namespace ANDOR_CS.AcquisitionMetadata
     {
         [DataMember]
         public ReadOnlyCollection<FitsKey> FitsKeys { get; }
+        [DataMember(EmitDefaultValue = true)]
+        public ImageFormat ImageFormat { get; }
 
-        public Request(IEnumerable<FitsKey> keys = default)
+        public Request(
+            ImageFormat imageFormat = ImageFormat.UnsignedInt16,
+            IEnumerable<FitsKey> keys = default)
         {
             FitsKeys = keys is null
                 ? null
                 : new ReadOnlyCollection<FitsKey>(keys.ToList());
+            ImageFormat = imageFormat;
         }
     }
 }

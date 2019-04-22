@@ -76,10 +76,11 @@ namespace ANDOR_CS.Classes
         private event EventHandler SdkEventFired;
 
         // WATCH : this is the image 
+        private string _imagePathPattern;
+        private int _startImageIndex;
         private bool _sessionImageFlag;
         private Task _sessionSubscription;
-        private ImageFormat _imageFormat;
-        private Subject<(Image Image, DateTimeOffset Time)> _sessionImageSource;
+        private Subject<(Image Image, DateTimeOffset Time, Request Metadata)> _sessionImageSource;
         private CancellationTokenSource _sessionImageCancellation;
 
         /// <summary>
@@ -1170,7 +1171,7 @@ namespace ANDOR_CS.Classes
         /// This is the preferred way to acquire images from camera.
         /// To run synchronously, call i.e. <see cref="Task.Wait()"/> on the returned task.
         /// </summary>
-        /// <param name="metadata">Metadata to be utilized when images are saved.</param>
+        /// <param name="metadata">optional metadata to be utilized when images are saved.</param>
         /// <param name="token">Cancellation token that can be used to abort process.</param>
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSdkException"/>
@@ -1220,7 +1221,7 @@ namespace ANDOR_CS.Classes
                             for (; imageIndex <= totalImg.Last; imageIndex++)
                             {
                                 var timing = GetImageTiming(imageIndex);
-                                _sessionImageSource.OnNext((PullPreviewImage(imageIndex, _imageFormat), timing));
+                                _sessionImageSource.OnNext((PullPreviewImage(imageIndex, metadata.ImageFormat), timing, metadata));
                                 OnNewImageReceived(
                                     new NewImageReceivedEventArgs(imageIndex, timing));
                             }
@@ -1440,11 +1441,11 @@ namespace ANDOR_CS.Classes
         // TODO : move to base class and implement on other derived classes
         public override void StartImageSavingSequence(
             string folderPath, string imagePattern, 
-            ImageFormat format, FitsKey[] extraKeys = null)
+            string filter,
+            FitsKey[] extraKeys = null)
         {
             var camStr = $"{CameraModel}_{SerialNumber}";
-            if (!SettingsProvider.Filters.TryGetValue(camStr, out var filter))
-                filter = string.Empty;
+            
 
             if (!string.IsNullOrWhiteSpace(filter))
                 imagePattern += $"_{filter}";
@@ -1465,7 +1466,7 @@ namespace ANDOR_CS.Classes
                 RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
 
-            var index = Directory.EnumerateFiles(path, $"{imagePattern}_????.fits")
+            _startImageIndex = Directory.EnumerateFiles(path, $"{imagePattern}_????.fits")
                                  .Reverse()
                                  .Select(x =>
                                  {
@@ -1473,19 +1474,20 @@ namespace ANDOR_CS.Classes
                                      return m.Success ? int.Parse(m.Groups[1].Value) : 0;
                                  }).FirstOrDefault() + 1;
 
-            var fitsType = format == ImageFormat.UnsignedInt16 ? FitsImageType.Int16 : FitsImageType.Int32;
-
+            _imagePathPattern = Path.Combine(dateStr, folderPath, $"{imagePattern}_{{0:0000}}.fits");
             _sessionImageCancellation = new CancellationTokenSource();
             _sessionImageFlag = true;
-            async Task SaveAsync(Image im, DateTimeOffset time, int i, CancellationToken token = default)
+            async Task SaveAsync(Image im, DateTimeOffset time, Request metadata, int i, CancellationToken token = default)
             {
-                var imgPath = Path.Combine(path, $"{imagePattern}_{index + i:0000}.fits");
+                var fitsType = metadata.ImageFormat == ImageFormat.UnsignedInt16
+                    ? FitsImageType.Int16
+                    : FitsImageType.Int32;
+
+                var imgPath = Path.Combine(path, $"{imagePattern}_{_startImageIndex + i:0000}.fits");
                 List<FitsKey> keys = null;
                 var tempStatus = GetCurrentTemperature();
                 await Task.Run(() =>
                 {
-
-
                     keys = new List<FitsKey>(extraKeys?.Length ?? 10)
                     {
                         new FitsKey("CAMERA", FitsKeywordType.String, ToString()),
@@ -1498,11 +1500,12 @@ namespace ANDOR_CS.Classes
                         new FitsKey(@"TEMPST", FitsKeywordType.String, tempStatus.Status.ToString(), "Temperature status")
                     };
                     
-                    if(!string.IsNullOrWhiteSpace(filter))
-                        keys.Add(new FitsKey(@"FILTER", FitsKeywordType.String, filter));
-
+                   
                     if (!(extraKeys is null))
                         keys.AddRange(extraKeys);
+
+                    if(metadata.FitsKeys?.Any() == true)
+                        keys.AddRange(metadata.FitsKeys);
 
                     if (!(CurrentSettings is null) &&
                         SettingsFitsKeys?.Count > 0)
@@ -1516,13 +1519,11 @@ namespace ANDOR_CS.Classes
             }
 
 
-            _imageFormat = format;
-
-            _sessionImageSource = new Subject<(Image Image, DateTimeOffset Time)>();
+            _sessionImageSource = new Subject<(Image Image, DateTimeOffset Time, Request Metadata)>();
 
             _sessionSubscription = _sessionImageSource.ForEachAsync(
                 (data, ind) => Task.Run(async () => 
-                    await SaveAsync(data.Image, data.Time, ind, _sessionImageCancellation.Token), _sessionImageCancellation.Token));
+                    await SaveAsync(data.Image, data.Time, data.Metadata, ind, _sessionImageCancellation.Token), _sessionImageCancellation.Token));
         }
         
         // TODO : move to base class and implement on other derived classes
