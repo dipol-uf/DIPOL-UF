@@ -25,6 +25,7 @@
 
 using System;
 using System.ServiceModel;
+using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
@@ -240,6 +241,7 @@ namespace DIPOL_Remote.Remote
         void CallSetAutosave(int camIndex, Switch mode, ImageFormat format);
 
         [OperationContract]
+        [Obsolete]
         void CallSaveNextAcquisitionAs(
             int camIndex,
             string folderPath,
@@ -251,7 +253,7 @@ namespace DIPOL_Remote.Remote
         void StartImageSavingSequence(
             int camIndex,
             string folderPath, string imagePattern,
-            ImageFormat format, FitsKey[] extraKeys = null);
+            string filter, FitsKey[] extraKeys = null);
 
         #region Async methods
 
@@ -263,7 +265,7 @@ namespace DIPOL_Remote.Remote
         void EndCreateCameraAsync(IAsyncResult result);
 
         [OperationContract(AsyncPattern = true)]
-        IAsyncResult BeginStartAcquisitionAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state);
+        IAsyncResult BeginStartAcquisitionAsync(int camIndex, Request metadata, RemoteCancellationToken token, AsyncCallback callback, object state);
         void EndStartAcquisitionAsync(IAsyncResult result);
 
         [OperationContract(AsyncPattern = true)]

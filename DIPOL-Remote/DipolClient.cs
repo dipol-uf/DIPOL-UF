@@ -29,6 +29,7 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
 using System.Threading.Tasks;
+using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_Remote.Callback;
@@ -225,9 +226,9 @@ namespace DIPOL_Remote
             FitsKey[] extraKeys)
             => Channel.CallSaveNextAcquisitionAs(camIndex, folderPath, imagePattern, format, extraKeys);
 
-        public void StartImageSavingSequence(int camIndex, string folderPath, string imagePattern, ImageFormat format,
+        public void StartImageSavingSequence(int camIndex, string folderPath, string imagePattern, string filter,
             FitsKey[] extraKeys = null)
-            => Channel.StartImageSavingSequence(camIndex, folderPath, imagePattern, format, extraKeys);
+            => Channel.StartImageSavingSequence(camIndex, folderPath, imagePattern, filter, extraKeys);
 
         public int[] ActiveRemoteCameras()
             => Channel.GetCamerasInUse();
@@ -257,7 +258,7 @@ namespace DIPOL_Remote
                 $"{nameof(IRemoteControl.EndCreateCameraAsync)} is not supported directly. " +
                 $"Use {nameof(CreateCameraAsync)} instead.");
 
-        IAsyncResult IRemoteControl.BeginStartAcquisitionAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback,
+        IAsyncResult IRemoteControl.BeginStartAcquisitionAsync(int camIndex, Request metadata, RemoteCancellationToken token, AsyncCallback callback,
             object state)
             => throw new NotSupportedException(
                 $"{nameof(IRemoteControl.BeginStartAcquisitionAsync)} is not supported directly. " +
@@ -395,7 +396,7 @@ namespace DIPOL_Remote
                 x => Channel.EndCreateCameraAsync(x),
                 camIndex);
 
-        public Task StartAcquisitionAsync(int camIndex, CancellationToken token)
+        public Task StartAcquisitionAsync(int camIndex, Request metadata, CancellationToken token)
             => AsyncHelper(
                 Channel.BeginStartAcquisitionAsync,
                 x =>
@@ -404,6 +405,7 @@ namespace DIPOL_Remote
                     return true;
                 },
                 camIndex,
+                metadata,
                 token);
 
         public Task<DipolImage.Image[]> PullAllImagesAsync(int camIndex, ImageFormat format, CancellationToken token)

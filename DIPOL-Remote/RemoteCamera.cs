@@ -28,6 +28,7 @@ using System.IO;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
+using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
@@ -298,8 +299,8 @@ namespace DIPOL_Remote
         public override SettingsBase GetAcquisitionSettingsTemplate()
             => new RemoteSettings(this, _client.CreateSettings(CameraIndex), _client);
 
-        public override Task StartAcquisitionAsync(CancellationToken cancellationToken)
-            => _client.StartAcquisitionAsync(CameraIndex, cancellationToken);
+        public override Task StartAcquisitionAsync(Request metadata = default, CancellationToken cancellationToken = default)
+            => _client.StartAcquisitionAsync(CameraIndex, metadata, cancellationToken);
 
         public override Image PullPreviewImage<T>(int index)
         {
@@ -364,9 +365,9 @@ namespace DIPOL_Remote
             }
         }
 
-        public override void StartImageSavingSequence(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
+        public override void StartImageSavingSequence(string folderPath, string imagePattern, string filter, FitsKey[] extraKeys = null)
         {
-            _client.StartImageSavingSequence(CameraIndex, folderPath, imagePattern, format, extraKeys);
+            _client.StartImageSavingSequence(CameraIndex, folderPath, imagePattern, filter, extraKeys);
         }
 
         public override Task FinishImageSavingSequenceAsync()
