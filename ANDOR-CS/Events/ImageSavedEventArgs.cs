@@ -23,24 +23,24 @@
 //     SOFTWARE.
 
 
-using ANDOR_CS.Classes;
+using System;
+using System.Runtime.Serialization;
 
 namespace ANDOR_CS.Events
 {
-    /// <summary>
-    /// Handles all events related to acquisition of image process.
-    /// </summary>
-    /// <param name="sender">A <see cref="Camera"/> type source</param>
-    /// <param name="e">Event arguments</param>
-    public delegate void AcquisitionStatusEventHandler(object sender, AcquisitionStatusEventArgs e);
-    /// <summary>
-    /// Handles all events related to temperature cycle.
-    /// </summary>
-    /// <param name="sender">A <see cref="Camera"/> type source</param>
-    /// <param name="e">Event arguments</param>
-    public delegate void TemperatureStatusEventHandler(object sender, TemperatureStatusEventArgs e);
+    [DataContract]
+    public class ImageSavedEventArgs : EventArgs
+    {
+        [DataMember]
+        public string Path { get; }
 
-    public delegate void NewImageReceivedHandler(object sender, NewImageReceivedEventArgs e);
+        [DataMember]
+        public int Index { get; }
 
-    public delegate void ImageSavedHandler(object sender, ImageSavedEventArgs e);
+        public ImageSavedEventArgs(string path, int index)
+        {
+            Path = path;
+            Index = index;
+        }
+    }
 }

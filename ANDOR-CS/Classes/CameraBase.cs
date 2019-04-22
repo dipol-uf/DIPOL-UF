@@ -243,6 +243,8 @@ namespace ANDOR_CS.Classes
 
         public event NewImageReceivedHandler NewImageReceived;
 
+        public event ImageSavedHandler ImageSaved;
+
         protected CameraBase()
         {
             AcquisitionStarted += (sender, e) => { };
@@ -374,6 +376,16 @@ namespace ANDOR_CS.Classes
             if (!IsDisposed && !IsDisposing)
                 TemperatureStatusChecked?.Invoke(this, e);
         }
+        protected virtual void OnNewImageReceived(NewImageReceivedEventArgs e)
+        {
+            if (!IsDisposed && !IsDisposing)
+                NewImageReceived?.Invoke(this, e);
+        }
+        protected virtual void OnImageSaved(ImageSavedEventArgs e)
+        {
+            if (!IsDisposed && !IsDisposing)
+                ImageSaved?.Invoke(this, e);
+        }
 
         protected virtual void RaisePropertyChanged<T>(
             T value, ref T target,
@@ -384,12 +396,6 @@ namespace ANDOR_CS.Classes
                 target = value;
                 OnPropertyChanged(propertyName);
             }
-        }
-
-        protected virtual void OnNewImageReceived(NewImageReceivedEventArgs e)
-        {
-            if (!IsDisposed && !IsDisposing)
-                NewImageReceived?.Invoke(this, e);
         }
 
         public virtual void TemperatureMonitor(Switch mode, int timeout = TempCheckTimeOutMs)
