@@ -120,13 +120,12 @@ namespace DIPOL_UF.Models
                     var comPorts = SerialPort.GetPortNames();
                     _foundSerialDevices =
                         await Task.WhenAll(comPorts.Select(async x =>
-                            (Port: x, Devices: await StepMotorHandler.FindDevice(x))));
+                            (Port: x, Devices: await StepMotorHandler.FindDevice(x, 1, 4))));
                     var preferredPortName =
                         UiSettingsProvider.Settings.Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant();
 
                     if (_foundSerialDevices.FirstOrOptional(x => x.Port.ToUpperInvariant() == preferredPortName) is
-                            var
-                            ports
+                            var ports
                         && ports.HasValue
                         && ports.Value.Devices.Count > 0)
                     {
