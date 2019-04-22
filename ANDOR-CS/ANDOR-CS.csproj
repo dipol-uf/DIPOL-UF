@@ -102,7 +102,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AcquisitionMetadata\Response.cs" />
     <Compile Include="AcquisitionMetadata\Request.cs" />
     <Compile Include="Attributes\FitsKeyAttribute.cs" />
     <Compile Include="Attributes\IgnoreDefaultAttribute.cs" />
@@ -126,6 +125,7 @@
     <Compile Include="Enums\ShutterModeEnum.cs" />
     <Compile Include="Enums\TTLShutterSignalEnum.cs" />
     <Compile Include="Events\Delegates.cs" />
+    <Compile Include="Events\ImageSavedEventArgs.cs" />
     <Compile Include="Events\NewImageReceivedEventArgs.cs" />
     <Compile Include="Events\TemperatureStatusEventArgs.cs" />
     <Compile Include="Exceptions\AcquisitionInProgressException.cs" />

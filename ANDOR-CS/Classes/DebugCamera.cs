@@ -27,6 +27,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Threading;
+using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Events;
@@ -186,7 +187,7 @@ namespace ANDOR_CS.Classes
 
         }
 
-        public override async Task StartAcquisitionAsync(CancellationToken token)
+        public override async Task StartAcquisitionAsync(Request metadata, CancellationToken token)
         {
             StartAcquisition();
             OnAcquisitionStarted(new AcquisitionStatusEventArgs(CameraStatus.Acquiring));
@@ -241,7 +242,7 @@ namespace ANDOR_CS.Classes
             return Task.FromResult(new[] {PullPreviewImage(0, format), PullPreviewImage(0, format)});
         }
 
-        public override void StartImageSavingSequence(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
+        public override void StartImageSavingSequence(string folderPath, string imagePattern, string filter, FitsKey[] extraKeys = null)
         {
             Console.WriteLine(@"Start saving sequence");
         }
