@@ -31,7 +31,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.AcquisitionMetadata;
-using ANDOR_CS.Enums;
+using FITS_CS;
 
 namespace DIPOL_UF.Jobs
 {
@@ -73,23 +73,27 @@ namespace DIPOL_UF.Jobs
                         ? "all"
                         : SpecificCameras.EnumerableToString();
 
+                var sharedKeys = new List<FitsKey>();
+                if(Manager.MotorPosition.HasValue)
+                    sharedKeys.Add(new FitsKey("ANGLE", FitsKeywordType.Float, Manager.MotorPosition, "Plate position in deg"));
+
                 //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) start exposure");
                 // TODO : add support for the specific cameras
                 var tasks = Manager._jobControls.Select(async x => {
-                    
-                        // TODO : Add cancellation support
-                        // WATCH : Disabled saving
-                        //x.Camera.SaveNextAcquisitionAs(
-                        //Manager.CurrentTarget.TargetName,
-                        //Manager._fileName,
-                        //ImageFormat.SignedInt32);
-                        // In order to capture extremely fast acquisitions, first capture a task from observable,
-                        // then start acquisition through the command interface
-                        // and then await initial task
 
-                        var task = x.WhenAcquisitionFinished.FirstAsync().ToTask(token);
-                        x.StartAcquisition(Manager._requestMap[x.Camera.GetHashCode()], token);
-                        await task;
+                    // TODO : Add cancellation support
+                    // WATCH : Disabled saving
+                    //x.Camera.SaveNextAcquisitionAs(
+                    //Manager.CurrentTarget.TargetName,
+                    //Manager._fileName,
+                    //ImageFormat.SignedInt32);
+                    // In order to capture extremely fast acquisitions, first capture a task from observable,
+                    // then start acquisition through the command interface
+                    // and then await initial task
+                   
+                    var task = x.WhenAcquisitionFinished.FirstAsync().ToTask(token);
+                    x.StartAcquisition(Manager._requestMap[x.Camera.GetHashCode()].WithNewKeywords(sharedKeys), token);
+                    await task;
                 }).ToList();
 
                 await Task.WhenAll(tasks).ConfigureAwait(false);
