@@ -85,8 +85,8 @@ namespace DIPOL_UF.ViewModels
         public string JobProgressString { [ObservableAsProperty] get; }
         public int JobCumulativeTotal { [ObservableAsProperty] get; }
         public int JobCumulativeCurrent { [ObservableAsProperty] get; }
-        public float JobMotorProgress { [ObservableAsProperty] get; }
-        public bool IsPolarimeryJob { [ObservableAsProperty] get; }
+        public string JobMotorProgress { [ObservableAsProperty] get; }
+        public bool IsPolarimetryJob { [ObservableAsProperty] get; }
         // TODO :Make this prettier
 
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
@@ -134,7 +134,6 @@ namespace DIPOL_UF.ViewModels
                     x => new JobSettingsViewModel((ReactiveWrapper<Target>)x))
                     .DisposeWith(Subscriptions);
 
-            // WATCH : opening shutters
             if (CanControlExternalShutter)
                 ExternalShutterMode = ShutterMode.PermanentlyOpen;
             if (CanControlInternalShutter)
@@ -146,17 +145,16 @@ namespace DIPOL_UF.ViewModels
             JobManager.Manager.WhenPropertyChanged(x => x.MotorPosition).Select(x => x.Value.HasValue)
                 .DistinctUntilChanged()
                 .ObserveOnUi()
-                .ToPropertyEx(this, x => x.IsPolarimeryJob)
+                .ToPropertyEx(this, x => x.IsPolarimetryJob)
                 .DisposeWith(Subscriptions);
 
             JobManager.Manager.WhenPropertyChanged(x => x.MotorPosition).Select(x => x.Value ?? 0f)
-                .Sample(UiSettingsProvider.UiThrottlingDelay)
+                      .Select(x => string.Format(Localization.CameraTab_StepMotorAngleFormat, x))
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.JobMotorProgress)
                 .DisposeWith(Subscriptions);
 
             JobManager.Manager.WhenAnyPropertyChanged(nameof(JobManager.Progress), nameof(JobManager.Total))
-                      .Sample(UiSettingsProvider.UiThrottlingDelay)
                       .Select(x => string.Format(Localization.CameraTab_JobProgressFormat, x.Progress, x.Total))
                       .ObserveOnUi()
                       .ToPropertyEx(this, x => x.JobProgressString)

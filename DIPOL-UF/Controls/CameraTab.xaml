@@ -288,12 +288,12 @@
                                Visibility="{Binding IsJobInProgress, Converter={StaticResource BoolToVisibilityConverter}}"/>
                         <Label Style="{StaticResource ContentFont_Label}"
                                MinHeight="15"
-                               Content="{Binding JobMotorProgress, StringFormat={}{0}°deg}">
+                               Content="{Binding JobMotorProgress}">
                             <Label.Visibility>
                                 <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}"
                                                ConverterParameter="{StaticResource BoolToVisibilityConverter}">
                                     <Binding Path="IsJobInProgress"/>
-                                    <Binding Path="IsPolarimeryJob"/>
+                                    <Binding Path="IsPolarimetryJob"/>
                                 </MultiBinding>
                             </Label.Visibility>
                         </Label>
