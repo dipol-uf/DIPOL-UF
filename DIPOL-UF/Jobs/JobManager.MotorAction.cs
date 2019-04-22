@@ -27,6 +27,8 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using MathNet.Numerics;
+using Newtonsoft.Json;
 using StepMotor;
 
 namespace DIPOL_UF.Jobs
@@ -40,6 +42,8 @@ namespace DIPOL_UF.Jobs
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             private const int Angle = 3200;
+            private const int NRetries = 3;
+
 
             private enum MotorActionType
             {
@@ -51,6 +55,7 @@ namespace DIPOL_UF.Jobs
 
             private MotorActionType ActionType { get; }
 
+           
             public MotorAction(string command)
             {
                 // Assuming regex produces exactly the amount of groups
@@ -84,75 +89,82 @@ namespace DIPOL_UF.Jobs
                 if (Manager._windowRef.PolarimeterMotor is null)
                     throw new NotSupportedException(@"No step motor found");
 
-                var retry = false;
-                // TODO : Add cancellation support
                 if (ActionType == MotorActionType.Reset)
-                {
-                    try
-                    {
-                        await Manager._windowRef.PolarimeterMotor.ReturnToOriginAsyncEx(token);
-                    }
-                    catch (Exception)
-                    {
-                        retry = true;
-                    }
-
-                    if (retry)
-                    {
-                        retry = false;
-                        await Manager._windowRef.PolarimeterMotor.ReturnToOriginAsyncEx(token);
-                    }
-                }
+                    await RetryAction(() => Manager._windowRef.PolarimeterMotor.ReturnToOriginAsyncEx(token), NRetries);
                 else
                 {
+                    var oldPos = Manager.MotorPosition ?? 0f / 22.5f * Angle;
+
+                    await RetryAction(() => Manager._windowRef.PolarimeterMotor.SendCommandAsync(
+                            Command.MoveToPosition,
+                            (int) (oldPos + Angle * Parameter), CommandType.Absolute),
+                        NRetries);
+
+
+                    await RetryAction(
+                        () => Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token),
+                        NRetries);
+                }
+
+                var pos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetActualPositionAsync(), NRetries);
+                // TODO : deal with constant
+                Manager.MotorPosition = 22.5f * pos / Angle;
+            }
+            private static async Task RetryAction(Func<Task> action, int retries)
+            {
+                var isFinished = false;
+                Exception lastException = null;
+                for (var i = 0; !isFinished && i < retries; i++)
+                {
                     try
                     {
-                        await Manager._windowRef.PolarimeterMotor.SendCommandAsync(Command.MoveToPosition,
-                            (int) (Angle * Parameter), CommandType.Relative);
+                        await action();
+                        isFinished = true;
                     }
-                    catch (Exception)
+                    catch (TaskCanceledException)
                     {
-                        retry = true;
+                        throw;
                     }
-
-                    if (retry)
+                    catch (Exception e)
                     {
-                        retry = false;
-                        var tempPos = await  Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
-                        var oldPos = (int) (Manager.MotorPosition ?? 0 / 22.5f * Angle);
-
-                        if(tempPos == oldPos)
-                            
-                        await Manager._windowRef.PolarimeterMotor.SendCommandAsync(Command.MoveToPosition,
-                            tempPos + Angle, CommandType.Absolute);
+                        lastException = e;
+                        isFinished = false;
                     }
+                }
 
+                if (!isFinished)
+                    throw lastException ??
+                          new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
+            }
+
+            private static async Task<T> RetryAction<T>(Func<Task<T>> action, int retries)
+            {
+                var isFinished = false;
+                Exception lastException = null;
+                T result = default;
+                for (var i = 0; !isFinished && i < retries; i++)
+                {
                     try
                     {
-                        await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token);
+                        result = await action();
+                        isFinished = true;
                     }
-                    catch (Exception)
+                    catch (TaskCanceledException)
                     {
-                        retry = true;
+                        throw;
                     }
-
-                    if (retry)
+                    catch (Exception e)
                     {
-                        retry = false;
-                        await Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token);
+                        lastException = e;
+                        isFinished = false;
                     }
                 }
 
-                try
-                {
-                    var pos = await Manager._windowRef.PolarimeterMotor.GetActualPositionAsync();
-                    // TODO : deal with constant
-                    Manager.MotorPosition = 22.5f * pos / Angle;
-                }
-                catch (Exception)
-                {
-                    // Ignore
-                }
+                if (!isFinished)
+                    throw lastException ??
+                          new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
+
+                return result;
             }
 
         }
