@@ -102,6 +102,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AcquisitionMetadata\Response.cs" />
+    <Compile Include="AcquisitionMetadata\Request.cs" />
     <Compile Include="Attributes\FitsKeyAttribute.cs" />
     <Compile Include="Attributes\IgnoreDefaultAttribute.cs" />
     <Compile Include="Classes\AcquisitionSettings.cs" />

@@ -29,5 +29,12 @@ namespace ANDOR_CS.AcquisitionMetadata
     [DataContract]
     public struct Response
     {
+        [DataMember]
+        public string LastImagePath { get; }
+
+        public Response(string lastImagePath = null)
+        {
+            LastImagePath = lastImagePath;
+        }
     }
 }
