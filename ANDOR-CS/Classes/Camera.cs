@@ -1508,6 +1508,8 @@ namespace ANDOR_CS.Classes
                         new FitsKey(@"TEMPST", FitsKeywordType.String, tempStatus.Status.ToString(), "Temperature status")
                     };
                     
+                    if(!string.IsNullOrWhiteSpace(filter))
+                        keys.Add(new FitsKey("FILTER", FitsKeywordType.String, filter));
                    
                     if (!(extraKeys is null))
                         keys.AddRange(extraKeys);
