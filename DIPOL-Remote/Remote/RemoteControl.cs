@@ -168,14 +168,7 @@ namespace DIPOL_Remote.Remote
             try
             {
                 // Tries to create new remote camera
-#if DEBUG
-                camera = Camera.GetNumberOfCameras() <= 0
-                    ? await DebugCamera.CreateAsync(camIndex, @params)
-                    : await Camera.CreateAsync(camIndex, @params) as CameraBase;
-
-#else
                 camera = await Camera.CreateAsync(camIndex, @params);
-#endif
             }
             // Andor-related exception
             catch (AndorSdkException andorEx)
@@ -288,23 +281,9 @@ namespace DIPOL_Remote.Remote
         {
             try
             {
-#if DEBUG
-                var nCams = 0;
-                try
-                {
-                    nCams = Camera.GetNumberOfCameras();
-                }
-                catch (Exception)
-                {
-                    // Ignored for debug purposes
-                }
 
-                return nCams == 0 ? 3 : nCams;
-#else
                 // Tries to retrieve the number of available cameras
                 return Camera.GetNumberOfCameras();
-#endif
-
             }
             // If method fails and Andor-related exception is thrown
             catch (AndorSdkException andorEx)
@@ -738,25 +717,6 @@ namespace DIPOL_Remote.Remote
                     ServiceFault.GeneralServiceErrorReason);
         }
 
-
-#if DEBUG
-        [OperationBehavior]
-        public IAsyncResult BeginDebugMethodAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state)
-        {
-            var src = new CancellationTokenSource();
-            return new AsyncResult(
-                Task.Delay(TimeSpan.FromSeconds(5), src.Token)
-                    .ContinueWith(_ => camIndex * camIndex, src.Token),
-                src,
-                token,
-                callback,
-                state);
-        }
-        public int EndDebugMethodAsync(IAsyncResult result)
-            => FinalizeAsyncOperation(result) is Task<int> actualTask
-                ? actualTask.Result
-                : throw new FaultException(@"Failed to retrieve asynchronous operation result.");
-        #endif
 
         #endregion
     }
