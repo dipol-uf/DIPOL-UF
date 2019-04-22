@@ -27,8 +27,6 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using MathNet.Numerics;
-using Newtonsoft.Json;
 using StepMotor;
 
 namespace DIPOL_UF.Jobs
@@ -97,6 +95,7 @@ namespace DIPOL_UF.Jobs
 
                     await RetryAction(() => Manager._windowRef.PolarimeterMotor.SendCommandAsync(
                             Command.MoveToPosition,
+                            // ReSharper disable once RedundantArgumentDefaultValue
                             (int) (oldPos + Angle * Parameter), CommandType.Absolute),
                         NRetries);
 
