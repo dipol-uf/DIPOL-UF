@@ -464,6 +464,12 @@ namespace DIPOL_Remote
                 cam.OnNewImageReceived(e);
         }
 
+        internal static void NotifyRemoteImageSavedEventHappened(int globalId, ImageSavedEventArgs e)
+        {
+            if (RemoteCameras.TryGetValue(globalId, out var cam))
+                cam.OnImageSaved(e);
+        }
+
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
 

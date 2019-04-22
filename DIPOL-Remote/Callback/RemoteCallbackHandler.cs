@@ -48,5 +48,7 @@ namespace DIPOL_Remote.Callback
         public void NotifyRemoteNewImageReceivedEventHappened(int camIndex, NewImageReceivedEventArgs e)
             => RemoteCamera.NotifyRemoteNewImageReceivedEventHappened(camIndex, e);
 
+        public void NotifyRemoteImageSavedEventHappened(int camIndex, ImageSavedEventArgs e)
+            => RemoteCamera.NotifyRemoteImageSavedEventHappened(camIndex, e);
     }
 }
