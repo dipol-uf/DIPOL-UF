@@ -304,7 +304,6 @@ namespace Tests
                     {
                         Assert.AreEqual(camera, setts.Camera);
 
-#if DEBUG
                         Assert.That(() =>
                         {
                             setts.SupportedSettings();
@@ -398,41 +397,11 @@ namespace Tests
                             Assert.AreEqual(setts.ImageArea?.Width, img.Width);
                             Assert.AreEqual(setts.ImageArea?.Height, img.Height);
                         }
-#endif
                     });
                     // ReSharper restore AccessToDisposedClosure
                 }
             }
         }
 
-        #region Temp tests
-        #if DEBUG
-
-        [Test]
-        public void Test_CancellationNoCancel()
-        {
-            var src = 123;
-            var res = 0;
-            Assert.That(async () => res = await _client.DebugMethodAsync(src, CancellationToken.None),
-                Throws.Nothing);
-            Assert.That(res, Is.EqualTo(src * src));
-        }
-
-        [Test]
-        public void Test_CancellationCancelled()
-        {
-            var src = 123;
-            var res = 0;
-            Assert.That(async () => 
-                    res = await _client.DebugMethodAsync(
-                        src, 
-                        new CancellationTokenSource(TimeSpan.FromSeconds(1.5)).Token),
-                Throws.InstanceOf<TaskCanceledException>());
-            Assert.That(res, Is.EqualTo(0));
-        }
-
-
-        #endif
-        #endregion
     }
 }
