@@ -517,7 +517,6 @@ namespace DIPOL_UF.Models
                             (int) (TimeSpan.Parse(UiSettingsProvider.Settings.Get("UICamStatusUpdateDelay", "00:00:01"))
                                            .TotalMilliseconds));
 
-                    // WATCH : Opened shutter by default
                     if(cam.Capabilities.Features.HasFlag(SdkFeatures.ShutterEx) ||
                        cam.Capabilities.Features.HasFlag(SdkFeatures.Shutter))
                         cam.ShutterControl(ShutterMode.PermanentlyOpen, ShutterMode.PermanentlyOpen);
