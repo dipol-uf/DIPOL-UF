@@ -31,6 +31,7 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
@@ -592,9 +593,9 @@ namespace DIPOL_Remote.Remote
             FitsKey[] extraKeys)
             => GetCameraSafe(camIndex).SaveNextAcquisitionAs(folderPath, imagePattern, format);
 
-        public void StartImageSavingSequence(int camIndex, string folderPath, string imagePattern, ImageFormat format,
+        public void StartImageSavingSequence(int camIndex, string folderPath, string imagePattern, string filter,
             FitsKey[] extraKeys = null)
-            => GetCameraSafe(camIndex).StartImageSavingSequence(folderPath, imagePattern, format, extraKeys);
+            => GetCameraSafe(camIndex).StartImageSavingSequence(folderPath, imagePattern, filter, extraKeys);
 
 
         private CameraBase GetCameraSafe(int camIndex)
@@ -672,11 +673,11 @@ namespace DIPOL_Remote.Remote
         }
 
         [OperationBehavior]
-        public IAsyncResult BeginStartAcquisitionAsync(int camIndex, RemoteCancellationToken token,
+        public IAsyncResult BeginStartAcquisitionAsync(int camIndex, Request metadata, RemoteCancellationToken token,
             AsyncCallback callback, object state)
         {
             var src = new CancellationTokenSource();
-            return new AsyncResult(GetCameraSafe(camIndex).StartAcquisitionAsync(src.Token),
+            return new AsyncResult(GetCameraSafe(camIndex).StartAcquisitionAsync(metadata, src.Token),
                 src, token, callback, state);
         }
         public void EndStartAcquisitionAsync(IAsyncResult result)
