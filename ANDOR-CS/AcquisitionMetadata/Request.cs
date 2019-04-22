@@ -32,12 +32,13 @@ using FITS_CS;
 namespace ANDOR_CS.AcquisitionMetadata
 {
     [DataContract]
-    public struct Request
+    public class Request
     {
         [DataMember]
-        public ReadOnlyCollection<FitsKey> FitsKeys { get; }
-        [DataMember(EmitDefaultValue = true)]
-        public ImageFormat ImageFormat { get; }
+        public ReadOnlyCollection<FitsKey> FitsKeys { get; private set; }
+
+        [DataMember]
+        public ImageFormat ImageFormat { get; private set; } = ImageFormat.UnsignedInt16;
 
         public Request(
             ImageFormat imageFormat = ImageFormat.UnsignedInt16,
