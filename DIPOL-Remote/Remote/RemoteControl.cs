@@ -141,6 +141,12 @@ namespace DIPOL_Remote.Remote
                 .NotifyRemoteNewImageReceivedEventHappened(
                     (SessionID + camera.CameraIndex).GetHashCode(),
                     e);
+            // Fires event when image is saved
+            camera.ImageSaved += (sender, e)
+                => Callback
+                   .NotifyRemoteImageSavedEventHappened(
+                       (SessionID + camera.CameraIndex).GetHashCode(),
+                       e);
 
             camera.TemperatureStatusChecked += (sender, e)
                 => _host?.OnEventReceived(sender, $"{e.Status} {e.Temperature}");
