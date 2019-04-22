@@ -1653,6 +1653,27 @@ namespace ANDOR_CS.Classes
                     nameof(SdkInstance.SetAcquisitionMode),
                     out except))
                     throw except;
+
+                // WATCH : Resetting options previously set by Accumulate/Kinetic cycle
+                // No exception handling is required
+                if (acqMode == AcquisitionMode.SingleScan
+                    || acqMode == AcquisitionMode.RunTillAbort)
+                    Call(CameraHandle, SdkInstance.SetAccumulationCycleTime, 0f);
+
+                if (acqMode == AcquisitionMode.SingleScan
+                    || acqMode == AcquisitionMode.RunTillAbort
+                    || acqMode == AcquisitionMode.FastKinetics)
+                    Call(CameraHandle, SdkInstance.SetNumberAccumulations, 0);
+
+                if (acqMode == AcquisitionMode.SingleScan
+                    || acqMode == AcquisitionMode.Accumulation
+                    || acqMode == AcquisitionMode.FastKinetics)
+                    Call(CameraHandle, SdkInstance.SetKineticCycleTime, 0f);
+
+                if (acqMode == AcquisitionMode.SingleScan
+                    || acqMode == AcquisitionMode.Accumulation
+                    || acqMode == AcquisitionMode.RunTillAbort)
+                    Call(CameraHandle, SdkInstance.SetNumberKinetics, 0);
             }
             else
                 throw new NullReferenceException("Acquisition mode should be set before applying settings.");
