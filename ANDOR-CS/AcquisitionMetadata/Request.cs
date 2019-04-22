@@ -22,7 +22,6 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -49,5 +48,21 @@ namespace ANDOR_CS.AcquisitionMetadata
                 : new ReadOnlyCollection<FitsKey>(keys.ToList());
             ImageFormat = imageFormat;
         }
+
+        public Request WithNewKeywords(IEnumerable<FitsKey> newKeys)
+        {
+            if(FitsKeys is null && newKeys is null)
+                return new Request(ImageFormat);
+
+            var keys = new List<FitsKey>();
+
+            if(!(FitsKeys is null))
+                keys.AddRange(FitsKeys);
+            if(!(newKeys is null))
+                keys.AddRange(newKeys);
+              
+            return new Request(ImageFormat, keys);
+        }
+
     }
 }

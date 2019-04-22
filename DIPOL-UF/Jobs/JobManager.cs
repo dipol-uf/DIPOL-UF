@@ -263,6 +263,7 @@ namespace DIPOL_UF.Jobs
                 Progress = 0;
                 CurrentJobName = string.Empty;
                 Total = 0;
+                MotorPosition = null;
                 _jobControls.Clear();
                 _jobControls = null;
                 foreach( var sett in _settingsCache)
