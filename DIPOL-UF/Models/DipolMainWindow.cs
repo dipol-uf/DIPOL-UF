@@ -409,16 +409,23 @@ namespace DIPOL_UF.Models
 
         private async Task CheckStepMotorStatus()
         {
+            try
+            {
+                await (PolarimeterMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
+            }
+            catch (Exception)
+            {
+                PolarimeterMotor?.Dispose();
+                PolarimeterMotor = null;
+            }
             if (!(PolarimeterMotor is null))
             {
-                var reply = await PolarimeterMotor.SendCommandAsync(Command.GetAxisParameter, 1);
-                if (reply.Status == ReturnStatus.Success)
-                    MessageBox.Show(
-                        string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
-                            PolarimeterMotor.PortName,
-                            PolarimeterMotor.Address),
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(
+                    string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
+                        PolarimeterMotor.PortName,
+                        PolarimeterMotor.Address),
+                    Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
