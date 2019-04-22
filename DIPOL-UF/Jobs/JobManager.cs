@@ -179,6 +179,13 @@ namespace DIPOL_UF.Jobs
                         ? ImageFormat.SignedInt32
                         : ImageFormat.UnsignedInt16);
 
+                if (AcquisitionJob.ContainsActionOfType<MotorAction>()
+                    && _windowRef.PolarimeterMotor is null)
+                {
+                    await _windowRef.PolarimeterMotor.GetActualPositionAsync();
+                    throw new InvalidOperationException("Cannot execute current control with no motor connected.");
+                }
+
                 await Task.Run(async ()  =>
                 {
                     var fileName = CurrentTarget.TargetName;
