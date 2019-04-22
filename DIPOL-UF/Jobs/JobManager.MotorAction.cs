@@ -93,7 +93,7 @@ namespace DIPOL_UF.Jobs
                     await RetryAction(() => Manager._windowRef.PolarimeterMotor.ReturnToOriginAsyncEx(token), NRetries);
                 else
                 {
-                    var oldPos = Manager.MotorPosition ?? 0f / 22.5f * Angle;
+                    var oldPos = (Manager.MotorPosition ?? 0f) / 22.5f * Angle;
 
                     await RetryAction(() => Manager._windowRef.PolarimeterMotor.SendCommandAsync(
                             Command.MoveToPosition,
