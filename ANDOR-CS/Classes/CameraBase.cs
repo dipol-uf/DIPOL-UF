@@ -494,7 +494,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="TaskCanceledException"/>
         protected abstract void AbortAcquisition();
 
-        public abstract Task<Response> StartAcquisitionAsync(Request metadata = default, CancellationToken token = default);
+        public abstract Task StartAcquisitionAsync(Request metadata = default, CancellationToken token = default);
 
         public abstract Image PullPreviewImage<T>(int index) where T : unmanaged;
         

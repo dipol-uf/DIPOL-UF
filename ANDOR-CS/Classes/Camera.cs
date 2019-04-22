@@ -61,6 +61,9 @@ namespace ANDOR_CS.Classes
     /// </summary>
     public sealed class Camera : CameraBase
     {
+        private static readonly Regex PathPatternChecker =
+            new Regex(@":|;|//|[/\\]?\.\.[/\\]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        
         private static readonly ConcurrentDictionary<int, CameraBase> CreatedCameras
             = new ConcurrentDictionary<int, CameraBase>();
         
@@ -1176,7 +1179,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSdkException"/>
         /// <returns>Task that can be queried for execution status.</returns>
-        public override async Task<Response> StartAcquisitionAsync(Request metadata = default, CancellationToken token = default)
+        public override async Task StartAcquisitionAsync(Request metadata = default, CancellationToken token = default)
         {
             CheckIsDisposed();
             try
@@ -1303,9 +1306,6 @@ namespace ANDOR_CS.Classes
                 IsAcquiring = false;
                 OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus()));
             }
-
-            // TODO : Create response
-            return default;
         }
         public override Image PullPreviewImage<T>(int index)
         {
@@ -1444,6 +1444,13 @@ namespace ANDOR_CS.Classes
             string filter,
             FitsKey[] extraKeys = null)
         {
+            if (PathPatternChecker.IsMatch(folderPath))
+                throw new ArgumentException(@"Illegal folder name.", nameof(folderPath));
+
+            if (PathPatternChecker.IsMatch(imagePattern))
+                throw new ArgumentException(@"Illegal image pattern name.", nameof(imagePattern));
+            
+
             var camStr = $"{CameraModel}_{SerialNumber}";
             
 
@@ -1458,6 +1465,7 @@ namespace ANDOR_CS.Classes
                                       SettingsProvider.Settings.Get(@"RootDirectoryTimeOffset", "-12:00:00")))
                                   .ToString("yyyyMMdd");
             var path = Path.GetFullPath(Path.Combine(root, dateStr, folderPath));
+            var relativePath = Path.Combine(dateStr, folderPath);
 
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
@@ -1516,6 +1524,11 @@ namespace ANDOR_CS.Classes
 
                 });
                 await FitsStream.WriteImageAsync(im, fitsType, imgPath, keys, token);
+
+                // WATCH : new event
+                OnImageSaved(new ImageSavedEventArgs(
+                    Path.Combine(relativePath, $"{imagePattern}_{_startImageIndex + i:0000}.fits"),
+                    i));
             }
 
 
