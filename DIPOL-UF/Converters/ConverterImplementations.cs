@@ -54,7 +54,7 @@ namespace DIPOL_UF.Converters
                                       .GetArray<JToken>(@"CameraDescriptors")
                                       .ToDictionary(x => x.Value<string>(@"Name"),
                                           y => y.Value<string>(@"Alias"));
-            return _cachedAliases.TryGetValue(camString, out var result)
+            return _cachedAliases.TryGetValue(camString, out var result) && !string.IsNullOrWhiteSpace(result)
                 ? result
                 : camString;
         }
@@ -70,7 +70,7 @@ namespace DIPOL_UF.Converters
                                       .GetArray<JToken>(@"CameraDescriptors")
                                       .ToDictionary(x => x.Value<string>(@"Name"),
                                           y => y.Value<string>(@"Filter"));
-            return _cachedFilters.TryGetValue(camString, out var result)
+            return _cachedFilters.TryGetValue(camString, out var result) && !string.IsNullOrWhiteSpace(result)
                 ? result
                 : "0";
         }
