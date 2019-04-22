@@ -1663,7 +1663,7 @@ namespace ANDOR_CS.Classes
                 if (acqMode == AcquisitionMode.SingleScan
                     || acqMode == AcquisitionMode.RunTillAbort
                     || acqMode == AcquisitionMode.FastKinetics)
-                    Call(CameraHandle, SdkInstance.SetNumberAccumulations, 0);
+                    Call(CameraHandle, SdkInstance.SetNumberAccumulations, 1);
 
                 if (acqMode == AcquisitionMode.SingleScan
                     || acqMode == AcquisitionMode.Accumulation
@@ -1673,7 +1673,7 @@ namespace ANDOR_CS.Classes
                 if (acqMode == AcquisitionMode.SingleScan
                     || acqMode == AcquisitionMode.Accumulation
                     || acqMode == AcquisitionMode.RunTillAbort)
-                    Call(CameraHandle, SdkInstance.SetNumberKinetics, 0);
+                    Call(CameraHandle, SdkInstance.SetNumberKinetics, 1);
             }
             else
                 throw new NullReferenceException("Acquisition mode should be set before applying settings.");
