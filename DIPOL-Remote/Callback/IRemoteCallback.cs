@@ -43,7 +43,10 @@ namespace DIPOL_Remote.Callback
             int camIndex,  AcquisitionEventType type, AcquisitionStatusEventArgs args);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyRemoteNewImageReceivedEventHappened(int camIndex,NewImageReceivedEventArgs e);
-        
+        void NotifyRemoteNewImageReceivedEventHappened(int camIndex, NewImageReceivedEventArgs e);
+
+        [OperationContract(IsOneWay = true)]
+        void NotifyRemoteImageSavedEventHappened(int camIndex, ImageSavedEventArgs e);
+
     }
 }
