@@ -276,13 +276,6 @@ namespace DIPOL_Remote.Remote
         IAsyncResult BeginFinishImageSavingSequence(int camIndex, AsyncCallback callback, object state);
         void EndFinishImageSavingSequence(IAsyncResult result);
 
-        #if DEBUG
-        [OperationContract(AsyncPattern = true)]
-        [FaultContract(typeof(TaskCancelledRemotelyFault))]
-        IAsyncResult BeginDebugMethodAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state);
-        int EndDebugMethodAsync(IAsyncResult result);
-        #endif
-
         #endregion
     }
 }

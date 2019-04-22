@@ -287,15 +287,6 @@ namespace DIPOL_Remote
                 $"{nameof(IRemoteControl.EndFinishImageSavingSequence)} is not supported directly. " +
                 $"Use {nameof(FinishImageSavingSequenceAsync)} instead.");
 
-        IAsyncResult IRemoteControl.BeginDebugMethodAsync(int camIndex, RemoteCancellationToken token, AsyncCallback callback, object state)
-            => throw new NotSupportedException(
-                $"{nameof(IRemoteControl.BeginDebugMethodAsync)} is not supported directly. " +
-                $"Use {nameof(DebugMethodAsync)} instead.");
-        int IRemoteControl.EndDebugMethodAsync(IAsyncResult result)
-            => throw new NotSupportedException(
-                $"{nameof(IRemoteControl.EndDebugMethodAsync)} is not supported directly. " +
-                $"Use {nameof(DebugMethodAsync)} instead.");
-
         #endregion
 
         #region TAP async implementations
@@ -426,13 +417,6 @@ namespace DIPOL_Remote
                                         format == ImageFormat.SignedInt32 ? TypeCode.Int32 : TypeCode.UInt16))
                                     .ToArray(), token);
         
-
-        public Task<int> DebugMethodAsync(int i, CancellationToken token)
-            => AsyncHelper(
-                Channel.BeginDebugMethodAsync,
-                Channel.EndDebugMethodAsync,
-                i,
-                token);
 
         #endregion
     }
