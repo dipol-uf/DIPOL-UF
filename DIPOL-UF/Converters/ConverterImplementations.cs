@@ -41,7 +41,8 @@ namespace DIPOL_UF.Converters
     {
         //private static List<(string Name, string Alias)> _cachedAliases;
         private static Dictionary<string, string> _cachedAliases;
-        
+        private static Dictionary<string, string> _cachedFilters;
+
         public static string CameraToStringAliasConversion(CameraBase cam)
         {
             if (cam is null)
@@ -56,6 +57,22 @@ namespace DIPOL_UF.Converters
             return _cachedAliases.TryGetValue(camString, out var result)
                 ? result
                 : camString;
+        }
+
+        public static string CameraToFilterConversion(CameraBase cam)
+        {
+            if (cam is null)
+                return string.Empty;
+            var camString = $"{cam.CameraModel}_{cam.SerialNumber}";
+            if (_cachedFilters is null)
+                _cachedFilters =
+                    UiSettingsProvider.Settings
+                                      .GetArray<JToken>(@"CameraDescriptors")
+                                      .ToDictionary(x => x.Value<string>(@"Name"),
+                                          y => y.Value<string>(@"Filter"));
+            return _cachedFilters.TryGetValue(camString, out var result)
+                ? result
+                : "0";
         }
         public static string CameraKeyToHostConversion(string input)
             => Helper.GetCameraHostName(input);

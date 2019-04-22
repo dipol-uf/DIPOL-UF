@@ -380,7 +380,7 @@ namespace Tests
                         camera.NewImageReceived += (sender, args) => Interlocked.Increment(ref counter);
 
 
-                        Assert.That(async () => await camera.StartAcquisitionAsync(CancellationToken.None),
+                        Assert.That(async () => await camera.StartAcquisitionAsync(default, CancellationToken.None),
                             Throws.Nothing);
 
                         Assert.AreEqual(3, counter);

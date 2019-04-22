@@ -29,6 +29,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
@@ -121,7 +122,7 @@ namespace DIPOL_UF.Models
             _pbTimer.Elapsed += TimerTick;
         }
 
-        public void StartAcquisition(CancellationToken token)
+        public void StartAcquisition(Request metadata, CancellationToken token)
         {
             // TODO : use linked cancellation token source
             var (_, _, kinetic) = Camera.Timings;
@@ -132,7 +133,7 @@ namespace DIPOL_UF.Models
 
             _acqStartTime = DateTime.Now;
             _acquisitionTask = Camera
-                               .StartAcquisitionAsync(_acquisitionTokenSource.Token)
+                               .StartAcquisitionAsync(metadata, _acquisitionTokenSource.Token)
                                .ExpectCancellationAsync();
             _acqEndTime = _acqStartTime + TimeSpan.FromSeconds(kinetic);
 
@@ -289,7 +290,7 @@ namespace DIPOL_UF.Models
                                {
                                    if (!Camera.IsAcquiring
                                        && !(Camera.CurrentSettings is null))
-                                       StartAcquisition(CancellationToken.None);
+                                       StartAcquisition(default, CancellationToken.None);
                                    else if (!(_acquisitionTask is null) && !(_acquisitionTokenSource is null))
                                        StopAcquisition();
                                }, hasValidSettings)

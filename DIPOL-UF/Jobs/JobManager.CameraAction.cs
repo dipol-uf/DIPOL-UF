@@ -30,6 +30,7 @@ using System.Reactive.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Enums;
 
 namespace DIPOL_UF.Jobs
@@ -87,7 +88,7 @@ namespace DIPOL_UF.Jobs
                         // and then await initial task
 
                         var task = x.WhenAcquisitionFinished.FirstAsync().ToTask(token);
-                        x.StartAcquisition(token);
+                        x.StartAcquisition(Manager._requestMap[x.Camera.GetHashCode()], token);
                         await task;
                 }).ToList();
 
