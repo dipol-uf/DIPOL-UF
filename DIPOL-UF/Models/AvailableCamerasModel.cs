@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Threading;
@@ -441,7 +442,7 @@ namespace DIPOL_UF.Models
         }
 
 
-        public List<(string Id, CameraBase Camera)> RetrieveSelectedDevices()
+        public ReadOnlyCollection<(string Id, CameraBase Camera)> RetrieveSelectedDevices()
         {
             var result = new List<(string Id, CameraBase Camera)>();
 
@@ -459,7 +460,9 @@ namespace DIPOL_UF.Models
                 }
             });
 
-            return result;
+            return new ReadOnlyCollection<(string Id, CameraBase Camera)>(
+                result.OrderBy(x =>
+                    ConverterImplementations.CameraToStringAliasConversion(x.Camera) ?? x.Camera.ToString()).ToList());
         }
     }
 }

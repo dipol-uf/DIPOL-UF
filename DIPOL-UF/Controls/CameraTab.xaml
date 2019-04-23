@@ -67,12 +67,11 @@
                 <ColumnDefinition Width="Auto" MinWidth="330"/>
                 <ColumnDefinition Width="Auto" MinWidth="200"/>
             </Grid.ColumnDefinitions>
-            <Label Grid.Column="0" Grid.Row="0"
-                   Style="{StaticResource ContentFont_Label}"
+            <TextBlock Grid.Column="0" Grid.Row="0"
+                   Style="{StaticResource ContentFont_TextBlock}"
                    HorizontalAlignment="Left"
                    VerticalAlignment="Stretch"
-                   VerticalContentAlignment="Center"
-                   Content="{Binding LastSavedFilePath}"/>
+                   Text="{Binding LastSavedFilePath}"/>
             <!--Custom Image Presenter-->
             <cntr:DipolImagePresenter Grid.Row="1" Grid.Column="0" 
                                        Height="700"
