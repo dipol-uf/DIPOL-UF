@@ -32,10 +32,10 @@ namespace ANDOR_CS.Events
     public class ImageSavedEventArgs : EventArgs
     {
         [DataMember]
-        public string Path { get; }
+        public string Path { get; private set; }
 
         [DataMember]
-        public int Index { get; }
+        public int Index { get; private set; }
 
         public ImageSavedEventArgs(string path, int index)
         {
