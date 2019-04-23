@@ -42,6 +42,8 @@ using DIPOL_Remote.Faults;
 using FITS_CS;
 using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
 using SettingsDictionary = System.Collections.Concurrent.ConcurrentDictionary<string, ANDOR_CS.Classes.SettingsBase>;
+using Switch = ANDOR_CS.Enums.Switch;
+
 // ReSharper disable InheritdocConsiderUsage
 
 namespace DIPOL_Remote.Remote
