@@ -1367,78 +1367,7 @@ namespace ANDOR_CS.Classes
 
             return nImages;
         }
-        public override void SaveNextAcquisitionAs(
-            string folderPath, string imagePattern, ImageFormat format, 
-            FitsKey[] extraKeys = null)
-        {
-            if (!SettingsProvider.Settings.TryGet("RootDirectory", out string root))
-                throw new InvalidOperationException(
-                    "Configuration file does not contain required key \"RootDirectory\".");
-
-            var dateStr = DateTime.Now.ToString("yyyyMMdd");
-            var path = Path.GetFullPath(Path.Combine(root, dateStr, folderPath));
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-
-            var regex = new Regex($@"{imagePattern}_?(\d{{1,4}})\.fits",
-                RegexOptions.Compiled | RegexOptions.CultureInvariant);
-
-
-            var index = Directory.EnumerateFiles(path, $"{imagePattern}_????.fits")
-                            .Reverse()
-                            .Select(x =>
-                            {
-                                var m = regex.Match(x);
-                                return m.Success ? int.Parse(m.Groups[1].Value) : 0;
-                            }).FirstOrDefault() + 1;
-
-            var fitsType = format == ImageFormat.UnsignedInt16 ? FitsImageType.Int16 : FitsImageType.Int32;
-
-            async void SaverAsync(object sender, AcquisitionStatusEventArgs e)
-            {
-                try
-                {
-                    var images = await PullAllImagesAsync(format, CancellationToken.None);
-
-                    Parallel.ForEach(images, (im, state, i) =>
-                    {
-                        if (state.ShouldExitCurrentIteration)
-                            return;
-                        var keys = new List<FitsKey>(extraKeys?.Length ?? 10)
-                        {
-                            new FitsKey("CAMERA", FitsKeywordType.String, ToString()),
-                            FitsKey.CreateDate("DATE", GetImageTiming((int) i).UtcDateTime),
-                            new FitsKey("ACTEXPT", FitsKeywordType.Float, Timings.Exposure, "sec"),
-                            new FitsKey("ACTACCT", FitsKeywordType.Float, Timings.Accumulation, "sec"),
-                            new FitsKey("ACTKINT", FitsKeywordType.Float, Timings.Kinetic, "sec")
-                        };
-
-                        if(!(extraKeys is null))
-                            keys.AddRange(extraKeys);
-
-                        if(!(CurrentSettings is null) && 
-                           SettingsFitsKeys?.Count > 0)
-                            keys.AddRange(SettingsFitsKeys);
-
-                        keys.AddRange(SettingsProvider.MetaFitsKeys);
-
-                        var imgPath = Path.Combine(path, $"{imagePattern}_{index + i:0000}.fits");
-                        
-
-                        FitsStream.WriteImage(im, fitsType, imgPath, keys);
-                    });
-
-                }
-                finally
-                {
-                    AcquisitionFinished -= SaverAsync;
-                }
-            }
-
-            AcquisitionFinished += SaverAsync;
-        }
-
-        // TODO : move to base class and implement on other derived classes
+       
         public override void StartImageSavingSequence(
             string folderPath, string imagePattern, 
             string filter,

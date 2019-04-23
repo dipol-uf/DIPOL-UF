@@ -233,10 +233,6 @@ namespace ANDOR_CS.Classes
         public override int GetTotalNumberOfAcquiredImages()
             => 1;
 
-        public override void SaveNextAcquisitionAs(string folderPath, string imagePattern, ImageFormat format, FitsKey[] extraKeys = null)
-        {
-        }
-
         public override Task<Image[]> PullAllImagesAsync(ImageFormat format, CancellationToken token)
         {
             return Task.FromResult(new[] {PullPreviewImage(0, format), PullPreviewImage(0, format)});

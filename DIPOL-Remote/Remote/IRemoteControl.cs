@@ -242,16 +242,7 @@ namespace DIPOL_Remote.Remote
         void CallSetAutosave(int camIndex, Switch mode, ImageFormat format);
 
         [OperationContract]
-        [Obsolete]
-        void CallSaveNextAcquisitionAs(
-            int camIndex,
-            string folderPath,
-            string imagePattern,
-            ImageFormat format,
-            FitsKey[] extraKeys);
-
-        [OperationContract]
-        void StartImageSavingSequence(
+        void CallStartImageSavingSequence(
             int camIndex,
             string folderPath, string imagePattern,
             string filter, FitsKey[] extraKeys = null);

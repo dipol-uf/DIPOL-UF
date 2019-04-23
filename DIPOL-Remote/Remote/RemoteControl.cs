@@ -603,11 +603,7 @@ namespace DIPOL_Remote.Remote
         public void CallSetAutosave(int camIndex, Switch mode, ImageFormat format)
             => GetCameraSafe(camIndex).SetAutosave(mode, format);
 
-        public void CallSaveNextAcquisitionAs(int camIndex, string folderPath, string imagePattern, ImageFormat format,
-            FitsKey[] extraKeys)
-            => GetCameraSafe(camIndex).SaveNextAcquisitionAs(folderPath, imagePattern, format);
-
-        public void StartImageSavingSequence(int camIndex, string folderPath, string imagePattern, string filter,
+        public void CallStartImageSavingSequence(int camIndex, string folderPath, string imagePattern, string filter,
             FitsKey[] extraKeys = null)
             => GetCameraSafe(camIndex).StartImageSavingSequence(folderPath, imagePattern, filter, extraKeys);
 
