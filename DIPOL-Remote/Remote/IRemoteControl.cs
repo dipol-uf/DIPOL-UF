@@ -71,6 +71,7 @@ namespace DIPOL_Remote.Remote
     [ServiceKnownType(typeof(RemoteCancellationToken))]
     [ServiceKnownType(typeof(FitsKey))]
     [ServiceKnownType(typeof(Request))]
+    [ServiceKnownType(typeof(ImageSavedEventArgs))]
     public interface IRemoteControl
     {
         /// <summary>
