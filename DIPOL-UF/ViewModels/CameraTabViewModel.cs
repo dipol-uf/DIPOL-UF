@@ -30,6 +30,7 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
+using ANDOR_CS.Events;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DIPOL_UF.Properties;
@@ -87,7 +88,8 @@ namespace DIPOL_UF.ViewModels
         public int JobCumulativeCurrent { [ObservableAsProperty] get; }
         public string JobMotorProgress { [ObservableAsProperty] get; }
         public bool IsPolarimetryJob { [ObservableAsProperty] get; }
-        // TODO :Make this prettier
+        public string LastSavedFilePath { [ObservableAsProperty] get; }
+
 
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
         public ICommand SetUpAcquisitionCommand => Model.SetUpAcquisitionCommand;
@@ -182,7 +184,14 @@ namespace DIPOL_UF.ViewModels
                       .ToPropertyEx(this, x => x.JobCumulativeCurrent)
                       .DisposeWith(Subscriptions);
 
-
+            Observable.FromEventPattern<ImageSavedHandler, ImageSavedEventArgs>(
+                          x => Model.Camera.ImageSaved += x,
+                          x => Model.Camera.ImageSaved -= x)
+                      .Select(x =>
+                          string.Format(Localization.CameraTab_LastSavedFile, x.EventArgs.Path, x.EventArgs.Index))
+                      .ObserveOnUi()
+                      .ToPropertyEx(this, x => x.LastSavedFilePath)
+                      .DisposeWith(Subscriptions);
 
             Model.Camera.WhenAnyPropertyChanged(nameof(Model.Camera.IsAcquiring))
                  .Select(x => x.IsAcquiring)

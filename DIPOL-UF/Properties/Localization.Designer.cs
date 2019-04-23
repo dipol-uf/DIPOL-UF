@@ -534,6 +534,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Last image: {0}.
+        /// </summary>
+        public static string CameraTab_LastSavedFile {
+            get {
+                return ResourceManager.GetString("CameraTab_LastSavedFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to External.
         /// </summary>
         public static string CameraTab_Shutter_External {
