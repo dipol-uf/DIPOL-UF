@@ -222,11 +222,6 @@ namespace DIPOL_Remote
         public void CallSetAutosave(int camIndex, Switch mode, ImageFormat format)
             => Channel.CallSetAutosave(camIndex, mode, format);
 
-        [Obsolete(nameof(CallStartImageSavingSequence), true)]
-        public void CallSaveNextAcquisitionAs(int camIndex, string folderPath, string imagePattern, ImageFormat format,
-            FitsKey[] extraKeys)
-            => throw new NotSupportedException();
-
         public void CallStartImageSavingSequence(int camIndex, string folderPath, string imagePattern, string filter,
             FitsKey[] extraKeys = null)
             => Channel.CallStartImageSavingSequence(camIndex, folderPath, imagePattern, filter, extraKeys);
