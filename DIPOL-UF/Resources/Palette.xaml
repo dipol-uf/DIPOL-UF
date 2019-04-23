@@ -57,6 +57,17 @@
     <Thickness x:Key="OneLevelTreeItemMarginLeft" Left="{StaticResource TreeItemMarginValue}"/>
     
     <!-- Colors, brushes and gradients -->
+
+    <!--Filter text colors-->
+    <x:Array x:Key="FilterColorBrushCollection" Type="{x:Type SolidColorBrush}">
+        <!--B-->
+        <SolidColorBrush Color="CornflowerBlue"/>
+        <!--V-->
+        <SolidColorBrush Color="LimeGreen"/>
+        <!--R-->
+        <SolidColorBrush Color="Crimson"/>
+    </x:Array>
+
     <!--Temperature text colors-->
     <x:Array x:Key="TemperatureColorBrushCollection" Type="{x:Type SolidColorBrush}">
         <SolidColorBrush Color="Red"/>
@@ -116,11 +127,6 @@
     <SolidColorBrush x:Key="BorderColorDisabledBrush" Color="{x:Static SystemColors.InactiveBorderColor}"/>
     <SolidColorBrush x:Key="OutlineColorBrush" Color="{StaticResource OutlineColor}"/>  
     <!-- Backgrounds -->
-
-    <SolidColorBrush x:Key="Background_1" Color="{StaticResource BackgroundColor_1}"/>
-    <SolidColorBrush x:Key="Background_2" Color="{StaticResource BackgroundColor_2}"/>
-    <SolidColorBrush x:Key="Background_3" Color="{StaticResource BackgroundColor_3}"/>
-
 
     <SolidColorBrush x:Key="JobProgressBarColor" Color="#ff7b25"/>
     <!--Enum text representations-->
