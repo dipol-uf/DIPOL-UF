@@ -627,12 +627,14 @@
                 Command="{Binding LoadButtonCommand}"/>
         <!--Submit-->
         <Button Grid.Column="0" Grid.Row="2" 
+                IsDefault="True"
                 Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}"
                 Content="{extensions:Text Key=General_Submit}"
                 Command="{Binding SubmitCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
         <!--Cancel-->
         <Button Grid.Column="1" Grid.Row="2"
+                IsCancel="True"
                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}"
                 Content="{extensions:Text Key=General_Cancel}"
                 Command="{Binding CancelCommand}"
