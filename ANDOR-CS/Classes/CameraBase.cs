@@ -501,12 +501,6 @@ namespace ANDOR_CS.Classes
 
         public abstract int GetTotalNumberOfAcquiredImages();
 
-        [Obsolete]
-        public abstract void SaveNextAcquisitionAs(
-            string folderPath, string imagePattern,
-            ImageFormat format,
-            FitsKey[] extraKeys = null);
-
         /// <summary>
         /// String representation of the camera instance.
         /// </summary>

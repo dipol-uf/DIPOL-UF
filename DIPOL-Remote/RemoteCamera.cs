@@ -327,13 +327,6 @@ namespace DIPOL_Remote
         public override int GetTotalNumberOfAcquiredImages()
             => _client.CallGetTotalNumberOfAcquiredImages(CameraIndex);
 
-        public override void SaveNextAcquisitionAs(
-            string folderPath,
-            string imagePattern,
-            ImageFormat format,
-            FitsKey[] extraKeys = null)
-            => _client.CallSaveNextAcquisitionAs(CameraIndex, folderPath, imagePattern, format, extraKeys);
-
         public override void SetAutosave(Switch mode, ImageFormat format = ImageFormat.SignedInt32)
             => _client.CallSetAutosave(CameraIndex, mode, format);
 
@@ -367,7 +360,7 @@ namespace DIPOL_Remote
 
         public override void StartImageSavingSequence(string folderPath, string imagePattern, string filter, FitsKey[] extraKeys = null)
         {
-            _client.StartImageSavingSequence(CameraIndex, folderPath, imagePattern, filter, extraKeys);
+            _client.CallStartImageSavingSequence(CameraIndex, folderPath, imagePattern, filter, extraKeys);
         }
 
         public override Task FinishImageSavingSequenceAsync()
