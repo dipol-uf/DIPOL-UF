@@ -38,7 +38,12 @@ namespace ANDOR_CS.AcquisitionMetadata
         public ReadOnlyCollection<FitsKey> FitsKeys { get; private set; }
 
         [DataMember]
-        public ImageFormat ImageFormat { get; private set; } = ImageFormat.UnsignedInt16;
+        public ImageFormat ImageFormat { get; private set; }
+
+        public Request()
+        {
+            ImageFormat = ImageFormat.UnsignedInt16;
+        }
 
         public Request(
             ImageFormat imageFormat = ImageFormat.UnsignedInt16,
