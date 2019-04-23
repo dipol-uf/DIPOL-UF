@@ -79,7 +79,6 @@ namespace ANDOR_CS.Classes
         private event EventHandler SdkEventFired;
 
         // WATCH : this is the image 
-        private string _imagePathPattern;
         private int _startImageIndex;
         private bool _sessionImageFlag;
         private Task _sessionSubscription;
@@ -1224,7 +1223,7 @@ namespace ANDOR_CS.Classes
                             for (; imageIndex <= totalImg.Last; imageIndex++)
                             {
                                 var timing = GetImageTiming(imageIndex);
-                                _sessionImageSource.OnNext((PullPreviewImage(imageIndex, metadata.ImageFormat), timing, metadata));
+                                _sessionImageSource.OnNext((PullPreviewImage(imageIndex, metadata?.ImageFormat ?? ImageFormat.UnsignedInt16), timing, metadata));
                                 OnNewImageReceived(
                                     new NewImageReceivedEventArgs(imageIndex, timing));
                             }
@@ -1378,10 +1377,6 @@ namespace ANDOR_CS.Classes
 
             if (PathPatternChecker.IsMatch(imagePattern))
                 throw new ArgumentException(@"Illegal image pattern name.", nameof(imagePattern));
-            
-
-            var camStr = $"{CameraModel}_{SerialNumber}";
-            
 
             if (!string.IsNullOrWhiteSpace(filter))
                 imagePattern += $"_{filter}";
@@ -1411,7 +1406,6 @@ namespace ANDOR_CS.Classes
                                      return m.Success ? int.Parse(m.Groups[1].Value) : 0;
                                  }).FirstOrDefault() + 1;
 
-            _imagePathPattern = Path.Combine(dateStr, folderPath, $"{imagePattern}_{{0:0000}}.fits");
             _sessionImageCancellation = new CancellationTokenSource();
             _sessionImageFlag = true;
             async Task SaveAsync(Image im, DateTimeOffset time, Request metadata, int i, CancellationToken token = default)
