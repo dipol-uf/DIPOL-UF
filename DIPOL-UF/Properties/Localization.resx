@@ -578,6 +578,9 @@ The following settings produced this error:
   <data name="JobSettings_N_repeats" xml:space="preserve">
     <value># of cycles</value>
   </data>
+  <data name="CameraTab_LastSavedFile" xml:space="preserve">
+    <value>Last image: {0}</value>
+  </data>
   <data name="CameraTab_StepMotorAngleFormat" xml:space="preserve">
     <value>{0,6}°</value>
   </data>
