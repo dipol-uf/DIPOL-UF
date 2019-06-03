@@ -65,7 +65,7 @@ namespace DIPOL_UF.Models
 
         private Task _polarimeterPortScanningTask;
         private Task _retractorPortScanningTask;
-
+        private Task _regimeSwitchingTask;
 
         [Reactive]
         private bool PolarimeterMotorTaskCompleted { get; set; }
@@ -106,7 +106,7 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<Unit, Unit> PolarimeterMotorButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> RetractorMotorButtonCommand { get; private set; }
 
-        public ReactiveCommand<InstrumentRegime, Unit> ChangeRegimeCommand { get; private set; }
+        public ReactiveCommand<InstrumentRegime, ProgressBar> ChangeRegimeCommand { get; private set; }
 
         public DipolMainWindow()
         {
@@ -194,10 +194,10 @@ namespace DIPOL_UF.Models
         {
 
             ChangeRegimeCommand =
-                ReactiveCommand.Create<InstrumentRegime, Unit>(ChangeRegimeCommandExecute,
-                        this.WhenPropertyChanged(x => x.RetractorMotor)
-                            .CombineLatest(this.WhenPropertyChanged(y => y.PolarimeterMotor), (x, y) =>
-                                x != null && y != null))
+                ReactiveCommand.CreateFromTask<InstrumentRegime, ProgressBar>(ChangeRegimeCommandExecute, this
+                        .WhenPropertyChanged(x => x.RetractorMotor)
+                        .CombineLatest(this.WhenPropertyChanged(y => y.PolarimeterMotor), (x, y) =>
+                            x != null && y != null))
                     .DisposeWith(Subscriptions);
 
             ContextMenuCommand =
@@ -252,17 +252,7 @@ namespace DIPOL_UF.Models
                                .DisposeWith(Subscriptions);
 
             ProgressBarProvider = new DescendantProvider(
-                    ReactiveCommand.CreateFromTask<object, ReactiveObjectEx>(
-                        _ => Task.Run<ReactiveObjectEx>(() =>
-                            new ProgressBar()
-                            {
-                                Minimum = 0,
-                                Maximum = _remoteClients?.Length ?? 1,
-                                Value = 0,
-                                IsIndeterminate = true,
-                                CanAbort = false,
-                                BarTitle = Properties.Localization.MainWindow_ConnectingToRemoteLocations
-                            })),
+                    ReactiveCommand.Create<object, ReactiveObjectEx>(x => (ReactiveObjectEx)x),
                     null,
                     null,
                     ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
@@ -292,6 +282,7 @@ namespace DIPOL_UF.Models
                         this.WhenPropertyChanged(x => x.RetractorMotorTaskCompleted)
                             .Select(x => x.Value))
                     .DisposeWith(Subscriptions);
+
         }
 
         private void HookObservables()
@@ -323,7 +314,15 @@ namespace DIPOL_UF.Models
                                           .DisposeWith(Subscriptions);
 
             WindowLoadedCommand
-                .InvokeCommand(ProgressBarProvider.ViewRequested)
+                .Select(x => new ProgressBar()
+                {
+                    Minimum = 0,
+                    Maximum = _remoteClients?.Length ?? 1,
+                    Value = 0,
+                    IsIndeterminate = true,
+                    CanAbort = false,
+                    BarTitle = Properties.Localization.MainWindow_ConnectingToRemoteLocations
+                } as object).InvokeCommand(ProgressBarProvider.ViewRequested)
                 .DisposeWith(Subscriptions);
 
             ProgressBarProvider.ViewRequested.Select(x =>
@@ -559,10 +558,42 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private Unit ChangeRegimeCommandExecute(InstrumentRegime param)
+        private async Task<ProgressBar> ChangeRegimeCommandExecute(InstrumentRegime param)
         {
-            Regime = param;
-            return default;
+            if (param != InstrumentRegime.Unknown && RetractorMotor != null && PolarimeterMotor != null)
+            {
+                Regime = InstrumentRegime.Unknown;
+                var progress = new Progress<(int Current, int Target)>();
+                
+                var pos = await RetractorMotor.GetActualPositionAsync();
+                progress.ProgressChanged += (_, e) => Helper.WriteLog($"{pos}: {e.Current}, {e.Target}");
+
+                var reply = await RetractorMotor.SendCommandAsync(Command.MoveToPosition, (int) param,
+                    CommandType.Absolute);
+                if(reply.Status != ReturnStatus.Success)
+                    throw new InvalidOperationException("Failed to operate retractor,");
+
+                var axis = await RetractorMotor.GetRotationStatusAsync();
+                var target = axis[AxisParameter.TargetPosition];
+
+
+                _regimeSwitchingTask = RetractorMotor.WaitForPositionReachedAsync(progress).ContinueWith(task =>
+                {
+                    if (task.IsCompleted)
+                        Regime = param;
+                });
+
+                var pb = new ProgressBar()
+                {
+                    Minimum = pos,
+                    Maximum = target
+                };
+                progress.ProgressChanged += (_, e) => pb.Value = e.Current;
+
+                return pb;
+            }
+
+            throw new ArgumentException(nameof(param));
         }
 
         protected override void Dispose(bool disposing)
