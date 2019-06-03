@@ -27,6 +27,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using DIPOL_UF.Enums;
+using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DynamicData;
 using DynamicData.Binding;
@@ -57,8 +58,7 @@ namespace DIPOL_UF.ViewModels
         public ICommand RetractorMotorButtonCommand => Model.RetractorMotorButtonCommand;
         public bool CanSwitchRegime { [ObservableAsProperty] get; }
         public InstrumentRegime ActualRegime { [ObservableAsProperty] get; }
-
-
+        
         [Reactive] public int Regime { get; set; }
 
 
@@ -94,6 +94,7 @@ namespace DIPOL_UF.ViewModels
                 .Where(x => x != Model.Regime && CanSwitchRegime)
                 .InvokeCommand(Model.ChangeRegimeCommand)
                 .DisposeWith(Subscriptions);
+
 
             Model.WhenPropertyChanged(x => x.PolarimeterMotor)
                  .Select(x => x.Value != null)
@@ -144,9 +145,14 @@ namespace DIPOL_UF.ViewModels
 
             Model.WhenPropertyChanged(x => x.Regime)
                 .Select(x => x.Value != InstrumentRegime.Unknown)
+                .CombineLatest(
+                    JobManager.Manager.WhenPropertyChanged(y => y.AnyCameraIsAcquiring).Select(y => !y.Value), 
+                    JobManager.Manager.WhenPropertyChanged(z => z.IsInProcess).Select(z => !z.Value),
+                    (x, y, z) => x && y && z)
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.CanSwitchRegime)
                 .DisposeWith(Subscriptions);
+
 
             Model.WhenPropertyChanged(x => x.Regime)
                 .Where(x => x.Value != InstrumentRegime.Unknown)

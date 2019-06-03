@@ -35,6 +35,7 @@ using System.Windows;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
+using DIPOL_UF.Enums;
 using DIPOL_UF.Models;
 using DynamicData;
 using DynamicData.Binding;
@@ -180,11 +181,16 @@ namespace DIPOL_UF.Jobs
                         ? ImageFormat.SignedInt32
                         : ImageFormat.UnsignedInt16));
 
+                // TODO: Inform if regime unknown - can be a malfunction
+
                 if (AcquisitionJob.ContainsActionOfType<MotorAction>()
-                    && _windowRef.PolarimeterMotor is null)
+                    && (_windowRef.Regime == InstrumentRegime.Photometer ||
+                        _windowRef.PolarimeterMotor is null))
                 {
-                    await _windowRef.PolarimeterMotor.GetActualPositionAsync();
-                    throw new InvalidOperationException("Cannot execute current control with no motor connected.");
+                    throw new InvalidOperationException(
+                        _windowRef.PolarimeterMotor is null
+                        ? "Cannot execute current control with no motor connected."
+                            : "Cannot do polarimetry job in a non-polarimeter regime.");
                 }
 
                 await Task.Run(async ()  =>
