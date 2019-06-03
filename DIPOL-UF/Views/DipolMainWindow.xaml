@@ -58,6 +58,14 @@
                 Proxy="{Binding AvailableCamerasProxy}"
                 Type ="{x:Type vs:AvailableCameraView}"/>
         </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="ViewRequested"
+            SourceObject="{Binding RegimeSwitchProxy}">
+            <extensions:ShowViewAction 
+                Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                Proxy="{Binding RegimeSwitchProxy}"
+                Type="{x:Type vs:ProgressWindow}"/>
+        </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
     <Grid DockPanel.Dock="Top">
         <Grid.RowDefinitions>
