@@ -195,10 +195,10 @@
                          Grid.Row="4" 
                         Style="{StaticResource ResourceKey=BorderStyle}"
                         BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
-                    <Grid>
+                    <Grid HorizontalAlignment="Stretch">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="130"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock
                             Grid.Column="0"
@@ -206,6 +206,7 @@
                             Text = "{Binding ActualRegime, Converter={StaticResource EnumToDescriptionConverter}}"
                             HorizontalAlignment="Right"/>
                         <Slider 
+                            HorizontalAlignment="Right"
                             Value ="{Binding Regime, Mode=TwoWay}"
                             IsEnabled="{Binding CanSwitchRegime}"
                             Grid.Column="1"

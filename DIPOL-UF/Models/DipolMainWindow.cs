@@ -127,19 +127,30 @@ namespace DIPOL_UF.Models
             JobManager.Manager.AttachToMainWindow(this);
         }
 
+        private void SetupRegime()
+        {
+            if (RetractorMotor != null)
+            {
+                Regime = PolarimeterMotor is null
+                        ? InstrumentRegime.Unknown
+                        : InstrumentRegime.Polarimeter;
+             }
+        }
+
         private Task CheckPolarimeterMotor()
         {
             return Task.Run(async () =>
             {
                 Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = false);
-
+                StepMotorHandler motor = null;
                 try
                 {
                     if (_polarimeterPort is null)
                         _polarimeterPort = new SerialPort(UiSettingsProvider.Settings
                             .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant());
                    
-                    PolarimeterMotor = await StepMotorHandler.CreateFirstOrFromAddress(_polarimeterPort, 1);
+                    motor = await StepMotorHandler.CreateFirstOrFromAddress(_polarimeterPort, 1);
+                    await motor.ReferenceReturnToOriginAsync();
                 }
                 catch (Exception)
                 {
@@ -148,6 +159,8 @@ namespace DIPOL_UF.Models
                 }
                 finally
                 {
+                    PolarimeterMotor = motor;
+                    SetupRegime();
                     Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = true);
                 }
             });
@@ -158,15 +171,15 @@ namespace DIPOL_UF.Models
             return Task.Run(async () =>
             {
                 Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = false);
-
+                StepMotorHandler motor = null;
                 try
-                {
-
+                { 
                     if (_retractorPort is null)
                         _retractorPort = new SerialPort(UiSettingsProvider.Settings
                             .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant());
 
-                    RetractorMotor = await StepMotorHandler.CreateFirstOrFromAddress(_retractorPort, 1);
+                    motor = await StepMotorHandler.CreateFirstOrFromAddress(_retractorPort, 1);
+                    await motor.ReturnToOriginAsync();
                 }
                 catch (Exception)
                 {
@@ -175,18 +188,8 @@ namespace DIPOL_UF.Models
                 }
                 finally
                 {
-                    if (RetractorMotor != null)
-                    {
-                        var pos = await RetractorMotor.GetActualPositionAsync();
-                        if (pos == (int) InstrumentRegime.Polarimeter)
-                            Regime = PolarimeterMotor is null
-                                ? InstrumentRegime.Unknown
-                                : InstrumentRegime.Polarimeter;
-                        else if (pos == (int) InstrumentRegime.Photometer)
-                            Regime = InstrumentRegime.Photometer;
-                        else
-                            Regime = InstrumentRegime.Unknown;
-                    }
+                    RetractorMotor = motor;
+                    SetupRegime();
                     Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = true);
                 }
             });
@@ -477,9 +480,10 @@ namespace DIPOL_UF.Models
 
         private async Task CheckPolarimeterMotorStatus()
         {
+            var pos = 0;
             try
             {
-                await (PolarimeterMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
+                pos = await (PolarimeterMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
             }
             catch (Exception)
             {
@@ -491,7 +495,8 @@ namespace DIPOL_UF.Models
                 MessageBox.Show(
                     string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
                         _polarimeterPort.PortName,
-                        PolarimeterMotor.Address),
+                        PolarimeterMotor.Address,
+                        pos),
                     Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -520,9 +525,10 @@ namespace DIPOL_UF.Models
 
         private async Task CheckRetractorMotorStatus()
         {
+            var pos = 0;
             try
             {
-                await (RetractorMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
+                pos = await (RetractorMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
             }
             catch (Exception)
             {
@@ -534,7 +540,8 @@ namespace DIPOL_UF.Models
                 MessageBox.Show(
                     string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
                         _retractorPort.PortName,
-                        RetractorMotor.Address),
+                        RetractorMotor.Address,
+                        pos),
                     Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -576,6 +583,9 @@ namespace DIPOL_UF.Models
             {
                 if (param != InstrumentRegime.Unknown && RetractorMotor != null && PolarimeterMotor != null)
                 {
+                    var pbText = string.Format(Properties.Localization.MainWindow_Regime_Switching_Text,
+                        Regime.ToStringEx(), 
+                        param.ToStringEx());
                     Regime = InstrumentRegime.Unknown;
                     var progress = new Progress<(int Current, int Target)>();
 
@@ -594,6 +604,15 @@ namespace DIPOL_UF.Models
                     _regimeSwitchingTask = RetractorMotor.WaitForPositionReachedAsync(progress).ContinueWith(
                         async task =>
                         {
+                            try
+                            {
+                                await _regimeSwitchingTask;
+                            }
+                            catch (Exception e)
+                            {
+                                Helper.WriteLog(e);
+                            }
+
                             await RegimeSwitchProvider.ClosingRequested.Execute();
                             if (task.IsCompleted)
                                 Regime = param;
@@ -603,7 +622,9 @@ namespace DIPOL_UF.Models
                     {
                         Minimum = 0,
                         Maximum = Math.Abs(target - pos),
-                        DisplayPercents = true
+                        DisplayPercents = true,
+                        BarComment = pbText,
+                        BarTitle = Properties.Localization.MainWindow_Regime_Swtitching_Title
                     };
                     progress.ProgressChanged += (_, e) => pb.Value = Math.Abs(e.Current - pos);
 

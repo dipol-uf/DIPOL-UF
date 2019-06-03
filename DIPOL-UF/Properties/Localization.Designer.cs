@@ -1276,7 +1276,8 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Step motor on port {0} at address {1:00} is healthy and responding..
+        ///   Looks up a localized string similar to Step motor on port {0} at address {1:00} is healthy and responding.
+        ///Position is {2}..
         /// </summary>
         public static string MainWindow_MB_PolarimeterMotorOK_Text {
             get {
@@ -1317,6 +1318,24 @@ namespace DIPOL_UF.Properties {
         public static string MainWindow_PolarimeterButton_Present {
             get {
                 return ResourceManager.GetString("MainWindow_PolarimeterButton_Present", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Switching from {0} to {1}. Please wait..
+        /// </summary>
+        public static string MainWindow_Regime_Switching_Text {
+            get {
+                return ResourceManager.GetString("MainWindow_Regime_Switching_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Switcing instrument regime.
+        /// </summary>
+        public static string MainWindow_Regime_Swtitching_Title {
+            get {
+                return ResourceManager.GetString("MainWindow_Regime_Swtitching_Title", resourceCulture);
             }
         }
         
