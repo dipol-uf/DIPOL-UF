@@ -89,6 +89,8 @@ namespace DIPOL_UF.Jobs
         public bool ReadyToRun { get; private set; }
         // ReSharper disable once UnassignedGetOnlyAutoProperty
         public bool AnyCameraIsAcquiring { [ObservableAsProperty] get; }
+        // ReSharper disable once UnassignedGetOnlyAutoProperty
+        public bool IsRegimeSwitching { [ObservableAsProperty] get; }
 
         // TODO : return a copy of a target
         public Target CurrentTarget { get; private set; } = new Target();
@@ -109,6 +111,11 @@ namespace DIPOL_UF.Jobs
                 .TrueForAny(x => x.WhenPropertyChanged(y => y.IsAcquiring).Select(y => y.Value),
                     z => z)
                 .ToPropertyEx(this, x => x.AnyCameraIsAcquiring)
+                .DisposeWith(Subscriptions);
+
+            _windowRef.WhenPropertyChanged(x => x.IsSwitchingRegimes)
+                .Select(x => x.Value)
+                .ToPropertyEx(this, x => x.IsRegimeSwitching)
                 .DisposeWith(Subscriptions);
         }
 

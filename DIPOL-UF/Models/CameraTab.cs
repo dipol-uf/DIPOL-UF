@@ -287,23 +287,26 @@ namespace DIPOL_UF.Models
 
             StartAcquisitionCommand =
                 ReactiveCommand.Create(() =>
-                               {
-                                   if (!Camera.IsAcquiring
-                                       && !(Camera.CurrentSettings is null))
-                                       StartAcquisition(default, CancellationToken.None);
-                                   else if (!(_acquisitionTask is null) && !(_acquisitionTokenSource is null))
-                                       StopAcquisition();
-                               }, hasValidSettings)
-                               .DisposeWith(Subscriptions);
+                        {
+                            if (!Camera.IsAcquiring
+                                && !(Camera.CurrentSettings is null))
+                                StartAcquisition(default, CancellationToken.None);
+                            else if (!(_acquisitionTask is null) && !(_acquisitionTokenSource is null))
+                                StopAcquisition();
+                        },
+                        hasValidSettings.CombineLatest(JobManager.Manager.WhenPropertyChanged(y => y.IsRegimeSwitching).ObserveOnUi(),
+                            (x, y) => x && !y.Value))
+                    .DisposeWith(Subscriptions);
 
 
             var jobAvailableObs =
                 JobManager.Manager.WhenAnyPropertyChanged(
                               nameof(JobManager.AnyCameraIsAcquiring),
                               nameof(JobManager.ReadyToRun),
-                              nameof(JobManager.IsInProcess))
+                              nameof(JobManager.IsInProcess),
+                                nameof(JobManager.IsRegimeSwitching))
                            // (Ready AND NOT Acq) OR Job
-                          .Select(x => (!x.AnyCameraIsAcquiring && x.ReadyToRun)
+                          .Select(x => (!x.AnyCameraIsAcquiring && !x.IsRegimeSwitching && x.ReadyToRun)
                                        || x.IsInProcess)
                           .CombineLatest(
                               Camera.WhenPropertyChanged(y => y.CurrentSettings).Select(y => y.Value is null),
