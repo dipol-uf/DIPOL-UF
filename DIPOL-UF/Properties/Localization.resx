@@ -584,6 +584,12 @@ The following settings produced this error:
   <data name="CameraTab_StepMotorAngleFormat" xml:space="preserve">
     <value>{0,6}°</value>
   </data>
+  <data name="MainWindow_Photometer" xml:space="preserve">
+    <value>Photometer</value>
+  </data>
+  <data name="MainWindow_Polariemter" xml:space="preserve">
+    <value>Polarimeter</value>
+  </data>
   <data name="MainWindow_RetractorButton_None" xml:space="preserve">
     <value>No retractor</value>
   </data>

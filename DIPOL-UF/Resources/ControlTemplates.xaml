@@ -196,7 +196,7 @@
         <Setter Property="Height" Value="20"/>
         <Setter Property="Width" Value="80"/>
         <Setter Property="Minimum" Value="1"/>
-        <Setter Property="Maximum" Value="3"/>
+        <Setter Property="Maximum" Value="2"/>
         <Setter Property="IsSnapToTickEnabled" Value="True"/>
         <Setter Property="TickFrequency" Value="1"/>
         <Setter Property="Template" >
@@ -248,7 +248,7 @@
                             <Setter TargetName="PART_Border" Property="BorderBrush" 
                                     Value="{StaticResource BorderColorDisabledBrush}"/>
                         </Trigger>
-                        <Trigger Property="Value" Value="3">
+                        <!--<Trigger Property="Value" Value="3">
                             <Trigger.EnterActions>
                                 <BeginStoryboard x:Name="Animation_To_3">
                                     <Storyboard Storyboard.TargetName="PART_BorderBrush" Storyboard.TargetProperty="Color">
@@ -273,14 +273,14 @@
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
-                        </Trigger>
+                        </Trigger>-->
                         <Trigger Property="Value" Value="1">
                             <Trigger.EnterActions>
                                 <BeginStoryboard x:Name="Animation_To_1" >
                                     <Storyboard Storyboard.TargetName="PART_BorderBrush" Storyboard.TargetProperty="Color"
                                                >
                                         <ColorAnimation 
-                                            From="{StaticResource BackgroundColor_2}"
+                                            From="{StaticResource BackgroundColor_3}"
                                             To="{StaticResource BackgroundColor_1}"
                                             Duration="{StaticResource ColorChangeDuration}"
                                             FillBehavior="HoldEnd"
@@ -293,7 +293,7 @@
                                     <Storyboard Storyboard.TargetName="PART_BorderBrush" Storyboard.TargetProperty="Color">
                                         <ColorAnimation 
                                             From="{StaticResource BackgroundColor_1}"
-                                            To="{StaticResource BackgroundColor_2}"
+                                            To="{StaticResource BackgroundColor_3}"
                                             Duration="{StaticResource ColorChangeDuration}"
                                             FillBehavior="Stop"
                                             />

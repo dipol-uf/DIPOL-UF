@@ -1258,6 +1258,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Photometer.
+        /// </summary>
+        public static string MainWindow_Photometer {
+            get {
+                return ResourceManager.GetString("MainWindow_Photometer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polarimeter.
+        /// </summary>
+        public static string MainWindow_Polariemter {
+            get {
+                return ResourceManager.GetString("MainWindow_Polariemter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No motor.
         /// </summary>
         public static string MainWindow_PolarimeterButton_None {
