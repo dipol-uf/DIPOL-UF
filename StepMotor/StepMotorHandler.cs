@@ -478,6 +478,48 @@ namespace StepMotor
                 
         }
 
+        public async Task WaitForPositionReachedAsync(IProgress<(int Current, int Target)> progressReporter, CancellationToken token = default, TimeSpan timeOut = default, byte motorOrBank = 0)
+        {
+            token.ThrowIfCancellationRequested();
+            var startTime = DateTime.Now;
+            
+            var target = 0;
+            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType) AxisParameter.TargetPosition,
+                motorOrBank);
+            if(reply.Status != ReturnStatus.Success)
+                throw new InvalidOperationException("Filed to query target position.");
+
+            target = reply.ReturnValue;
+            var current = await GetActualPositionAsync(motorOrBank);
+
+            progressReporter?.Report((current, target));
+            
+            if (!await IsTargetPositionReachedAsync(motorOrBank))
+            {
+                token.ThrowIfCancellationRequested();
+                var status = await GetRotationStatusAsync(motorOrBank);
+                var delayMs = Math.Max(
+                    125 * Math.Abs(status[AxisParameter.TargetPosition] - status[AxisParameter.ActualPosition]) /
+                    (SpeedFactor * status[AxisParameter.MaximumSpeed]),
+                    250);
+
+                while (!await IsTargetPositionReachedAsync(motorOrBank))
+                {
+                    token.ThrowIfCancellationRequested();
+                    if (timeOut != default && (DateTime.Now - startTime) > timeOut)
+                        throw new TimeoutException();
+                    await Task.Delay(delayMs, token);
+                    current = await GetActualPositionAsync(motorOrBank);
+                    progressReporter?.Report((current, target));
+                }
+
+            }
+
+            current = await GetActualPositionAsync(motorOrBank);
+            progressReporter?.Report((current, target));
+
+        }
+
         public async Task<bool> IsInMotionAsync(byte motorOrBank = 0)
         {
             var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType)AxisParameter.ActualSpeed,
