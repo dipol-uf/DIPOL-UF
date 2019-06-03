@@ -57,7 +57,7 @@ namespace DIPOL_UF.Models
 
         private DipolClient[] _remoteClients;
 
-        private (string Port, ReadOnlyCollection<byte> Devices)[] _foundSerialDevices;
+        private (SerialPort Port, ReadOnlyCollection<byte> Devices)[] _foundSerialDevices;
 
         private readonly SourceCache<(string Id, CameraBase Camera), string> _connectedCameras;
 
@@ -119,18 +119,18 @@ namespace DIPOL_UF.Models
                 {
                     var comPorts = SerialPort.GetPortNames();
                     _foundSerialDevices =
-                        await Task.WhenAll(comPorts.Select(async x =>
+                        await Task.WhenAll(comPorts.Select(x => new SerialPort(x)).Select(async x =>
                             (Port: x, Devices: await StepMotorHandler.FindDevice(x, 1, 4))));
                     var preferredPortName =
                         UiSettingsProvider.Settings.Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant();
 
-                    if (_foundSerialDevices.FirstOrOptional(x => x.Port.ToUpperInvariant() == preferredPortName) is
+                    if (_foundSerialDevices.FirstOrOptional(x => x.Port.PortName.ToUpperInvariant() == preferredPortName) is
                             var ports
                         && ports.HasValue
                         && ports.Value.Devices.Count > 0)
                     {
                         var address = ports.Value.Devices.First();
-                        PolarimeterMotor = new StepMotorHandler(preferredPortName, address).DisposeWith(Subscriptions);
+                        PolarimeterMotor = new StepMotorHandler(ports.Value.Port, address).DisposeWith(Subscriptions);
                     }
 
                 }
@@ -422,7 +422,7 @@ namespace DIPOL_UF.Models
             {
                 MessageBox.Show(
                     string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
-                        PolarimeterMotor.PortName,
+                        PolarimeterMotor.Port.PortName,
                         PolarimeterMotor.Address),
                     Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
                     MessageBoxButton.OK, MessageBoxImage.Information);
@@ -471,6 +471,12 @@ namespace DIPOL_UF.Models
                     // and can use client infrastructure when client has been disconnected.
                     // [IsDisposing] overrides that behaviour, and each camera is removed & disposed
                     // individually and synchronously.
+
+                    PolarimeterMotor?.Dispose();
+                    PolarimeterMotor?.Port.Dispose();
+                    foreach(var (port, _) in _foundSerialDevices)
+                        port?.Dispose();
+
                     IsDisposing = true;
                     var keys = _connectedCameras.Keys.ToList();
                     foreach (var key in keys)
