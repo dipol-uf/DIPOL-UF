@@ -41,10 +41,12 @@ namespace Tests
             var ports = SerialPort.GetPortNames();
 
             var devices =
-                await Task.WhenAll(ports.Select(async x => (Port: x, Addresses: await StepMotorHandler.FindDevice(x))));
+                await Task.WhenAll(ports.Select(x => new SerialPort(x)).Select(async x => (Port: x, Addresses: await StepMotorHandler.FindDevice(x))));
 
             Assert.IsTrue(devices.Any(x => x.Addresses.Count > 0));
 
+           foreach(var (port, _) in devices)
+                port.Dispose();
         }
     }
 
@@ -52,11 +54,12 @@ namespace Tests
     public class StepMotorTests
     {
         private StepMotorHandler _motor;
-
+        private SerialPort _port;
         [SetUp]
         public void SetUp()
         {
-            _motor = new StepMotorHandler("COM1");
+            _port = new SerialPort("COM1");
+            _motor = new StepMotorHandler(_port);
             _motor.ReturnToOriginAsync().GetAwaiter().GetResult();
         }
 
@@ -64,6 +67,7 @@ namespace Tests
         public void TearDown()
         {
             _motor.Dispose();
+            _port.Dispose();
         }
 
         [Theory]

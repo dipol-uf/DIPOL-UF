@@ -34,12 +34,18 @@ namespace Tests
     public class RetractorMotorStaticTests
     {
         private StepMotorHandler _device;
+        private SerialPort _port;
         private const string TestPort = @"COM4";
+
         [TearDown]
         public void TearDown()
         {
+            
             _device?.Dispose();
             _device = null;
+
+            _port?.Dispose();
+            _port = null;
         }
 
         [Theory]
@@ -49,7 +55,8 @@ namespace Tests
             Assume.That(ports, Contains.Item(TestPort));
             Assume.That(_device, Is.Null);
 
-            _device = await StepMotorHandler.TryCreateFromAddress(TestPort, 1);
+            _port = new SerialPort(TestPort);
+            _device = await StepMotorHandler.TryCreateFromAddress(_port, 1);
             Assume.That(_device, Is.Not.Null);
             Assert.That(await _device.GetActualPositionAsync(), Is.EqualTo(0));
 
@@ -61,12 +68,29 @@ namespace Tests
             var ports = SerialPort.GetPortNames();
             Assume.That(ports, Contains.Item(TestPort));
             Assume.That(_device, Is.Null);
+            _port = new SerialPort(TestPort);
 
-            _device = await StepMotorHandler.TryCreateFirst(TestPort);
+            _device = await StepMotorHandler.TryCreateFirst(_port);
             Assume.That(_device, Is.Not.Null);
             
             Assert.That(await _device.GetActualPositionAsync(), Is.EqualTo(0));
 
         }
+
+        [Theory]
+        public async Task Test_CreateFirstOrFromAddress()
+        {
+            var ports = SerialPort.GetPortNames();
+            Assume.That(ports, Contains.Item(TestPort));
+            Assume.That(_device, Is.Null);
+            _port = new SerialPort(TestPort);
+
+            _device = await StepMotorHandler.CreateFirstOrFromAddress(_port, 1);
+            Assume.That(_device, Is.Not.Null);
+
+            Assert.That(await _device.GetActualPositionAsync(), Is.EqualTo(0));
+
+        }
+
     }
 }

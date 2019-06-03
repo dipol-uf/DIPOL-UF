@@ -69,7 +69,8 @@ namespace StepMotor
         /// </summary>
         private volatile bool _suppressEvents;
 
-        public string PortName => _port.PortName;
+        //public string PortName => _port.PortName;
+        public SerialPort Port => _port;
         public byte Address { get; }
 
         /// <summary>
@@ -84,29 +85,32 @@ namespace StepMotor
         /// <summary>
         /// Default constructor
         /// </summary>
-        /// <param name="portName">COM port name.</param>
+        /// <param name="port">COM port.</param>
         /// <param name="defaultTimeOut">Default response timeout.</param>
         /// <param name="address">Device address.</param>
         /// <exception cref="ArgumentOutOfRangeException"/>
-        public StepMotorHandler(string portName, byte address = 1, TimeSpan defaultTimeOut = default)
+        public StepMotorHandler(SerialPort port, byte address = 1, TimeSpan defaultTimeOut = default)
         {
             _timeOut = defaultTimeOut == default
                 ? TimeSpan.FromMilliseconds(300)
                 : defaultTimeOut;
 
             Address = address;
-            // Checks if port name is legal
-            if (!SerialPort.GetPortNames().Contains(portName))
-                throw new ArgumentOutOfRangeException($"Provided {nameof(portName)} ({portName}) is either illegal or not present on the sstem.");
-
-            // Creates port
-            _port = new SerialPort(portName, 9600, Parity.None, 8, StopBits.One);
+            _port = port; //new SerialPort(portName, 9600, Parity.None, 8, StopBits.One);
             // Event listeners
             _port.DataReceived += OnPortDataReceived;
             _port.ErrorReceived += OnPortErrorReceived;
             _port.NewLine = "\r";
-            // Opens port
-            _port.Open();
+
+            if (!_port.IsOpen)
+            {
+                // Creates port
+                _port.BaudRate = 9600;
+                _port.Parity = Parity.None;
+                _port.DataBits = 8;
+                _port.StopBits = StopBits.One;
+                _port.Open();
+            }
         }
 
 
@@ -352,11 +356,6 @@ namespace StepMotor
         {
             while(_responseWaitQueue.TryDequeue(out var taskSrc) && taskSrc?.Task.IsCanceled == false)
                 taskSrc.SetException(new ObjectDisposedException(nameof(StepMotorHandler)));
-
-            _port.DiscardInBuffer();
-            _port.DiscardOutBuffer();
-            _port.Close();
-            _port.Dispose();
         }
 
         /// <summary>
@@ -612,28 +611,33 @@ namespace StepMotor
 
         }
 
-        public static async Task<ReadOnlyCollection<byte>> FindDevice(string port, byte startAddress = 1, byte endAddress = 16)
+        public static async Task<ReadOnlyCollection<byte>> FindDevice(SerialPort port, byte startAddress = 1,
+            byte endAddress = 16)
         {
+           
             var result = new Collection<byte>();
-            using (var motor = new StepMotorHandler(port))
+
+            for (var address = startAddress; address <= endAddress; address++)
             {
-                for (var i = startAddress; i <= endAddress; i++)
+                var motor = new StepMotorHandler(port, address);
+                try
                 {
-                    try
+                    if (await motor.PokeAddressInBinary(address))
+                        result.Add(address);
+                    else
                     {
-                        if (await motor.PokeAddressInBinary(i))
-                            result.Add(i);
-                        else
-                        {
-                            await motor.SwitchToBinary(i);
-                            if (await motor.PokeAddressInBinary(i))
-                                result.Add(i);
-                        }
+                        await motor.SwitchToBinary(address);
+                        if (await motor.PokeAddressInBinary(address))
+                            result.Add(address);
                     }
-                    catch (Exception)
-                    {
-                        // Ignored
-                    }
+                }
+                catch (Exception)
+                {
+                    // Ignored
+                }
+                finally
+                {
+                    motor.Dispose();
                 }
             }
 
@@ -641,9 +645,12 @@ namespace StepMotor
         }
 
         public static async Task<StepMotorHandler> TryCreateFromAddress(
-            string port, byte address, TimeSpan defaultTimeOut = default)
+            SerialPort port, byte address, TimeSpan defaultTimeOut = default)
         {
-            var motor = new StepMotorHandler(port, address, defaultTimeOut);
+            if (port is null)
+                throw new ArgumentNullException(nameof(port));
+
+            var motor = new StepMotorHandler(port , address, defaultTimeOut);
 
             try
             {
@@ -664,17 +671,31 @@ namespace StepMotor
         }
 
         public static async Task<StepMotorHandler> TryCreateFirst(
-            string port, byte startAddress = 1, byte endAddress = 16, TimeSpan defaultTimeOut = default)
+            SerialPort port, byte startAddress = 1, byte endAddress = 16, TimeSpan defaultTimeOut = default)
         {
-            for (var i = startAddress; i <= endAddress; i++)
+            if (port is null)
+                throw new ArgumentNullException(nameof(port));
+            if (startAddress > endAddress)
+                throw new ArgumentOutOfRangeException(
+                    $"[{nameof(startAddress)}] should be less than or equal to [{nameof(endAddress)}]");
+
+            for (var address = startAddress; address <= endAddress; address++)
             {
-                var motor = await TryCreateFromAddress(port, i, defaultTimeOut);
+                var motor = await TryCreateFromAddress(port, address, defaultTimeOut);
                 if (motor != null)
                     return motor;
             }
 
             return null;
         }
+
+        public static async Task<StepMotorHandler> CreateFirstOrFromAddress(
+            SerialPort port, byte address,
+            byte startAddress = 1, byte endAddress = 16,
+            TimeSpan defaultTimeOut = default)
+            => (await TryCreateFromAddress(port, address, defaultTimeOut)
+                ?? await TryCreateFirst(port, startAddress, endAddress, defaultTimeOut))
+               ?? throw new InvalidOperationException("Failed to connect to step motor.");
     }
 
 }
