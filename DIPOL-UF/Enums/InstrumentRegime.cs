@@ -36,7 +36,7 @@ namespace DIPOL_UF.Enums
         Unknown = 1,
 
         [EnumMember]
-        [Description("Polariemter regime")]
+        [Description("Polarimeter regime")]
         Polarimeter = 0,
 
         [EnumMember]

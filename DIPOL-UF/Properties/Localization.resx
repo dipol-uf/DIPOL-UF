@@ -596,4 +596,13 @@ The following settings produced this error:
   <data name="MainWindow_RetractorButton_Present" xml:space="preserve">
     <value>Retractor OK</value>
   </data>
+  <data name="General_InstrumentRegime_Photometer" xml:space="preserve">
+    <value>Photometry</value>
+  </data>
+  <data name="General_InstrumentRegime_Polarimeter" xml:space="preserve">
+    <value>Polarimetry</value>
+  </data>
+  <data name="General_InstrumentRegime_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
 </root>

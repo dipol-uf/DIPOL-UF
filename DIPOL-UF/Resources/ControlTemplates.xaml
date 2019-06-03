@@ -215,7 +215,7 @@
                                >
                             <Border.Background>
                                 <SolidColorBrush x:Name="PART_BorderBrush" 
-                                                 Color="{StaticResource BackgroundColor_2}"
+                                                 Color="{StaticResource BackgroundColor_1}"
                                                  />
                             </Border.Background>
                         </Border>
@@ -280,8 +280,8 @@
                                     <Storyboard Storyboard.TargetName="PART_BorderBrush" Storyboard.TargetProperty="Color"
                                                >
                                         <ColorAnimation 
-                                            From="{StaticResource BackgroundColor_3}"
-                                            To="{StaticResource BackgroundColor_1}"
+                                            From="{StaticResource BackgroundColor_1}"
+                                            To="{StaticResource BackgroundColor_2}"
                                             Duration="{StaticResource ColorChangeDuration}"
                                             FillBehavior="HoldEnd"
                                            />

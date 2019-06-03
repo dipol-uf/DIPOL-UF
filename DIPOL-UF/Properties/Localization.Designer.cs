@@ -831,6 +831,33 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Photometry.
+        /// </summary>
+        public static string General_InstrumentRegime_Photometer {
+            get {
+                return ResourceManager.GetString("General_InstrumentRegime_Photometer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polarimetry.
+        /// </summary>
+        public static string General_InstrumentRegime_Polarimeter {
+            get {
+                return ResourceManager.GetString("General_InstrumentRegime_Polarimeter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string General_InstrumentRegime_Unknown {
+            get {
+                return ResourceManager.GetString("General_InstrumentRegime_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to D.
         /// </summary>
         public static string General_IntegerFormat {
