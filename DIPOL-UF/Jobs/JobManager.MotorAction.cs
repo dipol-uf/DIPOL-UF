@@ -88,7 +88,7 @@ namespace DIPOL_UF.Jobs
                     throw new NotSupportedException(@"No step motor found");
 
                 if (ActionType == MotorActionType.Reset)
-                    await RetryAction(() => Manager._windowRef.PolarimeterMotor.ReturnToOriginAsyncEx(token), NRetries);
+                    await RetryAction(() => Manager._windowRef.PolarimeterMotor.ReferenceReturnToOriginAsync(token), NRetries);
                 else
                 {
                     var oldPos = (Manager.MotorPosition ?? 0f) / 22.5f * Angle;

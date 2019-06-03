@@ -43,7 +43,7 @@ namespace Tests
 
                 status = await motor.GetRotationStatusAsync();
 
-                await motor.ReturnToOriginAsyncEx();
+                await motor.ReferenceReturnToOriginAsync();
 
                 status = await motor.GetRotationStatusAsync();
 
