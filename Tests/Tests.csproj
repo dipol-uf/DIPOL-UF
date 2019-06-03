@@ -91,6 +91,7 @@
     <Compile Include="RemoteCameraTests.cs" />
     <Compile Include="RemoteCommunicationConfigProvider.cs" />
     <Compile Include="OutOfProcessHostingTests.cs" />
+    <Compile Include="RetractorTests.cs" />
     <Compile Include="StepMotorTests.cs" />
   </ItemGroup>
   <ItemGroup>
