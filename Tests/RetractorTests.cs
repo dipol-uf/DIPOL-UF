@@ -93,4 +93,47 @@ namespace Tests
         }
 
     }
+
+    [TestFixture]
+    public class RetractorMotorTests
+    {
+        private SerialPort _port;
+        private StepMotorHandler _motor;
+        private const string PortName = @"COM4";
+
+        [SetUp]
+        public async Task SetUp()
+        {
+            _port = new SerialPort(PortName);
+            _motor = await StepMotorHandler.CreateFirstOrFromAddress(_port, 1);
+
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _motor?.Dispose();
+            _port?.Dispose();
+        }
+
+        [Test]
+        [TestCase(-1_000)]
+        [TestCase(-10_000)]
+        [TestCase(-100_000)]
+        [TestCase(-450_000)]
+        public async Task Test(int pos)
+        {
+            await _motor.ReturnToOriginAsync();
+            Assert.That(await _motor.GetActualPositionAsync(), Is.EqualTo(0));
+
+            var reply = await _motor.SendCommandAsync(Command.MoveToPosition, pos, CommandType.Absolute);
+            Assert.AreEqual(ReturnStatus.Success, reply.Status);
+
+            await _motor.WaitForPositionReachedAsync();
+            Assert.That(await _motor.GetActualPositionAsync(), Is.EqualTo(pos));
+
+            await _motor.ReturnToOriginAsync();
+            Assert.That(await _motor.GetActualPositionAsync(), Is.EqualTo(0));
+        }
+    }
 }
