@@ -182,6 +182,29 @@
                         </Button>
                     </DockPanel>
                 </Border>
+                <Border  VerticalAlignment="Bottom" 
+                         Grid.Row="4" 
+                        Style="{StaticResource ResourceKey=BorderStyle}"
+                        BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="3*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Grid.Column="0"
+                            Style="{StaticResource TextBlock_SmallFont}"
+                            Text = "Regime:"
+                            HorizontalAlignment="Right"/>
+                        <Slider 
+                            Value ="{Binding Regime, Mode=TwoWay}"
+                            IsEnabled="{Binding CanSwitchRegime}"
+                            Grid.Column="1"
+                            Margin="{StaticResource DefaultMargin}"
+                            Style="{StaticResource SlaveMasterSlider}">
+                        </Slider>
+                    </Grid>
+                </Border>
             </Grid>
         </Border>
         <StatusBar Name="DipolStatusBar" 

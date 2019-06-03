@@ -42,6 +42,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DynamicData.Kernel;
 using StepMotor;
@@ -70,6 +71,9 @@ namespace DIPOL_UF.Models
         private bool PolarimeterMotorTaskCompleted { get; set; }
         [Reactive]
         private bool RetractorMotorTaskCompleted { get; set; }
+
+        [Reactive]
+        public InstrumentRegime Regime { get; private set; } = InstrumentRegime.Unknown;
 
         [Reactive]
         // ReSharper disable once UnusedAutoPropertyAccessor.Local
@@ -102,6 +106,7 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<Unit, Unit> PolarimeterMotorButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> RetractorMotorButtonCommand { get; private set; }
 
+        public ReactiveCommand<InstrumentRegime, Unit> ChangeRegimeCommand { get; private set; }
 
         public DipolMainWindow()
         {
@@ -168,6 +173,18 @@ namespace DIPOL_UF.Models
                 }
                 finally
                 {
+                    if (RetractorMotor != null)
+                    {
+                        var pos = await RetractorMotor.GetActualPositionAsync();
+                        if (pos == (int) InstrumentRegime.Polarimeter)
+                            Regime = PolarimeterMotor is null
+                                ? InstrumentRegime.Unknown
+                                : InstrumentRegime.Polarimeter;
+                        else if (pos == (int) InstrumentRegime.Photometer)
+                            Regime = InstrumentRegime.Photometer;
+                        else
+                            Regime = InstrumentRegime.Unknown;
+                    }
                     Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = true);
                 }
             });
@@ -175,6 +192,13 @@ namespace DIPOL_UF.Models
 
         private void InitializeCommands()
         {
+
+            ChangeRegimeCommand =
+                ReactiveCommand.Create<InstrumentRegime, Unit>(ChangeRegimeCommandExecute,
+                        this.WhenPropertyChanged(x => x.RetractorMotor)
+                            .CombineLatest(this.WhenPropertyChanged(y => y.PolarimeterMotor), (x, y) =>
+                                x != null && y != null))
+                    .DisposeWith(Subscriptions);
 
             ContextMenuCommand =
                 ReactiveCommand.CreateFromObservable<string, Unit>(
@@ -533,6 +557,12 @@ namespace DIPOL_UF.Models
                 SelectedDevices.Remove(id);
                 _connectedCameras.RemoveKey(id);
             }
+        }
+
+        private Unit ChangeRegimeCommandExecute(InstrumentRegime param)
+        {
+            Regime = param;
+            return default;
         }
 
         protected override void Dispose(bool disposing)

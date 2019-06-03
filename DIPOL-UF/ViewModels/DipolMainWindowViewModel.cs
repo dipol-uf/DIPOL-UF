@@ -23,12 +23,16 @@
 //     SOFTWARE.
 
 using System;
+using System.Net.Configuration;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using DIPOL_UF.Enums;
 using DIPOL_UF.Models;
 using DynamicData;
 using DynamicData.Binding;
+using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 // ReSharper disable UnassignedGetOnlyAutoProperty
 
@@ -53,6 +57,10 @@ namespace DIPOL_UF.ViewModels
         public ICommand WindowLoadedCommand => Model.WindowLoadedCommand;
         public ICommand PolarimeterMotorButtonCommand => Model.PolarimeterMotorButtonCommand;
         public ICommand RetractorMotorButtonCommand => Model.RetractorMotorButtonCommand;
+        public bool CanSwitchRegime { [ObservableAsProperty] get; }
+
+        [Reactive]
+        public int Regime { get; set; }
 
 
         public DescendantProxy ProgressBarProxy { get; }
@@ -77,6 +85,12 @@ namespace DIPOL_UF.ViewModels
 
         private void HookObservables()
         {
+            this.WhenPropertyChanged(x => x.Regime, false)
+                .Select(x => x.Value == 1 ? InstrumentRegime.Polarimeter : InstrumentRegime.Photometer)
+                .Where(x => x != Model.Regime && CanSwitchRegime)
+                .InvokeCommand(Model.ChangeRegimeCommand)
+                .DisposeWith(Subscriptions);
+
             Model.WhenPropertyChanged(x => x.PolarimeterMotor)
                  .Select(x => x.Value != null)
                  .ObserveOnUi()
@@ -124,6 +138,22 @@ namespace DIPOL_UF.ViewModels
                  .Subscribe()
                  .DisposeWith(Subscriptions);
 
+            Model.WhenPropertyChanged(x => x.Regime)
+                .Select(x => x.Value != InstrumentRegime.Unknown)
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.CanSwitchRegime)
+                .DisposeWith(Subscriptions);
+
+            Model.WhenPropertyChanged(x => x.Regime)
+                .Where(x => x.Value != InstrumentRegime.Unknown)
+                .Select(x => x.Value == InstrumentRegime.Polarimeter ? 1 : 2)
+                .ObserveOnUi()
+                .BindTo(this, x => x.Regime)
+                .DisposeWith(Subscriptions);
+
+
+
         }
+
     }
 }
