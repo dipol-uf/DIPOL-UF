@@ -216,7 +216,7 @@ namespace StepMotor
             if (_port.BytesToRead <= 0) return;
 
             var len = _port.BytesToRead;
-            var pool = ArrayPool<byte>.Shared.Rent(Math.Max(ResponseSizeInBytes, len));
+            byte[] pool = null;
             TaskCompletionSource<Reply> taskSrc;
 
             while (_responseWaitQueue.TryDequeue(out taskSrc) &&
@@ -232,11 +232,15 @@ namespace StepMotor
             {
                 Task.Delay(TimeSpan.FromMilliseconds(_timeOut.TotalMilliseconds/4)).GetAwaiter().GetResult();
                 if (_port.BytesToRead % ResponseSizeInBytes == 0)
+                {
                     len = _port.BytesToRead;
+
+                }
             }
 
             try
             {
+                pool = ArrayPool<byte>.Shared.Rent(Math.Max(ResponseSizeInBytes, len));
                 _port.Read(pool, 0, len);
                 
                 if (len == ResponseSizeInBytes)
@@ -270,7 +274,8 @@ namespace StepMotor
             }
             finally
             {
-                ArrayPool<byte>.Shared.Return(pool, true);
+                if(pool != null)
+                    ArrayPool<byte>.Shared.Return(pool, true);
             }
         }
 
@@ -483,7 +488,7 @@ namespace StepMotor
             token.ThrowIfCancellationRequested();
             var startTime = DateTime.Now;
             
-            var target = 0;
+            int target;
             var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType) AxisParameter.TargetPosition,
                 motorOrBank);
             if(reply.Status != ReturnStatus.Success)

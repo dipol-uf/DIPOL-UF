@@ -482,7 +482,8 @@ The following settings produced this error:
     <value>Step motor is OK</value>
   </data>
   <data name="MainWindow_MB_PolarimeterMotorOK_Text" xml:space="preserve">
-    <value>Step motor on port {0} at address {1:00} is healthy and responding.</value>
+    <value>Step motor on port {0} at address {1:00} is healthy and responding.
+Position is {2}.</value>
   </data>
   <data name="CameraTab_JobSettings" xml:space="preserve">
     <value>Job Settings</value>
@@ -604,5 +605,11 @@ The following settings produced this error:
   </data>
   <data name="General_InstrumentRegime_Unknown" xml:space="preserve">
     <value>Unknown</value>
+  </data>
+  <data name="MainWindow_Regime_Switching_Text" xml:space="preserve">
+    <value>Switching from {0} to {1}. Please wait.</value>
+  </data>
+  <data name="MainWindow_Regime_Swtitching_Title" xml:space="preserve">
+    <value>Switcing instrument regime</value>
   </data>
 </root>
