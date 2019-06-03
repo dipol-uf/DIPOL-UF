@@ -508,7 +508,7 @@ namespace StepMotor
             await WaitForPositionReachedAsync(token);
         }
 
-        public async Task ReturnToOriginAsyncEx(CancellationToken token = default, byte motorOrBank = 0)
+        public async Task ReferenceReturnToOriginAsync(CancellationToken token = default, byte motorOrBank = 0)
         {
             var reply = await SendCommandAsync(Command.ReferenceSearch, 0, CommandType.Start, motorOrBank);
             if (reply.Status != ReturnStatus.Success)
