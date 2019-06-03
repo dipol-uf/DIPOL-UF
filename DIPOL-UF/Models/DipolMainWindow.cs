@@ -74,6 +74,9 @@ namespace DIPOL_UF.Models
         private bool RetractorMotorTaskCompleted { get; set; }
 
         [Reactive]
+        public bool IsSwitchingRegimes { get; private set; }
+
+        [Reactive]
         public InstrumentRegime Regime { get; private set; } = InstrumentRegime.Unknown;
 
         [Reactive]
@@ -579,27 +582,41 @@ namespace DIPOL_UF.Models
 
         private Task<ProgressBar> ChangeRegimeCommandExecute(InstrumentRegime param)
         {
-           return Task.Run(async () => 
-            {
+           return Task.Run(async () =>
+           {
+               IsSwitchingRegimes = true;
+
                 if (param != InstrumentRegime.Unknown && RetractorMotor != null && PolarimeterMotor != null)
                 {
-                    var pbText = string.Format(Properties.Localization.MainWindow_Regime_Switching_Text,
-                        Regime.ToStringEx(), 
-                        param.ToStringEx());
-                    Regime = InstrumentRegime.Unknown;
-                    var progress = new Progress<(int Current, int Target)>();
+                    Progress<(int Current, int Target)> progress;
+                    string pbText;
+                    int pos;
+                    int target;
+                    try
+                    {
+                        pbText = string.Format(Properties.Localization.MainWindow_Regime_Switching_Text,
+                            Regime.ToStringEx(),
+                            param.ToStringEx());
+                        Regime = InstrumentRegime.Unknown;
+                        progress = new Progress<(int Current, int Target)>();
 
-                    var pos = await RetractorMotor.GetActualPositionAsync();
-                    progress.ProgressChanged += (_, e) => Helper.WriteLog($"{pos}: {e.Current}, {e.Target}");
+                        pos = await RetractorMotor.GetActualPositionAsync();
 
-                    var reply = await RetractorMotor.SendCommandAsync(Command.MoveToPosition, (int) param,
-                        CommandType.Absolute);
-                    if (reply.Status != ReturnStatus.Success)
-                        throw new InvalidOperationException("Failed to operate retractor,");
+                        // ReSharper disable once RedundantArgumentDefaultValue
+                        var reply = await RetractorMotor.SendCommandAsync(Command.MoveToPosition, (int) param,
+                            CommandType.Absolute);
+                        if (reply.Status != ReturnStatus.Success)
+                            throw new InvalidOperationException("Failed to operate retractor,");
 
-                    var axis = await RetractorMotor.GetRotationStatusAsync();
-                    var target = axis[AxisParameter.TargetPosition];
+                        var axis = await RetractorMotor.GetRotationStatusAsync();
+                        target = axis[AxisParameter.TargetPosition];
 
+                    }
+                    catch(Exception)
+                    {
+                        IsSwitchingRegimes = false;
+                        throw;
+                    }
 
                     _regimeSwitchingTask = RetractorMotor.WaitForPositionReachedAsync(progress).ContinueWith(
                         async task =>
@@ -616,6 +633,7 @@ namespace DIPOL_UF.Models
                             await RegimeSwitchProvider.ClosingRequested.Execute();
                             if (task.IsCompleted)
                                 Regime = param;
+                            IsSwitchingRegimes = false;
                         });
 
                     var pb = new ProgressBar()
