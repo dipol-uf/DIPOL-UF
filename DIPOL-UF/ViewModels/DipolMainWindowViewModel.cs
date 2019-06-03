@@ -40,7 +40,7 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class DipolMainWindowViewModel : ReactiveViewModel<DipolMainWindow>
     {
-        
+
         public IObservableCollection<MainWindowTreeViewModel> CameraPanel { get; }
             = new ObservableCollectionExtended<MainWindowTreeViewModel>();
 
@@ -59,15 +59,14 @@ namespace DIPOL_UF.ViewModels
         public ICommand RetractorMotorButtonCommand => Model.RetractorMotorButtonCommand;
         public bool CanSwitchRegime { [ObservableAsProperty] get; }
 
-        [Reactive]
-        public int Regime { get; set; }
+        [Reactive] public int Regime { get; set; }
 
 
         public DescendantProxy ProgressBarProxy { get; }
         public DescendantProxy AvailableCamerasProxy { get; }
+        public DescendantProxy RegimeSwitchProxy { get; }
 
-
-        public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
+    public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
         {
             ProgressBarProxy = new DescendantProxy(
                 Model.ProgressBarProvider,
@@ -77,6 +76,10 @@ namespace DIPOL_UF.ViewModels
             AvailableCamerasProxy = new DescendantProxy(
                 Model.AvailableCamerasProvider,
                 x => new AvailableCamerasViewModel((AvailableCamerasModel)x))
+                .DisposeWith(Subscriptions);
+
+            RegimeSwitchProxy = new DescendantProxy(Model.RegimeSwitchProvider,
+                    x => new ProgressBarViewModel((ProgressBar) x))
                 .DisposeWith(Subscriptions);
 
             HookObservables();

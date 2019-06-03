@@ -37,6 +37,7 @@ using System.Collections.ObjectModel;
 using System.IO.Ports;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -84,6 +85,7 @@ namespace DIPOL_UF.Models
 
         public DescendantProvider ProgressBarProvider { get; private set; }
         public DescendantProvider AvailableCamerasProvider { get; private set; }
+        public DescendantProvider RegimeSwitchProvider { get; private set; }
 
         public bool IsDisposing { get; private set; }
 
@@ -258,6 +260,13 @@ namespace DIPOL_UF.Models
                     ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
                 .DisposeWith(Subscriptions);
 
+            RegimeSwitchProvider = new DescendantProvider(
+                    ReactiveCommand.Create<object, ReactiveObjectEx>(x => (ReactiveObjectEx)x),
+                    null,
+                    null,
+                    ReactiveCommand.Create<ReactiveObjectEx>(x => x.Dispose()))
+                .DisposeWith(Subscriptions);
+
             AvailableCamerasProvider = new DescendantProvider(
                     ReactiveCommand.Create<object, ReactiveObjectEx>(x => (ReactiveObjectEx) x),
                     null,
@@ -360,6 +369,9 @@ namespace DIPOL_UF.Models
                                         await QueryCamerasAsync((AvailableCamerasModel) x)
                                             .ExpectCancellation())
                                     .DisposeWith(Subscriptions);
+
+            ChangeRegimeCommand.Select(x => x as object).InvokeCommand(RegimeSwitchProvider.ViewRequested)
+                .DisposeWith(Subscriptions);
 
         }
 
@@ -558,42 +570,49 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private async Task<ProgressBar> ChangeRegimeCommandExecute(InstrumentRegime param)
+        private Task<ProgressBar> ChangeRegimeCommandExecute(InstrumentRegime param)
         {
-            if (param != InstrumentRegime.Unknown && RetractorMotor != null && PolarimeterMotor != null)
+           return Task.Run(async () => 
             {
-                Regime = InstrumentRegime.Unknown;
-                var progress = new Progress<(int Current, int Target)>();
-                
-                var pos = await RetractorMotor.GetActualPositionAsync();
-                progress.ProgressChanged += (_, e) => Helper.WriteLog($"{pos}: {e.Current}, {e.Target}");
-
-                var reply = await RetractorMotor.SendCommandAsync(Command.MoveToPosition, (int) param,
-                    CommandType.Absolute);
-                if(reply.Status != ReturnStatus.Success)
-                    throw new InvalidOperationException("Failed to operate retractor,");
-
-                var axis = await RetractorMotor.GetRotationStatusAsync();
-                var target = axis[AxisParameter.TargetPosition];
-
-
-                _regimeSwitchingTask = RetractorMotor.WaitForPositionReachedAsync(progress).ContinueWith(task =>
+                if (param != InstrumentRegime.Unknown && RetractorMotor != null && PolarimeterMotor != null)
                 {
-                    if (task.IsCompleted)
-                        Regime = param;
-                });
+                    Regime = InstrumentRegime.Unknown;
+                    var progress = new Progress<(int Current, int Target)>();
 
-                var pb = new ProgressBar()
-                {
-                    Minimum = pos,
-                    Maximum = target
-                };
-                progress.ProgressChanged += (_, e) => pb.Value = e.Current;
+                    var pos = await RetractorMotor.GetActualPositionAsync();
+                    progress.ProgressChanged += (_, e) => Helper.WriteLog($"{pos}: {e.Current}, {e.Target}");
 
-                return pb;
-            }
+                    var reply = await RetractorMotor.SendCommandAsync(Command.MoveToPosition, (int) param,
+                        CommandType.Absolute);
+                    if (reply.Status != ReturnStatus.Success)
+                        throw new InvalidOperationException("Failed to operate retractor,");
 
-            throw new ArgumentException(nameof(param));
+                    var axis = await RetractorMotor.GetRotationStatusAsync();
+                    var target = axis[AxisParameter.TargetPosition];
+
+
+                    _regimeSwitchingTask = RetractorMotor.WaitForPositionReachedAsync(progress).ContinueWith(
+                        async task =>
+                        {
+                            await RegimeSwitchProvider.ClosingRequested.Execute();
+                            if (task.IsCompleted)
+                                Regime = param;
+                        });
+
+                    var pb = new ProgressBar()
+                    {
+                        Minimum = 0,
+                        Maximum = Math.Abs(target - pos),
+                        DisplayPercents = true
+                    };
+                    progress.ProgressChanged += (_, e) => pb.Value = Math.Abs(e.Current - pos);
+
+                    return pb;
+                }
+
+                throw new ArgumentException(nameof(param));
+            });
+
         }
 
         protected override void Dispose(bool disposing)
