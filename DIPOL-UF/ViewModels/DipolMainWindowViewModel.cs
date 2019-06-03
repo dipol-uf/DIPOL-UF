@@ -23,8 +23,6 @@
 //     SOFTWARE.
 
 using System;
-using System.Net.Configuration;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
@@ -58,8 +56,11 @@ namespace DIPOL_UF.ViewModels
         public ICommand PolarimeterMotorButtonCommand => Model.PolarimeterMotorButtonCommand;
         public ICommand RetractorMotorButtonCommand => Model.RetractorMotorButtonCommand;
         public bool CanSwitchRegime { [ObservableAsProperty] get; }
+        public InstrumentRegime ActualRegime { [ObservableAsProperty] get; }
+
 
         [Reactive] public int Regime { get; set; }
+
 
 
         public DescendantProxy ProgressBarProxy { get; }
@@ -154,7 +155,7 @@ namespace DIPOL_UF.ViewModels
                 .BindTo(this, x => x.Regime)
                 .DisposeWith(Subscriptions);
 
-
+            PropagateReadOnlyProperty(this, x => x.Regime, y => y.ActualRegime);
 
         }
 

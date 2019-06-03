@@ -30,6 +30,7 @@
         xmlns:vs="clr-namespace:DIPOL_UF.Views"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
         xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
+        xmlns:enums="clr-namespace:DIPOL_UF.Enums"
         Title="{extensions:Text Key=ApplicationName}" 
         Height="960" Width="1280" HorizontalContentAlignment="Stretch" 
         MinWidth="768" MinHeight="576" WindowStartupLocation="CenterScreen"
@@ -202,7 +203,7 @@
                         <TextBlock
                             Grid.Column="0"
                             Style="{StaticResource TextBlock_SmallFont}"
-                            Text = "Regime:"
+                            Text = "{Binding ActualRegime, Converter={StaticResource EnumToDescriptionConverter}}"
                             HorizontalAlignment="Right"/>
                         <Slider 
                             Value ="{Binding Regime, Mode=TwoWay}"
@@ -217,7 +218,22 @@
         </Border>
         <StatusBar Name="DipolStatusBar" 
                    Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
-                   VerticalAlignment="Bottom"
-                   Style="{StaticResource ResourceKey=StatusBarStyle}"></StatusBar>
+                   VerticalAlignment="Bottom">
+            <StatusBar.Style>
+                <Style BasedOn="{StaticResource StatusBarStyle}" TargetType="StatusBar">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ActualRegime}" Value="{x:Static enums:InstrumentRegime.Polarimeter}">
+                            <Setter Property="Background" Value="{StaticResource BackgroundBrush_2}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding ActualRegime}" Value="{x:Static enums:InstrumentRegime.Photometer}">
+                            <Setter Property="Background" Value="{StaticResource BackgroundBrush_1}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding ActualRegime}" Value="{x:Static enums:InstrumentRegime.Unknown}">
+                            <Setter Property="Background" Value="{StaticResource BackgroundBrush_4}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StatusBar.Style>
+        </StatusBar>
     </Grid>
 </Window>
