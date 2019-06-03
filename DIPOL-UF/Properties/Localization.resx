@@ -584,4 +584,10 @@ The following settings produced this error:
   <data name="CameraTab_StepMotorAngleFormat" xml:space="preserve">
     <value>{0,6}°</value>
   </data>
+  <data name="MainWindow_RetractorButton_None" xml:space="preserve">
+    <value>No retractor</value>
+  </data>
+  <data name="MainWindow_RetractorButton_Present" xml:space="preserve">
+    <value>Retractor OK</value>
+  </data>
 </root>

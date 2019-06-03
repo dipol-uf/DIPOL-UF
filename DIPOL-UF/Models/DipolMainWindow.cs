@@ -57,18 +57,26 @@ namespace DIPOL_UF.Models
 
         private DipolClient[] _remoteClients;
 
-        private (SerialPort Port, ReadOnlyCollection<byte> Devices)[] _foundSerialDevices;
-
         private readonly SourceCache<(string Id, CameraBase Camera), string> _connectedCameras;
 
-        private Task _serialPortScanningTask;
+        private SerialPort _polarimeterPort;
+        private SerialPort _retractorPort;
+
+        private Task _polarimeterPortScanningTask;
+        private Task _retractorPortScanningTask;
+
 
         [Reactive]
-        private bool IsSerialPortTaskCompleted { get; set; }
+        private bool PolarimeterMotorTaskCompleted { get; set; }
+        [Reactive]
+        private bool RetractorMotorTaskCompleted { get; set; }
 
         [Reactive]
         // ReSharper disable once UnusedAutoPropertyAccessor.Local
         public StepMotorHandler PolarimeterMotor { get; private set; }
+        [Reactive]
+        // ReSharper disable once UnusedAutoPropertyAccessor.Local
+        public StepMotorHandler RetractorMotor { get; private set; }
 
         public DescendantProvider ProgressBarProvider { get; private set; }
         public DescendantProvider AvailableCamerasProvider { get; private set; }
@@ -92,10 +100,13 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<string, Unit> ContextMenuCommand { get; private set; }
 
         public ReactiveCommand<Unit, Unit> PolarimeterMotorButtonCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit> RetractorMotorButtonCommand { get; private set; }
+
 
         public DipolMainWindow()
         {
-            _serialPortScanningTask = CheckStepMotors();
+            _polarimeterPortScanningTask = CheckPolarimeterMotor();
+            _retractorPortScanningTask = CheckRetractorMotor();
 
             _connectedCameras = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
                 .DisposeWith(Subscriptions);
@@ -109,30 +120,19 @@ namespace DIPOL_UF.Models
             JobManager.Manager.AttachToMainWindow(this);
         }
 
-        private Task CheckStepMotors()
+        private Task CheckPolarimeterMotor()
         {
             return Task.Run(async () =>
             {
-                Application.Current?.Dispatcher.InvokeAsync(() => IsSerialPortTaskCompleted = false);
+                Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = false);
 
                 try
                 {
-                    var comPorts = SerialPort.GetPortNames();
-                    _foundSerialDevices =
-                        await Task.WhenAll(comPorts.Select(x => new SerialPort(x)).Select(async x =>
-                            (Port: x, Devices: await StepMotorHandler.FindDevice(x, 1, 4))));
-                    var preferredPortName =
-                        UiSettingsProvider.Settings.Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant();
-
-                    if (_foundSerialDevices.FirstOrOptional(x => x.Port.PortName.ToUpperInvariant() == preferredPortName) is
-                            var ports
-                        && ports.HasValue
-                        && ports.Value.Devices.Count > 0)
-                    {
-                        var address = ports.Value.Devices.First();
-                        PolarimeterMotor = new StepMotorHandler(ports.Value.Port, address).DisposeWith(Subscriptions);
-                    }
-
+                    if (_polarimeterPort is null)
+                        _polarimeterPort = new SerialPort(UiSettingsProvider.Settings
+                            .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant());
+                   
+                    PolarimeterMotor = await StepMotorHandler.CreateFirstOrFromAddress(_polarimeterPort, 1);
                 }
                 catch (Exception)
                 {
@@ -141,7 +141,34 @@ namespace DIPOL_UF.Models
                 }
                 finally
                 {
-                    Application.Current?.Dispatcher.InvokeAsync(() => IsSerialPortTaskCompleted = true);
+                    Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = true);
+                }
+            });
+        }
+
+        private Task CheckRetractorMotor()
+        {
+            return Task.Run(async () =>
+            {
+                Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = false);
+
+                try
+                {
+
+                    if (_retractorPort is null)
+                        _retractorPort = new SerialPort(UiSettingsProvider.Settings
+                            .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant());
+
+                    RetractorMotor = await StepMotorHandler.CreateFirstOrFromAddress(_retractorPort, 1);
+                }
+                catch (Exception)
+                {
+                    // TODO: maybe handle
+                    // Ignored
+                }
+                finally
+                {
+                    Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = true);
                 }
             });
         }
@@ -231,10 +258,16 @@ namespace DIPOL_UF.Models
 
 
             PolarimeterMotorButtonCommand =
-                ReactiveCommand.CreateFromTask(CheckStepMotorStatus,
-                                   this.WhenPropertyChanged(x => x.IsSerialPortTaskCompleted)
+                ReactiveCommand.CreateFromTask(CheckPolarimeterMotorStatus,
+                                   this.WhenPropertyChanged(x => x.PolarimeterMotorTaskCompleted)
                                        .Select(x => x.Value))
                                .DisposeWith(Subscriptions);
+
+            RetractorMotorButtonCommand =
+                ReactiveCommand.CreateFromTask(CheckRetractorMotorStatus,
+                        this.WhenPropertyChanged(x => x.RetractorMotorTaskCompleted)
+                            .Select(x => x.Value))
+                    .DisposeWith(Subscriptions);
         }
 
         private void HookObservables()
@@ -407,7 +440,7 @@ namespace DIPOL_UF.Models
             await PrepareCamerasAsync(cams.Select(x => x.Camera));
         }
 
-        private async Task CheckStepMotorStatus()
+        private async Task CheckPolarimeterMotorStatus()
         {
             try
             {
@@ -422,16 +455,15 @@ namespace DIPOL_UF.Models
             {
                 MessageBox.Show(
                     string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
-                        PolarimeterMotor.Port.PortName,
+                        _polarimeterPort.PortName,
                         PolarimeterMotor.Address),
                     Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
-                if (!(_serialPortScanningTask is null)
-                    && !_serialPortScanningTask.IsFaulted
-                    && (_foundSerialDevices?.Any() ?? false))
+                if (!(_polarimeterPortScanningTask is null)
+                    && !_polarimeterPortScanningTask.IsFaulted)
                 {
                     var response = MessageBox.Show(
                         string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
@@ -439,7 +471,50 @@ namespace DIPOL_UF.Models
                         Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
                         MessageBoxButton.YesNo, MessageBoxImage.Warning);
                     if (response == MessageBoxResult.Yes)
-                        _serialPortScanningTask = CheckStepMotors();
+                        _polarimeterPortScanningTask = CheckPolarimeterMotor();
+                }
+                else
+                {
+                    MessageBox.Show(
+                        Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
+                        Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private async Task CheckRetractorMotorStatus()
+        {
+            try
+            {
+                await (RetractorMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
+            }
+            catch (Exception)
+            {
+                RetractorMotor?.Dispose();
+                RetractorMotor = null;
+            }
+            if (!(RetractorMotor is null))
+            {
+                MessageBox.Show(
+                    string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
+                        _retractorPort.PortName,
+                        RetractorMotor.Address),
+                    Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                if (!(_retractorPortScanningTask is null)
+                    && !_retractorPortScanningTask.IsFaulted)
+                {
+                    var response = MessageBox.Show(
+                        string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
+                            UiSettingsProvider.Settings.Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant()),
+                        Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (response == MessageBoxResult.Yes)
+                        _retractorPortScanningTask = CheckRetractorMotor();
                 }
                 else
                 {
@@ -472,11 +547,13 @@ namespace DIPOL_UF.Models
                     // [IsDisposing] overrides that behaviour, and each camera is removed & disposed
                     // individually and synchronously.
 
+                    // TODO : Dispose ports
+                    
                     PolarimeterMotor?.Dispose();
-                    PolarimeterMotor?.Port.Dispose();
-                    foreach(var (port, _) in _foundSerialDevices)
-                        port?.Dispose();
-
+                    RetractorMotor?.Dispose();
+                    _polarimeterPort?.Dispose();
+                    _retractorPort?.Dispose();
+                    
                     IsDisposing = true;
                     var keys = _connectedCameras.Keys.ToList();
                     foreach (var key in keys)

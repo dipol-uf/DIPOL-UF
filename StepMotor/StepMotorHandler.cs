@@ -70,7 +70,6 @@ namespace StepMotor
         private volatile bool _suppressEvents;
 
         //public string PortName => _port.PortName;
-        public SerialPort Port => _port;
         public byte Address { get; }
 
         /// <summary>

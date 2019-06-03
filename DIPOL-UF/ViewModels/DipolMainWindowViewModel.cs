@@ -52,6 +52,8 @@ namespace DIPOL_UF.ViewModels
         public ICommand DisconnectButtonCommand => Model.DisconnectButtonCommand;
         public ICommand WindowLoadedCommand => Model.WindowLoadedCommand;
         public ICommand PolarimeterMotorButtonCommand => Model.PolarimeterMotorButtonCommand;
+        public ICommand RetractorMotorButtonCommand => Model.RetractorMotorButtonCommand;
+
 
         public DescendantProxy ProgressBarProxy { get; }
         public DescendantProxy AvailableCamerasProxy { get; }
