@@ -213,12 +213,23 @@ namespace StepMotor
             if (_port.BytesToRead <= 0) return;
 
             var len = _port.BytesToRead;
-            var pool = ArrayPool<byte>.Shared.Rent(len);
+            var pool = ArrayPool<byte>.Shared.Rent(Math.Max(ResponseSizeInBytes, len));
             TaskCompletionSource<Reply> taskSrc;
 
             while (_responseWaitQueue.TryDequeue(out taskSrc) &&
                    taskSrc.Task.IsCanceled)
             {
+            }
+
+            // Sometimes step motor writes checksum with a delay.
+            // On trigger .BytesToRead == 8
+            // Checksum is usually written immediately after, 
+            // so small delay allows to capture it
+            if (len < ResponseSizeInBytes)
+            {
+                Task.Delay(TimeSpan.FromMilliseconds(_timeOut.TotalMilliseconds/4)).GetAwaiter().GetResult();
+                if (_port.BytesToRead % ResponseSizeInBytes == 0)
+                    len = _port.BytesToRead;
             }
 
             try
@@ -342,6 +353,8 @@ namespace StepMotor
             while(_responseWaitQueue.TryDequeue(out var taskSrc) && taskSrc?.Task.IsCanceled == false)
                 taskSrc.SetException(new ObjectDisposedException(nameof(StepMotorHandler)));
 
+            _port.DiscardInBuffer();
+            _port.DiscardOutBuffer();
             _port.Close();
             _port.Dispose();
         }
@@ -625,6 +638,42 @@ namespace StepMotor
             }
 
             return new ReadOnlyCollection<byte>(result);
+        }
+
+        public static async Task<StepMotorHandler> TryCreateFromAddress(
+            string port, byte address, TimeSpan defaultTimeOut = default)
+        {
+            var motor = new StepMotorHandler(port, address, defaultTimeOut);
+
+            try
+            {
+                if (await motor.PokeAddressInBinary(address))
+                    return motor;
+
+                await motor.SwitchToBinary(address);
+                if (await motor.PokeAddressInBinary(address))
+                    return motor;
+
+            }
+            catch (Exception)
+            {
+                // Ignored
+            }
+            motor.Dispose();
+            return null;
+        }
+
+        public static async Task<StepMotorHandler> TryCreateFirst(
+            string port, byte startAddress = 1, byte endAddress = 16, TimeSpan defaultTimeOut = default)
+        {
+            for (var i = startAddress; i <= endAddress; i++)
+            {
+                var motor = await TryCreateFromAddress(port, i, defaultTimeOut);
+                if (motor != null)
+                    return motor;
+            }
+
+            return null;
         }
     }
 
