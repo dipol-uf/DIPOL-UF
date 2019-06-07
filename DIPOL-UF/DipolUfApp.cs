@@ -23,7 +23,7 @@
 //     SOFTWARE.
 
 //#define HOST_SERVER
-#define IN_PROCESS
+//#define IN_PROCESS
 
 using System;
 using System.Diagnostics;
