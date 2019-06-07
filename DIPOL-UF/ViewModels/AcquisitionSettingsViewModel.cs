@@ -156,16 +156,16 @@ namespace DIPOL_UF.ViewModels
         {
             // TODO : Remove logging
 
-            Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
-                          x => Model.Object.PropertyChanged += x,
-                          x => Model.Object.PropertyChanged -= x)
-                      .Select(x =>
-                      {
-                          var name = x.EventArgs.PropertyName;
-                          var val = x.Sender.GetType().GetProperty(name)?.GetValue(x.Sender);
-                          return $"{name}\t{val?.ToString()}";
-                      })
-                      .LogObservable("MODEL", Subscriptions);
+            //Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+            //              x => Model.Object.PropertyChanged += x,
+            //              x => Model.Object.PropertyChanged -= x)
+            //          .Select(x =>
+            //          {
+            //              var name = x.EventArgs.PropertyName;
+            //              var val = x.Sender.GetType().GetProperty(name)?.GetValue(x.Sender);
+            //              return $"{name}\t{val?.ToString()}";
+            //          });
+                      //.LogObservable("MODEL", Subscriptions);
 
             PropertyChanged += (sender, e) =>
             {
