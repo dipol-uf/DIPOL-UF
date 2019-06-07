@@ -389,7 +389,7 @@ namespace DIPOL_Remote
                 IsDisposing = true;
                 if(_client.State == CommunicationState.Opened)
                     _client.RemoveCamera(CameraIndex);
-                RemoteCameras.TryRemove(CameraIndex, out _);
+                RemoteCameras.TryRemove((_client.SessionID + CameraIndex).GetHashCode(), out _);
             }
 
             base.Dispose(disposing);
