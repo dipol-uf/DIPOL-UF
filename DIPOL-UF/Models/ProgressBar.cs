@@ -1,211 +1,156 @@
 ﻿using System;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Windows;
+using DynamicData.Binding;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
+
+using DIPOL_UF.Validators;
 
 namespace DIPOL_UF.Models
 {
-    class ProgressBar : ObservableObject
+    internal class ProgressBar : ReactiveObjectEx
     {
-        private int _minimum;
-        private int _maximum = 100;
-        private int _value = 50;
-        private bool _isIndeterminate;
-        private bool _displayPercents;
-        private string _barTitle = "";
-        private string _barComment = "";
-        private bool _isAborted;
-        private bool _canAbort = true;
-
-        public event EventHandler AbortButtonClick;
-        public event EventHandler MaximumReached;
-        public event EventHandler MinimumReached;
-
-        public int Minimum
-        {
-            get => _minimum;
-            set
-            {
-                if (value != _minimum)
-                {
-                    if (value >= _maximum)
-                        _minimum = _maximum - 1;
-                    else
-                        _minimum = value;
-
-                    if (Value < _minimum)
-                        Value = _minimum;
-
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        public int Maximum
-        {
-            get => _maximum;
-            set
-            {
-                if (value != _maximum)
-                {
-                    if (value <= _minimum)
-                        _maximum = _minimum + 1;
-                    else
-                        _maximum = value;
-
-                    if (Value > _maximum)
-                        Value = _maximum;
-
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        public int Value
-        {
-            get => _value;
-            set
-            {
-                if (value != _value)
-                {
-                    int old = _value;
-
-                    if (value < _minimum)
-                        _value = _minimum;
-                    else if (value > _maximum)
-                        _value = _maximum;
-                    else
-                        _value = value;
-
-                    if (_value != old)
-                    {
-                        RaisePropertyChanged();
-
-                        if (_value == _maximum)
-                            OnMaximumReached(this, new EventArgs());
-                        else if (_value == _minimum)
-                            OnMinimumReached(this, new EventArgs());
-                    }
-                }
-            }
-        }
-
-        public bool IsIndeterminate
-        {
-            get => _isIndeterminate;
-            set
-            {
-                if (value != _isIndeterminate)
-                {
-                    _isIndeterminate = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        public bool DisplayPercents
-        {
-            get => _displayPercents;
-            set
-            {
-                if (value != _displayPercents)
-                {
-                    _displayPercents = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        public string BarTitle
-        {
-            get => _barTitle;
-            set
-            {
-                if (value != _barTitle)
-                {
-                    _barTitle = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        public string BarComment
-        {
-            get => _barComment;
-            set
-            {
-                if (value != _barComment)
-                {
-                    _barComment = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        public bool IsAborted
-        {
-            get => _isAborted;
-            set
-            {
-                if (value != _isAborted)
-                {
-                    _isAborted = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        public bool CanAbort
-        {
-            get => _canAbort;
-            set
-            {
-                if (value != _canAbort)
-                {
-                    _canAbort = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
         
-        public Commands.DelegateCommand WindowDragCommand
-        {
-            get;
-        }
+        public ReactiveCommand<Window, Unit> WindowDragCommand { get; private set; }
+        public ReactiveCommand<Window, Unit> CancelCommand { get; private set; }
 
-        public Commands.DelegateCommand CancelCommand
-        {
-            get;
-        }
+        [Reactive]
+        public int Minimum { get; set; }
+        [Reactive]
+        public int Maximum { get; set; }
+        [Reactive]
+        public int Value { get; set; }
+        [Reactive]
+        public bool IsIndeterminate { get; set; }
+        [Reactive]
+        public bool DisplayPercents { get; set; }
+        [Reactive]
+        public string BarTitle { get; set; }
+        [Reactive]
+        public string BarComment { get; set; }
+        [Reactive]
+        public bool IsAborted { get; private set; }
+        [Reactive]
+        public bool CanAbort { get; set; }
 
-        public bool TryIncrement()
-            => ++Value <= Maximum;
+        public IObservable<int> MaximumReached { get; private set;}
+        public IObservable<int> MinimumReached { get; private set; }
 
-        public bool Decrement()
-            => --Value >= Minimum;
 
         public ProgressBar()
         {
-            CancelCommand = new Commands.DelegateCommand(
-                (param) => {
-                    if (param is Window w)
-                    {
-                        if(Helper.IsDialogWindow(w))
-                            w.DialogResult = false;
-                        IsAborted = true;
-                        OnAbortButtonClick(this, new EventArgs());
-                        w.Close();
-                    }
-                },
-                (param) => CanAbort && !IsAborted);
+            Reset();
 
-            WindowDragCommand = new Commands.WindowDragCommandProvider().Command;
+            
+            InitializeCommands();
+            HookValidators();
+            HookObservers();
         }
 
+        private void Reset()
+        {
+            Minimum = 0;
+            Maximum = 100;
+            Value = 0;
+        }
 
-        protected virtual void OnAbortButtonClick(object sender, EventArgs e)
-            => AbortButtonClick?.Invoke(this, e);
-        protected virtual void OnMaximumReached(object sender, EventArgs e)
-            => MaximumReached?.Invoke(this, e);
-        protected virtual void OnMinimumReached(object sender, EventArgs e)
-            => MinimumReached?.Invoke(this, e);
+        private void InitializeCommands()
+        {
+            WindowDragCommand =
+                ReactiveCommand.Create<Window>(
+                                   x => x.DragMove())
+                               .DisposeWith(Subscriptions);
+            CancelCommand =
+                ReactiveCommand.Create<Window>(param =>
+                               {
+                                   if (Helper.IsDialogWindow(param))
+                                       param.DialogResult = false;
+                                   IsAborted = true;
+                                   param.Close();
+                               }, this.WhenAnyPropertyChanged(nameof(CanAbort), nameof(IsAborted))
+                                      .Select(x => x.CanAbort && !x.IsAborted)
+                                      .ObserveOnUi())
+                               .DisposeWith(Subscriptions);
+        }
+
+        private void HookObservers()
+        {
+            MaximumReached = this.WhenAnyPropertyChanged(nameof(Value), nameof(Maximum))
+                                 .Where(x => x.Value == x.Maximum)
+                                 .Select(x => x.Value);
+            MinimumReached = this.WhenAnyPropertyChanged(nameof(Value), nameof(Minimum))
+                                 .Where(x => x.Value == x.Minimum)
+                                 .Select(x => x.Value);
+
+
+            this.WhenAnyPropertyChanged(nameof(IsIndeterminate))
+                .DistinctUntilChanged()
+                .Subscribe(x => Reset())
+                .DisposeWith(Subscriptions);
+        }
+
+        protected sealed override void HookValidators()
+        {
+            CreateValidator(
+                this.WhenAnyPropertyChanged(
+                        nameof(Value), nameof(Minimum), nameof(Maximum))
+                    .Select(x => (
+                        Type: nameof(Validate.ShouldFallWithinRange),
+                         Message: Validate.ShouldFallWithinRange(x.Value, x.Minimum, x.Maximum))),
+                nameof(Value));
+
+            CreateValidator(
+                this.WhenAnyPropertyChanged(nameof(Minimum))
+                    .Select(x => (
+                        Type: nameof(Validate.CannotBeGreaterThan),
+                        Message: Validate.CannotBeGreaterThan(x.Minimum, x.Maximum))),
+                nameof(Minimum));
+
+            CreateValidator(
+                this.WhenAnyPropertyChanged(nameof(Maximum))
+                    .Select(x => (
+                        Type: nameof(Validate.CannotBeLessThan),
+                        Message: Validate.CannotBeLessThan(x.Maximum, x.Minimum))),
+                nameof(Maximum));
+
+            base.HookValidators();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (!IsDisposed && disposing)
+            {
+                CancelCommand.Dispose();
+                WindowDragCommand.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
+        public bool TryIncrement()
+        {
+            if (!HasErrors && Value < Maximum)
+            {
+                Value++;
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool TryDecrement()
+        {
+            if (!HasErrors && Value > Minimum)
+            {
+                Value--;
+                return true;
+            }
+
+            return false;
+        }
+
     }
 }

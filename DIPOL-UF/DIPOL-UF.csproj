@@ -5,10 +5,10 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{EDB4E90E-B8FA-4A97-B684-8ED430F2A1F7}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <RootNamespace>DIPOL_UF</RootNamespace>
     <AssemblyName>DIPOL-UF</AssemblyName>
-    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
@@ -33,7 +33,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>DIPOL_UF.DIPOL_UF_App</StartupObject>
+    <StartupObject>DIPOL_UF.DipolUfApp</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -65,7 +65,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.2</LangVersion>
+    <LangVersion>latest</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
@@ -81,18 +81,21 @@
     <Prefer32Bit>true</Prefer32Bit>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Dipol Logo.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Build" />
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Web.Extensions" />
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Windows" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -105,9 +108,6 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\DelegateCommand.cs" />
-    <Compile Include="Commands\CommandEventArgs.cs" />
-    <Compile Include="Commands\EventToCommndExtension.cs" />
     <Compile Include="Controls\CameraTab.xaml.cs">
       <DependentUpon>CameraTab.xaml</DependentUpon>
     </Compile>
@@ -116,39 +116,61 @@
     </Compile>
     <Compile Include="Converters\BoolToBoolMultiValueConverter.cs" />
     <Compile Include="Converters\BoolToVisibilityValueConverter.cs" />
+    <Compile Include="Converters\CombineMultiValueConverter.cs" />
+    <Compile Include="Converters\CompareToValueConverter.cs" />
+    <Compile Include="Converters\ConverterImplementations.cs" />
     <Compile Include="Converters\DebugConverter.cs" />
     <Compile Include="Converters\DefaultValueConverter.cs" />
     <Compile Include="Converters\GeometryRulesToStreamGeometryValueConverter.cs" />
-    <Compile Include="Converters\CameraKeyToDictionaryValueMultiValueConverter.cs" />
     <Compile Include="Converters\CameraKeyToStringValueConverter.cs" />
-    <Compile Include="Converters\CameraStatsToStringMultiValueConverter.cs" />
-    <Compile Include="Converters\CameraStatsToValueMultiValueConverter.cs" />
     <Compile Include="Converters\CameraToStringAliasValueConverter.cs" />
     <Compile Include="Converters\EnumToDescriptionValueConverter.cs" />
     <Compile Include="Converters\MarginModifierValueConverter.cs" />
+    <Compile Include="Converters\NotValueConverter.cs" />
     <Compile Include="Converters\SingleDoubleToStringValueConverter.cs" />
-    <Compile Include="Converters\TemperatureStatusToBrushMultiValueConverter.cs" />
-    <Compile Include="Converters\TemperatureToBrushMultiValueConverter.cs" />
+    <Compile Include="Converters\TemperatureStatusToBrushValueConverter.cs" />
+    <Compile Include="Converters\TemperatureToBrushValueConverter.cs" />
+    <Compile Include="Converters\TextAsConverter.cs" />
+    <Compile Include="Converters\ValidationErrorsToStringValueConverter.cs" />
     <Compile Include="Converters\ValueTupleToValueValueConverter.cs" />
     <Compile Include="Converters\TypeValueConverter.cs" />
-    <Compile Include="DebuggingTests.cs" />
     <Compile Include="DebugTracer.cs" />
-    <Compile Include="DebugWindow.xaml.cs">
-      <DependentUpon>DebugWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Enums\ControlStateEnum.cs" />
+    <Compile Include="Enums\InstrumentRegime.cs" />
+    <Compile Include="EqualityComparer.cs" />
+    <Compile Include="Extensions\EventToCommandAction.cs" />
+    <Compile Include="Extensions\FileDialogAction.cs" />
+    <Compile Include="Extensions\ShowViewAction.cs" />
+    <Compile Include="Extensions\ValidationAdorner.cs" />
+    <Compile Include="Extensions\ValidationBinding.cs" />
+    <Compile Include="FileDialogDescriptor.cs" />
     <Compile Include="GeometryDescriptor.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="Jobs\JobManager.CameraAction.cs" />
+    <Compile Include="Jobs\JobManager.DelayAction.cs" />
+    <Compile Include="Jobs\JobManager.Job.cs" />
+    <Compile Include="Jobs\JobManager.JobAction.cs" />
+    <Compile Include="Jobs\JobManager.cs" />
+    <Compile Include="Jobs\JobManager.MotorAction.cs" />
+    <Compile Include="Jobs\JobManager.RepeatAction.cs" />
+    <Compile Include="Jobs\JobManager.SettingsAction.cs" />
+    <Compile Include="Jobs\JobManager.ShutterAction.cs" />
+    <Compile Include="Jobs\Target.cs" />
+    <Compile Include="MappedNameAttribute.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
-    <Compile Include="Models\ConnectedCamera.cs" />
-    <Compile Include="Models\ConnectedCamerasTreeModel.cs" />
+    <Compile Include="Models\CameraTab.cs" />
+    <Compile Include="Models\DescendantProvider.cs" />
     <Compile Include="Models\DipolImagePresenter.cs" />
     <Compile Include="Models\DipolMainWindow.cs" />
-    <Compile Include="Models\MenuItemModel.cs" />
+    <Compile Include="PropagatingEventArgs.cs" />
+    <Compile Include="ReactiveWrapper.cs" />
+    <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
+    <Compile Include="ViewModels\CameraTabViewModel.cs" />
+    <Compile Include="ViewModels\DescendantProxy.cs" />
+    <Compile Include="DialogRequestedEventArgs.cs" />
+    <Compile Include="ViewModels\JobSettingsViewModel.cs" />
+    <Compile Include="ViewModels\ReactiveViewModelBase.cs" />
+    <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="Models\ProgressBar.cs" />
-    <Compile Include="Commands\WindowDragCommandProvider.cs" />
-    <Compile Include="ObservableConcurrentDictionary.cs" />
-    <Compile Include="ObservableObject.cs" />
     <Compile Include="Properties\Localization.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -159,20 +181,22 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Localization.ru-RU.resx</DependentUpon>
     </Compile>
-    <Compile Include="SettingsManager.cs" />
-    <Compile Include="TextExtension.cs" />
-    <Compile Include="ValidationErrorInstance.cs" />
+    <Compile Include="ReactiveObjectEx.cs" />
+    <Compile Include="Extensions\TextExtension.cs" />
+    <Compile Include="UiSettingsProvider.cs" />
+    <Compile Include="Validators\Validate.cs" />
     <Compile Include="ViewModels\AcquisitionSettingsViewModel.cs" />
     <Compile Include="ViewModels\AvailableCamerasViewModel.cs" />
     <Compile Include="ViewModels\CameraPropertiesViewModel.cs" />
-    <Compile Include="ViewModels\ConnectedCameraTreeItemViewModel.cs" />
-    <Compile Include="ViewModels\ConnectedCameraViewModel.cs" />
+    <Compile Include="ViewModels\MainWindowTreeItemViewModel.cs" />
     <Compile Include="ViewModels\DipolImagePresenterViewModel.cs" />
     <Compile Include="ViewModels\DipolMainWindowViewModel.cs" />
-    <Compile Include="ViewModels\MenuItemViewModel.cs" />
-    <Compile Include="ViewModels\ConnectedCamerasTreeViewModel.cs" />
+    <Compile Include="ViewModels\MainWindowTreeViewModel.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
-    <Compile Include="ViewModels\ViewModel.cs" />
+    <Compile Include="ViewModels\ReactiveViewModel.cs" />
+    <Compile Include="Views\JobSerttingsView.xaml.cs">
+      <DependentUpon>JobSerttingsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\AcquisitionSettingsView.xaml.cs">
       <DependentUpon>AcquisitionSettingsView.xaml</DependentUpon>
     </Compile>
@@ -197,10 +221,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="DebugWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="Resources\ControlTemplates.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -220,6 +240,10 @@
     <Page Include="Resources\StaticConverters.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\JobSerttingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\AcquisitionSettingsView.xaml">
       <SubType>Designer</SubType>
@@ -241,7 +265,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DIPOL_UF.cs" />
+    <Compile Include="DipolUfApp.cs" />
     <Compile Include="Views\DipolMainWindow.xaml.cs">
       <DependentUpon>DipolMainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -264,10 +288,24 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="packages.config" />
+    <None Include="sample_star.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="polarimetry_job.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="user-allowed-setts.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="ui-config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -286,8 +324,120 @@
       <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
       <Name>DipolImage</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FITS-CS\FITS-CS.csproj">
+      <Project>{89516F86-17D4-4ED3-89F2-D20DF612C7DE}</Project>
+      <Name>FITS-CS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Serializers\Serializers.csproj">
+      <Project>{0ffbf38f-e75e-46c9-ad9c-78926e7dac89}</Project>
+      <Name>Serializers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SettingsManager\SettingsManager.csproj">
+      <Project>{f9a3b5ae-04c0-43cc-a0b7-7e03924b6698}</Project>
+      <Name>SettingsManager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\StepMotor\StepMotor.csproj">
+      <Project>{27a3f774-a7b6-43d9-baba-29a36aa0bfe1}</Project>
+      <Name>StepMotor</Name>
+    </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <PackageReference Include="DynamicData">
+      <Version>6.7.1.2534</Version>
+    </PackageReference>
+    <PackageReference Include="Expression.Blend.Sdk">
+      <Version>1.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="Fody">
+      <Version>4.0.0-beta.2</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="MathNet.Numerics">
+      <Version>4.7.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
+      <Version>1.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="ReactiveUI">
+      <Version>10.0.0-preview.3</Version>
+    </PackageReference>
+    <PackageReference Include="ReactiveUI.Fody">
+      <Version>10.0.0-preview.3</Version>
+    </PackageReference>
+    <PackageReference Include="ReactiveUI.WPF">
+      <Version>10.0.0-preview.3</Version>
+    </PackageReference>
+    <PackageReference Include="Splat">
+      <Version>6.1.7</Version>
+    </PackageReference>
+    <PackageReference Include="System.Buffers">
+      <Version>4.5.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.ComponentModel.Annotations">
+      <Version>4.6.0-preview.19073.11</Version>
+    </PackageReference>
+    <PackageReference Include="System.Drawing.Primitives">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Memory">
+      <Version>4.5.2</Version>
+    </PackageReference>
+    <PackageReference Include="System.Numerics.Vectors">
+      <Version>4.4.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.ObjectModel">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive">
+      <Version>4.2.0-preview.102</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive.Compatibility">
+      <Version>4.2.0-preview.63</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive.Core">
+      <Version>4.2.0-preview.63</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive.Experimental">
+      <Version>4.2.0-preview.63</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive.Interfaces">
+      <Version>4.2.0-preview.63</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive.Linq">
+      <Version>4.2.0-preview.63</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive.PlatformServices">
+      <Version>4.2.0-preview.63</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive.Providers">
+      <Version>4.2.0-preview.63</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive.Runtime.Remoting">
+      <Version>4.2.0-preview.63</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive.Windows.Forms">
+      <Version>4.2.0-preview.63</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive.Windows.Threading">
+      <Version>4.2.0-preview.63</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reflection.Extensions">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
+      <Version>4.5.2</Version>
+    </PackageReference>
+    <PackageReference Include="System.Threading.Tasks.Extensions">
+      <Version>4.6.0-preview.18571.3</Version>
+    </PackageReference>
+    <PackageReference Include="System.ValueTuple">
+      <Version>4.5.0</Version>
+    </PackageReference>
+  </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
       <Visible>False</Visible>
@@ -304,6 +454,9 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Localization.ru-RU.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Dipol Logo.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">

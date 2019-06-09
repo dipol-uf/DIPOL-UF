@@ -1,19 +1,74 @@
-﻿<Window x:Class="DIPOL_UF.Views.DipolMainWindow"
+﻿<!--This file is part of Dipol-3 Camera Manager.
+
+ MIT License
+ 
+ Copyright(c) 2018-2019 Ilia Kosenkov
+ 
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ 
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ 
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.-->
+<Window x:Class="DIPOL_UF.Views.DipolMainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:loc="clr-namespace:DIPOL_UF"
+        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:vs="clr-namespace:DIPOL_UF.Views"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
-        xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
-        Title="{loc:Text Key=ApplicationName}" 
-        Height="960" Width="1280" HorizontalContentAlignment="Stretch" MinWidth="768" MinHeight="576"
+        xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
+        xmlns:enums="clr-namespace:DIPOL_UF.Enums"
+        Title="{extensions:Text Key=ApplicationName}" 
+        Height="960" Width="1280" HorizontalContentAlignment="Stretch" 
+        MinWidth="768" MinHeight="576" WindowStartupLocation="CenterScreen"
         Style="{StaticResource ResourceKey=ContentFont}"
         x:Name="DipolWindow"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vms:DipolMainWindowViewModel}">
-
-    <Grid x:Name="MainWindowGrid" DockPanel.Dock="Top">
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="Loaded">
+            <behaviors:InvokeCommandAction
+                Command="{Binding WindowLoadedCommand}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="ViewRequested"
+            SourceObject="{Binding ProgressBarProxy}">
+            <extensions:ShowViewAction 
+                Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                Proxy="{Binding ProgressBarProxy}"
+                Type="{x:Type vs:ProgressWindow}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="ViewRequested"
+            SourceObject="{Binding AvailableCamerasProxy}">
+            <extensions:ShowViewAction
+                Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                Proxy="{Binding AvailableCamerasProxy}"
+                Type ="{x:Type vs:AvailableCameraView}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="ViewRequested"
+            SourceObject="{Binding RegimeSwitchProxy}">
+            <extensions:ShowViewAction 
+                Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                Proxy="{Binding RegimeSwitchProxy}"
+                Type="{x:Type vs:ProgressWindow}"/>
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
+    <Grid DockPanel.Dock="Top">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
@@ -26,14 +81,13 @@
         <Menu DockPanel.Dock="Top" x:Name="MenuBar" VerticalAlignment="Top" VerticalContentAlignment="Center"
               Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
               Style="{StaticResource ResourceKey=MenuBarStyle}"      
-              ItemsSource="{Binding MenuBarItems}"
               ItemTemplate="{StaticResource ResourceKey=MenuBarItemTemplate}"/>
 
         
         <TabControl x:Name="CameraTabs" Margin="2"
                     Grid.Row="1" Grid.Column="0"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                    ItemsSource="{Binding ConnectedCameras, UpdateSourceTrigger=PropertyChanged}"
+                    ItemsSource="{Binding CameraTabs}"
                     ContentTemplate="{StaticResource ResourceKey=TabControlItemTemplate}"
                     ItemContainerStyle="{StaticResource ResourceKey=TabItemStyle}">
          </TabControl>
@@ -46,7 +100,8 @@
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto" x:Name="GridButtonRowHeight"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
                 
                 <Border Grid.Row="0" 
@@ -59,23 +114,22 @@
                                     IsThreeState="True"
                                     IsEnabled="{Binding AnyCameraConnected}"
                                     x:Name="SelectAllCheckBox"
-                                    IsChecked="{Binding CameraPanelAreAllSelected, Mode=OneWay}"
-                                    Command="{Binding CameraPanelSelectedAllCommand}"
+                                    IsChecked="{Binding AllCamerasSelected, Mode=OneWay}"
+                                    Command="{Binding SelectAllCamerasCommand}"
                                     />
 
                         <Label x:Name="ConnectedCamerasLabel" 
-                                Content="{loc:Text Key=MainWindow_CameraManager}" 
+                                Content="{extensions:Text Key=MainWindow_CameraManager}" 
                                 HorizontalAlignment="Center" VerticalAlignment="Stretch" 
                                 VerticalContentAlignment="Center"/>
                     </Grid>
                 </Border>
-                <ListView x:Name="CameraTreeListView" 
-                            BorderThickness="0" TabIndex="0" 
-                            Grid.Row="1" 
+                <ScrollViewer TabIndex="0" Grid.Row="1" >
+                    <ItemsControl x:Name="CameraTreeListView" 
                             KeyboardNavigation.ControlTabNavigation="Cycle"
                             ItemsSource="{Binding CameraPanel}"
-                            Style="{StaticResource ResourceKey=ListTreeViewStyle}"
                             ItemTemplate="{StaticResource ResourceKey=ListTreeViewItemTemplate}"/>
+                </ScrollViewer>
                 <Border VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
                         Grid.Row="2" 
                         Style="{StaticResource ResourceKey=BorderStyle}"
@@ -83,13 +137,13 @@
                     <DockPanel>
                         <Button x:Name="ConnectNewCamerasButton" DockPanel.Dock="Left"
                                 Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" 
-                                Content="{loc:Text Key=General_Connect}"
+                                Content="{extensions:Text Key=General_Connect}"
                                 Command="{Binding ConnectButtonCommand}"
-                                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" 
+                                CommandParameter="{Binding ElementName=DipolWindow}"
                                 />
                         <Button x:Name="ReleaseExistingCamerasButton" DockPanel.Dock="Right"
                                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" 
-                                Content="{loc:Text Key=General_Disconnect}"
+                                Content="{extensions:Text Key=General_Disconnect}"
                                 Command="{Binding DisconnectButtonCommand}" 
                                 />
                     </DockPanel>
@@ -98,16 +152,89 @@
                          Grid.Row="3" 
                         Style="{StaticResource ResourceKey=BorderStyle}"
                         BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
-                    <Button 
-                        Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                        Content="Remote Sessions"
-                        Width="auto" HorizontalAlignment="Center" IsEnabled="False"/>
+                    <DockPanel>
+                    <Button DockPanel.Dock="Left"
+                        HorizontalAlignment="Center" IsEnabled="True"
+                        Command="{Binding PolarimeterMotorButtonCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource BasicButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasPolarimeterMotor}" Value="True">
+                                        <Setter Property="Content" Value="{extensions:Text Key=MainWindow_PolarimeterButton_Present}"/>
+                                        <Setter Property="Background" Value="{StaticResource PositiveEffectButtonBackgroundColor}"></Setter>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding HasPolarimeterMotor}" Value="False">
+                                        <Setter Property="Content" Value="{extensions:Text Key=MainWindow_PolarimeterButton_None}"/>
+                                        <Setter Property="Background" Value="{StaticResource NegativeEffectButtonBackgroundColor}"></Setter>
+                                    </DataTrigger>
+                                    </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                        <Button DockPanel.Dock="Left"
+                                HorizontalAlignment="Center" IsEnabled="True"
+                                Command="{Binding RetractorMotorButtonCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource BasicButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasPolarimeterMotor}" Value="True">
+                                            <Setter Property="Content" Value="{extensions:Text Key=MainWindow_RetractorButton_Present}"/>
+                                            <Setter Property="Background" Value="{StaticResource PositiveEffectButtonBackgroundColor}"></Setter>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding HasPolarimeterMotor}" Value="False">
+                                            <Setter Property="Content" Value="{extensions:Text Key=MainWindow_RetractorButton_None}"/>
+                                            <Setter Property="Background" Value="{StaticResource NegativeEffectButtonBackgroundColor}"></Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </DockPanel>
+                </Border>
+                <Border  VerticalAlignment="Bottom" 
+                         Grid.Row="4" 
+                        Style="{StaticResource ResourceKey=BorderStyle}"
+                        BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
+                    <Grid HorizontalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="130"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Grid.Column="0"
+                            Style="{StaticResource TextBlock_SmallFont}"
+                            Text = "{Binding ActualRegime, Converter={StaticResource EnumToDescriptionConverter}}"
+                            HorizontalAlignment="Right"/>
+                        <Slider 
+                            HorizontalAlignment="Right"
+                            Value ="{Binding Regime, Mode=TwoWay}"
+                            IsEnabled="{Binding CanSwitchRegime}"
+                            Grid.Column="1"
+                            Margin="{StaticResource DefaultMargin}"
+                            Style="{StaticResource SlaveMasterSlider}">
+                        </Slider>
+                    </Grid>
                 </Border>
             </Grid>
         </Border>
         <StatusBar Name="DipolStatusBar" 
                    Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
-                   VerticalAlignment="Bottom"
-                   Style="{StaticResource ResourceKey=StatusBarStyle}"></StatusBar>
+                   VerticalAlignment="Bottom">
+            <StatusBar.Style>
+                <Style BasedOn="{StaticResource StatusBarStyle}" TargetType="StatusBar">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ActualRegime}" Value="{x:Static enums:InstrumentRegime.Polarimeter}">
+                            <Setter Property="Background" Value="{StaticResource BackgroundBrush_2}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding ActualRegime}" Value="{x:Static enums:InstrumentRegime.Photometer}">
+                            <Setter Property="Background" Value="{StaticResource BackgroundBrush_1}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding ActualRegime}" Value="{x:Static enums:InstrumentRegime.Unknown}">
+                            <Setter Property="Background" Value="{StaticResource BackgroundBrush_4}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StatusBar.Style>
+        </StatusBar>
     </Grid>
 </Window>

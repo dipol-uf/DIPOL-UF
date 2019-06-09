@@ -117,11 +117,32 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AcquisitionSettings_AccumulationCycle" xml:space="preserve">
+    <value>Accumulation cycle settings:</value>
+  </data>
+  <data name="AcquisitionSettings_AcquisitionModeDoesNotSupportCycles" xml:space="preserve">
+    <value>Selected Camera or camera Acquisition Mode does not support either of Accumulation or Kinetic cycles.</value>
+  </data>
+  <data name="AcquisitionSettings_CycleNumber" xml:space="preserve">
+    <value># of cycles</value>
+  </data>
   <data name="AcquisitionSettings_Cycles" xml:space="preserve">
     <value>Cycles</value>
   </data>
+  <data name="AcquisitionSettings_CycleTime" xml:space="preserve">
+    <value>Cycle time (s)</value>
+  </data>
+  <data name="AcquisitionSettings_DetectorSize" xml:space="preserve">
+    <value>Detector size (H x V):</value>
+  </data>
+  <data name="AcquisitionSettings_DetectorSize_Format" xml:space="preserve">
+    <value>{0} x {1}</value>
+  </data>
   <data name="AcquisitionSettings_ImageSize" xml:space="preserve">
     <value>Image size</value>
+  </data>
+  <data name="AcquisitionSettings_KineticCycle" xml:space="preserve">
+    <value>Kinetic cycle settings:</value>
   </data>
   <data name="AcquisitionSettings_Settings" xml:space="preserve">
     <value>Settings</value>
@@ -129,17 +150,53 @@
   <data name="AcquisitionSettings_WindowName" xml:space="preserve">
     <value>Set up acquisition process</value>
   </data>
+  <data name="AcquisitionSetttings_AvailableGainFormat" xml:space="preserve">
+    <value>[{0}, {1}]</value>
+  </data>
   <data name="ApplicationName" xml:space="preserve">
     <value>Dipol-UF</value>
   </data>
   <data name="AvailableCameras" xml:space="preserve">
     <value>Available Cameras</value>
   </data>
+  <data name="AvailableCameras_AcquiredLocalCamera" xml:space="preserve">
+    <value>Acquired local camera {0}.</value>
+  </data>
+  <data name="AvailableCameras_AcquiredRemoteCamera" xml:space="preserve">
+    <value>Acquired remote camera {0}.</value>
+  </data>
+  <data name="AvailableCameras_CameraIsUnavailable" xml:space="preserve">
+    <value>Camera resource is unavailable.</value>
+  </data>
+  <data name="AvailableCameras_CheckingConnection_BarTitle" xml:space="preserve">
+    <value>Checking connections...</value>
+  </data>
   <data name="AvailableCameras_Found" xml:space="preserve">
     <value>Found</value>
   </data>
+  <data name="AvailableCameras_NoNewCameras" xml:space="preserve">
+    <value>No cameras available. Check connections and try again.</value>
+  </data>
+  <data name="CameraProperties_Alias" xml:space="preserve">
+    <value>Alias</value>
+  </data>
+  <data name="CameraProperties_CamModel" xml:space="preserve">
+    <value>Camera Model</value>
+  </data>
+  <data name="CameraProperties_HardwareVers" xml:space="preserve">
+    <value>Hardware Version</value>
+  </data>
   <data name="CameraProperties_Property" xml:space="preserve">
     <value>Property</value>
+  </data>
+  <data name="CameraProperties_SerialNumber" xml:space="preserve">
+    <value>Serial Number</value>
+  </data>
+  <data name="CameraProperties_SoftwareVers" xml:space="preserve">
+    <value>Software Version</value>
+  </data>
+  <data name="CameraProperties_UnknownValue" xml:space="preserve">
+    <value>Unknown</value>
   </data>
   <data name="CameraProperties_Value" xml:space="preserve">
     <value>Value</value>
@@ -150,8 +207,17 @@
   <data name="CameraTab_AcquisitionSettings" xml:space="preserve">
     <value>Acq. Settings</value>
   </data>
+  <data name="CameraTab_Autosave_Checkbox" xml:space="preserve">
+    <value>Autosave</value>
+  </data>
   <data name="CameraTab_Cooler" xml:space="preserve">
     <value>Cooler</value>
+  </data>
+  <data name="CameraTab_Cooler_Start" xml:space="preserve">
+    <value>Start cooling</value>
+  </data>
+  <data name="CameraTab_Cooler_Stop" xml:space="preserve">
+    <value>Stop cooling</value>
   </data>
   <data name="CameraTab_Fan" xml:space="preserve">
     <value>Fan</value>
@@ -167,15 +233,6 @@
   </data>
   <data name="CameraTab_Shutter_Internal" xml:space="preserve">
     <value>Internal</value>
-  </data>
-  <data name="CameraTab_Timing_AccumulationCycle" xml:space="preserve">
-    <value>Acc</value>
-  </data>
-  <data name="CameraTab_Timing_Exposure" xml:space="preserve">
-    <value>Exp</value>
-  </data>
-  <data name="CameraTab_Timing_KineticCycle" xml:space="preserve">
-    <value>Kin</value>
   </data>
   <data name="DipolImagePresenter_ApertureControlGroup" xml:space="preserve">
     <value>Aperture settings</value>
@@ -243,6 +300,9 @@
   <data name="General_Disconnect" xml:space="preserve">
     <value>Disconnect</value>
   </data>
+  <data name="General_ExposureFloatFormat" xml:space="preserve">
+    <value>G6</value>
+  </data>
   <data name="General_FanMode_Full" xml:space="preserve">
     <value>Full</value>
   </data>
@@ -252,14 +312,35 @@
   <data name="General_FanMode_Off" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="General_FloatTempFormat" xml:space="preserve">
+    <value>+0.00;-0.00;0.00</value>
+  </data>
+  <data name="General_IntegerFormat" xml:space="preserve">
+    <value>D</value>
+  </data>
+  <data name="General_InvalidArgument" xml:space="preserve">
+    <value>Argument {0} is invalid.</value>
+  </data>
   <data name="General_Load" xml:space="preserve">
     <value>Load</value>
+  </data>
+  <data name="General_LocalHostName" xml:space="preserve">
+    <value>Local</value>
+  </data>
+  <data name="General_OperationNotSupported" xml:space="preserve">
+    <value>Operation [{0}] is not supported.</value>
   </data>
   <data name="General_Save" xml:space="preserve">
     <value>Save</value>
   </data>
+  <data name="General_ShouldNotHappen" xml:space="preserve">
+    <value>An unexpected error has happened. This indicates a likely unrecoverable error in the software. Consider reporting it.</value>
+  </data>
   <data name="General_Submit" xml:space="preserve">
     <value>Submit</value>
+  </data>
+  <data name="General_TemperatureFloatFormat" xml:space="preserve">
+    <value>G2</value>
   </data>
   <data name="General_TemperatureStatus_Drift" xml:space="preserve">
     <value>Drifting</value>
@@ -279,6 +360,33 @@
   <data name="MainWindow_CameraManager" xml:space="preserve">
     <value>Camera Manager</value>
   </data>
+  <data name="MainWindow_MB_FailedToAddCamera_Caption" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="MainWindow_MB_FailedToAddCamera_Message" xml:space="preserve">
+    <value>Failed to connect camera {0}. Please, try again.</value>
+  </data>
+  <data name="Menu_MainWindow_CameraProperties" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="ProgressBar_DisplayCountFormatString" xml:space="preserve">
+    <value>{{0, {0:F0} }}/{{1, {0:F0} }}</value>
+  </data>
+  <data name="ProgressBar_DisplayPercentString" xml:space="preserve">
+    <value>{0:F0}%</value>
+  </data>
+  <data name="ProgressBar_DisplayRangeFormatString" xml:space="preserve">
+    <value>{{0, {0:F0} }} in ({{1, {0:F0} }}, {{2, {0:F0} }})</value>
+  </data>
+  <data name="ProgressBar_IndeterminateString" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ProgressBar_IsInvalidString" xml:space="preserve">
+    <value />
+  </data>
+  <data name="RemoteConnection_UnreachableHostTitle" xml:space="preserve">
+    <value>Host not found or unreachable</value>
+  </data>
   <data name="Slider_PixelToolTipFormat" xml:space="preserve">
     <value>{0:f0} pix</value>
     <comment>Nonlocalized general resource</comment>
@@ -286,5 +394,222 @@
   <data name="StringFormat_Float_DipolImagePresenter_Statistics" xml:space="preserve">
     <value>{0:g7}</value>
     <comment>Nonlocalized general resource</comment>
+  </data>
+  <data name="Validation_CannotBeDefault" xml:space="preserve">
+    <value>Default value is illegal</value>
+  </data>
+  <data name="Validation_CannotBeParsed" xml:space="preserve">
+    <value>Invalid input format</value>
+  </data>
+  <data name="Validation_OnlyNumbersAllowed" xml:space="preserve">
+    <value>Only numeric values are permitted</value>
+  </data>
+  <data name="Validation_ValueCannotBeGreaterThan" xml:space="preserve">
+    <value>Value cannot be greater than {0}</value>
+  </data>
+  <data name="Validation_ValueCannotBeLessThan" xml:space="preserve">
+    <value>Value cannot be less than {0}</value>
+  </data>
+  <data name="Validation_ValueMatchesRegex" xml:space="preserve">
+    <value>Input contains disallowed symbols{0}</value>
+  </data>
+  <data name="Validation_ValueShouldFallWithinRange" xml:space="preserve">
+    <value>Value cannot be outside of the [{0}, {1}] range</value>
+  </data>
+  <data name="DipolImagePresenter_CenterPixelFormat" xml:space="preserve">
+    <value>{0,6:000}:{1,-6:000}</value>
+  </data>
+  <data name="AcquisitionSettings_ApplicationFailed" xml:space="preserve">
+    <value>Failed to apply settings</value>
+  </data>
+  <data name="AcquisitionSettings_ApplicationFailedUnrecoverable_Message" xml:space="preserve">
+    <value>An unrecoverable error happened while applying acquisition settings, which indicates the program is in a faulty state. The error message is:
+{0}</value>
+  </data>
+  <data name="AcquisitionSettings_ApplicationFailed_Message" xml:space="preserve">
+    <value>An unexpected error happened while applying acquisition settings: "{0}".
+The following settings produced this error:
+{1}</value>
+  </data>
+  <data name="AcquisitionSettings_UnknownSetting" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="MainWindow_ConnectingToRemoteLocations" xml:space="preserve">
+    <value>Connecting to remote services...</value>
+  </data>
+  <data name="AcquisitionSettings_DeserializationFailed_Message" xml:space="preserve">
+    <value>An error occured while loading acquisition settings to {0}:
+{1}</value>
+  </data>
+  <data name="AcquisitionSettings_DeserializationFailed_Title" xml:space="preserve">
+    <value>Unable to load file</value>
+  </data>
+  <data name="AcquisitionSettings_Dialog_Load_Title" xml:space="preserve">
+    <value>Load current acquisition settings</value>
+  </data>
+  <data name="AcquisitionSettings_Dialog_Save_Title" xml:space="preserve">
+    <value>Save current acquisition settings</value>
+  </data>
+  <data name="AcquisitionSettings_SerializationFailed_Message" xml:space="preserve">
+    <value>An error occured while saving acquisition settings to {0}:
+{1}</value>
+  </data>
+  <data name="AcquisitionSettings_SerializationFailed_Title" xml:space="preserve">
+    <value>Unable to save file</value>
+  </data>
+  <data name="CameraTab_EstimatedTime" xml:space="preserve">
+    <value>Act. time (s):</value>
+  </data>
+  <data name="MainWindow_PolarimeterButton_Present" xml:space="preserve">
+    <value>Motor OK</value>
+  </data>
+  <data name="MainWindow_PolarimeterButton_None" xml:space="preserve">
+    <value>No motor</value>
+  </data>
+  <data name="MainWindow_MB_PolarimeterMotorFailure_Caption" xml:space="preserve">
+    <value />
+  </data>
+  <data name="MainWindow_MB_PolarimeterMotorFailure_Text" xml:space="preserve">
+    <value>A failure is detected in either hardware or software. Step motor cannot be connected. Make sure it is powered on and accessible, restart the program and try again.</value>
+  </data>
+  <data name="MainWindow_MB_PolarimeterMotorNotFound_Caption" xml:space="preserve">
+    <value>Step motor is unavailable</value>
+  </data>
+  <data name="MainWindow_MB_PolarimeterMotorNotFound_Text" xml:space="preserve">
+    <value>Step motor on preferred port {0} is not found. Make sure the polariemter is connected and turned on. If you want to rescan, press [Yes].</value>
+  </data>
+  <data name="MainWindow_MB_PolarimeterMotorOK_Caption" xml:space="preserve">
+    <value>Step motor is OK</value>
+  </data>
+  <data name="MainWindow_MB_PolarimeterMotorOK_Text" xml:space="preserve">
+    <value>Step motor on port {0} at address {1:00} is healthy and responding.
+Position is {2}.</value>
+  </data>
+  <data name="CameraTab_JobSettings" xml:space="preserve">
+    <value>Job Settings</value>
+  </data>
+  <data name="General_Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="JobSettings_ExposureTime" xml:space="preserve">
+    <value>Exp. times (s):</value>
+  </data>
+  <data name="JobSettings_JobFile" xml:space="preserve">
+    <value>Job file:</value>
+  </data>
+  <data name="JobSettings_TargetName" xml:space="preserve">
+    <value>Star name:</value>
+  </data>
+  <data name="JobManager_Error_Caption" xml:space="preserve">
+    <value>Failed to load job description</value>
+  </data>
+  <data name="JobManager_Error_FileNotFound" xml:space="preserve">
+    <value>Requested file was not found:
+{0}</value>
+  </data>
+  <data name="JobManager_Error_InvalidOp" xml:space="preserve">
+    <value>Job configuration failed:
+{0}</value>
+  </data>
+  <data name="JobManager_Error_Other" xml:space="preserve">
+    <value>An undefined error happened:
+{0}</value>
+  </data>
+  <data name="JobSettings_Dialog_Acquisition" xml:space="preserve">
+    <value>Chose file with acquisition settings</value>
+  </data>
+  <data name="JobSettings_Dialog_Job" xml:space="preserve">
+    <value>Chose file with job settings</value>
+  </data>
+  <data name="JobSettings_Dialog_Load" xml:space="preserve">
+    <value>Load observation target</value>
+  </data>
+  <data name="JobSettings_Dialog_Save" xml:space="preserve">
+    <value>Save current observation target</value>
+  </data>
+  <data name="JobSettings_SettingsFile" xml:space="preserve">
+    <value>Acq. file</value>
+  </data>
+  <data name="JobSettings_WindowName" xml:space="preserve">
+    <value>Set up job</value>
+  </data>
+  <data name="CameraTab_Job_Start" xml:space="preserve">
+    <value>Start Cycle</value>
+  </data>
+  <data name="CameraTab_Job_Stop" xml:space="preserve">
+    <value>Stop Cycle</value>
+  </data>
+  <data name="MainWindow_RemoteConnection_ClientCount" xml:space="preserve">
+    <value>Connected to {0} out of {1}</value>
+  </data>
+  <data name="JobSettings_BiasFile" xml:space="preserve">
+    <value>Bias file</value>
+  </data>
+  <data name="JobSettings_DarkFile" xml:space="preserve">
+    <value>Dark file</value>
+  </data>
+  <data name="MB_MoreLeft" xml:space="preserve">
+    <value>There are {0} more errors that were not shown.</value>
+  </data>
+  <data name="CameraTab_JobProgressFormat" xml:space="preserve">
+    <value>{0:d3}/{1:d3}</value>
+  </data>
+  <data name="JobManager_AcquisitionJobName" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="JobManager_BiasJobName" xml:space="preserve">
+    <value>Bias</value>
+  </data>
+  <data name="JobManager_DarkJobName" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="JobManager_MB_Failed_Header" xml:space="preserve">
+    <value>Acquisition cycle failed!</value>
+  </data>
+  <data name="JobManager_MB_Failed_Text" xml:space="preserve">
+    <value>Acquisition cycled was interrupted with the following error: 
+{0}</value>
+  </data>
+  <data name="JobManager_MB_Finished_Header" xml:space="preserve">
+    <value>Acquisition cycle finished</value>
+  </data>
+  <data name="JobManager_MB_Finished_Text" xml:space="preserve">
+    <value>Acquired {0} frames.</value>
+  </data>
+  <data name="JobSettings_N_repeats" xml:space="preserve">
+    <value># of cycles</value>
+  </data>
+  <data name="CameraTab_LastSavedFile" xml:space="preserve">
+    <value>Last image: {0}</value>
+  </data>
+  <data name="CameraTab_StepMotorAngleFormat" xml:space="preserve">
+    <value>{0,6}°</value>
+  </data>
+  <data name="MainWindow_Photometer" xml:space="preserve">
+    <value>Photometer</value>
+  </data>
+  <data name="MainWindow_Polariemter" xml:space="preserve">
+    <value>Polarimeter</value>
+  </data>
+  <data name="MainWindow_RetractorButton_None" xml:space="preserve">
+    <value>No retractor</value>
+  </data>
+  <data name="MainWindow_RetractorButton_Present" xml:space="preserve">
+    <value>Retractor OK</value>
+  </data>
+  <data name="General_InstrumentRegime_Photometer" xml:space="preserve">
+    <value>Photometry</value>
+  </data>
+  <data name="General_InstrumentRegime_Polarimeter" xml:space="preserve">
+    <value>Polarimetry</value>
+  </data>
+  <data name="General_InstrumentRegime_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="MainWindow_Regime_Switching_Text" xml:space="preserve">
+    <value>Switching from {0} to {1}. Please wait.</value>
+  </data>
+  <data name="MainWindow_Regime_Swtitching_Title" xml:space="preserve">
+    <value>Switcing instrument regime</value>
   </data>
 </root>

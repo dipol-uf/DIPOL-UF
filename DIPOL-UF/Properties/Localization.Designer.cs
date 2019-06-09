@@ -61,11 +61,132 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Accumulation cycle settings:.
+        /// </summary>
+        public static string AcquisitionSettings_AccumulationCycle {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_AccumulationCycle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected Camera or camera Acquisition Mode does not support either of Accumulation or Kinetic cycles..
+        /// </summary>
+        public static string AcquisitionSettings_AcquisitionModeDoesNotSupportCycles {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_AcquisitionModeDoesNotSupportCycles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to apply settings.
+        /// </summary>
+        public static string AcquisitionSettings_ApplicationFailed {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_ApplicationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unexpected error happened while applying acquisition settings: &quot;{0}&quot;.
+        ///The following settings produced this error:
+        ///{1}.
+        /// </summary>
+        public static string AcquisitionSettings_ApplicationFailed_Message {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_ApplicationFailed_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unrecoverable error happened while applying acquisition settings, which indicates the program is in a faulty state. The error message is:
+        ///{0}.
+        /// </summary>
+        public static string AcquisitionSettings_ApplicationFailedUnrecoverable_Message {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_ApplicationFailedUnrecoverable_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to # of cycles.
+        /// </summary>
+        public static string AcquisitionSettings_CycleNumber {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_CycleNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cycles.
         /// </summary>
         public static string AcquisitionSettings_Cycles {
             get {
                 return ResourceManager.GetString("AcquisitionSettings_Cycles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cycle time (s).
+        /// </summary>
+        public static string AcquisitionSettings_CycleTime {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_CycleTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occured while loading acquisition settings to {0}:
+        ///{1}.
+        /// </summary>
+        public static string AcquisitionSettings_DeserializationFailed_Message {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_DeserializationFailed_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to load file.
+        /// </summary>
+        public static string AcquisitionSettings_DeserializationFailed_Title {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_DeserializationFailed_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detector size (H x V):.
+        /// </summary>
+        public static string AcquisitionSettings_DetectorSize {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_DetectorSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} x {1}.
+        /// </summary>
+        public static string AcquisitionSettings_DetectorSize_Format {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_DetectorSize_Format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Load current acquisition settings.
+        /// </summary>
+        public static string AcquisitionSettings_Dialog_Load_Title {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_Dialog_Load_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save current acquisition settings.
+        /// </summary>
+        public static string AcquisitionSettings_Dialog_Save_Title {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_Dialog_Save_Title", resourceCulture);
             }
         }
         
@@ -79,6 +200,34 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Kinetic cycle settings:.
+        /// </summary>
+        public static string AcquisitionSettings_KineticCycle {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_KineticCycle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occured while saving acquisition settings to {0}:
+        ///{1}.
+        /// </summary>
+        public static string AcquisitionSettings_SerializationFailed_Message {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_SerializationFailed_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to save file.
+        /// </summary>
+        public static string AcquisitionSettings_SerializationFailed_Title {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_SerializationFailed_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Settings.
         /// </summary>
         public static string AcquisitionSettings_Settings {
@@ -88,11 +237,29 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string AcquisitionSettings_UnknownSetting {
+            get {
+                return ResourceManager.GetString("AcquisitionSettings_UnknownSetting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Set up acquisition process.
         /// </summary>
         public static string AcquisitionSettings_WindowName {
             get {
                 return ResourceManager.GetString("AcquisitionSettings_WindowName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [{0}, {1}].
+        /// </summary>
+        public static string AcquisitionSetttings_AvailableGainFormat {
+            get {
+                return ResourceManager.GetString("AcquisitionSetttings_AvailableGainFormat", resourceCulture);
             }
         }
         
@@ -115,6 +282,42 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Acquired local camera {0}..
+        /// </summary>
+        public static string AvailableCameras_AcquiredLocalCamera {
+            get {
+                return ResourceManager.GetString("AvailableCameras_AcquiredLocalCamera", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acquired remote camera {0}..
+        /// </summary>
+        public static string AvailableCameras_AcquiredRemoteCamera {
+            get {
+                return ResourceManager.GetString("AvailableCameras_AcquiredRemoteCamera", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Camera resource is unavailable..
+        /// </summary>
+        public static string AvailableCameras_CameraIsUnavailable {
+            get {
+                return ResourceManager.GetString("AvailableCameras_CameraIsUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checking connections....
+        /// </summary>
+        public static string AvailableCameras_CheckingConnection_BarTitle {
+            get {
+                return ResourceManager.GetString("AvailableCameras_CheckingConnection_BarTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Found.
         /// </summary>
         public static string AvailableCameras_Found {
@@ -124,11 +327,74 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No cameras available. Check connections and try again..
+        /// </summary>
+        public static string AvailableCameras_NoNewCameras {
+            get {
+                return ResourceManager.GetString("AvailableCameras_NoNewCameras", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias.
+        /// </summary>
+        public static string CameraProperties_Alias {
+            get {
+                return ResourceManager.GetString("CameraProperties_Alias", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Camera Model.
+        /// </summary>
+        public static string CameraProperties_CamModel {
+            get {
+                return ResourceManager.GetString("CameraProperties_CamModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hardware Version.
+        /// </summary>
+        public static string CameraProperties_HardwareVers {
+            get {
+                return ResourceManager.GetString("CameraProperties_HardwareVers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Property.
         /// </summary>
         public static string CameraProperties_Property {
             get {
                 return ResourceManager.GetString("CameraProperties_Property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Serial Number.
+        /// </summary>
+        public static string CameraProperties_SerialNumber {
+            get {
+                return ResourceManager.GetString("CameraProperties_SerialNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Software Version.
+        /// </summary>
+        public static string CameraProperties_SoftwareVers {
+            get {
+                return ResourceManager.GetString("CameraProperties_SoftwareVers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string CameraProperties_UnknownValue {
+            get {
+                return ResourceManager.GetString("CameraProperties_UnknownValue", resourceCulture);
             }
         }
         
@@ -160,11 +426,47 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Autosave.
+        /// </summary>
+        public static string CameraTab_Autosave_Checkbox {
+            get {
+                return ResourceManager.GetString("CameraTab_Autosave_Checkbox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cooler.
         /// </summary>
         public static string CameraTab_Cooler {
             get {
                 return ResourceManager.GetString("CameraTab_Cooler", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start cooling.
+        /// </summary>
+        public static string CameraTab_Cooler_Start {
+            get {
+                return ResourceManager.GetString("CameraTab_Cooler_Start", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop cooling.
+        /// </summary>
+        public static string CameraTab_Cooler_Stop {
+            get {
+                return ResourceManager.GetString("CameraTab_Cooler_Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Act. time (s):.
+        /// </summary>
+        public static string CameraTab_EstimatedTime {
+            get {
+                return ResourceManager.GetString("CameraTab_EstimatedTime", resourceCulture);
             }
         }
         
@@ -196,6 +498,51 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Start Cycle.
+        /// </summary>
+        public static string CameraTab_Job_Start {
+            get {
+                return ResourceManager.GetString("CameraTab_Job_Start", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop Cycle.
+        /// </summary>
+        public static string CameraTab_Job_Stop {
+            get {
+                return ResourceManager.GetString("CameraTab_Job_Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:d3}/{1:d3}.
+        /// </summary>
+        public static string CameraTab_JobProgressFormat {
+            get {
+                return ResourceManager.GetString("CameraTab_JobProgressFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Job Settings.
+        /// </summary>
+        public static string CameraTab_JobSettings {
+            get {
+                return ResourceManager.GetString("CameraTab_JobSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last image: {0}.
+        /// </summary>
+        public static string CameraTab_LastSavedFile {
+            get {
+                return ResourceManager.GetString("CameraTab_LastSavedFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to External.
         /// </summary>
         public static string CameraTab_Shutter_External {
@@ -214,29 +561,11 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Acc.
+        ///   Looks up a localized string similar to {0,6}°.
         /// </summary>
-        public static string CameraTab_Timing_AccumulationCycle {
+        public static string CameraTab_StepMotorAngleFormat {
             get {
-                return ResourceManager.GetString("CameraTab_Timing_AccumulationCycle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Exp.
-        /// </summary>
-        public static string CameraTab_Timing_Exposure {
-            get {
-                return ResourceManager.GetString("CameraTab_Timing_Exposure", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Kin.
-        /// </summary>
-        public static string CameraTab_Timing_KineticCycle {
-            get {
-                return ResourceManager.GetString("CameraTab_Timing_KineticCycle", resourceCulture);
+                return ResourceManager.GetString("CameraTab_StepMotorAngleFormat", resourceCulture);
             }
         }
         
@@ -246,6 +575,15 @@ namespace DIPOL_UF.Properties {
         public static string DipolImagePresenter_ApertureControlGroup {
             get {
                 return ResourceManager.GetString("DipolImagePresenter_ApertureControlGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0,6:000}:{1,-6:000}.
+        /// </summary>
+        public static string DipolImagePresenter_CenterPixelFormat {
+            get {
+                return ResourceManager.GetString("DipolImagePresenter_CenterPixelFormat", resourceCulture);
             }
         }
         
@@ -394,6 +732,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Browse.
+        /// </summary>
+        public static string General_Browse {
+            get {
+                return ResourceManager.GetString("General_Browse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string General_Cancel {
@@ -439,6 +786,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to G6.
+        /// </summary>
+        public static string General_ExposureFloatFormat {
+            get {
+                return ResourceManager.GetString("General_ExposureFloatFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Full.
         /// </summary>
         public static string General_FanMode_Full {
@@ -466,11 +822,83 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to +0.00;-0.00;0.00.
+        /// </summary>
+        public static string General_FloatTempFormat {
+            get {
+                return ResourceManager.GetString("General_FloatTempFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Photometry.
+        /// </summary>
+        public static string General_InstrumentRegime_Photometer {
+            get {
+                return ResourceManager.GetString("General_InstrumentRegime_Photometer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polarimetry.
+        /// </summary>
+        public static string General_InstrumentRegime_Polarimeter {
+            get {
+                return ResourceManager.GetString("General_InstrumentRegime_Polarimeter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string General_InstrumentRegime_Unknown {
+            get {
+                return ResourceManager.GetString("General_InstrumentRegime_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to D.
+        /// </summary>
+        public static string General_IntegerFormat {
+            get {
+                return ResourceManager.GetString("General_IntegerFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Argument {0} is invalid..
+        /// </summary>
+        public static string General_InvalidArgument {
+            get {
+                return ResourceManager.GetString("General_InvalidArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Load.
         /// </summary>
         public static string General_Load {
             get {
                 return ResourceManager.GetString("General_Load", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Local.
+        /// </summary>
+        public static string General_LocalHostName {
+            get {
+                return ResourceManager.GetString("General_LocalHostName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operation [{0}] is not supported..
+        /// </summary>
+        public static string General_OperationNotSupported {
+            get {
+                return ResourceManager.GetString("General_OperationNotSupported", resourceCulture);
             }
         }
         
@@ -484,11 +912,29 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An unexpected error has happened. This indicates a likely unrecoverable error in the software. Consider reporting it..
+        /// </summary>
+        public static string General_ShouldNotHappen {
+            get {
+                return ResourceManager.GetString("General_ShouldNotHappen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Submit.
         /// </summary>
         public static string General_Submit {
             get {
                 return ResourceManager.GetString("General_Submit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to G2.
+        /// </summary>
+        public static string General_TemperatureFloatFormat {
+            get {
+                return ResourceManager.GetString("General_TemperatureFloatFormat", resourceCulture);
             }
         }
         
@@ -538,11 +984,457 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Images.
+        /// </summary>
+        public static string JobManager_AcquisitionJobName {
+            get {
+                return ResourceManager.GetString("JobManager_AcquisitionJobName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bias.
+        /// </summary>
+        public static string JobManager_BiasJobName {
+            get {
+                return ResourceManager.GetString("JobManager_BiasJobName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dark.
+        /// </summary>
+        public static string JobManager_DarkJobName {
+            get {
+                return ResourceManager.GetString("JobManager_DarkJobName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to load job description.
+        /// </summary>
+        public static string JobManager_Error_Caption {
+            get {
+                return ResourceManager.GetString("JobManager_Error_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Requested file was not found:
+        ///{0}.
+        /// </summary>
+        public static string JobManager_Error_FileNotFound {
+            get {
+                return ResourceManager.GetString("JobManager_Error_FileNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Job configuration failed:
+        ///{0}.
+        /// </summary>
+        public static string JobManager_Error_InvalidOp {
+            get {
+                return ResourceManager.GetString("JobManager_Error_InvalidOp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An undefined error happened:
+        ///{0}.
+        /// </summary>
+        public static string JobManager_Error_Other {
+            get {
+                return ResourceManager.GetString("JobManager_Error_Other", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acquisition cycle failed!.
+        /// </summary>
+        public static string JobManager_MB_Failed_Header {
+            get {
+                return ResourceManager.GetString("JobManager_MB_Failed_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acquisition cycled was interrupted with the following error: 
+        ///{0}.
+        /// </summary>
+        public static string JobManager_MB_Failed_Text {
+            get {
+                return ResourceManager.GetString("JobManager_MB_Failed_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acquisition cycle finished.
+        /// </summary>
+        public static string JobManager_MB_Finished_Header {
+            get {
+                return ResourceManager.GetString("JobManager_MB_Finished_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acquired {0} frames..
+        /// </summary>
+        public static string JobManager_MB_Finished_Text {
+            get {
+                return ResourceManager.GetString("JobManager_MB_Finished_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bias file.
+        /// </summary>
+        public static string JobSettings_BiasFile {
+            get {
+                return ResourceManager.GetString("JobSettings_BiasFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dark file.
+        /// </summary>
+        public static string JobSettings_DarkFile {
+            get {
+                return ResourceManager.GetString("JobSettings_DarkFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chose file with acquisition settings.
+        /// </summary>
+        public static string JobSettings_Dialog_Acquisition {
+            get {
+                return ResourceManager.GetString("JobSettings_Dialog_Acquisition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chose file with job settings.
+        /// </summary>
+        public static string JobSettings_Dialog_Job {
+            get {
+                return ResourceManager.GetString("JobSettings_Dialog_Job", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Load observation target.
+        /// </summary>
+        public static string JobSettings_Dialog_Load {
+            get {
+                return ResourceManager.GetString("JobSettings_Dialog_Load", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save current observation target.
+        /// </summary>
+        public static string JobSettings_Dialog_Save {
+            get {
+                return ResourceManager.GetString("JobSettings_Dialog_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exp. times (s):.
+        /// </summary>
+        public static string JobSettings_ExposureTime {
+            get {
+                return ResourceManager.GetString("JobSettings_ExposureTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Job file:.
+        /// </summary>
+        public static string JobSettings_JobFile {
+            get {
+                return ResourceManager.GetString("JobSettings_JobFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to # of cycles.
+        /// </summary>
+        public static string JobSettings_N_repeats {
+            get {
+                return ResourceManager.GetString("JobSettings_N_repeats", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acq. file.
+        /// </summary>
+        public static string JobSettings_SettingsFile {
+            get {
+                return ResourceManager.GetString("JobSettings_SettingsFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Star name:.
+        /// </summary>
+        public static string JobSettings_TargetName {
+            get {
+                return ResourceManager.GetString("JobSettings_TargetName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set up job.
+        /// </summary>
+        public static string JobSettings_WindowName {
+            get {
+                return ResourceManager.GetString("JobSettings_WindowName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Camera Manager.
         /// </summary>
         public static string MainWindow_CameraManager {
             get {
                 return ResourceManager.GetString("MainWindow_CameraManager", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connecting to remote services....
+        /// </summary>
+        public static string MainWindow_ConnectingToRemoteLocations {
+            get {
+                return ResourceManager.GetString("MainWindow_ConnectingToRemoteLocations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error.
+        /// </summary>
+        public static string MainWindow_MB_FailedToAddCamera_Caption {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_FailedToAddCamera_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to connect camera {0}. Please, try again..
+        /// </summary>
+        public static string MainWindow_MB_FailedToAddCamera_Message {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_FailedToAddCamera_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorFailure_Caption {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorFailure_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A failure is detected in either hardware or software. Step motor cannot be connected. Make sure it is powered on and accessible, restart the program and try again..
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorFailure_Text {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorFailure_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Step motor is unavailable.
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorNotFound_Caption {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorNotFound_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Step motor on preferred port {0} is not found. Make sure the polariemter is connected and turned on. If you want to rescan, press [Yes]..
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorNotFound_Text {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorNotFound_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Step motor is OK.
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorOK_Caption {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorOK_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Step motor on port {0} at address {1:00} is healthy and responding.
+        ///Position is {2}..
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorOK_Text {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorOK_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Photometer.
+        /// </summary>
+        public static string MainWindow_Photometer {
+            get {
+                return ResourceManager.GetString("MainWindow_Photometer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polarimeter.
+        /// </summary>
+        public static string MainWindow_Polariemter {
+            get {
+                return ResourceManager.GetString("MainWindow_Polariemter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No motor.
+        /// </summary>
+        public static string MainWindow_PolarimeterButton_None {
+            get {
+                return ResourceManager.GetString("MainWindow_PolarimeterButton_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Motor OK.
+        /// </summary>
+        public static string MainWindow_PolarimeterButton_Present {
+            get {
+                return ResourceManager.GetString("MainWindow_PolarimeterButton_Present", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Switching from {0} to {1}. Please wait..
+        /// </summary>
+        public static string MainWindow_Regime_Switching_Text {
+            get {
+                return ResourceManager.GetString("MainWindow_Regime_Switching_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Switcing instrument regime.
+        /// </summary>
+        public static string MainWindow_Regime_Swtitching_Title {
+            get {
+                return ResourceManager.GetString("MainWindow_Regime_Swtitching_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connected to {0} out of {1}.
+        /// </summary>
+        public static string MainWindow_RemoteConnection_ClientCount {
+            get {
+                return ResourceManager.GetString("MainWindow_RemoteConnection_ClientCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No retractor.
+        /// </summary>
+        public static string MainWindow_RetractorButton_None {
+            get {
+                return ResourceManager.GetString("MainWindow_RetractorButton_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retractor OK.
+        /// </summary>
+        public static string MainWindow_RetractorButton_Present {
+            get {
+                return ResourceManager.GetString("MainWindow_RetractorButton_Present", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are {0} more errors that were not shown..
+        /// </summary>
+        public static string MB_MoreLeft {
+            get {
+                return ResourceManager.GetString("MB_MoreLeft", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Properties.
+        /// </summary>
+        public static string Menu_MainWindow_CameraProperties {
+            get {
+                return ResourceManager.GetString("Menu_MainWindow_CameraProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {{0, {0:F0} }}/{{1, {0:F0} }}.
+        /// </summary>
+        public static string ProgressBar_DisplayCountFormatString {
+            get {
+                return ResourceManager.GetString("ProgressBar_DisplayCountFormatString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:F0}%.
+        /// </summary>
+        public static string ProgressBar_DisplayPercentString {
+            get {
+                return ResourceManager.GetString("ProgressBar_DisplayPercentString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {{0, {0:F0} }} in ({{1, {0:F0} }}, {{2, {0:F0} }}).
+        /// </summary>
+        public static string ProgressBar_DisplayRangeFormatString {
+            get {
+                return ResourceManager.GetString("ProgressBar_DisplayRangeFormatString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string ProgressBar_IndeterminateString {
+            get {
+                return ResourceManager.GetString("ProgressBar_IndeterminateString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string ProgressBar_IsInvalidString {
+            get {
+                return ResourceManager.GetString("ProgressBar_IsInvalidString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Host not found or unreachable.
+        /// </summary>
+        public static string RemoteConnection_UnreachableHostTitle {
+            get {
+                return ResourceManager.GetString("RemoteConnection_UnreachableHostTitle", resourceCulture);
             }
         }
         
@@ -561,6 +1453,69 @@ namespace DIPOL_UF.Properties {
         public static string StringFormat_Float_DipolImagePresenter_Statistics {
             get {
                 return ResourceManager.GetString("StringFormat_Float_DipolImagePresenter_Statistics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default value is illegal.
+        /// </summary>
+        public static string Validation_CannotBeDefault {
+            get {
+                return ResourceManager.GetString("Validation_CannotBeDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid input format.
+        /// </summary>
+        public static string Validation_CannotBeParsed {
+            get {
+                return ResourceManager.GetString("Validation_CannotBeParsed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only numeric values are permitted.
+        /// </summary>
+        public static string Validation_OnlyNumbersAllowed {
+            get {
+                return ResourceManager.GetString("Validation_OnlyNumbersAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value cannot be greater than {0}.
+        /// </summary>
+        public static string Validation_ValueCannotBeGreaterThan {
+            get {
+                return ResourceManager.GetString("Validation_ValueCannotBeGreaterThan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value cannot be less than {0}.
+        /// </summary>
+        public static string Validation_ValueCannotBeLessThan {
+            get {
+                return ResourceManager.GetString("Validation_ValueCannotBeLessThan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input contains disallowed symbols{0}.
+        /// </summary>
+        public static string Validation_ValueMatchesRegex {
+            get {
+                return ResourceManager.GetString("Validation_ValueMatchesRegex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value cannot be outside of the [{0}, {1}] range.
+        /// </summary>
+        public static string Validation_ValueShouldFallWithinRange {
+            get {
+                return ResourceManager.GetString("Validation_ValueShouldFallWithinRange", resourceCulture);
             }
         }
     }

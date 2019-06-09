@@ -1,7 +1,31 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:enum="clr-namespace:DIPOL_UF.Enums">
+﻿<!--This file is part of Dipol-3 Camera Manager.
 
+ MIT License
+ 
+ Copyright(c) 2018-2019 Ilia Kosenkov
+ 
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ 
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ 
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.-->
+
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ext="clr-namespace:DIPOL_UF.Extensions"
+                    xmlns:enum="clr-namespace:DIPOL_UF.Enums">
     <!--Basic font styles-->
     <Style x:Key="TitleFont"  TargetType="{x:Type Control}">
         <Setter Property="FontSize" Value="20"/>
@@ -103,109 +127,20 @@
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Background" Value="{StaticResource ResourceKey=ListContainerBackgroundColor}"/>
     </Style>
-
-    <Style x:Key="NonSelectableListViewItemStyle" TargetType="{x:Type ListViewItem}">
-        <Setter Property="Focusable" Value="False"/>
-    </Style>
+    
     <Style x:Key="SelectableListViewItemStyle" TargetType="{x:Type ListViewItem}">
         <Setter Property="Focusable" Value="True"/>
     </Style>
-
-    <Style x:Key="ListTreeViewStyle" TargetType="{x:Type ListView}" BasedOn="{StaticResource ListViewStyle}">
-        <Setter Property="Focusable" Value="False"/>
-        <Setter Property="ItemContainerStyle" Value="{StaticResource NonSelectableListViewItemStyle}"/>
+   
+    <Style x:Key="RectangleAsSeparatorStyle" 
+           TargetType="Rectangle">
+        <Setter Property="Fill" Value="{StaticResource BorderColor}"/>
+        <Setter Property="Margin" Value="{StaticResource DefaultMargin}"/>
     </Style>
-
 
     <!--TabItem style-->
     <Style x:Key="TabItemStyle" TargetType="{x:Type TabItem}">
-        <Setter Property="Header" Value="{Binding 
-            Camera, 
-            Mode=OneWay,
-            Converter={StaticResource CameraToStringAliasConverter}}"/>
-        <Setter Property="Border.CornerRadius" Value="{DynamicResource TabItemTopCornerRadius}"/>
-        <Setter Property="Margin" Value="{DynamicResource TabItemMargin}"/>
-        <Setter Property="Foreground" Value="{DynamicResource TabItemForegroundBrush}"/>
-        <Setter Property="HeaderTemplate">
-            <Setter.Value>
-                <DataTemplate>
-                    <Border CornerRadius="0" Margin="-6.5 -1.5, -6.5, -1.5"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch">
-                        <Border.Background>
-                            <SolidColorBrush Color="{StaticResource BackgroundColor_2}"/>
-                        </Border.Background>
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Style.Triggers>
-                                    <DataTrigger
-                                        Binding="{Binding 
-                                            RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
-                                        Path=DataContext.State}"
-                                        Value="{x:Static enum:ControlState.Slave}">
-                                        <DataTrigger.EnterActions>
-                                            <BeginStoryboard x:Name="Animation_To_3">
-                                                <Storyboard TargetProperty="(Border.Background).(SolidColorBrush.Color)">
-                                                    <ColorAnimation 
-                                                        From="{StaticResource BackgroundColor_2}"
-                                                        To="{StaticResource BackgroundColor_3}"
-                                                        Duration="{StaticResource ColorChangeDuration}"
-                                                        FillBehavior="HoldEnd"
-                                                    />
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </DataTrigger.EnterActions>
-                                        <DataTrigger.ExitActions>
-                                            <BeginStoryboard x:Name="Animation_From_3">
-                                                <Storyboard TargetProperty="(Border.Background).(SolidColorBrush.Color)">
-                                                    <ColorAnimation 
-                                                        From="{StaticResource BackgroundColor_3}"
-                                                        To="{StaticResource BackgroundColor_2}"
-                                                        Duration="{StaticResource ColorChangeDuration}"
-                                                        FillBehavior="Stop"
-                                                    />
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </DataTrigger.ExitActions>
-                                    </DataTrigger>
-                                    <DataTrigger
-                                        Binding="{Binding 
-                                            RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem},
-                                        Path=DataContext.State}"
-                                        Value="{x:Static enum:ControlState.Master}">
-                                        <DataTrigger.EnterActions>
-                                            <BeginStoryboard x:Name="Animation_To_1">
-                                                <Storyboard TargetProperty="(Border.Background).(SolidColorBrush.Color)">
-                                                    <ColorAnimation 
-                                                        From="{StaticResource BackgroundColor_2}"
-                                                        To="{StaticResource BackgroundColor_1}"
-                                                        Duration="{StaticResource ColorChangeDuration}"
-                                                        FillBehavior="HoldEnd"
-                                                    />
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </DataTrigger.EnterActions>
-                                        <DataTrigger.ExitActions>
-                                            <BeginStoryboard x:Name="Animation_From_1">
-                                                <Storyboard TargetProperty="(Border.Background).(SolidColorBrush.Color)">
-                                                    <ColorAnimation 
-                                                        From="{StaticResource BackgroundColor_1}"
-                                                        To="{StaticResource BackgroundColor_2}"
-                                                        Duration="{StaticResource ColorChangeDuration}"
-                                                        FillBehavior="Stop"
-                                                    />
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </DataTrigger.ExitActions>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <ContentPresenter Content="{Binding}" Margin="{StaticResource DefaultMargin}"/>
-                    </Border>
-                </DataTemplate>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="Header" Value="{Binding TabHeader}"/>
     </Style>
 
     <!--ComboBox style-->
@@ -230,4 +165,14 @@
         <Setter Property="Height" Value="15"/>
         <Setter Property="Width" Value="auto"/>
     </Style>
+
+
+    <Style x:Key="ErrorBorderStyle" TargetType="Border">
+        <Setter Property="BorderThickness" Value="{StaticResource ErrorBorderThickness}"/>
+        <Setter Property="CornerRadius" Value="5"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderDefaultColor}"/>
+        <Setter Property="Padding" Value="{StaticResource DefaultPadding}"/>
+        <Setter Property="Margin" Value="0"/>
+    </Style>
+   
 </ResourceDictionary>
