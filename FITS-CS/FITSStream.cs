@@ -282,13 +282,6 @@ namespace FITS_CS
                 return ReadImage(str, out keywords);
                 
         }
-
-        public static Image ReadImage(string path, out List<FitsKey> keywords)
-        {
-
-            using (var str = new FileStream(path, FileMode.Open))
-                return ReadImage(str, out keywords);
-                
-        }
+        
     }
 }
