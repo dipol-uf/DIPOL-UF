@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -67,7 +67,7 @@ namespace ANDOR_CS.Classes
             {TriggerMode.ExternalExposure, 7 },
             {TriggerMode.ExternalFvbem, 9 },
             {TriggerMode.Continuous, 10 },
-            {TriggerMode.ExternalChargeshifting, 12 }
+            {TriggerMode.ExternalChargeShifting, 12 }
         };
     }
 }

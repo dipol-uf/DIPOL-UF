@@ -3,47 +3,75 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:loc="clr-namespace:DIPOL_UF"
+        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:vs="clr-namespace:DIPOL_UF.Views"
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
-        xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
         x:Name="AvailableCamerasWindow"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vms:AvailableCamerasViewModel}"
         Style="{StaticResource ResourceKey=ContentFont}"
-        Title="{loc:Text Key=AvailableCameras}" Height="auto" Width="auto" 
+        Title="{extensions:Text Key=AvailableCameras}" Height="auto" Width="auto" 
         WindowStyle="ThreeDBorderWindow" SizeToContent="WidthAndHeight" Topmost="True" 
-        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Closing="{cmnds:EventToCommand WindowClosingCommand}"
-        ContentRendered="{cmnds:EventToCommand WindowShownCommand}">
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger EventName="ContentRendered">
+            <behaviors:InvokeCommandAction
+                Command="{Binding WindowContentRenderedCommand}"
+                CommandParameter="{Binding ElementName=AvailableCamerasWindow}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger EventName="Closing">
+            <behaviors:InvokeCommandAction
+                Command="{Binding CloseCrossCommand}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="ViewRequested"
+            SourceObject="{Binding ProgressBarProxy}">
+            <extensions:ShowViewAction
+                Proxy="{Binding ProgressBarProxy}"
+                Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                StartupLocation="CenterOwner"
+                IsDialog="True"
+                Type="{x:Type vs:ProgressWindow}"/>
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
     <DockPanel Margin="10, 5, 10, 5">
         <Label DockPanel.Dock="Top" 
-               Content="{loc:Text Key=AvailableCameras_Found,Format='\{0\}:'}" 
+               Content="{extensions:Text Key=AvailableCameras_Found,Format='\{0\}:'}" 
                BorderBrush="{StaticResource ResourceKey=BorderColor}"
                BorderThickness="{StaticResource ResourceKey=BottomOnlyBorderThickness}"/>
 
-        <ListView DockPanel.Dock="Top" BorderThickness="0" Height="300" IsSynchronizedWithCurrentItem="True"
+        <ListView DockPanel.Dock="Top" Height="300" IsSynchronizedWithCurrentItem="False"
                   Style="{StaticResource ResourceKey=ListViewStyle}"
                   ItemContainerStyle="{StaticResource ResourceKey=SelectableListViewItemStyle}"
-                  ItemsSource="{Binding FoundCameras}"
+                  ItemsSource="{Binding ListedCameras}"
                   ItemTemplate="{StaticResource ResourceKey=FoundCamerasListViewItemTemplate}"
-                  SelectionMode="Multiple" SelectedIndex="-1"
-                  SelectionChanged="{cmnds:EventToCommand SelectionChangedCommand}">
-            
+                  SelectionMode="Multiple">
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger
+                    EventName="SelectionChanged" 
+                    SourceObject="{Binding RelativeSource={RelativeSource 
+                            FindAncestor, AncestorType=ListView}}">
+                    <behaviors:InvokeCommandAction
+                        Command ="{Binding SelectionChangedCommand}"
+                        CommandParameter="{Binding SelectedItems, 
+                            RelativeSource={RelativeSource FindAncestor, AncestorType=ListView}}"/>
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
         </ListView>
         <Border DockPanel.Dock="Top" VerticalAlignment="Bottom" 
                 Style="{StaticResource ResourceKey=BorderStyle}"
                 BorderThickness="{StaticResource ResourceKey=TopOnlyBorderThickness}">
             
             <DockPanel>
-                <Button Content="{loc:Text Key=General_Connect}" IsDefault="True"
-                        Command="{Binding ConnectButtonCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                <Button Content="{extensions:Text Key=General_Connect}" IsDefault="True"
+                        Command="{Binding ConnectButtonCommand}" CommandParameter="{Binding ElementName=AvailableCamerasWindow}"
                         Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}" HorizontalAlignment="Left"/>
-                <Button Content="{loc:Text Key=General_ConnectAll}"
-                        Command="{Binding ConnectAllButtonCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                <Button Content="{extensions:Text Key=General_ConnectAll}"
+                        Command="{Binding ConnectAllButtonCommand}" CommandParameter="{Binding ElementName=AvailableCamerasWindow}"
                         Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}"/>
-                <Button Content="{loc:Text Key=General_Cancel}" IsCancel="True" 
-                        Command="{Binding CancelButtonCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                <Button Content="{extensions:Text Key=General_Cancel}" IsCancel="True" 
+                        Command="{Binding CancelButtonCommand}" CommandParameter="{Binding ElementName=AvailableCamerasWindow}"
                         Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}" HorizontalAlignment="Right"/>
             </DockPanel>
         </Border>

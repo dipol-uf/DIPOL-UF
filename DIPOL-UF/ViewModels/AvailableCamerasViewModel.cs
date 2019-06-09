@@ -1,36 +1,84 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Windows.Input;
-using System.Windows;
 using DIPOL_UF.Models;
-
-using ANDOR_CS.Classes;
+using DIPOL_UF.Converters;
+using DynamicData;
+using DynamicData.Alias;
+using DynamicData.Binding;
+using ReactiveUI;
 
 namespace DIPOL_UF.ViewModels
 {
-    class AvailableCamerasViewModel : ViewModel<AvailableCamerasModel>
+    internal sealed class AvailableCamerasViewModel : ReactiveViewModel<AvailableCamerasModel>
     {
-        public ObservableConcurrentDictionary<string, CameraBase> FoundCameras => model.FoundCameras;
-        
 
-        public ICommand SelectionChangedCommand => model.SelectionChangedCommand as ICommand;
-        public ICommand WindowClosingCommand => model.WindowClosingCommand as ICommand;
-        public ICommand CancelButtonCommand => model.CancelButtonCommand as ICommand;
-        public ICommand ConnectButtonCommand => model.ConnectButtonCommand as ICommand;
-        public ICommand ConnectAllButtonCommand => model.ConnectAllButtonCommand as ICommand;
-        public ICommand WindowShownCommand => model.WindowShownCommand as ICommand;
+        public DescendantProxy ProgressBarProxy { get; private set; }
 
-        public AvailableCamerasViewModel(AvailableCamerasModel model) 
+        public IObservableCollection<Tuple<string, string, string>> ListedCameras { get; }
+            = new ObservableCollectionExtended<Tuple<string, string, string>>();
+
+        public ICommand CancelButtonCommand => Model.CancelButtonCommand;
+        public ICommand ConnectButtonCommand => Model.ConnectButtonCommand;
+        public ICommand ConnectAllButtonCommand => Model.ConnectAllButtonCommand;
+        public ICommand WindowContentRenderedCommand => Model.WindowContentRenderedCommand;
+        public ICommand CloseCrossCommand => Model.CloseCrossCommand;
+        public ICommand ClickCommand => Model.ClickCommand;
+
+        public ICommand SelectionChangedCommand { get; private set; }
+
+        public AvailableCamerasViewModel(AvailableCamerasModel model)
             : base(model)
         {
-          
+
+            HookValidators();
+            HookCommands();
+            HookObservables();
         }
 
-        
+        private void HookObservables()
+        {
+            var observer = Model.FoundCameras.Connect();
+            observer.Select(x => new Tuple<string, string, string>(
+                        ConverterImplementations.CameraKeyToHostConversion(x.Id),
+                        ConverterImplementations.CameraToStringAliasConversion(x.Camera),
+                        x.Id))
+                    .Sort(SortExpressionComparer<Tuple<string, string, string>>
+                          .Ascending(x => x.Item1).ThenByAscending(x => x.Item2))
+                    .ObserveOnUi()
+                    .Bind(ListedCameras)
+                    .DisposeMany()
+                    .Subscribe()
+                    .DisposeWith(Subscriptions);
+
+
+            (SelectionChangedCommand as ReactiveCommand<IList, IList>)
+                ?.ObserveOnUi()
+                .Select(x => x.Cast<Tuple<string, string, string>>().Select(y => y.Item3).ToList())
+                .Subscribe(x =>
+                {
+                    Model.SelectedIds.Edit(context =>
+                    {
+                        context.Clear();
+                        context.AddRange(x);
+                    });
+                })
+                .DisposeWith(Subscriptions);
+
+            ProgressBarProxy = new DescendantProxy(Model.ProgressBarProvider,
+                    x => new ProgressBarViewModel((ProgressBar) x))
+                .DisposeWith(Subscriptions);
+        }
+
+        private void HookCommands()
+        {
+            SelectionChangedCommand =
+                ReactiveCommand.Create<IList, IList>(x => x)
+                               .DisposeWith(Subscriptions);
+        }
+
     }
 }

@@ -98,14 +98,14 @@ namespace Benchmark
 
         }
 
-        [Benchmark]
-        public unsafe void MarshalCopy_3()
-        {
-            fixed(double* pSrc = _srcArray)
-                fixed (byte* pTar = _target1)
-                    Buffer.MemoryCopy(pSrc, pTar, N * sizeof(double), N * sizeof(double));
+        //[Benchmark]
+        //public unsafe void MarshalCopy_3()
+        //{
+        //    fixed(double* pSrc = _srcArray)
+        //        fixed (byte* pTar = _target1)
+        //            Buffer.MemoryCopy(pSrc, pTar, N * sizeof(double), N * sizeof(double));
 
-        }
+        //}
 
 
     }

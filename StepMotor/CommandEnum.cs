@@ -1,19 +1,26 @@
 ﻿//    This file is part of Dipol-3 Camera Manager.
 
-//    Dipol-3 Camera Manager is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-
-//    Dipol-3 Camera Manager is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//    GNU General Public License for more details.
-
-//    You should have received a copy of the GNU General Public License
-//    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
-//
-//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+//     MIT License
+//     
+//     Copyright(c) 2018-2019 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
 
 using System.Runtime.Serialization;
 
@@ -44,7 +51,7 @@ namespace StepMotor
         RotateLeft = 2,
 
         /// <summary>
-        /// MST: Motor stopps
+        /// MST: Motor stops
         /// </summary>
         [EnumMember]
         MotorStop = 3,
@@ -62,7 +69,7 @@ namespace StepMotor
         SetAxisParameter = 5,
 
         /// <summary>
-        /// GAP: Gets axis paramter
+        /// GAP: Gets axis parameter
         /// </summary>
         [EnumMember]
         GetAxisParameter = 6,
@@ -77,7 +84,7 @@ namespace StepMotor
         /// RSAP: Restores axis parameter
         /// </summary>
         [EnumMember]
-        RestoreAxisPArameter = 8,
+        RestoreAxisParameter = 8,
 
         /// <summary>
         /// SGP: Sets global parameter
@@ -137,7 +144,7 @@ namespace StepMotor
         /// SAC: Accesses SPI Bus
         /// </summary>
         [EnumMember]
-        SPIBUsAccess = 29,
+        SpibUsAccess = 29,
 
         /// <summary>
         /// SCO: Sets coordinate
@@ -173,12 +180,13 @@ namespace StepMotor
         /// AGP: Accumulates to global parameter
         /// </summary>
         [EnumMember]
-        AccumulatorToGlovalParameter = 35,
+        AccumulatorToGlobalParameter = 35,
 
         /// <summary>
-        /// CLE: CLears error flags
+        /// CLE: Clears error flags
         /// </summary>
         [EnumMember]
         ClearErrorFlags = 36
+
     }
 }

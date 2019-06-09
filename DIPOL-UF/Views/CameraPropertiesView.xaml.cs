@@ -19,10 +19,9 @@ namespace DIPOL_UF.Views
     /// </summary>
     public partial class CameraPropertiesView : Window
     {
-        public CameraPropertiesView(object viewmodel)
+        public CameraPropertiesView()
         {
             InitializeComponent();
-            DataContext = viewmodel;
         }
     }
 }

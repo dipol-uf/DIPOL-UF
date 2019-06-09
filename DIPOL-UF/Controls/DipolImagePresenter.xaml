@@ -3,17 +3,27 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
              xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
-             xmlns:locl="clr-namespace:DIPOL_UF"
              xmlns:p="clr-namespace:DIPOL_UF.Properties"
+             xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
+             xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
              Style="{StaticResource ResourceKey=SmallFont}"
              MinWidth="420" Background="Transparent"
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="420" 
-             d:DataContext="{d:DesignInstance Type=vms:DipolImagePresenterViewModel}"
-             MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
-             MouseLeave="{cmnds:EventToCommand MouseHoverCommand}">
+             d:DataContext="{d:DesignInstance Type=vms:DipolImagePresenterViewModel}">
+    <behaviors:Interaction.Triggers>
+        <behaviors:EventTrigger
+            EventName="MouseEnter"
+            SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}">
+            <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+        </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="MouseLeave"
+            SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}">
+            <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+        </behaviors:EventTrigger>
+    </behaviors:Interaction.Triggers>
             
     <Grid>
         <Grid.RowDefinitions>
@@ -22,23 +32,49 @@
             <RowDefinition Height="Auto" MinHeight="50"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"
-              Background="Transparent" Margin="10"
-              MouseMove="{cmnds:EventToCommand MouseHoverCommand}"
-              MouseEnter="{cmnds:EventToCommand MouseHoverCommand}"
-              MouseLeave="{cmnds:EventToCommand MouseHoverCommand}"
-              MouseLeftButtonDown="{cmnds:EventToCommand ImageDoubleClickCommand}">
+              Background="Transparent" Margin="10">
             <Image x:Name="Im" MinWidth="200" MinHeight="100"
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                 Source="{Binding BitmapSource, Mode=OneWay}"
-                SizeChanged="{cmnds:EventToCommand SizeChangedCommand}"
-                Cursor="Cross"
-               />
+                Cursor="Cross">
+                <behaviors:Interaction.Triggers>
+                    <behaviors:EventTrigger
+                     EventName="MouseLeftButtonDown"
+                     SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
+                        <extensions:EventToCommandAction Command="{Binding ImageClickCommand}"/>
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger
+                    EventName="MouseEnter"
+                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
+                        <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger
+                    EventName="MouseLeave"
+                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
+                        <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger
+                    EventName="MouseMove"
+                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
+                        <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger
+                        EventName="SizeChanged"
+                        SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
+                        <extensions:EventToCommandAction Command="{Binding SizeChangedCommand}"/>
+                    </behaviors:EventTrigger>
+                </behaviors:Interaction.Triggers>
+            </Image>
             <Canvas Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top"
                     Width="{Binding ElementName=Im, Path=ActualWidth}"
-                    Height="{Binding ElementName=Im, Path=ActualHeight}">
+                    Height="{Binding ElementName=Im, Path=ActualHeight}"
+                    IsHitTestVisible="False">
                 <Path 
-                    Data="{Binding ApertureGeometry.PathDescription, Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
-                    StrokeThickness="{Binding ApertureGeometry.Thickness, Mode=OneWay}" Stroke="{Binding SamplerColor, Mode=OneWay}" 
+                    Data="{Binding 
+                        ApertureGeometry.PathDescription, 
+                        Converter={StaticResource ResourceKey=GeometryRulesToStreamGeometryConverter}}" 
+                    StrokeThickness="{Binding ApertureGeometry.Thickness, Mode=OneWay}" 
+                    Stroke="{Binding SamplerColor, Mode=OneWay}" 
                     Visibility="{Binding IsGeometryDisplayed, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path.RenderTransform>
                         <TranslateTransform X="{Binding AperturePos.X}" Y ="{Binding AperturePos.Y}"/>
@@ -70,18 +106,20 @@
             </Grid.RowDefinitions>
             <Slider Grid.Row="0" Grid.Column="0" 
                     HorizontalAlignment="Stretch" MaxWidth="400"
-                    Minimum="{Binding ImgScaleMin}"
-                    Maximum="{Binding ImgScaleMax}"
-                    Value="{Binding ThumbLeft, UpdateSourceTrigger=PropertyChanged}"
-                    ValueChanged="{cmnds:EventToCommand ThumbValueChangedCommand}"
+                    TickFrequency="100"
+                    SmallChange="25"
+                    Minimum="{Binding ThumbScaleMin}"
+                    Maximum="{Binding ThumbScaleMax}"
+                    Value="{Binding ThumbRight, UpdateSourceTrigger=PropertyChanged}"
                     Margin="20, 3, 20, 3"
                     />
             <Slider Grid.Row="1" Grid.Column="0" 
                     HorizontalAlignment="Stretch" MaxWidth="400"
-                    Minimum="{Binding ImgScaleMin}"
-                    Maximum="{Binding ImgScaleMax}"
-                    Value="{Binding ThumbRight, UpdateSourceTrigger=PropertyChanged}"
-                    ValueChanged="{cmnds:EventToCommand ThumbValueChangedCommand}"
+                    TickFrequency="100"
+                    SmallChange="25"
+                    Minimum="{Binding ThumbScaleMin}"
+                    Maximum="{Binding ThumbScaleMax}"
+                    Value="{Binding ThumbLeft, UpdateSourceTrigger=PropertyChanged}"
                     Margin="20, 3, 20, 3"
                     />
         </Grid>
@@ -113,123 +151,123 @@
             <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Aperture, Format='{}{0}:'}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Aperture, Format='{}{0}:'}"/>
             <!-- Labels -->
             <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Median}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Median}"/>
             <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Minimum}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Minimum}"/>
             <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Maximum}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Maximum}"/>
             <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Average}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Average}"/>
             <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Intensity}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Intensity}"/>
             <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
 
             <!-- Right labels -->
             <!-- Header -->
             <TextBlock Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2"
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterPixel, Format='{}{0}:'}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_CenterPixel, Format='{}{0}:'}"/>
             <!-- Labels -->
             <TextBlock Grid.Row="1" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterPosition}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_CenterPosition}"/>
             <TextBlock Grid.Row="2" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_CenterValue}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_CenterValue}"/>
             <!-- Header -->
             <TextBlock Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2"
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Annulus, Format='{}{0}:'}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Annulus, Format='{}{0}:'}"/>
             <!-- Labels -->
             <TextBlock Grid.Row="4" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Average}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Average}"/>
             <TextBlock Grid.Row="5" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_SignalToNoise}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_SignalToNoise}"/>
             <TextBlock Grid.Row="6" Grid.Column="3" Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_StandardDev}"/>
 
             <!-- Aperture control labels -->
             <!-- Header -->
             <TextBlock Grid.Row="0" Grid.Column="4" Grid.ColumnSpan="2"
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Text="{locl:Text 
+                       Text="{extensions:Text 
                             Key=DipolImagePresenter_ApertureControlGroup, 
                             Format='{}{0}:'}"/>
             <TextBlock Grid.Row="1" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Aperture}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Aperture}"/>
             <TextBlock Grid.Row="2" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Gap}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Geometry_Gap}"/>
             <TextBlock Grid.Row="3" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Statistics_Annulus}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Statistics_Annulus}"/>
             <TextBlock Grid.Row="4" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=General_Color}"/>
+                       Text="{extensions:Text Key=General_Color}"/>
             <TextBlock Grid.Row="5" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Type}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Geometry_Type}"/>
             <TextBlock Grid.Row="6" Grid.Column="4" 
                        Style="{StaticResource TextBlock_SmallFont}" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                       Text="{locl:Text Key=DipolImagePresenter_Geometry_Thickness}"/>
+                       Text="{extensions:Text Key=DipolImagePresenter_Geometry_Thickness}"/>
             <!-- Left data -->
             <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[Median], 
+                        ImageStats.Median, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[Minimum], 
+                        ImageStats.Minimum, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[Maximum], 
+                        ImageStats.Maximum, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[ApertureAvg], 
+                        ImageStats.ApertureAvg, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[Intensity], 
+                        ImageStats.Intensity, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[ApertureSd], 
+                        ImageStats.ApertureSd, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
 
@@ -237,7 +275,8 @@
             <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Center" HorizontalContentAlignment="Center">
                 <TextBox.Text>
-                    <MultiBinding StringFormat="{}{0,6:####0}:{1,-6:####0}" Mode="OneWay">
+                    <MultiBinding StringFormat="{extensions:Text Key=DipolImagePresenter_CenterPixelFormat}"
+                                  Mode="OneWay">
                         <Binding Path="SamplerCenterPosInPix.X" Mode="OneWay"/>
                         <Binding Path="SamplerCenterPosInPix.Y" Mode="OneWay"/>
                     </MultiBinding>
@@ -253,19 +292,19 @@
             <TextBox Grid.Row="4" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[AnnulusAvg], 
+                        ImageStats.AnnulusAvg, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="5" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[SNR], 
+                        ImageStats.Snr, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
             <TextBox Grid.Row="6" Grid.Column="2" Style="{StaticResource TextBoxStyle_SmallFont}" 
                      IsReadOnly="True" TextAlignment="Right"
                      Text="{Binding 
-                        ImageStats[AnnulusSd], 
+                        ImageStats.AnnulusSd, 
                         StringFormat={x:Static 
                             p:Localization.StringFormat_Float_DipolImagePresenter_Statistics}}"/>
 

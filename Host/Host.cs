@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -23,63 +23,171 @@
 //     SOFTWARE.
 
 using System;
-
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using CommandLine;
+using DIPOL_Remote;
 
 namespace Host
 {
-    internal class Host
+    internal static class Host
     {
-        private static readonly object Locker = new object();
-
-        private static void Main(string[] args)
+        [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
+        private sealed class Options
         {
-            Console.WindowWidth = 180;
-            Console.WindowHeight = 60;
+            private static List<(PropertyInfo Property, object Default)> props =
+                typeof(Options).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                               .Where(x => x.CanWrite &&
+                                           (x.GetCustomAttribute<OptionAttribute>()?.Default != null
+                                            || x.GetCustomAttribute<ValueAttribute>()?.Default != null))
+                               .Select(x => (Property: x,
+                                   Default: x.GetCustomAttribute<OptionAttribute>()?.Default ??
+                                            x.GetCustomAttribute<ValueAttribute>()?.Default))
+                               .ToList();
 
-            //Debug();
+            [Value(0, HelpText = @"Service connection string", Required = true)]
+            public string Uri { get; set; }
 
-            using (var host = new DIPOL_Remote.Classes.DipolHost())
+            [Option("console-width", Default = 120, HelpText = @"Width of the console window")]
+            public int ConsoleWidth { get; set; }
+
+            [Option("console-height", Default = 80, HelpText = @"Height of the console window")]
+            public int ConsoleHeight { get; set; }
+
+            [Option('l', "log", Default = false, HelpText = @"Enable logging")]
+            public bool Log { get; set; }
+
+            public static Options MakeDefault()
             {
-                host.Host();
-                host.EventReceived += (sender, message)
-                    =>
-                {
-                    if (!(sender is ANDOR_CS.Classes.DebugCamera))
-                    {
-                        string senderString;
-                        if (sender is ANDOR_CS.Classes.CameraBase cam)
-                            senderString = $"{cam.CameraModel}/{cam.SerialNumber}";
-                        else
-                            senderString = sender.ToString();
+                var opt = new Options();
 
-                        lock (Locker)
-                        {
-                            Console.ForegroundColor = ConsoleColor.Yellow;
-                            Console.Write("[{0,23:yyyy/MM/dd HH-mm-ss.fff}] @", DateTime.Now);
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.Write(" {0, 16}", senderString);
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.WriteLine($": { message}");
-                        }
-                    }
+                foreach (var (property, @default) in props)
+                    property.SetValue(opt, @default);
 
-                };
-
-
-                while (Console.ReadKey().Key != ConsoleKey.Escape)
-                { }
+                return opt;
             }
         }
 
-        private static void Debug()
+        private static TextWriter Output { get; } = Console.Out;
+
+        private static Options HandleArgs(IEnumerable<string> args)
         {
-            var t = System.Diagnostics.Stopwatch.StartNew();
-            using(var cam = new ANDOR_CS.Classes.Camera())
+            if (args is null)
+                return Options.MakeDefault();
+
+            using (var parser = new Parser(settings =>
             {
-                t.Stop();
-                Console.WriteLine(cam.CameraModel + $"\t{t.ElapsedMilliseconds / 1000.0}");
-                Console.ReadKey();
+                settings.AutoHelp = true;
+                settings.AutoVersion = true;
+                settings.CaseInsensitiveEnumValues = true;
+                settings.HelpWriter = Output;
+                settings.IgnoreUnknownArguments = true;
+            }))
+            {
+                var arguments = parser.ParseArguments<Options>(args);
+
+                return arguments.MapResult(x => x, y => Options.MakeDefault());
             }
+        }
+
+        private static string MessageTemplate => $"[{DateTime.Now:yyyy/MM/dd\t HH:mm:ss.fff}] > ";
+
+        private static int Main(string[] args)
+        {
+            System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(@"en-US");
+            System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(@"en-US");
+
+            var options = HandleArgs(args);
+
+            if (options.Uri is null || !Uri.TryCreate(options.Uri, UriKind.RelativeOrAbsolute, out var uri))
+            {
+                Console.ReadKey();
+                return 13;
+            }
+
+            if (options.ConsoleWidth < Console.LargestWindowWidth)
+                Console.WindowWidth = options.ConsoleWidth;
+
+            if (options.ConsoleHeight < Console.LargestWindowHeight)
+                Console.WindowHeight = options.ConsoleHeight;
+
+            using (var host = new DipolHost(uri))
+            {
+
+                if (options.Log)
+                {
+                    host.Opening += (sender, e) => OnHostOpenFired("opening");
+                    host.Opened += (sender, e) => OnHostOpenFired("opened");
+
+                    host.Closing += (sender, e) => OnHostCloseFired("closing");
+                    host.Closed += (sender, e) => OnHostCloseFired("closed");
+
+                    host.Faulted += (sender, e) => OnHostFaultingFired("faulted");
+                    host.UnknownMessageReceived += (sender, e) => OnHostFaultingFired(e.Message.ToString());
+
+                    host.EventReceived += OnServiceMessageFired;
+
+                }
+
+                host.Open();
+                
+//#if !DEBUG
+//                while (Console.ReadLine() != "exit")
+//                {
+//                }
+//#else
+                while (Console.ReadKey().Key is var key 
+                && key != ConsoleKey.Escape
+                && key != ConsoleKey.Q)
+                { }
+//#endif
+            }
+
+            return 0;
+        }
+
+        private static async void OnHostOpenFired(string message)
+        {
+            if(Output is null)
+                return;
+
+            var str = $"{MessageTemplate} Initialization: {message}";
+            await Output.WriteLineAsync(str);
+            await Output.FlushAsync();
+        }
+
+        private static async void OnHostCloseFired(string message)
+        {
+            if (Output is null)
+                return;
+
+            var str = $"{MessageTemplate} Finalization: {message}";
+            await Output.WriteLineAsync(str);
+            await Output.FlushAsync();
+        }
+
+        private static async void OnHostFaultingFired(string message)
+        {
+            if (Output is null)
+                return;
+
+            var str = $"{MessageTemplate} service failing: {message}";
+            await Output.WriteLineAsync(str);
+            await Output.FlushAsync();
+        }
+
+        private static async void OnServiceMessageFired(object sender, string message)
+        {
+            if (Output is null)
+                return;
+
+            var str = $"{MessageTemplate} [{sender}]: {message}";
+            await Output.WriteLineAsync(str);
+            await Output.FlushAsync();
         }
     }
 }

@@ -55,6 +55,9 @@ namespace SettingsManager
         public T Get<T>(in string name)
 			=> !HasKey(name) ? default : _rawObject.GetValue(name).ToObject<T>();
 
+        public T Get<T>(in string name, T fallback)
+            => !HasKey(name) ? fallback : _rawObject.GetValue(name).ToObject<T>();
+
         public T[] GetArray<T>(in string name)
 			=> !HasKey(name) ? new T[] { } : (_rawObject.GetValue(name) as JArray)?.ToObject<T[]>();
 
@@ -70,7 +73,9 @@ namespace SettingsManager
 
             if (HasKey(name))
             {
-                if (Get(name) is T result)
+                //if (Get(name) is T result)
+                //    value = result;
+                if(_rawObject.TryGetValue(name, out var token) && token.Value<T>() is T result)
                     value = result;
 
                 if (Get(name) == null &&

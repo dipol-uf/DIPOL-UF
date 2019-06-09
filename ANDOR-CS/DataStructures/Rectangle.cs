@@ -1,30 +1,46 @@
 ﻿//    This file is part of Dipol-3 Camera Manager.
 
-//    Dipol-3 Camera Manager is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-
-//    Dipol-3 Camera Manager is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//    GNU General Public License for more details.
-
-//    You should have received a copy of the GNU General Public License
-//    along with Dipol-3 Camera Manager.  If not, see<http://www.gnu.org/licenses/>.
-//
-//    Copyright 2017, Ilia Kosenkov, Tuorla Observatory, Finland
+//     MIT License
+//     
+//     Copyright(c) 2018-2019 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
 
 using System;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
+#pragma warning disable 1591
 
 namespace ANDOR_CS.DataStructures
 {
     [DataContract]
     public struct Rectangle
     {
+        public class RectangleUpdater
+        {
+            public int X1 { get; set; }
+            public int Y1 { get; set; }
+            public int X2 { get; set; }
+            public int Y2 { get; set; }
+        }
+
         [ScriptIgnore]
         public int X1 => Start.X;
         [ScriptIgnore]
@@ -58,7 +74,7 @@ namespace ANDOR_CS.DataStructures
         public Rectangle(Point2D start, Point2D end)
         {
             if (start.X > end.X || start.Y > end.Y)
-                throw new ArgumentOutOfRangeException($"{nameof(start)} should point to lower left corner, {nameof(end)} - to upper right. (start: {start} and end: {end})");
+                throw new ArgumentException($"{nameof(start)} should point to lower left corner, {nameof(end)} - to upper right. (start: {start} and end: {end})");
 
             Start = start;
             End = end;
@@ -67,9 +83,11 @@ namespace ANDOR_CS.DataStructures
         public Rectangle(int x1, int y1, int x2, int y2)
         {
             if (x2 < x1)
-                throw new ArgumentOutOfRangeException($"{nameof(x2)} should be greater than or equal to {nameof(x1)} ({x1} <= {x2})");
+                throw new ArgumentOutOfRangeException(nameof(x2),
+                    $"{nameof(x2)} should be greater than or equal to {nameof(x1)} ({x1} <= {x2})");
             if (y2 < y1)
-                throw new ArgumentOutOfRangeException($"{nameof(y2)} should be greater than or equal to {nameof(y1)} ({y1} <= {y2})");
+                throw new ArgumentOutOfRangeException(nameof(y2),
+                    $"{nameof(y2)} should be greater than or equal to {nameof(y1)} ({y1} <= {y2})");
 
             Start = new Point2D(x1, y1);
             End = new Point2D(x2, y2);
@@ -78,10 +96,12 @@ namespace ANDOR_CS.DataStructures
         public Rectangle(Point2D start, int width, int height)
         {
             if (width < 0)
-                throw new ArgumentOutOfRangeException($"{nameof(width)} should be greater than or equal to {0} ({width} >= {0})");
+                throw new ArgumentOutOfRangeException(nameof(width),
+                    $"{nameof(width)} should be greater than or equal to {0} ({width} >= {0})");
 
             if (height < 0)
-                throw new ArgumentOutOfRangeException($"{nameof(height)} should be greater than or equal to {0} ({height} >= {0})");
+                throw new ArgumentOutOfRangeException(nameof(height),
+                    $"{nameof(height)} should be greater than or equal to {0} ({height} >= {0})");
 
             Start = start;
             End = start + new Size(width, height);
@@ -91,6 +111,34 @@ namespace ANDOR_CS.DataStructures
         {
             Start = start;
             End = start - new Point2D(1, 1) +  size;
+        }
+
+        public Rectangle((int X1, int Y1, int X2, int Y2) param)
+            : this(param.X1, param.Y1, param.X2, param.Y2)
+        {
+        }
+
+        public Rectangle CopyWithModifications(Action<RectangleUpdater> context)
+        {
+            var updater = new RectangleUpdater()
+            {
+                X1 = X1,
+                Y1 = Y1,
+                X2 = X2,
+                Y2 = Y2
+            };
+
+            context(updater);
+
+            return new Rectangle(updater.X1, updater.Y1, updater.X2, updater.Y2);
+        }
+
+        public void Deconstruct(out int x1, out int y1, out int x2, out int y2)
+        {
+            x1 = X1;
+            x2 = X2;
+            y1 = Y1;
+            y2 = Y2;
         }
 
         public override string ToString()
@@ -110,6 +158,7 @@ namespace ANDOR_CS.DataStructures
 
             return new Rectangle(coords[0], coords[1], coords[2], coords[3]);
         }
+
     }
 
 }

@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DIPOL_Remote</RootNamespace>
     <AssemblyName>DIPOL-Remote</AssemblyName>
-    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
@@ -41,7 +41,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>latest</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -64,25 +64,28 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\DipolClient.cs" />
-    <Compile Include="Classes\DipolHost.cs" />
-    <Compile Include="Classes\RemoteCamera.cs" />
-    <Compile Include="Classes\RemoteSettings.cs" />
+    <Compile Include="Remote\AsyncResult.cs" />
+    <Compile Include="DipolClient.cs" />
+    <Compile Include="DipolHost.cs" />
+    <Compile Include="RemoteCamera.cs" />
+    <Compile Include="RemoteSettings.cs" />
     <Compile Include="Enums\AcquisitionEventTypeEnum.cs" />
-    <Compile Include="Faults\AndorSDKServiceException.cs" />
-    <Compile Include="Faults\ServiceException.cs" />
-    <Compile Include="Interfaces\IRemoteCallback.cs" />
-    <Compile Include="Interfaces\IRemoteControl.cs" />
-    <Compile Include="Classes\RemoteCallbackHandler.cs" />
-    <Compile Include="Classes\RemoteControl.cs" />
+    <Compile Include="Faults\AndorSdkFault.cs" />
+    <Compile Include="Faults\ServiceFault.cs" />
+    <Compile Include="Faults\TaskCancelledRemotelyFault.cs" />
+    <Compile Include="Callback\IRemoteCallback.cs" />
+    <Compile Include="Remote\IRemoteControl.cs" />
+    <Compile Include="Callback\RemoteCallbackHandler.cs" />
+    <Compile Include="Remote\RemoteCancellationToken.cs" />
+    <Compile Include="Remote\RemoteControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ANDOR-CS\ANDOR-CS.csproj">
@@ -93,13 +96,19 @@
       <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
       <Name>DipolImage</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FITS-CS\FITS-CS.csproj">
+      <Project>{89516f86-17d4-4ed3-89f2-d20df612c7de}</Project>
+      <Name>FITS-CS</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj">
       <Project>{f9a3b5ae-04c0-43cc-a0b7-7e03924b6698}</Project>
       <Name>SettingsManager</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.1</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

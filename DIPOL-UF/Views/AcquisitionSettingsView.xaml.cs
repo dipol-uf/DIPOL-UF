@@ -19,10 +19,9 @@ namespace DIPOL_UF.Views
     /// </summary>
     public partial class AcquisitionSettingsView : Window
     {
-        public AcquisitionSettingsView(object context)
+        public AcquisitionSettingsView()
         {
             InitializeComponent();
-            DataContext = context;
         }
     }
 }

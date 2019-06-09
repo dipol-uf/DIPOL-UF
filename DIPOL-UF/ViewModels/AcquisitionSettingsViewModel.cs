@@ -1,850 +1,1293 @@
-﻿using System;
+﻿//    This file is part of Dipol-3 Camera Manager.
+
+//     MIT License
+//     
+//     Copyright(c) 2018-2019 Ilia Kosenkov
+//     
+//     Permission is hereby granted, free of charge, to any person obtaining a copy
+//     of this software and associated documentation files (the "Software"), to deal
+//     in the Software without restriction, including without limitation the rights
+//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//     copies of the Software, and to permit persons to whom the Software is
+//     furnished to do so, subject to the following conditions:
+//     
+//     The above copyright notice and this permission notice shall be included in all
+//     copies or substantial portions of the Software.
+//     
+//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
+//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//     SOFTWARE.
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
-using System.Text.RegularExpressions;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.IO;
+using System.Linq.Expressions;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Windows.Input;
 using ANDOR_CS.Classes;
-using ANDOR_CS.Enums;
 using ANDOR_CS.DataStructures;
+using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
+using DynamicData.Binding;
+using MathNet.Numerics;
+using Microsoft.Xaml.Behaviors.Core;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
-using DIPOL_UF.Commands;
+using static DIPOL_UF.Validators.Validate;
+using EnumConverter = ANDOR_CS.Classes.EnumConverter;
+using MessageBox = System.Windows.MessageBox;
+using Window = System.Windows.Window;
+
+// ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace DIPOL_UF.ViewModels
 {
-    internal class AcquisitionSettingsViewModel : ViewModel<SettingsBase>
+    internal sealed class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<SettingsBase>>
     {
-        private static readonly Regex PropNameTrimmer = new Regex("(((Value)|(Index))+(Text)?)|(_.{2})");
-        private static readonly List<(string, PropertyInfo)> PropertyList =
-            typeof(AcquisitionSettingsViewModel)
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(pi => pi.CanRead && pi.CanWrite)
-            .Select(pi => (PropNameTrimmer.Replace(pi.Name, ""), pi))
-            .ToList();
+        private static List<(PropertyInfo Property, string EquivalentName)> InteractiveSettings { get; }
+            = typeof(AcquisitionSettingsViewModel)
+              .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+              .Where(x => !(x.GetCustomAttribute<ReactiveAttribute>() is null))
+              .Select(x => (Property: x,
+                  EquivalentName: x.GetCustomAttribute<UnderlyingCameraSettingsAttribute>()?.AndorName
+                                   .ToLowerInvariant()))
+              .Where(x => !(x.EquivalentName is null))
+              .ToList();
 
-        public DelegateCommand SubmitCommand { get; private set; }
 
-        public DelegateCommand CancelCommand { get; private set; }
-        public DelegateCommand SaveCommand { get; private set; }
-
-        public DelegateCommand LoadCommand { get; private set; }
-        public (float ExposureTime, float AccumulationCycleTime, 
-            float KineticCycleTime, int BufferSize) EstimatedTiming
+        public class SettingsAvailability : ReactiveObjectEx
         {
-            get;
-            private set;
+            public bool VsSpeed { [ObservableAsProperty] get; }
+            public bool VsAmplitude { [ObservableAsProperty] get; }
+            public bool AdcBitDepth { [ObservableAsProperty] get; }
+            public bool Amplifier { [ObservableAsProperty] get; }
+            public bool HsSpeed { [ObservableAsProperty] get; }
+            public bool PreAmpGain { [ObservableAsProperty] get; }
+            public bool AcquisitionMode { [ObservableAsProperty] get; }
+            public bool ExposureTimeText { [ObservableAsProperty] get; }
+            public bool FrameTransfer { [ObservableAsProperty] get; }
+            public bool ReadMode { [ObservableAsProperty] get; }
+            public bool TriggerMode { [ObservableAsProperty] get; }
+            public bool EmCcdGainText { [ObservableAsProperty] get; }
+            public bool ImageArea { [ObservableAsProperty] get; }
+            public bool AccumulateCycleTime { [ObservableAsProperty] get; }
+            public bool AccumulateCycleNumber { [ObservableAsProperty] get; }
+            public bool KineticCycleTime { [ObservableAsProperty] get; }
+            public bool KineticCycleNumber { [ObservableAsProperty] get; }
+            public bool KineticCycleBlock { [ObservableAsProperty] get; }
         }
 
-        /// <summary>
-        /// Reference to Camera instance.
-        /// </summary>
-        public CameraBase Camera { get; }
+
+        private string[] Group1Names { get; }
+        private string[] Group2Names { get; }
+        private string[] Group3Names { get; }
+
+        public event EventHandler FileDialogRequested;
+
+        public SettingsAvailability IsAvailable { get; }
+            = new SettingsAvailability();
+        public CameraBase Camera => Model.Object.Camera;
+
+        public ICommand CancelCommand { get; private set; }
+        public ReactiveCommand<Window, Window> SubmitCommand { get; private set; }
+        public ReactiveCommand<Window, Unit> ViewLoadedCommand { get; private set; }
+        public ReactiveCommand<Unit, FileDialogDescriptor> SaveButtonCommand { get; private set; }
+        public ReactiveCommand<Unit, FileDialogDescriptor> LoadButtonCommand { get; private set; }
+        public ReactiveCommand<string, Unit> SaveActionCommand { get; private set; }
+        public ReactiveCommand<string, Unit> LoadActionCommand { get; private set; }
 
         /// <summary>
         /// Collection of supported by a given Camera settings.
         /// </summary>
-        public Dictionary<string, bool> SupportedSettings { get; private set; }
-
+        public HashSet<string> SupportedSettings { get; }
         /// <summary>
         /// Collection of settings that can be set now.
         /// </summary>
-        public ObservableConcurrentDictionary<string, bool> AllowedSettings
+        public HashSet<string> AllowedSettings
         {
             get;
-            set;
         }
 
         /// <summary>
         /// Supported acquisition modes.
         /// </summary>
         public AcquisitionMode[] AllowedAcquisitionModes =>
-           Helper.EnumFlagsToArray(Camera.Capabilities.AcquisitionModes)
-            .Where(item => item != AcquisitionMode.FrameTransfer)
-            .Where(ANDOR_CS.Classes.EnumConverter.IsAcquisitionModeSupported)
+           Helper.EnumFlagsToArray<AcquisitionMode>(Model.Object.Camera.Capabilities.AcquisitionModes)
+            .Where(item => item != ANDOR_CS.Enums.AcquisitionMode.FrameTransfer)
+            .Where(EnumConverter.IsAcquisitionModeSupported)
             .ToArray();
-
-        public ReadMode[] AllowedReadoutModes =>
-            Helper.EnumFlagsToArray(Camera.Capabilities.ReadModes)
-            .Where(ANDOR_CS.Classes.EnumConverter.IsReadModeSupported)
-            .ToArray();
-
         public TriggerMode[] AllowedTriggerModes =>
-            Helper.EnumFlagsToArray(Camera.Capabilities.TriggerModes)
-            .Where(ANDOR_CS.Classes.EnumConverter.IsTriggerModeSupported)
+            Helper.EnumFlagsToArray<TriggerMode>(Model.Object.Camera.Capabilities.TriggerModes)
+            .Where(EnumConverter.IsTriggerModeSupported)
             .ToArray();
+        public IObservableCollection<(int Index, float Speed)> AvailableHsSpeeds { get;}
+            = new ObservableCollectionExtended<(int Index, float Speed)>();
+        public IObservableCollection<(int Index, string Name)> AvailablePreAmpGains { get; }
+            = new ObservableCollectionExtended<(int Index, string Name)>();
+        public IObservableCollection<ReadMode> AvailableReadModes { get; }
+        = new ObservableCollectionExtended<ReadMode>();
 
-        public (int Index, float Speed)[] AvailableHSSpeeds =>
-            (ADConverterIndex < 0 || OutputAmplifierIndex < 0)
-            ? null
-            : model
-            .GetAvailableHSSpeeds(ADConverterIndex, OutputAmplifierIndex)
-            .ToArray();
-        public (int Index, string Name)[] AvailablePreAmpGains =>
-            (ADConverterIndex < 0 || OutputAmplifierIndex < 0 || HSSpeedIndex < 0)
-            ? null
-            : model
-            .GetAvailablePreAmpGain(ADConverterIndex,
-                OutputAmplifierIndex, HSSpeedIndex)
-            .ToArray();
+        public string DetectorSize =>
+            string.Format(Properties.Localization.AcquisitionSettings_DetectorSize_Format,
+                Camera.Properties.DetectorSize.Horizontal,
+                Camera.Properties.DetectorSize.Vertical);
 
-        public int[] AvailableEMCCDGains =>
-            Enumerable.Range(Camera.Properties.EMCCDGainRange.Low, Camera.Properties.EMCCDGainRange.High)
-            .ToArray();
+        public bool Group1ContainsErrors { [ObservableAsProperty] get; }
+        public bool Group2ContainsErrors { [ObservableAsProperty] get; }
+        public bool Group3ContainsErrors { [ObservableAsProperty] get; }
 
-        /// <summary>
-        /// Index of VS Speed.
-        /// </summary>
-        public int VSSpeedIndex
-        {
-            get => model.VSSpeed?.Index ?? -1;
-            set
-            {
-                try
-                {
-                    model.SetVSSpeed(value < 0 ? 0 : value);
-                    ValidateProperty(null);
-                    //RaisePropertyChanged();
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-
-            }
-        }
-        /// <summary>
-        /// VS Amplitude.
-        /// </summary>
-        public VSAmplitude? VSAmplitudeValue
-        {
-            get => model.VSAmplitude;
-            set
-            {
-                try
-                {
-                    model.SetVSAmplitude(value ?? VSAmplitude.Normal);
-                    ValidateProperty(null);
-                    //RaisePropertyChanged();
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-            }
-        }
-        /// <summary>
-        /// Analog-Digital COnverter index.
-        /// </summary>
-        public int ADConverterIndex
-        {
-            get => model.ADConverter?.Index ?? -1;
-            set
-            {
-                try
-                {
-                    model.SetADConverter(value < 0 ? 0 : value);
-                    ValidateProperty(null);
-                    //RaisePropertyChanged();
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-            }
-        }
-        /// <summary>
-        /// Output OutputAmplifier index.
-        /// </summary>
-        public int OutputAmplifierIndex
-        {
-            get => model.OutputAmplifier?.Index ?? -1;
-            set
-            {
-                try
-                {
-                    model.SetOutputAmplifier(Camera.Properties.OutputAmplifiers[value < 0 ? 0 : value].OutputAmplifier);
-                    ValidateProperty(null);
-                    //RaisePropertyChanged();
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-            }
-        }
-        /// <summary>
-        /// HS Speed.
-        /// </summary>
-        public int HSSpeedIndex
-        {
-            get => model.HSSpeed?.Index ?? -1;
-            set
-            {
-
-                try
-                {
-                    model.SetHSSpeed(value < 0 ? 0 : value);
-                    ValidateProperty(null);
-                    //RaisePropertyChanged();
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-
-            }
-        }
-        /// <summary>
-        /// Index of Pre OutputAmplifier Gain.
-        /// </summary>
-        public int PreAmpGainIndex
-        {
-            get => model.PreAmpGain?.Index ?? -1;
-            set
-            {
-                try
-                {
-                    model.SetPreAmpGain(value < 0 ? 0 : value);
-                    ValidateProperty(null);
-                    //RaisePropertyChanged();
-
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-            }
-        }
-        /// <summary>
-        /// Acquisition mode value.
-        /// </summary>
-        public AcquisitionMode? AcquisitionModeValue
-        {
-            get
-            {
-                if (model.AcquisitionMode?.HasFlag(AcquisitionMode.FrameTransfer) ?? false)
-                    return model.AcquisitionMode ^ AcquisitionMode.FrameTransfer;
-                else
-                    return model.AcquisitionMode;
-            }
-            set
-            {
-                try
-                {
-                    model.SetAcquisitionMode(value ?? AcquisitionMode.SingleScan);
-                    ValidateProperty(null);
-                    //RaisePropertyChanged();
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-            }
-        }
-        /// <summary>
-        /// Frame transfer flag; applied to acquisition mode
-        /// </summary>
-        public bool FrameTransferValue
-        {
-            get => model.AcquisitionMode?.HasFlag(AcquisitionMode.FrameTransfer) ?? false;
-            set
-            {
-                try
-                {
-                    if (value)
-                    {
-                        if (!model.AcquisitionMode?.HasFlag(AcquisitionMode.FrameTransfer) ?? false)
-                        {
-                            model.SetAcquisitionMode((model.AcquisitionMode | AcquisitionMode.FrameTransfer) ?? AcquisitionMode.FrameTransfer);
-                            ValidateProperty(null);
-                            //RaisePropertyChanged();
-                        }
-                    }
-                    else
-                    {
-                        if (model.AcquisitionMode?.HasFlag(AcquisitionMode.FrameTransfer) ?? false)
-                        {
-                            model.SetAcquisitionMode((model.AcquisitionMode ^ AcquisitionMode.FrameTransfer) ?? AcquisitionMode.SingleScan);
-                            ValidateProperty(null);
-                            //RaisePropertyChanged();
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-
-            }
-        }
-        /// <summary>
-        /// Read mode value
-        /// </summary>
-        public ReadMode? ReadoutModeValue
-        {
-            get => model.ReadoutMode;
-            set
-            {
-                try
-                {
-                    model.SetReadoutMode(value ?? ReadMode.FullImage);
-                    ValidateProperty(null);
-                    //RaisePropertyChanged();
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-            }
-        }
-        /// <summary>
-        /// Trigger mode value
-        /// </summary>
-        public TriggerMode? TriggerModeValue
-        {
-            get => model.TriggerMode;
-            set
-            {
-                try
-                {
-                    model.SetTriggerMode(value ?? TriggerMode.Internal);
-                    ValidateProperty(null);
-                    //RaisePropertyChanged();
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-            }
-        }
-        /// <summary>
-        /// Exposure time; text field
-        /// </summary>
-        public string ExposureTimeValueText
-        {
-            get => model.ExposureTime?.ToString();
-            set
-            {
-                try
-                {
-                    if (string.IsNullOrWhiteSpace(value))
-                    {
-                        model.SetExposureTime(0f);
-                        ValidateProperty(null);
-                        //RaisePropertyChanged();
-                    }
-                    else if (float.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out float flVal))
-                    {
-                        model.SetExposureTime(flVal);
-                        ValidateProperty(null);
-                        //RaisePropertyChanged();
-                    }
-                    else
-                        ValidateProperty(new ArgumentException("Provided value is not a number."));
-
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-            }
-
-        }
-        /// <summary>
-        /// EM CCD gain; text field
-        /// </summary>
-        public string EMCCDGainValueText
-        {
-            get => model.EMCCDGain?.ToString();
-            set
-            {
-                try
-                {
-                    if (string.IsNullOrWhiteSpace(value))
-                    {
-                        model.SetEMCCDGain(Camera.Properties.EMCCDGainRange.Low);
-                        ValidateProperty();
-                        //RaisePropertyChanged();
-                    }
-                    else if (int.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out int intVal))
-                    {
-                        model.SetEMCCDGain(intVal);
-                        ValidateProperty();
-                        //RaisePropertyChanged();
-                    }
-                    else
-                        ValidateProperty(new ArgumentException("Provided value is not a number."));
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-                finally
-                {
-                    //RaisePropertyChanged();
-                }
-            }
-        }
-
-        public string ImageArea_X1
-        {
-            get => model.ImageArea?.X1.ToString();
-            set {
-                try
-                {
-                    if (int.TryParse(value,
-                        System.Globalization.NumberStyles.Any,
-                        System.Globalization.NumberFormatInfo.InvariantInfo, out var intVal))
-                    {
-                        var rect = new Rectangle(
-                            intVal,
-                            model.ImageArea?.Y1 ?? 1,
-                            model.ImageArea?.X2 > intVal ? model.ImageArea.Value.X2 : intVal + 1,
-                            model.ImageArea?.Y2 ?? 2);
-                        model.SetImageArea(rect);
-                        ValidateProperty(null);
-                    }
-                    else
-                        ValidateProperty(new ArgumentException("Provided value is not a number"));
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-
-            }
-        }
-        public string ImageArea_X2
-        {
-            get => model.ImageArea?.X2.ToString();
-            set
-            {
-                try
-                {
-                    if (int.TryParse(value,
-                        System.Globalization.NumberStyles.Any,
-                        System.Globalization.NumberFormatInfo.InvariantInfo, out var intVal))
-                    {
-                        var rect = new Rectangle(
-                            model.ImageArea?.X1 < intVal ? model.ImageArea.Value.X1 : intVal - 1,
-                            model.ImageArea?.Y1 ?? 1,
-                            intVal,
-                            model.ImageArea?.Y2 ?? 2);
-                        model.SetImageArea(rect);
-                        ValidateProperty(null);
-                    }
-                    else
-                        ValidateProperty(new ArgumentException("Provided value is not a number"));
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-
-            }
-        }
-        public string ImageArea_Y1
-        {
-            get => model.ImageArea?.Y1.ToString();
-            set
-            {
-                try
-                {
-                    if (int.TryParse(value,
-                        System.Globalization.NumberStyles.Any,
-                        System.Globalization.NumberFormatInfo.InvariantInfo, out var intVal))
-                    {
-                        var rect = new Rectangle(
-                            model.ImageArea?.X1 ?? 1,
-                            intVal,
-                            model.ImageArea?.X2 ?? 2,
-                            model.ImageArea?.Y2 > intVal ? model.ImageArea.Value.Y2 : intVal + 1);
-                        model.SetImageArea(rect);
-                        ValidateProperty(null);
-                    }
-                    else
-                        ValidateProperty(new ArgumentException("Provided value is not a number"));
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-
-            }
-        }
-        public string ImageArea_Y2
-        {
-            get => model.ImageArea?.Y2.ToString();
-            set
-            {
-                try
-                {
-                    if (int.TryParse(value,
-                        System.Globalization.NumberStyles.Any,
-                        System.Globalization.NumberFormatInfo.InvariantInfo, out var intVal))
-                    {
-                        var rect = new Rectangle(
-                            model.ImageArea?.X1 ?? 1,
-                            model.ImageArea?.Y1 < intVal ? model.ImageArea.Value.Y1 : intVal - 1,
-                            model.ImageArea?.X2 ?? 2,
-                            intVal);
-                        model.SetImageArea(rect);
-                        ValidateProperty(null);
-                    }
-                    else
-                        ValidateProperty(new ArgumentException("Provided value is not a number"));
-                }
-                catch (Exception e)
-                {
-                    ValidateProperty(e);
-                }
-
-            }
-        }
-
-        public AcquisitionSettingsViewModel(SettingsBase model, CameraBase camera)
+        public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model)
             : base(model)
         {
-            this.model = model;
-            this.Camera = camera;
+            // TODO : Remove logging
+
+            //Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+            //              x => Model.Object.PropertyChanged += x,
+            //              x => Model.Object.PropertyChanged -= x)
+            //          .Select(x =>
+            //          {
+            //              var name = x.EventArgs.PropertyName;
+            //              var val = x.Sender.GetType().GetProperty(name)?.GetValue(x.Sender);
+            //              return $"{name}\t{val?.ToString()}";
+            //          });
+                      //.LogObservable("MODEL", Subscriptions);
+
+            PropertyChanged += (sender, e) =>
+            {
+                if (e.PropertyName != nameof(HasErrors))
+                    Helper.WriteLog(
+                        $"\tVIEW\t{e.PropertyName}\t{typeof(AcquisitionSettingsViewModel).GetProperty(e.PropertyName)?.GetValue(this)}");
+            };
+
+            AvailableReadModes.CollectionChanged += (sender, e) =>
+            {
+                Helper.WriteLog($"\tREADMODES: {e.Action} \t {e.NewItems?.Count} \t {AvailableReadModes.Count}");
+            };
+            AvailableHsSpeeds.CollectionChanged += (sender, e) =>
+            {
+                Helper.WriteLog($"\tHSSPEEDS: {e.Action} \t {e.NewItems?.Count} \t {AvailableHsSpeeds.Count}");
+            };
+            AvailablePreAmpGains.CollectionChanged += (sender, e) =>
+            {
+                Helper.WriteLog($"\tPREAMPS: {e.Action} \t {e.NewItems?.Count} \t {AvailablePreAmpGains.Count}");
+            };
 
 
-            CheckSupportedFeatures();
-            InitializeAllowedSettings();
+            SupportedSettings = Model.Object.SupportedSettings();
+            AllowedSettings = Model.Object.AllowedSettings();
+
+            Group1Names = new[]
+            {
+                nameof(VsSpeed),
+                nameof(VsAmplitude),
+                nameof(AdcBitDepth),
+                nameof(Amplifier),
+                nameof(HsSpeed),
+                nameof(PreAmpGain),
+                nameof(AcquisitionMode),
+                nameof(ExposureTimeText),
+                nameof(FrameTransfer),
+                nameof(ReadMode),
+                nameof(TriggerMode),
+                nameof(EmCcdGainText)
+            };
+
+            Group2Names = new[]
+            {
+                nameof(ImageArea_X1),
+                nameof(ImageArea_X2),
+                nameof(ImageArea_Y1),
+                nameof(ImageArea_Y2)
+            };
+
+            Group3Names = new[]
+            {
+                nameof(AccumulateCycleTime),
+                nameof(AccumulateCycleNumber),
+                nameof(KineticCycleTime),
+                nameof(KineticCycleNumber)
+            };
+
+
+
+            PreloadSettings();
+
             InitializeCommands();
 
+            WatchItemSources();
+            HookObservables();
+            HookValidators();
         }
 
-        private void CheckSupportedFeatures()
+        private void PreloadSettings()
         {
-            SupportedSettings = new Dictionary<string, bool>()
+            if (Model.Object?.ADConverter.HasValue == true
+                && Model.Object.OutputAmplifier.HasValue)
             {
-                { nameof(model.VSSpeed), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalReadoutSpeed)},
-                { nameof(model.VSAmplitude), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.VerticalClockVoltage) },
-                { nameof(model.ADConverter), true },
-                { nameof(model.OutputAmplifier), true },
-                { nameof(model.HSSpeed), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.HorizontalReadoutSpeed) },
-                { nameof(model.PreAmpGain), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.PreAmpGain) },
-                { nameof(model.AcquisitionMode), true },
-                { nameof(FrameTransferValue), true},
-                { nameof(model.ReadoutMode), true },
-                { nameof(model.TriggerMode), true },
-                { nameof(model.ExposureTime), true },
-                { nameof(model.EMCCDGain), Camera.Capabilities.SetFunctions.HasFlag(SetFunction.EMCCDGain) },
-                { nameof(model.ImageArea), true }
-            };
+                AvailableHsSpeeds.Load(Model.Object.GetAvailableHSSpeeds(
+                    Model.Object.ADConverter.Value.Index,
+                    Model.Object.OutputAmplifier.Value.Index));
+            }
+
+            if (Model.Object?.ADConverter.HasValue == true
+                && Model.Object.OutputAmplifier.HasValue
+                && Model.Object.HSSpeed.HasValue)
+            {
+                AvailablePreAmpGains.Load(Model.Object.GetAvailablePreAmpGain(
+                    Model.Object.ADConverter.Value.Index,
+                    Model.Object.OutputAmplifier.Value.Index,
+                    Model.Object.HSSpeed.Value.Index));
+            }
+
+            if (Model.Object?.AcquisitionMode.HasValue == true)
+            {
+                var isFmt = Model.Object.AcquisitionMode.Value.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer);
+                AvailableReadModes.Load(
+                    Helper.EnumFlagsToArray<ReadMode>(isFmt
+                        ? Camera.Capabilities.FtReadModes
+                        : Camera.Capabilities.ReadModes).Where(EnumConverter.IsReadModeSupported));
+            }
+
+            if (Model.Object?.OutputAmplifier.HasValue == true
+                && Model.Object.OutputAmplifier.Value.OutputAmplifier == OutputAmplification.ElectronMultiplication)
+            {
+
+                var (low, high) = Model.Object.GetEmGainRange();
+                AllowedGain = string.Format(Properties.Localization.AcquisitionSetttings_AvailableGainFormat,
+                    low, high);
+            }
+        }
+        private void HookObservables()
+        {
+            AttachAccessors();
+            WatchAvailableSettings();
+
+            this.WhenAnyPropertyChanged(nameof(Amplifier))
+                .Select(x => x.Amplifier)
+                .DistinctUntilChanged()
+                .Subscribe(_ => EmCcdGainText = null)
+                .DisposeWith(Subscriptions);
+
+            IsAvailable.WhenPropertyChanged(x => x.KineticCycleTime)
+                       .Select(x => x.Value)
+                       .CombineLatest(
+                            IsAvailable.WhenPropertyChanged(y => y.KineticCycleNumber)
+                                       .Select(y => y.Value),
+                           (x, y) => x || y)
+                       .ToPropertyEx(IsAvailable, x => x.KineticCycleBlock)
+                       .DisposeWith(Subscriptions);
+
         }
 
-        private void InitializeAllowedSettings()
+        private void AttachAccessors()
         {
-            AllowedSettings = new ObservableConcurrentDictionary<string, bool>(
-                new KeyValuePair<string, bool>[]
-                {
-                    new KeyValuePair<string, bool>(nameof(model.VSSpeed), true),
-                    new KeyValuePair<string, bool>(nameof(model.VSAmplitude), true),
-                    new KeyValuePair<string, bool>(nameof(model.ADConverter), true),
-                    new KeyValuePair<string, bool>(nameof(model.OutputAmplifier), true),
-                    new KeyValuePair<string, bool>(nameof(model.HSSpeed),
-                        ADConverterIndex >= 0
-                        && OutputAmplifierIndex >= 0),
-                    new KeyValuePair<string, bool>(nameof(model.PreAmpGain),
-                        ADConverterIndex >= 0
-                        && OutputAmplifierIndex >= 0
-                        && HSSpeedIndex >= 0),
-                    new KeyValuePair<string, bool>(nameof(model.AcquisitionMode), true),
-                    new KeyValuePair<string, bool>(nameof(FrameTransferValue), false),
-                    new KeyValuePair<string, bool>(nameof(model.ReadoutMode), true),
-                    new KeyValuePair<string, bool>(nameof(model.TriggerMode), true),
-                    new KeyValuePair<string, bool>(nameof(model.ExposureTime), true),
-                    new KeyValuePair<string, bool>(nameof(model.EMCCDGain),
-                        (OutputAmplifierIndex >= 0)
-                        && Camera.Properties.OutputAmplifiers[OutputAmplifierIndex].OutputAmplifier == OutputAmplification.Conventional),
-                    new KeyValuePair<string, bool>(nameof(model.ImageArea), true)   
-                }
-                );
+            AttachGetters();
+            AttachSetters();
         }
+
+        private void AttachSetters()
+        {
+            void CreateSetter<TSrc, TTarget>(
+                Expression<Func<AcquisitionSettingsViewModel, TSrc>> sourceAccessor,
+                Func<TSrc, bool> condition,
+                Func<TSrc, TTarget> selector,
+                Action<TTarget> setter)
+            {
+                var name = (sourceAccessor.Body as MemberExpression)?.Member.Name
+                           ?? throw new ArgumentException(
+                               Properties.Localization.General_ShouldNotHappen,
+                               nameof(sourceAccessor));
+
+                this.WhenPropertyChanged(sourceAccessor)
+                    .Where(x => condition(x.Value))
+                    .Select(x => DoesNotThrow(setter, selector(x.Value)))
+                    .ObserveOnUi()
+                    .Subscribe(x => UpdateErrors(name, nameof(DoesNotThrow), x))
+                    .DisposeWith(Subscriptions);
+            }
+
+            void CreateStringToIntSetter(
+                Expression<Func<AcquisitionSettingsViewModel, string>> sourceAccessor,
+                Action<int> setter,
+                Expression<Func<SettingsAvailability, bool>> availability)
+            {
+                var name = (sourceAccessor.Body as MemberExpression)?.Member.Name
+                           ?? throw new ArgumentException(
+                               Properties.Localization.General_ShouldNotHappen,
+                               nameof(sourceAccessor));
+
+                var srcGetter = sourceAccessor.Compile();
+                var avGetter = availability.Compile();
+
+                this.WhenPropertyChanged(sourceAccessor).Select(_ => Unit.Default)
+                    .Merge(
+                        IsAvailable.WhenPropertyChanged(availability).Select(_ => Unit.Default))
+                    .Subscribe(x =>
+                    {
+                        string test1 = null;
+                        string test2 = null;
+                        if (avGetter(IsAvailable))
+                        {
+                            test1 = CanBeParsed(srcGetter(this), out int result);
+
+                            if (string.IsNullOrEmpty(test1))
+                                test2 = DoesNotThrow(setter, result);
+                        }
+
+                        UpdateErrors(name, nameof(CanBeParsed), test1);
+                        UpdateErrors(name, nameof(DoesNotThrow), test2);
+
+                    }).DisposeWith(Subscriptions);
+            }
+
+            void CreateStringToFloatSetter(
+                Expression<Func<AcquisitionSettingsViewModel, string>> sourceAccessor,
+                Action<float> setter,
+                Expression<Func<SettingsAvailability, bool>> availability)
+            {
+                var name = (sourceAccessor.Body as MemberExpression)?.Member.Name
+                           ?? throw new ArgumentException(
+                               Properties.Localization.General_ShouldNotHappen,
+                               nameof(sourceAccessor));
+
+                var srcGetter = sourceAccessor.Compile();
+                var avGetter = availability.Compile();
+
+                this.WhenPropertyChanged(sourceAccessor).Select(_ => Unit.Default)
+                    .Merge(
+                        IsAvailable.WhenPropertyChanged(availability).Select(_ => Unit.Default))
+                    .Subscribe(x =>
+                    {
+                        string test1 = null;
+                        string test2 = null;
+                        if (avGetter(IsAvailable))
+                        {
+                            test1 = CanBeParsed(srcGetter(this), out float result);
+
+                            if (string.IsNullOrEmpty(test1))
+                                test2 = DoesNotThrow(setter, result);
+                        }
+
+                            BatchUpdateErrors(
+                                (name, nameof(CanBeParsed), test1),
+                                (name, nameof(DoesNotThrow), test2));
+                    }).DisposeWith(Subscriptions);
+            }
+
+            // ReSharper disable PossibleInvalidOperationException
+            CreateSetter(x => x.VsSpeed, y => y >= 0, z => z, Model.Object.SetVSSpeed);
+            CreateSetter(x => x.VsAmplitude, y => y.HasValue, z => z.Value, Model.Object.SetVSAmplitude);
+            CreateStringToIntSetter(x => x.EmCcdGainText, Model.Object.SetEmCcdGain, y => y.EmCcdGainText);
+            CreateSetter(x => x.PreAmpGain, y => y >= 0 && y < AvailablePreAmpGains.Count,
+                z => z, Model.Object.SetPreAmpGain);
+            CreateSetter(x => x.HsSpeed, y => y >= 0 && y < AvailableHsSpeeds.Count,
+                z => z, Model.Object.SetHSSpeed);
+            CreateSetter(x => x.AdcBitDepth, y => y >= 0, z => z, Model.Object.SetADConverter);
+            CreateSetter(x => x.Amplifier, y => y.HasValue, z => z.Value, Model.Object.SetOutputAmplifier);
+            CreateSetter(x => x.TriggerMode, y => y.HasValue, z => z.Value, Model.Object.SetTriggerMode);
+            CreateSetter(x => x.ReadMode, y => y.HasValue, z => z.Value, Model.Object.SetReadoutMode);
+
+            CreateStringToFloatSetter(x => x.ExposureTimeText, Model.Object.SetExposureTime, 
+                y => y.ExposureTimeText);
+
+            this.NotifyWhenAnyPropertyChanged(
+                    nameof(ImageArea_X1), nameof(ImageArea_X2),
+                    nameof(ImageArea_Y1), nameof(ImageArea_Y2))
+                .Merge(IsAvailable.NotifyWhenAnyPropertyChanged(nameof(IsAvailable.ImageArea)))
+                .Subscribe(_ =>
+                {
+                    var firstTest = new string[] {null, null, null, null};
+                    string secondTest = null;
+
+                    if (IsAvailable.ImageArea)
+                    {
+                        firstTest[0] = CanBeParsed(ImageArea_X1, out int x1);
+                        firstTest[1] = CanBeParsed(ImageArea_Y1, out int y1);
+                        firstTest[2] = CanBeParsed(ImageArea_X2, out int x2);
+                        firstTest[3] = CanBeParsed(ImageArea_Y2, out int y2);
+
+                        if (firstTest.All(y => y is null)
+                            && (secondTest =
+                                DoesNotThrow(x => new Rectangle(x), (x1, y1, x2, y2), out var rect)) is null)
+                            secondTest = DoesNotThrow(Model.Object.SetImageArea, rect);
+                    }
+
+                    BatchUpdateErrors(
+                        (nameof(ImageArea_X1), nameof(CanBeParsed), firstTest[0]),
+                        (nameof(ImageArea_Y1), nameof(CanBeParsed), firstTest[1]),
+                        (nameof(ImageArea_X2), nameof(CanBeParsed), firstTest[2]),
+                        (nameof(ImageArea_Y2), nameof(CanBeParsed), firstTest[3]),
+                        (nameof(ImageArea_X1), nameof(DoesNotThrow), secondTest),
+                        (nameof(ImageArea_Y1), nameof(DoesNotThrow), secondTest),
+                        (nameof(ImageArea_X2), nameof(DoesNotThrow), secondTest),
+                        (nameof(ImageArea_Y2), nameof(DoesNotThrow), secondTest));
+
+                })
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
+                .Where(x => x.AcquisitionMode.HasValue)
+                .Select(x => x.FrameTransfer
+                    ? x.AcquisitionMode.Value | ANDOR_CS.Enums.AcquisitionMode.FrameTransfer
+                    : x.AcquisitionMode.Value)
+                .Select(x => DoesNotThrow(Model.Object.SetAcquisitionMode, x))
+                .ObserveOnUi()
+                .Subscribe(x =>
+                {
+                    if (IsAvailable.AcquisitionMode)
+                        UpdateErrors(nameof(AcquisitionMode), nameof(DoesNotThrow), x);
+                    if (IsAvailable.FrameTransfer)
+                        UpdateErrors(nameof(FrameTransfer), nameof(DoesNotThrow), x);
+                })
+                .DisposeWith(Subscriptions);
+
+            this.NotifyWhenAnyPropertyChanged(
+                    nameof(AccumulateCycleTime),
+                    nameof(AccumulateCycleNumber))
+                .Merge(IsAvailable.NotifyWhenAnyPropertyChanged(
+                    nameof(IsAvailable.AccumulateCycleTime),
+                    nameof(IsAvailable.AccumulateCycleNumber)))
+                .Subscribe(_ =>
+                {
+                    if (!IsAvailable.AccumulateCycleTime && !IsAvailable.AccumulateCycleNumber)
+                        BatchUpdateErrors(
+                            (nameof(AccumulateCycleTime), nameof(CanBeParsed), null),
+                            (nameof(AccumulateCycleNumber), nameof(CanBeParsed), null),
+                            (nameof(AccumulateCycleTime), nameof(DoesNotThrow), null),
+                            (nameof(AccumulateCycleNumber), nameof(DoesNotThrow), null));
+                    else if (IsAvailable.AccumulateCycleTime && IsAvailable.AccumulateCycleNumber)
+                    {
+                        string secondTest = default;
+
+                        var firstTestTime = CanBeParsed(AccumulateCycleTime, out float time);
+                        var firstTestNumber = CanBeParsed(AccumulateCycleNumber, out int frames);
+
+                        if (firstTestTime is null && firstTestNumber is null
+                                                  && Model.Object.AccumulateCycle != (frames, time))
+                            secondTest = DoesNotThrow(Model.Object.SetAccumulateCycle, frames, time);
+
+                        BatchUpdateErrors(
+                            (nameof(AccumulateCycleTime), nameof(CanBeParsed), firstTestTime),
+                            (nameof(AccumulateCycleNumber), nameof(CanBeParsed), firstTestNumber),
+                            (nameof(AccumulateCycleTime), nameof(DoesNotThrow), secondTest),
+                            (nameof(AccumulateCycleNumber), nameof(DoesNotThrow), secondTest));
+                    }
+                    else if (IsAvailable.AccumulateCycleTime)
+                    {
+                        string secondTest = default;
+
+                        var firstTest = CanBeParsed(AccumulateCycleTime, out float time);
+
+                        if (firstTest is null
+                            && Model.Object.AccumulateCycle?.Time.AlmostEqual(time) != true)
+                            secondTest = DoesNotThrow(Model.Object.SetAccumulateCycle,
+                                Model.Object.AccumulateCycle?.Frames ?? 0, time);
+
+                        BatchUpdateErrors(
+                            (nameof(AccumulateCycleTime), nameof(CanBeParsed), firstTest),
+                            (nameof(AccumulateCycleTime), nameof(DoesNotThrow), secondTest),
+                            (nameof(AccumulateCycleNumber), nameof(CanBeParsed), null),
+                            (nameof(AccumulateCycleNumber), nameof(DoesNotThrow), null));
+                    }
+                    else if (IsAvailable.AccumulateCycleNumber)
+                    {
+                        string secondTest = default;
+
+                        var firstTest = CanBeParsed(AccumulateCycleNumber, out int frames);
+
+                        if (firstTest is null
+                            && Model.Object.AccumulateCycle?.Frames != frames)
+                            secondTest = DoesNotThrow(Model.Object.SetAccumulateCycle,
+                                frames, Model.Object.AccumulateCycle?.Time ?? 0f);
+
+                        BatchUpdateErrors(
+                            (nameof(AccumulateCycleTime), nameof(CanBeParsed), null),
+                            (nameof(AccumulateCycleTime), nameof(DoesNotThrow), null),
+                            (nameof(AccumulateCycleNumber), nameof(CanBeParsed), firstTest),
+                            (nameof(AccumulateCycleNumber), nameof(DoesNotThrow), secondTest));
+                    }
+                })
+                .DisposeWith(Subscriptions);
+
+
+            this.NotifyWhenAnyPropertyChanged(
+                    nameof(KineticCycleTime),
+                    nameof(KineticCycleNumber))
+                .Merge(IsAvailable.NotifyWhenAnyPropertyChanged(
+                    nameof(IsAvailable.KineticCycleTime),
+                    nameof(IsAvailable.KineticCycleNumber)))
+                .Subscribe(_ =>
+                {
+                    if (!IsAvailable.KineticCycleTime && !IsAvailable.KineticCycleNumber)
+                        BatchUpdateErrors(
+                            (nameof(KineticCycleTime), nameof(CanBeParsed), null),
+                            (nameof(KineticCycleNumber), nameof(CanBeParsed), null),
+                            (nameof(KineticCycleTime), nameof(DoesNotThrow), null),
+                            (nameof(KineticCycleNumber), nameof(DoesNotThrow), null));
+                    else if (IsAvailable.KineticCycleTime && IsAvailable.KineticCycleNumber)
+                    {
+                        string secondTest = default;
+
+                        var firstTestTime = CanBeParsed(KineticCycleTime, out float time);
+                        var firstTestNumber = CanBeParsed(KineticCycleNumber, out int frames);
+
+                        if (firstTestTime is null && firstTestNumber is null
+                                                  && Model.Object.KineticCycle != (frames, time))
+                            secondTest = DoesNotThrow(Model.Object.SetKineticCycle, frames, time);
+
+                        BatchUpdateErrors(
+                            (nameof(KineticCycleTime), nameof(CanBeParsed), firstTestTime),
+                            (nameof(KineticCycleNumber), nameof(CanBeParsed), firstTestNumber),
+                            (nameof(KineticCycleTime), nameof(DoesNotThrow), secondTest),
+                            (nameof(KineticCycleNumber), nameof(DoesNotThrow), secondTest));
+                    }
+                    else if (IsAvailable.KineticCycleTime)
+                    {
+                        string secondTest = default;
+
+                        var firstTest = CanBeParsed(KineticCycleTime, out float time);
+
+                        if (firstTest is null
+                            && Model.Object.KineticCycle?.Time.AlmostEqual(time) != true)
+                            secondTest = DoesNotThrow(Model.Object.SetKineticCycle,
+                                Model.Object.KineticCycle?.Frames ?? 0, time);
+
+                        BatchUpdateErrors(
+                            (nameof(KineticCycleTime), nameof(CanBeParsed), firstTest),
+                            (nameof(KineticCycleTime), nameof(DoesNotThrow), secondTest),
+                            (nameof(KineticCycleNumber), nameof(CanBeParsed), null),
+                            (nameof(KineticCycleNumber), nameof(DoesNotThrow), null));
+                    }
+                    else if (IsAvailable.KineticCycleNumber)
+                    {
+                        string secondTest = default;
+
+                        var firstTest = CanBeParsed(KineticCycleNumber, out int frames);
+
+                        if (firstTest is null
+                            && Model.Object.KineticCycle?.Frames != frames)
+                            secondTest = DoesNotThrow(Model.Object.SetKineticCycle,
+                                frames, Model.Object.KineticCycle?.Time ?? 0f);
+
+                        BatchUpdateErrors(
+                            (nameof(KineticCycleTime), nameof(CanBeParsed), null),
+                            (nameof(KineticCycleTime), nameof(DoesNotThrow), null),
+                            (nameof(KineticCycleNumber), nameof(CanBeParsed), firstTest),
+                            (nameof(KineticCycleNumber), nameof(DoesNotThrow), secondTest));
+                    }
+                })
+                .DisposeWith(Subscriptions);
+            // ReSharper restore PossibleInvalidOperationException
+        }
+
+        private void AttachGetters()
+        {
+            bool FloatIsNotEqualString(float? src, string tar)
+                => src?.AlmostEqual(float.TryParse(tar, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var val)
+                       ? val
+                       : float.NaN) != true;
+
+            bool IntIsNotEqualString(int? src, string tar)
+                => src?.Equals(int.TryParse(tar, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var val)
+                       ? val
+                       : 0) != true;
+
+            void CreateGetter<TSrc, TTarget>(
+                Expression<Func<SettingsBase, TSrc>> sourceAccessor,
+                Func<TSrc, TTarget> selector,
+                Expression<Func<AcquisitionSettingsViewModel, TTarget>> targetAccessor,
+                Func<TSrc, TTarget, bool> comparator = null)
+            {
+                var accessor = targetAccessor.Compile();
+                Model.Object.WhenPropertyChanged(sourceAccessor)
+                    .ModifyIf(!(comparator is null),
+                        // ReSharper disable once PossibleNullReferenceException
+                        x => x.Where(y => comparator(y.Value, accessor(this))))
+                    .Select(x => selector(x.Value))
+                    //.DistinctUntilChanged()
+                    .ObserveOnUi()
+                    .BindTo(this, targetAccessor)
+                    .DisposeWith(Subscriptions);
+            }
+
+            CreateGetter(x => x.VSSpeed, y => y?.Index ?? -1, z => z.VsSpeed, (src, tar) => src?.Index != tar);
+            CreateGetter(x => x.VSAmplitude, y => y, z => z.VsAmplitude, (src, tar) => src != tar);
+            CreateGetter(x => x.ADConverter, y => y?.Index ?? -1, z => z.AdcBitDepth, (src, tar) => src?.Index != tar);
+            CreateGetter(x => x.PreAmpGain, y => y?.Index ?? -1, z => z.PreAmpGain, (src, tar) => src?.Index != tar);
+            CreateGetter(x => x.HSSpeed, y => y?.Index ?? -1, z => z.HsSpeed, (src, tar) => src?.Index != tar);
+            CreateGetter(x => x.OutputAmplifier, y => y?.OutputAmplifier, 
+                z => z.Amplifier, (src, tar) => src?.OutputAmplifier != tar);
+            CreateGetter(x => x.TriggerMode, y => y, z => z.TriggerMode, (src, tar) => src != tar);
+            CreateGetter(x => x.ReadoutMode, y => y, z => z.ReadMode, (src, tar) => src != tar);
+
+            CreateGetter(x => x.ExposureTime,
+                y => y?.ToString(Properties.Localization.General_ExposureFloatFormat),
+                z => z.ExposureTimeText,
+                FloatIsNotEqualString);
+
+            CreateGetter(x => x.EMCCDGain, 
+                y => y?.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.EmCcdGainText,
+                IntIsNotEqualString);
+
+            CreateGetter(x => x.ImageArea,
+                y => y?.X1.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.ImageArea_X1,
+                (src, tar) => IntIsNotEqualString(src?.X1, tar));
+            CreateGetter(x => x.ImageArea,
+                y => y?.Y1.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.ImageArea_Y1,
+                (src, tar) => IntIsNotEqualString(src?.Y1, tar));
+            CreateGetter(x => x.ImageArea,
+                y => y?.X2.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.ImageArea_X2,
+                (src, tar) => IntIsNotEqualString(src?.X2, tar));
+            CreateGetter(x => x.ImageArea,
+                y => y?.Y2.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.ImageArea_Y2,
+                (src, tar) => IntIsNotEqualString(src?.Y2, tar));
+
+            CreateGetter(x => x.AccumulateCycle,
+                y => y?.Time.ToString(Properties.Localization.General_ExposureFloatFormat),
+                z => z.AccumulateCycleTime,
+                (src, tar) => FloatIsNotEqualString(src?.Time, tar));
+            CreateGetter(x => x.AccumulateCycle,
+                y => y?.Frames.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.AccumulateCycleNumber,
+                (src, tar) => IntIsNotEqualString(src?.Frames, tar));
+
+            CreateGetter(x => x.KineticCycle,
+                y => y?.Time.ToString(Properties.Localization.General_ExposureFloatFormat),
+                z => z.KineticCycleTime,
+                (src, tar) => FloatIsNotEqualString(src?.Time, tar));
+            CreateGetter(x => x.KineticCycle,
+                y => y?.Frames.ToString(Properties.Localization.General_IntegerFormat),
+                z => z.KineticCycleNumber,
+                (src, tar) => IntIsNotEqualString(src?.Frames, tar));
+
+            var acqModeObs =
+                Model.Object.WhenPropertyChanged(x => x.AcquisitionMode)
+                     .Select(x =>
+                     {
+                         var hasFt = x.Value?.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer) ??
+                                     false;
+
+                         return (
+                             Mode: hasFt
+                                 ? x.Value ^ ANDOR_CS.Enums.AcquisitionMode.FrameTransfer
+                                 : x.Value,
+                             FrameTransfer: hasFt);
+                     })
+                     .DistinctUntilChanged();
+
+            acqModeObs.Select(x => x.Mode)
+                      .Where(x => x != AcquisitionMode)
+                      .DistinctUntilChanged()
+                      .ObserveOnUi()
+                      .BindTo(this, x => x.AcquisitionMode)
+                      .DisposeWith(Subscriptions);
+
+            acqModeObs.Select(x => x.FrameTransfer)
+                      .Where(x => x != FrameTransfer)
+                      .DistinctUntilChanged()
+                      .ObserveOnUi()
+                      .BindTo(this, x => x.FrameTransfer)
+                      .DisposeWith(Subscriptions);
+        }
+
+        protected override void HookValidators()
+        {
+            base.HookValidators();
+
+            SetUpDefaultValueValidators();
+
+            ObserveHasErrors
+                .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                .Select(_ => Group1Names.Any(HasSpecificErrors))
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.Group1ContainsErrors)
+                .DisposeWith(Subscriptions);
+
+            ObserveHasErrors
+                .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                .Select(_ => Group2Names.Any(HasSpecificErrors))
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.Group2ContainsErrors)
+                .DisposeWith(Subscriptions);
+
+            ObserveHasErrors
+                .Throttle(UiSettingsProvider.UiThrottlingDelay)
+                .Select(_ => Group3Names.Any(HasSpecificErrors))
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.Group3ContainsErrors)
+                .DisposeWith(Subscriptions);
+
+        }
+
+        private void SetUpDefaultValueValidators()
+        {
+            void DefaultValueValidator<TSrc>(
+                Expression<Func<AcquisitionSettingsViewModel, TSrc>> accessor,
+                TSrc comparisonValue,
+                Expression<Func<SettingsAvailability, bool>> availability)
+            {
+                var name = (accessor.Body as MemberExpression)?.Member.Name
+                           ?? throw new ArgumentException(
+                               Properties.Localization.General_ShouldNotHappen,
+                               nameof(accessor));
+
+                CreateValidator(
+                    this.WhenPropertyChanged(accessor)
+                        .CombineLatest(IsAvailable.WhenPropertyChanged(availability),
+                            (x, y) => (x.Value, IsAvailable: y.Value))
+                        .Select(x => (
+                            Type: nameof(CannotBeDefault),
+                            Message: x.IsAvailable
+                                ? CannotBeDefault(x.Value, comparisonValue)
+                                : null)),
+                    name);
+            }
+
+            void DefaultStringValueValidator(
+                Expression<Func<AcquisitionSettingsViewModel, string>> accessor,
+                Expression<Func<SettingsAvailability, bool>> availability)
+            {
+                var name = (accessor.Body as MemberExpression)?.Member.Name
+                           ?? throw new ArgumentException(
+                               Properties.Localization.General_ShouldNotHappen,
+                               nameof(accessor));
+
+                CreateValidator(
+                    this.WhenPropertyChanged(accessor)
+                        .CombineLatest(IsAvailable.WhenPropertyChanged(availability),
+                            (x, y) => (x.Value, IsAvailable: y.Value))
+                        .Select(x => (
+                            Type: nameof(CannotBeDefault),
+                            Message: x.IsAvailable
+                                ? CannotBeDefault(x.Value)
+                                : null))
+                        .ObserveOnUi(),
+                    name);
+            }
+
+            DefaultValueValidator(x => x.VsSpeed, -1, y => y.VsSpeed);
+            DefaultValueValidator(x => x.VsAmplitude, null, y=> y.VsAmplitude);
+            DefaultValueValidator(x => x.AdcBitDepth, -1, y => y.AdcBitDepth);
+            DefaultValueValidator(x => x.Amplifier, null, y => y.Amplifier);
+            DefaultValueValidator(x => x.HsSpeed, -1, y => y.HsSpeed);
+            DefaultValueValidator(x => x.PreAmpGain, -1, y => y.PreAmpGain);
+            DefaultValueValidator(x => x.AcquisitionMode, null, x => x.AcquisitionMode);
+            DefaultValueValidator(x => x.TriggerMode, null, y => y.TriggerMode);
+            DefaultValueValidator(x => x.ReadMode, null, y => y.ReadMode);
+            
+            DefaultStringValueValidator(x => x.ExposureTimeText, y => y.ExposureTimeText);
+            DefaultStringValueValidator(x => x.EmCcdGainText, y => y.EmCcdGainText);
+            DefaultStringValueValidator(x => x.ImageArea_X1, y => y.ImageArea);
+            DefaultStringValueValidator(x => x.ImageArea_Y1, y => y.ImageArea);
+            DefaultStringValueValidator(x => x.ImageArea_X2, y => y.ImageArea);
+            DefaultStringValueValidator(x => x.ImageArea_Y2, y => y.ImageArea);
+
+            DefaultStringValueValidator(x => x.AccumulateCycleTime, y => y.AccumulateCycleTime);
+            DefaultStringValueValidator(x => x.AccumulateCycleNumber, y => y.AccumulateCycleNumber);
+            DefaultStringValueValidator(x => x.KineticCycleTime, y => y.KineticCycleTime);
+            DefaultStringValueValidator(x => x.KineticCycleNumber, y => y.KineticCycleNumber);
+
+        }
+
+        private void WatchAvailableSettings()
+        {
+            void ImmutableAvailability(string srcProperty,
+                Expression<Func<SettingsAvailability, bool>> accessor)
+            {
+                var lwrName = srcProperty.ToLowerInvariant();
+                Observable.Return(AllowedSettings.Contains(lwrName) && SupportedSettings.Contains(lwrName))
+                          .ToPropertyEx(IsAvailable, accessor)
+                          .DisposeWith(Subscriptions);
+            }
+            
+            ImmutableAvailability(nameof(Model.Object.VSSpeed), x => x.VsSpeed);
+            ImmutableAvailability(nameof(Model.Object.VSAmplitude), x => x.VsAmplitude);
+            ImmutableAvailability(nameof(Model.Object.ADConverter), x => x.AdcBitDepth);
+            ImmutableAvailability(nameof(Model.Object.OutputAmplifier), x=> x.Amplifier);
+            ImmutableAvailability(nameof(Model.Object.AcquisitionMode), x => x.AcquisitionMode);
+            ImmutableAvailability(nameof(Model.Object.ExposureTime), x => x.ExposureTimeText);
+            ImmutableAvailability(nameof(FrameTransfer), x => x.FrameTransfer); // This is correct
+            ImmutableAvailability(nameof(Model.Object.TriggerMode), x => x.TriggerMode);
+            ImmutableAvailability(nameof(Model.Object.ImageArea), x => x.ImageArea);
+
+            this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.HSSpeed).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && x.AdcBitDepth >= 0
+                           && Amplifier.HasValue;
+
+                })
+                .ToPropertyEx(IsAvailable, x => x.HsSpeed)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AdcBitDepth), nameof(Amplifier), nameof(HsSpeed))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.PreAmpGain).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && x.AdcBitDepth >= 0
+                           && Amplifier.HasValue
+                           && HsSpeed >= 0;
+
+                })
+                .ToPropertyEx(IsAvailable, x => x.PreAmpGain)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(Amplifier))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.EMCCDGain).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && Amplifier.HasValue
+                           && Amplifier.Value == OutputAmplification.ElectronMultiplication;
+                })
+                .ToPropertyEx(IsAvailable, x => x.EmCcdGainText)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.ReadoutMode).ToLowerInvariant();
+                    return AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && AcquisitionMode.HasValue;
+                })
+                .ToPropertyEx(IsAvailable, x => x.ReadMode)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.AccumulateCycle).ToLowerInvariant();
+                    return AcquisitionMode is AcquisitionMode mode
+                           && AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && (mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Accumulation)
+                               || mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Kinetic)
+                               || mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FastKinetics));
+                })
+                .ToPropertyEx(IsAvailable, x => x.AccumulateCycleTime)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.AccumulateCycle).ToLowerInvariant();
+                    return AcquisitionMode is AcquisitionMode mode
+                           && AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && (mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Accumulation)
+                               || mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Kinetic));
+                })
+                .ToPropertyEx(IsAvailable, x => x.AccumulateCycleNumber)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.KineticCycle).ToLowerInvariant();
+                    return AcquisitionMode is AcquisitionMode mode
+                           && AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && (mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Kinetic)
+                               || mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.RunTillAbort));
+                })
+                .ToPropertyEx(IsAvailable, x => x.KineticCycleTime)
+                .DisposeWith(Subscriptions);
+
+            this.WhenAnyPropertyChanged(nameof(AcquisitionMode), nameof(FrameTransfer))
+                .Select(x =>
+                {
+                    var name = nameof(Model.Object.KineticCycle).ToLowerInvariant();
+                    return AcquisitionMode is AcquisitionMode mode
+                           && AllowedSettings.Contains(name)
+                           && SupportedSettings.Contains(name)
+                           && (mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.Kinetic)
+                               || mode.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FastKinetics));
+                })
+                .ToPropertyEx(IsAvailable, x => x.KineticCycleNumber)
+                .DisposeWith(Subscriptions);
+        }
+
+        private void WatchItemSources()
+        {
+            Model.Object.WhenAnyPropertyChanged(
+                     nameof(Model.Object.ADConverter),
+                     nameof(Model.Object.OutputAmplifier))
+                 .Where(x => x.ADConverter.HasValue && x.OutputAmplifier.HasValue)
+                 .Select(x => x.GetAvailableHSSpeeds(x.ADConverter?.Index ?? -1, x.OutputAmplifier?.Index ?? -1))
+                 .ObserveOnUi()
+                 .Subscribe(x =>
+                 {
+                     AvailableHsSpeeds.GracefullyLoad(x);
+                 }).DisposeWith(Subscriptions);
+            
+
+            Model.Object.WhenAnyPropertyChanged(
+                     nameof(Model.Object.ADConverter),
+                     nameof(Model.Object.OutputAmplifier),
+                     nameof(Model.Object.HSSpeed))
+                .Where(x =>
+                     x.ADConverter.HasValue
+                     && x.OutputAmplifier.HasValue
+                     && x.HSSpeed.HasValue)
+                 .Select(x =>
+                     x.GetAvailablePreAmpGain(
+                         x.ADConverter?.Index ?? -1,
+                         x.OutputAmplifier?.Index ?? -1,
+                         x.HSSpeed?.Index ?? -1))
+                 .ObserveOnUi()
+                 .Subscribe(x =>
+                 {
+                     AvailablePreAmpGains.GracefullyLoad(x);
+                 })
+                 .DisposeWith(Subscriptions);
+
+            // Read mode changes if FrameTransfer is enabled
+            Model.Object.WhenAnyPropertyChanged(nameof(Model.Object.AcquisitionMode))
+                    .Where(x => x.AcquisitionMode.HasValue)
+                    // ReSharper disable once PossibleInvalidOperationException
+                    .Select(x => x.AcquisitionMode.Value.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer))
+                 .DistinctUntilChanged()
+                 .Select(x => Helper.EnumFlagsToArray<ReadMode>(x
+                                        ? Camera.Capabilities.FtReadModes
+                                        : Camera.Capabilities.ReadModes)
+                                    .Where(EnumConverter.IsReadModeSupported))
+                 .ObserveOnUi()
+                 .Subscribe(x =>
+                 {
+                    AvailableReadModes.GracefullyLoad(x);
+                 })
+                 .DisposeWith(Subscriptions);
+
+            Model.Object.WhenPropertyChanged(x => x.OutputAmplifier)
+                 .Select(x =>
+                 {
+                     var isEm = x.Value?.OutputAmplifier == OutputAmplification.ElectronMultiplication;
+                     if (!isEm) return null;
+                     var (low, high) = Model.Object.GetEmGainRange();
+                     return string.Format(Properties.Localization.AcquisitionSetttings_AvailableGainFormat,
+                         low, high);
+                 })
+                 .BindTo(this, x => x.AllowedGain)
+                 .DisposeWith(Subscriptions);
+
+        }
+        
 
         private void InitializeCommands()
         {
-            SubmitCommand = new DelegateCommand(
-                (param) => CloseView(param, false),
-                CanSubmit
-                );
+            ViewLoadedCommand = 
+                    ReactiveCommand.Create<Window>(x =>
+                    {
+                        foreach (var name in Group1Names)
+                            OnErrorsChanged(new DataErrorsChangedEventArgs(name));
+                    });
 
-            CancelCommand = new DelegateCommand(
-                (param) => CloseView(param, true),
-                DelegateCommand.CanExecuteAlways
-                );
+            // Sacrificing reactivity in order to avoid command disposal and memory leaks
+            CancelCommand = new ActionCommand(x => (x as Window)?.Close());
 
-            SaveCommand = new DelegateCommand(
-                SaveTo,
-                DelegateCommand.CanExecuteAlways
-                );
+            var isValid = this.WhenAnyPropertyChanged(
+                                  nameof(Group1ContainsErrors),
+                                  nameof(Group2ContainsErrors),
+                                  nameof(Group3ContainsErrors))
+                              .Select(x => !x.Group1ContainsErrors
+                                           && !x.Group2ContainsErrors
+                                           && !x.Group3ContainsErrors)
+                              .DistinctUntilChanged();
 
-            LoadCommand = new DelegateCommand(
-                LoadFrom,
-                DelegateCommand.CanExecuteAlways);
+            SubmitCommand =
+                ReactiveCommand.Create<Window, Window>(
+                                   x => x,
+                                   isValid)
+                               .DisposeWith(Subscriptions);
+
+            SubmitCommand.Subscribe(Submit).DisposeWith(Subscriptions);
+
+            SaveButtonCommand =
+                ReactiveCommand.Create<Unit, FileDialogDescriptor>(
+                                   _ => new FileDialogDescriptor()
+                                   {
+                                       Mode = FileDialogDescriptor.DialogMode.Save,
+                                       Title = Properties.Localization.AcquisitionSettings_Dialog_Save_Title,
+                                       FileName = Camera.ToString(),
+                                       DefaultExtenstion = ".acq"
+                                   }, isValid)
+                               .DisposeWith(Subscriptions);
+
+            LoadButtonCommand =
+                ReactiveCommand.Create<Unit, FileDialogDescriptor>(
+                                   _ => new FileDialogDescriptor()
+                                   {
+                                       Mode = FileDialogDescriptor.DialogMode.Load,
+                                       Title = Properties.Localization.AcquisitionSettings_Dialog_Load_Title,
+                                       FileName = Camera.ToString(),
+                                       DefaultExtenstion = ".acq"
+                                   })
+                               .DisposeWith(Subscriptions);
+
+            SaveButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
+            LoadButtonCommand.Subscribe(x =>
+            {
+                OnFileDialogRequested(x);
+            }).DisposeWith(Subscriptions);
+
+            SaveActionCommand =
+                ReactiveCommand.CreateFromTask<string>(
+                                   async (x, token) =>
+                                   {
+                                       if (x is null)
+                                           return;
+                                       await SaveTo(x, token);
+                                   })
+                               .DisposeWith(Subscriptions);
+
+            LoadActionCommand =
+                ReactiveCommand.CreateFromTask<string>(
+                                   async (x, token) =>
+                                   {
+                                       if (x is null)
+                                           return;
+                                       await LoadFrom(x, token);
+                                   })
+                               .DisposeWith(Subscriptions);
+
         }
 
-        private void SaveTo(object parameter)
+        private void Submit(Window w)
         {
-            var dialog = new Microsoft.Win32.SaveFileDialog
+            try
             {
-                AddExtension = true,
-                CheckPathExists = true,
-                DefaultExt = ".acq",
-                FileName = Camera.ToString(),
-                FilterIndex = 0,
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                Title = "Save current acquisition settings"
-            };
-            dialog.Filter = $@"Acquisition settings (*{dialog.DefaultExt})|*{dialog.DefaultExt}|All files (*.*)|*.*";
-            
-
-            if (dialog.ShowDialog() == true)
-                try
-                {
-                    using (var fl = File.Open(dialog.FileName, FileMode.Create, FileAccess.Write, FileShare.Read))
-                        model.Serialize(fl);
-                }
-                catch (Exception e)
-                {
-                    var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
-                    MessageBox.Show($"An error occured while saving acquisition settings to {dialog.FileName}.\n" +
-                                    $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]", 
-                        "Unable to save file", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-                }
-        }
-
-        private void LoadFrom(object parameter)
-        {
-            var dialog = new Microsoft.Win32.OpenFileDialog()
-            {
-                AddExtension = true,
-                CheckFileExists = true,
-                CheckPathExists = true,
-                DefaultExt = ".acq",
-                FileName = Camera.ToString(),
-                FilterIndex = 0,
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                Title = "Load acquisition settings from file"
-            };
-            dialog.Filter = $@"Acquisition settings (*{dialog.DefaultExt})|*{dialog.DefaultExt}|All files (*.*)|*.*";
-
-            var temp = AllowedSettings;
-            AllowedSettings =
-                new ObservableConcurrentDictionary<string, bool>(temp.Select(item => new KeyValuePair<string, bool>(item.Key, false)));
-            RaisePropertyChanged(nameof(AllowedSettings));
-            AllowedSettings = temp;
-            if (dialog.ShowDialog() == true)
-            {
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        Task.Delay(2000).Wait();
-                        using (var fl = File.Open(dialog.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                            model.Deserialize(fl);
-                    }
-                    catch (Exception e)
-                    {
-                        var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
-                        Application.Current?.Dispatcher?.Invoke(() =>
-                        {
-                            MessageBox.Show($"An error occured while reading acquisition settings from {dialog.FileName}.\n" +
-                                            $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
-                                "Unable to load file", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-                        });
-                    }
-                    Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(AllowedSettings)));
-                });
-
+                Camera.ApplySettings(Model.Object);
+                Helper.ExecuteOnUi(() => CancelCommand.Execute(w));
             }
-            else
-                RaisePropertyChanged(nameof(AllowedSettings));
-        }
-
-        private void ValidateProperty(Exception e = null,
-            [System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
-        {
-            if (!string.IsNullOrWhiteSpace(propertyName))
+            catch (AndorSdkException andorExcept)
             {
-                if (e != null)
-                    AddError(new ValidationErrorInstance("DefaultError", e.Message),
-                       ErrorPriority.High,
-                       propertyName);
+                if (andorExcept.MethodName?.ToLowerInvariant() is string methodName)
+                {
+                    var errors = new List<(string, string, string)>();
+                    var errorStrings= new List<string>();
+
+                    foreach (var (prop, _) in InteractiveSettings.Where(x => x.EquivalentName == methodName))
+                    {
+                        var isAvailableName = prop.GetCustomAttribute<MappedNameAttribute>()?.MappedName ?? prop.Name;
+                        var isAvailable = typeof(SettingsAvailability).GetProperty(isAvailableName,
+                                              BindingFlags.Public | BindingFlags.Instance)?.GetValue(IsAvailable) is bool b && b;
+
+                        if (isAvailable)
+                            errors.Add((prop.Name, nameof(DoesNotThrow), andorExcept.Message));
+                        else
+                            errorStrings.Add(prop.Name);
+                        
+                    }
+
+                    if(errors.Count > 0)
+                        BatchUpdateErrors(errors);
+
+                    if (errorStrings.Count > 0)
+                        Helper.ExecuteOnUi(() => MessageBox.Show(
+                            string.Format(Properties.Localization.AcquisitionSettings_ApplicationFailed_Message,
+                                andorExcept.Message,
+                                errorStrings.EnumerableToString(",\r\n")),
+                            Properties.Localization.AcquisitionSettings_ApplicationFailed,
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error));
+                }
                 else
-                    RemoveError(new ValidationErrorInstance("DefaultError", ""),
-                        propertyName);
-
+                    Helper.ExecuteOnUi(() => MessageBox.Show(
+                        string.Format(Properties.Localization.AcquisitionSettings_ApplicationFailed_Message,
+                            andorExcept.Message,
+                            Properties.Localization.AcquisitionSettings_UnknownSetting),
+                        Properties.Localization.AcquisitionSettings_ApplicationFailed,
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error));
+            }
+            catch (Exception except)
+            {
+                Helper.ExecuteOnUi(() => MessageBox.Show(
+                    string.Format(
+                        Properties.Localization.AcquisitionSettings_ApplicationFailedUnrecoverable_Message,
+                        except.Message),
+                    Properties.Localization.AcquisitionSettings_ApplicationFailed,
+                    MessageBoxButton.OK, MessageBoxImage.Error));
             }
         }
 
-        protected override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private async Task SaveTo(string fileName, CancellationToken token)
         {
-            base.OnPropertyChanged(sender, e);
-
-            if ((e.PropertyName == nameof(OutputAmplifierIndex) ||
-                 e.PropertyName == nameof(ADConverterIndex)) &&
-                (AllowedSettings[nameof(model.HSSpeed)]
-                    = ADConverterIndex >= 0 &&
-                      OutputAmplifierIndex >= 0))
+            try
             {
-                RaisePropertyChanged(nameof(PreAmpGainIndex));
-                RaisePropertyChanged(nameof(HSSpeedIndex));
-                RaisePropertyChanged(nameof(AvailableHSSpeeds));
+                using (var fl = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.Read))
+                    await Model.Object.SerializeAsync(fl, Encoding.ASCII, token)
+                               .ExpectCancellationAsync()
+                               .ConfigureAwait(false);
             }
-
-            if ((e.PropertyName == nameof(OutputAmplifierIndex) ||
-                 e.PropertyName == nameof(ADConverterIndex) ||
-                 e.PropertyName == nameof(HSSpeedIndex)) &&
-                (AllowedSettings[nameof(model.PreAmpGain)]
-                    = OutputAmplifierIndex >= 0 &&
-                      ADConverterIndex >= 0 &&
-                      HSSpeedIndex >= 0))
+            catch (Exception e)
             {
-                RaisePropertyChanged(nameof(PreAmpGainIndex));
-                RaisePropertyChanged(nameof(AvailablePreAmpGains));
+                var messSize = UiSettingsProvider.Settings.Get("MessageBoxMessageMaxLength", 100);
+                var message = string.Format(Properties.Localization.AcquisitionSettings_SerializationFailed_Message,
+                    Path.GetFileName(fileName),
+                    e.Message);
+                message = message.Length > messSize ? message.Substring(0, messSize) : message;
+                MessageBox.Show(message,
+                    Properties.Localization.AcquisitionSettings_SerializationFailed_Title,
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            if (e.PropertyName == nameof(AcquisitionModeValue) &&
-                AcquisitionModeValue.HasValue)
-            {
-                AllowedSettings[nameof(FrameTransferValue)] =
-                    AcquisitionModeValue != AcquisitionMode.SingleScan &&
-                    AcquisitionModeValue != AcquisitionMode.FastKinetics;
-                if (!AllowedSettings[nameof(FrameTransferValue)])
-                {
-                    FrameTransferValue = false;
-                    //RaisePropertyChanged(nameof(FrameTransferValue));
-                }
-            }
-            if (e.PropertyName == nameof(OutputAmplifierIndex))
-            {
-                AllowedSettings[nameof(model.EMCCDGain)] = (OutputAmplifierIndex >= 0) &&
-                    (Camera.Properties.OutputAmplifiers[OutputAmplifierIndex].OutputAmplifier 
-                    == OutputAmplification.Conventional);
-                RaisePropertyChanged(nameof(EMCCDGainValueText));
-            }
-
-            SubmitCommand?.OnCanExecuteChanged();
-
         }
 
-        protected override void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private async Task LoadFrom(string fileName, CancellationToken token)
         {
-            // Model can raise PropertyChange from non-UI thread,
-            // therefore ModelView should dispatch respective events on UI thread
 
-            base.OnModelPropertyChanged(sender, e);
-            var prop = PropertyList
-                .FirstOrDefault(item => item.Item1 == e.PropertyName);
-
-            if (prop.Item2 != null)
-               Helper.ExecuteOnUI(() => RaisePropertyChanged(prop.Item2.Name));
-
-            if (e.PropertyName == nameof(model.AcquisitionMode))
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(FrameTransferValue)));
-
-            if (e.PropertyName == nameof(model.ImageArea))
+            try
             {
-                Helper.ExecuteOnUI(() => RaiseErrorChanged(nameof(ImageArea_X1)));
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(ImageArea_Y1)));
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(ImageArea_X2)));
-                Helper.ExecuteOnUI(() => RaisePropertyChanged(nameof(ImageArea_Y2)));
+                using (var fl = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    // ReSharper disable once AccessToDisposedClosure
+                    await Task.Run(() => Model.Object.Deserialize(fl), token)
+                              .ExpectCancellationAsync()
+                              .ConfigureAwait(false);
             }
+            catch (Exception e)
+            {
+                var messSize = UiSettingsProvider.Settings.Get("MessageBoxMessageMaxLength", 100);
+                var message = string.Format(Properties.Localization.AcquisitionSettings_DeserializationFailed_Message,
+                    Path.GetFileName(fileName),
+                    e.Message);
+                message = message.Length > messSize ? message.Substring(0, messSize) : message;
+                MessageBox.Show(message,
+                    Properties.Localization.AcquisitionSettings_DeserializationFailed_Title,
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
         }
 
-        private void CloseView(object parameter, bool isCanceled)
+        private void OnFileDialogRequested(FileDialogDescriptor e)
+            => FileDialogRequested?.Invoke(this, new DialogRequestedEventArgs(e));
+
+        #region V2
+
+        [Reactive]
+        public string AllowedGain {  get; private set; }
+
+        //[Reactive]
+        //[UnderlyingCameraSettings(@"SetExposureTime")]
+        //public string ExposureTimeText { get; set; }
+
+
+        // WATCH : Anon-reactive property for debugging
+        private string _exposureTimeText;
+
+        [UnderlyingCameraSettings(@"SetExposureTime")]
+        public string ExposureTimeText
         {
-            if (parameter is DependencyObject elem)
-            {
-                var window = Helper.FindParentOfType<Window>(elem);
-                if (window != null && Helper.IsDialogWindow(window))
-                {
-                    if (!isCanceled)
-                    {
-                        try
-                        {
-                            var applicationResult = model.ApplySettings(out var timing);
-                            var failed = applicationResult.Where(item => !item.Success).ToList();
-                            if (failed.Count > 0)
-                            {
-                                var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
-                                var listSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 5);
-                                var sb = new StringBuilder(messSize * listSize);
-
-                                sb.AppendLine("Some of the settings were applied unsuccessfully:");
-                                foreach (var fl in failed.Take(listSize))
-                                    sb.AppendLine($"[{(fl.Option.Length < messSize ? fl.Option : fl.Option.Substring(0, messSize))}]");
-                                MessageBox.Show(sb.ToString(),
-                                    "Partially unsuccessful application of settings", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-
-                                foreach (var prop in PropertyList.Join(failed, x => x.Item1, y => y.Option, (x, y) =>
-                                    new {
-                                        Name = x.Item1,
-                                        Error = y.ReturnCode
-                                    }))
-                                    ValidateProperty(new AndorSdkException(prop.Name, prop.Error), prop.Name);
-
-                                return;
-                            }
-                            EstimatedTiming = timing;
-                        }
-                        catch (Exception e)
-                        {
-                            var messSize = DIPOL_UF_App.Settings.GetValueOrNullSafe("ExceptionStringLimit", 80);
-                            MessageBox.Show("Failed to apply current settings to target camera.\n" +
-                                            $"[{(e.Message.Length <= messSize ? e.Message : e.Message.Substring(0, messSize))}]",
-                                "Incompatible settings", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-                            return;
-                        }
-                    }
-
-
-                    window.DialogResult = !isCanceled;
-                    window.Close();
-                }
-
-             
-            }
+            get => _exposureTimeText;
+            set => this.RaiseAndSetIfChanged(ref _exposureTimeText, value);
         }
 
-        /// <summary>
-        /// Checks if Acquisiotn Settings form can be submitted.
-        /// </summary>
-        /// <param name="parameter">Unused parameter for compatibility with <see cref="Commands.DelegateCommand"/>.</param>
-        /// <returns>True if all required fields are set.</returns>
-        private bool CanSubmit(object parameter)
-        {
-            // Helper function, checks if value is set.
-            bool ValueIsSet(PropertyInfo p)
-            {
-                if (Nullable.GetUnderlyingType(p.PropertyType) != null)
-                    return p.GetValue(this) != null;
-                if (p.PropertyType == typeof(int))
-                    return (int)p.GetValue(this) != -1;
-                if (p.PropertyType == typeof(string))
-                    return !string.IsNullOrWhiteSpace((string)p.GetValue(this));
-                return false;
-            }
+        // -1 is the default selected index in the list, equivalent to
+        // [SelectedItem] = null in case of nullable properties
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetVSSpeed")]
+        public int VsSpeed { get; set; } = -1;
 
-            // Query that joins pulic Properties to Allowed settings with true value.
-            // As a result, propsQuery stores all Proprties that should have values set.
-            var propsQuery =
-                from prop in PropertyList
-                join allowedProp in AllowedSettings 
-                on prop.Item1 equals allowedProp.Key
-                where allowedProp.Value
-                select prop.Item2;
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetVSAmplitude")]
+        public VSAmplitude? VsAmplitude { get; set; }
 
-            // Runs check of values on all selected properties.
-            return propsQuery.All(ValueIsSet) && propsQuery.Any();
-        }
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetADChannel")]
+        public int AdcBitDepth { get; set; } = -1;
+
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetOutputAmplifier")]
+        public OutputAmplification? Amplifier { get; set; }
+
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetHSSpeed")]
+        public int HsSpeed { get; set; } = -1;
+
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetPreAmpGain")]
+        public int PreAmpGain { get; set; } = -1;
+
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetAcquisitionMode")]
+        public AcquisitionMode? AcquisitionMode { get; set; }
+
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetFrameTransferMode")]
+        public bool FrameTransfer { get; set; }
+
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetReadoutMode")]
+        public ReadMode? ReadMode { get; set; }
+
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetTriggerMode")]
+        public TriggerMode? TriggerMode { get; set; }
+
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetEmCcdGain")]
+        public string EmCcdGainText { get; set; }
+
+        // ReSharper disable InconsistentNaming
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetImage")]
+        [MappedName(nameof(SettingsAvailability.ImageArea))]
+        public string ImageArea_X1 { get; set; }
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetImage")]
+        [MappedName(nameof(SettingsAvailability.ImageArea))]
+        public string ImageArea_Y1 { get; set; }
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetImage")]
+        [MappedName(nameof(SettingsAvailability.ImageArea))]
+        public string ImageArea_X2 { get; set; }
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetImage")]
+        [MappedName(nameof(SettingsAvailability.ImageArea))]
+        public string ImageArea_Y2 { get; set; }
+        // ReSharper restore InconsistentNaming
+
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetAccumulationCycleTime")]
+        public string AccumulateCycleTime { get; set; }
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetNumberAccumulations")]
+        public string AccumulateCycleNumber { get; set; }
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetKineticCycleTime")]
+        public string KineticCycleTime { get; set; }
+        [Reactive]
+        [UnderlyingCameraSettings(@"SetNumberKinetics")]
+        public string KineticCycleNumber { get; set; }
+
+        #endregion
+
+       
     }
 }

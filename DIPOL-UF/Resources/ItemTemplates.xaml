@@ -1,45 +1,65 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:DIPOL_UF.ViewModels"
-                    xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS"
                     xmlns:cntrl="clr-namespace:DIPOL_UF.Controls"
-                    xmlns:cmnds="clr-namespace:DIPOL_UF.Commands"
-                    xmlns:cnvrt="clr-namespace:DIPOL_UF.Converters">
-    <HierarchicalDataTemplate x:Key="MenuBarItemTemplate" DataType="{x:Type vm:MenuItemViewModel}"
-                              ItemsSource="{Binding MenuItems}">
-        <Label Content="{Binding Header}"/>
+                    xmlns:ext="clr-namespace:DIPOL_UF.Extensions"
+                    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+                    xmlns:enums="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS">
+    <HierarchicalDataTemplate x:Key="MenuBarItemTemplate"
+                              DataType="{x:Type vm:MenuItemViewModel}"
+                              ItemsSource="{Binding SubMenu}">
+        <Label Content="{Binding Name}"/>
     </HierarchicalDataTemplate>
-
     <!--Active cameras list representation-->
-    <DataTemplate x:Key="FoundCamerasListViewItemTemplate">
+    <DataTemplate x:Key="FoundCamerasListViewItemTemplate" >
         <StackPanel Orientation="Horizontal">
-            <Label Width="80" Content="{Binding Key, Converter={StaticResource ResourceKey=CameraKeyToStringConverter}}" HorizontalContentAlignment="Right"/>
-            <Label Content="{Binding Value, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}" HorizontalContentAlignment="Right"/>
+            <Label Width="80" Content="{Binding Item1}" HorizontalContentAlignment="Right"/>
+            <Label Content="{Binding Item2}" HorizontalContentAlignment="Right"/>
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger
+                    EventName="MouseDoubleClick"
+                    SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListViewItem}}">
+                    <behaviors:InvokeCommandAction
+                        Command="{Binding 
+                            RelativeSource={RelativeSource FindAncestor, AncestorType=Window},
+                            Path=DataContext.ClickCommand}">
+                        <behaviors:InvokeCommandAction.CommandParameter>
+                            <MultiBinding Converter="{StaticResource CombineConverter}">
+                                <Binding Path="DataContext.Item3" 
+                                         RelativeSource="{RelativeSource FindAncestor, AncestorType=StackPanel}"/>
+                                <Binding 
+                                    RelativeSource="{RelativeSource FindAncestor, AncestorType=Window}"/>
+                            </MultiBinding>
+                        </behaviors:InvokeCommandAction.CommandParameter>
+                    </behaviors:InvokeCommandAction>    
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
         </StackPanel>
     </DataTemplate>
     
     <!--Main window tree view of connected cameras.-->
     <!--Cameras a grouped by location (e.g. Local or network address)-->
-    <DataTemplate x:Key="ListTreeViewItemTemplate">
+    <DataTemplate x:Key="ListTreeViewItemTemplate"
+                  DataType="vm:MainWindowTreeViewModel">
         <!--For each group there is expander with sublist of all associated cameras-->
         <!--Name is group name (i.e. location)-->
-        <Expander Header="{Binding Name}" IsExpanded="True">
+        <Expander Header="{Binding GroupName}" IsExpanded="True">
             <!--List of cameras in a group-->
-            <ListView ItemsSource="{Binding CameraList}" 
-                      Style="{StaticResource ResourceKey=ListTreeViewStyle}"
-                      KeyboardNavigation.TabNavigation="Continue">
-                <ListView.ItemTemplate>
+            <ItemsControl ItemsSource="{Binding CameraList}">
+                <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <!--Vertical StackPanel contains horizontal panels per each row-->
                         <StackPanel Orientation="Vertical" Background="Transparent">
                             <StackPanel.ContextMenu>
                                 <ContextMenu 
-                                    ItemsSource="{Binding Value.ContextMenu}"
+                                    ItemsSource="{Binding ContextMenu}"
                                     ItemTemplate="{StaticResource MenuBarItemTemplate}">
                                     <ContextMenu.ItemContainerStyle>
                                         <Style TargetType="{x:Type MenuItem}">
+                                            <!-- ReSharper disable once Xaml.BindingWithContextNotResolved -->
                                             <Setter Property="Command" Value="{Binding Command}"/>
-                                            <Setter Property="CommandParameter" Value="{Binding Header}"/>
+                                            <Setter Property="CommandParameter" 
+                                                    Value="{Binding DataContext.Id, RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}}"/>
                                         </Style>
                                     </ContextMenu.ItemContainerStyle>
                                 </ContextMenu>
@@ -48,93 +68,39 @@
                             <StackPanel Orientation="Horizontal">
                                 <!--Checked/Unchecked events are forwarded to DipolWindow's context commands-->
                                 <CheckBox Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}" VerticalAlignment="Center"
-                                          Command="{Binding Path=DataContext.CameraPanelSelectionChangedCommand, 
-                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" 
-                                          CommandParameter="{Binding Key}"
-                                          TabIndex="{Binding TabIndex, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListViewItem}}">
-                                    <CheckBox.IsChecked>
-                                        <MultiBinding Converter="{StaticResource ResourceKey=CameraKeyToValueMultiConverter}" 
-                                                      UpdateSourceTrigger="PropertyChanged" Mode="OneWay">
-                                            <Binding Path="Key" Mode="OneWay" />
-                                            <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" 
-                                                     Path="DataContext.CameraPanelSelectedItems" Mode="OneWay"
-                                                     />
-                                        </MultiBinding>
-                                    </CheckBox.IsChecked>
+                                          IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                          IsThreeState="False"
+                                          Command="{Binding SelectCommand}"
+                                          CommandParameter="{Binding Id}">
                                 </CheckBox>
-                                <Label Content="{Binding Value.Camera, Converter={StaticResource ResourceKey=CameraToStringAliasConverter}}" VerticalAlignment="Center" Width="155"/>
+                                <Label Content="{Binding Name}" VerticalAlignment="Center" Width="155"/>
                             </StackPanel>
                             <!--Second horizontal panel contains temperature information-->
                             <StackPanel Orientation="Horizontal">
                                 <Label VerticalAlignment="Center" Width="70"  HorizontalAlignment="Right"
                                        HorizontalContentAlignment="Right"
                                        Margin="{StaticResource ResourceKey=OneLevelTreeItemMarginLeft}"
+                                       Content="{Binding Temperature}" ContentStringFormat="{ext:Text Key=General_FloatTempFormat}"
+                                       Foreground="{Binding Temperature, 
+                                            Converter={StaticResource TemperatureToBrushConverter},
+                                            ConverterParameter={StaticResource TemperatureColorBrushCollection}}"
                                        x:Name="TemperatureLabel">
-                                    <!--Content is multi-bound to DipolWindow's Context colletion of camera statuses and to the string ID of a current camera (Key)-->
-                                    <!--Converter parameter is used to retrieve specific parameter string from camera status dictionary-->
-                                    <Label.Content>
-                                        <MultiBinding
-                                        Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
-                                        ConverterParameter="Temp"
-                                        UpdateSourceTrigger="PropertyChanged"
-                                        StringFormat="\{0,6:#0.00\}">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
-                                            <Binding Path="Key"/>
-                                        </MultiBinding>
-                                    </Label.Content>
-                                    <!--Foreground is bound the same way to Temp value, but returned value is one of the StaticResource-->
-                                    <!--pre-defined brush collection.-->
-                                    <Label.Foreground>
-                                        <MultiBinding
-                                            Converter="{StaticResource ResourceKey=TemperatureToBrushMultiConverter}"
-                                            ConverterParameter="{StaticResource TemperatureColorBrushCollection}"
-                                            UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
-                                            <Binding Path="Key"/>
-                                        </MultiBinding>
-                                    </Label.Foreground>
+                                    
                                 </Label>
                                 <Label VerticalAlignment="Center" HorizontalAlignment="Right"
-                                       x:Name="TemperatureStatusLabel">
-                                    <!--Content comes from TempStatus TemperatureStatus enum-->
-                                    <Label.Content>
-                                        <MultiBinding
-                                            Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
-                                            ConverterParameter="TempStatus"
-                                            UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
-                                            <Binding Path="Key"/>
-                                        </MultiBinding>
-                                    </Label.Content>
-                                    <!--Color comes from the same status in accordance to static dictionary-->
-                                    <Label.Foreground>
-                                        <MultiBinding
-                                            Converter="{StaticResource ResourceKey=TemperatureStatusToBrushMultiConverter}"
-                                            ConverterParameter="{StaticResource TemperatureStatusColorBrushCollection}"
-                                            UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"/>
-                                            <Binding Path="Key"/>                                            
-                                        </MultiBinding>
-                                    </Label.Foreground>
+                                       x:Name="TemperatureStatusLabel"
+                                       Content="{Binding TempStatus, Converter={StaticResource EnumToDescriptionConverter}}"
+                                       Foreground="{Binding TempStatus, 
+                                            Converter={StaticResource TemperatureStatusToBrushConverter},
+                                            ConverterParameter={StaticResource TemperatureStatusColorBrushCollection}}">
                                 </Label>
-                                <!--<Label VerticalAlignment="Center" HorizontalAlignment="Right">
-                                    --><!--Content comes from TempStatus TemperatureStatus enum--><!--
-                                    <Label.Content>
-                                        <MultiBinding
-                                            Converter="{StaticResource ResourceKey=CameraStatsToStringMultiConverter}"
-                                            ConverterParameter="FanStr"
-                                            UpdateSourceTrigger="PropertyChanged">
-                                            <Binding ElementName="DipolWindow" Path="DataContext.CameraRealTimeStats"
-                                                 UpdateSourceTrigger="PropertyChanged"/>
-                                            <Binding Path="Key"/>
-                                        </MultiBinding>
-                                    </Label.Content>
-                                </Label>-->
+                                <Label VerticalAlignment="Center" HorizontalAlignment="Right"
+                                       Content="{Binding FanMode, Converter={StaticResource EnumToDescriptionConverter}}"/>
                             </StackPanel>
                         </StackPanel>
                     </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </Expander>
     </DataTemplate>
     
@@ -142,15 +108,20 @@
     <!--Camera tab view template-->
     <DataTemplate 
         x:Key="TabControlItemTemplate" 
-        DataType="{x:Type vm:ConnectedCameraViewModel}">
+        DataType="{x:Type vm:CameraTabViewModel}">
         <cntrl:CameraTab/>
     </DataTemplate>
 
     <DataTemplate 
         x:Key="TabControlItemHeaderTemplate"
-        DataType="{x:Type vm:ConnectedCameraViewModel}">
+        DataType="{x:Type vm:CameraTabViewModel}">
         <TextBlock
             Text="{Binding Camera, Mode=OneWay, Converter={StaticResource CameraToStringAliasConverter}}">
         </TextBlock>
     </DataTemplate>
+
+    <DataTemplate x:Key="ShutterComboBoxItem" DataType="enums:ShutterMode">
+        <TextBlock Text="{Binding Converter={StaticResource EnumToDescriptionConverter}}"/>
+    </DataTemplate>
+        
 </ResourceDictionary>

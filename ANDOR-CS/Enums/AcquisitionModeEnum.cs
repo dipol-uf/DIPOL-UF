@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-
+using ANDOR_CS.Attributes;
 #if X86
 using SDK = ATMCD32CS.AndorSDK;
 #endif
@@ -42,6 +42,10 @@ namespace ANDOR_CS.Enums
     [DataContract]
     public enum AcquisitionMode : uint
     {
+        [IgnoreDefault]
+        [Description("Unknown")]
+        [EnumMember]
+        Unknown = 0,
 
         /// <summary>
         /// Single Scan

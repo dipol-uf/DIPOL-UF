@@ -1,25 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Text;
-using System.Threading.Tasks;
-using System.ComponentModel;
+using System.Reactive.Disposables;
 using System.Windows.Input;
-using System.Windows;
+using DynamicData;
+using DynamicData.Binding;
+using ReactiveUI.Fody.Helpers;
 
 namespace DIPOL_UF.ViewModels
 {
-    class MenuItemViewModel : ViewModel<Models.MenuItemModel>
+    internal sealed class MenuItemViewModel : ReactiveObjectEx
     {
+        [Reactive]
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+        public string Name { get; private set; }
 
-        public MenuItemViewModel(Models.MenuItemModel model)
-            :base(model)
+        public IObservableCollection<MenuItemViewModel> SubMenu { get; }
+            = new ObservableCollectionExtended<MenuItemViewModel>();
+
+        public ICommand Command { get; }
+
+        public MenuItemViewModel(string name, ICommand command,
+            IObservableList<MenuItemViewModel> subMenus = null)
         {
+            Name = name;
+            Command = command;
+            subMenus?.Connect().Bind(SubMenu).Subscribe().DisposeWith(Subscriptions);
         }
 
-        public string Header => model.Header;
-        public ICommand Command => model.Command as ICommand;
-        public ObservableCollection<MenuItemViewModel> MenuItems => model.MenuItems;
-                
+
     }
 }

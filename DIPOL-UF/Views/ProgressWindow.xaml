@@ -3,51 +3,75 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:cmds="clr-namespace:DIPOL_UF.Commands"
-        xmlns:loc="clr-namespace:DIPOL_UF"
-        xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
+        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:viewModels="clr-namespace:DIPOL_UF.ViewModels"
+        xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
         x:Name="ProgressWindowInstance"
         Title="ProgressWindow" Height="150" Width="500" WindowStyle="None" ResizeMode="NoResize"
         Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" 
         BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" 
         IsTabStop="False" ShowInTaskbar="False"
         mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance Type=vms:ProgressBarViewModel}">
-    <Grid Margin="5" Background="Transparent"  MouseDown="{cmds:EventToCommand 'MouseDragEventHandler | MouseEventHandler'}">
+        d:DataContext="{d:DesignInstance Type=viewModels:ProgressBarViewModel}">
+    <Grid Margin="5" Background="Transparent">
+        <behaviors:Interaction.Triggers>
+            <behaviors:EventTrigger EventName="MouseDown" >
+                <behaviors:InvokeCommandAction
+                    Command="{Binding WindowDragCommand}"
+                    CommandParameter="{Binding ElementName=ProgressWindowInstance}"/>
+            </behaviors:EventTrigger>
+        </behaviors:Interaction.Triggers>
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"/>
             <RowDefinition Height="1*"/>
             <RowDefinition Height="1.25*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <ProgressBar Name="Bar" VerticalAlignment="Center" 
-                     Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                     Style="{StaticResource ResourceKey=ProgressBarStyle}"
-                     IsIndeterminate="{Binding Path=IsIndeterminate, UpdateSourceTrigger=PropertyChanged}"
-                     Minimum="{Binding Minimum, UpdateSourceTrigger=PropertyChanged}"
-                     Maximum="{Binding Maximum, UpdateSourceTrigger=PropertyChanged}"
-                     Value="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
-        <Label Name="TitleBox" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-               Content="{Binding BarTitle, UpdateSourceTrigger=PropertyChanged}" 
-               Style="{StaticResource ResourceKey=TitleFont_Label}"/>
-        <TextBlock Name="CommentBox" Grid.Row="2" Grid.Column="0"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-               Text="{Binding BarComment, UpdateSourceTrigger=PropertyChanged}" 
-               TextWrapping="WrapWithOverflow"
-                   Style="{StaticResource ResourceKey=ContentFont_TextBlock}"
-               />
-        <Label Name="ProgressNumberBox" Grid.Row ="1" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" 
-               Content="{Binding ProgressText, UpdateSourceTrigger=PropertyChanged}"
-               Style="{StaticResource ResourceKey=ContentFont_Label}"/>
 
-        <Button Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" Margin="10, 5, 10, 5"
-                Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}"
-                IsCancel="True" Visibility="{Binding CanAbort, Converter={StaticResource BoolToVisibilityConverter}}"
-                Content="{loc:Text Key=General_Abort}"
-                Command="{Binding CancelCommand}" CommandParameter="{Binding ElementName=ProgressWindowInstance}"/>
+        <Label
+            Name="TitleBox" 
+            Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+            HorizontalAlignment="Stretch" VerticalAlignment="Center"
+            Content="{Binding BarTitle, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
+            Style="{StaticResource ResourceKey=TitleFont_Label}"/>
+
+        <TextBlock 
+            Name="CommentBox" Grid.Row="2" Grid.Column="0"  
+            HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+            Text="{Binding BarComment, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
+            TextWrapping="WrapWithOverflow"
+            Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
+    
+        <ProgressBar 
+            Name="Bar" 
+            VerticalAlignment="Center" HorizontalAlignment="Stretch"
+            Grid.Column="0"  Grid.Row="1"
+            Style="{StaticResource ResourceKey=ProgressBarStyle}"
+            IsIndeterminate="{Binding Path=IsIndeterminate, 
+                UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+            Minimum="{Binding Minimum, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
+            Maximum="{Binding Maximum, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
+            Value="{Binding Value, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"/>
+        <Label 
+            Name="ProgressNumberBox" 
+            Grid.Row="1" Grid.Column ="1"  
+            MaxWidth="{Binding ElementName=AbortButton, Path=MaxWidth}"
+            HorizontalAlignment="Stretch" VerticalAlignment="Center" 
+            HorizontalContentAlignment="Center"
+            Content="{Binding ProgressText, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
+            Style="{StaticResource ResourceKey=ContentFont_Label}"/>
+        <Button 
+            Name="AbortButton"
+            Grid.Column="1" Grid.Row="2"
+            HorizontalAlignment="Right" 
+            Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}"
+            IsCancel="True"
+            Content="{extensions:Text Key=General_Abort}"
+            Command="{Binding CancelCommand}" 
+            CommandParameter="{Binding ElementName=ProgressWindowInstance}"/>
 
     </Grid>
 </Window>
