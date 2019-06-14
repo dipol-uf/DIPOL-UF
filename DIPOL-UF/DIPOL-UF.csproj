@@ -148,6 +148,7 @@
     <Compile Include="FileDialogDescriptor.cs" />
     <Compile Include="GeometryDescriptor.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="Injector.cs" />
     <Compile Include="Jobs\JobManager.CameraAction.cs" />
     <Compile Include="Jobs\JobManager.DelayAction.cs" />
     <Compile Include="Jobs\JobManager.Job.cs" />

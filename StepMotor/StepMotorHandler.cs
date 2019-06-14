@@ -663,91 +663,91 @@ namespace StepMotor
 
         }
 
-        public static async Task<ImmutableList<byte>> FindDevice(SerialPort port, byte startAddress = 1,
-            byte endAddress = 16)
-        {
+        //public static async Task<ImmutableList<byte>> FindDevice(SerialPort port, byte startAddress = 1,
+        //    byte endAddress = 16)
+        //{
 
-            var result = ImmutableList.CreateBuilder<byte>();
+        //    var result = ImmutableList.CreateBuilder<byte>();
 
-            for (var address = startAddress; address <= endAddress; address++)
-            {
-                var motor = new StepMotorHandler(port, address);
-                try
-                {
-                    if (await motor.PokeAddressInBinary(address))
-                        result.Add(address);
-                    else
-                    {
-                        await motor.SwitchToBinary(address);
-                        if (await motor.PokeAddressInBinary(address))
-                            result.Add(address);
-                    }
-                }
-                catch (Exception)
-                {
-                    // Ignored
-                }
-                finally
-                {
-                    motor.Dispose();
-                }
-            }
+        //    for (var address = startAddress; address <= endAddress; address++)
+        //    {
+        //        var motor = new StepMotorHandler(port, address);
+        //        try
+        //        {
+        //            if (await motor.PokeAddressInBinary(address))
+        //                result.Add(address);
+        //            else
+        //            {
+        //                await motor.SwitchToBinary(address);
+        //                if (await motor.PokeAddressInBinary(address))
+        //                    result.Add(address);
+        //            }
+        //        }
+        //        catch (Exception)
+        //        {
+        //            // Ignored
+        //        }
+        //        finally
+        //        {
+        //            motor.Dispose();
+        //        }
+        //    }
 
-            return result.ToImmutable();
-        }
+        //    return result.ToImmutable();
+        //}
 
-        public static async Task<IAsyncMotor> TryCreateFromAddress(
-            SerialPort port, byte address, TimeSpan defaultTimeOut = default)
-        {
-            if (port is null)
-                throw new ArgumentNullException(nameof(port));
+        //public static async Task<IAsyncMotor> TryCreateFromAddress(
+        //    SerialPort port, byte address, TimeSpan defaultTimeOut = default)
+        //{
+        //    if (port is null)
+        //        throw new ArgumentNullException(nameof(port));
 
-            var motor = new StepMotorHandler(port , address, defaultTimeOut);
+        //    var motor = new StepMotorHandler(port , address, defaultTimeOut);
 
-            try
-            {
-                if (await motor.PokeAddressInBinary(address))
-                    return motor;
+        //    try
+        //    {
+        //        if (await motor.PokeAddressInBinary(address))
+        //            return motor;
 
-                await motor.SwitchToBinary(address);
-                if (await motor.PokeAddressInBinary(address))
-                    return motor;
+        //        await motor.SwitchToBinary(address);
+        //        if (await motor.PokeAddressInBinary(address))
+        //            return motor;
 
-            }
-            catch (Exception)
-            {
-                // Ignored
-            }
-            motor.Dispose();
-            return null;
-        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //        // Ignored
+        //    }
+        //    motor.Dispose();
+        //    return null;
+        //}
 
-        public static async Task<IAsyncMotor> TryCreateFirst(
-            SerialPort port, byte startAddress = 1, byte endAddress = 16, TimeSpan defaultTimeOut = default)
-        {
-            if (port is null)
-                throw new ArgumentNullException(nameof(port));
-            if (startAddress > endAddress)
-                throw new ArgumentOutOfRangeException(
-                    $"[{nameof(startAddress)}] should be less than or equal to [{nameof(endAddress)}]");
+        //public static async Task<IAsyncMotor> TryCreateFirst(
+        //    SerialPort port, byte startAddress = 1, byte endAddress = 16, TimeSpan defaultTimeOut = default)
+        //{
+        //    if (port is null)
+        //        throw new ArgumentNullException(nameof(port));
+        //    if (startAddress > endAddress)
+        //        throw new ArgumentOutOfRangeException(
+        //            $"[{nameof(startAddress)}] should be less than or equal to [{nameof(endAddress)}]");
 
-            for (var address = startAddress; address <= endAddress; address++)
-            {
-                var motor = await TryCreateFromAddress(port, address, defaultTimeOut);
-                if (motor != null)
-                    return motor;
-            }
+        //    for (var address = startAddress; address <= endAddress; address++)
+        //    {
+        //        var motor = await TryCreateFromAddress(port, address, defaultTimeOut);
+        //        if (motor != null)
+        //            return motor;
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
-        public static async Task<IAsyncMotor> CreateFirstOrFromAddress(
-            SerialPort port, byte address,
-            byte startAddress = 1, byte endAddress = 16,
-            TimeSpan defaultTimeOut = default)
-            => (await TryCreateFromAddress(port, address, defaultTimeOut)
-                ?? await TryCreateFirst(port, startAddress, endAddress, defaultTimeOut))
-               ?? throw new InvalidOperationException("Failed to connect to step motor.");
+        //public static async Task<IAsyncMotor> CreateFirstOrFromAddress(
+        //    SerialPort port, byte address,
+        //    byte startAddress = 1, byte endAddress = 16,
+        //    TimeSpan defaultTimeOut = default)
+        //    => (await TryCreateFromAddress(port, address, defaultTimeOut)
+        //        ?? await TryCreateFirst(port, startAddress, endAddress, defaultTimeOut))
+        //       ?? throw new InvalidOperationException("Failed to connect to step motor.");
 
         public class StepMotorFactory : IAsyncMotorFactory
         {

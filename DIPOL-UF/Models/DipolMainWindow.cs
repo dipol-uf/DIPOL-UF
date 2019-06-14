@@ -148,8 +148,9 @@ namespace DIPOL_UF.Models
                     if (_polarimeterPort is null)
                         _polarimeterPort = new SerialPort(UiSettingsProvider.Settings
                             .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant());
-                   
-                    motor = await StepMotorHandler.CreateFirstOrFromAddress(_polarimeterPort, 1);
+
+                    motor = await Injector.NewStepMotorFactory().CreateFirstOrFromAddress(_polarimeterPort, 1);
+                    //motor = await StepMotorHandler.CreateFirstOrFromAddress(_polarimeterPort, 1);
                     await motor.ReferenceReturnToOriginAsync();
                 }
                 catch (Exception)
@@ -178,7 +179,8 @@ namespace DIPOL_UF.Models
                         _retractorPort = new SerialPort(UiSettingsProvider.Settings
                             .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant());
 
-                    motor = await StepMotorHandler.CreateFirstOrFromAddress(_retractorPort, 1);
+                    motor = await Injector.NewStepMotorFactory().CreateFirstOrFromAddress(_retractorPort, 1);
+                    //motor = await StepMotorHandler.CreateFirstOrFromAddress(_retractorPort, 1);
                     await motor.ReturnToOriginAsync();
                 }
                 catch (Exception)
