@@ -65,6 +65,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RemoteCameraFactory.cs" />
     <Compile Include="Remote\AsyncResult.cs" />
     <Compile Include="DipolClient.cs" />
     <Compile Include="DipolHost.cs" />

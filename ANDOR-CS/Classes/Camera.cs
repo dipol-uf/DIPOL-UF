@@ -59,7 +59,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Represents an instance of a Camera device
     /// </summary>
-    public sealed class Camera : CameraBase
+    public sealed partial class Camera : CameraBase
     {
         private static readonly Regex PathPatternChecker =
             new Regex(@":|;|//|[/\\]?\.\.[/\\]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -115,21 +115,9 @@ namespace ANDOR_CS.Classes
         /// <exception cref="ArgumentException"/>
         /// <exception cref="InvalidOperationException"/>
         /// <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="Camera.GetNumberOfCameras()"/></param>
-        public Camera(int camIndex = 0)
+        private Camera(int camIndex = 0)
         {
             // Stores return codes from SDK functions
-            var n = GetNumberOfCameras();
-            if (n == 0)
-                throw new AndorSdkException("No ANDOR-compatible cameras found.", null);
-
-            // If cameraIndex is less than 0, it is out of range
-            if (camIndex < 0)
-                throw new ArgumentException(
-                    $"Camera index is out of range; Cannot be less than 0 (provided {camIndex}).");
-            // If cameraIndex equals to or exceeds the number of available cameras, it is also out of range
-            if (camIndex > n)
-                throw new ArgumentException(
-                    $"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {camIndex}).");
             // If camera with such index is already in use, throws exception
             if (CreatedCameras.Count(cam => cam.Value.CameraIndex == camIndex) != 0)
                 throw new ArgumentException($"Camera with index {camIndex} is already created.");
@@ -1710,16 +1698,16 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AndorSdkException"/>
         /// <returns>TNumber of detected cameras</returns>
-        public static int GetNumberOfCameras()
-        {
-            // Variable is passed to SDK function
+        //public static int GetNumberOfCameras()
+        //{
+        //    // Variable is passed to SDK function
 
-            var result = CallWithoutHandle(SdkInstance.GetAvailableCameras, out int cameraCount);
-            if (FailIfError(result, nameof(SdkInstance.GetAvailableCameras), out var except))
-                throw except;
+        //    var result = CallWithoutHandle(SdkInstance.GetAvailableCameras, out int cameraCount);
+        //    if (FailIfError(result, nameof(SdkInstance.GetAvailableCameras), out var except))
+        //        throw except;
 
-            return cameraCount;
-        }
+        //    return cameraCount;
+        //}
 
         //public new static Camera Create(int camIndex = 0, params object[] @params)
         //    => new Camera(camIndex);

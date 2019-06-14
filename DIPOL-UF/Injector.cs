@@ -23,6 +23,8 @@
 //     SOFTWARE.
 
 using ANDOR_CS;
+using ANDOR_CS.Classes;
+using DIPOL_Remote;
 using StepMotor;
 
 namespace DIPOL_UF
@@ -33,6 +35,9 @@ namespace DIPOL_UF
             => new StepMotorHandler.StepMotorFactory();
 
         public static IDeviceFactory NewLocalDeviceFactory()
-            => new LocalCameraFactory();
+            => new Camera.LocalCameraFactory();
+
+        public static IDeviceFactory NewRemoteDeviceFactory(DipolClient client)
+            => new RemoteCamera.RemoteCameraFactory(client);
     }
 }

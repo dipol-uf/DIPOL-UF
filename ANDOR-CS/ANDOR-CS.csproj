@@ -147,10 +147,9 @@
     <Compile Include="Enums\VSAmplitudeEnum.cs" />
     <Compile Include="Events\AcquisitionStatusEventArgs.cs" />
     <Compile Include="IAcquisitionSettings.cs" />
-    <Compile Include="IDeviceCreationParams.cs" />
     <Compile Include="IDeviceFactory.cs" />
     <Compile Include="IDevice.cs" />
-    <Compile Include="LocalCameraFactory.cs" />
+    <Compile Include="Classes\LocalCameraFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Enums\TemperatureStatusEnum.cs" />
   </ItemGroup>

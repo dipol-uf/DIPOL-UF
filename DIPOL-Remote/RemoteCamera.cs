@@ -41,7 +41,7 @@ using AcquisitionEventType = DIPOL_Remote.Enums.AcquisitionEventType;
 
 namespace DIPOL_Remote
 {
-    public sealed class RemoteCamera : CameraBase
+    public sealed partial class RemoteCamera : CameraBase
     {
         private static readonly ConcurrentDictionary<int, RemoteCamera> RemoteCameras
             = new ConcurrentDictionary<int, RemoteCamera>();
@@ -296,7 +296,6 @@ namespace DIPOL_Remote
             => _client.CallTemperatureMonitor(CameraIndex, mode, timeout);
 
        
-
         public override IAcquisitionSettings GetAcquisitionSettingsTemplate()
             => new RemoteSettings(this, _client.CreateSettings(CameraIndex), _client);
 
@@ -467,27 +466,5 @@ namespace DIPOL_Remote
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
 
-        public new static RemoteCamera Create(int camIndex = 0, params object[] @params)
-        {
-            if (!(@params?.Length == 1 && @params[0] is DipolClient client))
-                throw new ArgumentException(
-                              $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.",
-                              nameof(@params));
-
-            client.CreateRemoteCamera(camIndex);
-
-            return new RemoteCamera(camIndex, client);
-        }
-
-        public new static async Task<RemoteCamera> CreateAsync(int camIndex = 0, params object[] @params)
-        {
-            if (!(@params?.Length == 1 && @params[0] is DipolClient client))
-                throw new ArgumentException(
-                    $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.",
-                    nameof(@params));
-
-            await client.CreateCameraAsync(camIndex);
-            return new RemoteCamera(camIndex, client);
-        }
     }
 }

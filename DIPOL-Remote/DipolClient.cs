@@ -332,6 +332,7 @@ namespace DIPOL_Remote
             await taskSource.Task;
         }
 
+        // ReSharper disable once UnusedMember.Local
         private async Task<TResult> AsyncHelper<TParam, TResult>(
             Func<TParam, RemoteCancellationToken, AsyncCallback, object, IAsyncResult> beginInvoke,
             Func<IAsyncResult, TResult> endInvoke,

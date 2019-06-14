@@ -67,6 +67,7 @@ namespace DIPOL_Remote.Remote
 
         private readonly CameraDictionary _cameras = new CameraDictionary();
         private readonly SettingsDictionary _settings = new SettingsDictionary();
+        private readonly IDeviceFactory _factory;
 
         private OperationContext Context { get; set; }
 
@@ -84,7 +85,7 @@ namespace DIPOL_Remote.Remote
 
         private RemoteControl()
         {
-         
+            _factory = new Camera.LocalCameraFactory();
         }
 
         private void SubscribeToCameraEvents(CameraBase camera)
@@ -178,7 +179,7 @@ namespace DIPOL_Remote.Remote
             //WATCH: temp solution
             CameraBase camera;
 
-            var factory = new LocalCameraFactory();
+            var factory = new Camera.LocalCameraFactory();
 
             try
             {
@@ -246,6 +247,7 @@ namespace DIPOL_Remote.Remote
 
             _host.OnEventReceived("Host", $"Session {SessionID} established.");
 
+
         }
         /// <summary>
         /// Exit point for any connection. Frees resources.
@@ -304,7 +306,7 @@ namespace DIPOL_Remote.Remote
 #if DEBUG_REMOTE
                 return 1;
 #else 
-                return Camera.GetNumberOfCameras();
+                return _factory.GetNumberOfCameras();
 #endif
 
             }
@@ -312,7 +314,7 @@ namespace DIPOL_Remote.Remote
             catch (AndorSdkException andorEx)
             {
                 // rethrow it, wrapped in FaultException<>, to the client side
-                throw AndorSdkFault.WrapFault(andorEx, nameof(Camera.GetNumberOfCameras));
+                throw AndorSdkFault.WrapFault(andorEx, nameof(_factory.GetNumberOfCameras));
           
             }
             // If failure is not related to Andor API
@@ -324,7 +326,7 @@ namespace DIPOL_Remote.Remote
                     {
                         Message = "Failed retrieving number of available cameras.",
                         Details = ex.Message,
-                        MethodName = nameof(Camera.GetNumberOfCameras)
+                        MethodName = nameof(_factory.GetNumberOfCameras)
                     },
                     ServiceFault.CameraCommunicationReason);
 

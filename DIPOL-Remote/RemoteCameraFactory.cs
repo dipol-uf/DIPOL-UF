@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
+//     Copyright(c) 2019 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -23,40 +23,35 @@
 //     SOFTWARE.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using ANDOR_CS.Classes;
-#if X86
-using SDK = ATMCD32CS.AndorSDK;
-#endif
-#if X64
-using SDK = ATMCD64CS.AndorSDK;
-#endif
+using ANDOR_CS;
 
-namespace ANDOR_CS
+namespace DIPOL_Remote
 {
-    public class LocalCameraFactory : IDeviceFactory
+    public sealed partial class RemoteCamera
     {
-        public int GetNumberOfCameras()
+        public class RemoteCameraFactory : IDeviceFactory
         {
-            // Variable is passed to SDK function
+            private readonly DipolClient _client;
 
-            var result =
-                Classes.AndorSdkInitialization.CallWithoutHandle(
-                    Classes.AndorSdkInitialization.SdkInstance.GetAvailableCameras, out int cameraCount);
-            if (Exceptions.AndorSdkException.FailIfError(result,
-                nameof(Classes.AndorSdkInitialization.SdkInstance.GetAvailableCameras), out var except))
-                throw except;
+            public RemoteCameraFactory(DipolClient client)
+                => _client = client ?? throw new ArgumentNullException(nameof(client));
 
-            return cameraCount;
+            public int GetNumberOfCameras()
+                => _client.GetNumberOfCameras();
+
+            public IDevice Create(int index = 0)
+            {
+                _client.CreateRemoteCamera(index);
+                return new RemoteCamera(index, _client);
+            }
+
+            public async Task<IDevice> CreateAsync(int index = 0)
+            {
+                await _client.CreateCameraAsync(index);
+                return new RemoteCamera(index, _client);
+            }
+
         }
-
-        public IDevice Create(int index = 0, IDeviceCreationParams @params = null)
-            => new Camera(index);
-
-        public Task<IDevice> CreateAsync(int index = 0, IDeviceCreationParams @params = null)
-            => Task.Run(() => Create(index, @params));
     }
 }

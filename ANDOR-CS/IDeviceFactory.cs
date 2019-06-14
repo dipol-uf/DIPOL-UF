@@ -29,7 +29,7 @@ namespace ANDOR_CS
     public interface IDeviceFactory
     {
         int GetNumberOfCameras();
-        IDevice Create(int index = 0, IDeviceCreationParams @params = null);
-        Task<IDevice> CreateAsync(int index = 0, IDeviceCreationParams @params = null);
+        IDevice Create(int index = 0);
+        Task<IDevice> CreateAsync(int index = 0);
     }
 }

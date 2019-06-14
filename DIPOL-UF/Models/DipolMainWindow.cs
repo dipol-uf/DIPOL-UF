@@ -22,7 +22,6 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_Remote;
 using DIPOL_UF.ViewModels;
@@ -475,7 +474,7 @@ namespace DIPOL_UF.Models
         {
             var cams = model.RetrieveSelectedDevices();
 
-            if (cams.Count > 0)
+            if (cams.Length > 0)
                 _connectedCameras.Edit(context => { context.AddOrUpdate(cams); });
 
             await PrepareCamerasAsync(cams.Select(x => x.Camera));

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Threading;
 using System.Threading.Tasks;
-
-using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
 
 using System.Reactive;
@@ -25,10 +24,12 @@ namespace DIPOL_UF.Models
 {
     internal sealed class AvailableCamerasModel : ReactiveObjectEx //-V3073
     {
-
         private readonly DipolClient[] _remoteClients;
 
         private readonly SourceCache<(string Id, IDevice Camera), string> _foundDevices;
+
+        private readonly ImmutableArray<IDeviceFactory> _remoteFactories;
+        private readonly IDeviceFactory _localFactory;
 
         private bool _isClosed;
         private bool _isSelected;
@@ -53,12 +54,19 @@ namespace DIPOL_UF.Models
         {
 
             _remoteClients = remoteClients;
+            _remoteFactories = 
+                remoteClients is null
+                ? ImmutableArray<IDeviceFactory>.Empty 
+                : ImmutableArray.CreateRange(remoteClients.Select(Injector.NewRemoteDeviceFactory));
+
             IsInteractive = true;
             SelectedIds = new SourceList<string>().DisposeWith(Subscriptions);
 
             _foundDevices =
                 new SourceCache<(string Id, IDevice Camera), string>(x => x.Id)
                     .DisposeWith(Subscriptions);
+
+            _localFactory = Injector.NewLocalDeviceFactory();
 
             InitializeCommands();
             HookObservables();
@@ -161,22 +169,22 @@ namespace DIPOL_UF.Models
 
             try
             {
-                nLocal = await Helper.RunNoMarshall(Camera.GetNumberOfCameras);
+                nLocal = await Helper.RunNoMarshall(_localFactory.GetNumberOfCameras);
             }
             catch (AndorSdkException aExp)
             {
                 Helper.WriteLog(aExp);
             }
-            if(!(_remoteClients is null))
-            foreach (var client in _remoteClients)
-                try
-                {
-                    nRemote.Add(await Helper.RunNoMarshall(() => client?.GetNumberOfCameras() ?? 0));
-                }
-                catch (Exception e)
-                {
-                    Helper.WriteLog(e.Message);
-                }
+            if(!(_remoteFactories.IsEmpty))
+                foreach (var factory in _remoteFactories)
+                    try
+                    {
+                        nRemote.Add(await Helper.RunNoMarshall(() => factory?.GetNumberOfCameras() ?? 0));
+                    }
+                    catch (Exception e)
+                    {
+                        Helper.WriteLog(e.Message);
+                    }
 
             cancelToken.ThrowIfCancellationRequested();
 
@@ -218,7 +226,6 @@ namespace DIPOL_UF.Models
             // Number of cameras
             var counter = 0;
             var workers = new Task[nLocal];
-            var factory = Injector.NewLocalDeviceFactory();
             // For each found local camera
             for (var camIndex = 0; camIndex < nLocal; camIndex++)
             {
@@ -231,7 +238,7 @@ namespace DIPOL_UF.Models
                     IDevice cam = null;
                     try
                     {
-                        cam = await factory.CreateAsync(index).ConfigureAwait(false);
+                        cam = await _localFactory.CreateAsync(index).ConfigureAwait(false);
                     }
                     // Silently catch exception and continue
                     catch (Exception aExp)
@@ -278,10 +285,10 @@ namespace DIPOL_UF.Models
         private async Task<int> QueryRemoteCamerasAsync(IReadOnlyList<int> nRemote, CancellationToken token, ProgressBar pb)
         {
             var counter = 0;
-            var workers = new Task[_remoteClients.Length];
+            var workers = new Task[_remoteFactories.Length];
             var clientIndex = 0;
             // For each remote client
-            foreach (var client in _remoteClients)
+            foreach (var factory in _remoteFactories)
             {
                 // Checks if cancellation is requested
                 token.ThrowIfCancellationRequested();
@@ -301,10 +308,10 @@ namespace DIPOL_UF.Models
                             IDevice cam = null;
                             try
                             {
-                                if (!client.ActiveRemoteCameras().Contains(camIndex))
+                                // WATCH: can fail here
+                                //if (!client.ActiveRemoteCameras().Contains(camIndex))
                                     //cam = client.CreateRemoteCamera(camIndex);  
-                                    cam = await RemoteCamera.CreateAsync(camIndex, client)
-                                                            .ConfigureAwait(false);
+                                    cam = await factory.CreateAsync(camIndex).ConfigureAwait(false);
                             }
                             // Catch silently
                             catch (Exception aExp)
@@ -322,7 +329,7 @@ namespace DIPOL_UF.Models
                             // Add to collection
                             if (cam != null)
                             {
-                                var id = $"{client.HostAddress};{cam.CameraIndex};{cam.CameraModel};{cam.SerialNumber}";
+                                var id = $"{_remoteClients[localIndex].HostAddress};{cam.CameraIndex};{cam.CameraModel};{cam.SerialNumber}";
                                 if (_foundDevices.Lookup(id).HasValue)
                                 {
                                     cam.Dispose();
@@ -444,9 +451,9 @@ namespace DIPOL_UF.Models
         }
 
 
-        public ReadOnlyCollection<(string Id, IDevice Camera)> RetrieveSelectedDevices()
+        public ImmutableArray<(string Id, IDevice Camera)> RetrieveSelectedDevices()
         {
-            var result = new List<(string Id, IDevice Camera)>();
+            var result = new List<(string Id, IDevice Camera)>(SelectedIds.Count);
 
             _foundDevices.Edit(context =>
             {
@@ -462,9 +469,10 @@ namespace DIPOL_UF.Models
                 }
             });
 
-            return new ReadOnlyCollection<(string Id, IDevice Camera)>(
-                result.OrderBy(x =>
-                    ConverterImplementations.CameraToStringAliasConversion(x.Camera) ?? x.Camera.ToString()).ToList());
+            return result.OrderBy(x =>
+                             ConverterImplementations.CameraToStringAliasConversion(x.Camera)
+                             ?? x.Camera.ToString())
+                         .ToImmutableArray();
         }
     }
 }
