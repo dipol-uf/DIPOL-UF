@@ -32,6 +32,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using ANDOR_CS;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
@@ -60,7 +61,7 @@ namespace DIPOL_UF.Jobs
         private DipolMainWindow _windowRef;
         private byte[] _settingsRep;
         private List<CameraTab> _jobControls;
-        private Dictionary<int, SettingsBase> _settingsCache;
+        private Dictionary<int, IAcquisitionSettings> _settingsCache;
         private Task _jobTask;
         private CancellationTokenSource _tokenSource;
         private Dictionary<int, Request> _requestMap;

@@ -1084,7 +1084,7 @@ namespace ANDOR_CS.Classes
         /// </summary>
         /// <exception cref="AndorSdkException"/>
         /// <returns>A template that can be used to select proper acquisition settings</returns>
-        public override SettingsBase GetAcquisitionSettingsTemplate()
+        public override IAcquisitionSettings GetAcquisitionSettingsTemplate()
         {
             CheckIsDisposed();
 
@@ -1472,7 +1472,7 @@ namespace ANDOR_CS.Classes
             await _sessionSubscription;
         }
 
-        public override void ApplySettings(SettingsBase settings)
+        public override void ApplySettings(IAcquisitionSettings settings)
         {
 
             CheckIsDisposed();

@@ -28,6 +28,7 @@ using System.IO;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
+using ANDOR_CS;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
@@ -51,7 +52,7 @@ namespace DIPOL_Remote
         private bool _isActive;
         private DipolClient _client;
 
-        public override SettingsBase CurrentSettings { get; protected set; }
+        public override IAcquisitionSettings CurrentSettings { get; protected set; }
         public override (float Exposure, float Accumulation, float Kinetic) Timings
         {
             get => _client.CallGetTimings(CameraIndex);
@@ -296,7 +297,7 @@ namespace DIPOL_Remote
 
        
 
-        public override SettingsBase GetAcquisitionSettingsTemplate()
+        public override IAcquisitionSettings GetAcquisitionSettingsTemplate()
             => new RemoteSettings(this, _client.CreateSettings(CameraIndex), _client);
 
         public override Task StartAcquisitionAsync(Request metadata = default, CancellationToken cancellationToken = default)
@@ -330,7 +331,7 @@ namespace DIPOL_Remote
         public override void SetAutosave(Switch mode, ImageFormat format = ImageFormat.SignedInt32)
             => _client.CallSetAutosave(CameraIndex, mode, format);
 
-        public override void ApplySettings(SettingsBase settings)
+        public override void ApplySettings(IAcquisitionSettings settings)
         {
             if (!(settings is RemoteSettings remoteSetts))
                 throw new ArgumentException(nameof(settings));

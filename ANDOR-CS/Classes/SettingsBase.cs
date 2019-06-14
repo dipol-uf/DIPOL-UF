@@ -51,7 +51,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Base class for all the settings profiles
     /// </summary>
-    public abstract class SettingsBase : IDisposable, INotifyPropertyChanged
+    public abstract class SettingsBase : IAcquisitionSettings
     {
         private static readonly Regex SetFunctionNameParser = new Regex(@"^set(.+)$", 
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -784,7 +784,7 @@ namespace ANDOR_CS.Classes
 
         public abstract (int Low, int High) GetEmGainRange();
 
-        public virtual SettingsBase MakeCopy()
+        public virtual IAcquisitionSettings MakeCopy()
         {
             var copy = MakeEmptyCopy();
             foreach (var prop in SerializedProperties)

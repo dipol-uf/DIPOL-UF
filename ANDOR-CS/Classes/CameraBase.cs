@@ -44,7 +44,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Base abstract class to all ANDOR-device classes
     /// </summary>
-    public abstract class CameraBase : IDisposable, INotifyPropertyChanged
+    public abstract class CameraBase : IDevice
     {
         protected const int AmpDescriptorMaxLength = 21;
         protected const int PreAmpGainDescriptorMaxLength = 30;
@@ -75,7 +75,7 @@ namespace ANDOR_CS.Classes
         private bool _isTemperatureMonitored;
         private bool _isAcquiring;
 
-        private SettingsBase _currentSettings;
+        private IAcquisitionSettings _currentSettings;
 
 
         protected Switch Autosave
@@ -86,7 +86,7 @@ namespace ANDOR_CS.Classes
         protected ImageFormat AutosaveFormat { get; private set; }
         protected List<FitsKey> SettingsFitsKeys { get; private set; }
 
-        public virtual SettingsBase CurrentSettings
+        public virtual IAcquisitionSettings CurrentSettings
         {
             get => _currentSettings;
             // TODO : Update this
@@ -442,7 +442,7 @@ namespace ANDOR_CS.Classes
             AutosaveFormat = format;
         }
 
-        public virtual void ApplySettings(SettingsBase settings)
+        public virtual void ApplySettings(IAcquisitionSettings settings)
         {
             CurrentSettings = settings;
             SettingsFitsKeys = settings.ConvertToFitsKeys();
@@ -480,7 +480,7 @@ namespace ANDOR_CS.Classes
             FitsKey[] extraKeys = null);
         public abstract Task FinishImageSavingSequenceAsync();
 
-        public abstract SettingsBase GetAcquisitionSettingsTemplate();
+        public abstract IAcquisitionSettings GetAcquisitionSettingsTemplate();
 
         protected abstract void StartAcquisition();
 

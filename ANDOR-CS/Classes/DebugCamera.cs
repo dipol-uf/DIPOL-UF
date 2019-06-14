@@ -155,7 +155,7 @@ namespace ANDOR_CS.Classes
 
        
 
-        public override SettingsBase GetAcquisitionSettingsTemplate()
+        public override IAcquisitionSettings GetAcquisitionSettingsTemplate()
         {
             return new DebugSettings(this);
         }
@@ -258,7 +258,7 @@ namespace ANDOR_CS.Classes
             IsAcquiring = false;
         }
 
-        public override void ApplySettings(SettingsBase settings)
+        public override void ApplySettings(IAcquisitionSettings settings)
         {
             var delta = 0.5f * CameraIndex;
             Timings = (1.5f + delta, 1.5f + delta, 1.5f + delta);

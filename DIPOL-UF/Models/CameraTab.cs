@@ -29,6 +29,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using ANDOR_CS;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
@@ -247,7 +248,7 @@ namespace DIPOL_UF.Models
 
             AcquisitionSettingsWindow = new DescendantProvider(
                     ReactiveCommand.Create<object, ReactiveObjectEx>(
-                        _ => new ReactiveWrapper<SettingsBase>(
+                        _ => new ReactiveWrapper<IAcquisitionSettings>(
                             Camera.CurrentSettings ?? Camera.GetAcquisitionSettingsTemplate())),
                     null, null,
                     ReactiveCommand.Create<ReactiveObjectEx>(x =>

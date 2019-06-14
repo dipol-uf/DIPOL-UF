@@ -31,6 +31,7 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ANDOR_CS;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
@@ -41,7 +42,7 @@ using DIPOL_Remote.Callback;
 using DIPOL_Remote.Faults;
 using FITS_CS;
 using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
-using SettingsDictionary = System.Collections.Concurrent.ConcurrentDictionary<string, ANDOR_CS.Classes.SettingsBase>;
+using SettingsDictionary = System.Collections.Concurrent.ConcurrentDictionary<string,ANDOR_CS.IAcquisitionSettings>;
 using Switch = ANDOR_CS.Enums.Switch;
 
 // ReSharper disable InheritdocConsiderUsage
@@ -370,7 +371,7 @@ namespace DIPOL_Remote.Remote
 
             var settingsId = Guid.NewGuid().ToString("N");
 
-            SettingsBase setts;
+            IAcquisitionSettings setts;
             try
             {
                 setts = cam.GetAcquisitionSettingsTemplate();
@@ -421,7 +422,7 @@ namespace DIPOL_Remote.Remote
 
             var newId = Guid.NewGuid().ToString("N");
 
-            SettingsBase setts;
+            IAcquisitionSettings setts;
             try
             {
                 setts = srcSetts.MakeCopy();
@@ -627,7 +628,7 @@ namespace DIPOL_Remote.Remote
                 ServiceFault.GeneralServiceErrorReason);
         }
 
-        private SettingsBase GetSettingsSafe(string settingsId)
+        private IAcquisitionSettings GetSettingsSafe(string settingsId)
         {
             if (_settings.TryGetValue(settingsId, out var sets))
                 return sets;
