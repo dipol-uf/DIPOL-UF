@@ -40,8 +40,10 @@ namespace Tests
         {
             var ports = SerialPort.GetPortNames();
 
+            var factory = new StepMotorHandler.StepMotorFactory();
+
             var devices =
-                await Task.WhenAll(ports.Select(x => new SerialPort(x)).Select(async x => (Port: x, Addresses: await StepMotorHandler.FindDevice(x))));
+                await Task.WhenAll(ports.Select(x => new SerialPort(x)).Select(async x => (Port: x, Addresses: await factory.FindDevice(x))));
 
             Assert.IsTrue(devices.Any(x => x.Addresses.Count > 0));
 
