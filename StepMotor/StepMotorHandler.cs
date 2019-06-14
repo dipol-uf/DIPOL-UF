@@ -26,6 +26,7 @@ using System;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.IO.Ports;
@@ -38,7 +39,7 @@ namespace StepMotor
     /// <summary>
     /// A COM-based interface to DIPOL's step-motor.
     /// </summary>
-    public class StepMotorHandler : IDisposable
+    public class StepMotorHandler : IAsyncMotor
     {
         private static readonly Regex Regex = new Regex(@"[a-z]([a-z])\s*(\d{1,3})\s*(.*)\r",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -367,14 +368,14 @@ namespace StepMotor
         /// </summary>
         /// <param name="motorOrBank">Motor or bank, defaults to 0.</param>
         /// <returns>Retrieved values for each AxisParameter queried.</returns>
-        public async Task<ReadOnlyDictionary<AxisParameter, int>> GetStatusAsync(
+        public async Task<ImmutableDictionary<AxisParameter, int>> GetStatusAsync(
             byte motorOrBank = 0)
         {
             // Stores old state
             var oldState = _suppressEvents;
             _suppressEvents = true;
 
-            var status = new Dictionary<AxisParameter, int>();
+            var status = ImmutableDictionary.CreateBuilder<AxisParameter, int>();
 
             // Ensures state is restored
             try
@@ -397,7 +398,7 @@ namespace StepMotor
             }
 
             // Returns query result
-            return new ReadOnlyDictionary<AxisParameter, int>(status);
+            return status.ToImmutable();
         }
 
 
@@ -406,14 +407,14 @@ namespace StepMotor
         /// </summary>
         /// <param name="motorOrBank">Motor or bank, defaults to 0.</param>
         /// <returns>Retrieved values for each AxisParameter queried.</returns>
-        public async Task<ReadOnlyDictionary<AxisParameter, int>> GetRotationStatusAsync(
+        public async Task<ImmutableDictionary<AxisParameter, int>> GetRotationStatusAsync(
             byte motorOrBank = 0)
         {
             // Stores old state
             var oldState = _suppressEvents;
             _suppressEvents = true;
 
-            var status = new Dictionary<AxisParameter, int>();
+            var status = ImmutableDictionary.CreateBuilder<AxisParameter, int>();
 
             // Ensures state is restored
             try
@@ -436,7 +437,7 @@ namespace StepMotor
             }
 
             // Returns query result
-            return new ReadOnlyDictionary<AxisParameter, int>(status);
+            return status.ToImmutable();
         }
 
         public async Task<int> GetActualPositionAsync(byte motorOrBank = 0)
