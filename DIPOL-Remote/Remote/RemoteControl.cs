@@ -174,14 +174,19 @@ namespace DIPOL_Remote.Remote
 
         private async Task CreateCameraAsync(int camIndex, params object[] @params)
         {
+
+            //WATCH: temp solution
             CameraBase camera;
+
+            var factory = new LocalCameraFactory();
+
             try
             {
                 // Tries to create new remote camera
 #if DEBUG_REMOTE
                 camera = await DebugCamera.CreateAsync(camIndex);
 #else
-                camera = await Camera.CreateAsync(camIndex, @params);
+                camera = (CameraBase)await factory.CreateAsync(camIndex);
 #endif
             }
             // Andor-related exception

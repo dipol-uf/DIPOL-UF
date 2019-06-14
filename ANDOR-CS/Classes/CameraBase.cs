@@ -542,11 +542,11 @@ namespace ANDOR_CS.Classes
         }
 
 
-        public static CameraBase Create(int camIndex = 0, params object[] @params)
-            => throw new NotSupportedException($"Cannot create instance of abstract class {nameof(CameraBase)}.");
+        //public static CameraBase Create(int camIndex = 0, params object[] @params)
+        //    => throw new NotSupportedException($"Cannot create instance of abstract class {nameof(CameraBase)}.");
 
-        public static async Task<CameraBase> CreateAsync(int camIndex = 0, params object[] @params)
-            => await Task.Run(() => Create(camIndex, @params));
+        //public static async Task<CameraBase> CreateAsync(int camIndex = 0, params object[] @params)
+        //    => await Task.Run(() => Create(camIndex, @params));
 
         ~CameraBase()
         {

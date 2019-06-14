@@ -22,6 +22,7 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using ANDOR_CS;
 using StepMotor;
 
 namespace DIPOL_UF
@@ -30,5 +31,8 @@ namespace DIPOL_UF
     {
         public static IAsyncMotorFactory NewStepMotorFactory() 
             => new StepMotorHandler.StepMotorFactory();
+
+        public static IDeviceFactory NewLocalDeviceFactory()
+            => new LocalCameraFactory();
     }
 }

@@ -1721,11 +1721,11 @@ namespace ANDOR_CS.Classes
             return cameraCount;
         }
 
-        public new static Camera Create(int camIndex = 0, params object[] @params)
-            => new Camera(camIndex);
+        //public new static Camera Create(int camIndex = 0, params object[] @params)
+        //    => new Camera(camIndex);
 
-        public new static async Task<Camera> CreateAsync(int camIndex = 0, params object[] @params)
-            => await Task.Run(() => Create(camIndex, @params));
+        //public new static async Task<Camera> CreateAsync(int camIndex = 0, params object[] @params)
+        //    => await Task.Run(() => Create(camIndex, @params));
 
     }
 

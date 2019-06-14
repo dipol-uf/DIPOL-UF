@@ -24,10 +24,13 @@
 
 using System;
 using System.ComponentModel;
+using System.Security.Policy;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.AcquisitionMetadata;
+using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
+using ANDOR_CS.Events;
 using DipolImage;
 using FITS_CS;
 
@@ -35,12 +38,29 @@ namespace ANDOR_CS
 {
     public interface IDevice : IDisposable, INotifyPropertyChanged
     {
+
+        event TemperatureStatusEventHandler TemperatureStatusChecked;
+
+        int CameraIndex { get; }
+        string CameraModel { get; }
+        string SerialNumber { get; }
+        bool IsDisposed { get; }
+        bool IsAcquiring { get; }
+        (Version EPROM, Version COFFile, Version Driver, Version Dll) Software { get; }
+        (Version PCB, Version Decode, Version CameraFirmware) Hardware { get; }
+
+        FanMode FanMode { get; }
+
+        DeviceCapabilities Capabilities { get; }
+        CameraProperties Properties { get; }
+
         CameraStatus GetStatus();
         (TemperatureStatus Status, float Temperature) GetCurrentTemperature();
         void FanControl(FanMode mode);
         void CoolerControl(Switch mode);
         void SetTemperature(int temperature);
         void ShutterControl(ShutterMode inter, ShutterMode extrn);
+        void TemperatureMonitor(Switch mode, int timeout);
 
         Image PullPreviewImage(int index, ImageFormat format);
 

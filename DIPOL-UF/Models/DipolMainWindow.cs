@@ -41,6 +41,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using ANDOR_CS;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using StepMotor;
@@ -56,7 +57,7 @@ namespace DIPOL_UF.Models
 
         private DipolClient[] _remoteClients;
 
-        private readonly SourceCache<(string Id, CameraBase Camera), string> _connectedCameras;
+        private readonly SourceCache<(string Id, IDevice Camera), string> _connectedCameras;
 
         private SerialPort _polarimeterPort;
         private SerialPort _retractorPort;
@@ -94,7 +95,7 @@ namespace DIPOL_UF.Models
         // ReSharper restore UnassignedGetOnlyAutoProperty
 
         public SourceList<string> SelectedDevices { get; }
-        public IObservableCache<(string Id, CameraBase Camera), string> ConnectedCameras { get; private set; }
+        public IObservableCache<(string Id, IDevice Camera), string> ConnectedCameras { get; private set; }
         public IObservableCache<(string Id, CameraTab Tab), string> CameraTabs { get; private set; }
 
         public ReactiveCommand<Unit, Unit> WindowLoadedCommand { get; private set; }
@@ -115,7 +116,7 @@ namespace DIPOL_UF.Models
             _polarimeterPortScanningTask = CheckPolarimeterMotor();
             _retractorPortScanningTask = CheckRetractorMotor();
 
-            _connectedCameras = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
+            _connectedCameras = new SourceCache<(string Id, IDevice Camera), string>(x => x.Id)
                 .DisposeWith(Subscriptions);
 
             SelectedDevices = new SourceList<string>()
@@ -712,7 +713,7 @@ namespace DIPOL_UF.Models
             return model;
         }
 
-        private static async Task PrepareCamerasAsync(IEnumerable<CameraBase> cams)
+        private static async Task PrepareCamerasAsync(IEnumerable<IDevice> cams)
         {
             await Helper.RunNoMarshall(() =>
             {
@@ -730,7 +731,7 @@ namespace DIPOL_UF.Models
             });
         }
 
-        private async Task DisposeCamera(CameraBase cam)
+        private async Task DisposeCamera(IDevice cam)
             => await Helper.RunNoMarshall(() =>
             {
                 // This one only works if a camera is disposed through 
@@ -738,7 +739,7 @@ namespace DIPOL_UF.Models
                 if (cam?.IsDisposed == false && !IsDisposing)
                 {
                     cam.CoolerControl(Switch.Disabled);
-                    cam.TemperatureMonitor(Switch.Disabled);
+                    cam.TemperatureMonitor(Switch.Disabled, 0);
                     cam.Dispose();
                 }
             });

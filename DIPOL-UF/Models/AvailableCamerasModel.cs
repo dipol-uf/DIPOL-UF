@@ -13,6 +13,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using ANDOR_CS;
 using DIPOL_Remote;
 using DIPOL_UF.Converters;
 using DynamicData;
@@ -27,7 +28,7 @@ namespace DIPOL_UF.Models
 
         private readonly DipolClient[] _remoteClients;
 
-        private readonly SourceCache<(string Id, CameraBase Camera), string> _foundDevices;
+        private readonly SourceCache<(string Id, IDevice Camera), string> _foundDevices;
 
         private bool _isClosed;
         private bool _isSelected;
@@ -36,7 +37,7 @@ namespace DIPOL_UF.Models
         [Reactive]
         public bool IsInteractive { get; private set; }
 
-        public IObservableCache<(string Id, CameraBase Camera), string> FoundCameras { get; private set; }
+        public IObservableCache<(string Id, IDevice Camera), string> FoundCameras { get; private set; }
         public SourceList<string> SelectedIds { get; }
 
         public ReactiveCommand<Window, Window> WindowContentRenderedCommand { get; private set; }
@@ -56,7 +57,7 @@ namespace DIPOL_UF.Models
             SelectedIds = new SourceList<string>().DisposeWith(Subscriptions);
 
             _foundDevices =
-                new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
+                new SourceCache<(string Id, IDevice Camera), string>(x => x.Id)
                     .DisposeWith(Subscriptions);
 
             InitializeCommands();
@@ -217,6 +218,7 @@ namespace DIPOL_UF.Models
             // Number of cameras
             var counter = 0;
             var workers = new Task[nLocal];
+            var factory = Injector.NewLocalDeviceFactory();
             // For each found local camera
             for (var camIndex = 0; camIndex < nLocal; camIndex++)
             {
@@ -226,10 +228,10 @@ namespace DIPOL_UF.Models
                 workers[camIndex] = Task.Run(async () =>
                 {
                     // If camera is nor present on the active list
-                    CameraBase cam = null;
+                    IDevice cam = null;
                     try
                     {
-                        cam = await Camera.CreateAsync(index).ConfigureAwait(false);
+                        cam = await factory.CreateAsync(index).ConfigureAwait(false);
                     }
                     // Silently catch exception and continue
                     catch (Exception aExp)
@@ -296,7 +298,7 @@ namespace DIPOL_UF.Models
                             token.ThrowIfCancellationRequested();
 
                             // Try to create remote camera
-                            CameraBase cam = null;
+                            IDevice cam = null;
                             try
                             {
                                 if (!client.ActiveRemoteCameras().Contains(camIndex))
@@ -442,9 +444,9 @@ namespace DIPOL_UF.Models
         }
 
 
-        public ReadOnlyCollection<(string Id, CameraBase Camera)> RetrieveSelectedDevices()
+        public ReadOnlyCollection<(string Id, IDevice Camera)> RetrieveSelectedDevices()
         {
-            var result = new List<(string Id, CameraBase Camera)>();
+            var result = new List<(string Id, IDevice Camera)>();
 
             _foundDevices.Edit(context =>
             {
@@ -460,7 +462,7 @@ namespace DIPOL_UF.Models
                 }
             });
 
-            return new ReadOnlyCollection<(string Id, CameraBase Camera)>(
+            return new ReadOnlyCollection<(string Id, IDevice Camera)>(
                 result.OrderBy(x =>
                     ConverterImplementations.CameraToStringAliasConversion(x.Camera) ?? x.Camera.ToString()).ToList());
         }

@@ -2,7 +2,7 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
-using ANDOR_CS.Classes;
+using ANDOR_CS;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DIPOL_UF.Properties;
@@ -16,7 +16,7 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class MainWindowTreeItemViewModel : ReactiveObjectEx
     {
-        private readonly CameraBase _model;
+        private readonly IDevice _model;
 
         [Reactive]
         public string Id { get; private set; }
@@ -34,7 +34,7 @@ namespace DIPOL_UF.ViewModels
         public IObservableCollection<MenuItemViewModel> ContextMenu { get; }
             = new ObservableCollectionExtended<MenuItemViewModel>();
 
-        public MainWindowTreeItemViewModel(string id, CameraBase cam,
+        public MainWindowTreeItemViewModel(string id, IDevice cam,
             IObservableList<string> selections,
             ICommand selectCommand,
             ICommand contextMenuCommand)

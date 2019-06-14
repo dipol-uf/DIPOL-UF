@@ -92,9 +92,10 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<Unit, Unit> StartJobCommand { get; private set; }
         public ReactiveCommand<Unit, object> SetUpJobCommand { get; private set; }
 
-        public CameraTab(CameraBase camera)
+        public CameraTab(IDevice camera)
         {
-            Camera = camera;
+            // WATCH: Temp solution
+            Camera = (CameraBase)camera;
             
             TemperatureRange = camera.Capabilities.GetFunctions.HasFlag(GetFunction.TemperatureRange)
                 ? camera.Properties.AllowedTemperatures
