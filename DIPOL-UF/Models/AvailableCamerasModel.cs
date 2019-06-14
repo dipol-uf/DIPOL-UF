@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Threading;
@@ -24,7 +23,7 @@ namespace DIPOL_UF.Models
 {
     internal sealed class AvailableCamerasModel : ReactiveObjectEx //-V3073
     {
-        private readonly DipolClient[] _remoteClients;
+        private readonly ImmutableArray<IControlClient> _remoteClients;
 
         private readonly SourceCache<(string Id, IDevice Camera), string> _foundDevices;
 
@@ -50,14 +49,14 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<object, Unit> ClickCommand { get; private set; }
 
         public AvailableCamerasModel(
-            DipolClient[] remoteClients = null)
+            ref ImmutableArray<IControlClient> remoteClients)
         {
 
             _remoteClients = remoteClients;
             _remoteFactories = 
-                remoteClients is null
+                remoteClients.IsDefaultOrEmpty
                 ? ImmutableArray<IDeviceFactory>.Empty 
-                : ImmutableArray.CreateRange(remoteClients.Select(Injector.NewRemoteDeviceFactory));
+                : remoteClients.Select(Injector.NewRemoteDeviceFactory).ToImmutableArray();
 
             IsInteractive = true;
             SelectedIds = new SourceList<string>().DisposeWith(Subscriptions);

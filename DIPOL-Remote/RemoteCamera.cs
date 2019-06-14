@@ -50,7 +50,7 @@ namespace DIPOL_Remote
             = new ConcurrentDictionary<string, bool>();
 
         private bool _isActive;
-        private DipolClient _client;
+        private IControlClient _client;
 
         public override IAcquisitionSettings CurrentSettings { get; protected set; }
         public override (float Exposure, float Accumulation, float Kinetic) Timings
@@ -238,7 +238,7 @@ namespace DIPOL_Remote
             }
         }
 
-        private RemoteCamera(int camIndex, DipolClient sessionInstance)
+        private RemoteCamera(int camIndex, IControlClient sessionInstance)
         {
             _client = sessionInstance ?? throw new ArgumentNullException(nameof(sessionInstance));
             CameraIndex = camIndex;

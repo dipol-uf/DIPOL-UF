@@ -32,6 +32,7 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO.Ports;
 using System.Linq;
 using System.Reactive;
@@ -54,7 +55,7 @@ namespace DIPOL_UF.Models
             = UiSettingsProvider.Settings.GetArray<string>("RemoteLocations")
               ?? new string[0];
 
-        private DipolClient[] _remoteClients;
+        private ImmutableArray<IControlClient> _remoteClients;
 
         private readonly SourceCache<(string Id, IDevice Camera), string> _connectedCameras;
 
@@ -232,7 +233,7 @@ namespace DIPOL_UF.Models
                                    _ =>
                                    {
                                        var camQueryModel = new AvailableCamerasModel(
-                                           _remoteClients);
+                                           ref _remoteClients);
 
                                        return camQueryModel;
                                    },
@@ -331,7 +332,7 @@ namespace DIPOL_UF.Models
                 .Select(x => new ProgressBar()
                 {
                     Minimum = 0,
-                    Maximum = _remoteClients?.Length ?? 1,
+                    Maximum = _remoteClients.IsDefaultOrEmpty ? 1 : _remoteClients.Length,
                     Value = 0,
                     IsIndeterminate = true,
                     CanAbort = false,
@@ -421,12 +422,14 @@ namespace DIPOL_UF.Models
 
         private async Task<List<Exception>> InitializeRemoteSessionsAsync(ProgressBar pb)
         {
+            var clientFactory = Injector.NewClientFactory();
+
             var tasks = _remoteLocations.Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => Task.Run(() =>
                 {
                     try
                     {
-                        var client = DipolClient.Create(new Uri(x),
+                        var client = clientFactory.Create(new Uri(x),
                             TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")),
                             TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")),
                             TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
@@ -460,7 +463,7 @@ namespace DIPOL_UF.Models
 
 
             var result = await Task.WhenAll(tasks).ConfigureAwait(false);
-            _remoteClients = result.OfType<DipolClient>().ToArray();
+            _remoteClients = result.OfType<IControlClient>().ToImmutableArray();
 
             var exceptions = result.OfType<Exception>().ToList();
 
@@ -684,7 +687,7 @@ namespace DIPOL_UF.Models
                         }
                     }
 
-                    if (!(_remoteClients is null))
+                    if (!(_remoteClients.IsEmpty))
                         Parallel.ForEach(_remoteClients, (client) =>
                         {
                             try

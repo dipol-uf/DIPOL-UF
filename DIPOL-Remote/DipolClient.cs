@@ -32,19 +32,18 @@ using System.Threading.Tasks;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
-using DIPOL_Remote.Callback;
 using DIPOL_Remote.Faults;
 using DIPOL_Remote.Remote;
 using FITS_CS;
 
 namespace DIPOL_Remote
 {
-    public class DipolClient : DuplexClientBase<IRemoteControl>, IRemoteControl
+    public sealed partial class DipolClient : DuplexClientBase<IRemoteControl>, IControlClient
     {
         private static readonly int MaxMessageSize = 512 * 512 * 8 * 4;
 
+        CommunicationState IControlClient.State => State;
         public string HostAddress => Endpoint.Address.ToString();
-
         public string SessionID
             => Channel.SessionID;
 
@@ -71,38 +70,6 @@ namespace DIPOL_Remote
             Close();
         }
 
-
-        public static DipolClient Create(Uri hostUri)
-        {
-            var context = new InstanceContext(new RemoteCallbackHandler());
-            var binding = new NetTcpBinding(SecurityMode.None)
-            {
-                MaxBufferSize = MaxMessageSize,
-                MaxReceivedMessageSize = MaxMessageSize
-            };
-            var endpoint = new EndpointAddress(hostUri);
-
-            return new DipolClient(context, binding, endpoint);
-        }
-
-        public static DipolClient Create(Uri hostUri,
-            TimeSpan openTimeout,
-            TimeSpan sendTimeout,
-            TimeSpan closeTimeout)
-        {
-            var context = new InstanceContext(new RemoteCallbackHandler());
-            var binding = new NetTcpBinding(SecurityMode.None)
-            {
-                MaxBufferSize = MaxMessageSize,
-                MaxReceivedMessageSize = MaxMessageSize,
-                OpenTimeout = openTimeout,
-                SendTimeout = sendTimeout,
-                CloseTimeout = closeTimeout
-            };
-            var endpoint = new EndpointAddress(hostUri);
-
-            return new DipolClient(context, binding, endpoint);
-        }
 
         #region Remote interface implementations
 

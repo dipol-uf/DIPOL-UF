@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2019 Ilia Kosenkov
+//     Copyright(c) 2018 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -23,35 +23,24 @@
 //     SOFTWARE.
 
 using System;
+using System.ServiceModel;
+using System.Threading;
 using System.Threading.Tasks;
-using ANDOR_CS;
+using ANDOR_CS.AcquisitionMetadata;
+using ANDOR_CS.Enums;
+using DIPOL_Remote.Remote;
 
 namespace DIPOL_Remote
 {
-    public sealed partial class RemoteCamera
+    public interface IControlClient : IRemoteControl, IDisposable
     {
-        public class RemoteCameraFactory : IDeviceFactory
-        {
-            private readonly IControlClient _client;
+        string HostAddress { get; }
+        CommunicationState State { get; }
+        Task FinishImageSavingSequenceAsync(int camIndex);
+        Task CreateCameraAsync(int camIndex);
+        Task StartAcquisitionAsync(int camIndex, Request metadata, CancellationToken token);
+        Task<DipolImage.Image[]> PullAllImagesAsync(int camIndex, ImageFormat format, CancellationToken token);
 
-            public RemoteCameraFactory(IControlClient client)
-                => _client = client ?? throw new ArgumentNullException(nameof(client));
-
-            public int GetNumberOfCameras()
-                => _client.GetNumberOfCameras();
-
-            public IDevice Create(int index = 0)
-            {
-                _client.CreateRemoteCamera(index);
-                return new RemoteCamera(index, _client);
-            }
-
-            public async Task<IDevice> CreateAsync(int index = 0)
-            {
-                await _client.CreateCameraAsync(index);
-                return new RemoteCamera(index, _client);
-            }
-
-        }
+        void CreateRemoteCamera(int camIndex);
     }
 }

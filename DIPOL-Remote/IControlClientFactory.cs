@@ -23,35 +23,16 @@
 //     SOFTWARE.
 
 using System;
-using System.Threading.Tasks;
-using ANDOR_CS;
 
 namespace DIPOL_Remote
 {
-    public sealed partial class RemoteCamera
+    public interface IControlClientFactory
     {
-        public class RemoteCameraFactory : IDeviceFactory
-        {
-            private readonly IControlClient _client;
+        IControlClient Create(Uri hostUri);
 
-            public RemoteCameraFactory(IControlClient client)
-                => _client = client ?? throw new ArgumentNullException(nameof(client));
-
-            public int GetNumberOfCameras()
-                => _client.GetNumberOfCameras();
-
-            public IDevice Create(int index = 0)
-            {
-                _client.CreateRemoteCamera(index);
-                return new RemoteCamera(index, _client);
-            }
-
-            public async Task<IDevice> CreateAsync(int index = 0)
-            {
-                await _client.CreateCameraAsync(index);
-                return new RemoteCamera(index, _client);
-            }
-
-        }
+        IControlClient Create(Uri hostUri,
+            TimeSpan openTimeout,
+            TimeSpan sendTimeout,
+            TimeSpan closeTimeout);
     }
 }

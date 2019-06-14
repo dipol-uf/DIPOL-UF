@@ -37,7 +37,10 @@ namespace DIPOL_UF
         public static IDeviceFactory NewLocalDeviceFactory()
             => new Camera.LocalCameraFactory();
 
-        public static IDeviceFactory NewRemoteDeviceFactory(DipolClient client)
+        public static IDeviceFactory NewRemoteDeviceFactory(IControlClient client)
             => new RemoteCamera.RemoteCameraFactory(client);
+
+        public static IControlClientFactory NewClientFactory()
+            => new DipolClient.DipolClientFactory();
     }
 }
