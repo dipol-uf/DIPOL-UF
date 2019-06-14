@@ -49,14 +49,14 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<object, Unit> ClickCommand { get; private set; }
 
         public AvailableCamerasModel(
-            ref ImmutableArray<IControlClient> remoteClients)
+            ImmutableArray<IControlClient> remoteClients)
         {
 
             _remoteClients = remoteClients;
             _remoteFactories = 
-                remoteClients.IsDefaultOrEmpty
+                _remoteClients.IsDefaultOrEmpty
                 ? ImmutableArray<IDeviceFactory>.Empty 
-                : remoteClients.Select(Injector.NewRemoteDeviceFactory).ToImmutableArray();
+                : _remoteClients.Select(Injector.NewRemoteDeviceFactory).ToImmutableArray();
 
             IsInteractive = true;
             SelectedIds = new SourceList<string>().DisposeWith(Subscriptions);

@@ -232,8 +232,7 @@ namespace DIPOL_UF.Models
                 ReactiveCommand.Create<object, AvailableCamerasModel>(
                                    _ =>
                                    {
-                                       var camQueryModel = new AvailableCamerasModel(
-                                           ref _remoteClients);
+                                       var camQueryModel = new AvailableCamerasModel(_remoteClients);
 
                                        return camQueryModel;
                                    },
