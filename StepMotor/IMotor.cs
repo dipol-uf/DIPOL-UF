@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -26,5 +25,7 @@ namespace StepMotor
         Task<ImmutableDictionary<AxisParameter, int>> GetRotationStatusAsync(byte motorOrBank = 0);
 
         Task<ImmutableDictionary<AxisParameter, int>> GetStatusAsync(byte motorOrBank = 0);
+
+        Task<Reply> MoveToPosition(int position, CommandType rotationType = CommandType.Absolute, byte motorOrBank = 0);
     }
 }

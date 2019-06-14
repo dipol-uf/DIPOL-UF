@@ -401,6 +401,11 @@ namespace StepMotor
             return status.ToImmutable();
         }
 
+        public Task<Reply> MoveToPosition(int position, CommandType rotationType = CommandType.Unused, byte motorOrBank = 0)
+        {
+            return SendCommandAsync(Command.MoveToPosition, position, rotationType, motorOrBank);
+        }
+
 
         /// <summary>
         /// Queries status of essential Axis parameters.
@@ -736,7 +741,7 @@ namespace StepMotor
             return null;
         }
 
-        public static async Task<StepMotorHandler> CreateFirstOrFromAddress(
+        public static async Task<IAsyncMotor> CreateFirstOrFromAddress(
             SerialPort port, byte address,
             byte startAddress = 1, byte endAddress = 16,
             TimeSpan defaultTimeOut = default)

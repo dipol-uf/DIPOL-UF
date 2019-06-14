@@ -78,10 +78,10 @@ namespace DIPOL_UF.Models
 
         [Reactive]
         // ReSharper disable once UnusedAutoPropertyAccessor.Local
-        public StepMotorHandler PolarimeterMotor { get; private set; }
+        public IAsyncMotor PolarimeterMotor { get; private set; }
         [Reactive]
         // ReSharper disable once UnusedAutoPropertyAccessor.Local
-        public StepMotorHandler RetractorMotor { get; private set; }
+        public IAsyncMotor RetractorMotor { get; private set; }
 
         public DescendantProvider ProgressBarProvider { get; private set; }
         public DescendantProvider AvailableCamerasProvider { get; private set; }
@@ -134,7 +134,7 @@ namespace DIPOL_UF.Models
                 Regime = PolarimeterMotor is null
                         ? InstrumentRegime.Unknown
                         : InstrumentRegime.Polarimeter;
-             }
+            }
         }
 
         private Task CheckPolarimeterMotor()
@@ -142,7 +142,7 @@ namespace DIPOL_UF.Models
             return Task.Run(async () =>
             {
                 Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = false);
-                StepMotorHandler motor = null;
+                IAsyncMotor motor = null;
                 try
                 {
                     if (_polarimeterPort is null)
@@ -171,7 +171,7 @@ namespace DIPOL_UF.Models
             return Task.Run(async () =>
             {
                 Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = false);
-                StepMotorHandler motor = null;
+                IAsyncMotor motor = null;
                 try
                 { 
                     if (_retractorPort is null)
@@ -600,8 +600,7 @@ namespace DIPOL_UF.Models
                         pos = await RetractorMotor.GetActualPositionAsync();
 
                         // ReSharper disable once RedundantArgumentDefaultValue
-                        var reply = await RetractorMotor.SendCommandAsync(Command.MoveToPosition, (int) param,
-                            CommandType.Absolute);
+                        var reply = await RetractorMotor.MoveToPosition((int) param, CommandType.Absolute);
                         if (reply.Status != ReturnStatus.Success)
                             throw new InvalidOperationException("Failed to operate retractor,");
 
