@@ -84,7 +84,7 @@ namespace Tests
             Assume.That(_device, Is.Null);
             _port = new SerialPort(TestPort);
 
-            _device = await StepMotorHandler.CreateFirstOrFromAddress(_port, 1);
+            _device = (StepMotorHandler)await StepMotorHandler.CreateFirstOrFromAddress(_port, 1);
             Assume.That(_device, Is.Not.Null);
 
             Assert.That(await _device.GetActualPositionAsync(), Is.EqualTo(0));
@@ -104,7 +104,7 @@ namespace Tests
         public async Task SetUp()
         {
             _port = new SerialPort(PortName);
-            _motor = await StepMotorHandler.CreateFirstOrFromAddress(_port, 1);
+            _motor = (StepMotorHandler)await StepMotorHandler.CreateFirstOrFromAddress(_port, 1);
 
         }
 
