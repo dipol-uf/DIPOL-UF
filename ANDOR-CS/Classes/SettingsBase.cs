@@ -863,6 +863,18 @@ namespace ANDOR_CS.Classes
                 {
                     switch (pars.Length)
                     {
+                        case 1 when pars[0].ParameterType.IsEnum && val is object[] strFlags && strFlags.All(x => x is string):
+                            // WATCH : Fixed case for [Flag] enums
+                            var enumFlagStr = strFlags.Cast<string>()
+                                .Aggregate((old, @new) => old + ", " + @new);
+                            if (!string.IsNullOrWhiteSpace(enumFlagStr))
+                            {
+                                var enumResult = Enum.Parse(pars[0].ParameterType, enumFlagStr);
+                                method.Invoke(this, new[] { enumResult });
+                            }
+                            else
+                                throw new ArgumentException("Deserialized value cannot be parsed.");
+                            break;
                         case 1 when pars[0].ParameterType.IsEnum:
                         {
                             if (val is string enumStr)
@@ -870,7 +882,8 @@ namespace ANDOR_CS.Classes
                                 var enumResult = Enum.Parse(pars[0].ParameterType, enumStr);
                                 method.Invoke(this, new[] {enumResult});
                             }
-
+                            else
+                                throw new ArgumentException("Deserialized value cannot be parsed.");
                             break;
                         }
                         case 1 when val.GetType().IsValueType:
