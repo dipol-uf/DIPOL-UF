@@ -37,7 +37,7 @@ using FITS_CS;
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
 {
-    public sealed class DebugCamera : CameraBase
+    public sealed partial class DebugCamera : CameraBase
     {
         private static readonly Random R = new Random();
         private static readonly object Locker = new object();

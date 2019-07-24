@@ -22,6 +22,7 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
+using System;
 using ANDOR_CS;
 using ANDOR_CS.Classes;
 using DIPOL_Remote;
@@ -42,5 +43,10 @@ namespace DIPOL_UF
 
         public static IControlClientFactory NewClientFactory()
             => new DipolClient.DipolClientFactory();
+
+#if DEBUG
+        public static IDeviceFactory NewDebugDeviceFactory()
+            => new DebugCamera.DebugCameraFactory();
+#endif
     }
 }

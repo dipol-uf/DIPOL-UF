@@ -114,6 +114,7 @@
     <Compile Include="Classes\DebugCamera.cs" />
     <Compile Include="Classes\DebugSettings.cs" />
     <Compile Include="Classes\EnumConverter.cs" />
+    <Compile Include="Classes\DebugCameraFactory.cs" />
     <Compile Include="Classes\SafeSDKCameraHandle.cs" />
     <Compile Include="Classes\SettingsBase.cs" />
     <Compile Include="Classes\SettingsProvider.cs" />
