@@ -59,13 +59,13 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Represents an instance of a Camera device
     /// </summary>
-    public sealed partial class LocalCamera : CameraBase
+    public sealed partial class LocalCamera : Camera
     {
         private static readonly Regex PathPatternChecker =
             new Regex(@":|;|//|[/\\]?\.\.[/\\]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         
-        private static readonly ConcurrentDictionary<int, CameraBase> CreatedCameras
-            = new ConcurrentDictionary<int, CameraBase>();
+        private static readonly ConcurrentDictionary<int, Camera> CreatedCameras
+            = new ConcurrentDictionary<int, Camera>();
         
         private readonly EventWaitHandle _eventHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
         private readonly bool _isMetadataAvailable;
@@ -671,7 +671,7 @@ namespace ANDOR_CS.Classes
         /// <summary>
         /// Starts acquisition of the image. Does not block current thread.
         /// To monitor acquisition progress, use <see cref="GetStatus"/>.
-        /// Fires <see cref="CameraBase.OnAcquisitionStarted"/> 
+        /// Fires <see cref="Camera.OnAcquisitionStarted"/> 
         /// Async version allows <see cref="LocalCamera"/> to properly monitor acquisition progress.
         /// </summary>
         /// <exception cref="AcquisitionInProgressException"/>

@@ -110,7 +110,7 @@
     <Compile Include="Attributes\FitsKeyAttribute.cs" />
     <Compile Include="Attributes\IgnoreDefaultAttribute.cs" />
     <Compile Include="Classes\AcquisitionSettings.cs" />
-    <Compile Include="Classes\CameraBase.cs" />
+    <Compile Include="Classes\Camera.cs" />
     <Compile Include="Classes\DebugCamera.cs" />
     <Compile Include="Classes\DebugSettings.cs" />
     <Compile Include="Classes\EnumConverter.cs" />

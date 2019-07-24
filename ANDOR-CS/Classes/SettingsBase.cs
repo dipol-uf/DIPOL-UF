@@ -92,7 +92,7 @@ namespace ANDOR_CS.Classes
 
         public bool IsDisposed { get; private set; }
 
-        public CameraBase Camera { get; protected set; }
+        public Camera Camera { get; protected set; }
 
         /// <summary>
         /// Stores the value of currently set vertical speed

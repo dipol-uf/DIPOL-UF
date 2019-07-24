@@ -49,7 +49,7 @@ namespace ANDOR_CS.Classes
         ///     Constructor adds reference to parent <see cref="LocalCamera" /> object.
         /// </summary>
         /// <param name="camera">Parent object. Camera, to which settings should be applied.</param>
-        internal AcquisitionSettings(CameraBase camera) 
+        internal AcquisitionSettings(Camera camera) 
             => Camera = camera;
 
         private SafeSdkCameraHandle Handle

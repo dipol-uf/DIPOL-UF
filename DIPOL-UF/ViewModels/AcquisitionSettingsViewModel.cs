@@ -102,7 +102,7 @@ namespace DIPOL_UF.ViewModels
 
         public SettingsAvailability IsAvailable { get; }
             = new SettingsAvailability();
-        public CameraBase Camera => Model.Object.Camera;
+        public Camera Camera => Model.Object.Camera;
 
         public ICommand CancelCommand { get; private set; }
         public ReactiveCommand<Window, Window> SubmitCommand { get; private set; }

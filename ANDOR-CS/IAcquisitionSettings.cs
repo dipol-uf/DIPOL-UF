@@ -42,7 +42,7 @@ namespace ANDOR_CS
     public interface IAcquisitionSettings : IDisposable, INotifyPropertyChanged
     {
         bool IsDisposed { get; }
-        CameraBase Camera { get; }
+        Camera Camera { get; }
 
         [SerializationOrder(1)]
         [FitsKey("VSPEED", "usec", 1)]

@@ -44,7 +44,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Base abstract class to all ANDOR-device classes
     /// </summary>
-    public abstract class CameraBase : IDevice
+    public abstract class Camera : IDevice
     {
         protected const int AmpDescriptorMaxLength = 21;
         protected const int PreAmpGainDescriptorMaxLength = 30;
@@ -245,7 +245,7 @@ namespace ANDOR_CS.Classes
 
         public event ImageSavedHandler ImageSaved;
 
-        protected CameraBase()
+        protected Camera()
         {
             AcquisitionStarted += (sender, e) => { };
             AcquisitionErrorReturned += (sender, e) => { };
@@ -515,7 +515,7 @@ namespace ANDOR_CS.Classes
 
         public override bool Equals(object obj)
         {
-            if (obj is CameraBase cam)
+            if (obj is Camera cam)
                 return
                     cam.GetHashCode() == GetHashCode();
             return false;
@@ -548,7 +548,7 @@ namespace ANDOR_CS.Classes
         //public static async Task<CameraBase> CreateAsync(int camIndex = 0, params object[] @params)
         //    => await Task.Run(() => Create(camIndex, @params));
 
-        ~CameraBase()
+        ~Camera()
         {
             Dispose(false);
         }

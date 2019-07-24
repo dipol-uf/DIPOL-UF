@@ -36,12 +36,11 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DipolImage;
 using FITS_CS;
-using CameraBase = ANDOR_CS.Classes.CameraBase;
 using AcquisitionEventType = DIPOL_Remote.Enums.AcquisitionEventType;
 
 namespace DIPOL_Remote
 {
-    public sealed partial class RemoteCamera : CameraBase
+    public sealed partial class RemoteCamera : Camera
     {
         private static readonly ConcurrentDictionary<int, RemoteCamera> RemoteCameras
             = new ConcurrentDictionary<int, RemoteCamera>();

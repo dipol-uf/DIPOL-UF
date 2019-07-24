@@ -64,7 +64,7 @@ namespace DIPOL_Remote
             EventReceived += (sender, message) =>
             {
                 string senderString;
-                if (sender is ANDOR_CS.Classes.CameraBase cam)
+                if (sender is ANDOR_CS.Classes.Camera cam)
                     senderString = $"{cam.CameraModel}/{cam.SerialNumber}";
                 else
                     senderString = sender.ToString();

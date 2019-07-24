@@ -39,7 +39,7 @@ namespace DIPOL_Remote
         }
 
         // ReSharper disable once SuggestBaseTypeForParameter
-        internal RemoteSettings(CameraBase cam, string settingsID, IControlClient client)
+        internal RemoteSettings(Camera cam, string settingsID, IControlClient client)
         {
             SettingsID = settingsID;
             _client = client;

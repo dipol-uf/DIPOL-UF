@@ -41,7 +41,7 @@ using DipolImage;
 using DIPOL_Remote.Callback;
 using DIPOL_Remote.Faults;
 using FITS_CS;
-using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
+using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.Camera>;
 using SettingsDictionary = System.Collections.Concurrent.ConcurrentDictionary<string,ANDOR_CS.IAcquisitionSettings>;
 using Switch = ANDOR_CS.Enums.Switch;
 
@@ -88,7 +88,7 @@ namespace DIPOL_Remote.Remote
             _factory = new LocalCamera.LocalCameraFactory();
         }
 
-        private void SubscribeToCameraEvents(CameraBase camera)
+        private void SubscribeToCameraEvents(Camera camera)
         {
             
             // Remotely fires event, informing that some property has changed
@@ -177,7 +177,7 @@ namespace DIPOL_Remote.Remote
         {
 
             //WATCH: temp solution
-            CameraBase camera;
+            Camera camera;
 
             var factory = new LocalCamera.LocalCameraFactory();
 
@@ -187,7 +187,7 @@ namespace DIPOL_Remote.Remote
 #if DEBUG_REMOTE
                 camera = await DebugCamera.CreateAsync(camIndex);
 #else
-                camera = (CameraBase)await factory.CreateAsync(camIndex);
+                camera = (Camera)await factory.CreateAsync(camIndex);
 #endif
             }
             // Andor-related exception
@@ -393,7 +393,7 @@ namespace DIPOL_Remote.Remote
                     new ServiceFault()
                     {
                         Details = e.Message,
-                        MethodName = nameof(CameraBase.GetAcquisitionSettingsTemplate),
+                        MethodName = nameof(Camera.GetAcquisitionSettingsTemplate),
                         Message = "Acquisition settings initialization " +
                                   $"threw exception of type {e.GetType()}"
                     },
@@ -444,7 +444,7 @@ namespace DIPOL_Remote.Remote
                     new ServiceFault()
                     {
                         Details = e.Message,
-                        MethodName = nameof(CameraBase.GetAcquisitionSettingsTemplate),
+                        MethodName = nameof(Camera.GetAcquisitionSettingsTemplate),
                         Message = "Acquisition settings initialization " +
                                   $"threw exception of type {e.GetType()}"
                     },
@@ -618,7 +618,7 @@ namespace DIPOL_Remote.Remote
             => GetCameraSafe(camIndex).StartImageSavingSequence(folderPath, imagePattern, filter, extraKeys);
 
 
-        private CameraBase GetCameraSafe(int camIndex)
+        private Camera GetCameraSafe(int camIndex)
         {
             if (_cameras.TryGetValue(
                 camIndex,

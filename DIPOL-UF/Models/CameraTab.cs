@@ -57,7 +57,7 @@ namespace DIPOL_UF.Models
 
         private readonly Timer _pbTimer = new Timer();
 
-        public CameraBase Camera { get; }
+        public Camera Camera { get; }
         public (float Minimum, float Maximum) TemperatureRange { get; }
         public bool CanControlTemperature { get; }
         public bool CanControlFan { get; }
@@ -95,7 +95,7 @@ namespace DIPOL_UF.Models
         public CameraTab(IDevice camera)
         {
             // WATCH: Temp solution
-            Camera = (CameraBase)camera;
+            Camera = (Camera)camera;
             
             TemperatureRange = camera.Capabilities.GetFunctions.HasFlag(GetFunction.TemperatureRange)
                 ? camera.Properties.AllowedTemperatures
