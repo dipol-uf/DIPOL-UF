@@ -173,6 +173,7 @@ namespace FITS_CS
                 RawValue = GetBytes(Value);
                 Type = FitsKeywordType.Comment;
             }
+
         }
 
         public FitsKey(string header, FitsKeywordType type, object value,

@@ -470,7 +470,10 @@ namespace DipolImage
                         for (var i = 0; i < arr.Length; i++)
                             arr[i] = (ushort) (gMin + factor * (arr[i] - min));
 
-                    break;
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = (ushort)(gMin + factor * (arr[i] - min));
+
+                        break;
                 }
                 case TypeCode.Int16:
                 {
@@ -487,7 +490,10 @@ namespace DipolImage
                         for (var i = 0; i < arr.Length; i++)
                             arr[i] = (short) (gMin + factor * (arr[i] - min));
 
-                    break;
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = (short)(gMin + factor * (arr[i] - min));
+
+                        break;
                 }
                 case TypeCode.UInt32:
                 {
@@ -504,7 +510,9 @@ namespace DipolImage
                         for (var i = 0; i < arr.Length; i++)
                             arr[i] = (uint) (gMin + factor * (arr[i] - min));
 
-                    break;
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = (uint)(gMin + factor * (arr[i] - min));
+                        break;
                 }
                 case TypeCode.Int32:
                 {
@@ -521,7 +529,10 @@ namespace DipolImage
                         for (var i = 0; i < arr.Length; i++)
                             arr[i] = (int) (gMin + factor * (arr[i] - min));
 
-                    break;
+                        for (var i = 0; i < arr.Length; i++)
+                            arr[i] = (int)(gMin + factor * (arr[i] - min));
+
+                        break;
                 }
                 case TypeCode.Single:
                 {
@@ -939,7 +950,7 @@ namespace DipolImage
                     for (var i = 0; i < Width * Height; i++)
                         if (!thisArr[i].AlmostEqual(otherArr[i]))
                             return false;
-                    return true;
+                        return true;
                 }
                 default:
                 {

@@ -28,7 +28,9 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,7 +41,56 @@ namespace Serializers
 {
     public static class JsonParser
     {
-        internal static object Converter(object inp, bool convertAll = false)
+        // WATCH: NOT-HotFixing here
+        internal static object Converter(object input, bool convertAll = false)
+        {
+            string[] FlagEnumConverter(Enum @enum)
+            {
+                
+                var type = @enum.GetType();
+                //var values = Enum.GetValues(type).OfType<Enum>().ToList();
+                //var values = type.GetFields(BindingFlags.Public | BindingFlags.Static)
+                //    .Where(f => f.FieldType == type)
+                //    .Select(f => (Enum) f.GetValue(null)).ToList();
+
+                var values = type.GetFields(BindingFlags.Public | BindingFlags.Static).Where(f => f.FieldType == type)
+                    .Select(f => new {FieldInfo = f, Ignore = f.GetCustomAttributes().Select(x => (x.TypeId as Type)?.Name ?? string.Empty).Any(x => x == "IgnoreDefaultAttribute")})
+                    .Where(x => !x.Ignore)
+                    .Select(x => (Enum)x.FieldInfo.GetValue(null))
+                    .ToList();
+
+                var flagVals = values.Where(@enum.HasFlag).Select(x => Enum.GetName(type, x)).ToArray();
+                return flagVals;
+            }
+
+            var tempResult = input;
+
+            if (input is ITuple tuple)
+            {
+                if (convertAll)
+                {
+                    var result = new object[tuple.Length];
+                    for (var i = 0; i < tuple.Length; i++)
+                        result[i] = tuple[i];
+                    tempResult = result;
+                }
+                else
+                    tempResult = tuple[0];
+            }
+
+            switch (tempResult)
+            {
+                case Enum @enum when Enum.IsDefined(@enum.GetType(), @enum):
+                    return Enum.GetName(@enum.GetType(), @enum);
+                case Enum @enum:
+                    return FlagEnumConverter(@enum);
+                default:
+                    return tempResult;
+            }
+        }
+       
+
+        internal static object Converter3(object inp, bool convertAll = false)
         {
             var result = inp;
             if (inp != null &&
