@@ -32,7 +32,7 @@ namespace DIPOL_Remote.Faults
     public class ServiceFault
     {
         public static readonly FaultReason CameraCommunicationReason
-            = new FaultReason($"Error occured while communicating with {nameof(ANDOR_CS.Classes.Camera)} object.");
+            = new FaultReason($"Error occured while communicating with {nameof(ANDOR_CS.Classes.LocalCamera)} object.");
 
         public static readonly FaultReason GeneralServiceErrorReason
             = new FaultReason("General error occured while communicating with service.");

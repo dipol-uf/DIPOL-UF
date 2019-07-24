@@ -59,7 +59,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Represents an instance of a Camera device
     /// </summary>
-    public sealed partial class Camera : CameraBase
+    public sealed partial class LocalCamera : CameraBase
     {
         private static readonly Regex PathPatternChecker =
             new Regex(@":|;|//|[/\\]?\.\.[/\\]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -99,7 +99,7 @@ namespace ANDOR_CS.Classes
             }
         }
         /// <summary>
-        /// A safe handle that stores native SDK pointer to the current <see cref="Camera"/> resource.
+        /// A safe handle that stores native SDK pointer to the current <see cref="LocalCamera"/> resource.
         /// </summary>
         public SafeSdkCameraHandle CameraHandle
         {
@@ -114,8 +114,8 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AndorSdkException"/>
         /// <exception cref="ArgumentException"/>
         /// <exception cref="InvalidOperationException"/>
-        /// <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="Camera.GetNumberOfCameras()"/></param>
-        private Camera(int camIndex = 0)
+        /// <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="LocalCamera.GetNumberOfCameras()"/></param>
+        private LocalCamera(int camIndex = 0)
         {
             // Stores return codes from SDK functions
             // If camera with such index is already in use, throws exception
@@ -672,7 +672,7 @@ namespace ANDOR_CS.Classes
         /// Starts acquisition of the image. Does not block current thread.
         /// To monitor acquisition progress, use <see cref="GetStatus"/>.
         /// Fires <see cref="CameraBase.OnAcquisitionStarted"/> 
-        /// Async version allows <see cref="Camera"/> to properly monitor acquisition progress.
+        /// Async version allows <see cref="LocalCamera"/> to properly monitor acquisition progress.
         /// </summary>
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSdkException"/>

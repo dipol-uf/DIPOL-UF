@@ -136,7 +136,7 @@
     <Compile Include="Exceptions\AcquisitionInProgressException.cs" />
     <Compile Include="Exceptions\AndorSDKException.cs" />
     <Compile Include="Classes\AndorSDKInitialization.cs" />
-    <Compile Include="Classes\Camera.cs" />
+    <Compile Include="Classes\LocalCamera.cs" />
     <Compile Include="Enums\CameraTypeEnum.cs" />
     <Compile Include="Enums\SwitchEnum.cs" />
     <Compile Include="Enums\FanModeEnum.cs" />

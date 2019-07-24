@@ -29,7 +29,7 @@ using ANDOR_CS.Exceptions;
 
 namespace ANDOR_CS.Classes
 {
-    public sealed partial class Camera
+    public sealed partial class LocalCamera
     {
         public class LocalCameraFactory : IDeviceFactory
         {
@@ -63,7 +63,7 @@ namespace ANDOR_CS.Classes
                     throw new ArgumentException(
                         $"Camera index is out of range; Cannot be greater than {GetNumberOfCameras() - 1} (provided {index}).");
 
-                return new Camera(index);
+                return new LocalCamera(index);
 
             }
 

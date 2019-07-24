@@ -85,7 +85,7 @@ namespace DIPOL_Remote.Remote
 
         private RemoteControl()
         {
-            _factory = new Camera.LocalCameraFactory();
+            _factory = new LocalCamera.LocalCameraFactory();
         }
 
         private void SubscribeToCameraEvents(CameraBase camera)
@@ -179,7 +179,7 @@ namespace DIPOL_Remote.Remote
             //WATCH: temp solution
             CameraBase camera;
 
-            var factory = new Camera.LocalCameraFactory();
+            var factory = new LocalCamera.LocalCameraFactory();
 
             try
             {
@@ -193,7 +193,7 @@ namespace DIPOL_Remote.Remote
             // Andor-related exception
             catch (AndorSdkException andorEx)
             {
-                throw AndorSdkFault.WrapFault(andorEx, nameof(Camera));
+                throw AndorSdkFault.WrapFault(andorEx, nameof(LocalCamera));
             }
             // Other possible exceptions
             catch (Exception ex)
@@ -203,7 +203,7 @@ namespace DIPOL_Remote.Remote
                     {
                         Message = "Failed to create new remote camera.",
                         Details = ex.Message,
-                        MethodName = nameof(Camera)
+                        MethodName = nameof(LocalCamera)
                     },
                     ServiceFault.CameraCommunicationReason);
             }
@@ -215,7 +215,7 @@ namespace DIPOL_Remote.Remote
                     new ServiceFault()
                     {
                         Message = "Failed to create new remote camera.",
-                        MethodName = nameof(Camera)
+                        MethodName = nameof(LocalCamera)
                     },
                     ServiceFault.CameraCommunicationReason);
             }
