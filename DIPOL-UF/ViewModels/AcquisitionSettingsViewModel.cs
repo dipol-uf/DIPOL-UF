@@ -38,6 +38,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows.Input;
+using ANDOR_CS;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
@@ -57,7 +58,7 @@ using Window = System.Windows.Window;
 
 namespace DIPOL_UF.ViewModels
 {
-    internal sealed class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<SettingsBase>>
+    internal sealed class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<IAcquisitionSettings>>
     {
         private static List<(PropertyInfo Property, string EquivalentName)> InteractiveSettings { get; }
             = typeof(AcquisitionSettingsViewModel)
@@ -151,7 +152,7 @@ namespace DIPOL_UF.ViewModels
         public bool Group2ContainsErrors { [ObservableAsProperty] get; }
         public bool Group3ContainsErrors { [ObservableAsProperty] get; }
 
-        public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model)
+        public AcquisitionSettingsViewModel(ReactiveWrapper<IAcquisitionSettings> model)
             : base(model)
         {
             // TODO : Remove logging
@@ -608,7 +609,7 @@ namespace DIPOL_UF.ViewModels
                        : 0) != true;
 
             void CreateGetter<TSrc, TTarget>(
-                Expression<Func<SettingsBase, TSrc>> sourceAccessor,
+                Expression<Func<IAcquisitionSettings, TSrc>> sourceAccessor,
                 Func<TSrc, TTarget> selector,
                 Expression<Func<AcquisitionSettingsViewModel, TTarget>> targetAccessor,
                 Func<TSrc, TTarget, bool> comparator = null)

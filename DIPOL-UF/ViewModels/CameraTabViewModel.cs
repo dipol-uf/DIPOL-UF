@@ -28,6 +28,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using ANDOR_CS;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
@@ -128,7 +129,7 @@ namespace DIPOL_UF.ViewModels
 
             AcquisitionSettingsWindow =
                 new DescendantProxy(Model.AcquisitionSettingsWindow,
-                        x => new AcquisitionSettingsViewModel((ReactiveWrapper<SettingsBase>) x))
+                        x => new AcquisitionSettingsViewModel((ReactiveWrapper<IAcquisitionSettings>) x))
                     .DisposeWith(Subscriptions);
             
             JobSettingsWindow
