@@ -68,8 +68,8 @@ namespace Tests
         [TearDown]
         public void TearDown()
         {
-            _motor.Dispose();
-            _port.Dispose();
+            _motor?.Dispose();
+            _port?.Dispose();
         }
 
         [Theory]
