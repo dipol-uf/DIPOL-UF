@@ -25,9 +25,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
@@ -37,16 +35,16 @@ using System.Threading.Tasks;
 namespace StepMotor
 {
     /// <summary>
-    /// A COM-based interface to DIPOL's step-motor.
+    /// A ComPort-based interface to DIPOL's step-motor.
     /// </summary>
-    public class StepMotorHandler : IAsyncMotor
+    public sealed class StepMotorHandler : IAsyncMotor
     {
         private static readonly Regex Regex = new Regex(@"[a-z]([a-z])\s*(\d{1,3})\s*(.*)\r",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private static readonly int ResponseSizeInBytes = 9;
+        private const int ResponseSizeInBytes = 9;
 
-        private static readonly int SpeedFactor = 30;
+        private const int SpeedFactor = 30;
 
         /// <summary>
         /// Delegate that handles Data/Error received events.
@@ -139,6 +137,7 @@ namespace StepMotor
 
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private async Task<bool> SwitchToBinary(byte address)
         {
             var oldStatus = _suppressEvents;
@@ -159,11 +158,11 @@ namespace StepMotor
                 {
                     await WaitTimeOut(taskSrc.Task, _timeOut);
                 }
-                catch (StepMotorException exept)
+                catch (StepMotorException except)
                 {
-                    if (exept.RawData != null && exept.RawData.Length > 0)
+                    if (except.RawData?.Length > 0)
                     {
-                        var result = Regex.Match(_port.Encoding.GetString(exept.RawData));
+                        var result = Regex.Match(_port.Encoding.GetString(except.RawData));
 
                         if (result.Groups.Count == 4
                             && result.Groups[1].Value == addrStr
@@ -193,7 +192,7 @@ namespace StepMotor
         /// </summary>
         /// <param name="sender">COM port.</param>
         /// <param name="e">Event arguments.</param>
-        protected void OnPortErrorReceived(object sender, SerialErrorReceivedEventArgs e)
+        private void OnPortErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
             // Reads last response
             byte[] buffer = null;
@@ -212,7 +211,7 @@ namespace StepMotor
         /// </summary>
         /// <param name="sender">COM port.</param>
         /// <param name="e">Event arguments.</param>
-        protected void OnPortDataReceived(object sender, SerialDataReceivedEventArgs e)
+        private void OnPortDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             if (_port.BytesToRead <= 0) return;
 
@@ -280,7 +279,7 @@ namespace StepMotor
             }
         }
 
-        protected async Task<Reply> SendCommandAsync(Command command, int argument,
+        private async Task<Reply> SendCommandAsync(Command command, int argument,
             byte type,
             byte address,
             byte motorOrBank, TimeSpan timeOut)
@@ -587,20 +586,12 @@ namespace StepMotor
 
         }
 
-        /// <summary>
-        /// Used to fire DataReceived event.
-        /// </summary>
-        /// <param name="e">Event arguments.</param>
-        protected virtual void OnDataReceived(StepMotorEventArgs e)
+        private void OnDataReceived(StepMotorEventArgs e)
         {
             if (!_suppressEvents)
                 DataReceived?.Invoke(this, e);
         }
-        /// <summary>
-        /// Used to fire ErrorReceived event.
-        /// </summary>
-        /// <param name="e">Event arguments.</param>
-        protected virtual void OnErrorReceived(StepMotorEventArgs e)
+        private void OnErrorReceived(StepMotorEventArgs e)
         {
             if (!_suppressEvents)
                 ErrorReceived?.Invoke(this, e);
@@ -662,92 +653,6 @@ namespace StepMotor
 
 
         }
-
-        //public static async Task<ImmutableList<byte>> FindDevice(SerialPort port, byte startAddress = 1,
-        //    byte endAddress = 16)
-        //{
-
-        //    var result = ImmutableList.CreateBuilder<byte>();
-
-        //    for (var address = startAddress; address <= endAddress; address++)
-        //    {
-        //        var motor = new StepMotorHandler(port, address);
-        //        try
-        //        {
-        //            if (await motor.PokeAddressInBinary(address))
-        //                result.Add(address);
-        //            else
-        //            {
-        //                await motor.SwitchToBinary(address);
-        //                if (await motor.PokeAddressInBinary(address))
-        //                    result.Add(address);
-        //            }
-        //        }
-        //        catch (Exception)
-        //        {
-        //            // Ignored
-        //        }
-        //        finally
-        //        {
-        //            motor.Dispose();
-        //        }
-        //    }
-
-        //    return result.ToImmutable();
-        //}
-
-        //public static async Task<IAsyncMotor> TryCreateFromAddress(
-        //    SerialPort port, byte address, TimeSpan defaultTimeOut = default)
-        //{
-        //    if (port is null)
-        //        throw new ArgumentNullException(nameof(port));
-
-        //    var motor = new StepMotorHandler(port , address, defaultTimeOut);
-
-        //    try
-        //    {
-        //        if (await motor.PokeAddressInBinary(address))
-        //            return motor;
-
-        //        await motor.SwitchToBinary(address);
-        //        if (await motor.PokeAddressInBinary(address))
-        //            return motor;
-
-        //    }
-        //    catch (Exception)
-        //    {
-        //        // Ignored
-        //    }
-        //    motor.Dispose();
-        //    return null;
-        //}
-
-        //public static async Task<IAsyncMotor> TryCreateFirst(
-        //    SerialPort port, byte startAddress = 1, byte endAddress = 16, TimeSpan defaultTimeOut = default)
-        //{
-        //    if (port is null)
-        //        throw new ArgumentNullException(nameof(port));
-        //    if (startAddress > endAddress)
-        //        throw new ArgumentOutOfRangeException(
-        //            $"[{nameof(startAddress)}] should be less than or equal to [{nameof(endAddress)}]");
-
-        //    for (var address = startAddress; address <= endAddress; address++)
-        //    {
-        //        var motor = await TryCreateFromAddress(port, address, defaultTimeOut);
-        //        if (motor != null)
-        //            return motor;
-        //    }
-
-        //    return null;
-        //}
-
-        //public static async Task<IAsyncMotor> CreateFirstOrFromAddress(
-        //    SerialPort port, byte address,
-        //    byte startAddress = 1, byte endAddress = 16,
-        //    TimeSpan defaultTimeOut = default)
-        //    => (await TryCreateFromAddress(port, address, defaultTimeOut)
-        //        ?? await TryCreateFirst(port, startAddress, endAddress, defaultTimeOut))
-        //       ?? throw new InvalidOperationException("Failed to connect to step motor.");
 
         public class StepMotorFactory : IAsyncMotorFactory
         {

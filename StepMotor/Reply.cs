@@ -24,8 +24,6 @@
 
 using System;
 using System.Runtime.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace StepMotor
 {
@@ -33,7 +31,7 @@ namespace StepMotor
     /// Represents a reply from a step motor.
     /// </summary>
     [DataContract]
-    public struct Reply
+    public readonly struct Reply
     {
         /// <summary>
         /// Reply byte length.
@@ -47,7 +45,6 @@ namespace StepMotor
         public byte ReplyAddress
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -57,7 +54,6 @@ namespace StepMotor
         public byte ModuleAddress
         {
             get;
-            private set;          
         }
 
         /// <summary>
@@ -67,7 +63,6 @@ namespace StepMotor
         public ReturnStatus Status
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -77,7 +72,6 @@ namespace StepMotor
         public Command Command
         {
             get;
-            private set;       
         }
 
         /// <summary>
@@ -88,7 +82,6 @@ namespace StepMotor
         public int ReturnValue
         {
             get;
-            private set;
         }
 
         /// <summary>

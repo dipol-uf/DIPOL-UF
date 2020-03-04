@@ -9,7 +9,7 @@ namespace StepMotor
         public StepMotorException(string message, Span<byte> data)
             :base(message)
         {
-            if (data .IsEmpty)
+            if (data.IsEmpty)
                 return;
             RawData = data.ToArray();
         }

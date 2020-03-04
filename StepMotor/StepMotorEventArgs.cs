@@ -34,14 +34,12 @@ namespace StepMotor
         public DateTime EventTime
         {
             get;
-            private set;
         }
 
         [DataMember]
         public Reply Reply
         {
             get;
-            private set;
         }
 
         public StepMotorEventArgs(byte[] message)
