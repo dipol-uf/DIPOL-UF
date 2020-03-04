@@ -96,9 +96,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
@@ -108,7 +105,6 @@
   <ItemGroup>
     <Compile Include="AcquisitionMetadata\Request.cs" />
     <Compile Include="Attributes\FitsKeyAttribute.cs" />
-    <Compile Include="Attributes\IgnoreDefaultAttribute.cs" />
     <Compile Include="Classes\AcquisitionSettings.cs" />
     <Compile Include="Classes\Camera.cs" />
     <Compile Include="Classes\DebugCamera.cs" />

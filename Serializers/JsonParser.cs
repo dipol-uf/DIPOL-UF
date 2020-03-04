@@ -28,12 +28,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Compatibility.ITuple;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -44,7 +42,7 @@ namespace Serializers
         // WATCH: NOT-HotFixing here
         internal static object Converter(object input, bool convertAll = false)
         {
-            string[] FlagEnumConverter(Enum @enum)
+            static string[] FlagEnumConverter(Enum @enum)
             {
                 
                 var type = @enum.GetType();
@@ -52,9 +50,9 @@ namespace Serializers
                 //var values = type.GetFields(BindingFlags.Public | BindingFlags.Static)
                 //    .Where(f => f.FieldType == type)
                 //    .Select(f => (Enum) f.GetValue(null)).ToList();
-
                 var values = type.GetFields(BindingFlags.Public | BindingFlags.Static).Where(f => f.FieldType == type)
-                    .Select(f => new {FieldInfo = f, Ignore = f.GetCustomAttributes().Select(x => (x.TypeId as Type)?.Name ?? string.Empty).Any(x => x == "IgnoreDefaultAttribute")})
+                    //.Select(f => new {FieldInfo = f, Ignore = f.GetCustomAttributes().Select(x => (x.TypeId as Type)?.Name ?? string.Empty).Any(x => x == "IgnoreDefaultAttribute")})
+                    .Select(f => new {FieldInfo = f, Ignore = f.GetCustomAttribute<IgnoreDefaultAttribute>() is { }})
                     .Where(x => !x.Ignore)
                     .Select(x => (Enum)x.FieldInfo.GetValue(null))
                     .ToList();
@@ -65,7 +63,7 @@ namespace Serializers
 
             var tempResult = input;
 
-            if (input is ITuple tuple)
+            if (input.IsValueTuple() is {} tuple)
             {
                 if (convertAll)
                 {
@@ -78,24 +76,21 @@ namespace Serializers
                     tempResult = tuple[0];
             }
 
-            switch (tempResult)
+            return tempResult switch
             {
-                case Enum @enum when Enum.IsDefined(@enum.GetType(), @enum):
-                    return Enum.GetName(@enum.GetType(), @enum);
-                case Enum @enum:
-                    return FlagEnumConverter(@enum);
-                default:
-                    return tempResult;
-            }
+                Enum @enum when Enum.IsDefined(@enum.GetType(), @enum) => Enum.GetName(@enum.GetType(), @enum),
+                Enum @enum => FlagEnumConverter(@enum),
+                _ => tempResult
+            };
         }
        
 
         internal static object Converter3(object inp, bool convertAll = false)
         {
             var result = inp;
-            if (inp != null &&
+            if (inp is { } &&
                 inp.GetType().IsValueType &&
-                inp is ITuple vTuple)
+                inp.IsValueTuple() is {} vTuple)
             {
                 if (convertAll)
                 {
@@ -118,9 +113,9 @@ namespace Serializers
             var props = settings.GetType()
                         .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                         .Where(p =>
-                            p.GetCustomAttribute<SerializationOrderAttribute>() != null &&
-                            p.SetMethod != null &&
-                            p.GetMethod != null)
+                            p.GetCustomAttribute<SerializationOrderAttribute>() is {} &&
+                            p.SetMethod is {} &&
+                            p.GetMethod is {})
                         .OrderBy(p =>
                             p.GetCustomAttribute<SerializationOrderAttribute>().Index);
 
@@ -129,7 +124,7 @@ namespace Serializers
                                 p.Name,
                                 Value = Converter(p.GetValue(settings),
                                     p.GetCustomAttribute<SerializationOrderAttribute>(true)?.All ?? false)
-                            }).Where(item => item.Value != null)
+                            }).Where(item => item.Value is {})
                             .ToDictionary(item => item.Name, item => item.Value);
 
             var dataString = JsonConvert.SerializeObject(data, Formatting.Indented);
@@ -174,8 +169,8 @@ namespace Serializers
             var props = settings.GetType()
                                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                                 .Where(p =>
-                                    p.GetCustomAttribute<SerializationOrderAttribute>() != null &&
-                                    p.GetMethod != null)
+                                    p.GetCustomAttribute<SerializationOrderAttribute>() is {} &&
+                                    p.GetMethod is {})
                                 .OrderBy(p =>
                                     p.GetCustomAttribute<SerializationOrderAttribute>(true)?.Index ?? 0);
 
@@ -184,7 +179,7 @@ namespace Serializers
                                 p.Name,
                                 Value = Converter(p.GetValue(settings),
                                     p.GetCustomAttribute<SerializationOrderAttribute>(true)?.All ?? false)
-                            }).Where(item => item.Value != null)
+                            }).Where(item => item.Value is {})
                             .ToDictionary(item => item.Name, item => item.Value);
 
             var dataString = JsonConvert.SerializeObject(data, Formatting.Indented);
@@ -196,17 +191,14 @@ namespace Serializers
 
         private static object Process( object token)
         {
-            if (token is JObject obj)
-                return new ReadOnlyDictionary<string, object>(obj.Properties().ToDictionary(x => x.Name, x => Process(x.Value)));
-            if (token is JValue val)
-                return val.Value;
-            if (token is JArray array)
+            return token switch
             {
-                return array.Select(Process).ToArray();
-            }
-
-
-            return token;
+                JObject obj => new ReadOnlyDictionary<string, object>(obj.Properties()
+                    .ToDictionary(x => x.Name, x => Process(x.Value))),
+                JValue val => val.Value,
+                JArray array => array.Select(Process).ToArray(),
+                _ => token
+            };
         }
 
     }

@@ -24,7 +24,7 @@
 
 using System;
 
-namespace ANDOR_CS.Attributes
+namespace Serializers
 {
     [AttributeUsage(AttributeTargets.Field)]
     public class IgnoreDefaultAttribute : Attribute

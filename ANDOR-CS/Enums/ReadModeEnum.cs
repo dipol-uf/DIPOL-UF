@@ -25,7 +25,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using ANDOR_CS.Attributes;
+using Serializers;
 #if X86
 using SDK = ATMCD32CS.AndorSDK;
 #endif

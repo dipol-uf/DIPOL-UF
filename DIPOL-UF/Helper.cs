@@ -37,10 +37,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using ANDOR_CS.Attributes;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
+using Serializers;
 
 namespace DIPOL_UF
 {
