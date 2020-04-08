@@ -1382,7 +1382,7 @@ namespace ANDOR_CS.Classes
                     keys = new List<FitsKey>(extraKeys?.Length ?? 10)
                     {
                         new FitsKey("CAMERA", FitsKeywordType.String, ToString()),
-                        FitsKey.CreateDate("DATE", time.UtcDateTime),
+                        FitsKey.CreateDate("DATE-OBS", time.UtcDateTime, format:@"yyyy-MM-ddTHH:mm:ss.fff"),
                         new FitsKey("ACTEXPT", FitsKeywordType.Float, Timings.Exposure, "sec"),
                         new FitsKey("ACTACCT", FitsKeywordType.Float, Timings.Accumulation, "sec"),
                         new FitsKey("ACTKINT", FitsKeywordType.Float, Timings.Kinetic, "sec"),
