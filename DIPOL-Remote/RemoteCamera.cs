@@ -357,9 +357,11 @@ namespace DIPOL_Remote
             }
         }
 
-        public override void StartImageSavingSequence(string folderPath, string imagePattern, string filter, FitsKey[] extraKeys = null)
+        public override void StartImageSavingSequence(string folderPath, string imagePattern, string filter, 
+            FrameType frameType = FrameType.Light,
+            FitsKey[] extraKeys = null)
         {
-            _client.CallStartImageSavingSequence(CameraIndex, folderPath, imagePattern, filter, extraKeys);
+            _client.CallStartImageSavingSequence(CameraIndex, folderPath, imagePattern, filter, frameType, extraKeys);
         }
 
         public override Task FinishImageSavingSequenceAsync()

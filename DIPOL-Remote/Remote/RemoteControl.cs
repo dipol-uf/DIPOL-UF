@@ -614,8 +614,9 @@ namespace DIPOL_Remote.Remote
             => GetCameraSafe(camIndex).SetAutosave(mode, format);
 
         public void CallStartImageSavingSequence(int camIndex, string folderPath, string imagePattern, string filter,
+            FrameType frameType,
             FitsKey[] extraKeys = null)
-            => GetCameraSafe(camIndex).StartImageSavingSequence(folderPath, imagePattern, filter, extraKeys);
+            => GetCameraSafe(camIndex).StartImageSavingSequence(folderPath, imagePattern, filter, frameType, extraKeys);
 
 
         private Camera GetCameraSafe(int camIndex)

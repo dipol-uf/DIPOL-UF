@@ -149,7 +149,7 @@ namespace DIPOL_UF.Jobs
 
         private async Task StartJobAsync(CancellationToken token)
         {
-            async Task DoCameraJobAsync(Job job, string file)
+            async Task DoCameraJobAsync(Job job, string file, FrameType type)
             {
                 if (job is null)
                     return;
@@ -159,6 +159,7 @@ namespace DIPOL_UF.Jobs
                         foreach (var control in _jobControls)
                             control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, file,
                                 Converters.ConverterImplementations.CameraToFilterConversion(control.Camera),
+                                type,
                                 new[] { FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime, format: @"yyyy-MM-ddTHH:mm:ss.fff") });
                     MotorPosition = job.ContainsActionOfType<MotorAction>()
                         ? new float?(0)
@@ -214,6 +215,7 @@ namespace DIPOL_UF.Jobs
                                 control.Camera.StartImageSavingSequence(
                                     CurrentTarget.TargetName, fileName,
                                     Converters.ConverterImplementations.CameraToFilterConversion(control.Camera),
+                                    FrameType.Light,
                                     new [] {  FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime, format: @"yyyy-MM-ddTHH:mm:ss.fff") });
 
                         MotorPosition = AcquisitionJob.ContainsActionOfType<MotorAction>()
@@ -236,7 +238,7 @@ namespace DIPOL_UF.Jobs
                         Progress = 0;
                         Total = BiasActionCount;
                         CurrentJobName = Localization.JobManager_BiasJobName;
-                        await DoCameraJobAsync(BiasJob, $"{CurrentTarget.TargetName}_bias");
+                        await DoCameraJobAsync(BiasJob, $"{CurrentTarget.TargetName}_bias", FrameType.Bias);
                     }
 
                     if (!(DarkJob is null))
@@ -244,7 +246,7 @@ namespace DIPOL_UF.Jobs
                         Progress = 0;
                         Total = DarkActionCount;
                         CurrentJobName = Localization.JobManager_DarkJobName;
-                        await DoCameraJobAsync(DarkJob, $"{CurrentTarget.TargetName}_dark");
+                        await DoCameraJobAsync(DarkJob, $"{CurrentTarget.TargetName}_dark", FrameType.Dark);
                     }
 
                 }, token);

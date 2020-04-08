@@ -21,7 +21,8 @@
 //     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
-
+#nullable enable
+#pragma warning disable 1591
 using System;
 using System.ComponentModel;
 using System.Threading;
@@ -68,16 +69,16 @@ namespace ANDOR_CS
 
         void StartImageSavingSequence(
             string folderPath, string imagePattern,
-            string filter,
-            FitsKey[] extraKeys = null);
+            string? filter, FrameType type = FrameType.Light,
+            FitsKey[]? extraKeys = null);
 
         Task FinishImageSavingSequenceAsync();
 
-        Image PullPreviewImage<T>(int index) where T : unmanaged;
+        Image? PullPreviewImage<T>(int index) where T : unmanaged;
 
         int GetTotalNumberOfAcquiredImages();
 
-        Task StartAcquisitionAsync(Request metadata = default, CancellationToken token = default);
+        Task StartAcquisitionAsync(Request? metadata = default, CancellationToken token = default);
 
         void CheckIsDisposed();
 

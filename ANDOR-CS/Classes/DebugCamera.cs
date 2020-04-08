@@ -238,7 +238,8 @@ namespace ANDOR_CS.Classes
             return Task.FromResult(new[] {PullPreviewImage(0, format), PullPreviewImage(0, format)});
         }
 
-        public override void StartImageSavingSequence(string folderPath, string imagePattern, string filter, FitsKey[] extraKeys = null)
+        public override void StartImageSavingSequence(string folderPath, string imagePattern, string filter, 
+            FrameType frameType = FrameType.Light, FitsKey[] extraKeys = null)
         {
             Console.WriteLine(@"Start saving sequence");
         }

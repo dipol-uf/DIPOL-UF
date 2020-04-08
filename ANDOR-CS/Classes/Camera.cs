@@ -21,7 +21,8 @@
 //     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
-
+#nullable enable
+#pragma warning disable 1591
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
@@ -38,7 +39,6 @@ using Timer = System.Timers.Timer;
 using System.Collections.Generic;
 using ANDOR_CS.AcquisitionMetadata;
 
-#pragma warning disable 1591
 namespace ANDOR_CS.Classes
 {
     /// <summary>
@@ -476,8 +476,8 @@ namespace ANDOR_CS.Classes
 
         public abstract void StartImageSavingSequence(
             string folderPath, string imagePattern,
-            string filter,
-            FitsKey[] extraKeys = null);
+            string? filter, FrameType frameType = FrameType.Light,
+            FitsKey[]? extraKeys = null);
         public abstract Task FinishImageSavingSequenceAsync();
 
         public abstract IAcquisitionSettings GetAcquisitionSettingsTemplate();
@@ -494,9 +494,9 @@ namespace ANDOR_CS.Classes
         /// <exception cref="TaskCanceledException"/>
         protected abstract void AbortAcquisition();
 
-        public abstract Task StartAcquisitionAsync(Request metadata = default, CancellationToken token = default);
+        public abstract Task StartAcquisitionAsync(Request? metadata = default, CancellationToken token = default);
 
-        public abstract Image PullPreviewImage<T>(int index) where T : unmanaged;
+        public abstract Image? PullPreviewImage<T>(int index) where T : unmanaged;
         
 
         public abstract int GetTotalNumberOfAcquiredImages();

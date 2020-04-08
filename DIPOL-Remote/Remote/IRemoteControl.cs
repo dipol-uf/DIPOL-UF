@@ -245,7 +245,7 @@ namespace DIPOL_Remote.Remote
         void CallStartImageSavingSequence(
             int camIndex,
             string folderPath, string imagePattern,
-            string filter, FitsKey[] extraKeys = null);
+            string filter, FrameType frameType, FitsKey[] extraKeys = null);
 
         #region Async methods
 

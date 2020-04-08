@@ -190,8 +190,8 @@ namespace DIPOL_Remote
             => Channel.CallSetAutosave(camIndex, mode, format);
 
         public void CallStartImageSavingSequence(int camIndex, string folderPath, string imagePattern, string filter,
-            FitsKey[] extraKeys = null)
-            => Channel.CallStartImageSavingSequence(camIndex, folderPath, imagePattern, filter, extraKeys);
+            FrameType frameType, FitsKey[] extraKeys = null)
+            => Channel.CallStartImageSavingSequence(camIndex, folderPath, imagePattern, filter, frameType, extraKeys);
 
         public int[] ActiveRemoteCameras()
             => Channel.GetCamerasInUse();
