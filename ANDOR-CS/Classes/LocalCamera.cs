@@ -1389,7 +1389,7 @@ namespace ANDOR_CS.Classes
                         new FitsKey(@"INDEX", FitsKeywordType.Integer, i, "Frame index in cycle"),
                         new FitsKey(@"TEMPC", FitsKeywordType.Float, temperature, "Temperature in C"),
                         new FitsKey(@"TEMPST", FitsKeywordType.String, status.ToString(), "Temperature status"),
-                        new FitsKey(@"IMAGETYPE", FitsKeywordType.String, 
+                        new FitsKey(@"IMAGETYP", FitsKeywordType.String, 
                             frameType switch
                             {
                                 FrameType.Bias => @"Bias Frame",
