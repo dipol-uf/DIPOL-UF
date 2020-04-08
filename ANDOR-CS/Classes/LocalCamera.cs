@@ -1329,7 +1329,7 @@ namespace ANDOR_CS.Classes
        
         public override void StartImageSavingSequence(
             string folderPath, string imagePattern, 
-            string filter,
+            string? filter, FrameType frameType = FrameType.Light,
             FitsKey[]? extraKeys = null)
         {
             if (PathPatternChecker.IsMatch(folderPath))
@@ -1388,7 +1388,14 @@ namespace ANDOR_CS.Classes
                         new FitsKey("ACTKINT", FitsKeywordType.Float, Timings.Kinetic, "sec"),
                         new FitsKey(@"INDEX", FitsKeywordType.Integer, i, "Frame index in cycle"),
                         new FitsKey(@"TEMPC", FitsKeywordType.Float, temperature, "Temperature in C"),
-                        new FitsKey(@"TEMPST", FitsKeywordType.String, status.ToString(), "Temperature status")
+                        new FitsKey(@"TEMPST", FitsKeywordType.String, status.ToString(), "Temperature status"),
+                        new FitsKey(@"IMAGETYPE", FitsKeywordType.String, 
+                            frameType switch
+                            {
+                                FrameType.Bias => @"Bias Frame",
+                                FrameType.Dark => @"Dark Frame",
+                                _ => @"Light Frame"
+                            }, "Type of the image")
                     };
                     
                     if(!string.IsNullOrWhiteSpace(filter))
