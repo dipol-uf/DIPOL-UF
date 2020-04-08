@@ -74,8 +74,11 @@ namespace DIPOL_UF.Jobs
                         : SpecificCameras.EnumerableToString();
 
                 var sharedKeys = new List<FitsKey>();
-                if(Manager.MotorPosition.HasValue)
-                    sharedKeys.Add(new FitsKey("ANGLE", FitsKeywordType.Float, Manager.MotorPosition, "Plate position in deg"));
+                if(Manager.MotorPosition is {} motorPosition)
+                    sharedKeys.Add(new FitsKey("ANGLE", FitsKeywordType.Float, motorPosition, "Plate position in deg"));
+
+                if(Manager.ActualMotorPosition is { } actualPosition)
+                    sharedKeys.Add(new FitsKey("RAWANGLE", FitsKeywordType.Float, actualPosition, "Actual position in deg"));
 
                 //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) start exposure");
                 // TODO : add support for the specific cameras

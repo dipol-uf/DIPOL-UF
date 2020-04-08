@@ -73,7 +73,7 @@ namespace DIPOL_UF.Jobs
 
 
         public static JobManager Manager { get; } = new JobManager();
-
+        
         [Reactive]
         public float? MotorPosition { get; private set; }
         [Reactive]
@@ -92,6 +92,8 @@ namespace DIPOL_UF.Jobs
         public bool AnyCameraIsAcquiring { [ObservableAsProperty] get; }
         // ReSharper disable once UnassignedGetOnlyAutoProperty
         public bool IsRegimeSwitching { [ObservableAsProperty] get; }
+
+        public float? ActualMotorPosition { get; private set; }
 
         // TODO : return a copy of a target
         public Target CurrentTarget { get; private set; } = new Target();
@@ -164,6 +166,7 @@ namespace DIPOL_UF.Jobs
                     MotorPosition = job.ContainsActionOfType<MotorAction>()
                         ? new float?(0)
                         : null;
+                    ActualMotorPosition = MotorPosition;
                     await job.Run(token);
                 }
                 finally
@@ -173,6 +176,7 @@ namespace DIPOL_UF.Jobs
                             await control.Camera.FinishImageSavingSequenceAsync();
 
                     MotorPosition = null;
+                    ActualMotorPosition = null;
                 }
             }
 
@@ -221,6 +225,7 @@ namespace DIPOL_UF.Jobs
                         MotorPosition = AcquisitionJob.ContainsActionOfType<MotorAction>()
                             ? new float?(0)
                             : null;
+                        ActualMotorPosition = MotorPosition;
                         for (var i = 0; i < AcquisitionRuns; i++)
                             await AcquisitionJob.Run(token);
                     }
@@ -230,6 +235,7 @@ namespace DIPOL_UF.Jobs
                             foreach (var control in _jobControls)
                                 await control.Camera.FinishImageSavingSequenceAsync();
                         MotorPosition = null;
+                        ActualMotorPosition = MotorPosition;
                     }
 
                     // TODO : Remove logging
@@ -280,6 +286,7 @@ namespace DIPOL_UF.Jobs
                 CurrentJobName = string.Empty;
                 Total = 0;
                 MotorPosition = null;
+                ActualMotorPosition = null;
                 _jobControls.Clear();
                 _jobControls = null;
                 foreach( var sett in _settingsCache)

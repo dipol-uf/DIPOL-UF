@@ -453,6 +453,15 @@ namespace StepMotor
             throw new InvalidOperationException("Failed to retrieve value.");
         }
 
+        public async Task<int> GetTruePositionAsync(byte motorOrBank = 0)
+        {
+            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType)AxisParameter.EncoderPosition,
+                motorOrBank);
+            if (reply.Status == ReturnStatus.Success)
+                return reply.ReturnValue;
+            throw new InvalidOperationException("Failed to retrieve value.");
+        }
+
         public async Task<bool> IsTargetPositionReachedAsync(byte motorOrBank = 0)
         {
             var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType)AxisParameter.TargetPositionReached,
