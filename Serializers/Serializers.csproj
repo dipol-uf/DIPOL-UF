@@ -6,12 +6,21 @@
     <Product>Serializers</Product>
     <Copyright>Copyright ©  2020</Copyright>
     <LangVersion>8.0</LangVersion>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
     <OutputPath>bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DebugType>full</DebugType>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebugType>pdbonly</DebugType>
     <OutputPath>bin\$(Configuration)\</OutputPath>
   </PropertyGroup>

@@ -1,8 +1,9 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
+﻿#nullable enable
+//    This file is part of Dipol-3 Camera Manager.
 
 //     MIT License
 //     
-//     Copyright(c) 2018 Ilia Kosenkov
+//     Copyright(c) 2018-2020 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -82,7 +83,7 @@ namespace ANDOR_CS.Classes
         private int _startImageIndex;
         private bool _sessionImageFlag;
         private Task _sessionSubscription;
-        private Subject<(Image Image, DateTimeOffset Time, Request Metadata)> _sessionImageSource;
+        private Subject<(Image Image, DateTimeOffset Time, Request? Metadata)> _sessionImageSource;
         private CancellationTokenSource _sessionImageCancellation;
 
         /// <summary>
@@ -106,15 +107,6 @@ namespace ANDOR_CS.Classes
             get;
         }
 
-
-        /// <summary>
-        /// Creates a new instance of Camera class to represent a connected Andor device.
-        /// Maximum 8 cameras can be controlled at the same time
-        /// </summary>
-        /// <exception cref="AndorSdkException"/>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="InvalidOperationException"/>
-        /// <param name="camIndex">The index of a camera (cannot exceed [0, 7] range). Usually limited by <see cref="LocalCamera.GetNumberOfCameras()"/></param>
         private LocalCamera(int camIndex = 0)
         {
             // Stores return codes from SDK functions
@@ -481,8 +473,6 @@ namespace ANDOR_CS.Classes
 
             // Stores the (maximum) number of different pre-Amp gain settings. Depends on currently selected AD-converter and amplifier
 
-            //result = Call(CameraHandle, SdkInstance.GetNumberPreAmpGains, out int preAmpGainMaxNumber);
-            //ThrowIfError(result, nameof(SdkInstance.GetNumberPreAmpGains));
             if (FailIfError(
                 Call(CameraHandle, SdkInstance.GetNumberPreAmpGains, out int preAmpGainMaxNumber),
                 nameof(SdkInstance.GetNumberPreAmpGains),
@@ -497,13 +487,8 @@ namespace ANDOR_CS.Classes
 
                 // Retrieves description
                 // Manual synchronization
-                //result = Call((ref string output) =>
-                //    SDKInstance.GetPreAmpGainText(preAmpIndex, ref output, PreAmpGainDescriptorMaxLength),
-                //    out string desc);                    
                 var desc = "";
                 var index = preAmpIndex;
-                //result = Call(CameraHandle, () => SdkInstance.GetPreAmpGainText(index, ref desc, PreAmpGainDescriptorMaxLength));
-                //ThrowIfError(result, nameof(SdkInstance.GetPreAmpGainText));
                 if (FailIfError(
                     Call(CameraHandle,
                         () => SdkInstance.GetPreAmpGainText(index, ref desc, PreAmpGainDescriptorMaxLength)),
@@ -514,8 +499,6 @@ namespace ANDOR_CS.Classes
                 preAmpGainDesc[preAmpIndex] = desc;
             }
 
-            //result = Call(CameraHandle, SdkInstance.GetNumberVSSpeeds, out int vsSpeedNumber);
-            //ThrowIfError(result, nameof(SdkInstance.GetNumberVSSpeeds));
             if (FailIfError(
                 Call(CameraHandle, SdkInstance.GetNumberVSSpeeds, out int vsSpeedNumber),
                 nameof(SdkInstance.GetNumberVSSpeeds),
@@ -531,8 +514,6 @@ namespace ANDOR_CS.Classes
             for (var speedIndex = 0; speedIndex < vsSpeedNumber; speedIndex++)
             {
 
-                //result = Call(CameraHandle, SdkInstance.GetVSSpeed, speedIndex, out float localSpeed);
-                //ThrowIfError(result, nameof(SdkInstance.GetVSSpeed));
                 if (FailIfError(
                     Call(CameraHandle, SdkInstance.GetVSSpeed, speedIndex, out float localSpeed),
                     nameof(SdkInstance.GetVSSpeed),
@@ -621,19 +602,14 @@ namespace ANDOR_CS.Classes
             {
                 await Task.Run(() =>
                 {
-                    FitsImageType type;
-                    switch (AutosaveFormat)
+                    var type = AutosaveFormat switch
                     {
-                        case ImageFormat.UnsignedInt16:
-                            type = FitsImageType.Int16;
-                            break;
-                        default:
-                            type = FitsImageType.Int32;
-                            break;
-                    }
+                        ImageFormat.UnsignedInt16 => FitsImageType.Int16,
+                        _ => FitsImageType.Int32
+                    };
 
                     var image = PullPreviewImage(e.Index, AutosaveFormat);
-                    if (!(image is null))
+                    if (image is { })
                     {
                         var path = Path.GetFullPath(Path.Combine(_autosavePath, $"{e.EventTime:yyyy.MM.ddThh-mm-ss.fffzz}.fits"));
                         var keys = new List<FitsKey>(SettingsProvider.MetaFitsKeys)
@@ -1053,18 +1029,13 @@ namespace ANDOR_CS.Classes
             }, token);
         }
 
-        public override async Task<Image[]> PullAllImagesAsync(ImageFormat format, CancellationToken token)
-        {
-            switch (format)
+        public override async Task<Image[]> PullAllImagesAsync(ImageFormat format, CancellationToken token) =>
+            format switch
             {
-                case ImageFormat.UnsignedInt16:
-                    return await PullAllImagesAsync<ushort>(token);
-                case ImageFormat.SignedInt32:
-                    return await PullAllImagesAsync<int>(token);
-                default:
-                    throw new ArgumentException("Unsupported image type.", nameof(format));
-            }
-        }
+                ImageFormat.UnsignedInt16 => await PullAllImagesAsync<ushort>(token),
+                ImageFormat.SignedInt32 => await PullAllImagesAsync<int>(token),
+                _ => throw new ArgumentException("Unsupported image type.", nameof(format))
+            };
 
         /// <summary>
         /// Generates an instance of <see cref="AcquisitionSettings"/> that can be used to select proper settings for image
@@ -1166,7 +1137,7 @@ namespace ANDOR_CS.Classes
         /// <exception cref="AcquisitionInProgressException"/>
         /// <exception cref="AndorSdkException"/>
         /// <returns>Task that can be queried for execution status.</returns>
-        public override async Task StartAcquisitionAsync(Request metadata = default, CancellationToken token = default)
+        public override async Task StartAcquisitionAsync(Request? metadata = default, CancellationToken token = default)
         {
             CheckIsDisposed();
             try
@@ -1199,11 +1170,12 @@ namespace ANDOR_CS.Classes
                     OnAcquisitionStatusChecked(new AcquisitionStatusEventArgs(status, DateTime.UtcNow, kin, acc));
 
                     var totalImg = (First: 0, Last: 0);
-                    var result = Call(CameraHandle,
+                    Call(CameraHandle,
                         () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
 
 
-                    Console.WriteLine($"IMAGES: {totalImg} {result} {GetStatus()}");
+
+                    //Console.WriteLine($"IMAGES: {totalImg} {result} {GetStatus()}");
 
                     if (totalImg.First >= 0)
                     {
@@ -1233,7 +1205,7 @@ namespace ANDOR_CS.Classes
                 if (_useSdkEvents)
                 {
                     SdkEventFired += ListenAndCheckImages;
-                    var reg = token.Register(() => ListenAndCheckImages(this, default));
+                    var reg = token.Register(() => ListenAndCheckImages(this, EventArgs.Empty));
                     try
                     {
                         StartAcquisition();
@@ -1257,7 +1229,7 @@ namespace ANDOR_CS.Classes
                     timer.Interval = intervalMs;
 
                     SdkEventFired += ListenAndCheckImages;
-                    var reg = token.Register(() => ListenAndCheckImages(this, default));
+                    var reg = token.Register(() => ListenAndCheckImages(this, EventArgs.Empty));
                     try
                     {
                         timer.Start();
@@ -1294,7 +1266,7 @@ namespace ANDOR_CS.Classes
                 OnAcquisitionFinished(new AcquisitionStatusEventArgs(GetStatus()));
             }
         }
-        public override Image PullPreviewImage<T>(int index)
+        public override Image? PullPreviewImage<T>(int index)
         {
             if(!(typeof(T) == typeof(ushort) || typeof(T) == typeof(int)))
                 throw new ArgumentException($"Current SDK only supports {typeof(ushort)} and {typeof(int)} images.");
@@ -1358,7 +1330,7 @@ namespace ANDOR_CS.Classes
         public override void StartImageSavingSequence(
             string folderPath, string imagePattern, 
             string filter,
-            FitsKey[] extraKeys = null)
+            FitsKey[]? extraKeys = null)
         {
             if (PathPatternChecker.IsMatch(folderPath))
                 throw new ArgumentException(@"Illegal folder name.", nameof(folderPath));
@@ -1396,15 +1368,15 @@ namespace ANDOR_CS.Classes
 
             _sessionImageCancellation = new CancellationTokenSource();
             _sessionImageFlag = true;
-            async Task SaveAsync(Image im, DateTimeOffset time, Request metadata, int i, CancellationToken token = default)
+            async Task SaveAsync(Image im, DateTimeOffset time, Request? metadata, int i, CancellationToken token = default)
             {
-                var fitsType = metadata.ImageFormat == ImageFormat.UnsignedInt16
+                var fitsType = metadata?.ImageFormat == ImageFormat.UnsignedInt16
                     ? FitsImageType.Int16
                     : FitsImageType.Int32;
 
                 var imgPath = Path.Combine(path, $"{imagePattern}_{_startImageIndex + i:0000}.fits");
-                List<FitsKey> keys = null;
-                var tempStatus = GetCurrentTemperature();
+                List<FitsKey>? keys = null;
+                var (status, temperature) = GetCurrentTemperature();
                 await Task.Run(() =>
                 {
                     keys = new List<FitsKey>(extraKeys?.Length ?? 10)
@@ -1415,8 +1387,8 @@ namespace ANDOR_CS.Classes
                         new FitsKey("ACTACCT", FitsKeywordType.Float, Timings.Accumulation, "sec"),
                         new FitsKey("ACTKINT", FitsKeywordType.Float, Timings.Kinetic, "sec"),
                         new FitsKey(@"INDEX", FitsKeywordType.Integer, i, "Frame index in cycle"),
-                        new FitsKey(@"TEMPC", FitsKeywordType.Float, tempStatus.Temperature, "Temperature in C"),
-                        new FitsKey(@"TEMPST", FitsKeywordType.String, tempStatus.Status.ToString(), "Temperature status")
+                        new FitsKey(@"TEMPC", FitsKeywordType.Float, temperature, "Temperature in C"),
+                        new FitsKey(@"TEMPST", FitsKeywordType.String, status.ToString(), "Temperature status")
                     };
                     
                     if(!string.IsNullOrWhiteSpace(filter))
@@ -1425,7 +1397,7 @@ namespace ANDOR_CS.Classes
                     if (!(extraKeys is null))
                         keys.AddRange(extraKeys);
 
-                    if(metadata.FitsKeys?.Any() == true)
+                    if(metadata?.FitsKeys?.Any() == true)
                         keys.AddRange(metadata.FitsKeys);
 
                     if (!(CurrentSettings is null) &&
@@ -1445,7 +1417,7 @@ namespace ANDOR_CS.Classes
             }
 
 
-            _sessionImageSource = new Subject<(Image Image, DateTimeOffset Time, Request Metadata)>();
+            _sessionImageSource = new Subject<(Image Image, DateTimeOffset Time, Request? Metadata)>();
 
             _sessionSubscription = _sessionImageSource.ForEachAsync(
                 (data, ind) => Task.Run(async () => 
@@ -1466,35 +1438,35 @@ namespace ANDOR_CS.Classes
             CheckIsDisposed();
 
 
-            if (settings.VSSpeed?.Index is int vsIndex
+            if (settings.VSSpeed?.Index is { } vsIndex
                 && FailIfError(
                     Call(CameraHandle, SdkInstance.SetVSSpeed, vsIndex),
                     nameof(SdkInstance.SetVSSpeed),
                     out var except))
                 throw except;
 
-            if (settings.VSAmplitude is VSAmplitude ampl
+            if (settings.VSAmplitude is { } ampl
                 && FailIfError(
                     Call(CameraHandle, SdkInstance.SetVSAmplitude, (int) ampl),
                     nameof(SdkInstance.SetVSAmplitude),
                     out except))
                 throw except;
 
-            if (settings.ADConverter?.Index is int adIndex
+            if (settings.ADConverter?.Index is { } adIndex
                 && FailIfError(
                     Call(CameraHandle, SdkInstance.SetADChannel, adIndex),
                     nameof(SdkInstance.SetADChannel),
                     out except))
                 throw except;
 
-            if (settings.OutputAmplifier?.Index is int oAmpIndex
+            if (settings.OutputAmplifier?.Index is { } oAmpIndex
                 && FailIfError(
                     Call(CameraHandle, SdkInstance.SetOutputAmplifier, oAmpIndex),
                     nameof(SdkInstance.SetOutputAmplifier),
                     out except))
                 throw except;
 
-            if (settings.HSSpeed?.Index is int hsIndex
+            if (settings.HSSpeed?.Index is { } hsIndex
                 && FailIfError(
                     Call(CameraHandle,
                         () => SdkInstance.SetHSSpeed(settings.OutputAmplifier?.Index ?? 0, hsIndex)),
@@ -1504,7 +1476,7 @@ namespace ANDOR_CS.Classes
 
 
 
-            if (settings.PreAmpGain?.Index is int ampIndex
+            if (settings.PreAmpGain?.Index is { } ampIndex
                 && FailIfError(
                     Call(CameraHandle, SdkInstance.SetPreAmpGain, ampIndex),
                     nameof(SdkInstance.SetPreAmpGain),
@@ -1512,7 +1484,7 @@ namespace ANDOR_CS.Classes
                 throw except;
 
 
-            if (settings.ImageArea is Rectangle image
+            if (settings.ImageArea is { } image
                 && FailIfError(
                     Call(CameraHandle,
                         () => SdkInstance.SetImage(1, 1, image.X1, image.X2, image.Y1, image.Y2)),
@@ -1521,7 +1493,7 @@ namespace ANDOR_CS.Classes
                 throw except;
 
 
-            if (settings.AcquisitionMode is AcquisitionMode acqMode)
+            if (settings.AcquisitionMode is { } acqMode)
             {
                 if (acqMode.HasFlag(AcquisitionMode.FrameTransfer))
                 {
@@ -1542,6 +1514,7 @@ namespace ANDOR_CS.Classes
 
 
                 if (FailIfError(
+                    // ReSharper disable once AssignNullToNotNullAttribute ---- Checked earlier
                     Call(CameraHandle, SdkInstance.SetAcquisitionMode, EnumConverter.AcquisitionModeTable[acqMode]),
                     nameof(SdkInstance.SetAcquisitionMode),
                     out except))
@@ -1572,7 +1545,7 @@ namespace ANDOR_CS.Classes
                 throw new NullReferenceException("Acquisition mode should be set before applying settings.");
 
 
-            if (settings.ReadoutMode is ReadMode roMode)
+            if (settings.ReadoutMode is { } roMode)
             {
                 if (FailIfError(
                     Call(CameraHandle, SdkInstance.SetReadMode, EnumConverter.ReadModeTable[roMode]),
@@ -1584,7 +1557,7 @@ namespace ANDOR_CS.Classes
                 throw new NullReferenceException("Read mode should be set before applying settings.");
 
 
-            if (settings.TriggerMode is TriggerMode trMode)
+            if (settings.TriggerMode is { } trMode)
             {
                 if (FailIfError(
                     Call(CameraHandle, SdkInstance.SetTriggerMode,
@@ -1596,7 +1569,7 @@ namespace ANDOR_CS.Classes
             else
                 throw new NullReferenceException("Trigger mode should be set before applying settings.");
 
-            if (settings.ExposureTime is float expTime)
+            if (settings.ExposureTime is { } expTime)
             {
                 if (FailIfError(
                     Call(CameraHandle, SdkInstance.SetExposureTime, expTime),
@@ -1609,8 +1582,8 @@ namespace ANDOR_CS.Classes
 
             if (settings.AcquisitionMode?.HasFlag(AcquisitionMode.Accumulation) == true)
             {
-                if (settings.AccumulateCycle?.Frames is int nAccFrames
-                    && settings.AccumulateCycle.Value.Time is float accExpTime)
+                if (settings.AccumulateCycle?.Frames is { } nAccFrames
+                    && settings.AccumulateCycle.Value.Time is { } accExpTime)
                 {
                     if (FailIfError(
                         Call(CameraHandle, SdkInstance.SetNumberAccumulations, nAccFrames),
@@ -1632,8 +1605,8 @@ namespace ANDOR_CS.Classes
 
             if (settings.AcquisitionMode?.HasFlag(AcquisitionMode.Kinetic) == true)
             {
-                if (settings.AccumulateCycle?.Frames is int nAccFrames
-                    && settings.AccumulateCycle.Value.Time is float accExpTime)
+                if (settings.AccumulateCycle?.Frames is { } nAccFrames
+                    && settings.AccumulateCycle.Value.Time is { } accExpTime)
                 {
                     if (FailIfError(
                         Call(CameraHandle, SdkInstance.SetNumberAccumulations, nAccFrames),
@@ -1651,8 +1624,8 @@ namespace ANDOR_CS.Classes
                     throw new NullReferenceException(
                         $"Accumulation cycle should be set if acquisition mode is {settings.AcquisitionMode.Value}.");
 
-                if (settings.KineticCycle?.Frames is int nKinFrames
-                    && settings.KineticCycle.Value.Time is float kinExpTime)
+                if (settings.KineticCycle?.Frames is { } nKinFrames
+                    && settings.KineticCycle.Value.Time is { } kinExpTime)
                 {
                     if (FailIfError(Call(CameraHandle, SdkInstance.SetNumberKinetics, nKinFrames),
                         nameof(SdkInstance.SetNumberKinetics),
@@ -1668,7 +1641,7 @@ namespace ANDOR_CS.Classes
                         $"Kinetic cycle should be set if acquisition mode is {settings.AcquisitionMode.Value}.");
             }
 
-            if (settings.EMCCDGain is int gain)
+            if (settings.EMCCDGain is { } gain)
             {
                 if (settings.OutputAmplifier?.OutputAmplifier != OutputAmplification.ElectronMultiplication)
                     throw new NullReferenceException(
@@ -1692,29 +1665,6 @@ namespace ANDOR_CS.Classes
             Timings = timings;
             base.ApplySettings(settings);
         }
-
-        /// <summary>
-        /// Queries the number of currently connected Andor cameras
-        /// </summary>
-        /// <exception cref="AndorSdkException"/>
-        /// <returns>TNumber of detected cameras</returns>
-        //public static int GetNumberOfCameras()
-        //{
-        //    // Variable is passed to SDK function
-
-        //    var result = CallWithoutHandle(SdkInstance.GetAvailableCameras, out int cameraCount);
-        //    if (FailIfError(result, nameof(SdkInstance.GetAvailableCameras), out var except))
-        //        throw except;
-
-        //    return cameraCount;
-        //}
-
-        //public new static Camera Create(int camIndex = 0, params object[] @params)
-        //    => new Camera(camIndex);
-
-        //public new static async Task<Camera> CreateAsync(int camIndex = 0, params object[] @params)
-        //    => await Task.Run(() => Create(camIndex, @params));
-
     }
 
 }
