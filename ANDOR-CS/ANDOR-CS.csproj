@@ -103,6 +103,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AcquisitionMetadata\FrameType.cs" />
     <Compile Include="AcquisitionMetadata\Request.cs" />
     <Compile Include="Attributes\FitsKeyAttribute.cs" />
     <Compile Include="Classes\AcquisitionSettings.cs" />
