@@ -1399,7 +1399,19 @@ namespace ANDOR_CS.Classes
                     };
                     
                     if(!string.IsNullOrWhiteSpace(filter))
-                        keys.Add(new FitsKey("FILTER", FitsKeywordType.String, filter));
+                    { 
+                        keys.Add(new FitsKey("FILTER", FitsKeywordType.Integer, 
+                            filter switch
+                            {
+                                "B" => 2,
+                                "V" => 3,
+                                "R" => 4,
+                                _ => 0
+                            },
+                            "Legacy filter ID"));
+
+                        keys.Add(new FitsKey("BAND", FitsKeywordType.String, filter, "ONIR band"));
+                    }
                    
                     if (!(extraKeys is null))
                         keys.AddRange(extraKeys);
