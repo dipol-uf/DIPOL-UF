@@ -214,7 +214,7 @@ namespace DIPOL_UF.Jobs
                                 control.Camera.StartImageSavingSequence(
                                     CurrentTarget.TargetName, fileName,
                                     Converters.ConverterImplementations.CameraToFilterConversion(control.Camera),
-                                    new [] {  FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime) });
+                                    new [] {  FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime, format: @"yyyy-MM-ddTHH:mm:ss.fff") });
 
                         MotorPosition = AcquisitionJob.ContainsActionOfType<MotorAction>()
                             ? new float?(0)
