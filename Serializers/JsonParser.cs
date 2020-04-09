@@ -87,6 +87,26 @@ namespace Serializers
             str.Flush();
         }
 
+        public static IReadOnlyDictionary<string, object> GenerateJson(object settings)
+        {
+            var props = settings.GetType()
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(p =>
+                    p.GetCustomAttribute<SerializationOrderAttribute>() != null &&
+                    p.SetMethod != null &&
+                    p.GetMethod != null)
+                .OrderBy(p =>
+                    p.GetCustomAttribute<SerializationOrderAttribute>().Index);
+
+            return props.Select(p => new
+                {
+                    p.Name,
+                    Value = Converter(p.GetValue(settings),
+                        p.GetCustomAttribute<SerializationOrderAttribute>(true)?.All ?? false)
+                }).Where(item => item.Value != null)
+                .ToDictionary(item => item.Name, item => item.Value);
+        }
+
         public static ReadOnlyDictionary<string, object> ReadJson(StreamReader str)
         {
 
