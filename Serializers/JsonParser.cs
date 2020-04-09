@@ -42,9 +42,7 @@ namespace Serializers
         internal static object Converter(object inp, bool convertAll = false)
         {
             var result = inp;
-            if (inp != null &&
-                inp.GetType().IsValueType &&
-                inp is ITuple vTuple)
+            if (inp is ITuple vTuple)
             {
                 if (convertAll)
                 {

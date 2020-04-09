@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ namespace Sandbox
             await JsonSerializationTest();
         }
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         private static async Task JsonSerializationTest()
         {
             var cams = await Task.WhenAll(Enumerable.Range(0, 3)
@@ -39,31 +41,36 @@ namespace Sandbox
                     setts.SetAll(nameof(SettingsBase.SetAcquisitionMode), AcquisitionMode.SingleScan);
                     setts.SetAll(nameof(SettingsBase.SetAcquisitionMode), AcquisitionMode.SingleScan);
                     setts.SetAll(nameof(SettingsBase.SetTriggerMode), TriggerMode.Internal);
-                    setts.SetAll(nameof(SettingsBase.SetReadoutMode), ReadMode.FullImage);
                     setts.SetAll(nameof(SettingsBase.SetImageArea), new Rectangle(1, 1, 64, 64));
                     setts.SetAll(nameof(SettingsBase.SetExposureTime), 3f);
+
+                    var camDict = cams.ToDictionary(
+                        x => x.CameraIndex switch
+                        {
+                            0 => "B",
+                            1 => "V",
+                            2 => "R",
+                            _ => "?"
+                        }, x => x as CameraBase);
 
                     var target = new Target1()
                     {
                         StarName = @"TestStar",
-                        SharedParameters = setts[0],
+                        SharedParameters = new SharedSettingsContainer(setts.First()),
                         CycleType = CycleType.Photometric,
                         PerCameraParameters = new Dictionary<string, Dictionary<string, object?>?>
                         {
-                            {nameof(SettingsBase.ExposureTime), 
-                                cams.ToDictionary(
-                                    x => x.CameraIndex switch
-                                    {
-                                        0 => "B",
-                                        1 => "V",
-                                        2 => "R",
-                                        _ => "?"
-                                    }, 
-                                    x => (object?)(x.CameraIndex * 0.5f)) }
+                            {
+                                nameof(SettingsBase.ExposureTime), 
+                                camDict.ToDictionary(x => x.Key, x => (object?)((x.Value.CameraIndex + 1) * 0.5f))
+                            }
                         }
                     };
 
-                    var str = JsonConvert.SerializeObject(target, Formatting.Indented);
+
+                    var newSetts = target.CreateTemplatesForCameras(camDict);
+
+                    //var str = JsonConvert.SerializeObject(target, Formatting.Indented);
                     //using var fstr = new FileStream("test.json", FileMode.Create, FileAccess.ReadWrite);
                     //using var writer = new StreamWriter(fstr);
                     //await writer.WriteAsync(str);

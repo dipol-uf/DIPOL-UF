@@ -21,8 +21,31 @@ namespace DIPOL_UF.Jobs
 
         public Dictionary<string, Dictionary<string, object?>?>? PerCameraParameters { get; set; }
 
-        public SettingsBase? SharedParameters { get; set; }
-        
+        public SharedSettingsContainer? SharedParameters { get; set; }
+
+        public IReadOnlyDictionary<string, SettingsBase> CreateTemplatesForCameras(
+            IReadOnlyDictionary<string, CameraBase> cameras)
+        {
+            _ = cameras ?? throw new ArgumentNullException(nameof(cameras));
+
+            return cameras.ToDictionary(
+                x => x.Key,
+                x => (SharedParameters ?? new SharedSettingsContainer())
+                    .PrepareTemplateForCamera(
+                        x.Value,
+                        GatherPerCameraParameters(x.Key)));
+        }
+
+        private IReadOnlyDictionary<string, object?> GatherPerCameraParameters(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentException(nameof(key));
+
+            return PerCameraParameters
+                       ?.Where(x => x.Value?.ContainsKey(key) is true)
+                       .ToDictionary(x => x.Key, x => x.Value?[key])
+                   ?? new Dictionary<string, object?>();
+        }
     }
 
     internal class Target1JSonConverter : JsonConverter<Target1>

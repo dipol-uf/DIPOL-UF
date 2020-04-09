@@ -850,7 +850,7 @@ namespace ANDOR_CS.Classes
             CancellationToken token)
             => JsonParser.ReadJsonAsync(str, enc, token);
 
-        private ReadOnlyCollection<string> Load(IReadOnlyDictionary<string, object> input)
+        public ReadOnlyCollection<string> Load(IReadOnlyDictionary<string, object> input)
         {
             var props = new Collection<string>();
             foreach (var (key, val) in input)
@@ -870,7 +870,8 @@ namespace ANDOR_CS.Classes
                                 var enumResult = Enum.Parse(pars[0].ParameterType, enumStr);
                                 method.Invoke(this, new[] {enumResult});
                             }
-
+                            else if (val is Enum @enum)
+                                method.Invoke(this, new object[] {@enum});
                             break;
                         }
                         case 1 when val.GetType().IsValueType:
