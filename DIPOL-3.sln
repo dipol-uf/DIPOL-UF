@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29920.165
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ANDOR-CS", "ANDOR-CS\ANDOR-CS.csproj", "{D1E8B17D-4C59-42DD-87BD-F111DF8E631D}"
 EndProject
@@ -24,6 +24,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "Benchmark\Benchmark.csproj", "{114F0204-867D-4F7C-B034-89990174EF26}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serializers", "Serializers\Serializers.csproj", "{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox", "Sandbox\Sandbox.csproj", "{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -153,6 +155,18 @@ Global
 		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Release|x64.Build.0 = Release|Any CPU
 		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Release|x86.ActiveCfg = Release|Any CPU
 		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Release|x86.Build.0 = Release|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Debug|x64.Build.0 = Debug|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Debug|x86.Build.0 = Debug|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Release|x64.ActiveCfg = Release|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Release|x64.Build.0 = Release|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Release|x86.ActiveCfg = Release|Any CPU
+		{9E3E19B1-5791-4837-A93D-BB1B6A04AC32}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
