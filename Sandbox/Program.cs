@@ -24,70 +24,67 @@ namespace Sandbox
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         private static async Task JsonSerializationTest()
         {
-            var cams = await Task.WhenAll(Enumerable.Range(0, 3)
-                .Select(x => DebugCamera.CreateAsync(x)));
+            var cams = (await Task.WhenAll(Enumerable.Range(0, 3)
+                    .Select(x => DebugCamera.CreateAsync(x))))
+                .ToDictionary(
+                    x => x.CameraIndex switch
+                    {
+                        0 => "B",
+                        1 => "V",
+                        2 => "R",
+                        _ => "?"
+                    }, x => x as CameraBase);
             try
             {
-                var setts = cams.InvokeAll<DebugCamera, SettingsBase>(
-                    nameof(DebugCamera.GetAcquisitionSettingsTemplate));
-                try
+                var sharedSetts = new SharedSettingsContainer
                 {
-                    setts.SetAll(nameof(SettingsBase.SetVSSpeed), 0);
-                    setts.SetAll(nameof(SettingsBase.SetVSAmplitude), VSAmplitude.Normal);
-                    setts.SetAll(nameof(SettingsBase.SetADConverter), 0);
-                    setts.SetAll(nameof(SettingsBase.SetOutputAmplifier), OutputAmplification.Conventional);
-                    setts.SetAll(nameof(SettingsBase.SetHSSpeed), 0);
-                    setts.SetAll(nameof(SettingsBase.SetPreAmpGain), 0);
-                    setts.SetAll(nameof(SettingsBase.SetAcquisitionMode), AcquisitionMode.SingleScan);
-                    setts.SetAll(nameof(SettingsBase.SetAcquisitionMode), AcquisitionMode.SingleScan);
-                    setts.SetAll(nameof(SettingsBase.SetTriggerMode), TriggerMode.Internal);
-                    setts.SetAll(nameof(SettingsBase.SetImageArea), new Rectangle(1, 1, 64, 64));
-                    setts.SetAll(nameof(SettingsBase.SetExposureTime), 3f);
+                    VSSpeed = 0,
+                    VSAmplitude = VSAmplitude.Normal,
+                    ADConverter = 0,
+                    OutputAmplifier = OutputAmplification.Conventional,
+                    HSSpeed = 0,
+                    PreAmpGain = 0,
+                    AcquisitionMode = AcquisitionMode.SingleScan,
+                    TriggerMode = TriggerMode.Internal,
+                    ImageArea = new Rectangle(1, 1, 64, 64),
+                    ExposureTime = 3f
+                };
 
-                    var camDict = cams.ToDictionary(
-                        x => x.CameraIndex switch
-                        {
-                            0 => "B",
-                            1 => "V",
-                            2 => "R",
-                            _ => "?"
-                        }, x => x as CameraBase);
 
-                    var target = new Target1()
+                var target = new Target1()
                     {
                         StarName = @"TestStar",
-                        SharedParameters = new SharedSettingsContainer(setts.First()),
+                        SharedParameters = sharedSetts,
                         CycleType = CycleType.Photometric,
                         PerCameraParameters = new Dictionary<string, Dictionary<string, object?>?>
                         {
                             {
                                 nameof(SettingsBase.ExposureTime), 
-                                camDict.ToDictionary(x => x.Key, x => (object?)((x.Value.CameraIndex + 1) * 0.5f))
+                                cams.ToDictionary(x => x.Key, x => (object?)((x.Value.CameraIndex + 1) * 0.5f))
                             }
                         }
                     };
 
 
-                    var newSetts = target.CreateTemplatesForCameras(camDict);
+                    var newSetts = target.CreateTemplatesForCameras(cams);
 
-                    //var str = JsonConvert.SerializeObject(target, Formatting.Indented);
+                    var str = JsonConvert.SerializeObject(target, Formatting.Indented);
+
+
+                    var tg = JsonConvert.DeserializeObject<Target1>(str);
+
                     //using var fstr = new FileStream("test.json", FileMode.Create, FileAccess.ReadWrite);
                     //using var writer = new StreamWriter(fstr);
                     //await writer.WriteAsync(str);
 
-                }
-                finally
-                {
-                    if (setts is { })
-                        foreach (var sett in setts)
-                            sett?.Dispose();
-                }
-
+                    if(newSetts is { })
+                        foreach (var (_, st) in newSetts)
+                            st?.Dispose();
             }
             finally
             {
                 if (cams is { })
-                    foreach(var cam in cams)
+                    foreach(var (_, cam) in cams)
                         cam?.Dispose();
             }
 
