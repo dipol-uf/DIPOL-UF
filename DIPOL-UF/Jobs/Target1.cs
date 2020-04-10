@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using ANDOR_CS.Classes;
 using DIPOL_UF.Enums;
 using Newtonsoft.Json;
-using Serializers;
 
 #nullable enable
 // TODO : Remove in prod

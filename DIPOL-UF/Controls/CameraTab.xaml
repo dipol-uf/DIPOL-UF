@@ -51,7 +51,7 @@
             <extensions:ShowViewAction
                 Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
                 Proxy="{Binding JobSettingsWindow}"
-                Type="{x:Type vs:JobSettingsView}"/>
+                Type="{x:Type vs:JobSettingsView1}"/>
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
     <ScrollViewer
