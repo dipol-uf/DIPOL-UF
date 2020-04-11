@@ -935,6 +935,37 @@ namespace ANDOR_CS.Classes
             return new ReadOnlyCollection<string>(props);
         }
 
+        public IReadOnlyCollection<string> Load1(IReadOnlyDictionary<string, object> input)
+        {
+            var props = new Collection<string>();
+
+            foreach (var (name, value, setter) in input.Join(DeserializationSetMethods,
+                x => x.Key.ToLowerInvariant(),
+                y => y.Key,
+                (x, y) => (Name: x.Key, x.Value, Setter: y.Value)))
+            {
+                if (value is { })
+                {
+                    setter.Invoke(this, (name, value) switch
+                    {
+                        (nameof(VSSpeed), float speed) => new object[]
+                            {Array.IndexOf(Camera.Properties.VSSpeeds, speed)},
+                        (nameof(HSSpeed), float speed) => new object[]
+                            {GetAvailableHSSpeeds().First(y => y.Speed.Equals(speed)).Index},
+                        (nameof(PreAmpGain), string gain) => new object[]
+                            {GetAvailablePreAmpGain().First(y => y.Name == gain).Index},
+                        (nameof(AccumulateCycle), (int frames, float time)) => new object[] {frames, time},
+                        (nameof(KineticCycle), (int frames, float time)) => new object[] {frames, time},
+                        var (_, otherVal) => new[] {otherVal}
+                    });
+                   props.Add(name);
+                }
+            }
+
+
+            return props;
+        }
+
         public List<FitsKey> ConvertToFitsKeys()
         {
             List<FitsKey> GetValue(string name, object value, List<FitsKeyAttribute> attrs)

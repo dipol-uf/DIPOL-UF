@@ -45,6 +45,21 @@ namespace DIPOL_UF.Jobs
                        .ToDictionary(x => x.Key, x => x.Value?[key])
                    ?? new Dictionary<string, object?>();
         }
+
+        public static void FromSettings(
+            IReadOnlyDictionary<string, SettingsBase> settings,
+            string? starName = null,
+            CycleType cycleType = CycleType.Photometric)
+        {
+            var result = new Target1()
+            {
+                StarName = starName,
+                CycleType = cycleType
+            };
+
+
+        }
+
     }
 
     

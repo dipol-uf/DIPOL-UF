@@ -18,7 +18,7 @@ namespace Sandbox
     {
         static async Task Main(string[] args)
         {
-            await JsonSerializationTest();
+             await JsonSerializationTest();
         }
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -36,14 +36,15 @@ namespace Sandbox
                     }, x => x as CameraBase);
             try
             {
+
                 var sharedSetts = new SharedSettingsContainer
                 {
-                    VSSpeed = 0,
+                    VSSpeed = 3,
                     VSAmplitude = VSAmplitude.Normal,
                     ADConverter = 0,
                     OutputAmplifier = OutputAmplification.Conventional,
-                    HSSpeed = 0,
-                    PreAmpGain = 0,
+                    HSSpeed = 10,
+                    PreAmpGain = "Gain1",
                     AcquisitionMode = AcquisitionMode.SingleScan,
                     TriggerMode = TriggerMode.Internal,
                     ImageArea = new Rectangle(1, 1, 64, 64),
@@ -66,20 +67,20 @@ namespace Sandbox
                     };
 
 
-                    var newSetts = target.CreateTemplatesForCameras(cams);
+                var newSetts = target.CreateTemplatesForCameras(cams);
 
-                    var str = JsonConvert.SerializeObject(target, Formatting.Indented);
+                var str = JsonConvert.SerializeObject(target, Formatting.Indented);
 
 
-                    var tg = JsonConvert.DeserializeObject<Target1>(str);
+                var tg = JsonConvert.DeserializeObject<Target1>(str);
 
-                    //using var fstr = new FileStream("test.json", FileMode.Create, FileAccess.ReadWrite);
-                    //using var writer = new StreamWriter(fstr);
-                    //await writer.WriteAsync(str);
+                //using var fstr = new FileStream("test.json", FileMode.Create, FileAccess.ReadWrite);
+                //using var writer = new StreamWriter(fstr);
+                //await writer.WriteAsync(str);
 
-                    if(newSetts is { })
-                        foreach (var (_, st) in newSetts)
-                            st?.Dispose();
+                if(newSetts is { })
+                    foreach (var (_, st) in newSetts)
+                        st?.Dispose();
             }
             finally
             {

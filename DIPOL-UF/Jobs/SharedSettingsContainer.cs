@@ -9,6 +9,8 @@ using System.Runtime.CompilerServices;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Serializers;
 
 namespace DIPOL_UF.Jobs
@@ -18,58 +20,81 @@ namespace DIPOL_UF.Jobs
     {
         private static readonly Dictionary<string, PropertyInfo> Properties = typeof(SharedSettingsContainer)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Select(x => new {Property = x, Order = x.GetCustomAttribute<SerializationOrderAttribute>()})
-            .Where(x => x.Order is {})
+            .Select(x => new { Property = x, Order = x.GetCustomAttribute<SerializationOrderAttribute>() })
+            .Where(x => x.Order is { })
             .OrderBy(x => x.Order.Index)
             .ToDictionary(x => x.Property.Name, x => x.Property);
-        private static readonly Dictionary<string, PropertyInfo> SBProperties = typeof(SettingsBase)
+
+        private static readonly Dictionary<string, PropertyInfo> SbProperties = typeof(SettingsBase)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Select(x => new { Property = x, Order = x.GetCustomAttribute<SerializationOrderAttribute>() })
             .Where(x => x.Order is { })
             .OrderBy(x => x.Order.Index)
             .ToDictionary(x => x.Property.Name, x => x.Property);
 
+        private static readonly Dictionary<string, (PropertyInfo This, PropertyInfo Settings)> JoinedProperties = Properties.Join(SbProperties, x => x.Key, y => y.Key, (x, y) => (x.Key, This: x.Value, Settings: y.Value))
+            .ToDictionary(x => x.Key, x => (Shared: x.This, x.Settings));
+
+        
         [SerializationOrder(1)]
-        public int? VSSpeed { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public float? VSSpeed { get; set; }
 
         [SerializationOrder(5)]
-        public int? HSSpeed { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public float? HSSpeed { get; set; }
 
         [SerializationOrder(3)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? ADConverter { get; set; }
 
-
         [SerializationOrder(2)]
+        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public VSAmplitude? VSAmplitude { get; set; }
 
         [SerializationOrder(4)]
+        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public OutputAmplification? OutputAmplifier { get; set; }
 
         [SerializationOrder(6)]
-        public int? PreAmpGain { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? PreAmpGain { get; set; }
 
         [SerializationOrder(7)]
+        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public AcquisitionMode? AcquisitionMode { get; set; }
 
         [SerializationOrder(8)]
+        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public ReadMode? ReadoutMode { get; set; }
 
         [SerializationOrder(9)]
+        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public TriggerMode? TriggerMode { get; set; }
 
         [SerializationOrder(0)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public float? ExposureTime { get; set; }
 
         [SerializationOrder(11)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Rectangle? ImageArea { get; set; }
 
         [SerializationOrder(12, true)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public (int Frames, float Time)? AccumulateCycle { get; set; }
 
         [SerializationOrder(13, true)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public (int Frames, float Time)? KineticCycle { get; set; }
 
         [SerializationOrder(10)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? EMCCDGain { get; set; }
 
         public SharedSettingsContainer(SettingsBase? sourceSettings)
@@ -77,22 +102,28 @@ namespace DIPOL_UF.Jobs
             if (sourceSettings is null)
                 return;
 
-            foreach (var (name, prop) in Properties)
+            foreach (var (name, (shared, specific)) in JoinedProperties)
             {
-                // Throws is property does not exist; Type mismatch
-                var sbProp = SBProperties[name];
-                if (sbProp.GetValue(sourceSettings) is { } value)
+                var value = specific.GetValue(sourceSettings);
+                switch (value)
                 {
-                    prop.SetValue(this, value switch
-                    {
-                        ITuple { } tuple when prop.GetCustomAttribute<SerializationOrderAttribute>()?.All == true =>
-                        tuple,
-                        ITuple { } tuple => tuple[0],
-                        { } val => val,
-                        // ReSharper disable once HeuristicUnreachableCode
-                        _ => null
-                    });
-
+                    case ITuple tuple:
+                        // Only tuples may have different representation
+                        shared.SetValue(this, name switch
+                        {
+                            nameof(SettingsBase.VSSpeed) when tuple[1] is float speed => speed,
+                            nameof(SettingsBase.ADConverter) when tuple[0] is int index => index,
+                            nameof(SettingsBase.HSSpeed) when tuple[1] is float speed => speed,
+                            nameof(SettingsBase.PreAmpGain) when tuple[1] is string gain => gain,
+                            nameof(SettingsBase.OutputAmplifier) when tuple[0] is OutputAmplification amplif => amplif,
+                            nameof(SettingsBase.AccumulateCycle) when tuple[0] is int frames && tuple[1] is float time => (Frames: frames, Time: time),
+                            nameof(SettingsBase.KineticCycle) when tuple[0] is int frames && tuple[1] is float time => (Frames: frames, Time: time),
+                            _ => null
+                        });
+                        break;
+                    case { }:
+                        shared.SetValue(this, value);
+                        break;
                 }
             }
         }
@@ -114,7 +145,8 @@ namespace DIPOL_UF.Jobs
             }
 
             var setts = camera.GetAcquisitionSettingsTemplate();
-            setts.Load(settsCollection);
+            
+            setts.Load1(settsCollection);
 
             return setts;
         }
@@ -128,5 +160,8 @@ namespace DIPOL_UF.Jobs
 
             return result;
         }
+
+        
+        
     }
 }

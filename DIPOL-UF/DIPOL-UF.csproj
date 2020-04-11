@@ -468,6 +468,9 @@
   <ItemGroup>
     <Resource Include="Dipol Logo.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Jobs\Extension\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <Copy Condition="'$(Platform)' == 'x86'" SourceFiles="..\atmcd32d.dll" DestinationFolder="$(OutputPath)" />

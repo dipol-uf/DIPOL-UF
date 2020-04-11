@@ -20,6 +20,11 @@ using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
+
+// TODO: remove
+using Camera = ANDOR_CS.Classes.DebugCamera;
+
+
 namespace DIPOL_UF.Models
 {
     internal sealed class AvailableCamerasModel : ReactiveObjectEx //-V3073
@@ -167,15 +172,15 @@ namespace DIPOL_UF.Models
                 Helper.WriteLog(aExp);
             }
             if(!(_remoteClients is null))
-            foreach (var client in _remoteClients)
-                try
-                {
-                    nRemote.Add(await Helper.RunNoMarshall(() => client?.GetNumberOfCameras() ?? 0));
-                }
-                catch (Exception e)
-                {
-                    Helper.WriteLog(e.Message);
-                }
+                foreach (var client in _remoteClients)
+                    try
+                    {
+                        nRemote.Add(await Helper.RunNoMarshall(() => client?.GetNumberOfCameras() ?? 0));
+                    }
+                    catch (Exception e)
+                    {
+                        Helper.WriteLog(e.Message);
+                    }
 
             cancelToken.ThrowIfCancellationRequested();
 
