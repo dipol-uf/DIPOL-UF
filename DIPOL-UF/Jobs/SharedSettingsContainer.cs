@@ -102,29 +102,9 @@ namespace DIPOL_UF.Jobs
             if (sourceSettings is null)
                 return;
 
-            foreach (var (name, (shared, specific)) in JoinedProperties)
+            foreach (var (_, (shared, specific)) in JoinedProperties)
             {
-                var value = specific.GetValue(sourceSettings);
-                switch (value)
-                {
-                    case ITuple tuple:
-                        // Only tuples may have different representation
-                        shared.SetValue(this, name switch
-                        {
-                            nameof(SettingsBase.VSSpeed) when tuple[1] is float speed => speed,
-                            nameof(SettingsBase.ADConverter) when tuple[0] is int index => index,
-                            nameof(SettingsBase.HSSpeed) when tuple[1] is float speed => speed,
-                            nameof(SettingsBase.PreAmpGain) when tuple[1] is string gain => gain,
-                            nameof(SettingsBase.OutputAmplifier) when tuple[0] is OutputAmplification amplif => amplif,
-                            nameof(SettingsBase.AccumulateCycle) when tuple[0] is int frames && tuple[1] is float time => (Frames: frames, Time: time),
-                            nameof(SettingsBase.KineticCycle) when tuple[0] is int frames && tuple[1] is float time => (Frames: frames, Time: time),
-                            _ => null
-                        });
-                        break;
-                    case { }:
-                        shared.SetValue(this, value);
-                        break;
-                }
+                SetValueFromSettings(specific.GetValue(sourceSettings), shared);
             }
         }
 
@@ -161,7 +141,64 @@ namespace DIPOL_UF.Jobs
             return result;
         }
 
-        
+        private void SetValueFromSettings(object value, PropertyInfo prop)
+        {
+            switch (value)
+            {
+                case ITuple tuple:
+                    // Only tuples may have different representation
+                    prop.SetValue(this, prop.Name switch
+                    {
+                        nameof(VSSpeed) when tuple[1] is float speed => speed,
+                        nameof(ADConverter) when tuple[0] is int index => index,
+                        nameof(HSSpeed) when tuple[1] is float speed => speed,
+                        nameof(PreAmpGain) when tuple[1] is string gain => gain,
+                        nameof(OutputAmplifier) when tuple[0] is OutputAmplification amplif => amplif,
+                        nameof(AccumulateCycle) when tuple[0] is int frames && tuple[1] is float time => (Frames: frames, Time: time),
+                        nameof(KineticCycle) when tuple[0] is int frames && tuple[1] is float time => (Frames: frames, Time: time),
+                        _ => null
+                    });
+                    break;
+                case { }:
+                    prop.SetValue(this, value);
+                    break;
+            }
+        }
+
+        public static (
+            SharedSettingsContainer Shared,
+            Dictionary<string, Dictionary<string, object>>) FindSharedSettings(
+                IReadOnlyDictionary<string, SettingsBase> settings)
+        {
+            if (settings.Count == 0)
+                return (new SharedSettingsContainer(), new Dictionary<string, Dictionary<string, object>>());
+            if (settings.Count == 1)
+                return (new SharedSettingsContainer(settings.Values.First()),
+                    new Dictionary<string, Dictionary<string, object>>());
+
+            var sharedContainer = new SharedSettingsContainer();
+            var uniqueVals = new Dictionary<string, Dictionary<string, object>>();
+            foreach (var (name, (sharedProp, specificProp)) in JoinedProperties)
+            {
+                var idvVals = settings.ToDictionary(x => x.Key, y => specificProp.GetValue(y.Value));
+                switch(idvVals.Values.Distinct().ToList())
+                {
+                    case { } list when list.Count == 1 && list[0] is null:
+                        break;
+
+                    case { } list when list.Count == 1 && list[0] is { } val:
+                        sharedContainer.SetValueFromSettings(val, sharedProp);
+                        break;
+                    
+                    case { }:
+                        uniqueVals[name] = idvVals;
+                        break;
+                }
+
+            }
+
+            return (sharedContainer, uniqueVals);
+        }
         
     }
 }

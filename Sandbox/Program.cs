@@ -52,22 +52,20 @@ namespace Sandbox
                 };
 
 
-                var target = new Target1()
+                var settings = cams.ToDictionary(x => x.Key,
+                    x =>
                     {
-                        StarName = @"TestStar",
-                        SharedParameters = sharedSetts,
-                        CycleType = CycleType.Photometric,
-                        PerCameraParameters = new Dictionary<string, Dictionary<string, object?>?>
-                        {
-                            {
-                                nameof(SettingsBase.ExposureTime), 
-                                cams.ToDictionary(x => x.Key, x => (object?)((x.Value.CameraIndex + 1) * 0.5f))
-                            }
-                        }
-                    };
+                        var (_, value) = x;
+                        var s = sharedSetts.PrepareTemplateForCamera(value);
+                        s.SetExposureTime(value.CameraIndex * 0.5f + 2f);
+                        return s;
+                    });
+
+                var target = Target1.FromSettings(settings, "TestStar");
 
 
-                var newSetts = target.CreateTemplatesForCameras(cams);
+
+                //var newSetts = target.CreateTemplatesForCameras(cams);
 
                 var str = JsonConvert.SerializeObject(target, Formatting.Indented);
 
@@ -78,9 +76,12 @@ namespace Sandbox
                 //using var writer = new StreamWriter(fstr);
                 //await writer.WriteAsync(str);
 
-                if(newSetts is { })
-                    foreach (var (_, st) in newSetts)
-                        st?.Dispose();
+                //if (newSetts is { })
+                //    foreach (var (_, st) in newSetts)
+                //        st?.Dispose();
+
+                foreach (var (_, sett) in settings)
+                    sett?.Dispose();
             }
             finally
             {

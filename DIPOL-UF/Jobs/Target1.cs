@@ -18,7 +18,7 @@ namespace DIPOL_UF.Jobs
         public string? StarName { get; set; }
         [JsonRequired]
         public CycleType CycleType { get; set; }
-        public Dictionary<string, Dictionary<string, object?>?>? PerCameraParameters { get; set; }
+        public Dictionary<string, Dictionary<string, object?>>? PerCameraParameters { get; set; }
         [JsonRequired]
         public SharedSettingsContainer? SharedParameters { get; set; }
 
@@ -46,7 +46,7 @@ namespace DIPOL_UF.Jobs
                    ?? new Dictionary<string, object?>();
         }
 
-        public static void FromSettings(
+        public static Target1 FromSettings(
             IReadOnlyDictionary<string, SettingsBase> settings,
             string? starName = null,
             CycleType cycleType = CycleType.Photometric)
@@ -54,10 +54,16 @@ namespace DIPOL_UF.Jobs
             var result = new Target1()
             {
                 StarName = starName,
-                CycleType = cycleType
+                CycleType = cycleType,
             };
 
 
+            var (shared, unique) = SharedSettingsContainer.FindSharedSettings(settings);
+
+            result.SharedParameters = shared;
+            result.PerCameraParameters = unique!;
+
+            return result;
         }
 
     }
