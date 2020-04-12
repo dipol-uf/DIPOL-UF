@@ -133,7 +133,8 @@ namespace DIPOL_UF.ViewModels
             
             JobSettingsWindow
                 = new DescendantProxy(Model.JobSettingsWindow,
-                    x => new JobSettingsViewModel((ReactiveWrapper<Target>)x))
+                    //x => new JobSettingsViewModel((ReactiveWrapper<Target>)x))
+                    x => new JobSettingsViewModel1((ReactiveWrapper<Target1>)x))
                     .DisposeWith(Subscriptions);
 
             if (CanControlExternalShutter)

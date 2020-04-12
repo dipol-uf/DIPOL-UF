@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using ANDOR_CS.Classes;
 using DIPOL_UF.Enums;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 #nullable enable
 // TODO : Remove in prod
@@ -15,11 +16,21 @@ namespace DIPOL_UF.Jobs
     internal class Target1
     {
         [JsonRequired]
+        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
         public string? StarName { get; set; }
+
         [JsonRequired]
+        [JsonConverter(typeof(StringEnumConverter))]
         public CycleType CycleType { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? Description { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, Dictionary<string, object?>>? PerCameraParameters { get; set; }
+
         [JsonRequired]
+        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
         public SharedSettingsContainer? SharedParameters { get; set; }
 
         public IReadOnlyDictionary<string, SettingsBase> CreateTemplatesForCameras(

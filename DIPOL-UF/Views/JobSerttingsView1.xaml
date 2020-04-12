@@ -30,6 +30,7 @@
         xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
         xmlns:viewModels="clr-namespace:DIPOL_UF.ViewModels"
         xmlns:props="clr-namespace:DIPOL_UF.Properties"
+        xmlns:vs="clr-namespace:DIPOL_UF.Views"
         mc:Ignorable="d"
         Title ="{x:Static props:Localization.JobSettings_WindowName}"
         WindowStyle="ToolWindow" 
@@ -37,56 +38,24 @@
         Height="545" Width="650"
         MinWidth="300" MinHeight="400"
         Style="{StaticResource ResourceKey=ContentFont}"
-        d:DataContext="{d:DesignInstance viewModels:JobSettingsViewModel}"
+        d:DataContext="{d:DesignInstance viewModels:JobSettingsViewModel1}"
         ResizeMode="NoResize">
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger
             EventName="FileDialogRequested"
             SourceObject="{Binding}">
             <extensions:FileDialogAction
-                SaveCommand="{Binding SaveActionCommand}"
-                LoadCommand="{Binding LoadActionCommand}"/>
+                SaveCommand="{Binding SaveActionCommand}"/>
         </behavior:EventTrigger>
-        <behavior:EventTrigger
-            EventName="BrowseJobSettingsRequested"
-            SourceObject="{Binding}">
-            <extensions:FileDialogAction
-                LoadCommand="{Binding JobReceivedCommand}"/>
-        </behavior:EventTrigger>
-        <behavior:EventTrigger
-            EventName="BrowseBiasSettingsRequested"
-            SourceObject="{Binding}">
-            <extensions:FileDialogAction
-                LoadCommand="{Binding BiasReceivedCommand}"/>
-        </behavior:EventTrigger>
-        <behavior:EventTrigger
-            EventName="BrowseDarkSettingsRequested"
-            SourceObject="{Binding}">
-            <extensions:FileDialogAction
-                LoadCommand="{Binding DarkReceivedCommand}"/>
-        </behavior:EventTrigger>
-        <behavior:EventTrigger
-            EventName="BrowseAcquisitionSettingsRequested"
-            SourceObject="{Binding}">
-            <extensions:FileDialogAction
-                LoadCommand="{Binding AcquisitionReceivedCommand}"/>
-        </behavior:EventTrigger>
+            <behavior:EventTrigger
+                EventName="ViewRequested"
+                SourceObject="{Binding AcquisitionSettingsProxy}">
+                <extensions:ShowViewAction
+                    Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                    Proxy="{Binding AcquisitionSettingsProxy}"
+                    Type="{x:Type vs:AcquisitionSettingsView}"/>
+            </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
-    <Window.Resources>
-        <Style x:Key="TextBlockStyle" TargetType="TextBlock" BasedOn="{StaticResource ContentFont_TextBlock}">
-            <Setter Property="Grid.Column" Value="0"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style x:Key="BrowseButtonStyle" TargetType="Button" BasedOn="{StaticResource BasicButtonStyle}">
-            <Setter Property="Grid.Column" Value="2"/>
-            <Setter Property="Width" Value="auto"/>
-            <Setter Property="Height" Value="auto"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="VerticalAlignment" Value="Stretch"/>
-            <Setter Property="Content" Value="{x:Static props:Localization.General_Browse}"/>
-        </Style>
-    </Window.Resources>
     <Grid Margin="0, 20, 0, 0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -98,106 +67,60 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <AdornerDecorator Grid.ColumnSpan="2">
-             
-                <!--<Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="auto" MaxWidth="150"/>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="80"/>
+             <Grid VerticalAlignment="Top">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="2*"/>
                 </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition/>
+                 <Grid.RowDefinitions>
+                     <RowDefinition/>
+                     <RowDefinition/>
+                     <RowDefinition/>
+                     <RowDefinition/>
+
                 </Grid.RowDefinitions>
+                <TextBlock 
+                    Grid.Row="0" Grid.Column="0"
+                    Text="{x:Static props:Localization.JobSettings_TargetName}"
+                    Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
+                <TextBlock 
+                    Grid.Row="1" Grid.Column="0"
+                    Text="{x:Static props:Localization.JobSettings_CycleType}"
+                    Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
+                <TextBlock 
+                    Grid.Row="2" Grid.Column="0"
+                    Text="{x:Static props:Localization.JobSettings_Description}"
+                    Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
+                <TextBlock 
+                    Grid.Row="3" Grid.Column="0"
+                    Text="{x:Static props:Localization.JobSettings_SettingsBlock}"
+                    Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
 
-                --><!--Left-hand side labels--><!--
-                <TextBlock Style="{StaticResource TextBlockStyle}"
-                           Grid.Row="0" Text="{x:Static props:Localization.JobSettings_TargetName}" />
-                <TextBlock Style="{StaticResource TextBlockStyle}"
-                           Grid.Row="1" Text="{x:Static props:Localization.JobSettings_SettingsFile}"/>
-                <TextBlock Style="{StaticResource TextBlockStyle}"
-                           Grid.Row="2" Text="{x:Static props:Localization.JobSettings_JobFile}"/>
-                <TextBlock Style="{StaticResource TextBlockStyle}"
-                           Grid.Row="3" Text="{x:Static props:Localization.JobSettings_BiasFile}" />
-                <TextBlock Style="{StaticResource TextBlockStyle}"
-                           Grid.Row="4" Text="{x:Static props:Localization.JobSettings_DarkFile}" />
-                <TextBlock Style="{StaticResource TextBlockStyle}"
-                           Grid.Row="5" Text="{x:Static props:Localization.JobSettings_N_repeats}" />
-                <TextBlock Style="{StaticResource TextBlockStyle}"
-                           VerticalAlignment="Top"
-                           Grid.Row="6" Text="{x:Static props:Localization.JobSettings_ExposureTime}" />
-                
-
-                --><!--Right-hand side controls-->
-                <!-- Object name--><!--
                 <TextBox Grid.Row="0" Grid.Column="1"
-                         Text="{extensions:ValidationBinding Path=ObjectName}"
+                         Text="{extensions:ValidationBinding Path=ObjectName, Mode=TwoWay}"
                          Style="{StaticResource TextBoxWithErrors}"/>
-
-                --><!--Settings path--><!--
-                <TextBox Grid.Row="1" Grid.Column="1"
-                         Text="{extensions:ValidationBinding Path=SettingsPath}"
+                <ComboBox Grid.Row="1" Grid.Column="1" 
+                          ItemsSource="{Binding Source={StaticResource CycleTypeEnumProvider}}"
+                          SelectedItem="{extensions:ValidationBinding Path=CycleType, Mode=TwoWay}"
+                          Style="{StaticResource ComboBoxWithErrors}"/>
+                <TextBox Grid.Row="2" Grid.Column="1" TextWrapping="Wrap"
+                         Text="{extensions:ValidationBinding Path=Description, Mode=TwoWay}"
                          Style="{StaticResource TextBoxWithErrors}"/>
-
-                --><!--Job path--><!--
-                <TextBox  Grid.Row="2" Grid.Column="1"
-                          Text="{extensions:ValidationBinding Path=JobPath}"
-                          Style="{StaticResource TextBoxWithErrors}"/>
-
-                --><!--Bias path--><!--
-                <TextBox  Grid.Row="3" Grid.Column="1"
-                          Text="{extensions:ValidationBinding Path=BiasPath}"
-                          Style="{StaticResource TextBoxWithErrors}"/>
-
-                --><!--Dark path--><!--
-                <TextBox  Grid.Row="4" Grid.Column="1"
-                          Text="{extensions:ValidationBinding Path=DarkPath}"
-                          Style="{StaticResource TextBoxWithErrors}"/>
-
-                --><!--Dark path--><!--
-                <TextBox  Grid.Row="5" Grid.Column="1"
-                          Text="{extensions:ValidationBinding Path=Repeats}"
-                          Style="{StaticResource TextBoxWithErrors}"/>
-
-
-
-                <ListView Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2"
-                          Style="{StaticResource ListViewStyle}"
-                          Margin="5">
-
-                </ListView>
-
-                --><!--Acquisition browsing--><!--
-                <Button Grid.Row="1"
-                        Style="{StaticResource BrowseButtonStyle}"
-                        Command="{Binding BrowseAcquisitionCommand}"/>
-
-                --><!--Job browsing--><!--
-                <Button Grid.Row="2"
-                        Style="{StaticResource BrowseButtonStyle}"
-                        Command="{Binding BrowseJobCommand}"/>
-
-                --><!--Bias browsing--><!--
-                <Button Grid.Row="3"
-                        Style="{StaticResource BrowseButtonStyle}"
-                        Command="{Binding BrowseBiasCommand}"/>
-
-                --><!--Dark browsing--><!--
-                <Button Grid.Row="4"
-                        Style="{StaticResource BrowseButtonStyle}"
-                        Command="{Binding BrowseDarkCommand}"/>
-            </Grid>-->
+                
+            </Grid>
         </AdornerDecorator>
            
         <!--Save-->
-        <Button Grid.Column="0" Grid.Row="1" 
+        <!--<Button Grid.Column="0" Grid.Row="1" 
                 Style="{StaticResource ResourceKey=BasicButtonStyle}"
                 Content="{x:Static props:Localization.General_Save}"
-                Command="{Binding SaveButtonCommand}"/>
+                Command="{Binding SaveButtonCommand}"/>-->
+
+        <!--CreateNew-->
+        <Button Grid.Column="0" Grid.Row="1" 
+                Style="{StaticResource ResourceKey=BasicButtonStyle}"
+                Content="{x:Static props:Localization.General_CreateNew}"
+                Command="{Binding CreateNewButtonCommand}"/>
         <!--Load-->
         <Button Grid.Column="1" Grid.Row="1"
                 Style="{StaticResource ResourceKey=BasicButtonStyle}"
@@ -208,7 +131,7 @@
                 IsDefault="True"
                 Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}"
                 Content="{x:Static props:Localization.General_Submit}"
-                Command="{Binding SubmitCommand}"
+                Command="{Binding SaveButtonCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
         <!--Cancel-->
         <Button Grid.Column="1" Grid.Row="2"

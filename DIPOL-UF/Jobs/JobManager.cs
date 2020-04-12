@@ -71,6 +71,8 @@ namespace DIPOL_UF.Jobs
         public int DarkActionCount { get; private set; }
 
 
+        public IObservableCache<(string, CameraBase), string> ConnectedCameras => _windowRef.ConnectedCameras;
+
         public static JobManager Manager { get; } = new JobManager();
 
         [Reactive]
@@ -94,6 +96,8 @@ namespace DIPOL_UF.Jobs
 
         // TODO : return a copy of a target
         public Target CurrentTarget { get; private set; } = new Target();
+        public Target1 CurrentTarget1 { get; private set; } = new Target1();
+
         public Job AcquisitionJob { get; private set; }
         public Job BiasJob { get; private set; }
         public Job DarkJob { get; private set; }

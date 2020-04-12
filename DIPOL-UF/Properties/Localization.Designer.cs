@@ -777,6 +777,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Create New.
+        /// </summary>
+        public static string General_CreateNew {
+            get {
+                return ResourceManager.GetString("General_CreateNew", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disconnect.
         /// </summary>
         public static string General_Disconnect {
@@ -1096,11 +1105,29 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CyleType:.
+        /// </summary>
+        public static string JobSettings_CycleType {
+            get {
+                return ResourceManager.GetString("JobSettings_CycleType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dark file.
         /// </summary>
         public static string JobSettings_DarkFile {
             get {
                 return ResourceManager.GetString("JobSettings_DarkFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Object description:.
+        /// </summary>
+        public static string JobSettings_Description {
+            get {
+                return ResourceManager.GetString("JobSettings_Description", resourceCulture);
             }
         }
         
@@ -1164,6 +1191,15 @@ namespace DIPOL_UF.Properties {
         public static string JobSettings_N_repeats {
             get {
                 return ResourceManager.GetString("JobSettings_N_repeats", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings:.
+        /// </summary>
+        public static string JobSettings_SettingsBlock {
+            get {
+                return ResourceManager.GetString("JobSettings_SettingsBlock", resourceCulture);
             }
         }
         
@@ -1435,6 +1471,15 @@ namespace DIPOL_UF.Properties {
         public static string RemoteConnection_UnreachableHostTitle {
             get {
                 return ResourceManager.GetString("RemoteConnection_UnreachableHostTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exposure time:.
+        /// </summary>
+        public static string Settings_ExposureTime {
+            get {
+                return ResourceManager.GetString("Settings_ExposureTime", resourceCulture);
             }
         }
         

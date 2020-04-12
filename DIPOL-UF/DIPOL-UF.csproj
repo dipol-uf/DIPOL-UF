@@ -170,6 +170,7 @@
     <Compile Include="ViewModels\CameraTabViewModel.cs" />
     <Compile Include="ViewModels\DescendantProxy.cs" />
     <Compile Include="DialogRequestedEventArgs.cs" />
+    <Compile Include="ViewModels\JobSettingsViewModel1.cs" />
     <Compile Include="ViewModels\JobSettingsViewModel.cs" />
     <Compile Include="ViewModels\ReactiveViewModelBase.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
@@ -470,6 +471,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Jobs\Extension\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Temp\View.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
