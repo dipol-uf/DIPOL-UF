@@ -271,8 +271,15 @@ namespace DIPOL_UF.Models
             // WATCH : Changed type
             JobSettingsWindow = new DescendantProvider(
                     ReactiveCommand.Create<object, ReactiveObjectEx>(
-                        _ => new ReactiveWrapper</*Target*/ Target1>(JobManager.Manager.CurrentTarget1)),
-                    null, null, null)
+                        _ => new ReactiveWrapper</*Target*/ Target1>(JobManager.Manager.CurrentTarget1.Clone())),
+                    null, null, ReactiveCommand.Create<ReactiveObjectEx>(x =>
+                    {
+
+                        // BUG : NotImplemented
+                        // TODO : Construct jobs
+                        // If model object is not null, then assign it, otherwise the operation was cancelled
+
+                    }))
                 .DisposeWith(Subscriptions);
 
             SetUpJobCommand.InvokeCommand(JobSettingsWindow.ViewRequested).DisposeWith(Subscriptions);

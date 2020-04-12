@@ -51,18 +51,17 @@ namespace DIPOL_UF.ViewModels
         
         public event EventHandler FileDialogRequested;
 
-        public DescendantProxy AcquisitionSettingsProxy { get; private set; }
+        public DescendantProxy AcquisitionSettingsProxy { get; }
 
         public ReactiveCommand<Window, Window> SaveButtonCommand { get; private set; }
-        public ReactiveCommand<Unit, FileDialogDescriptor> LoadButtonCommand { get; private set; }
+        //public ReactiveCommand<Unit, FileDialogDescriptor> LoadButtonCommand { get; private set; }
 
         public ReactiveCommand<string, bool> SaveActionCommand { get; private set; }
-        public ReactiveCommand<string, Unit> LoadActionCommand { get; private set; }
+        //public ReactiveCommand<string, Unit> LoadActionCommand { get; private set; }
 
 
         public ReactiveCommand<Unit, Unit> CreateNewButtonCommand { get; private set; }
 
-        public ICommand CancelCommand { get; private set; }
 
 
         [Reactive]
@@ -181,6 +180,11 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
+
+        private void SubmitJob()
+        {
+
+        }
 
         private void OnFileDialogRequested(FileDialogDescriptor e) 
             => FileDialogRequested?.Invoke(this, new DialogRequestedEventArgs(e));

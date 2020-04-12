@@ -16,7 +16,7 @@ using Serializers;
 namespace DIPOL_UF.Jobs
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    internal class SharedSettingsContainer
+    internal class SharedSettingsContainer : ICloneable
     {
         private static readonly Dictionary<string, PropertyInfo> Properties = typeof(SharedSettingsContainer)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -199,6 +199,16 @@ namespace DIPOL_UF.Jobs
 
             return (sharedContainer, uniqueVals);
         }
-        
+
+        public SharedSettingsContainer Clone()
+        {
+            var result = new SharedSettingsContainer();
+            foreach(var (_, prop) in Properties)
+                if(prop.GetValue(this) is { } value)
+                    prop.SetValue(result, value);
+            return result;
+        }
+
+        object ICloneable.Clone() => Clone();
     }
 }

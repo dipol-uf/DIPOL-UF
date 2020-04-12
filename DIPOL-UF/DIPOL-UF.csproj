@@ -469,9 +469,7 @@
   <ItemGroup>
     <Resource Include="Dipol Logo.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Jobs\Extension\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Resource Include="Temp\View.txt" />
   </ItemGroup>

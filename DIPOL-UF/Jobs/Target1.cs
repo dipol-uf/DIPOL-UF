@@ -13,7 +13,7 @@ using Newtonsoft.Json.Converters;
 
 namespace DIPOL_UF.Jobs
 {
-    internal class Target1
+    internal class Target1 : ICloneable
     {
         [JsonRequired]
         [JsonProperty(NullValueHandling = NullValueHandling.Include)]
@@ -31,7 +31,7 @@ namespace DIPOL_UF.Jobs
 
         [JsonRequired]
         [JsonProperty(NullValueHandling = NullValueHandling.Include)]
-        public SharedSettingsContainer? SharedParameters { get; set; }
+        public SharedSettingsContainer SharedParameters { get; set; } = new SharedSettingsContainer();
 
         public IReadOnlyDictionary<string, SettingsBase> CreateTemplatesForCameras(
             IReadOnlyDictionary<string, CameraBase> cameras)
@@ -77,6 +77,18 @@ namespace DIPOL_UF.Jobs
             return result;
         }
 
+        public Target1 Clone() =>
+            new Target1
+            {
+                StarName = StarName,
+                Description = Description,
+                CycleType = CycleType,
+                SharedParameters = SharedParameters?.Clone() ?? new SharedSettingsContainer(),
+                PerCameraParameters =
+                    PerCameraParameters?.ToDictionary(x => x.Key, y => y.Value.ToDictionary(z => z.Key, z => z.Value))
+            };
+
+        object ICloneable.Clone() => Clone();
     }
 
     
