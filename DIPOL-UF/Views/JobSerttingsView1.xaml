@@ -109,21 +109,37 @@
                          Style="{StaticResource TextBoxWithErrors}"/>
                 
                 <ScrollViewer Grid.Row="3" Grid.Column="1">
-                    <ListView 
+                    <ListView HorizontalContentAlignment="Stretch"
                         Style ="{StaticResource ListViewStyle}"
                         ItemsSource="{Binding SharedSettings}">
                         <ListView.ItemTemplate>
                             <ItemContainerTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="165"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Label Grid.Column="0" Style="{StaticResource ContentFont_Label}"
-                                           Content="{Binding SettingsName}"/>
-                                    <Label Grid.Column="1" Style="{StaticResource ContentFont_Label}"
-                                           Content="{Binding Value}"/>
-                                </Grid>
+                                <Border 
+                                    HorizontalAlignment="Stretch"
+                                    BorderBrush="{StaticResource JobProgressBarColor}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsOverriden}" Value="True">
+                                                    <Setter Property="BorderThickness" Value="5"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsOverriden}" Value="False">
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid HorizontalAlignment="Left">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="165"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Label Grid.Column="0" Style="{StaticResource ContentFont_Label}"
+                                               Content="{Binding SettingsName}"/>
+                                        <Label Grid.Column="1" Style="{StaticResource ContentFont_Label}"
+                                               Content="{Binding Value}"/>
+                                    </Grid>
+                                </Border>
                             </ItemContainerTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
@@ -132,12 +148,6 @@
             </Grid>
         </AdornerDecorator>
            
-        <!--Save-->
-        <!--<Button Grid.Column="0" Grid.Row="1" 
-                Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                Content="{x:Static props:Localization.General_Save}"
-                Command="{Binding SaveButtonCommand}"/>-->
-
         <!--CreateNew-->
         <Button Grid.Column="0" Grid.Row="1" 
                 Style="{StaticResource ResourceKey=BasicButtonStyle}"

@@ -23,27 +23,22 @@
 //     SOFTWARE.
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.Remoting.Messaging;
-using System.ServiceModel.Channels;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
+using System.Windows.Media;
 using ANDOR_CS.Classes;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DynamicData;
-using DynamicData.Binding;
 using Newtonsoft.Json;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -58,29 +53,31 @@ namespace DIPOL_UF.ViewModels
             public string SettingsName { get; }
             public string Value { get; }
 
-            public CollectionItem(string name, string value)
-                => (SettingsName, Value) = (name, value);
+            public bool IsOverriden { get; }
+
+            public CollectionItem(string name, string value, bool isOverriden = false)
+                => (SettingsName, Value, IsOverriden) = (name, value, isOverriden);
         }
-        private DescendantProvider _acqSettsProvider;
+        private DescendantProvider? _acqSettsProvider;
         private readonly CameraBase _firstCamera;
         private readonly ISourceList<CollectionItem> _propList;
         
-        public event EventHandler FileDialogRequested;
+        public event EventHandler? FileDialogRequested;
 
         public DescendantProxy AcquisitionSettingsProxy { get; }
 
-        public ReactiveCommand<Window, Window> SaveAndSubmitButtonCommand { get; private set; }
-        public ReactiveCommand<Unit, Unit> LoadButtonCommand { get; private set; }
+        public ReactiveCommand<Window, Window>? SaveAndSubmitButtonCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit>? LoadButtonCommand { get; private set; }
 
-        public ReactiveCommand<Unit, Unit> CreateNewButtonCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit>? CreateNewButtonCommand { get; private set; }
 
-        public ReactiveCommand<string, bool> SaveActionCommand { get; private set; }
-        public ReactiveCommand<string, Unit> LoadActionCommand { get; private set; }
+        public ReactiveCommand<string, bool>? SaveActionCommand { get; private set; }
+        public ReactiveCommand<string, Unit>? LoadActionCommand { get; private set; }
 
         public ReadOnlyObservableCollection<CollectionItem> SharedSettings { get; }
 
         [Reactive]
-        public string ObjectName { get; set; }
+        public string? ObjectName { get; set; }
 
         [Reactive]
         public string? Description { get; set; }
@@ -121,6 +118,8 @@ namespace DIPOL_UF.ViewModels
             //SharedSettingsRepresentation.Clear();
             if (Model.Object.SharedParameters is { } @params)
             {
+                var perCamSetts = Model.Object.PerCameraParameters?.Select(x => x.Key).ToList();
+
                 var dataToLoad = @params.AsDictionary()
                     .Select(x => new CollectionItem(x.Key, x.Value switch
                     {
@@ -128,7 +127,8 @@ namespace DIPOL_UF.ViewModels
                         Enum @enum => ConverterImplementations.EnumToDescriptionConversion(@enum),
                         { } val => val.ToString(),
                         _ => string.Empty
-                    }));
+                    },
+                    perCamSetts?.Contains(x.Key) == true));
                 _propList.Edit(x =>
                 {
                     x.Clear();
@@ -212,7 +212,7 @@ namespace DIPOL_UF.ViewModels
                 .Subscribe(OnFileDialogRequested)
                 .DisposeWith(Subscriptions);
 
-            CreateNewButtonCommand.InvokeCommand(_acqSettsProvider.ViewRequested).DisposeWith(Subscriptions);
+            CreateNewButtonCommand.InvokeCommand(_acqSettsProvider?.ViewRequested).DisposeWith(Subscriptions);
         }
 
 
