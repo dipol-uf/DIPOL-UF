@@ -140,7 +140,10 @@ namespace DIPOL_UF.Jobs
 
         public void StartJob()
         {
-            // BUG : Determine if calibrations are required
+            BiasActionCount = (_firstRun || NeedsCalibration) ? BiasJob?.NumberOfActions<CameraAction>() ?? 0 : 0;
+            DarkActionCount = (_firstRun || NeedsCalibration) ? DarkJob?.NumberOfActions<CameraAction>() ?? 0 : 0;
+
+
             CumulativeProgress = 0;
             IsInProcess = true;
             ReadyToRun = false;
@@ -153,8 +156,14 @@ namespace DIPOL_UF.Jobs
         {
             if (_jobTask is null)
                 return;
-            if(!_jobTask.IsCompleted)
+            if (!_jobTask.IsCompleted)
+            {
+                if (_firstRun && !NeedsCalibration)
+                    NeedsCalibration = true;
+
                 _tokenSource?.Cancel();
+
+            }
         }
 
         [Obsolete]
