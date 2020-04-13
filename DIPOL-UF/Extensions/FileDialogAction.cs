@@ -28,7 +28,6 @@ using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
 using Microsoft.Xaml.Behaviors;
-using static DIPOL_UF.ViewModels.AcquisitionSettingsViewModel;
 
 namespace DIPOL_UF.Extensions
 {
@@ -53,7 +52,7 @@ namespace DIPOL_UF.Extensions
         protected override void Invoke(object parameter)
         {
             if (!(parameter is DialogRequestedEventArgs args && 
-                args.Descriptor is FileDialogDescriptor desc)) return;
+                args.Descriptor is { } desc)) return;
 
             var initialDirectory = desc.InitialDirectory;
 

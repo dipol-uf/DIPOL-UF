@@ -1,0 +1,16 @@
+{
+  "Actions": [
+    { "MotorAction": "Reset" },
+    { "ShutterAction" : "open all" },
+    {
+      "RepeatAction":
+      {
+        "Repeats": 16,
+        "Actions": [
+          { "CameraAction": "Expose" },
+          { "MotorAction": "Rotate" }
+        ]
+      }
+    }
+  ]
+}

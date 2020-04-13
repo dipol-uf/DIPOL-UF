@@ -70,6 +70,7 @@ namespace DIPOL_UF.ViewModels
               .Where(x => !(x.EquivalentName is null))
               .ToList();
 
+        private readonly bool _submit;
 
         public class SettingsAvailability : ReactiveObjectEx
         {
@@ -152,9 +153,10 @@ namespace DIPOL_UF.ViewModels
         public bool Group2ContainsErrors { [ObservableAsProperty] get; }
         public bool Group3ContainsErrors { [ObservableAsProperty] get; }
 
-        public AcquisitionSettingsViewModel(ReactiveWrapper<IAcquisitionSettings> model)
+        public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model, bool submit = true)
             : base(model)
         {
+            _submit = submit;
             // TODO : Remove logging
 
             //Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
@@ -1084,7 +1086,8 @@ namespace DIPOL_UF.ViewModels
         {
             try
             {
-                Camera.ApplySettings(Model.Object);
+                if(_submit)
+                    Camera.ApplySettings(Model.Object);
                 Helper.ExecuteOnUi(() => CancelCommand.Execute(w));
             }
             catch (AndorSdkException andorExcept)

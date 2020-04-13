@@ -271,6 +271,8 @@ namespace ANDOR_CS.Classes
 
         public new static async Task<DebugCamera> CreateAsync(int camIndex = 0, params object[] @params)
             => await Task.Run(() => Create(camIndex, @params));
+
+        public static int GetNumberOfCameras() => 3;
     }
 }
 #endif

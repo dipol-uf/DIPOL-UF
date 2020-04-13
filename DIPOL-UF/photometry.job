@@ -1,0 +1,6 @@
+{
+  "Actions": [
+    { "ShutterAction" : "open all" },
+    { "CameraAction": "Expose" }
+  ]
+}

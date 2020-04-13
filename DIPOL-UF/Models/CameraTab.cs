@@ -255,7 +255,7 @@ namespace DIPOL_UF.Models
                     ReactiveCommand.Create<ReactiveObjectEx>(x =>
                     {
                         if (x is ReactiveWrapper<SettingsBase> wrapper
-                            && wrapper.Object is SettingsBase setts
+                            && wrapper.Object is { } setts
                             && ReferenceEquals(setts, Camera.CurrentSettings))
                             wrapper.Object = null;
 
@@ -270,10 +270,17 @@ namespace DIPOL_UF.Models
                 ReactiveCommand.Create<Unit, object>(x => x, canSetup)
                                .DisposeWith(Subscriptions);
 
+            // WATCH : Changed type
             JobSettingsWindow = new DescendantProvider(
                     ReactiveCommand.Create<object, ReactiveObjectEx>(
-                        _ => new ReactiveWrapper<Target>(JobManager.Manager.CurrentTarget)),
-                    null, null, null)
+                        _ => new ReactiveWrapper</*Target*/ Target1>(JobManager.Manager.GenerateTarget1())),
+                    null, null, ReactiveCommand.CreateFromTask<ReactiveObjectEx>(async x =>
+                    {
+
+                        if (x is ReactiveWrapper<Target1> wrapper
+                            && wrapper.Object is { } target)
+                            await JobManager.Manager.SubmitNewTarget1(target);
+                    }))
                 .DisposeWith(Subscriptions);
 
             SetUpJobCommand.InvokeCommand(JobSettingsWindow.ViewRequested).DisposeWith(Subscriptions);

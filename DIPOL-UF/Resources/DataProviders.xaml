@@ -24,12 +24,21 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
-                    xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS">
+                    xmlns:enm="clr-namespace:ANDOR_CS.Enums;assembly=ANDOR_CS"
+                    xmlns:duf="clr-namespace:DIPOL_UF.Enums">
     <ObjectDataProvider x:Key="ShutterModeEnumProvider"
                         MethodName="GetValues"
                         ObjectType="{x:Type sys:Enum}">
         <ObjectDataProvider.MethodParameters>
             <x:Type TypeName="enm:ShutterMode"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+
+    <ObjectDataProvider x:Key="CycleTypeEnumProvider"
+                        MethodName="GetValues"
+                        ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type TypeName="duf:CycleType"/>
         </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
 
