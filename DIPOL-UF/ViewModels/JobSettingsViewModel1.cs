@@ -31,15 +31,18 @@ using System.Net.Sockets;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.ServiceModel.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using ANDOR_CS;
 using ANDOR_CS.Classes;
+using ANDOR_CS.Enums;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DynamicData;
+using DynamicData.Binding;
 using Newtonsoft.Json;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -101,6 +104,15 @@ namespace DIPOL_UF.ViewModels
             HookObservables();
 
             AcquisitionSettingsProxy = new DescendantProxy(_acqSettsProvider, x => new AcquisitionSettingsViewModel((ReactiveWrapper<IAcquisitionSettings>)x, false)).DisposeWith(Subscriptions);
+
+
+            CreateValidators();
+
+        }
+
+        private void CreateValidators()
+        {
+            CreateValidator(this.WhenPropertyChanged(x => x.ObjectName).Select(x => (nameof(Validators.Validate.CannotBeDefault), Validators.Validate.CannotBeDefault(x.Value))), nameof(ObjectName));
         }
 
         private void PushValues()
@@ -131,13 +143,36 @@ namespace DIPOL_UF.ViewModels
                         ({ } val, bool ovr) => new CollectionItem(x.Key, val.ToString(), ovr),
                         (null, true) => new CollectionItem(x.Key, @"Overriden", true), 
                         (null, false) => new CollectionItem(x.Key, null, false),
-                    });
+                    })
+                    .Where(FilterEssential);
                 _propList.Edit(x =>
                 {
                     x.Clear();
                     x.AddRange(dataToLoad);
                 });
             }
+        }
+
+
+        private bool FilterEssential(CollectionItem item)
+        {
+            if (item.IsNotSpecified)
+            {
+                return item.SettingsName switch
+                {
+                    nameof(IAcquisitionSettings.EMCCDGain) when Model.Object?.SharedParameters.OutputAmplifier !=
+                                                                OutputAmplification.ElectronMultiplication => false,
+                    nameof(IAcquisitionSettings.AccumulateCycle) when
+                    Model.Object?.SharedParameters.AcquisitionMode is { } mode
+                    && (mode == AcquisitionMode.SingleScan || mode == AcquisitionMode.RunTillAbort) => false,
+                    nameof(IAcquisitionSettings.KineticCycle) when
+                    Model.Object?.SharedParameters.AcquisitionMode is { } mode
+                    && (mode == AcquisitionMode.SingleScan || mode == AcquisitionMode.Accumulation) => false,
+                    _ => true
+                };
+            }
+
+            return true;
         }
 
         private void InitializeCommands()
@@ -148,9 +183,13 @@ namespace DIPOL_UF.ViewModels
                 Model.Object = null;
                 w?.Close();
             });
-                //.DisposeWith(Subscriptions);
+            //.DisposeWith(Subscriptions);
 
-            SaveAndSubmitButtonCommand = ReactiveCommand.Create<Window, Window>(x => x)
+            var canSubmit = _propList.Connect().Select(_ => _propList.Items.Any(x => x.IsNotSpecified))
+                .CombineLatest(ObserveHasErrors, (x, y) => !x && !y);
+
+
+            SaveAndSubmitButtonCommand = ReactiveCommand.Create<Window, Window>(x => x, canSubmit)
                 .DisposeWith(Subscriptions);
 
             LoadButtonCommand = ReactiveCommand.Create<Unit, Unit>(x => x)
