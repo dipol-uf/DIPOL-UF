@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ANDOR_CS;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
@@ -33,7 +34,7 @@ namespace Sandbox
                         1 => "V",
                         2 => "R",
                         _ => "?"
-                    }, x => x as CameraBase);
+                    }, x => x as IDevice);
             try
             {
 

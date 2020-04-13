@@ -254,7 +254,7 @@ namespace DIPOL_UF.Models
                     null, null,
                     ReactiveCommand.Create<ReactiveObjectEx>(x =>
                     {
-                        if (x is ReactiveWrapper<SettingsBase> wrapper
+                        if (x is ReactiveWrapper<IAcquisitionSettings> wrapper
                             && wrapper.Object is { } setts
                             && ReferenceEquals(setts, Camera.CurrentSettings))
                             wrapper.Object = null;

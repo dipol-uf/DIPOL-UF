@@ -88,11 +88,11 @@ namespace Serializers
         internal static object Converter3(object inp, bool convertAll = false)
         {
             var result = inp;
-            // BUG : Check how it actually works
-            //if (inp is { } &&
-            //    inp.GetType().IsValueType &&
-            //    inp.IsValueTuple() is {} vTuple)
-            if (inp is ITuple vTuple)
+            if (inp is { } &&
+                inp.GetType().IsValueType &&
+                inp.IsValueTuple() is { } vTuple)
+                // BUG : Check this
+            //if (inp is ITuple vTuple)
             {
                 if (convertAll)
                 {

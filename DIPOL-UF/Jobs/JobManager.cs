@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
@@ -42,6 +43,7 @@ using DIPOL_UF.Models;
 using DynamicData;
 using DynamicData.Binding;
 using FITS_CS;
+using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Localization = DIPOL_UF.Properties.Localization;
 
@@ -68,7 +70,6 @@ namespace DIPOL_UF.Jobs
         private Dictionary<int, Request> _requestMap;
 
         // TODO : Make observable
-        private bool _needsCalibration = true;
         private bool _firstRun;
 
         public int AcquisitionActionCount { get; private set; }
@@ -76,11 +77,14 @@ namespace DIPOL_UF.Jobs
         public int BiasActionCount { get; private set; }
         public int DarkActionCount { get; private set; }
 
+        internal bool NeedsCalibration { get; set; } = true;
 
-        public IObservableCache<(string, CameraBase), string> ConnectedCameras => _windowRef.ConnectedCameras;
+        public IObservableCache<(string, IDevice), string> ConnectedCameras => _windowRef.ConnectedCameras;
 
         public static JobManager Manager { get; } = new JobManager();
         
+
+
         [Reactive]
         public float? MotorPosition { get; private set; }
         [Reactive]
@@ -103,7 +107,7 @@ namespace DIPOL_UF.Jobs
         public float? ActualMotorPosition { get; private set; }
 
         // TODO : return a copy of a target
-        [Obsolete]
+        [Obsolete("Use " + nameof(CurrentTarget1), true)]
         public Target CurrentTarget { get; private set; } = new Target();
         public Target1 CurrentTarget1 { get; private set; } = new Target1();
 
@@ -130,7 +134,9 @@ namespace DIPOL_UF.Jobs
                 .Select(x => x.Value)
                 .ToPropertyEx(this, x => x.IsRegimeSwitching)
                 .DisposeWith(Subscriptions);
+
         }
+
 
         public void StartJob()
         {
@@ -161,7 +167,7 @@ namespace DIPOL_UF.Jobs
             return SetupNewTarget();
         }
 
-        public IReadOnlyDictionary<string, CameraBase> GetCameras() 
+        public IReadOnlyDictionary<string, IDevice> GetCameras() 
             => _windowRef.ConnectedCameras.Items.ToDictionary(
                 x => ConverterImplementations.CameraToFilterConversion(x.Camera), x => x.Camera);
 
@@ -241,8 +247,8 @@ namespace DIPOL_UF.Jobs
                 {
                     if (job.ContainsActionOfType<CameraAction>())
                         foreach (var control in _jobControls)
-                            control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, file,
-                                Converters.ConverterImplementations.CameraToFilterConversion(control.Camera),
+                            control.Camera.StartImageSavingSequence(CurrentTarget1.StarName, file,
+                                ConverterImplementations.CameraToFilterConversion(control.Camera),
                                 type,
                                 new[] { FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime, format: @"yyyy-MM-ddTHH:mm:ss.fff") });
                     MotorPosition = job.ContainsActionOfType<MotorAction>()
@@ -298,8 +304,8 @@ namespace DIPOL_UF.Jobs
                         if (AcquisitionJob.ContainsActionOfType<CameraAction>())
                             foreach (var control in _jobControls)
                                 control.Camera.StartImageSavingSequence(
-                                    CurrentTarget.TargetName, fileName,
-                                    Converters.ConverterImplementations.CameraToFilterConversion(control.Camera),
+                                    CurrentTarget1.StarName, fileName,
+                                    ConverterImplementations.CameraToFilterConversion(control.Camera),
                                     FrameType.Light,
                                     new [] {  FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime, format: @"yyyy-MM-ddTHH:mm:ss.fff") });
 
@@ -321,7 +327,7 @@ namespace DIPOL_UF.Jobs
 
                     // WATCH : Easy path
                     if (_firstRun ||
-                        _needsCalibration && MessageBox.Show(
+                        NeedsCalibration && MessageBox.Show(
                             Localization.JobManager_TakeCalibrations_Text,
                             Localization.JobManager_TakeCalibrations_Header,
                             MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
@@ -331,15 +337,18 @@ namespace DIPOL_UF.Jobs
                         Progress = 0;
                         Total = BiasActionCount;
                         CurrentJobName = Localization.JobManager_BiasJobName;
-                        await DoCameraJobAsync(BiasJob, $"{CurrentTarget.TargetName}_bias", FrameType.Bias);
-                    }
+                        await DoCameraJobAsync(BiasJob, $"{CurrentTarget1.StarName}_bias", FrameType.Bias);
+                    
 
                         //if (!(DarkJob is null))
                         //{
                         Progress = 0;
                         Total = DarkActionCount;
                         CurrentJobName = Localization.JobManager_DarkJobName;
-                        await DoCameraJobAsync(DarkJob, $"{CurrentTarget.TargetName}_dark", FrameType.Dark);
+                        await DoCameraJobAsync(DarkJob, $"{CurrentTarget1.StarName}_dark", FrameType.Dark);
+
+                        calibrationsMade = true;
+                        NeedsCalibration = false;
                     }
 
                 }, token);

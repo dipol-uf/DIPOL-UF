@@ -49,6 +49,8 @@ namespace ANDOR_CS
         (Version EPROM, Version COFFile, Version Driver, Version Dll) Software { get; }
         (Version PCB, Version Decode, Version CameraFirmware) Hardware { get; }
 
+        IAcquisitionSettings? CurrentSettings { get; }
+
         FanMode FanMode { get; }
 
         DeviceCapabilities Capabilities { get; }

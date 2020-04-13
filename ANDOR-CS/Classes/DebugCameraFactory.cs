@@ -33,7 +33,7 @@ namespace ANDOR_CS.Classes
     {
         public class DebugCameraFactory : IDeviceFactory
         {
-            public int GetNumberOfCameras() => 1;
+            public int GetNumberOfCameras() => 3;
 
             public IDevice Create(int index = 0)
             {

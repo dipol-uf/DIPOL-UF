@@ -31,6 +31,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using ANDOR_CS;
 using ANDOR_CS.Classes;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
@@ -57,7 +58,7 @@ namespace DIPOL_UF.ViewModels
                 => (SettingsName, Value, IsOverriden) = (name, value, isOverriden);
         }
         private DescendantProvider? _acqSettsProvider;
-        private readonly CameraBase _firstCamera;
+        private readonly IDevice _firstCamera;
         private readonly ISourceList<CollectionItem> _propList;
         
         public event EventHandler? FileDialogRequested;
@@ -97,7 +98,7 @@ namespace DIPOL_UF.ViewModels
             InitializeCommands();
             HookObservables();
 
-            AcquisitionSettingsProxy = new DescendantProxy(_acqSettsProvider, x => new AcquisitionSettingsViewModel((ReactiveWrapper<SettingsBase>)x, false)).DisposeWith(Subscriptions);
+            AcquisitionSettingsProxy = new DescendantProxy(_acqSettsProvider, x => new AcquisitionSettingsViewModel((ReactiveWrapper<IAcquisitionSettings>)x, false)).DisposeWith(Subscriptions);
         }
 
         private void PushValues()
@@ -156,7 +157,7 @@ namespace DIPOL_UF.ViewModels
             CreateNewButtonCommand = ReactiveCommand.Create(() => Unit.Default).DisposeWith(Subscriptions);
 
             _acqSettsProvider = new DescendantProvider(
-                ReactiveCommand.Create<object, ReactiveObjectEx>(_ => new ReactiveWrapper<SettingsBase>(GetNewSettingsTemplate())),
+                ReactiveCommand.Create<object, ReactiveObjectEx>(_ => new ReactiveWrapper<IAcquisitionSettings>(GetNewSettingsTemplate())),
                 null, null,
                 ReactiveCommand.Create<ReactiveObjectEx>(x =>
                 {
@@ -174,7 +175,7 @@ namespace DIPOL_UF.ViewModels
                 })).DisposeWith(Subscriptions);
         }
 
-        private SettingsBase GetNewSettingsTemplate()
+        private IAcquisitionSettings GetNewSettingsTemplate()
         {
             var template = _firstCamera.CurrentSettings?.MakeCopy() ?? _firstCamera.GetAcquisitionSettingsTemplate();
             if (Model.Object.SharedParameters is { } shPar)

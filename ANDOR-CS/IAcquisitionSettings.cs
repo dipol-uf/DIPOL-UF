@@ -148,5 +148,7 @@ namespace ANDOR_CS
         Task<ReadOnlyCollection<string>> DeserializeAsync(Stream stream, Encoding enc, CancellationToken token);
 
         List<FitsKey> ConvertToFitsKeys();
+
+        IReadOnlyCollection<string> Load1(IReadOnlyDictionary<string, object> input);
     }
 }

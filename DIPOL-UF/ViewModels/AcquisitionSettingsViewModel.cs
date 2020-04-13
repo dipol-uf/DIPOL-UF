@@ -43,6 +43,7 @@ using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
+using DIPOL_UF.Jobs;
 using DynamicData.Binding;
 using MathNet.Numerics;
 using Microsoft.Xaml.Behaviors.Core;
@@ -153,7 +154,7 @@ namespace DIPOL_UF.ViewModels
         public bool Group2ContainsErrors { [ObservableAsProperty] get; }
         public bool Group3ContainsErrors { [ObservableAsProperty] get; }
 
-        public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model, bool submit = true)
+        public AcquisitionSettingsViewModel(ReactiveWrapper<IAcquisitionSettings> model, bool submit = true)
             : base(model)
         {
             _submit = submit;
@@ -1086,8 +1087,12 @@ namespace DIPOL_UF.ViewModels
         {
             try
             {
-                if(_submit)
+                if (_submit)
+                {
                     Camera.ApplySettings(Model.Object);
+                    JobManager.Manager.NeedsCalibration = true;
+                }
+
                 Helper.ExecuteOnUi(() => CancelCommand.Execute(w));
             }
             catch (AndorSdkException andorExcept)
