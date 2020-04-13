@@ -253,7 +253,7 @@ namespace DIPOL_UF.Models
                     ReactiveCommand.Create<ReactiveObjectEx>(x =>
                     {
                         if (x is ReactiveWrapper<SettingsBase> wrapper
-                            && wrapper.Object is SettingsBase setts
+                            && wrapper.Object is { } setts
                             && ReferenceEquals(setts, Camera.CurrentSettings))
                             wrapper.Object = null;
 
@@ -271,14 +271,13 @@ namespace DIPOL_UF.Models
             // WATCH : Changed type
             JobSettingsWindow = new DescendantProvider(
                     ReactiveCommand.Create<object, ReactiveObjectEx>(
-                        _ => new ReactiveWrapper</*Target*/ Target1>(JobManager.Manager.CurrentTarget1.Clone())),
-                    null, null, ReactiveCommand.Create<ReactiveObjectEx>(x =>
+                        _ => new ReactiveWrapper</*Target*/ Target1>(JobManager.Manager.GenerateTarget1())),
+                    null, null, ReactiveCommand.CreateFromTask<ReactiveObjectEx>(async x =>
                     {
 
-                        // BUG : NotImplemented
-                        // TODO : Construct jobs
-                        // If model object is not null, then assign it, otherwise the operation was cancelled
-
+                        if (x is ReactiveWrapper<Target1> wrapper
+                            && wrapper.Object is { } target)
+                            await JobManager.Manager.SubmitNewTarget1(target);
                     }))
                 .DisposeWith(Subscriptions);
 

@@ -51,11 +51,11 @@ namespace DIPOL_UF.ViewModels
         public class CollectionItem
         {
             public string SettingsName { get; }
-            public string Value { get; }
+            public string? Value { get; }
 
             public bool IsOverriden { get; }
 
-            public CollectionItem(string name, string value, bool isOverriden = false)
+            public CollectionItem(string name, string? value, bool isOverriden = false)
                 => (SettingsName, Value, IsOverriden) = (name, value, isOverriden);
         }
         private DescendantProvider? _acqSettsProvider;
@@ -74,7 +74,7 @@ namespace DIPOL_UF.ViewModels
         public ReactiveCommand<string, bool>? SaveActionCommand { get; private set; }
         public ReactiveCommand<string, Unit>? LoadActionCommand { get; private set; }
 
-        public ReadOnlyObservableCollection<CollectionItem> SharedSettings { get; }
+        public ReadOnlyObservableCollection<CollectionItem> SharedSettingsView { get; }
 
         [Reactive]
         public string? ObjectName { get; set; }
@@ -91,7 +91,7 @@ namespace DIPOL_UF.ViewModels
 
             _propList = new SourceList<CollectionItem>();
             _propList.Connect().ObserveOnDispatcher().Bind(out var collection, 2).SubscribeDispose(Subscriptions);
-            SharedSettings = collection;
+            SharedSettingsView = collection;
             
             LoadValues();
 
@@ -106,9 +106,6 @@ namespace DIPOL_UF.ViewModels
             Model.Object.StarName = ObjectName;
             Model.Object.Description = Description;
             Model.Object.CycleType = CycleType;
-
-            // TODO : For testing only
-            Model.Object.SharedParameters ??= new SharedSettingsContainer();
         }
         private void LoadValues()
         {
@@ -120,15 +117,16 @@ namespace DIPOL_UF.ViewModels
             {
                 var perCamSetts = Model.Object.PerCameraParameters?.Select(x => x.Key).ToList();
 
-                var dataToLoad = @params.AsDictionary()
+                var dataToLoad = @params.AsDictionary(true)
                     .Select(x => new CollectionItem(x.Key, x.Value switch
-                    {
-                        float f => f.ToString("F"),
-                        Enum @enum => ConverterImplementations.EnumToDescriptionConversion(@enum),
-                        { } val => val.ToString(),
-                        _ => string.Empty
-                    },
-                    perCamSetts?.Contains(x.Key) == true));
+                        {
+                            float f => f.ToString("F"),
+                            Enum @enum => ConverterImplementations.EnumToDescriptionConversion(@enum),
+                            { } val => val.ToString(),
+                            _ => "Overriden"
+                        },
+                        perCamSetts?.Contains(x.Key) == true))
+                    .Where(x => x.Value != "Overriden" || x.IsOverriden);
                 _propList.Edit(x =>
                 {
                     x.Clear();
@@ -151,8 +149,7 @@ namespace DIPOL_UF.ViewModels
             CreateNewButtonCommand = ReactiveCommand.Create(() => Unit.Default).DisposeWith(Subscriptions);
 
             _acqSettsProvider = new DescendantProvider(
-                ReactiveCommand.Create<object, ReactiveObjectEx>(_ => new ReactiveWrapper<SettingsBase>(
-                    _firstCamera.CurrentSettings?.MakeCopy() ?? _firstCamera.GetAcquisitionSettingsTemplate())),
+                ReactiveCommand.Create<object, ReactiveObjectEx>(_ => new ReactiveWrapper<SettingsBase>(GetNewSettingsTemplate())),
                 null, null,
                 ReactiveCommand.Create<ReactiveObjectEx>(x =>
                 {
@@ -162,11 +159,20 @@ namespace DIPOL_UF.ViewModels
                         
                         // If the settings are applied to the camera, do not dispose it 
                         if (ReferenceEquals(_firstCamera.CurrentSettings, wrapper.Object))
-                            Model.Object = null!;
+                            wrapper.Object = null!;
+                        LoadValues();
                     }
 
                     x.Dispose();
                 })).DisposeWith(Subscriptions);
+        }
+
+        private SettingsBase GetNewSettingsTemplate()
+        {
+            var template = _firstCamera.CurrentSettings?.MakeCopy() ?? _firstCamera.GetAcquisitionSettingsTemplate();
+            if (Model.Object.SharedParameters is { } shPar)
+                template.Load1(shPar.AsDictionary());
+            return template;
         }
 
         private FileDialogDescriptor GenerateSaveDialogDescriptor() =>

@@ -72,7 +72,7 @@ namespace DIPOL_UF.Converters
                                           y => y.Value<string>(@"Filter"));
             return _cachedFilters.TryGetValue(camString, out var result) && !string.IsNullOrWhiteSpace(result)
                 ? result
-                : "0";
+                : cam.ToString();
         }
         public static string CameraKeyToHostConversion(string input)
             => Helper.GetCameraHostName(input);

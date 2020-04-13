@@ -68,16 +68,16 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <AdornerDecorator Grid.ColumnSpan="2">
-             <Grid VerticalAlignment="Top">
+             <Grid VerticalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="2.5*"/>
                 </Grid.ColumnDefinitions>
                  <Grid.RowDefinitions>
-                     <RowDefinition/>
-                     <RowDefinition/>
-                     <RowDefinition/>
-                     <RowDefinition Height="250"/>
+                     <RowDefinition Height="Auto"/>
+                     <RowDefinition Height="Auto"/>
+                     <RowDefinition Height="Auto"/>
+                     <RowDefinition Height="Auto"/>
 
                 </Grid.RowDefinitions>
                 <TextBlock 
@@ -111,7 +111,7 @@
                 <ScrollViewer Grid.Row="3" Grid.Column="1">
                     <ListView HorizontalContentAlignment="Stretch"
                         Style ="{StaticResource ListViewStyle}"
-                        ItemsSource="{Binding SharedSettings}">
+                        ItemsSource="{Binding SharedSettingsView}">
                         <ListView.ItemTemplate>
                             <ItemContainerTemplate>
                                 <Border 

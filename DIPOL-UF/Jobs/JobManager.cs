@@ -35,6 +35,7 @@ using System.Windows;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
+using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Models;
 using DynamicData;
@@ -148,6 +149,74 @@ namespace DIPOL_UF.Jobs
                                 Localization.General_ShouldNotHappen,
                                 nameof(target));
             return SetupNewTarget();
+        }
+
+        public IReadOnlyDictionary<string, CameraBase> GetCameras() 
+            => _windowRef.ConnectedCameras.Items.ToDictionary(
+                x => ConverterImplementations.CameraToFilterConversion(x.Camera), x => x.Camera);
+
+        public async Task SubmitNewTarget1(Target1 target)
+        {
+            ReadyToRun = false;
+            CurrentTarget1 = target ?? throw new ArgumentNullException(
+                Localization.General_ShouldNotHappen,
+                nameof(target));
+
+            return;
+        }
+
+        public Target1 GenerateTarget1()
+        {
+            var result = CurrentTarget1.Clone();
+            var setts = GetCameras().ToDictionary(x => x.Key, x => x.Value.CurrentSettings);
+            if (setts.All(x => x.Value is {}))
+            {
+                // If all settings are present, recalculating target value
+                result = Target1.FromSettings(setts, result?.StarName, result?.Description, result?.CycleType ?? CycleType.Polarimetric);
+            }
+
+            return result;
+        }
+        private async Task SetupNewTarget1()
+        {
+            try
+            {
+                AcquisitionJob = await ConstructJob(CurrentTarget.JobPath);
+                AcquisitionRuns = CurrentTarget.Repeats > 0
+                    ? CurrentTarget.Repeats
+                    : throw new InvalidOperationException(Localization.General_ShouldNotHappen);
+                AcquisitionActionCount = AcquisitionJob.NumberOfActions<CameraAction>();
+                TotalAcquisitionActionCount = AcquisitionActionCount * AcquisitionRuns;
+
+                // TODO : Consider checking shutter support in advance
+                if (AcquisitionJob.ContainsActionOfType<MotorAction>()
+                    && _windowRef.PolarimeterMotor is null)
+                    throw new InvalidOperationException("Cannot execute current control with no motor connected.");
+
+                BiasJob = CurrentTarget.BiasPath is null
+                    ? null
+                    : await ConstructJob(CurrentTarget.BiasPath);
+                BiasActionCount = BiasJob?.NumberOfActions<CameraAction>() ?? 0;
+
+                DarkJob = CurrentTarget.DarkPath is null
+                    ? null
+                    : await ConstructJob(CurrentTarget.DarkPath);
+                DarkActionCount = DarkJob?.NumberOfActions<CameraAction>() ?? 0;
+
+
+                await LoadSettingsTemplate();
+                await ApplySettingsTemplate();
+                ReadyToRun = true;
+            }
+            catch (Exception)
+            {
+                CurrentTarget = new Target();
+                AcquisitionJob = null;
+                BiasJob = null;
+                DarkJob = null;
+                _settingsRep = null;
+                throw;
+            }
         }
 
         private async Task StartJobAsync(CancellationToken token)

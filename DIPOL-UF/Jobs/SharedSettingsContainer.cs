@@ -131,11 +131,11 @@ namespace DIPOL_UF.Jobs
             return setts;
         }
 
-        public Dictionary<string, object> AsDictionary()
+        public Dictionary<string, object?> AsDictionary(bool outputAll = false)
         {
-            var result = new Dictionary<string, object>();
+            var result = new Dictionary<string, object?>();
             foreach (var (key, prop) in Properties)
-                if (prop.GetValue(this) is {} value)
+                if (prop.GetValue(this) is var value  && (value is {} || outputAll))
                     result.Add(key, value);
 
             return result;

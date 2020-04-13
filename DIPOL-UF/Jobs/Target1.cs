@@ -60,12 +60,14 @@ namespace DIPOL_UF.Jobs
         public static Target1 FromSettings(
             IReadOnlyDictionary<string, SettingsBase> settings,
             string? starName = null,
-            CycleType cycleType = CycleType.Photometric)
+            string? description = null,
+            CycleType cycleType = CycleType.Polarimetric)
         {
             var result = new Target1()
             {
                 StarName = starName,
                 CycleType = cycleType,
+                Description = description
             };
 
 
