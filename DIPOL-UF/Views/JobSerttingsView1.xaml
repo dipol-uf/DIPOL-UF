@@ -45,7 +45,8 @@
             EventName="FileDialogRequested"
             SourceObject="{Binding}">
             <extensions:FileDialogAction
-                SaveCommand="{Binding SaveActionCommand}"/>
+                SaveCommand="{Binding SaveActionCommand}"
+                LoadCommand="{Binding LoadActionCommand}"/>
         </behavior:EventTrigger>
             <behavior:EventTrigger
                 EventName="ViewRequested"
@@ -131,7 +132,7 @@
                 IsDefault="True"
                 Style="{StaticResource ResourceKey=PositiveEffectButtonStyle}"
                 Content="{x:Static props:Localization.General_Submit}"
-                Command="{Binding SaveButtonCommand}"
+                Command="{Binding SaveAndSubmitButtonCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
         <!--Cancel-->
         <Button Grid.Column="1" Grid.Row="2"

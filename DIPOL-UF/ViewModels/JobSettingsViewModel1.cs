@@ -23,6 +23,7 @@
 //     SOFTWARE.
 #nullable enable
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -53,14 +54,15 @@ namespace DIPOL_UF.ViewModels
 
         public DescendantProxy AcquisitionSettingsProxy { get; }
 
-        public ReactiveCommand<Window, Window> SaveButtonCommand { get; private set; }
-        //public ReactiveCommand<Unit, FileDialogDescriptor> LoadButtonCommand { get; private set; }
-
-        public ReactiveCommand<string, bool> SaveActionCommand { get; private set; }
-        //public ReactiveCommand<string, Unit> LoadActionCommand { get; private set; }
-
+        public ReactiveCommand<Window, Window> SaveAndSubmitButtonCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit> LoadButtonCommand { get; private set; }
 
         public ReactiveCommand<Unit, Unit> CreateNewButtonCommand { get; private set; }
+
+        public ReactiveCommand<string, bool> SaveActionCommand { get; private set; }
+        public ReactiveCommand<string, Unit> LoadActionCommand { get; private set; }
+
+
 
 
 
@@ -103,10 +105,14 @@ namespace DIPOL_UF.ViewModels
 
         private void InitializeCommands()
         {
-            SaveButtonCommand = ReactiveCommand.Create<Window, Window>(x => x)
+            SaveAndSubmitButtonCommand = ReactiveCommand.Create<Window, Window>(x => x)
+                .DisposeWith(Subscriptions);
+
+            LoadButtonCommand = ReactiveCommand.Create<Unit, Unit>(x => x)
                 .DisposeWith(Subscriptions);
 
             SaveActionCommand = ReactiveCommand.CreateFromTask<string, bool>(WriteTargetFile).DisposeWith(Subscriptions);
+            LoadActionCommand = ReactiveCommand.CreateFromTask<string>(ReadTargetFile).DisposeWith(Subscriptions);
 
             CreateNewButtonCommand = ReactiveCommand.Create(() => Unit.Default).DisposeWith(Subscriptions);
 
@@ -132,22 +138,33 @@ namespace DIPOL_UF.ViewModels
         private FileDialogDescriptor GenerateSaveDialogDescriptor() =>
             new FileDialogDescriptor
             {
+                Mode = FileDialogDescriptor.DialogMode.Save,
                 DefaultExtenstion = "*.star",
                 FileName = ObjectName,
                 Title = Properties.Localization.JobSettings_Dialog_Save
             };
 
+
+        private FileDialogDescriptor GenerateLoadDialogDescriptor() =>
+            new FileDialogDescriptor
+            {
+                Mode = FileDialogDescriptor.DialogMode.Load,
+                DefaultExtenstion = "*.star",
+                FileName = ObjectName,
+                Title = Properties.Localization.JobSettings_Dialog_Load
+            };
+
         private void HookObservables()
         {
             // On save button click, generate file dialog request
-            SaveButtonCommand
+            SaveAndSubmitButtonCommand
                 .Select(_ => GenerateSaveDialogDescriptor())
                 .Subscribe(OnFileDialogRequested)
                 .DisposeWith(Subscriptions);
             
             // When both save button was clicked and dialog finished (one way or another),
             // Close window
-            SaveButtonCommand.Zip(SaveActionCommand, 
+            SaveAndSubmitButtonCommand.Zip(SaveActionCommand, 
                 (x, y) => (Window:x, WasSaved:y))
                 .Subscribe(x =>
                 {
@@ -155,6 +172,11 @@ namespace DIPOL_UF.ViewModels
                         window.Close();
 
                 }).DisposeWith(Subscriptions);
+
+            LoadButtonCommand
+                .Select(_ => GenerateLoadDialogDescriptor())
+                .Subscribe(OnFileDialogRequested)
+                .DisposeWith(Subscriptions);
 
             CreateNewButtonCommand.InvokeCommand(_acqSettsProvider.ViewRequested).DisposeWith(Subscriptions);
         }
@@ -177,6 +199,29 @@ namespace DIPOL_UF.ViewModels
             {
                 // TODO : Show message box
                 return false;
+            }
+        }
+
+        private async Task ReadTargetFile(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+            try
+            {
+                using var fStr = new FileStream(path, FileMode.Open, FileAccess.Read);
+                using var reader = new StreamReader(fStr);
+                var line = await reader.ReadToEndAsync();
+                var target = JsonConvert.DeserializeObject<Target1>(line);
+                if (target is { })
+                {
+                    Model.Object = target;
+                    LoadValues();
+                }
+
+            }
+            catch (Exception e)
+            {
+                // TODO : Show message box
             }
         }
 
