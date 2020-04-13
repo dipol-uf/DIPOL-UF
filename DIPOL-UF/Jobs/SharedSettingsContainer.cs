@@ -131,7 +131,7 @@ namespace DIPOL_UF.Jobs
             return setts;
         }
 
-        private Dictionary<string, object> AsDictionary()
+        public Dictionary<string, object> AsDictionary()
         {
             var result = new Dictionary<string, object>();
             foreach (var (key, prop) in Properties)

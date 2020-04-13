@@ -23,7 +23,9 @@
 //     SOFTWARE.
 #nullable enable
 using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -36,19 +38,32 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using ANDOR_CS.Classes;
+using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
+using DynamicData;
+using DynamicData.Binding;
 using Newtonsoft.Json;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using SettingsBase = ANDOR_CS.Classes.SettingsBase;
 
 namespace DIPOL_UF.ViewModels
 {
     internal sealed class JobSettingsViewModel1 : ReactiveViewModel<ReactiveWrapper<Target1>>
     {
+        public class CollectionItem
+        {
+            public string SettingsName { get; }
+            public string Value { get; }
+
+            public CollectionItem(string name, string value)
+                => (SettingsName, Value) = (name, value);
+        }
         private DescendantProvider _acqSettsProvider;
         private readonly CameraBase _firstCamera;
+        private readonly ISourceList<CollectionItem> _propList;
         
         public event EventHandler FileDialogRequested;
 
@@ -62,9 +77,7 @@ namespace DIPOL_UF.ViewModels
         public ReactiveCommand<string, bool> SaveActionCommand { get; private set; }
         public ReactiveCommand<string, Unit> LoadActionCommand { get; private set; }
 
-
-
-
+        public ReadOnlyObservableCollection<CollectionItem> SharedSettings { get; }
 
         [Reactive]
         public string ObjectName { get; set; }
@@ -79,8 +92,12 @@ namespace DIPOL_UF.ViewModels
         {
             _firstCamera = JobManager.Manager.ConnectedCameras.Items.First().Item2;
 
-
+            _propList = new SourceList<CollectionItem>();
+            _propList.Connect().ObserveOnDispatcher().Bind(out var collection, 2).SubscribeDispose(Subscriptions);
+            SharedSettings = collection;
+            
             LoadValues();
+
             InitializeCommands();
             HookObservables();
 
@@ -101,6 +118,23 @@ namespace DIPOL_UF.ViewModels
             ObjectName = Model.Object.StarName ?? $"star_{DateTimeOffset.UtcNow:yyMMddHHmmss}";
             Description = Model.Object.Description;
             CycleType = Model.Object.CycleType;
+            //SharedSettingsRepresentation.Clear();
+            if (Model.Object.SharedParameters is { } @params)
+            {
+                var dataToLoad = @params.AsDictionary()
+                    .Select(x => new CollectionItem(x.Key, x.Value switch
+                    {
+                        float f => f.ToString("F"),
+                        Enum @enum => ConverterImplementations.EnumToDescriptionConversion(@enum),
+                        { } val => val.ToString(),
+                        _ => string.Empty
+                    }));
+                _propList.Edit(x =>
+                {
+                    x.Clear();
+                    x.AddRange(dataToLoad);
+                });
+            }
         }
 
         private void InitializeCommands()

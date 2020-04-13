@@ -71,13 +71,13 @@
              <Grid VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="2.5*"/>
                 </Grid.ColumnDefinitions>
                  <Grid.RowDefinitions>
                      <RowDefinition/>
                      <RowDefinition/>
                      <RowDefinition/>
-                     <RowDefinition/>
+                     <RowDefinition Height="250"/>
 
                 </Grid.RowDefinitions>
                 <TextBlock 
@@ -108,6 +108,27 @@
                          Text="{extensions:ValidationBinding Path=Description, Mode=TwoWay}"
                          Style="{StaticResource TextBoxWithErrors}"/>
                 
+                <ScrollViewer Grid.Row="3" Grid.Column="1">
+                    <ListView 
+                        Style ="{StaticResource ListViewStyle}"
+                        ItemsSource="{Binding SharedSettings}">
+                        <ListView.ItemTemplate>
+                            <ItemContainerTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="165"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Label Grid.Column="0" Style="{StaticResource ContentFont_Label}"
+                                           Content="{Binding SettingsName}"/>
+                                    <Label Grid.Column="1" Style="{StaticResource ContentFont_Label}"
+                                           Content="{Binding Value}"/>
+                                </Grid>
+                            </ItemContainerTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </ScrollViewer>
+
             </Grid>
         </AdornerDecorator>
            
