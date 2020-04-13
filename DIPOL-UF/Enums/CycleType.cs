@@ -6,8 +6,8 @@ namespace DIPOL_UF.Enums
     public enum CycleType : byte
     {
         [EnumMember]
-        Photometric,
+        Polarimetric,
         [EnumMember]
-        Polarimetric
+        Photometric
     }
 }

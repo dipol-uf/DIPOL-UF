@@ -66,6 +66,10 @@ namespace DIPOL_UF.Jobs
         private CancellationTokenSource _tokenSource;
         private Dictionary<int, Request> _requestMap;
 
+        // TODO : Make observable
+        private bool _needsCalibration = true;
+        private bool _firstRun;
+
         public int AcquisitionActionCount { get; private set; }
         public int TotalAcquisitionActionCount { get; private set; }
         public int BiasActionCount { get; private set; }
@@ -96,6 +100,7 @@ namespace DIPOL_UF.Jobs
         public bool IsRegimeSwitching { [ObservableAsProperty] get; }
 
         // TODO : return a copy of a target
+        [Obsolete]
         public Target CurrentTarget { get; private set; } = new Target();
         public Target1 CurrentTarget1 { get; private set; } = new Target1();
 
@@ -126,6 +131,7 @@ namespace DIPOL_UF.Jobs
 
         public void StartJob()
         {
+            // BUG : Determine if calibrations are required
             CumulativeProgress = 0;
             IsInProcess = true;
             ReadyToRun = false;
@@ -142,6 +148,7 @@ namespace DIPOL_UF.Jobs
                 _tokenSource?.Cancel();
         }
 
+        [Obsolete]
         public Task SubmitNewTarget(Target target)
         {
             ReadyToRun = false;
@@ -155,14 +162,14 @@ namespace DIPOL_UF.Jobs
             => _windowRef.ConnectedCameras.Items.ToDictionary(
                 x => ConverterImplementations.CameraToFilterConversion(x.Camera), x => x.Camera);
 
-        public async Task SubmitNewTarget1(Target1 target)
+        public Task SubmitNewTarget1(Target1 target)
         {
             ReadyToRun = false;
             CurrentTarget1 = target ?? throw new ArgumentNullException(
                 Localization.General_ShouldNotHappen,
                 nameof(target));
 
-            return;
+            return SetupNewTarget1();
         }
 
         public Target1 GenerateTarget1()
@@ -177,40 +184,42 @@ namespace DIPOL_UF.Jobs
 
             return result;
         }
+
+        
         private async Task SetupNewTarget1()
         {
+
             try
             {
-                AcquisitionJob = await ConstructJob(CurrentTarget.JobPath);
-                AcquisitionRuns = CurrentTarget.Repeats > 0
-                    ? CurrentTarget.Repeats
-                    : throw new InvalidOperationException(Localization.General_ShouldNotHappen);
+                var paths = JobPaths(CurrentTarget1.CycleType);
+
+
+                AcquisitionJob = await ConstructJob(paths["Light"]);
+
+                //TODO : Fixed to 4 for testing
+                AcquisitionRuns = 4;
+
                 AcquisitionActionCount = AcquisitionJob.NumberOfActions<CameraAction>();
                 TotalAcquisitionActionCount = AcquisitionActionCount * AcquisitionRuns;
 
-                // TODO : Consider checking shutter support in advance
                 if (AcquisitionJob.ContainsActionOfType<MotorAction>()
                     && _windowRef.PolarimeterMotor is null)
                     throw new InvalidOperationException("Cannot execute current control with no motor connected.");
 
-                BiasJob = CurrentTarget.BiasPath is null
-                    ? null
-                    : await ConstructJob(CurrentTarget.BiasPath);
+                BiasJob = await ConstructJob(paths["Bias"]);
                 BiasActionCount = BiasJob?.NumberOfActions<CameraAction>() ?? 0;
 
-                DarkJob = CurrentTarget.DarkPath is null
-                    ? null
-                    : await ConstructJob(CurrentTarget.DarkPath);
+                DarkJob = await ConstructJob(paths["Dark"]);
                 DarkActionCount = DarkJob?.NumberOfActions<CameraAction>() ?? 0;
-
-
-                await LoadSettingsTemplate();
-                await ApplySettingsTemplate();
+                
+                ApplySettingsTemplate1();
+                
+                _firstRun = true;
                 ReadyToRun = true;
             }
             catch (Exception)
             {
-                CurrentTarget = new Target();
+                CurrentTarget1 = new Target1();
                 AcquisitionJob = null;
                 BiasJob = null;
                 DarkJob = null;
@@ -229,8 +238,8 @@ namespace DIPOL_UF.Jobs
                 {
                     if (job.ContainsActionOfType<CameraAction>())
                         foreach (var control in _jobControls)
-                            control.Camera.StartImageSavingSequence(CurrentTarget.TargetName, file,
-                                Converters.ConverterImplementations.CameraToFilterConversion(control.Camera),
+                            control.Camera.StartImageSavingSequence(CurrentTarget1.StarName, file,
+                                ConverterImplementations.CameraToFilterConversion(control.Camera),
                                 new[] { FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime) });
                     MotorPosition = job.ContainsActionOfType<MotorAction>()
                         ? new float?(0)
@@ -261,8 +270,6 @@ namespace DIPOL_UF.Jobs
                         ? ImageFormat.SignedInt32
                         : ImageFormat.UnsignedInt16));
 
-                // TODO: Inform if regime unknown - can be a malfunction
-
                 if (AcquisitionJob.ContainsActionOfType<MotorAction>()
                     && (_windowRef.Regime == InstrumentRegime.Photometer ||
                         _windowRef.PolarimeterMotor is null))
@@ -273,9 +280,10 @@ namespace DIPOL_UF.Jobs
                             : "Cannot do polarimetry job in a non-polarimeter regime.");
                 }
 
+                var calibrationsMade = false;
                 await Task.Run(async ()  =>
                 {
-                    var fileName = CurrentTarget.TargetName;
+                    var fileName = CurrentTarget1.StarName;
                     Progress = 0;
                     Total = TotalAcquisitionActionCount;
                     CurrentJobName = Localization.JobManager_AcquisitionJobName;
@@ -284,8 +292,8 @@ namespace DIPOL_UF.Jobs
                         if (AcquisitionJob.ContainsActionOfType<CameraAction>())
                             foreach (var control in _jobControls)
                                 control.Camera.StartImageSavingSequence(
-                                    CurrentTarget.TargetName, fileName,
-                                    Converters.ConverterImplementations.CameraToFilterConversion(control.Camera),
+                                    CurrentTarget1.StarName, fileName,
+                                    ConverterImplementations.CameraToFilterConversion(control.Camera),
                                     new [] {  FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime) });
 
                         MotorPosition = AcquisitionJob.ContainsActionOfType<MotorAction>()
@@ -302,31 +310,37 @@ namespace DIPOL_UF.Jobs
                         MotorPosition = null;
                     }
 
-                    // TODO : Remove logging
-                    if (!(BiasJob is null))
+                    // WATCH : Easy path
+                    if (_firstRun ||
+                        _needsCalibration && MessageBox.Show(
+                            Localization.JobManager_TakeCalibrations_Text,
+                            Localization.JobManager_TakeCalibrations_Header,
+                            MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                     {
+                        //if (!(BiasJob is null))
+                        //{
                         Progress = 0;
                         Total = BiasActionCount;
                         CurrentJobName = Localization.JobManager_BiasJobName;
-                        await DoCameraJobAsync(BiasJob, $"{CurrentTarget.TargetName}_bias");
-                    }
+                        await DoCameraJobAsync(BiasJob, $"{CurrentTarget1.StarName}_bias");
+                        //}
 
-                    if (!(DarkJob is null))
-                    {
+                        //if (!(DarkJob is null))
+                        //{
                         Progress = 0;
                         Total = DarkActionCount;
                         CurrentJobName = Localization.JobManager_DarkJobName;
-                        await DoCameraJobAsync(DarkJob, $"{CurrentTarget.TargetName}_dark");
+                        await DoCameraJobAsync(DarkJob, $"{CurrentTarget1.StarName}_dark");
+                        //}
+                        calibrationsMade = true;
                     }
 
                 }, token);
 
                 var report = $"{Environment.NewLine}{TotalAcquisitionActionCount} {Localization.JobManager_AcquisitionJobName}";
-                if (!(BiasJob is null))
-                    report += $",{Environment.NewLine}{BiasActionCount} {Localization.JobManager_BiasJobName}";
 
-                if (!(DarkJob is null))
-                    report += $",{Environment.NewLine}{BiasActionCount} {Localization.JobManager_DarkJobName}";
+                if(calibrationsMade)
+                    report += $",{Environment.NewLine}{BiasActionCount} {Localization.JobManager_BiasJobName},{Environment.NewLine}{BiasActionCount} {Localization.JobManager_DarkJobName}";
                 
                 MessageBox.Show(
                     string.Format(Localization.JobManager_MB_Finished_Text, report),
@@ -356,9 +370,11 @@ namespace DIPOL_UF.Jobs
                     sett.Value.Dispose();
                 _settingsCache.Clear();
                 _settingsCache = null;
+                _firstRun = false;
             }
         }
 
+        [Obsolete]
         private async Task SetupNewTarget()
         {
             try
@@ -401,6 +417,7 @@ namespace DIPOL_UF.Jobs
             }
         }
 
+        [Obsolete]
         private async Task LoadSettingsTemplate()
         {
             if(!File.Exists(CurrentTarget.SettingsPath))
@@ -417,6 +434,7 @@ namespace DIPOL_UF.Jobs
             }
         }
 
+        [Obsolete]
         private async Task ApplySettingsTemplate()
         {
             if (_settingsRep is null)
@@ -427,7 +445,7 @@ namespace DIPOL_UF.Jobs
             if (cameras.Count < 1)
                 throw new InvalidOperationException("No connected cameras to work with.");
 
-            using (var memory = new MemoryStream(_settingsRep, false))
+            using var memory = new MemoryStream(_settingsRep, false);
             foreach (var cam in cameras)
             {
                 memory.Position = 0;
@@ -440,21 +458,41 @@ namespace DIPOL_UF.Jobs
             }
         }
 
-        private async Task<Job> ConstructJob(string path)
+        private void ApplySettingsTemplate1()
         {
-            Job control;
+            var setts = CurrentTarget1.CreateTemplatesForCameras(GetCameras());
+            foreach(var (_, s) in setts)
+                s.Camera.ApplySettings(s);
+        }
+
+
+        private static Task<Job> ConstructJob(string path)
+        {
             if (!File.Exists(path))
                 throw new FileNotFoundException("Job file is not found", path);
 
-            using (var str = new FileStream(path, FileMode.Open, FileAccess.Read))
-                control = await Job.CreateAsync(str);
-
-            // TODO : Enable for alpha tests
-            // INFO : Disabled to test on local environment
-           
-            return control;
+            using var str = new FileStream(path, FileMode.Open, FileAccess.Read);
+            return Job.CreateAsync(str);
         }
+        private static IReadOnlyDictionary<string, string> JobPaths(CycleType type)
+        {
+            var setts = UiSettingsProvider.Settings.Get<Dictionary<string, string>>(type == CycleType.Polarimetric
+                ? @"Polarimetry"
+                : "Photometry") ?? new Dictionary<string, string>();
 
+            var prefix = type == CycleType.Polarimetric ? @"polarimetry" : @"photometry";
+
+            if (!setts.ContainsKey("Light") || string.IsNullOrWhiteSpace("Light"))
+                setts["Light"] = $"{prefix}.job";
+
+            if (!setts.ContainsKey("Bias") || string.IsNullOrWhiteSpace("Bias"))
+                setts["Bias"] = $"{prefix}.bias";
+
+            if (!setts.ContainsKey("Dark") || string.IsNullOrWhiteSpace("Dark"))
+                setts["Dark"] = $"{prefix}.dark";
+
+            return setts;
+        }
 
         private JobManager() { }
 

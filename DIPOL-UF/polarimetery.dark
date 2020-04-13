@@ -1,0 +1,15 @@
+{
+  "Actions": [
+    { "ShutterAction" : "close all" },
+    {
+      "RepeatAction":
+      {
+        "Repeats": 7,
+        "Actions": [
+          { "CameraAction": "Expose" }
+        ]
+      }
+    },
+    { "ShutterAction" : "open all"}
+  ]
+}

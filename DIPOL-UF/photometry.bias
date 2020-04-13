@@ -1,0 +1,17 @@
+{
+  "Actions": [
+    { "ShutterAction" : "close all" },
+    { "SettingsAction" : "set exposuretime 0" },
+    {
+      "RepeatAction":
+      {
+        "Repeats": 7,
+        "Actions": [
+          { "CameraAction": "Expose" }
+        ]
+      }
+    },
+    { "SettingsAction" : "reset exposuretime" },
+    { "ShutterAction" : "open all"}
+  ]
+}

@@ -1096,6 +1096,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Take calibrations?.
+        /// </summary>
+        public static string JobManager_TakeCalibrations_Header {
+            get {
+                return ResourceManager.GetString("JobManager_TakeCalibrations_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dipol parameters has changed since last calibration. Do you want to take new calibration frames?.
+        /// </summary>
+        public static string JobManager_TakeCalibrations_Text {
+            get {
+                return ResourceManager.GetString("JobManager_TakeCalibrations_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bias file.
         /// </summary>
         public static string JobSettings_BiasFile {

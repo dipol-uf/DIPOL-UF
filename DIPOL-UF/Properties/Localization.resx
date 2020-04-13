@@ -627,4 +627,10 @@ Position is {2}.</value>
   <data name="General_CreateNew" xml:space="preserve">
     <value>Create New</value>
   </data>
+  <data name="JobManager_TakeCalibrations_Header" xml:space="preserve">
+    <value>Take calibrations?</value>
+  </data>
+  <data name="JobManager_TakeCalibrations_Text" xml:space="preserve">
+    <value>Dipol parameters has changed since last calibration. Do you want to take new calibration frames?</value>
+  </data>
 </root>
