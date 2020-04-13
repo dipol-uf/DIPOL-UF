@@ -23,6 +23,7 @@
 //     SOFTWARE.
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -54,7 +55,7 @@ namespace DIPOL_UF.ViewModels
             public string? Value { get; }
 
             public bool IsOverriden { get; }
-
+            public bool IsNotSpecified => Value is null && !IsOverriden;
             public CollectionItem(string name, string? value, bool isOverriden = false)
                 => (SettingsName, Value, IsOverriden) = (name, value, isOverriden);
         }
@@ -122,15 +123,15 @@ namespace DIPOL_UF.ViewModels
                     .Select(x => x.Key).ToList();
 
                 var dataToLoad = @params.AsDictionary(true)
-                    .Select(x => new CollectionItem(x.Key, x.Value switch
-                        {
-                            float f => f.ToString("F"),
-                            Enum @enum => ConverterImplementations.EnumToDescriptionConversion(@enum),
-                            { } val => val.ToString(),
-                            _ => "Overriden"
-                        },
-                        perCamSetts?.Contains(x.Key) == true))
-                    .Where(x => x.Value != "Overriden" || x.IsOverriden);
+                    .Select(x => (x.Value, perCamSetts?.Contains(x.Key) == true) switch
+                    {
+                        (float f, bool ovr) => new CollectionItem(x.Key, f.ToString("F"), ovr),
+                        (Enum @enum, bool ovr) => new CollectionItem(x.Key,
+                            ConverterImplementations.EnumToDescriptionConversion(@enum), ovr),
+                        ({ } val, bool ovr) => new CollectionItem(x.Key, val.ToString(), ovr),
+                        (null, true) => new CollectionItem(x.Key, @"Overriden", true), 
+                        (null, false) => new CollectionItem(x.Key, null, false),
+                    });
                 _propList.Edit(x =>
                 {
                     x.Clear();
@@ -165,10 +166,10 @@ namespace DIPOL_UF.ViewModels
                 null, null,
                 ReactiveCommand.Create<ReactiveObjectEx>(x =>
                 {
-                    if (x is ReactiveWrapper<SettingsBase> wrapper)
+                    if (x is ReactiveWrapper<IAcquisitionSettings> wrapper)
                     {
                         Model.Object.SharedParameters = new SharedSettingsContainer(wrapper.Object);
-                        
+                        Model.Object.PerCameraParameters = new Dictionary<string, Dictionary<string, object?>>();
                         // If the settings are applied to the camera, do not dispose it 
                         if (ReferenceEquals(_firstCamera.CurrentSettings, wrapper.Object))
                             wrapper.Object = null!;

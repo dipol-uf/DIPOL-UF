@@ -37,7 +37,6 @@ namespace DIPOL_UF.Jobs
             Properties.Join(SbProperties, x => x.Key, y => y.Key, (x, y) => (x.Key, This: x.Value, Settings: y.Value))
             .ToDictionary(x => x.Key, x => (Shared: x.This, x.Settings));
 
-        
         [SerializationOrder(1)]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public float? VSSpeed { get; set; }
@@ -212,5 +211,6 @@ namespace DIPOL_UF.Jobs
         }
 
         object ICloneable.Clone() => Clone();
+
     }
 }
