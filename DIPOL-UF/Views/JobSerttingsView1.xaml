@@ -97,14 +97,14 @@
                     Text="{x:Static props:Localization.JobSettings_SettingsBlock}"
                     Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
 
-                <TextBox Grid.Row="0" Grid.Column="1"
+                <TextBox Grid.Row="0" Grid.Column="1" MaxLines="1"
                          Text="{extensions:ValidationBinding Path=ObjectName, Mode=TwoWay}"
                          Style="{StaticResource TextBoxWithErrors}"/>
                 <ComboBox Grid.Row="1" Grid.Column="1" 
                           ItemsSource="{Binding Source={StaticResource CycleTypeEnumProvider}}"
                           SelectedItem="{extensions:ValidationBinding Path=CycleType, Mode=TwoWay}"
                           Style="{StaticResource ComboBoxWithErrors}"/>
-                <TextBox Grid.Row="2" Grid.Column="1" TextWrapping="Wrap"
+                <TextBox Grid.Row="2" Grid.Column="1" MaxLines="1"
                          Text="{extensions:ValidationBinding Path=Description, Mode=TwoWay}"
                          Style="{StaticResource TextBoxWithErrors}"/>
                 

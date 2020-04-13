@@ -203,6 +203,9 @@
     <Compile Include="ViewModels\MainWindowTreeViewModel.cs" />
     <Compile Include="ViewModels\ProgressBarViewModel.cs" />
     <Compile Include="ViewModels\ReactiveViewModel.cs" />
+    <Compile Include="Views\CycleConfigView.xaml.cs">
+      <DependentUpon>CycleConfigView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\JobSerttingsView1.xaml.cs">
       <DependentUpon>JobSerttingsView1.xaml</DependentUpon>
     </Compile>
@@ -250,6 +253,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Resources\StaticConverters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\CycleConfigView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

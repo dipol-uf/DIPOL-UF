@@ -633,4 +633,10 @@ Position is {2}.</value>
   <data name="JobManager_TakeCalibrations_Text" xml:space="preserve">
     <value>Dipol parameters has changed since last calibration. Do you want to take new calibration frames?</value>
   </data>
+  <data name="CycleConfigView_NRepeats" xml:space="preserve">
+    <value>Number of repeats:</value>
+  </data>
+  <data name="CycleConfigView_WindowTitle" xml:space="preserve">
+    <value>Configure next cycle</value>
+  </data>
 </root>

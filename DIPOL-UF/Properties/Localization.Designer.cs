@@ -570,6 +570,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of repeats:.
+        /// </summary>
+        public static string CycleConfigView_NRepeats {
+            get {
+                return ResourceManager.GetString("CycleConfigView_NRepeats", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Configure next cycle.
+        /// </summary>
+        public static string CycleConfigView_WindowTitle {
+            get {
+                return ResourceManager.GetString("CycleConfigView_WindowTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Aperture settings.
         /// </summary>
         public static string DipolImagePresenter_ApertureControlGroup {
