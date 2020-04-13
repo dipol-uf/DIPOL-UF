@@ -108,8 +108,9 @@
                          Text="{extensions:ValidationBinding Path=Description, Mode=TwoWay}"
                          Style="{StaticResource TextBoxWithErrors}"/>
                 
-                <ScrollViewer Grid.Row="3" Grid.Column="1">
-                    <ListView HorizontalContentAlignment="Stretch"
+                <ScrollViewer Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch"
+                              Height="300">
+                    <ListView 
                         Style ="{StaticResource ListViewStyle}"
                         ItemsSource="{Binding SharedSettingsView}">
                         <ListView.ItemTemplate>

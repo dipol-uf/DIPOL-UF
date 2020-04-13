@@ -26,6 +26,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -112,10 +113,13 @@ namespace DIPOL_UF.ViewModels
             ObjectName = Model.Object.StarName ?? $"star_{DateTimeOffset.UtcNow:yyMMddHHmmss}";
             Description = Model.Object.Description;
             CycleType = Model.Object.CycleType;
-            //SharedSettingsRepresentation.Clear();
+            
             if (Model.Object.SharedParameters is { } @params)
             {
-                var perCamSetts = Model.Object.PerCameraParameters?.Select(x => x.Key).ToList();
+                var camNames = JobManager.Manager.GetCameras().Keys.ToList();
+
+                var perCamSetts = Model.Object.PerCameraParameters?.Where(x => x.Value.Keys.Join(camNames, y => y, z => z, (y, z) => Unit.Default).Any())
+                    .Select(x => x.Key).ToList();
 
                 var dataToLoad = @params.AsDictionary(true)
                     .Select(x => new CollectionItem(x.Key, x.Value switch
