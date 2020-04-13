@@ -170,7 +170,7 @@
                 IsCancel="True"
                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}"
                 Content="{x:Static props:Localization.General_Cancel}"
-                Command="{Binding CancelCommand}"
+                Command="{Binding CancelButtonCommand}"
                 CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
     </Grid>
 </Window>

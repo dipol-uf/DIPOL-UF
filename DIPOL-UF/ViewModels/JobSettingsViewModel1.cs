@@ -23,7 +23,6 @@
 //     SOFTWARE.
 #nullable enable
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -32,7 +31,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
 using ANDOR_CS.Classes;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
@@ -66,6 +64,7 @@ namespace DIPOL_UF.ViewModels
 
         public DescendantProxy AcquisitionSettingsProxy { get; }
 
+        public ReactiveCommand<Window, Unit> CancelButtonCommand { get; private set; }
         public ReactiveCommand<Window, Window>? SaveAndSubmitButtonCommand { get; private set; }
         public ReactiveCommand<Unit, Unit>? LoadButtonCommand { get; private set; }
 
@@ -137,6 +136,14 @@ namespace DIPOL_UF.ViewModels
 
         private void InitializeCommands()
         {
+            CancelButtonCommand = ReactiveCommand.Create<Window>(w =>
+            {
+                // Passing `null` to indicate that the operation is cancelled
+                Model.Object = null;
+                w?.Close();
+            });
+                //.DisposeWith(Subscriptions);
+
             SaveAndSubmitButtonCommand = ReactiveCommand.Create<Window, Window>(x => x)
                 .DisposeWith(Subscriptions);
 
@@ -265,11 +272,6 @@ namespace DIPOL_UF.ViewModels
             }
         }
 
-
-        private void SubmitJob()
-        {
-
-        }
 
         private void OnFileDialogRequested(FileDialogDescriptor e) 
             => FileDialogRequested?.Invoke(this, new DialogRequestedEventArgs(e));
