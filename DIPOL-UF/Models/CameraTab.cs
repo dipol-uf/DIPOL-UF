@@ -80,6 +80,7 @@ namespace DIPOL_UF.Models
         public DipolImagePresenter ImagePresenter { get; }
         public DescendantProvider AcquisitionSettingsWindow { get; private set; }
         public DescendantProvider JobSettingsWindow { get; private set; }
+        public DescendantProvider CycleConfigWindow { get; private set; }
         public IObservable<TemperatureStatusEventArgs> WhenTemperatureChecked { get; private set; }
 
         public ReactiveCommand<int, Unit> CoolerCommand { get; private set; }
@@ -285,6 +286,18 @@ namespace DIPOL_UF.Models
 
             SetUpJobCommand.InvokeCommand(JobSettingsWindow.ViewRequested).DisposeWith(Subscriptions);
 
+
+            CycleConfigWindow = new DescendantProvider(
+                ReactiveCommand.Create<object, ReactiveObjectEx>(
+                    _ => new ReactiveWrapper<int?>(null)),
+                null, null,
+                ReactiveCommand.Create<ReactiveObjectEx>(x =>
+                {
+                    if(x is ReactiveWrapper<int?> wrapper && wrapper.Object is { } iVal )
+                    { }
+
+                }))
+                .DisposeWith(Subscriptions);
 
             var hasValidSettings = Camera.WhenPropertyChanged(x => x.CurrentSettings)
                                          .CombineLatest(this.WhenPropertyChanged(y => y.IsJobInProgress),

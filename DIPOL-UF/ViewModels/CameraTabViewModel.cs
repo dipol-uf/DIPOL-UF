@@ -59,6 +59,7 @@ namespace DIPOL_UF.ViewModels
         public DipolImagePresenterViewModel DipolImagePresenter { get; }
         public DescendantProxy AcquisitionSettingsWindow { get; private set; }
         public DescendantProxy JobSettingsWindow { get; private set; }
+        public DescendantProxy CycleConfigWindow { get; private set; }
 
         public float ExposureTime { [ObservableAsProperty] get; }
         public int AcquisitionPbMax { [ObservableAsProperty] get; }
@@ -136,6 +137,10 @@ namespace DIPOL_UF.ViewModels
                     //x => new JobSettingsViewModel((ReactiveWrapper<Target>)x))
                     x => new JobSettingsViewModel1((ReactiveWrapper<Target1>)x))
                     .DisposeWith(Subscriptions);
+
+            CycleConfigWindow = new DescendantProxy(Model.CycleConfigWindow,
+                    x => new CycleConfigViewModel((ReactiveWrapper<int?>) x))
+                .DisposeWith(Subscriptions);
 
             if (CanControlExternalShutter)
                 ExternalShutterMode = ShutterMode.PermanentlyOpen;
