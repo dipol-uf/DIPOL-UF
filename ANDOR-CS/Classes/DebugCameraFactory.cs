@@ -29,6 +29,7 @@ using ANDOR_CS.Exceptions;
 
 namespace ANDOR_CS.Classes
 {
+#if DEBUG
     public sealed partial class DebugCamera
     {
         public class DebugCameraFactory : IDeviceFactory
@@ -58,4 +59,5 @@ namespace ANDOR_CS.Classes
                 => Task.Run(() => Create(index));
         }
     }
+#endif
 }

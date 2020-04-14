@@ -20,9 +20,6 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 
-// TODO: remove
-using Camera = ANDOR_CS.Classes.DebugCamera;
-
 
 namespace DIPOL_UF.Models
 {
