@@ -102,7 +102,10 @@ namespace DIPOL_UF.Extensions
                     view.Closed += (sender, e) =>
                     {
                         if (Proxy.ViewFinished?.CanExecute(null) ?? false)
+                        {
                             Proxy.ViewFinished.Execute(args.Content);
+                            Owner.Focus();
+                        }
                     };
 
                     view.ContentRendered += (sender, e) =>
