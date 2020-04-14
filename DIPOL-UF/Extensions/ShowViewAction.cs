@@ -101,9 +101,9 @@ namespace DIPOL_UF.Extensions
                     
                     view.Closed += (sender, e) =>
                     {
-                        if (Proxy.ViewFinished?.CanExecute(null) ?? false)
+                        if (Proxy?.ViewFinished?.CanExecute(null) ?? false)
                         {
-                            Proxy.ViewFinished.Execute(args.Content);
+                            Proxy?.ViewFinished.Execute(args.Content);
                             Owner.Focus();
                         }
                     };

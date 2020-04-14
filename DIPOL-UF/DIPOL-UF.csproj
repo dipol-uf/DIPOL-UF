@@ -321,10 +321,10 @@
     <None Include="photometry.bias">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="polarimetery.bias">
+    <None Include="polarimetry.bias">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="polarimetery.dark">
+    <None Include="polarimetry.dark">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="polarimetry.job">
@@ -500,9 +500,8 @@
   <ItemGroup>
     <Resource Include="Dipol Logo.ico" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
-    <Resource Include="Temp\View.txt" />
+    <Folder Include="Temp\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">

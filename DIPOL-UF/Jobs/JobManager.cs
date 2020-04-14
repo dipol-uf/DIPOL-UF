@@ -490,13 +490,13 @@ namespace DIPOL_UF.Jobs
         }
 
 
-        private static Task<Job> ConstructJob(string path)
+        private static async Task<Job> ConstructJob(string path)
         {
             if (!File.Exists(path))
                 throw new FileNotFoundException("Job file is not found", path);
 
             using var str = new FileStream(path, FileMode.Open, FileAccess.Read);
-            return Job.CreateAsync(str);
+            return await Job.CreateAsync(str);
         }
         private static IReadOnlyDictionary<string, string> JobPaths(CycleType type)
         {
