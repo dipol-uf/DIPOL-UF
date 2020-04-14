@@ -65,17 +65,23 @@ namespace Sandbox
 
 
 
-                //var newSetts = target.CreateTemplatesForCameras(cams);
 
                 var str = JsonConvert.SerializeObject(target, Formatting.Indented);
 
 
-                var tg = JsonConvert.DeserializeObject<Target1>(str);
+                using (var fstr = new FileStream("test.json", FileMode.Create, FileAccess.ReadWrite))
+                {
+                    using var writer = new StreamWriter(fstr);
+                    await writer.WriteAsync(str);
+                }
 
-                //using var fstr = new FileStream("test.json", FileMode.Create, FileAccess.ReadWrite);
-                //using var writer = new StreamWriter(fstr);
-                //await writer.WriteAsync(str);
-
+                using (var fstr = new FileStream("test.json", FileMode.Open, FileAccess.ReadWrite))
+                {
+                    using var reader = new StreamReader(fstr);
+                    var line = await reader.ReadToEndAsync();
+                    target = JsonConvert.DeserializeObject<Target1>(line);
+                }
+                var newSetts = target.CreateTemplatesForCameras(cams);
                 //if (newSetts is { })
                 //    foreach (var (_, st) in newSetts)
                 //        st?.Dispose();

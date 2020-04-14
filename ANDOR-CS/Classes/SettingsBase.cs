@@ -946,17 +946,29 @@ namespace ANDOR_CS.Classes
             {
                 if (value is { })
                 {
+                    // BUG : Fix equalities
                     setter.Invoke(this, (name, value) switch
                     {
                         (nameof(VSSpeed), float speed) => new object[]
                             {Array.IndexOf(Camera.Properties.VSSpeeds, speed)},
+                        (nameof(VSSpeed), double speed) => new object[]
+                            {Array.IndexOf(Camera.Properties.VSSpeeds, (float)speed)},
+
                         (nameof(HSSpeed), float speed) => new object[]
                             {GetAvailableHSSpeeds().First(y => y.Speed.Equals(speed)).Index},
+                        (nameof(HSSpeed), double speed) => new object[]
+                            {GetAvailableHSSpeeds().First(y => y.Speed.Equals((float)speed)).Index},
+
                         (nameof(PreAmpGain), string gain) => new object[]
                             {GetAvailablePreAmpGain().First(y => y.Name == gain).Index},
+
                         (nameof(AccumulateCycle), (int frames, float time)) => new object[] {frames, time},
+                        (nameof(AccumulateCycle), (int frames, double time)) => new object[] { frames, (float)time },
+
                         (nameof(KineticCycle), (int frames, float time)) => new object[] {frames, time},
-                        var (_, otherVal) => new[] {otherVal}
+                        (nameof(KineticCycle), (int frames, double time)) => new object[] { frames, (float) time },
+
+                        var (_, otherVal) => new[] {Convert.ChangeType(otherVal, setter.ReturnType)}
                     });
                    props.Add(name);
                 }
