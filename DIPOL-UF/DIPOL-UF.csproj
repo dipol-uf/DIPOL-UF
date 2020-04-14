@@ -173,6 +173,7 @@
     <Compile Include="ReactiveWrapper.cs" />
     <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
     <Compile Include="ViewModels\CameraTabViewModel.cs" />
+    <Compile Include="ViewModels\CycleConfigViewModel.cs" />
     <Compile Include="ViewModels\DescendantProxy.cs" />
     <Compile Include="DialogRequestedEventArgs.cs" />
     <Compile Include="ViewModels\JobSettingsViewModel1.cs" />

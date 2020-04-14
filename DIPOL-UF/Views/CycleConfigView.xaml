@@ -12,6 +12,7 @@
         Topmost="True" WindowStartupLocation="CenterScreen"  BorderThickness="1" 
         BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" 
         IsTabStop="False" ShowInTaskbar="False"
+        d:DataContext="{d:DesignInstance viewModels:CycleConfigViewModel}"
         mc:Ignorable="d">
     <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
         <Grid.ColumnDefinitions>
@@ -40,16 +41,21 @@
         
         <TextBox Grid.Row="1" Grid.Column="1" MaxWidth="140" Width="140"
                  HorizontalAlignment="Left"
+                 Text="{Binding RepeatsValue, Mode=OneWay}"
                  Style="{StaticResource TextBoxWithErrors}"/>
 
 
         <Button Grid.Column="0" Grid.Row="3"
                 IsDefault="True"
+                Command="{Binding SubmitCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
                 Content="{x:Static props:Localization.General_Submit}"
                 Style="{StaticResource PositiveEffectButtonStyle}"/>
 
         <Button Grid.Column="1" Grid.Row="3"
                 IsCancel="True"
+                Command="{Binding CancelCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
                 Content="{x:Static props:Localization.General_Cancel}"
                 Style="{StaticResource NegativeEffectButtonStyle}"/>
 
