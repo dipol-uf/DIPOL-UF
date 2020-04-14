@@ -33,7 +33,7 @@ namespace DIPOL_UF.ViewModels
                         Validators.Validate.CanBeParsed(x.Value, out int result));
 
                     var v2 = (nameof(RepeatsValue), nameof(Validators.Validate.ShouldFallWithinRange),
-                        v1.Item3 is { }
+                        v1.Item3 is null
                             ? Validators.Validate.ShouldFallWithinRange(result, 1, 128)
                             : null);
 
@@ -42,17 +42,17 @@ namespace DIPOL_UF.ViewModels
 
             Model.Object = null;
 
-            CancelCommand = ReactiveCommand.Create<Window>(w => w?.Close())
-                .DisposeWith(Subscriptions);
+            CancelCommand = ReactiveCommand.Create<Window>(w => w?.Close());
+                //.DisposeWith(Subscriptions);
             SubmitCommand = ReactiveCommand.Create<Window>(w =>
+            {
+                if (int.TryParse(RepeatsValue, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var val))
                 {
-                    if (int.TryParse(RepeatsValue, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var val))
-                    {
-                        Model.Object = val;
-                        w?.Close();
-                    }
-                }, ObserveHasErrors.Select(x => !x))
-                .DisposeWith(Subscriptions);
+                    Model.Object = val;
+                    w?.Close();
+                }
+            }, ObserveHasErrors.Select(x => !x));
+            //.DisposeWith(Subscriptions);
 
         }
     }

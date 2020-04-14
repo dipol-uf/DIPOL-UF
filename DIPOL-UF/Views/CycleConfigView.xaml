@@ -41,7 +41,9 @@
         
         <TextBox Grid.Row="1" Grid.Column="1" MaxWidth="140" Width="140"
                  HorizontalAlignment="Left"
-                 Text="{Binding RepeatsValue, Mode=OneWay}"
+                 IsTabStop="True"
+                 TabIndex="0"
+                 Text="{extensions:ValidationBinding Path=RepeatsValue}"
                  Style="{StaticResource TextBoxWithErrors}"/>
 
 

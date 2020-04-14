@@ -138,11 +138,15 @@ namespace DIPOL_UF.Jobs
         }
 
 
-        public void StartJob()
+        public void StartJob(int nRepeats)
         {
             BiasActionCount = (_firstRun || NeedsCalibration) ? BiasJob?.NumberOfActions<CameraAction>() ?? 0 : 0;
             DarkActionCount = (_firstRun || NeedsCalibration) ? DarkJob?.NumberOfActions<CameraAction>() ?? 0 : 0;
 
+            AcquisitionRuns = nRepeats <= 1 ? 1 : nRepeats;
+
+            AcquisitionActionCount = AcquisitionJob.NumberOfActions<CameraAction>();
+            TotalAcquisitionActionCount = AcquisitionActionCount * AcquisitionRuns;
 
             CumulativeProgress = 0;
             IsInProcess = true;
@@ -214,11 +218,11 @@ namespace DIPOL_UF.Jobs
 
                 AcquisitionJob = await ConstructJob(paths["Light"]);
 
-                //TODO : Fixed to 4 for testing
-                AcquisitionRuns = 4;
+                ////TODO : Fixed to 4 for testing
+                //AcquisitionRuns = 4;
 
-                AcquisitionActionCount = AcquisitionJob.NumberOfActions<CameraAction>();
-                TotalAcquisitionActionCount = AcquisitionActionCount * AcquisitionRuns;
+                //AcquisitionActionCount = AcquisitionJob.NumberOfActions<CameraAction>();
+                //TotalAcquisitionActionCount = AcquisitionActionCount * AcquisitionRuns;
 
                 if (AcquisitionJob.ContainsActionOfType<MotorAction>()
                     && _windowRef.PolarimeterMotor is null)

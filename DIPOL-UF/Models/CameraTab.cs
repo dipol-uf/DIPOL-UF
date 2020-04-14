@@ -90,7 +90,7 @@ namespace DIPOL_UF.Models
         
         public ReactiveCommand<Unit, object> SetUpAcquisitionCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> StartAcquisitionCommand { get; private set; }
-        public ReactiveCommand<Unit, Unit> StartJobCommand { get; private set; }
+        public ReactiveCommand<Unit, bool> StartJobCommand { get; private set; }
         public ReactiveCommand<Unit, object> SetUpJobCommand { get; private set; }
 
         public CameraTab(IDevice camera)
@@ -293,8 +293,13 @@ namespace DIPOL_UF.Models
                 null, null,
                 ReactiveCommand.Create<ReactiveObjectEx>(x =>
                 {
-                    if(x is ReactiveWrapper<int?> wrapper && wrapper.Object is { } iVal )
-                    { }
+                    if (x is ReactiveWrapper<int?> wrapper && wrapper.Object is { } iVal)
+                    {
+                        if (!JobManager.Manager.IsInProcess && JobManager.Manager.ReadyToRun)
+                        {
+                            JobManager.Manager.StartJob(iVal);
+                        }
+                    }
 
                 }))
                 .DisposeWith(Subscriptions);
@@ -336,26 +341,30 @@ namespace DIPOL_UF.Models
                               (x, y) => x && !y)
                           .ObserveOnUi();
 
-
+            // BUG : Not working 
             StartJobCommand =
-                ReactiveCommand.Create(() =>
+                ReactiveCommand.Create<Unit, bool>(_ =>
                                    {
                                        if (!JobManager.Manager.IsInProcess)
                                        {
-                                           if(JobManager.Manager.ReadyToRun)
-                                               JobManager.Manager.StartJob();
+                                           if (JobManager.Manager.ReadyToRun)
+                                               return true;
                                            else
                                            {
-                                               // TODO : Inform something is wrong
+                                               // BUG : Inform something is wrong
                                            }
                                        }
                                        else
                                        {
                                            JobManager.Manager.StopJob();
                                        }
+                                       return false;
                                    },
                                    jobAvailableObs)
                                .DisposeWith(Subscriptions);
+
+            StartJobCommand.Where(x => x).InvokeCommand(CycleConfigWindow.ViewRequested).DisposeWith(Subscriptions);
+            
         }
 
         private void TimerTick(object sender, ElapsedEventArgs e)
