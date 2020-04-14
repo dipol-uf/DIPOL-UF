@@ -1077,6 +1077,33 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occured while setting up a new job.
+        /// </summary>
+        public static string JobManager_GenericError_Header {
+            get {
+                return ResourceManager.GetString("JobManager_GenericError_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dipol-UF is in invalid state.
+        /// </summary>
+        public static string JobManager_InvalidState_Header {
+            get {
+                return ResourceManager.GetString("JobManager_InvalidState_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The job system is in invalid state. This inidcates a miscommunication or internal error has happened. The current session may not be recovered, so it is advised to restart the application..
+        /// </summary>
+        public static string JobManager_InvalidState_Text {
+            get {
+                return ResourceManager.GetString("JobManager_InvalidState_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Acquisition cycle failed!.
         /// </summary>
         public static string JobManager_MB_Failed_Header {

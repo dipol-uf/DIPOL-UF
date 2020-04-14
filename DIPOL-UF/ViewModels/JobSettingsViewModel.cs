@@ -39,6 +39,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace DIPOL_UF.ViewModels
 {
+    [Obsolete]
     internal sealed class JobSettingsViewModel : ReactiveViewModel<ReactiveWrapper<Target>>
     {
         public event EventHandler FileDialogRequested;

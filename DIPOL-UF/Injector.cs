@@ -36,8 +36,11 @@ namespace DIPOL_UF
             => new StepMotorHandler.StepMotorFactory();
 
         public static IDeviceFactory NewLocalDeviceFactory()
+#if  DEBUG
         => new DebugCamera.DebugCameraFactory();
-            //=> new LocalCamera.LocalCameraFactory();
+#else
+        => new LocalCamera.LocalCameraFactory();
+#endif
 
         public static IDeviceFactory NewRemoteDeviceFactory(IControlClient client)
             => new RemoteCamera.RemoteCameraFactory(client);

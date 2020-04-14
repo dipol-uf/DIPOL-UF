@@ -29,6 +29,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Windows;
 using ANDOR_CS;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
@@ -69,6 +70,7 @@ namespace DIPOL_UF.Models
         [Reactive]
         public double AcquisitionProgress { get; private set; }
         [Reactive]
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
         public (int Min, int Max) AcquisitionProgressRange { get; private set; }
 
         // ReSharper disable once UnassignedGetOnlyAutoProperty
@@ -271,16 +273,24 @@ namespace DIPOL_UF.Models
                 ReactiveCommand.Create<Unit, object>(x => x, canSetup)
                                .DisposeWith(Subscriptions);
 
-            // WATCH : Changed type
             JobSettingsWindow = new DescendantProvider(
                     ReactiveCommand.Create<object, ReactiveObjectEx>(
                         _ => new ReactiveWrapper</*Target*/ Target1>(JobManager.Manager.GenerateTarget1())),
                     null, null, ReactiveCommand.CreateFromTask<ReactiveObjectEx>(async x =>
                     {
-
                         if (x is ReactiveWrapper<Target1> wrapper
                             && wrapper.Object is { } target)
-                            await JobManager.Manager.SubmitNewTarget1(target);
+                            try
+                            {
+                                await JobManager.Manager.SubmitNewTarget1(target);
+                            }
+                            catch (Exception e)
+                            {
+                                MessageBox.Show(
+                                    e.Message,
+                                    Properties.Localization.JobManager_InvalidState_Header,
+                                    MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
                     }))
                 .DisposeWith(Subscriptions);
 
@@ -341,7 +351,6 @@ namespace DIPOL_UF.Models
                               (x, y) => x && !y)
                           .ObserveOnUi();
 
-            // BUG : Not working 
             StartJobCommand =
                 ReactiveCommand.Create<Unit, bool>(_ =>
                                    {
@@ -351,7 +360,9 @@ namespace DIPOL_UF.Models
                                                return true;
                                            else
                                            {
-                                               // BUG : Inform something is wrong
+                                               MessageBox.Show(Properties.Localization.JobManager_InvalidState_Text,
+                                                   Properties.Localization.JobManager_InvalidState_Header,
+                                                   MessageBoxButton.OK, MessageBoxImage.Error);
                                            }
                                        }
                                        else
@@ -382,7 +393,7 @@ namespace DIPOL_UF.Models
         {
             if(!IsDisposed && disposing)
                 _pbTimer.Stop();
-                _pbTimer.Elapsed -= TimerTick;
+            _pbTimer.Elapsed -= TimerTick;
 
             base.Dispose(disposing);
         }
