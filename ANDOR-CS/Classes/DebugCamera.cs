@@ -37,7 +37,7 @@ using FITS_CS;
 #pragma warning disable 1591
 namespace ANDOR_CS.Classes
 {
-    public sealed class DebugCamera : CameraBase
+    public sealed partial class DebugCamera : Camera
     {
         private static readonly Random R = new Random();
         private static readonly object Locker = new object();
@@ -155,7 +155,7 @@ namespace ANDOR_CS.Classes
 
        
 
-        public override SettingsBase GetAcquisitionSettingsTemplate()
+        public override IAcquisitionSettings GetAcquisitionSettingsTemplate()
         {
             return new DebugSettings(this);
         }
@@ -238,7 +238,8 @@ namespace ANDOR_CS.Classes
             return Task.FromResult(new[] {PullPreviewImage(0, format), PullPreviewImage(0, format)});
         }
 
-        public override void StartImageSavingSequence(string folderPath, string imagePattern, string filter, FitsKey[] extraKeys = null)
+        public override void StartImageSavingSequence(string folderPath, string imagePattern, string filter, 
+            FrameType frameType = FrameType.Light, FitsKey[] extraKeys = null)
         {
             Console.WriteLine(@"Start saving sequence");
         }
@@ -258,7 +259,7 @@ namespace ANDOR_CS.Classes
             IsAcquiring = false;
         }
 
-        public override void ApplySettings(SettingsBase settings)
+        public override void ApplySettings(IAcquisitionSettings settings)
         {
             var delta = 0.5f * CameraIndex;
             Timings = (1.5f + delta, 1.5f + delta, 1.5f + delta);

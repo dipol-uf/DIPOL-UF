@@ -22,7 +22,6 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
 
-using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_Remote;
 using DIPOL_UF.ViewModels;
@@ -33,19 +32,18 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Collections.Immutable;
 using System.IO.Ports;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using ANDOR_CS;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
-using DynamicData.Kernel;
 using StepMotor;
 using Exception = System.Exception;
 
@@ -57,9 +55,9 @@ namespace DIPOL_UF.Models
             = UiSettingsProvider.Settings.GetArray<string>("RemoteLocations")
               ?? new string[0];
 
-        private DipolClient[] _remoteClients;
+        private ImmutableArray<IControlClient> _remoteClients;
 
-        private readonly SourceCache<(string Id, CameraBase Camera), string> _connectedCameras;
+        private readonly SourceCache<(string Id, IDevice Camera), string> _connectedCameras;
 
         private SerialPort _polarimeterPort;
         private SerialPort _retractorPort;
@@ -81,10 +79,10 @@ namespace DIPOL_UF.Models
 
         [Reactive]
         // ReSharper disable once UnusedAutoPropertyAccessor.Local
-        public StepMotorHandler PolarimeterMotor { get; private set; }
+        public IAsyncMotor PolarimeterMotor { get; private set; }
         [Reactive]
         // ReSharper disable once UnusedAutoPropertyAccessor.Local
-        public StepMotorHandler RetractorMotor { get; private set; }
+        public IAsyncMotor RetractorMotor { get; private set; }
 
         public DescendantProvider ProgressBarProvider { get; private set; }
         public DescendantProvider AvailableCamerasProvider { get; private set; }
@@ -97,7 +95,7 @@ namespace DIPOL_UF.Models
         // ReSharper restore UnassignedGetOnlyAutoProperty
 
         public SourceList<string> SelectedDevices { get; }
-        public IObservableCache<(string Id, CameraBase Camera), string> ConnectedCameras { get; private set; }
+        public IObservableCache<(string Id, IDevice Camera), string> ConnectedCameras { get; private set; }
         public IObservableCache<(string Id, CameraTab Tab), string> CameraTabs { get; private set; }
 
         public ReactiveCommand<Unit, Unit> WindowLoadedCommand { get; private set; }
@@ -118,7 +116,7 @@ namespace DIPOL_UF.Models
             _polarimeterPortScanningTask = CheckPolarimeterMotor();
             _retractorPortScanningTask = CheckRetractorMotor();
 
-            _connectedCameras = new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
+            _connectedCameras = new SourceCache<(string Id, IDevice Camera), string>(x => x.Id)
                 .DisposeWith(Subscriptions);
 
             SelectedDevices = new SourceList<string>()
@@ -137,7 +135,7 @@ namespace DIPOL_UF.Models
                 Regime = PolarimeterMotor is null
                         ? InstrumentRegime.Unknown
                         : InstrumentRegime.Polarimeter;
-             }
+            }
         }
 
         private Task CheckPolarimeterMotor()
@@ -145,14 +143,15 @@ namespace DIPOL_UF.Models
             return Task.Run(async () =>
             {
                 Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = false);
-                StepMotorHandler motor = null;
+                IAsyncMotor motor = null;
                 try
                 {
                     if (_polarimeterPort is null)
                         _polarimeterPort = new SerialPort(UiSettingsProvider.Settings
                             .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant());
-                   
-                    motor = await StepMotorHandler.CreateFirstOrFromAddress(_polarimeterPort, 1);
+
+                    motor = await Injector.NewStepMotorFactory().CreateFirstOrFromAddress(_polarimeterPort, 1);
+                    //motor = await StepMotorHandler.CreateFirstOrFromAddress(_polarimeterPort, 1);
                     await motor.ReferenceReturnToOriginAsync();
                 }
                 catch (Exception)
@@ -174,14 +173,15 @@ namespace DIPOL_UF.Models
             return Task.Run(async () =>
             {
                 Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = false);
-                StepMotorHandler motor = null;
+                IAsyncMotor motor = null;
                 try
                 { 
                     if (_retractorPort is null)
                         _retractorPort = new SerialPort(UiSettingsProvider.Settings
                             .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant());
 
-                    motor = await StepMotorHandler.CreateFirstOrFromAddress(_retractorPort, 1);
+                    motor = await Injector.NewStepMotorFactory().CreateFirstOrFromAddress(_retractorPort, 1);
+                    //motor = await StepMotorHandler.CreateFirstOrFromAddress(_retractorPort, 1);
                     await motor.ReturnToOriginAsync();
                 }
                 catch (Exception)
@@ -232,8 +232,7 @@ namespace DIPOL_UF.Models
                 ReactiveCommand.Create<object, AvailableCamerasModel>(
                                    _ =>
                                    {
-                                       var camQueryModel = new AvailableCamerasModel(
-                                           _remoteClients);
+                                       var camQueryModel = new AvailableCamerasModel(_remoteClients);
 
                                        return camQueryModel;
                                    },
@@ -332,7 +331,7 @@ namespace DIPOL_UF.Models
                 .Select(x => new ProgressBar()
                 {
                     Minimum = 0,
-                    Maximum = _remoteClients?.Length ?? 1,
+                    Maximum = _remoteClients.IsDefaultOrEmpty ? 1 : _remoteClients.Length,
                     Value = 0,
                     IsIndeterminate = true,
                     CanAbort = false,
@@ -422,12 +421,14 @@ namespace DIPOL_UF.Models
 
         private async Task<List<Exception>> InitializeRemoteSessionsAsync(ProgressBar pb)
         {
+            var clientFactory = Injector.NewClientFactory();
+
             var tasks = _remoteLocations.Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => Task.Run(() =>
                 {
                     try
                     {
-                        var client = DipolClient.Create(new Uri(x),
+                        var client = clientFactory.Create(new Uri(x),
                             TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")),
                             TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")),
                             TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
@@ -461,7 +462,7 @@ namespace DIPOL_UF.Models
 
 
             var result = await Task.WhenAll(tasks).ConfigureAwait(false);
-            _remoteClients = result.OfType<DipolClient>().ToArray();
+            _remoteClients = result.OfType<IControlClient>().ToImmutableArray();
 
             var exceptions = result.OfType<Exception>().ToList();
 
@@ -475,7 +476,7 @@ namespace DIPOL_UF.Models
         {
             var cams = model.RetrieveSelectedDevices();
 
-            if (cams.Count > 0)
+            if (cams.Length > 0)
                 _connectedCameras.Edit(context => { context.AddOrUpdate(cams); });
 
             await PrepareCamerasAsync(cams.Select(x => x.Camera));
@@ -603,8 +604,7 @@ namespace DIPOL_UF.Models
                         pos = await RetractorMotor.GetActualPositionAsync();
 
                         // ReSharper disable once RedundantArgumentDefaultValue
-                        var reply = await RetractorMotor.SendCommandAsync(Command.MoveToPosition, (int) param,
-                            CommandType.Absolute);
+                        var reply = await RetractorMotor.MoveToPosition((int) param, CommandType.Absolute);
                         if (reply.Status != ReturnStatus.Success)
                             throw new InvalidOperationException("Failed to operate retractor,");
 
@@ -686,7 +686,7 @@ namespace DIPOL_UF.Models
                         }
                     }
 
-                    if (!(_remoteClients is null))
+                    if (!(_remoteClients.IsEmpty))
                         Parallel.ForEach(_remoteClients, (client) =>
                         {
                             try
@@ -714,7 +714,7 @@ namespace DIPOL_UF.Models
             return model;
         }
 
-        private static async Task PrepareCamerasAsync(IEnumerable<CameraBase> cams)
+        private static async Task PrepareCamerasAsync(IEnumerable<IDevice> cams)
         {
             await Helper.RunNoMarshall(() =>
             {
@@ -732,7 +732,7 @@ namespace DIPOL_UF.Models
             });
         }
 
-        private async Task DisposeCamera(CameraBase cam)
+        private async Task DisposeCamera(IDevice cam)
             => await Helper.RunNoMarshall(() =>
             {
                 // This one only works if a camera is disposed through 
@@ -740,7 +740,7 @@ namespace DIPOL_UF.Models
                 if (cam?.IsDisposed == false && !IsDisposing)
                 {
                     cam.CoolerControl(Switch.Disabled);
-                    cam.TemperatureMonitor(Switch.Disabled);
+                    cam.TemperatureMonitor(Switch.Disabled, 0);
                     cam.Dispose();
                 }
             });

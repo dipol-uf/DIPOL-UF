@@ -31,6 +31,7 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ANDOR_CS;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
@@ -40,8 +41,8 @@ using DipolImage;
 using DIPOL_Remote.Callback;
 using DIPOL_Remote.Faults;
 using FITS_CS;
-using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.CameraBase>;
-using SettingsDictionary = System.Collections.Concurrent.ConcurrentDictionary<string, ANDOR_CS.Classes.SettingsBase>;
+using CameraDictionary = System.Collections.Concurrent.ConcurrentDictionary<int, ANDOR_CS.Classes.Camera>;
+using SettingsDictionary = System.Collections.Concurrent.ConcurrentDictionary<string,ANDOR_CS.IAcquisitionSettings>;
 using Switch = ANDOR_CS.Enums.Switch;
 
 // ReSharper disable InheritdocConsiderUsage
@@ -66,6 +67,7 @@ namespace DIPOL_Remote.Remote
 
         private readonly CameraDictionary _cameras = new CameraDictionary();
         private readonly SettingsDictionary _settings = new SettingsDictionary();
+        private readonly IDeviceFactory _factory;
 
         private OperationContext Context { get; set; }
 
@@ -83,10 +85,10 @@ namespace DIPOL_Remote.Remote
 
         private RemoteControl()
         {
-         
+            _factory = new LocalCamera.LocalCameraFactory();
         }
 
-        private void SubscribeToCameraEvents(CameraBase camera)
+        private void SubscribeToCameraEvents(Camera camera)
         {
             
             // Remotely fires event, informing that some property has changed
@@ -173,20 +175,25 @@ namespace DIPOL_Remote.Remote
 
         private async Task CreateCameraAsync(int camIndex, params object[] @params)
         {
-            CameraBase camera;
+
+            //WATCH: temp solution
+            Camera camera;
+
+            var factory = new LocalCamera.LocalCameraFactory();
+
             try
             {
                 // Tries to create new remote camera
 #if DEBUG_REMOTE
                 camera = await DebugCamera.CreateAsync(camIndex);
 #else
-                camera = await Camera.CreateAsync(camIndex, @params);
+                camera = (Camera)await factory.CreateAsync(camIndex);
 #endif
             }
             // Andor-related exception
             catch (AndorSdkException andorEx)
             {
-                throw AndorSdkFault.WrapFault(andorEx, nameof(Camera));
+                throw AndorSdkFault.WrapFault(andorEx, nameof(LocalCamera));
             }
             // Other possible exceptions
             catch (Exception ex)
@@ -196,7 +203,7 @@ namespace DIPOL_Remote.Remote
                     {
                         Message = "Failed to create new remote camera.",
                         Details = ex.Message,
-                        MethodName = nameof(Camera)
+                        MethodName = nameof(LocalCamera)
                     },
                     ServiceFault.CameraCommunicationReason);
             }
@@ -208,7 +215,7 @@ namespace DIPOL_Remote.Remote
                     new ServiceFault()
                     {
                         Message = "Failed to create new remote camera.",
-                        MethodName = nameof(Camera)
+                        MethodName = nameof(LocalCamera)
                     },
                     ServiceFault.CameraCommunicationReason);
             }
@@ -239,6 +246,7 @@ namespace DIPOL_Remote.Remote
                             
 
             _host.OnEventReceived("Host", $"Session {SessionID} established.");
+
 
         }
         /// <summary>
@@ -298,7 +306,7 @@ namespace DIPOL_Remote.Remote
 #if DEBUG_REMOTE
                 return 1;
 #else 
-                return Camera.GetNumberOfCameras();
+                return _factory.GetNumberOfCameras();
 #endif
 
             }
@@ -306,7 +314,7 @@ namespace DIPOL_Remote.Remote
             catch (AndorSdkException andorEx)
             {
                 // rethrow it, wrapped in FaultException<>, to the client side
-                throw AndorSdkFault.WrapFault(andorEx, nameof(Camera.GetNumberOfCameras));
+                throw AndorSdkFault.WrapFault(andorEx, nameof(_factory.GetNumberOfCameras));
           
             }
             // If failure is not related to Andor API
@@ -318,7 +326,7 @@ namespace DIPOL_Remote.Remote
                     {
                         Message = "Failed retrieving number of available cameras.",
                         Details = ex.Message,
-                        MethodName = nameof(Camera.GetNumberOfCameras)
+                        MethodName = nameof(_factory.GetNumberOfCameras)
                     },
                     ServiceFault.CameraCommunicationReason);
 
@@ -370,7 +378,7 @@ namespace DIPOL_Remote.Remote
 
             var settingsId = Guid.NewGuid().ToString("N");
 
-            SettingsBase setts;
+            IAcquisitionSettings setts;
             try
             {
                 setts = cam.GetAcquisitionSettingsTemplate();
@@ -385,7 +393,7 @@ namespace DIPOL_Remote.Remote
                     new ServiceFault()
                     {
                         Details = e.Message,
-                        MethodName = nameof(CameraBase.GetAcquisitionSettingsTemplate),
+                        MethodName = nameof(Camera.GetAcquisitionSettingsTemplate),
                         Message = "Acquisition settings initialization " +
                                   $"threw exception of type {e.GetType()}"
                     },
@@ -421,7 +429,7 @@ namespace DIPOL_Remote.Remote
 
             var newId = Guid.NewGuid().ToString("N");
 
-            SettingsBase setts;
+            IAcquisitionSettings setts;
             try
             {
                 setts = srcSetts.MakeCopy();
@@ -436,7 +444,7 @@ namespace DIPOL_Remote.Remote
                     new ServiceFault()
                     {
                         Details = e.Message,
-                        MethodName = nameof(CameraBase.GetAcquisitionSettingsTemplate),
+                        MethodName = nameof(Camera.GetAcquisitionSettingsTemplate),
                         Message = "Acquisition settings initialization " +
                                   $"threw exception of type {e.GetType()}"
                     },
@@ -606,11 +614,12 @@ namespace DIPOL_Remote.Remote
             => GetCameraSafe(camIndex).SetAutosave(mode, format);
 
         public void CallStartImageSavingSequence(int camIndex, string folderPath, string imagePattern, string filter,
+            FrameType frameType,
             FitsKey[] extraKeys = null)
-            => GetCameraSafe(camIndex).StartImageSavingSequence(folderPath, imagePattern, filter, extraKeys);
+            => GetCameraSafe(camIndex).StartImageSavingSequence(folderPath, imagePattern, filter, frameType, extraKeys);
 
 
-        private CameraBase GetCameraSafe(int camIndex)
+        private Camera GetCameraSafe(int camIndex)
         {
             if (_cameras.TryGetValue(
                 camIndex,
@@ -627,7 +636,7 @@ namespace DIPOL_Remote.Remote
                 ServiceFault.GeneralServiceErrorReason);
         }
 
-        private SettingsBase GetSettingsSafe(string settingsId)
+        private IAcquisitionSettings GetSettingsSafe(string settingsId)
         {
             if (_settings.TryGetValue(settingsId, out var sets))
                 return sets;

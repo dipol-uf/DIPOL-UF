@@ -38,10 +38,12 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows.Input;
+using ANDOR_CS;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Exceptions;
+using DIPOL_UF.Jobs;
 using DynamicData.Binding;
 using MathNet.Numerics;
 using Microsoft.Xaml.Behaviors.Core;
@@ -57,7 +59,7 @@ using Window = System.Windows.Window;
 
 namespace DIPOL_UF.ViewModels
 {
-    internal sealed class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<SettingsBase>>
+    internal sealed class AcquisitionSettingsViewModel : ReactiveViewModel<ReactiveWrapper<IAcquisitionSettings>>
     {
         private static List<(PropertyInfo Property, string EquivalentName)> InteractiveSettings { get; }
             = typeof(AcquisitionSettingsViewModel)
@@ -102,7 +104,7 @@ namespace DIPOL_UF.ViewModels
 
         public SettingsAvailability IsAvailable { get; }
             = new SettingsAvailability();
-        public CameraBase Camera => Model.Object.Camera;
+        public Camera Camera => Model.Object.Camera;
 
         public ICommand CancelCommand { get; private set; }
         public ReactiveCommand<Window, Window> SubmitCommand { get; private set; }
@@ -152,7 +154,7 @@ namespace DIPOL_UF.ViewModels
         public bool Group2ContainsErrors { [ObservableAsProperty] get; }
         public bool Group3ContainsErrors { [ObservableAsProperty] get; }
 
-        public AcquisitionSettingsViewModel(ReactiveWrapper<SettingsBase> model, bool submit = true)
+        public AcquisitionSettingsViewModel(ReactiveWrapper<IAcquisitionSettings> model, bool submit = true)
             : base(model)
         {
             _submit = submit;
@@ -610,7 +612,7 @@ namespace DIPOL_UF.ViewModels
                        : 0) != true;
 
             void CreateGetter<TSrc, TTarget>(
-                Expression<Func<SettingsBase, TSrc>> sourceAccessor,
+                Expression<Func<IAcquisitionSettings, TSrc>> sourceAccessor,
                 Func<TSrc, TTarget> selector,
                 Expression<Func<AcquisitionSettingsViewModel, TTarget>> targetAccessor,
                 Func<TSrc, TTarget, bool> comparator = null)
@@ -1085,8 +1087,12 @@ namespace DIPOL_UF.ViewModels
         {
             try
             {
-                if(_submit)
+                if (_submit)
+                {
                     Camera.ApplySettings(Model.Object);
+                    JobManager.Manager.NeedsCalibration = true;
+                }
+
                 Helper.ExecuteOnUi(() => CancelCommand.Execute(w));
             }
             catch (AndorSdkException andorExcept)

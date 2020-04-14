@@ -43,11 +43,12 @@ namespace Tests
         [SetUp]
         public async Task SetUp()
         {
+            var factory = new StepMotorHandler.StepMotorFactory();
             _port1 = new SerialPort(@"COM1");
             _port2 = new SerialPort(@"COM4");
 
-            _handler1 = await StepMotorHandler.CreateFirstOrFromAddress(_port1, 1);
-            _handler2 = await StepMotorHandler.CreateFirstOrFromAddress(_port2, 1);
+            _handler1 = (StepMotorHandler) await factory.CreateFirstOrFromAddress(_port1, 1);
+            _handler2 = (StepMotorHandler) await factory.CreateFirstOrFromAddress(_port2, 1);
         }
 
         [TearDown]

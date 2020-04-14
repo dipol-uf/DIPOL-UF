@@ -30,13 +30,13 @@ namespace ANDOR_CS.Events
     /// <summary>
     /// Handles all events related to acquisition of image process.
     /// </summary>
-    /// <param name="sender">A <see cref="Camera"/> type source</param>
+    /// <param name="sender">A <see cref="LocalCamera"/> type source</param>
     /// <param name="e">Event arguments</param>
     public delegate void AcquisitionStatusEventHandler(object sender, AcquisitionStatusEventArgs e);
     /// <summary>
     /// Handles all events related to temperature cycle.
     /// </summary>
-    /// <param name="sender">A <see cref="Camera"/> type source</param>
+    /// <param name="sender">A <see cref="LocalCamera"/> type source</param>
     /// <param name="e">Event arguments</param>
     public delegate void TemperatureStatusEventHandler(object sender, TemperatureStatusEventArgs e);
 

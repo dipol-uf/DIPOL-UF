@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using ANDOR_CS;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
@@ -25,17 +26,17 @@ namespace DIPOL_UF.Jobs
             .OrderBy(x => x.Order.Index)
             .ToDictionary(x => x.Property.Name, x => x.Property);
 
-        private static readonly Dictionary<string, PropertyInfo> SbProperties = typeof(SettingsBase)
+        private static readonly Dictionary<string, PropertyInfo> SbProperties = typeof(IAcquisitionSettings)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Select(x => new { Property = x, Order = x.GetCustomAttribute<SerializationOrderAttribute>() })
             .Where(x => x.Order is { })
             .OrderBy(x => x.Order.Index)
             .ToDictionary(x => x.Property.Name, x => x.Property);
 
-        private static readonly Dictionary<string, (PropertyInfo This, PropertyInfo Settings)> JoinedProperties = Properties.Join(SbProperties, x => x.Key, y => y.Key, (x, y) => (x.Key, This: x.Value, Settings: y.Value))
+        private static readonly Dictionary<string, (PropertyInfo This, PropertyInfo Settings)> JoinedProperties = 
+            Properties.Join(SbProperties, x => x.Key, y => y.Key, (x, y) => (x.Key, This: x.Value, Settings: y.Value))
             .ToDictionary(x => x.Key, x => (Shared: x.This, x.Settings));
 
-        
         [SerializationOrder(1)]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public float? VSSpeed { get; set; }
@@ -97,7 +98,7 @@ namespace DIPOL_UF.Jobs
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? EMCCDGain { get; set; }
 
-        public SharedSettingsContainer(SettingsBase? sourceSettings)
+        public SharedSettingsContainer(IAcquisitionSettings? sourceSettings)
         {
             if (sourceSettings is null)
                 return;
@@ -112,7 +113,7 @@ namespace DIPOL_UF.Jobs
         {
         }
 
-        public SettingsBase PrepareTemplateForCamera(CameraBase camera,
+        public IAcquisitionSettings PrepareTemplateForCamera(IDevice camera,
             IReadOnlyDictionary<string, object?>? overridingParams = null)
         {
             _ = camera ?? throw new ArgumentNullException(nameof(camera));
@@ -168,7 +169,7 @@ namespace DIPOL_UF.Jobs
         public static (
             SharedSettingsContainer Shared,
             Dictionary<string, Dictionary<string, object>>) FindSharedSettings(
-                IReadOnlyDictionary<string, SettingsBase> settings)
+                IReadOnlyDictionary<string, IAcquisitionSettings> settings)
         {
             if (settings.Count == 0)
                 return (new SharedSettingsContainer(), new Dictionary<string, Dictionary<string, object>>());
@@ -210,5 +211,6 @@ namespace DIPOL_UF.Jobs
         }
 
         object ICloneable.Clone() => Clone();
+
     }
 }

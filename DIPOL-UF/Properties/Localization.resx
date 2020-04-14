@@ -633,4 +633,19 @@ Position is {2}.</value>
   <data name="JobManager_TakeCalibrations_Text" xml:space="preserve">
     <value>Dipol parameters has changed since last calibration. Do you want to take new calibration frames?</value>
   </data>
+  <data name="CycleConfigView_NRepeats" xml:space="preserve">
+    <value>Number of repeats:</value>
+  </data>
+  <data name="CycleConfigView_WindowTitle" xml:space="preserve">
+    <value>Configure next cycle</value>
+  </data>
+  <data name="JobManager_GenericError_Header" xml:space="preserve">
+    <value>An error occured while setting up a new job</value>
+  </data>
+  <data name="JobManager_InvalidState_Header" xml:space="preserve">
+    <value>Dipol-UF is in invalid state</value>
+  </data>
+  <data name="JobManager_InvalidState_Text" xml:space="preserve">
+    <value>The job system is in invalid state. This inidcates a miscommunication or internal error has happened. The current session may not be recovered, so it is advised to restart the application.</value>
+  </data>
 </root>

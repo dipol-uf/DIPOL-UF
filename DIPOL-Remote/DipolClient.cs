@@ -32,19 +32,18 @@ using System.Threading.Tasks;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
-using DIPOL_Remote.Callback;
 using DIPOL_Remote.Faults;
 using DIPOL_Remote.Remote;
 using FITS_CS;
 
 namespace DIPOL_Remote
 {
-    public class DipolClient : DuplexClientBase<IRemoteControl>, IRemoteControl
+    public sealed partial class DipolClient : DuplexClientBase<IRemoteControl>, IControlClient
     {
         private static readonly int MaxMessageSize = 512 * 512 * 8 * 4;
 
+        CommunicationState IControlClient.State => State;
         public string HostAddress => Endpoint.Address.ToString();
-
         public string SessionID
             => Channel.SessionID;
 
@@ -71,38 +70,6 @@ namespace DIPOL_Remote
             Close();
         }
 
-
-        public static DipolClient Create(Uri hostUri)
-        {
-            var context = new InstanceContext(new RemoteCallbackHandler());
-            var binding = new NetTcpBinding(SecurityMode.None)
-            {
-                MaxBufferSize = MaxMessageSize,
-                MaxReceivedMessageSize = MaxMessageSize
-            };
-            var endpoint = new EndpointAddress(hostUri);
-
-            return new DipolClient(context, binding, endpoint);
-        }
-
-        public static DipolClient Create(Uri hostUri,
-            TimeSpan openTimeout,
-            TimeSpan sendTimeout,
-            TimeSpan closeTimeout)
-        {
-            var context = new InstanceContext(new RemoteCallbackHandler());
-            var binding = new NetTcpBinding(SecurityMode.None)
-            {
-                MaxBufferSize = MaxMessageSize,
-                MaxReceivedMessageSize = MaxMessageSize,
-                OpenTimeout = openTimeout,
-                SendTimeout = sendTimeout,
-                CloseTimeout = closeTimeout
-            };
-            var endpoint = new EndpointAddress(hostUri);
-
-            return new DipolClient(context, binding, endpoint);
-        }
 
         #region Remote interface implementations
 
@@ -223,8 +190,8 @@ namespace DIPOL_Remote
             => Channel.CallSetAutosave(camIndex, mode, format);
 
         public void CallStartImageSavingSequence(int camIndex, string folderPath, string imagePattern, string filter,
-            FitsKey[] extraKeys = null)
-            => Channel.CallStartImageSavingSequence(camIndex, folderPath, imagePattern, filter, extraKeys);
+            FrameType frameType, FitsKey[] extraKeys = null)
+            => Channel.CallStartImageSavingSequence(camIndex, folderPath, imagePattern, filter, frameType, extraKeys);
 
         public int[] ActiveRemoteCameras()
             => Channel.GetCamerasInUse();
@@ -332,6 +299,7 @@ namespace DIPOL_Remote
             await taskSource.Task;
         }
 
+        // ReSharper disable once UnusedMember.Local
         private async Task<TResult> AsyncHelper<TParam, TResult>(
             Func<TParam, RemoteCancellationToken, AsyncCallback, object, IAsyncResult> beginInvoke,
             Func<IAsyncResult, TResult> endInvoke,

@@ -95,9 +95,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
@@ -105,14 +102,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AcquisitionMetadata\FrameType.cs" />
     <Compile Include="AcquisitionMetadata\Request.cs" />
     <Compile Include="Attributes\FitsKeyAttribute.cs" />
-    <Compile Include="Attributes\IgnoreDefaultAttribute.cs" />
     <Compile Include="Classes\AcquisitionSettings.cs" />
-    <Compile Include="Classes\CameraBase.cs" />
+    <Compile Include="Classes\Camera.cs" />
     <Compile Include="Classes\DebugCamera.cs" />
     <Compile Include="Classes\DebugSettings.cs" />
     <Compile Include="Classes\EnumConverter.cs" />
+    <Compile Include="Classes\DebugCameraFactory.cs" />
     <Compile Include="Classes\SafeSDKCameraHandle.cs" />
     <Compile Include="Classes\SettingsBase.cs" />
     <Compile Include="Classes\SettingsProvider.cs" />
@@ -134,7 +132,7 @@
     <Compile Include="Exceptions\AcquisitionInProgressException.cs" />
     <Compile Include="Exceptions\AndorSDKException.cs" />
     <Compile Include="Classes\AndorSDKInitialization.cs" />
-    <Compile Include="Classes\Camera.cs" />
+    <Compile Include="Classes\LocalCamera.cs" />
     <Compile Include="Enums\CameraTypeEnum.cs" />
     <Compile Include="Enums\SwitchEnum.cs" />
     <Compile Include="Enums\FanModeEnum.cs" />
@@ -148,6 +146,10 @@
     <Compile Include="Enums\TriggerModeEnum.cs" />
     <Compile Include="Enums\VSAmplitudeEnum.cs" />
     <Compile Include="Events\AcquisitionStatusEventArgs.cs" />
+    <Compile Include="IAcquisitionSettings.cs" />
+    <Compile Include="IDeviceFactory.cs" />
+    <Compile Include="IDevice.cs" />
+    <Compile Include="Classes\LocalCameraFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Enums\TemperatureStatusEnum.cs" />
   </ItemGroup>
@@ -188,10 +190,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.1</Version>
+      <Version>12.0.3</Version>
     </PackageReference>
     <PackageReference Include="System.Reactive">
-      <Version>4.2.0-preview.102</Version>
+      <Version>4.4.1</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

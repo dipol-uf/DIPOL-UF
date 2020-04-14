@@ -28,6 +28,7 @@ using System.IO;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
+using ANDOR_CS;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
@@ -35,12 +36,11 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DipolImage;
 using FITS_CS;
-using CameraBase = ANDOR_CS.Classes.CameraBase;
 using AcquisitionEventType = DIPOL_Remote.Enums.AcquisitionEventType;
 
 namespace DIPOL_Remote
 {
-    public sealed class RemoteCamera : CameraBase
+    public sealed partial class RemoteCamera : Camera
     {
         private static readonly ConcurrentDictionary<int, RemoteCamera> RemoteCameras
             = new ConcurrentDictionary<int, RemoteCamera>();
@@ -49,9 +49,9 @@ namespace DIPOL_Remote
             = new ConcurrentDictionary<string, bool>();
 
         private bool _isActive;
-        private DipolClient _client;
+        private IControlClient _client;
 
-        public override SettingsBase CurrentSettings { get; protected set; }
+        public override IAcquisitionSettings CurrentSettings { get; protected set; }
         public override (float Exposure, float Accumulation, float Kinetic) Timings
         {
             get => _client.CallGetTimings(CameraIndex);
@@ -237,7 +237,7 @@ namespace DIPOL_Remote
             }
         }
 
-        private RemoteCamera(int camIndex, DipolClient sessionInstance)
+        private RemoteCamera(int camIndex, IControlClient sessionInstance)
         {
             _client = sessionInstance ?? throw new ArgumentNullException(nameof(sessionInstance));
             CameraIndex = camIndex;
@@ -295,8 +295,7 @@ namespace DIPOL_Remote
             => _client.CallTemperatureMonitor(CameraIndex, mode, timeout);
 
        
-
-        public override SettingsBase GetAcquisitionSettingsTemplate()
+        public override IAcquisitionSettings GetAcquisitionSettingsTemplate()
             => new RemoteSettings(this, _client.CreateSettings(CameraIndex), _client);
 
         public override Task StartAcquisitionAsync(Request metadata = default, CancellationToken cancellationToken = default)
@@ -330,7 +329,7 @@ namespace DIPOL_Remote
         public override void SetAutosave(Switch mode, ImageFormat format = ImageFormat.SignedInt32)
             => _client.CallSetAutosave(CameraIndex, mode, format);
 
-        public override void ApplySettings(SettingsBase settings)
+        public override void ApplySettings(IAcquisitionSettings settings)
         {
             if (!(settings is RemoteSettings remoteSetts))
                 throw new ArgumentException(nameof(settings));
@@ -358,9 +357,11 @@ namespace DIPOL_Remote
             }
         }
 
-        public override void StartImageSavingSequence(string folderPath, string imagePattern, string filter, FitsKey[] extraKeys = null)
+        public override void StartImageSavingSequence(string folderPath, string imagePattern, string filter, 
+            FrameType frameType = FrameType.Light,
+            FitsKey[] extraKeys = null)
         {
-            _client.CallStartImageSavingSequence(CameraIndex, folderPath, imagePattern, filter, extraKeys);
+            _client.CallStartImageSavingSequence(CameraIndex, folderPath, imagePattern, filter, frameType, extraKeys);
         }
 
         public override Task FinishImageSavingSequenceAsync()
@@ -466,27 +467,5 @@ namespace DIPOL_Remote
         private static string NameofProperty([System.Runtime.CompilerServices.CallerMemberName] string name = "")
             => name;
 
-        public new static RemoteCamera Create(int camIndex = 0, params object[] @params)
-        {
-            if (!(@params?.Length == 1 && @params[0] is DipolClient client))
-                throw new ArgumentException(
-                              $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.",
-                              nameof(@params));
-
-            client.CreateRemoteCamera(camIndex);
-
-            return new RemoteCamera(camIndex, client);
-        }
-
-        public new static async Task<RemoteCamera> CreateAsync(int camIndex = 0, params object[] @params)
-        {
-            if (!(@params?.Length == 1 && @params[0] is DipolClient client))
-                throw new ArgumentException(
-                    $"{nameof(Create)} requires additional parameter of type {typeof(DipolClient)}.",
-                    nameof(@params));
-
-            await client.CreateCameraAsync(camIndex);
-            return new RemoteCamera(camIndex, client);
-        }
     }
 }

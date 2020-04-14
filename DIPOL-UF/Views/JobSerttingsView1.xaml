@@ -97,35 +97,43 @@
                     Text="{x:Static props:Localization.JobSettings_SettingsBlock}"
                     Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
 
-                <TextBox Grid.Row="0" Grid.Column="1"
+                <TextBox Grid.Row="0" Grid.Column="1" MaxLines="1" Width="250" HorizontalAlignment="Left"
                          Text="{extensions:ValidationBinding Path=ObjectName, Mode=TwoWay}"
                          Style="{StaticResource TextBoxWithErrors}"/>
-                <ComboBox Grid.Row="1" Grid.Column="1" 
+                <ComboBox Grid.Row="1" Grid.Column="1" Width="250" HorizontalAlignment="Left"
                           ItemsSource="{Binding Source={StaticResource CycleTypeEnumProvider}}"
                           SelectedItem="{extensions:ValidationBinding Path=CycleType, Mode=TwoWay}"
                           Style="{StaticResource ComboBoxWithErrors}"/>
-                <TextBox Grid.Row="2" Grid.Column="1" TextWrapping="Wrap"
+                <TextBox Grid.Row="2" Grid.Column="1" MaxLines="1" Width="250" HorizontalAlignment="Left"
                          Text="{extensions:ValidationBinding Path=Description, Mode=TwoWay}"
                          Style="{StaticResource TextBoxWithErrors}"/>
                 
-                <ScrollViewer Grid.Row="3" Grid.Column="1">
-                    <ListView HorizontalContentAlignment="Stretch"
+                <ScrollViewer Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch"
+                              Height="300">
+                    <ListView
                         Style ="{StaticResource ListViewStyle}"
                         ItemsSource="{Binding SharedSettingsView}">
                         <ListView.ItemTemplate>
                             <ItemContainerTemplate>
                                 <Border 
-                                    HorizontalAlignment="Stretch"
-                                    BorderBrush="{StaticResource JobProgressBarColor}">
+                                    HorizontalAlignment="Stretch">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsNotSpecified}" Value="True">
+                                                    <Setter Property="BorderThickness" Value="5"/>
+                                                    <Setter Property="BorderBrush" Value ="{StaticResource ErrorBorderErrorColor}"/>
+                                                </DataTrigger>
                                                 <DataTrigger Binding="{Binding IsOverriden}" Value="True">
                                                     <Setter Property="BorderThickness" Value="5"/>
+                                                    <Setter Property="BorderBrush" Value ="{StaticResource JobProgressBarColor}"/>
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsOverriden}" Value="False">
+                                                <!--<DataTrigger Binding="{Binding IsOverriden}" Value="False">
                                                     <Setter Property="BorderThickness" Value="0"/>
                                                 </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsNotSpecified}" Value="False">
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                </DataTrigger>-->
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>

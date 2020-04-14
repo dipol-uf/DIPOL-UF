@@ -93,8 +93,7 @@ namespace DIPOL_UF.Jobs
                 {
                     var oldPos = (Manager.MotorPosition ?? 0f) / 22.5f * Angle;
 
-                    await RetryAction(() => Manager._windowRef.PolarimeterMotor.SendCommandAsync(
-                            Command.MoveToPosition,
+                    await RetryAction(() => Manager._windowRef.PolarimeterMotor.MoveToPosition(
                             // ReSharper disable once RedundantArgumentDefaultValue
                             (int) (oldPos + Angle * Parameter), CommandType.Absolute),
                         NRetries);
@@ -106,8 +105,10 @@ namespace DIPOL_UF.Jobs
                 }
 
                 var pos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetActualPositionAsync(), NRetries);
+                var actualPos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetTruePositionAsync(), NRetries);
                 // TODO : deal with constant
                 Manager.MotorPosition = 22.5f * pos / Angle;
+                Manager.ActualMotorPosition = 22.5f * actualPos / Angle;
             }
             private static async Task RetryAction(Func<Task> action, int retries)
             {

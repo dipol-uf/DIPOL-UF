@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Windows;
 using System.Threading;
 using System.Threading.Tasks;
-
-using ANDOR_CS.Classes;
 using ANDOR_CS.Exceptions;
 
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using ANDOR_CS;
 using DIPOL_Remote;
 using DIPOL_UF.Converters;
 using DynamicData;
@@ -21,19 +20,20 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 
-// TODO: remove
-using Camera = ANDOR_CS.Classes.DebugCamera;
-
 
 namespace DIPOL_UF.Models
 {
     internal sealed class AvailableCamerasModel : ReactiveObjectEx //-V3073
     {
+        private readonly ImmutableArray<IControlClient> _remoteClients;
 
-        private readonly DipolClient[] _remoteClients;
+        private readonly SourceCache<(string Id, IDevice Camera), string> _foundDevices;
 
-        private readonly SourceCache<(string Id, CameraBase Camera), string> _foundDevices;
-
+        private readonly ImmutableArray<IDeviceFactory> _remoteFactories;
+        private readonly IDeviceFactory _localFactory;
+//#if DEBUG
+//        private readonly IDeviceFactory _debugFactory;
+//#endif
         private bool _isClosed;
         private bool _isSelected;
 
@@ -41,7 +41,7 @@ namespace DIPOL_UF.Models
         [Reactive]
         public bool IsInteractive { get; private set; }
 
-        public IObservableCache<(string Id, CameraBase Camera), string> FoundCameras { get; private set; }
+        public IObservableCache<(string Id, IDevice Camera), string> FoundCameras { get; private set; }
         public SourceList<string> SelectedIds { get; }
 
         public ReactiveCommand<Window, Window> WindowContentRenderedCommand { get; private set; }
@@ -53,17 +53,26 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<object, Unit> ClickCommand { get; private set; }
 
         public AvailableCamerasModel(
-            DipolClient[] remoteClients = null)
+            ImmutableArray<IControlClient> remoteClients)
         {
 
             _remoteClients = remoteClients;
+            _remoteFactories = 
+                _remoteClients.IsDefaultOrEmpty
+                ? ImmutableArray<IDeviceFactory>.Empty 
+                : _remoteClients.Select(Injector.NewRemoteDeviceFactory).ToImmutableArray();
+
             IsInteractive = true;
             SelectedIds = new SourceList<string>().DisposeWith(Subscriptions);
 
             _foundDevices =
-                new SourceCache<(string Id, CameraBase Camera), string>(x => x.Id)
+                new SourceCache<(string Id, IDevice Camera), string>(x => x.Id)
                     .DisposeWith(Subscriptions);
 
+            _localFactory = Injector.NewLocalDeviceFactory();
+//#if DEBUG
+//            _debugFactory = Injector.NewDebugDeviceFactory();
+//#endif
             InitializeCommands();
             HookObservables();
             HookValidators();
@@ -165,17 +174,20 @@ namespace DIPOL_UF.Models
 
             try
             {
-                nLocal = await Helper.RunNoMarshall(Camera.GetNumberOfCameras);
+                nLocal = await Helper.RunNoMarshall(_localFactory.GetNumberOfCameras);
+//#if DEBUG
+//                nLocal = nLocal > 0 ? nLocal : 1;
+//#endif
             }
             catch (AndorSdkException aExp)
             {
                 Helper.WriteLog(aExp);
             }
-            if(!(_remoteClients is null))
-                foreach (var client in _remoteClients)
+            if(!(_remoteFactories.IsEmpty))
+                foreach (var factory in _remoteFactories)
                     try
                     {
-                        nRemote.Add(await Helper.RunNoMarshall(() => client?.GetNumberOfCameras() ?? 0));
+                        nRemote.Add(await Helper.RunNoMarshall(() => factory?.GetNumberOfCameras() ?? 0));
                     }
                     catch (Exception e)
                     {
@@ -231,10 +243,19 @@ namespace DIPOL_UF.Models
                 workers[camIndex] = Task.Run(async () =>
                 {
                     // If camera is nor present on the active list
-                    CameraBase cam = null;
+                    IDevice cam = null;
                     try
                     {
-                        cam = await Camera.CreateAsync(index).ConfigureAwait(false);
+                        cam = await _localFactory.CreateAsync(index).ConfigureAwait(false);
+
+//#if DEBUG
+
+//                        cam =
+//                            _localFactory.GetNumberOfCameras() > 0
+//                                ? await _localFactory.CreateAsync(index).ConfigureAwait(false)
+//                                : await _debugFactory.CreateAsync(index).ConfigureAwait(false);
+//#endif
+
                     }
                     // Silently catch exception and continue
                     catch (Exception aExp)
@@ -281,10 +302,10 @@ namespace DIPOL_UF.Models
         private async Task<int> QueryRemoteCamerasAsync(IReadOnlyList<int> nRemote, CancellationToken token, ProgressBar pb)
         {
             var counter = 0;
-            var workers = new Task[_remoteClients.Length];
+            var workers = new Task[_remoteFactories.Length];
             var clientIndex = 0;
             // For each remote client
-            foreach (var client in _remoteClients)
+            foreach (var factory in _remoteFactories)
             {
                 // Checks if cancellation is requested
                 token.ThrowIfCancellationRequested();
@@ -301,13 +322,13 @@ namespace DIPOL_UF.Models
                             token.ThrowIfCancellationRequested();
 
                             // Try to create remote camera
-                            CameraBase cam = null;
+                            IDevice cam = null;
                             try
                             {
-                                if (!client.ActiveRemoteCameras().Contains(camIndex))
+                                // WATCH: can fail here
+                                //if (!client.ActiveRemoteCameras().Contains(camIndex))
                                     //cam = client.CreateRemoteCamera(camIndex);  
-                                    cam = await RemoteCamera.CreateAsync(camIndex, client)
-                                                            .ConfigureAwait(false);
+                                    cam = await factory.CreateAsync(camIndex).ConfigureAwait(false);
                             }
                             // Catch silently
                             catch (Exception aExp)
@@ -325,7 +346,7 @@ namespace DIPOL_UF.Models
                             // Add to collection
                             if (cam != null)
                             {
-                                var id = $"{client.HostAddress};{cam.CameraIndex};{cam.CameraModel};{cam.SerialNumber}";
+                                var id = $"{_remoteClients[localIndex].HostAddress};{cam.CameraIndex};{cam.CameraModel};{cam.SerialNumber}";
                                 if (_foundDevices.Lookup(id).HasValue)
                                 {
                                     cam.Dispose();
@@ -447,9 +468,9 @@ namespace DIPOL_UF.Models
         }
 
 
-        public ReadOnlyCollection<(string Id, CameraBase Camera)> RetrieveSelectedDevices()
+        public ImmutableArray<(string Id, IDevice Camera)> RetrieveSelectedDevices()
         {
-            var result = new List<(string Id, CameraBase Camera)>();
+            var result = new List<(string Id, IDevice Camera)>(SelectedIds.Count);
 
             _foundDevices.Edit(context =>
             {
@@ -465,9 +486,10 @@ namespace DIPOL_UF.Models
                 }
             });
 
-            return new ReadOnlyCollection<(string Id, CameraBase Camera)>(
-                result.OrderBy(x =>
-                    ConverterImplementations.CameraToStringAliasConversion(x.Camera) ?? x.Camera.ToString()).ToList());
+            return result.OrderBy(x =>
+                             ConverterImplementations.CameraToStringAliasConversion(x.Camera)
+                             ?? x.Camera.ToString())
+                         .ToImmutableArray();
         }
     }
 }

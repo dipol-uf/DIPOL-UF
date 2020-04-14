@@ -53,6 +53,14 @@
                 Proxy="{Binding JobSettingsWindow}"
                 Type="{x:Type vs:JobSettingsView1}"/>
         </behaviors:EventTrigger>
+        <behaviors:EventTrigger
+            EventName="ViewRequested"
+            SourceObject="{Binding CycleConfigWindow}">
+            <extensions:ShowViewAction
+                Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                Proxy="{Binding CycleConfigWindow}"
+                Type="{x:Type vs:CycleConfigView}"/>
+        </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
     <ScrollViewer
         HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Auto"

@@ -46,18 +46,18 @@ namespace ANDOR_CS.Classes
     public class AcquisitionSettings : SettingsBase
     {
         /// <summary>
-        ///     Constructor adds reference to parent <see cref="Camera" /> object.
+        ///     Constructor adds reference to parent <see cref="LocalCamera" /> object.
         /// </summary>
         /// <param name="camera">Parent object. Camera, to which settings should be applied.</param>
-        internal AcquisitionSettings(CameraBase camera) 
+        internal AcquisitionSettings(Camera camera) 
             => Camera = camera;
 
         private SafeSdkCameraHandle Handle
-            => Camera is Camera cam
+            => Camera is LocalCamera cam
                 ? cam.CameraHandle
                 : throw new NullReferenceException(
                     $"Camera object in {nameof(AcquisitionSettings)} is of type {Camera.GetType()}, " +
-                    $"while it is expected to be ${typeof(Camera)}");
+                    $"while it is expected to be ${typeof(LocalCamera)}");
 
         /// <summary>
         ///     Tries to set vertical speed to fastest recommended speed.

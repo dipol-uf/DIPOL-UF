@@ -7,12 +7,12 @@ using ANDOR_CS.Classes;
 
 namespace DIPOL_UF.Converters
 {
-    [ValueConversion(typeof(CameraBase), typeof(string))]
+    [ValueConversion(typeof(Camera), typeof(string))]
     class CameraToStringAliasValueConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is CameraBase cam)
+            if (value is Camera cam)
             {
                 return ConverterImplementations.CameraToStringAliasConversion(cam);
             }

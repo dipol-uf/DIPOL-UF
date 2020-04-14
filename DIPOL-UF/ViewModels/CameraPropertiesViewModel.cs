@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Linq;
-using ANDOR_CS.Classes;
+using ANDOR_CS;
 using ANDOR_CS.DataStructures;
 using DIPOL_UF.Converters;
 using DynamicData.Binding;
@@ -27,7 +27,7 @@ namespace DIPOL_UF.ViewModels
             PropertiesAccessors = typeof(CameraProperties).GetProperties(BindingFlags.Instance | BindingFlags.Public);
         }
 
-        public CameraPropertiesViewModel(CameraBase model)
+        public CameraPropertiesViewModel(IDevice model)
         {
             string GetStringRep(object value)
                 => value?.ToStringEx() ?? Properties.Localization.CameraProperties_UnknownValue;

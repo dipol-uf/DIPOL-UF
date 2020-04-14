@@ -68,6 +68,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DipolClientFactory.cs" />
+    <Compile Include="IControlClient.cs" />
+    <Compile Include="IControlClientFactory.cs" />
+    <Compile Include="RemoteCameraFactory.cs" />
     <Compile Include="Remote\AsyncResult.cs" />
     <Compile Include="DipolClient.cs" />
     <Compile Include="DipolHost.cs" />
@@ -107,7 +111,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.1</Version>
+      <Version>12.0.3</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

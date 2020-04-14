@@ -5,6 +5,7 @@ using System.Reactive.Disposables;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ANDOR_CS;
 using ANDOR_CS.Classes;
 using DynamicData;
 using DynamicData.Binding;
@@ -24,7 +25,7 @@ namespace DIPOL_UF.ViewModels
 
         public MainWindowTreeViewModel(
             string name, 
-            IConnectableCache<(string Id, CameraBase Camera), string> collection,
+            IConnectableCache<(string Id, IDevice Camera), string> collection,
             IObservableList<string> selections,
             ICommand selectCommand,
             ICommand contextMenuCommand)

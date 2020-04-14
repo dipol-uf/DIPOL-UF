@@ -29,6 +29,8 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Windows;
+using ANDOR_CS;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
@@ -56,7 +58,7 @@ namespace DIPOL_UF.Models
 
         private readonly Timer _pbTimer = new Timer();
 
-        public CameraBase Camera { get; }
+        public Camera Camera { get; }
         public (float Minimum, float Maximum) TemperatureRange { get; }
         public bool CanControlTemperature { get; }
         public bool CanControlFan { get; }
@@ -68,6 +70,7 @@ namespace DIPOL_UF.Models
         [Reactive]
         public double AcquisitionProgress { get; private set; }
         [Reactive]
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
         public (int Min, int Max) AcquisitionProgressRange { get; private set; }
 
         // ReSharper disable once UnassignedGetOnlyAutoProperty
@@ -79,6 +82,7 @@ namespace DIPOL_UF.Models
         public DipolImagePresenter ImagePresenter { get; }
         public DescendantProvider AcquisitionSettingsWindow { get; private set; }
         public DescendantProvider JobSettingsWindow { get; private set; }
+        public DescendantProvider CycleConfigWindow { get; private set; }
         public IObservable<TemperatureStatusEventArgs> WhenTemperatureChecked { get; private set; }
 
         public ReactiveCommand<int, Unit> CoolerCommand { get; private set; }
@@ -88,12 +92,13 @@ namespace DIPOL_UF.Models
         
         public ReactiveCommand<Unit, object> SetUpAcquisitionCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> StartAcquisitionCommand { get; private set; }
-        public ReactiveCommand<Unit, Unit> StartJobCommand { get; private set; }
+        public ReactiveCommand<Unit, bool> StartJobCommand { get; private set; }
         public ReactiveCommand<Unit, object> SetUpJobCommand { get; private set; }
 
-        public CameraTab(CameraBase camera)
+        public CameraTab(IDevice camera)
         {
-            Camera = camera;
+            // WATCH: Temp solution
+            Camera = (Camera)camera;
             
             TemperatureRange = camera.Capabilities.GetFunctions.HasFlag(GetFunction.TemperatureRange)
                 ? camera.Properties.AllowedTemperatures
@@ -247,12 +252,12 @@ namespace DIPOL_UF.Models
 
             AcquisitionSettingsWindow = new DescendantProvider(
                     ReactiveCommand.Create<object, ReactiveObjectEx>(
-                        _ => new ReactiveWrapper<SettingsBase>(
+                        _ => new ReactiveWrapper<IAcquisitionSettings>(
                             Camera.CurrentSettings ?? Camera.GetAcquisitionSettingsTemplate())),
                     null, null,
                     ReactiveCommand.Create<ReactiveObjectEx>(x =>
                     {
-                        if (x is ReactiveWrapper<SettingsBase> wrapper
+                        if (x is ReactiveWrapper<IAcquisitionSettings> wrapper
                             && wrapper.Object is { } setts
                             && ReferenceEquals(setts, Camera.CurrentSettings))
                             wrapper.Object = null;
@@ -268,21 +273,46 @@ namespace DIPOL_UF.Models
                 ReactiveCommand.Create<Unit, object>(x => x, canSetup)
                                .DisposeWith(Subscriptions);
 
-            // WATCH : Changed type
             JobSettingsWindow = new DescendantProvider(
                     ReactiveCommand.Create<object, ReactiveObjectEx>(
                         _ => new ReactiveWrapper</*Target*/ Target1>(JobManager.Manager.GenerateTarget1())),
                     null, null, ReactiveCommand.CreateFromTask<ReactiveObjectEx>(async x =>
                     {
-
                         if (x is ReactiveWrapper<Target1> wrapper
                             && wrapper.Object is { } target)
-                            await JobManager.Manager.SubmitNewTarget1(target);
+                            try
+                            {
+                                await JobManager.Manager.SubmitNewTarget1(target);
+                            }
+                            catch (Exception e)
+                            {
+                                MessageBox.Show(
+                                    e.Message,
+                                    Properties.Localization.JobManager_InvalidState_Header,
+                                    MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
                     }))
                 .DisposeWith(Subscriptions);
 
             SetUpJobCommand.InvokeCommand(JobSettingsWindow.ViewRequested).DisposeWith(Subscriptions);
 
+
+            CycleConfigWindow = new DescendantProvider(
+                ReactiveCommand.Create<object, ReactiveObjectEx>(
+                    _ => new ReactiveWrapper<int?>(null)),
+                null, null,
+                ReactiveCommand.Create<ReactiveObjectEx>(x =>
+                {
+                    if (x is ReactiveWrapper<int?> wrapper && wrapper.Object is { } iVal)
+                    {
+                        if (!JobManager.Manager.IsInProcess && JobManager.Manager.ReadyToRun)
+                        {
+                            JobManager.Manager.StartJob(iVal);
+                        }
+                    }
+
+                }))
+                .DisposeWith(Subscriptions);
 
             var hasValidSettings = Camera.WhenPropertyChanged(x => x.CurrentSettings)
                                          .CombineLatest(this.WhenPropertyChanged(y => y.IsJobInProgress),
@@ -321,26 +351,31 @@ namespace DIPOL_UF.Models
                               (x, y) => x && !y)
                           .ObserveOnUi();
 
-
             StartJobCommand =
-                ReactiveCommand.Create(() =>
+                ReactiveCommand.Create<Unit, bool>(_ =>
                                    {
                                        if (!JobManager.Manager.IsInProcess)
                                        {
-                                           if(JobManager.Manager.ReadyToRun)
-                                               JobManager.Manager.StartJob();
+                                           if (JobManager.Manager.ReadyToRun)
+                                               return true;
                                            else
                                            {
-                                               // TODO : Inform something is wrong
+                                               MessageBox.Show(Properties.Localization.JobManager_InvalidState_Text,
+                                                   Properties.Localization.JobManager_InvalidState_Header,
+                                                   MessageBoxButton.OK, MessageBoxImage.Error);
                                            }
                                        }
                                        else
                                        {
                                            JobManager.Manager.StopJob();
                                        }
+                                       return false;
                                    },
                                    jobAvailableObs)
                                .DisposeWith(Subscriptions);
+
+            StartJobCommand.Where(x => x).InvokeCommand(CycleConfigWindow.ViewRequested).DisposeWith(Subscriptions);
+            
         }
 
         private void TimerTick(object sender, ElapsedEventArgs e)
@@ -358,7 +393,7 @@ namespace DIPOL_UF.Models
         {
             if(!IsDisposed && disposing)
                 _pbTimer.Stop();
-                _pbTimer.Elapsed -= TimerTick;
+            _pbTimer.Elapsed -= TimerTick;
 
             base.Dispose(disposing);
         }

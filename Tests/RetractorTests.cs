@@ -32,9 +32,16 @@ namespace Tests
     [TestFixture]
     public class RetractorMotorStaticTests
     {
-        private StepMotorHandler _device;
+        private IAsyncMotor _device;
         private SerialPort _port;
         private const string TestPort = @"COM4";
+        private IAsyncMotorFactory _factory;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _factory = new StepMotorHandler.StepMotorFactory();
+        }
 
         [TearDown]
         public void TearDown()
@@ -55,7 +62,7 @@ namespace Tests
             Assume.That(_device, Is.Null);
 
             _port = new SerialPort(TestPort);
-            _device = await StepMotorHandler.TryCreateFromAddress(_port, 1);
+            _device = await _factory.TryCreateFromAddress(_port, 1);
             Assume.That(_device, Is.Not.Null);
             Assert.That(await _device.GetActualPositionAsync(), Is.EqualTo(0));
 
@@ -69,7 +76,7 @@ namespace Tests
             Assume.That(_device, Is.Null);
             _port = new SerialPort(TestPort);
 
-            _device = await StepMotorHandler.TryCreateFirst(_port);
+            _device = await _factory.TryCreateFirst(_port);
             Assume.That(_device, Is.Not.Null);
             
             Assert.That(await _device.GetActualPositionAsync(), Is.EqualTo(0));
@@ -84,7 +91,7 @@ namespace Tests
             Assume.That(_device, Is.Null);
             _port = new SerialPort(TestPort);
 
-            _device = await StepMotorHandler.CreateFirstOrFromAddress(_port, 1);
+            _device = await _factory.CreateFirstOrFromAddress(_port, 1);
             Assume.That(_device, Is.Not.Null);
 
             Assert.That(await _device.GetActualPositionAsync(), Is.EqualTo(0));
@@ -97,14 +104,15 @@ namespace Tests
     public class RetractorMotorTests
     {
         private SerialPort _port;
-        private StepMotorHandler _motor;
+        private IAsyncMotor _motor;
         private const string PortName = @"COM4";
 
         [SetUp]
         public async Task SetUp()
         {
+            var factory = new StepMotorHandler.StepMotorFactory();
             _port = new SerialPort(PortName);
-            _motor = await StepMotorHandler.CreateFirstOrFromAddress(_port, 1);
+            _motor = await factory.CreateFirstOrFromAddress(_port, 1);
 
         }
 
@@ -125,7 +133,7 @@ namespace Tests
             await _motor.ReturnToOriginAsync();
             Assert.That(await _motor.GetActualPositionAsync(), Is.EqualTo(0));
 
-            var reply = await _motor.SendCommandAsync(Command.MoveToPosition, pos, CommandType.Absolute);
+            var reply = await _motor.MoveToPosition(pos, CommandType.Absolute);
             Assert.AreEqual(ReturnStatus.Success, reply.Status);
 
             await _motor.WaitForPositionReachedAsync();

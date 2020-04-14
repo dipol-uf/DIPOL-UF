@@ -23,20 +23,26 @@
 //     SOFTWARE.
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.ServiceModel.Channels;
 using System.Threading.Tasks;
 using System.Windows;
+using ANDOR_CS;
 using ANDOR_CS.Classes;
+using ANDOR_CS.Enums;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DynamicData;
+using DynamicData.Binding;
 using Newtonsoft.Json;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -52,12 +58,12 @@ namespace DIPOL_UF.ViewModels
             public string? Value { get; }
 
             public bool IsOverriden { get; }
-
+            public bool IsNotSpecified => Value is null && !IsOverriden;
             public CollectionItem(string name, string? value, bool isOverriden = false)
                 => (SettingsName, Value, IsOverriden) = (name, value, isOverriden);
         }
         private DescendantProvider? _acqSettsProvider;
-        private readonly CameraBase _firstCamera;
+        private readonly IDevice _firstCamera;
         private readonly ISourceList<CollectionItem> _propList;
         
         public event EventHandler? FileDialogRequested;
@@ -97,7 +103,16 @@ namespace DIPOL_UF.ViewModels
             InitializeCommands();
             HookObservables();
 
-            AcquisitionSettingsProxy = new DescendantProxy(_acqSettsProvider, x => new AcquisitionSettingsViewModel((ReactiveWrapper<SettingsBase>)x, false)).DisposeWith(Subscriptions);
+            AcquisitionSettingsProxy = new DescendantProxy(_acqSettsProvider, x => new AcquisitionSettingsViewModel((ReactiveWrapper<IAcquisitionSettings>)x, false)).DisposeWith(Subscriptions);
+
+
+            CreateValidators();
+
+        }
+
+        private void CreateValidators()
+        {
+            CreateValidator(this.WhenPropertyChanged(x => x.ObjectName).Select(x => (nameof(Validators.Validate.CannotBeDefault), Validators.Validate.CannotBeDefault(x.Value))), nameof(ObjectName));
         }
 
         private void PushValues()
@@ -111,27 +126,53 @@ namespace DIPOL_UF.ViewModels
             ObjectName = Model.Object.StarName ?? $"star_{DateTimeOffset.UtcNow:yyMMddHHmmss}";
             Description = Model.Object.Description;
             CycleType = Model.Object.CycleType;
-            //SharedSettingsRepresentation.Clear();
+            
             if (Model.Object.SharedParameters is { } @params)
             {
-                var perCamSetts = Model.Object.PerCameraParameters?.Select(x => x.Key).ToList();
+                var camNames = JobManager.Manager.GetCameras().Keys.ToList();
+
+                var perCamSetts = Model.Object.PerCameraParameters?.Where(x => x.Value.Keys.Join(camNames, y => y, z => z, (y, z) => Unit.Default).Any())
+                    .Select(x => x.Key).ToList();
 
                 var dataToLoad = @params.AsDictionary(true)
-                    .Select(x => new CollectionItem(x.Key, x.Value switch
-                        {
-                            float f => f.ToString("F"),
-                            Enum @enum => ConverterImplementations.EnumToDescriptionConversion(@enum),
-                            { } val => val.ToString(),
-                            _ => "Overriden"
-                        },
-                        perCamSetts?.Contains(x.Key) == true))
-                    .Where(x => x.Value != "Overriden" || x.IsOverriden);
+                    .Select(x => (x.Value, perCamSetts?.Contains(x.Key) == true) switch
+                    {
+                        (float f, bool ovr) => new CollectionItem(x.Key, f.ToString("F"), ovr),
+                        (Enum @enum, bool ovr) => new CollectionItem(x.Key,
+                            ConverterImplementations.EnumToDescriptionConversion(@enum), ovr),
+                        ({ } val, bool ovr) => new CollectionItem(x.Key, val.ToString(), ovr),
+                        (null, true) => new CollectionItem(x.Key, @"Overriden", true), 
+                        (null, false) => new CollectionItem(x.Key, null, false),
+                    })
+                    .Where(FilterEssential);
                 _propList.Edit(x =>
                 {
                     x.Clear();
                     x.AddRange(dataToLoad);
                 });
             }
+        }
+
+
+        private bool FilterEssential(CollectionItem item)
+        {
+            if (item.IsNotSpecified)
+            {
+                return item.SettingsName switch
+                {
+                    nameof(IAcquisitionSettings.EMCCDGain) when Model.Object?.SharedParameters.OutputAmplifier !=
+                                                                OutputAmplification.ElectronMultiplication => false,
+                    nameof(IAcquisitionSettings.AccumulateCycle) when
+                    Model.Object?.SharedParameters.AcquisitionMode is { } mode
+                    && (mode == AcquisitionMode.SingleScan || mode == AcquisitionMode.RunTillAbort) => false,
+                    nameof(IAcquisitionSettings.KineticCycle) when
+                    Model.Object?.SharedParameters.AcquisitionMode is { } mode
+                    && (mode == AcquisitionMode.SingleScan || mode == AcquisitionMode.Accumulation) => false,
+                    _ => true
+                };
+            }
+
+            return true;
         }
 
         private void InitializeCommands()
@@ -142,9 +183,13 @@ namespace DIPOL_UF.ViewModels
                 Model.Object = null;
                 w?.Close();
             });
-                //.DisposeWith(Subscriptions);
+            //.DisposeWith(Subscriptions);
 
-            SaveAndSubmitButtonCommand = ReactiveCommand.Create<Window, Window>(x => x)
+            var canSubmit = _propList.Connect().Select(_ => _propList.Items.Any(x => x.IsNotSpecified))
+                .CombineLatest(ObserveHasErrors, (x, y) => !x && !y);
+
+
+            SaveAndSubmitButtonCommand = ReactiveCommand.Create<Window, Window>(x => x, canSubmit)
                 .DisposeWith(Subscriptions);
 
             LoadButtonCommand = ReactiveCommand.Create<Unit, Unit>(x => x)
@@ -156,14 +201,14 @@ namespace DIPOL_UF.ViewModels
             CreateNewButtonCommand = ReactiveCommand.Create(() => Unit.Default).DisposeWith(Subscriptions);
 
             _acqSettsProvider = new DescendantProvider(
-                ReactiveCommand.Create<object, ReactiveObjectEx>(_ => new ReactiveWrapper<SettingsBase>(GetNewSettingsTemplate())),
+                ReactiveCommand.Create<object, ReactiveObjectEx>(_ => new ReactiveWrapper<IAcquisitionSettings>(GetNewSettingsTemplate())),
                 null, null,
                 ReactiveCommand.Create<ReactiveObjectEx>(x =>
                 {
-                    if (x is ReactiveWrapper<SettingsBase> wrapper)
+                    if (x is ReactiveWrapper<IAcquisitionSettings> wrapper)
                     {
                         Model.Object.SharedParameters = new SharedSettingsContainer(wrapper.Object);
-                        
+                        Model.Object.PerCameraParameters = new Dictionary<string, Dictionary<string, object?>>();
                         // If the settings are applied to the camera, do not dispose it 
                         if (ReferenceEquals(_firstCamera.CurrentSettings, wrapper.Object))
                             wrapper.Object = null!;
@@ -174,7 +219,7 @@ namespace DIPOL_UF.ViewModels
                 })).DisposeWith(Subscriptions);
         }
 
-        private SettingsBase GetNewSettingsTemplate()
+        private IAcquisitionSettings GetNewSettingsTemplate()
         {
             var template = _firstCamera.CurrentSettings?.MakeCopy() ?? _firstCamera.GetAcquisitionSettingsTemplate();
             if (Model.Object.SharedParameters is { } shPar)

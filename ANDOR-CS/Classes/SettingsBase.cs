@@ -51,7 +51,7 @@ namespace ANDOR_CS.Classes
     /// <summary>
     /// Base class for all the settings profiles
     /// </summary>
-    public abstract class SettingsBase : IDisposable, INotifyPropertyChanged
+    public abstract class SettingsBase : IAcquisitionSettings
     {
         private static readonly Regex SetFunctionNameParser = new Regex(@"^set(.+)$", 
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -92,7 +92,7 @@ namespace ANDOR_CS.Classes
 
         public bool IsDisposed { get; private set; }
 
-        public CameraBase Camera { get; protected set; }
+        public Camera Camera { get; protected set; }
 
         /// <summary>
         /// Stores the value of currently set vertical speed
@@ -784,7 +784,7 @@ namespace ANDOR_CS.Classes
 
         public abstract (int Low, int High) GetEmGainRange();
 
-        public virtual SettingsBase MakeCopy()
+        public virtual IAcquisitionSettings MakeCopy()
         {
             var copy = MakeEmptyCopy();
             foreach (var prop in SerializedProperties)
@@ -863,6 +863,18 @@ namespace ANDOR_CS.Classes
                 {
                     switch (pars.Length)
                     {
+                        case 1 when pars[0].ParameterType.IsEnum && val is object[] strFlags && strFlags.All(x => x is string):
+                            // WATCH : Fixed case for [Flag] enums
+                            var enumFlagStr = strFlags.Cast<string>()
+                                .Aggregate((old, @new) => old + ", " + @new);
+                            if (!string.IsNullOrWhiteSpace(enumFlagStr))
+                            {
+                                var enumResult = Enum.Parse(pars[0].ParameterType, enumFlagStr);
+                                method.Invoke(this, new[] { enumResult });
+                            }
+                            else
+                                throw new ArgumentException("Deserialized value cannot be parsed.");
+                            break;
                         case 1 when pars[0].ParameterType.IsEnum:
                         {
                             if (val is string enumStr)

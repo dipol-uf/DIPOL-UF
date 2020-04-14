@@ -30,6 +30,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Controls;
+using ANDOR_CS;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Properties;
@@ -43,7 +44,7 @@ namespace DIPOL_UF.Converters
         private static Dictionary<string, string> _cachedAliases;
         private static Dictionary<string, string> _cachedFilters;
 
-        public static string CameraToStringAliasConversion(CameraBase cam)
+        public static string CameraToStringAliasConversion(IDevice cam)
         {
             if (cam is null)
                 return string.Empty;
@@ -59,7 +60,7 @@ namespace DIPOL_UF.Converters
                 : camString;
         }
 
-        public static string CameraToFilterConversion(CameraBase cam)
+        public static string CameraToFilterConversion(IDevice cam)
         {
             if (cam is null)
                 return string.Empty;

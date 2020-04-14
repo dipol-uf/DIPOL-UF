@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using ANDOR_CS;
 using ANDOR_CS.Classes;
 using DIPOL_UF.Enums;
 using Newtonsoft.Json;
@@ -33,8 +34,8 @@ namespace DIPOL_UF.Jobs
         [JsonProperty(NullValueHandling = NullValueHandling.Include)]
         public SharedSettingsContainer SharedParameters { get; set; } = new SharedSettingsContainer();
 
-        public IReadOnlyDictionary<string, SettingsBase> CreateTemplatesForCameras(
-            IReadOnlyDictionary<string, CameraBase> cameras)
+        public IReadOnlyDictionary<string, IAcquisitionSettings> CreateTemplatesForCameras(
+            IReadOnlyDictionary<string, IDevice> cameras)
         {
             _ = cameras ?? throw new ArgumentNullException(nameof(cameras));
 
@@ -51,14 +52,16 @@ namespace DIPOL_UF.Jobs
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentException(nameof(key));
 
-            return PerCameraParameters
+            var result = PerCameraParameters
                        ?.Where(x => x.Value?.ContainsKey(key) is true)
                        .ToDictionary(x => x.Key, x => x.Value?[key])
                    ?? new Dictionary<string, object?>();
+
+            return result;
         }
 
         public static Target1 FromSettings(
-            IReadOnlyDictionary<string, SettingsBase> settings,
+            IReadOnlyDictionary<string, IAcquisitionSettings> settings,
             string? starName = null,
             string? description = null,
             CycleType cycleType = CycleType.Polarimetric)
@@ -91,6 +94,7 @@ namespace DIPOL_UF.Jobs
             };
 
         object ICloneable.Clone() => Clone();
+       
     }
 
     

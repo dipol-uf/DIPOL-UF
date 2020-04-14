@@ -2,7 +2,7 @@
 
 //     MIT License
 //     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
+//     Copyright(c) 2018-2020 Ilia Kosenkov
 //     
 //     Permission is hereby granted, free of charge, to any person obtaining a copy
 //     of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,10 @@
 //     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //     SOFTWARE.
+#nullable enable
+#pragma warning disable 1591
 
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.Serialization;
 using ANDOR_CS.Enums;
@@ -35,39 +36,41 @@ namespace ANDOR_CS.AcquisitionMetadata
     public class Request
     {
         [DataMember]
-        public ReadOnlyCollection<FitsKey> FitsKeys { get; private set; }
+        public List<FitsKey> FitsKeys { get; private set; }
 
         [DataMember]
         public ImageFormat ImageFormat { get; private set; }
+        
+        [DataMember]
+        public FrameType FrameType { get; private set; }
 
-        public Request()
-        {
-            ImageFormat = ImageFormat.UnsignedInt16;
-        }
-
+        [DataMember]
+        public bool IsSkyflat { get; private set; }
         public Request(
             ImageFormat imageFormat = ImageFormat.UnsignedInt16,
-            IEnumerable<FitsKey> keys = default)
+            FrameType frameType = FrameType.Light,
+            bool isSkyflat = false,
+            IEnumerable<FitsKey>? keys = default)
         {
-            FitsKeys = keys is null
-                ? null
-                : new ReadOnlyCollection<FitsKey>(keys.ToList());
+            FitsKeys = keys?.ToList() ?? new List<FitsKey>();
+            FrameType = frameType;
             ImageFormat = imageFormat;
+            IsSkyflat = isSkyflat;
         }
 
         public Request WithNewKeywords(IEnumerable<FitsKey> newKeys)
         {
-            if(FitsKeys is null && newKeys is null)
-                return new Request(ImageFormat);
+            if(FitsKeys?.Count == 0 && newKeys is null)
+                return new Request(ImageFormat, FrameType);
 
             var keys = new List<FitsKey>();
 
-            if(!(FitsKeys is null))
+            if(FitsKeys?.Any() == true)
                 keys.AddRange(FitsKeys);
-            if(!(newKeys is null))
+            if(newKeys is {})
                 keys.AddRange(newKeys);
               
-            return new Request(ImageFormat, keys);
+            return new Request(ImageFormat, FrameType, IsSkyflat, keys);
         }
 
     }
