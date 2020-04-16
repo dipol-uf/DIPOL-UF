@@ -961,6 +961,9 @@ namespace ANDOR_CS.Classes
                     // BUG : Fix equalities
                     setter.Invoke(this, (name, value) switch
                     {
+                        (nameof(ExposureTime), float time) => new object[] {time},
+                        (nameof(ExposureTime), double time) => new object[] {(float)time},
+
                         (nameof(VSSpeed), float speed) => new object[]
                             {Array.IndexOf(Camera.Properties.VSSpeeds, speed)},
                         (nameof(VSSpeed), double speed) => new object[]
@@ -980,7 +983,7 @@ namespace ANDOR_CS.Classes
                         (nameof(KineticCycle), (int frames, float time)) => new object[] {frames, time},
                         (nameof(KineticCycle), (int frames, double time)) => new object[] { frames, (float) time },
 
-                        var (_, otherVal) => new[] {Convert.ChangeType(otherVal, setter.ReturnType)}
+                        var (_, otherVal) => new[] {otherVal}
                     });
                    props.Add(name);
                 }
