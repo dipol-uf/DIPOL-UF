@@ -39,6 +39,7 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Exceptions;
 using ANDOR_CS.Attributes;
 using FITS_CS;
+using MathNet.Numerics;
 using SettingsManager;
 
 using Serializers;
@@ -958,21 +959,26 @@ namespace ANDOR_CS.Classes
             {
                 if (value is { })
                 {
-                    // BUG : Fix equalities
                     setter.Invoke(this, (name, value) switch
                     {
                         (nameof(ExposureTime), float time) => new object[] {time},
                         (nameof(ExposureTime), double time) => new object[] {(float)time},
 
-                        (nameof(VSSpeed), float speed) => new object[]
-                            {Array.IndexOf(Camera.Properties.VSSpeeds, speed)},
-                        (nameof(VSSpeed), double speed) => new object[]
-                            {Array.IndexOf(Camera.Properties.VSSpeeds, (float)speed)},
+                        (nameof(VSSpeed), float speed) => new object[] { Camera.Properties.VSSpeeds.IndexOf(speed, 0) },
+                        (nameof(VSSpeed), double speed) => new object[] { Camera.Properties.VSSpeeds.IndexOf((float)speed, 0) },
 
-                        (nameof(HSSpeed), float speed) => new object[]
-                            {GetAvailableHSSpeeds().First(y => y.Speed.Equals(speed)).Index},
-                        (nameof(HSSpeed), double speed) => new object[]
-                            {GetAvailableHSSpeeds().First(y => y.Speed.Equals((float)speed)).Index},
+                        (nameof(HSSpeed), float speed) => 
+                            new object[] {GetAvailableHSSpeeds()
+                                .Where(y => y.Speed.AlmostEqualRelative(speed))
+                                .Select(y => y.Index)
+                                .FirstOrDefault()
+                            },
+                        (nameof(HSSpeed), double speed) =>
+                            new object[] {GetAvailableHSSpeeds()
+                                .Where(y => y.Speed.AlmostEqualRelative((float)speed))
+                                .Select(y => y.Index)
+                                .FirstOrDefault()
+                            },
 
                         (nameof(PreAmpGain), string gain) => new object[]
                             {GetAvailablePreAmpGain().First(y => y.Name == gain).Index},
@@ -1000,7 +1006,7 @@ namespace ANDOR_CS.Classes
                 var result = new List<FitsKey>();
 
                 if (attrs is null)
-                    attrs = new List<FitsKeyAttribute>() {null};
+                    attrs = new List<FitsKeyAttribute> {null};
 
                 foreach (var attr in attrs)
                 {
@@ -1011,7 +1017,7 @@ namespace ANDOR_CS.Classes
 
                     var val = value;
 
-                    if (val is ITuple tuple && attr?.Index is int index && index < tuple.Length)
+                    if (val is ITuple tuple && attr?.Index is { } index && index < tuple.Length)
                         val = tuple[index];
 
                     if(val is int)

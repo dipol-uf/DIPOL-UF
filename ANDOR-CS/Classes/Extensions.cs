@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using MathNet.Numerics;
 
 namespace ANDOR_CS.Classes
 { 
@@ -63,6 +64,15 @@ namespace ANDOR_CS.Classes
 
                 return index;
             }
+        }
+
+        internal static int IndexOf(this float[] array, float item, int @default = -1)
+        {
+            for(var i = 0; i < array.Length; i++)
+                if (array[i].AlmostEqualRelative(item))
+                    return i;
+
+            return @default;
         }
 
         public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> @this,
