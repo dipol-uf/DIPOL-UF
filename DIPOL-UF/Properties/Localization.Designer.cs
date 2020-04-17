@@ -1141,6 +1141,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Photometry cycle should not be run when the insrument is in &quot;Polarimeter&quot; regime. Make sure the instrument is switched to the &quot;Photometer&quot; mode..
+        /// </summary>
+        public static string JobManager_NotPhotometry {
+            get {
+                return ResourceManager.GetString("JobManager_NotPhotometry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polarimetry cycle requires connected step motors and instrument in &quot;Polarimeter&quot; regime. Make sure motors are connected and instrument mode is switched to &quot;Polarimeter&quot;..
+        /// </summary>
+        public static string JobManager_NotPolarimetry {
+            get {
+                return ResourceManager.GetString("JobManager_NotPolarimetry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Take calibrations?.
         /// </summary>
         public static string JobManager_TakeCalibrations_Header {

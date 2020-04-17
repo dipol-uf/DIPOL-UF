@@ -651,4 +651,10 @@ Position is {2}.</value>
   <data name="JobSettings_PerCameraExposures" xml:space="preserve">
     <value>Individual exposure times:</value>
   </data>
+  <data name="JobManager_NotPhotometry" xml:space="preserve">
+    <value>Photometry cycle should not be run when the insrument is in "Polarimeter" regime. Make sure the instrument is switched to the "Photometer" mode.</value>
+  </data>
+  <data name="JobManager_NotPolarimetry" xml:space="preserve">
+    <value>Polarimetry cycle requires connected step motors and instrument in "Polarimeter" regime. Make sure motors are connected and instrument mode is switched to "Polarimeter".</value>
+  </data>
 </root>

@@ -223,8 +223,8 @@ namespace DIPOL_UF.Jobs
 
                 AcquisitionJob = await ConstructJob(paths["Light"]);
 
-                if (AcquisitionJob.ContainsActionOfType<MotorAction>()
-                    && _windowRef.PolarimeterMotor is null)
+                if(CurrentTarget1.CycleType is CycleType.Polarimetric
+                    && (!AcquisitionJob.ContainsActionOfType<MotorAction>() || _windowRef.PolarimeterMotor is null))
                     throw new InvalidOperationException("Cannot execute current control with no motor connected.");
 
                 BiasJob = await ConstructJob(paths["Bias"]);
@@ -294,15 +294,14 @@ namespace DIPOL_UF.Jobs
                         ? ImageFormat.SignedInt32
                         : ImageFormat.UnsignedInt16));
 
-                if (AcquisitionJob.ContainsActionOfType<MotorAction>()
-                    && (_windowRef.Regime == InstrumentRegime.Photometer ||
+                if (CurrentTarget1.CycleType == CycleType.Polarimetric
+                    && (_windowRef.Regime != InstrumentRegime.Polarimeter ||
                         _windowRef.PolarimeterMotor is null))
-                {
-                    throw new InvalidOperationException(
-                        _windowRef.PolarimeterMotor is null
-                        ? "Cannot execute current control with no motor connected."
-                            : "Cannot do polarimetry job in a non-polarimeter regime.");
-                }
+                    throw new InvalidOperationException(Localization.JobManager_NotPolarimetry);
+
+                if (CurrentTarget1.CycleType == CycleType.Photometric
+                    && _windowRef.Regime == InstrumentRegime.Polarimeter)
+                    throw new InvalidOperationException(Localization.JobManager_NotPhotometry);
 
                 var calibrationsMade = false;
                 await Task.Run(async ()  =>

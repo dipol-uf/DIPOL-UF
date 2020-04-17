@@ -37,6 +37,7 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DipolImage;
 using DIPOL_UF.Converters;
+using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -374,7 +375,9 @@ namespace DIPOL_UF.Models
                                    jobAvailableObs)
                                .DisposeWith(Subscriptions);
 
-            StartJobCommand.Where(x => x).InvokeCommand(CycleConfigWindow.ViewRequested).DisposeWith(Subscriptions);
+            StartJobCommand
+                .Where(x => x)
+                .InvokeCommand(CycleConfigWindow.ViewRequested).DisposeWith(Subscriptions);
             
         }
 
