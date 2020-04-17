@@ -30,31 +30,24 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
-using System.ServiceModel.Channels;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 using ANDOR_CS;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
-using DIPOL_UF.Annotations;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DynamicData;
-using DynamicData.Aggregation;
 using DynamicData.Binding;
-using DynamicData.Tests;
 using Newtonsoft.Json;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using SettingsBase = ANDOR_CS.Classes.SettingsBase;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -303,6 +296,12 @@ namespace DIPOL_UF.ViewModels
                     }
                 });
             }
+            else
+                _exposureList.Edit(x =>
+                {
+                    foreach (var item in x.Items)
+                        item.Value = string.Empty;
+                });
         }
 
 

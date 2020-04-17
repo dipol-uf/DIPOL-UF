@@ -567,7 +567,7 @@ Position is {2}.</value>
     <value>Acquisition cycle failed!</value>
   </data>
   <data name="JobManager_MB_Failed_Text" xml:space="preserve">
-    <value>Acquisition cycled was interrupted with the following error: 
+    <value>Acquisition cycle was interrupted with the following error: 
 {0}</value>
   </data>
   <data name="JobManager_MB_Finished_Header" xml:space="preserve">
