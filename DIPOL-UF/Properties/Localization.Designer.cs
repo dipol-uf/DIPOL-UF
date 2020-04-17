@@ -1258,7 +1258,16 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Settings:.
+        ///   Looks up a localized string similar to Individual exposure times:.
+        /// </summary>
+        public static string JobSettings_PerCameraExposures {
+            get {
+                return ResourceManager.GetString("JobSettings_PerCameraExposures", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shared settings:.
         /// </summary>
         public static string JobSettings_SettingsBlock {
             get {

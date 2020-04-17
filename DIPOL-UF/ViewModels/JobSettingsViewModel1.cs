@@ -23,26 +23,34 @@
 //     SOFTWARE.
 #nullable enable
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using System.ServiceModel.Channels;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using ANDOR_CS;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
+using DIPOL_UF.Annotations;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DynamicData;
+using DynamicData.Aggregation;
 using DynamicData.Binding;
+using DynamicData.Tests;
 using Newtonsoft.Json;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -52,7 +60,92 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class JobSettingsViewModel1 : ReactiveViewModel<ReactiveWrapper<Target1>>
     {
-        public class CollectionItem
+        public sealed class PerCameraSettingItem : INotifyPropertyChanged, INotifyDataErrorInfo, IDisposable
+        { 
+            private readonly Dictionary<string, string> _valueErrors = new Dictionary<string, string>();
+            private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
+            private string _value = string.Empty;
+            public string CameraName { get; }
+
+            public IObservable<bool> ObserveHasErrors { get; } 
+            public bool HasErrors => _valueErrors.Any();
+            public string Value
+            {
+                get => _value;
+                set
+                {
+                    value ??= string.Empty;
+                    if (value == _value) return;
+                    _value = value;
+                    RaisePropertyChanged();
+                }
+            }
+
+            public event PropertyChangedEventHandler? PropertyChanged;
+            public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
+
+            public PerCameraSettingItem(string camera, string value)
+            {
+                (CameraName, Value) = (camera, value);
+                this.WhenPropertyChanged(x => x.Value)
+                    .Select(x => x.Value)
+                    .Subscribe(ValidateValue)
+                    .DisposeWith(_subscriptions);
+
+                ObserveHasErrors = Observable
+                    .FromEventPattern<DataErrorsChangedEventArgs>(x => ErrorsChanged += x, x => ErrorsChanged -= x)
+                    .Select(_ => HasErrors);
+
+                RaiseErrorsChanged(nameof(Value));
+            }
+
+            private void ValidateValue(string s)
+            {
+                if (string.IsNullOrWhiteSpace(s))
+                {
+                    _valueErrors.Remove(nameof(Validators.Validate.CanBeParsed));
+                    _valueErrors.Remove(nameof(Validators.Validate.CannotBeLessThan));
+
+                }
+                else
+                {
+                    var m1 = Validators.Validate.CanBeParsed(s, out float f);
+                    if (m1 is { })
+                    {
+                        _valueErrors[nameof(Validators.Validate.CanBeParsed)] = m1;
+                        _valueErrors.Remove(nameof(Validators.Validate.CannotBeLessThan));
+                    }
+                    else
+                    {
+                        var m2 = Validators.Validate.CannotBeLessThan(f, 0f);
+                        _valueErrors.Remove(nameof(Validators.Validate.CanBeParsed));
+                        if (m2 is { })
+                            _valueErrors[nameof(Validators.Validate.CannotBeLessThan)] = m2;
+                        else
+                            _valueErrors.Remove(nameof(Validators.Validate.CannotBeLessThan));
+                    }
+                }
+                RaiseErrorsChanged(nameof(Value));
+            }
+
+            private void RaisePropertyChanged([CallerMemberName] string? propertyName = null) => 
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+            private void RaiseErrorsChanged([CallerMemberName] string? propertyName = null) =>
+                ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+
+            public IEnumerable GetErrors(string propertyName) =>
+                propertyName switch
+                {
+                    nameof(Value) => _valueErrors.Values,
+                    _ => Enumerable.Empty<object>()
+                };
+
+            public void Dispose() 
+                => _subscriptions?.Dispose();
+        }
+
+        public sealed class CollectionItem
         {
             public string SettingsName { get; }
             public string? Value { get; }
@@ -65,7 +158,8 @@ namespace DIPOL_UF.ViewModels
         private DescendantProvider? _acqSettsProvider;
         private readonly IDevice _firstCamera;
         private readonly ISourceList<CollectionItem> _propList;
-        
+        private readonly ISourceCache<PerCameraSettingItem, string> _exposureList;
+
         public event EventHandler? FileDialogRequested;
 
         public DescendantProxy AcquisitionSettingsProxy { get; }
@@ -80,6 +174,7 @@ namespace DIPOL_UF.ViewModels
         public ReactiveCommand<string, Unit>? LoadActionCommand { get; private set; }
 
         public ReadOnlyObservableCollection<CollectionItem> SharedSettingsView { get; }
+        public ReadOnlyObservableCollection<PerCameraSettingItem> PerCameraSettingsView { get; }
 
         [Reactive]
         public string? ObjectName { get; set; }
@@ -96,12 +191,23 @@ namespace DIPOL_UF.ViewModels
 
             _propList = new SourceList<CollectionItem>();
             _propList.Connect().ObserveOnDispatcher().Bind(out var collection, 2).SubscribeDispose(Subscriptions);
+
+            _exposureList = new SourceCache<PerCameraSettingItem, string>(x => x.CameraName);
+            _exposureList.Connect().ObserveOnDispatcher().Bind(out var expList, 2).DisposeMany().SubscribeDispose(Subscriptions);
+
+            PerCameraSettingsView = expList;
             SharedSettingsView = collection;
-            
-            LoadValues();
+            var camNames = JobManager.Manager.GetCameras().Keys.ToList();
+
+            _exposureList.Edit(x =>
+            {
+                x.Load(camNames.Select(y => new PerCameraSettingItem(y, string.Empty)));
+            });
+
 
             InitializeCommands();
             HookObservables();
+            LoadValues();
 
             AcquisitionSettingsProxy = new DescendantProxy(_acqSettsProvider, x => new AcquisitionSettingsViewModel((ReactiveWrapper<IAcquisitionSettings>)x, false)).DisposeWith(Subscriptions);
 
@@ -120,16 +226,36 @@ namespace DIPOL_UF.ViewModels
             Model.Object.StarName = ObjectName;
             Model.Object.Description = Description;
             Model.Object.CycleType = CycleType;
+
+            var sharedExposure = Model.Object.SharedParameters?.ExposureTime ?? 0f;
+
+            Model.Object.PerCameraParameters ??= new Dictionary<string, Dictionary<string, object?>>();
+
+            if (!Model.Object.PerCameraParameters.ContainsKey(nameof(IAcquisitionSettings.ExposureTime)))
+                Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)] =
+                    new Dictionary<string, object?>();
+
+            foreach (var (camName, valueContainer) in _exposureList.KeyValues)
+            {
+                if (!valueContainer.HasErrors && float.TryParse(valueContainer.Value, NumberStyles.Any,
+                    NumberFormatInfo.InvariantInfo, out var expTime))
+                    Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)][camName] = expTime;
+                else if(!Model.Object.PerCameraParameters.ContainsKey(camName))
+                    Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)][camName] = sharedExposure;
+            }
+
         }
         private void LoadValues()
         {
             ObjectName = Model.Object.StarName ?? $"star_{DateTimeOffset.UtcNow:yyMMddHHmmss}";
             Description = Model.Object.Description;
             CycleType = Model.Object.CycleType;
+
+            var camNames = JobManager.Manager.GetCameras().Keys.ToList();
+
             
             if (Model.Object.SharedParameters is { } @params)
             {
-                var camNames = JobManager.Manager.GetCameras().Keys.ToList();
 
                 var perCamSetts = Model.Object.PerCameraParameters?.Where(x => x.Value.Keys.Join(camNames, y => y, z => z, (y, z) => Unit.Default).Any())
                     .Select(x => x.Key).ToList();
@@ -149,6 +275,32 @@ namespace DIPOL_UF.ViewModels
                 {
                     x.Clear();
                     x.AddRange(dataToLoad);
+                });
+            }
+
+            if (Model.Object.PerCameraParameters?.ContainsKey(nameof(IAcquisitionSettings.ExposureTime)) == true)
+            {
+                var exposures = Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)]
+                    .ToDictionary(x => x.Key,
+                        x => x.Value switch
+                        {
+                            float f => f.ToString("F"),
+                            double d => d.ToString("F"),
+                            _ => ""
+                        });
+
+                _exposureList.Edit(x =>
+                {
+                    foreach (var (camName, val) in exposures)
+                    {
+                        if (x.Lookup(camName) is var lookup && lookup.HasValue)
+                        {
+                            lookup.Value.Value = val;
+                            x.AddOrUpdate(lookup.Value);
+                        }
+                        else
+                            x.AddOrUpdate(new PerCameraSettingItem(camName, val));
+                    }
                 });
             }
         }
@@ -184,10 +336,12 @@ namespace DIPOL_UF.ViewModels
                 w?.Close();
             });
             //.DisposeWith(Subscriptions);
-
+            
             var canSubmit = _propList.Connect().Select(_ => _propList.Items.Any(x => x.IsNotSpecified))
-                .CombineLatest(ObserveHasErrors, (x, y) => !x && !y);
-
+                .CombineLatest(
+                    ObserveHasErrors,
+                    _exposureList.Connect().TrueForAny(x => x.ObserveHasErrors, (x, y) => y).Prepend(false),
+                    (x, y, z) => !x && !y && !z);
 
             SaveAndSubmitButtonCommand = ReactiveCommand.Create<Window, Window>(x => x, canSubmit)
                 .DisposeWith(Subscriptions);
@@ -287,9 +441,8 @@ namespace DIPOL_UF.ViewModels
                 await writer.WriteAsync(line);
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                // TODO : Show message box
                 return false;
             }
         }

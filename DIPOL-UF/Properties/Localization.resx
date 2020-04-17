@@ -619,7 +619,7 @@ Position is {2}.</value>
     <value>Object description:</value>
   </data>
   <data name="JobSettings_SettingsBlock" xml:space="preserve">
-    <value>Settings:</value>
+    <value>Shared settings:</value>
   </data>
   <data name="Settings_ExposureTime" xml:space="preserve">
     <value>Exposure time:</value>
@@ -647,5 +647,8 @@ Position is {2}.</value>
   </data>
   <data name="JobManager_InvalidState_Text" xml:space="preserve">
     <value>The job system is in invalid state. This inidcates a miscommunication or internal error has happened. The current session may not be recovered, so it is advised to restart the application.</value>
+  </data>
+  <data name="JobSettings_PerCameraExposures" xml:space="preserve">
+    <value>Individual exposure times:</value>
   </data>
 </root>

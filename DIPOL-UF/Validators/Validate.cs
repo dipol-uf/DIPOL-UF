@@ -42,6 +42,13 @@ namespace DIPOL_UF.Validators
                 : null;
         }
 
+        public static string CannotBeLessThan(float x, float comp)
+        {
+            return x < comp
+                ? string.Format(Properties.Localization.Validation_ValueCannotBeLessThan, comp)
+                : null;
+        }
+
         public static string CannotBeGreaterThan(int x, int comp)
         {
             return x > comp

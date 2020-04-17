@@ -66,6 +66,7 @@
             <RowDefinition/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+
         </Grid.RowDefinitions>
         <AdornerDecorator Grid.ColumnSpan="2">
              <Grid VerticalAlignment="Stretch">
@@ -74,11 +75,11 @@
                     <ColumnDefinition Width="2.5*"/>
                 </Grid.ColumnDefinitions>
                  <Grid.RowDefinitions>
-                     <RowDefinition Height="Auto"/>
-                     <RowDefinition Height="Auto"/>
-                     <RowDefinition Height="Auto"/>
-                     <RowDefinition Height="Auto"/>
-
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <TextBlock 
                     Grid.Row="0" Grid.Column="0"
@@ -94,6 +95,10 @@
                     Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
                 <TextBlock 
                     Grid.Row="3" Grid.Column="0"
+                    Text="{x:Static props:Localization.JobSettings_PerCameraExposures}"
+                    Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
+                <TextBlock 
+                    Grid.Row="4" Grid.Column="0"
                     Text="{x:Static props:Localization.JobSettings_SettingsBlock}"
                     Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
 
@@ -108,9 +113,39 @@
                          Text="{extensions:ValidationBinding Path=Description, Mode=TwoWay}"
                          Style="{StaticResource TextBoxWithErrors}"/>
                 
-                <ScrollViewer Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch"
-                              Height="300">
-                    <ListView
+                <ScrollViewer Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" Height="100"
+                              VerticalScrollBarVisibility="Disabled"
+                              HorizontalScrollBarVisibility="Auto">
+                    <ListView 
+                        Style ="{StaticResource ListViewStyle}"
+                        ItemsSource="{Binding PerCameraSettingsView}">
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+                        <ListView.ItemTemplate>
+                            <ItemContainerTemplate>
+                                    <StackPanel Orientation="Vertical">
+                                        <Label 
+                                             HorizontalAlignment="Center"
+                                             Style="{StaticResource ContentFont_Label}"
+                                             Content="{Binding CameraName}"/>
+                                        <TextBox Width="100" MaxWidth="100" MinWidth="100"
+                                             HorizontalAlignment="Center"
+                                        Text="{extensions:ValidationBinding Value, Mode=TwoWay}"
+                                        Style="{StaticResource TextBoxWithErrors}"/>
+                                    </StackPanel>
+                            </ItemContainerTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </ScrollViewer>
+
+                <ScrollViewer 
+                    Background="Transparent"
+                    Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch"
+                    Height="300">
+                    <ListView 
                         Style ="{StaticResource ListViewStyle}"
                         ItemsSource="{Binding SharedSettingsView}">
                         <ListView.ItemTemplate>

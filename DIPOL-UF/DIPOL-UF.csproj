@@ -6,7 +6,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{EDB4E90E-B8FA-4A97-B684-8ED430F2A1F7}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>DIPOL_UF</RootNamespace>
     <AssemblyName>DIPOL-UF</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
@@ -170,6 +170,7 @@
     <Compile Include="Models\DipolImagePresenter.cs" />
     <Compile Include="Models\DipolMainWindow.cs" />
     <Compile Include="PropagatingEventArgs.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ReactiveWrapper.cs" />
     <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
     <Compile Include="ViewModels\CameraTabViewModel.cs" />
