@@ -37,6 +37,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using ANDOR_CS;
+using DIPOL_UF.Converters;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -59,7 +61,6 @@ namespace DIPOL_UF
 
             return (bool) (showingAsDialogField?.GetValue(window) ?? false);
         }
-
         public static void WriteLog(string entry)
         {
             System.Diagnostics.Debug.WriteLine(entry);
@@ -473,6 +474,14 @@ namespace DIPOL_UF
 
 
         
+    }
+
+    internal class CameraTupleOrderComparer : IComparer<(string Id, IDevice Camera)>
+    {
+        public static IComparer<(string Id, IDevice Camera)> Default { get; } = new CameraTupleOrderComparer();
+        public int Compare((string Id, IDevice Camera) x, (string Id, IDevice Camera) y)
+            => ConverterImplementations.CameraToIndexConversion(x.Camera)
+                .CompareTo(ConverterImplementations.CameraToIndexConversion(y.Camera));
     }
 
 #if DEBUG

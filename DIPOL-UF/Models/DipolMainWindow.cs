@@ -42,6 +42,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using ANDOR_CS;
+using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using StepMotor;
@@ -316,16 +317,19 @@ namespace DIPOL_UF.Models
                              .DisposeWith(Subscriptions);
 
             ConnectedCameras = _connectedCameras
-                               .AsObservableCache()
-                               .DisposeWith(Subscriptions);
+                .Connect()
+                .Sort(CameraTupleOrderComparer.Default)
+                .AsObservableCache()
+                .DisposeWith(Subscriptions);
 
 
 
             CameraTabs = _connectedCameras.Connect()
-                                          .Transform(x => (x.Id, Tab: new CameraTab(x.Camera)))
-                                          .DisposeManyEx(x => x.Tab?.Dispose())
-                                          .AsObservableCache()
-                                          .DisposeWith(Subscriptions);
+                .Sort(CameraTupleOrderComparer.Default)
+                .Transform(x => (x.Id, Tab: new CameraTab(x.Camera)))
+                .DisposeManyEx(x => x.Tab?.Dispose())
+                .AsObservableCache()
+                .DisposeWith(Subscriptions);
 
             WindowLoadedCommand
                 .Select(x => new ProgressBar()
@@ -728,6 +732,9 @@ namespace DIPOL_UF.Models
                     if(cam.Capabilities.Features.HasFlag(SdkFeatures.ShutterEx) ||
                        cam.Capabilities.Features.HasFlag(SdkFeatures.Shutter))
                         cam.ShutterControl(ShutterMode.PermanentlyOpen, ShutterMode.PermanentlyOpen);
+
+                    if(cam.Capabilities.Features.HasFlag(SdkFeatures.FanControl))
+                        cam.FanControl(FanMode.FullSpeed);
                 }
             });
         }
