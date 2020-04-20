@@ -148,6 +148,9 @@ namespace DIPOL_UF.ViewModels
             public CollectionItem(string name, string? value, bool isOverriden = false)
                 => (SettingsName, Value, IsOverriden) = (name, value, isOverriden);
         }
+
+
+        private bool _closedUsingButton;
         private DescendantProvider? _acqSettsProvider;
         private readonly IDevice _firstCamera;
         private readonly ISourceList<CollectionItem> _propList;
@@ -165,6 +168,8 @@ namespace DIPOL_UF.ViewModels
 
         public ReactiveCommand<string, bool>? SaveActionCommand { get; private set; }
         public ReactiveCommand<string, Unit>? LoadActionCommand { get; private set; }
+
+        public ReactiveCommand<object, Unit> WindowClosingCommand { get; private set; }
 
         public ReadOnlyObservableCollection<CollectionItem> SharedSettingsView { get; }
         public ReadOnlyObservableCollection<PerCameraSettingItem> PerCameraSettingsView { get; }
@@ -330,6 +335,7 @@ namespace DIPOL_UF.ViewModels
         {
             CancelButtonCommand = ReactiveCommand.Create<Window>(w =>
             {
+                _closedUsingButton = true;
                 // Passing `null` to indicate that the operation is cancelled
                 Model.Object = null;
                 w?.Close();
@@ -370,6 +376,12 @@ namespace DIPOL_UF.ViewModels
 
                     x.Dispose();
                 })).DisposeWith(Subscriptions);
+
+            WindowClosingCommand = ReactiveCommand.Create<object>(x =>
+            {
+                if (!_closedUsingButton)
+                    Model.Object = null!;
+            });
         }
 
         private IAcquisitionSettings GetNewSettingsTemplate()
@@ -413,8 +425,11 @@ namespace DIPOL_UF.ViewModels
                 (x, y) => (Window:x, WasSaved:y))
                 .Subscribe(x =>
                 {
-                    if(x.WasSaved && x.Window is {} window)
+                    if (x.WasSaved && x.Window is {} window)
+                    {
+                        _closedUsingButton = true;
                         window.Close();
+                    }
 
                 }).DisposeWith(Subscriptions);
 

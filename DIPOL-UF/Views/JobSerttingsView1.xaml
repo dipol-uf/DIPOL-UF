@@ -32,11 +32,13 @@
         xmlns:props="clr-namespace:DIPOL_UF.Properties"
         xmlns:vs="clr-namespace:DIPOL_UF.Views"
         mc:Ignorable="d"
+        x:Name="JobSettingsWindow"
         Title ="{x:Static props:Localization.JobSettings_WindowName}"
         WindowStyle="ToolWindow" 
         Topmost="True" WindowStartupLocation="CenterOwner"
         Height="545" Width="650"
         MinWidth="300" MinHeight="400"
+        Background="AliceBlue"
         Style="{StaticResource ResourceKey=ContentFont}"
         d:DataContext="{d:DesignInstance viewModels:JobSettingsViewModel1}"
         ResizeMode="NoResize">
@@ -48,14 +50,18 @@
                 SaveCommand="{Binding SaveActionCommand}"
                 LoadCommand="{Binding LoadActionCommand}"/>
         </behavior:EventTrigger>
-            <behavior:EventTrigger
-                EventName="ViewRequested"
-                SourceObject="{Binding AcquisitionSettingsProxy}">
-                <extensions:ShowViewAction
-                    Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
-                    Proxy="{Binding AcquisitionSettingsProxy}"
-                    Type="{x:Type vs:AcquisitionSettingsView}"/>
-            </behavior:EventTrigger>
+        <behavior:EventTrigger
+            EventName="ViewRequested"
+            SourceObject="{Binding AcquisitionSettingsProxy}">
+            <extensions:ShowViewAction
+                Owner="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                Proxy="{Binding AcquisitionSettingsProxy}"
+                Type="{x:Type vs:AcquisitionSettingsView}"/>
+        </behavior:EventTrigger>
+        <behavior:EventTrigger EventName="Closing" SourceName="JobSettingsWindow">
+            <behavior:InvokeCommandAction Command="{Binding WindowClosingCommand}"
+                                          CommandParameter="{Binding ElementName=JobSettingsWindow}"/>
+        </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
     <Grid Margin="0, 20, 0, 0">
         <Grid.ColumnDefinitions>
@@ -75,11 +81,12 @@
                     <ColumnDefinition Width="2.5*"/>
                 </Grid.ColumnDefinitions>
                  <Grid.RowDefinitions>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="110"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <TextBlock 
                     Grid.Row="0" Grid.Column="0"
@@ -98,7 +105,7 @@
                     Text="{x:Static props:Localization.JobSettings_PerCameraExposures}"
                     Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
                 <TextBlock 
-                    Grid.Row="4" Grid.Column="0"
+                    Grid.Row="5" Grid.Column="0"
                     Text="{x:Static props:Localization.JobSettings_SettingsBlock}"
                     Style="{StaticResource ResourceKey=ContentFont_TextBlock}"/>
 
@@ -126,6 +133,7 @@
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>
                             <ItemContainerTemplate>
+                                <Border Style="{StaticResource BorderStyle}">
                                     <StackPanel Orientation="Vertical">
                                         <Label 
                                              HorizontalAlignment="Center"
@@ -133,18 +141,24 @@
                                              Content="{Binding CameraName}"/>
                                         <TextBox Width="100" MaxWidth="100" MinWidth="100"
                                              HorizontalAlignment="Center"
+                                             HorizontalContentAlignment="Right"
                                         Text="{extensions:ValidationBinding Value, Mode=TwoWay}"
                                         Style="{StaticResource TextBoxWithErrors}"/>
                                     </StackPanel>
+                                </Border>
                             </ItemContainerTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
                 </ScrollViewer>
-
-                <ScrollViewer 
+                <Separator 
+                    Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                    Height="1" Foreground="Black"/> 
+                <ScrollViewer
                     Background="Transparent"
-                    Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch"
-                    Height="300">
+                    Grid.Row="5" Grid.Column="1" HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Height="Auto">
                     <ListView 
                         Style ="{StaticResource ListViewStyle}"
                         ItemsSource="{Binding SharedSettingsView}">
