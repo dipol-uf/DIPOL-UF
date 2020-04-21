@@ -109,6 +109,8 @@ namespace DIPOL_UF.Jobs
                 // TODO : deal with constant
                 Manager.MotorPosition = 22.5f * pos / Angle;
                 Manager.ActualMotorPosition = 22.5f * actualPos / Angle;
+
+                Console.WriteLine($"Motor finished at {Manager.MotorPosition}");
             }
             private static async Task RetryAction(Func<Task> action, int retries)
             {

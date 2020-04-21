@@ -201,6 +201,10 @@ namespace DIPOL_UF.Models
                       .Select(x => x.Value)
                       .ToPropertyEx(this, x => x.IsJobInProgress)
                       .DisposeWith(Subscriptions);
+
+
+            // TODO : Remove
+            WhenAcquisitionFinished.Subscribe(x => { }).DisposeWith(Subscriptions);
         }
 
         private void InitializeCommands()

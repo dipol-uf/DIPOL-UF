@@ -304,7 +304,7 @@ namespace DIPOL_UF.Jobs
                     throw new InvalidOperationException(Localization.JobManager_NotPhotometry);
 
                 var calibrationsMade = false;
-                await Task.Run(async ()  =>
+                //await Task.Factory.StartNew(async ()  =>
                 {
                     var fileName = CurrentTarget1.StarName;
                     Progress = 0;
@@ -361,7 +361,7 @@ namespace DIPOL_UF.Jobs
                         NeedsCalibration = false;
                     }
 
-                }, token);
+                }//, token, );
 
                 var report = $"{Environment.NewLine}{TotalAcquisitionActionCount} {Localization.JobManager_AcquisitionJobName}";
 

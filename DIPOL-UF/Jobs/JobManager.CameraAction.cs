@@ -93,13 +93,13 @@ namespace DIPOL_UF.Jobs
                     // In order to capture extremely fast acquisitions, first capture a task from observable,
                     // then start acquisition through the command interface
                     // and then await initial task
-                   
-                    var task = x.WhenAcquisitionFinished.FirstAsync().ToTask(token);
+                    var task = x.WhenAcquisitionFinished.FirstAsync().ToTask(token).ConfigureAwait(false);
+                    await Task.Delay(TimeSpan.FromMilliseconds(0.001));
                     x.StartAcquisition(Manager._requestMap[x.Camera.GetHashCode()].WithNewKeywords(sharedKeys), token);
                     await task;
                 }).ToList();
 
-                await Task.WhenAll(tasks).ConfigureAwait(false);
+                await Task.WhenAll(tasks);//.ConfigureAwait(false);
                 Manager.Progress++;
                 Manager.CumulativeProgress++;
                 //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) finish exposure");

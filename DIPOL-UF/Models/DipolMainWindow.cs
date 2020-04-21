@@ -318,14 +318,14 @@ namespace DIPOL_UF.Models
 
             ConnectedCameras = _connectedCameras
                 .Connect()
-                .Sort(CameraTupleOrderComparer.Default)
+                .Sort(CameraTupleOrderComparer.Default, SortOptimisations.None, 1)
                 .AsObservableCache()
                 .DisposeWith(Subscriptions);
 
 
 
             CameraTabs = _connectedCameras.Connect()
-                .Sort(CameraTupleOrderComparer.Default)
+                .Sort(CameraTupleOrderComparer.Default, SortOptimisations.None, 1)
                 .Transform(x => (x.Id, Tab: new CameraTab(x.Camera)))
                 .DisposeManyEx(x => x.Tab?.Dispose())
                 .AsObservableCache()

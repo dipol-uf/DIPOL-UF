@@ -58,10 +58,10 @@
                 Proxy="{Binding AcquisitionSettingsProxy}"
                 Type="{x:Type vs:AcquisitionSettingsView}"/>
         </behavior:EventTrigger>
-        <behavior:EventTrigger EventName="Closing" SourceName="JobSettingsWindow">
+        <!--<behavior:EventTrigger EventName="Closing" SourceName="JobSettingsWindow">
             <behavior:InvokeCommandAction Command="{Binding WindowClosingCommand}"
                                           CommandParameter="{Binding ElementName=JobSettingsWindow}"/>
-        </behavior:EventTrigger>
+        </behavior:EventTrigger>-->
     </behavior:Interaction.Triggers>
     <Grid Margin="0, 20, 0, 0">
         <Grid.ColumnDefinitions>

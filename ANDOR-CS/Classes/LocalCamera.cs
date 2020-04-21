@@ -201,14 +201,14 @@ namespace ANDOR_CS.Classes
                     timeoutMs = timeoutMs > 1000 || timeoutMs < 10 ? 100 : timeoutMs;
                     var interval = TimeSpan.FromMilliseconds(timeoutMs);
 
-                    Task.Run(() =>
+                    Task.Factory.StartNew(() =>
                     {
                         while (!_sdkEventCancellation.IsCancellationRequested)
                         {
                             if (_eventHandle.WaitOne(interval))
                                 SdkEventFired?.Invoke(this, EventArgs.Empty);
                         }
-                    }, _sdkEventCancellation.Token).ConfigureAwait(false);
+                    }, _sdkEventCancellation.Token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default).ConfigureAwait(false);
 
                     _useSdkEvents = true;
                 }
@@ -216,7 +216,7 @@ namespace ANDOR_CS.Classes
 
             // TODO : Remove logger
 
-            NewImageReceived += (sender, args) => Console.WriteLine($"\tIMAGE RECEIVED {args.Index}\t{args.EventTime}");
+            //NewImageReceived += (sender, args) => Console.WriteLine($"\tIMAGE RECEIVED {args.Index}\t{args.EventTime}");
 
         }
 
@@ -1159,7 +1159,7 @@ namespace ANDOR_CS.Classes
                     throw except;
 
                 var imageIndex = 1;
-                var completionSrc = new TaskCompletionSource<bool>();
+                var completionSrc = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
                 void ListenAndCheckImages(object sender, EventArgs e)
                 {
@@ -1174,8 +1174,7 @@ namespace ANDOR_CS.Classes
                         () => SdkInstance.GetNumberAvailableImages(ref totalImg.First, ref totalImg.Last));
 
 
-
-                    //Console.WriteLine($"IMAGES: {totalImg} {result} {GetStatus()}");
+                    //Console.WriteLine($"IMAGES: {totalImg} {GetStatus()}");
 
                     if (totalImg.First >= 0)
                     {
