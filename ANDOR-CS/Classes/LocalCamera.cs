@@ -1352,11 +1352,11 @@ namespace ANDOR_CS.Classes
 
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
-
-            var regex = new Regex($@"{imagePattern}_?(\d{{1,4}})\.fits",
+            
+            var regex = new Regex($@"{imagePattern.EscapePathSymbols()}_?(\d{{1,4}})\.fits",
                 RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-
+            // This is wildcard, it should work as is
             _startImageIndex = Directory.EnumerateFiles(path, $"{imagePattern}_????.fits")
                                  .Reverse()
                                  .Select(x =>

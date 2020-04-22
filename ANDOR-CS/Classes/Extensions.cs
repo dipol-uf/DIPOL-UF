@@ -81,5 +81,28 @@ namespace ANDOR_CS.Classes
             key = @this.Key;
             value = @this.Value;
         }
+
+        internal static string EscapePathSymbols(this string s)
+        {
+            if (string.IsNullOrWhiteSpace(s))
+                return string.Empty;
+
+            var buffer = new char[s.Length + 16];
+            var i = 0;
+            foreach (var letter in s)
+            {
+                if (i > buffer.Length - 2)
+                {
+                    var array = new char[buffer.Length + 16];
+                    Buffer.BlockCopy(buffer, 0, array, 0, i * sizeof(char));
+                    buffer = array;
+                }
+                if (letter == '+' || letter == '*' || letter == '[' || letter == ']' || letter == ')' || letter == '(' || letter == '\\')
+                    buffer[i++] = '\\';
+                buffer[i++] = letter;
+            }
+
+            return new string(buffer, 0, i);
+        }
     }
 }
