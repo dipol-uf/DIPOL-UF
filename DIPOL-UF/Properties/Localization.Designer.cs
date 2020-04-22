@@ -1619,7 +1619,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Only letters, digits, +. -. _ symbols are allowed..
+        ///   Looks up a localized string similar to Only letters, digits, +. -. _ symbols are allowed.
         /// </summary>
         public static string Validation_ShouldBeSimpleString {
             get {

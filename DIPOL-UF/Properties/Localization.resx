@@ -658,6 +658,6 @@ Position is {2}.</value>
     <value>Polarimetry cycle requires connected step motors and instrument in "Polarimeter" regime. Make sure motors are connected and instrument mode is switched to "Polarimeter".</value>
   </data>
   <data name="Validation_ShouldBeSimpleString" xml:space="preserve">
-    <value>Only letters, digits, +. -. _ symbols are allowed.</value>
+    <value>Only letters, digits, +. -. _ symbols are allowed</value>
   </data>
 </root>
