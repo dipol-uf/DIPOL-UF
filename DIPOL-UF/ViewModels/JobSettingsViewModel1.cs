@@ -216,7 +216,11 @@ namespace DIPOL_UF.ViewModels
 
         private void CreateValidators()
         {
-            CreateValidator(this.WhenPropertyChanged(x => x.ObjectName).Select(x => (nameof(Validators.Validate.CannotBeDefault), Validators.Validate.CannotBeDefault(x.Value))), nameof(ObjectName));
+            CreateValidator(this.WhenPropertyChanged(x => x.ObjectName)
+                .Select(x => (nameof(Validators.Validate.CannotBeDefault), Validators.Validate.CannotBeDefault(x.Value))), nameof(ObjectName));
+
+            CreateValidator(this.WhenPropertyChanged(x => x.ObjectName)
+                .Select(x => (nameof(Validators.Validate.ShouldBeSimpleString), Validators.Validate.ShouldBeSimpleString(x.Value))), nameof(ObjectName));
         }
 
         private void PushValues()

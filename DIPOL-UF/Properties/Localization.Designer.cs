@@ -1619,6 +1619,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Only letters, digits, +. -. _ symbols are allowed..
+        /// </summary>
+        public static string Validation_ShouldBeSimpleString {
+            get {
+                return ResourceManager.GetString("Validation_ShouldBeSimpleString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value cannot be greater than {0}.
         /// </summary>
         public static string Validation_ValueCannotBeGreaterThan {

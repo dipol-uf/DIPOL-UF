@@ -142,6 +142,17 @@ namespace DIPOL_UF.Validators
                 ? Properties.Localization.Validation_CannotBeDefault
                 : null;
 
+        public static string ShouldBeSimpleString(string s)
+        {
+            foreach (var letter in s)
+            {
+                if (!char.IsLetterOrDigit(letter) && letter != '+' && letter != '-' && letter != '_')
+                    return Properties.Localization.Validation_ShouldBeSimpleString;
+            }
+
+            return null;
+        }
+
         public static string CannotBeDefault(string value)
             => string.IsNullOrWhiteSpace(value)
                 ? Properties.Localization.Validation_CannotBeDefault
