@@ -245,9 +245,12 @@ namespace DIPOL_UF.Models
                                    Observable.Return(CanControlShutter.External))
                                .DisposeWith(Subscriptions);
 
+            // Use JobManager.Manager.AnyCameraIsAcquiring
             var canSetup =
                 this.WhenPropertyChanged(x => x.IsJobInProgress)
-                    .CombineLatest(Camera.WhenPropertyChanged(y => y.IsAcquiring),
+                    .CombineLatest(
+                        //Camera.WhenPropertyChanged(y => y.IsAcquiring),
+                        JobManager.Manager.WhenPropertyChanged(y => y.AnyCameraIsAcquiring),
                         (x, y) => !x.Value && !y.Value)
                     .ObserveOnUi();
 
