@@ -36,11 +36,11 @@ namespace DIPOL_UF
             => new StepMotorHandler.StepMotorFactory();
 
         public static IDeviceFactory NewLocalDeviceFactory()
-#if  DEBUG
-        => new DebugCamera.DebugCameraFactory();
-#else
+//#if  DEBUG
+      //  => new DebugCamera.DebugCameraFactory();
+//#else
         => new LocalCamera.LocalCameraFactory();
-#endif
+//#endif
 
         public static IDeviceFactory NewRemoteDeviceFactory(IControlClient client)
             => new RemoteCamera.RemoteCameraFactory(client);
@@ -48,9 +48,9 @@ namespace DIPOL_UF
         public static IControlClientFactory NewClientFactory()
             => new DipolClient.DipolClientFactory();
 
-#if DEBUG
-        public static IDeviceFactory NewDebugDeviceFactory()
-            => new DebugCamera.DebugCameraFactory();
-#endif
+//#if DEBUG
+//        public static IDeviceFactory NewDebugDeviceFactory()
+//            => new DebugCamera.DebugCameraFactory();
+//#endif
     }
 }
