@@ -64,6 +64,14 @@ namespace DIPOL_UF
 #endif
 
 #endif
+            var dirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"Dipol-UF");
+            if (!Directory.Exists(dirPath))
+                Directory.CreateDirectory(dirPath);
+
+            var filePath = Path.Combine(dirPath, $"{DateTime.UtcNow:yyyyMMdd}.log");
+            using var fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write);
+            using var fileWriter = new StreamWriter(fileStream);
+            Debug.Listeners.Add(new TextWriterTraceListener(fileWriter));
             Debug.Listeners.Add(new TextWriterTraceListener(Console.Out));
             Debug.AutoFlush = true;
             Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
