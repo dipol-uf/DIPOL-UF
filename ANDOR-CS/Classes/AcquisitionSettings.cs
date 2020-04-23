@@ -196,7 +196,7 @@ namespace ANDOR_CS.Classes
                         adConverter, amplifier, hsSpeed, gainIndex, ref status));
                     if (FailIfError(result, nameof(SdkInstance.IsPreAmpGainAvailable), out var except))
                         throw except;
-
+                    // BUG : Exception is thrown in IsPreAmpGainAvailable
                     // If status of a certain combination of settings is 1, return it
                     if (status == 1)
                         list.Add((Index: gainIndex, Name: Camera.Properties.PreAmpGains[gainIndex]));
@@ -222,7 +222,7 @@ namespace ANDOR_CS.Classes
                || Camera.Properties.OutputAmplifiers.All(x => x.OutputAmplifier != OutputAmplification.ElectronMultiplication))
                     throw new NotSupportedException("EM CCD gain control is not supported.");
 
-
+            // BUG : Check thus
             if (FailIfError(Call(Handle, SdkInstance.SetOutputAmplifier, 0), nameof(SdkInstance.SetOutputAmplifier),
                 out var except))
                 throw except;

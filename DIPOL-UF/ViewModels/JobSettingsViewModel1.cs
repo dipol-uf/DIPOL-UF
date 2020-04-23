@@ -225,6 +225,8 @@ namespace DIPOL_UF.ViewModels
 
         private void PushValues()
         {
+
+            // BUG : Incorrectly generated
             Model.Object.StarName = ObjectName;
             Model.Object.Description = Description;
             Model.Object.CycleType = CycleType;
