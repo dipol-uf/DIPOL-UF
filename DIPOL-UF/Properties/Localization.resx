@@ -660,4 +660,10 @@ Position is {2}.</value>
   <data name="Validation_ShouldBeSimpleString" xml:space="preserve">
     <value>Only letters, digits, +. -. _ symbols are allowed</value>
   </data>
+  <data name="CameraTab_Imaging_StartAll" xml:space="preserve">
+    <value>Start all</value>
+  </data>
+  <data name="CameraTab_Imaging_StopAll" xml:space="preserve">
+    <value>Stop all</value>
+  </data>
 </root>

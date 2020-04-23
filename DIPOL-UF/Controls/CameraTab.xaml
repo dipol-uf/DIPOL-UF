@@ -101,6 +101,7 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <!--Cooler slider/bar-->
                 <Grid Grid.Column="0" Grid.Row="0" Margin="2">
@@ -408,6 +409,44 @@
                     </Button.Style>
                 </Button>
 
+                <!-- Acquire all images button -->
+                <Button Grid.Column="0" Grid.Row="5"
+                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                        >
+                    <Button.Style>
+                        <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger Value="True">
+                                    <DataTrigger.Binding>
+                                        <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}" ConverterParameter="any">
+                                            <Binding Path="IsAcquiring" Mode="OneWay"/>
+                                            <Binding Path="IsJobInProgress" Mode="OneWay"/>
+                                        </MultiBinding>
+                                    </DataTrigger.Binding>
+                                    <Setter Property="Content" Value="{x:Static props:Localization.CameraTab_Imaging_StopAll}"/>
+                                    <Setter Property="Button.Background" 
+                                        Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
+                                    <Setter Property="Button.Foreground" 
+                                        Value="{StaticResource ResourceKey=NegativeEffectButtonForegroundColor}"/>
+                                </DataTrigger>
+                                <DataTrigger Value="True" >
+                                    <DataTrigger.Binding>
+                                        <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}" ConverterParameter="all">
+                                            <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
+                                            <Binding Path="IsJobInProgress" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
+                                        </MultiBinding>
+                                    </DataTrigger.Binding>
+                                    <Setter Property="Content"  Value="{x:Static props:Localization.CameraTab_Imaging_StartAll}"/>
+                                    <Setter Property="Button.Background" 
+                                        Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>
+                                    <Setter Property="Button.Foreground" 
+                                        Value="{StaticResource ResourceKey=PositiveEffectButtonForegroundColor}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
                 <!-- Job settings -->
                 <Button  Grid.Column="1" Grid.Row="3" 
                          VerticalAlignment="Center" HorizontalAlignment="Center"
@@ -443,11 +482,11 @@
 
                 <!-- Timing table -->
                 <TextBlock HorizontalAlignment="Stretch"
-                           Grid.Column="0" Grid.Row="5"
+                           Grid.Column="0" Grid.Row="6"
                            Style="{StaticResource ContentFont_TextBlock}"
                            Text="{extensions:Text Key=CameraTab_EstimatedTime}"/>
                 <TextBox Style="{StaticResource TextBoxStyle}" 
-                         Grid.Column="1" Grid.Row="5"
+                         Grid.Column="1" Grid.Row="6"
                          IsReadOnly="True" Focusable="False" 
                          HorizontalContentAlignment="Right"
                          HorizontalAlignment="Stretch"

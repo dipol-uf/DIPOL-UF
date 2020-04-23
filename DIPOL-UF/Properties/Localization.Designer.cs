@@ -489,11 +489,29 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Start all.
+        /// </summary>
+        public static string CameraTab_Imaging_StartAll {
+            get {
+                return ResourceManager.GetString("CameraTab_Imaging_StartAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Stop Imaging.
         /// </summary>
         public static string CameraTab_Imaging_Stop {
             get {
                 return ResourceManager.GetString("CameraTab_Imaging_Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop all.
+        /// </summary>
+        public static string CameraTab_Imaging_StopAll {
+            get {
+                return ResourceManager.GetString("CameraTab_Imaging_StopAll", resourceCulture);
             }
         }
         
