@@ -246,7 +246,7 @@ namespace DIPOL_UF.Models
                                .DisposeWith(Subscriptions);
 
             // Use JobManager.Manager.AnyCameraIsAcquiring
-            var canSetup =
+            var canSetupJob =
                 this.WhenPropertyChanged(x => x.IsJobInProgress)
                     .CombineLatest(
                         //Camera.WhenPropertyChanged(y => y.IsAcquiring),
@@ -254,8 +254,14 @@ namespace DIPOL_UF.Models
                         (x, y) => !x.Value && !y.Value)
                     .ObserveOnUi();
 
+            var canSetupSetts = this.WhenPropertyChanged(x => x.IsJobInProgress)
+                .CombineLatest(
+                    Camera.WhenPropertyChanged(y => y.IsAcquiring),
+                    (x, y) => !x.Value && !y.Value)
+                .ObserveOnUi();
+
             SetUpAcquisitionCommand =
-                ReactiveCommand.Create<Unit, object>(x => x, canSetup)
+                ReactiveCommand.Create<Unit, object>(x => x, canSetupSetts)
                                .DisposeWith(Subscriptions);
 
             AcquisitionSettingsWindow = new DescendantProvider(
@@ -276,9 +282,8 @@ namespace DIPOL_UF.Models
 
             SetUpAcquisitionCommand.InvokeCommand(AcquisitionSettingsWindow.ViewRequested).DisposeWith(Subscriptions);
 
-
             SetUpJobCommand =
-                ReactiveCommand.Create<Unit, object>(x => x, canSetup)
+                ReactiveCommand.Create<Unit, object>(x => x, canSetupJob)
                                .DisposeWith(Subscriptions);
 
             JobSettingsWindow = new DescendantProvider(
