@@ -259,7 +259,9 @@ namespace DIPOL_UF.Jobs
                 {
                     if (job.ContainsActionOfType<CameraAction>())
                         foreach (var control in _jobControls)
-                            control.Camera.StartImageSavingSequence(CurrentTarget1.StarName, file,
+                            control.Camera.StartImageSavingSequence(
+                                CurrentTarget1.StarName!, 
+                                file,
                                 ConverterImplementations.CameraToFilterConversion(control.Camera),
                                 type,
                                 new[] { FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime, format: @"yyyy-MM-ddTHH:mm:ss.fff") });

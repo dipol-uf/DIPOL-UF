@@ -37,9 +37,9 @@ namespace DIPOL_UF
 
         public static IDeviceFactory NewLocalDeviceFactory()
 //#if  DEBUG
-      //  => new DebugCamera.DebugCameraFactory();
+        => new DebugCamera.DebugCameraFactory();
 //#else
-        => new LocalCamera.LocalCameraFactory();
+        //=> new LocalCamera.LocalCameraFactory();
 //#endif
 
         public static IDeviceFactory NewRemoteDeviceFactory(IControlClient client)
