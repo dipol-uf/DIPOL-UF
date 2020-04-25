@@ -412,14 +412,14 @@
                 <!-- Acquire all images button -->
                 <Button Grid.Column="0" Grid.Row="5"
                         VerticalAlignment="Center" HorizontalAlignment="Center"
-                        >
+                        Command="{Binding StartAllAcquisitionsCommand}">
                     <Button.Style>
                         <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
                             <Style.Triggers>
                                 <DataTrigger Value="True">
                                     <DataTrigger.Binding>
                                         <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}" ConverterParameter="any">
-                                            <Binding Path="IsAcquiring" Mode="OneWay"/>
+                                            <Binding Path="IsAnyCameraAcquiring" Mode="OneWay"/>
                                             <Binding Path="IsJobInProgress" Mode="OneWay"/>
                                         </MultiBinding>
                                     </DataTrigger.Binding>
@@ -432,7 +432,7 @@
                                 <DataTrigger Value="True" >
                                     <DataTrigger.Binding>
                                         <MultiBinding Converter="{StaticResource BoolToBoolMultiConverter}" ConverterParameter="all">
-                                            <Binding Path="IsAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
+                                            <Binding Path="IsAnyCameraAcquiring" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
                                             <Binding Path="IsJobInProgress" Mode="OneWay" Converter="{StaticResource NotConverter}"/>
                                         </MultiBinding>
                                     </DataTrigger.Binding>

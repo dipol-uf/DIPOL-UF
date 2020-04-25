@@ -81,6 +81,7 @@ namespace DIPOL_UF.ViewModels
 
         public bool IsJobInProgress { [ObservableAsProperty] get; }
         public bool IsAcquiring { [ObservableAsProperty]get; }
+        public bool IsAnyCameraAcquiring { [ObservableAsProperty] get; }
         public float CurrentTemperature { [ObservableAsProperty] get; }
         public Switch CoolerMode { [ObservableAsProperty] get; }
         public string JobName { [ObservableAsProperty] get; }
@@ -97,6 +98,9 @@ namespace DIPOL_UF.ViewModels
         public ICommand StartAcquisitionCommand => Model.StartAcquisitionCommand;
         public ICommand StartJobCommand => Model.StartJobCommand;
         public ICommand SetUpJobCommand => Model.SetUpJobCommand;
+
+        public ICommand StartAllAcquisitionsCommand => Model.StartAllAcquisitionsCommand;
+
         public CameraTabViewModel(CameraTab model) : base(model)
         {
 
@@ -188,6 +192,12 @@ namespace DIPOL_UF.ViewModels
                       .Sample(UiSettingsProvider.UiThrottlingDelay)
                       .ObserveOnUi()
                       .ToPropertyEx(this, x => x.JobCumulativeCurrent)
+                      .DisposeWith(Subscriptions);
+
+            JobManager.Manager.WhenPropertyChanged(x => x.AnyCameraIsAcquiring)
+                      .Select(x => x.Value)
+                      .ObserveOnUi()
+                      .ToPropertyEx(this, x => x.IsAnyCameraAcquiring)
                       .DisposeWith(Subscriptions);
 
             Observable.FromEventPattern<ImageSavedHandler, ImageSavedEventArgs>(

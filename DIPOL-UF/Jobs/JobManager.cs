@@ -26,12 +26,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using ANDOR_CS;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
@@ -101,6 +103,8 @@ namespace DIPOL_UF.Jobs
         // ReSharper disable once UnassignedGetOnlyAutoProperty
         public bool IsRegimeSwitching { [ObservableAsProperty] get; }
 
+        // ReSharper disable once UnassignedGetOnlyAutoProperty
+        public bool AllCamerasHaveSettings { [ObservableAsProperty] get; }
         public float? ActualMotorPosition { get; private set; }
 
         [Obsolete("Use " + nameof(CurrentTarget1), true)]
@@ -126,6 +130,14 @@ namespace DIPOL_UF.Jobs
                 .ToPropertyEx(this, x => x.AnyCameraIsAcquiring)
                 .DisposeWith(Subscriptions);
 
+            _windowRef.ConnectedCameras.Connect()
+                .Transform(x => x.Camera)
+                .TrueForAll(
+                    x => x.WhenPropertyChanged(y => y.CurrentSettings).Select(y => y.Value is { }),
+                    z => z)
+                .ToPropertyEx(this, x => x.AllCamerasHaveSettings)
+                .DisposeWith(Subscriptions);
+
             _windowRef.WhenPropertyChanged(x => x.IsSwitchingRegimes)
                 .Select(x => x.Value)
                 .ToPropertyEx(this, x => x.IsRegimeSwitching)
@@ -133,6 +145,28 @@ namespace DIPOL_UF.Jobs
 
         }
 
+        public void StartAllAcquisitions()
+        {
+            var tabs = GetCameraTabs();
+            foreach (var tab in tabs)
+            {
+                var command = tab.StartAcquisitionCommand as ICommand;
+                if(command.CanExecute(Unit.Default))
+                    command.Execute(Unit.Default);
+            }
+
+        }
+
+        public void StopAllAcquisitions()
+        {
+            var tabs = GetCameraTabs(true);
+            foreach (var tab in tabs)
+            {
+                var command = tab.StartAcquisitionCommand as ICommand;
+                if (command.CanExecute(Unit.Default))
+                    command.Execute(Unit.Default);
+            }
+        }
 
         public void StartJob(int nRepeats)
         {
@@ -212,7 +246,9 @@ namespace DIPOL_UF.Jobs
             return result;
         }
 
-        
+        private IReadOnlyList<CameraTab> GetCameraTabs(bool acquiring = false) =>
+            _windowRef.CameraTabs.Items.Where(x => acquiring ? x.Tab.Camera.IsAcquiring : !x.Tab.Camera.IsAcquiring).Select(x => x.Tab).ToList();
+
         private async Task SetupNewTarget1()
         {
 
@@ -284,6 +320,9 @@ namespace DIPOL_UF.Jobs
 
             try
             {
+                // To avoid random NREs
+                CurrentTarget1.StarName ??= $"star_{DateTimeOffset.UtcNow:yyyyMMddHHmmss}";
+
                 _jobControls = _windowRef.CameraTabs.Items.Select(x => x.Tab).ToList();
                 _settingsCache = _jobControls.ToDictionary(x => x.Camera.GetHashCode(),
                     y => y.Camera.CurrentSettings.MakeCopy());
