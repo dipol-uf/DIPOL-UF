@@ -103,6 +103,7 @@ namespace DIPOL_UF.Jobs
         // ReSharper disable once UnassignedGetOnlyAutoProperty
         public bool IsRegimeSwitching { [ObservableAsProperty] get; }
 
+        // ReSharper disable once UnassignedGetOnlyAutoProperty
         public bool AllCamerasHaveSettings { [ObservableAsProperty] get; }
         public float? ActualMotorPosition { get; private set; }
 
@@ -294,7 +295,9 @@ namespace DIPOL_UF.Jobs
                 {
                     if (job.ContainsActionOfType<CameraAction>())
                         foreach (var control in _jobControls)
-                            control.Camera.StartImageSavingSequence(CurrentTarget1.StarName, file,
+                            control.Camera.StartImageSavingSequence(
+                                CurrentTarget1.StarName, 
+                                file,
                                 ConverterImplementations.CameraToFilterConversion(control.Camera),
                                 type,
                                 new[] { FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime, format: @"yyyy-MM-ddTHH:mm:ss.fff") });
@@ -317,6 +320,9 @@ namespace DIPOL_UF.Jobs
 
             try
             {
+                // To avoid random NREs
+                CurrentTarget1.StarName ??= $"star_{DateTimeOffset.UtcNow:yyyyMMddHHmmss}";
+
                 _jobControls = _windowRef.CameraTabs.Items.Select(x => x.Tab).ToList();
                 _settingsCache = _jobControls.ToDictionary(x => x.Camera.GetHashCode(),
                     y => y.Camera.CurrentSettings.MakeCopy());
