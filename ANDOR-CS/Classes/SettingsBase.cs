@@ -114,11 +114,7 @@ namespace ANDOR_CS.Classes
         public (int Index, float Speed)? HSSpeed
         {
             get => _HSSpeed;
-            protected set
-            {
-                if (RaisePropertyChanged(ref _HSSpeed, value))
-                    PreAmpGain = null;
-            }
+            protected set => RaisePropertyChanged(ref _HSSpeed, value, @this => @this.PreAmpGain = null);
         }
 
         /// <summary>
@@ -130,11 +126,7 @@ namespace ANDOR_CS.Classes
         public (int Index, int BitDepth)? ADConverter
         {
             get => _ADConverter;
-            protected set
-            {
-                if (RaisePropertyChanged(ref _ADConverter, value))
-                    HSSpeed = null;
-            }
+            protected set => RaisePropertyChanged(ref _ADConverter, value, @this => @this.OutputAmplifier = null);
         }
 
 
@@ -157,14 +149,12 @@ namespace ANDOR_CS.Classes
         public (OutputAmplification OutputAmplifier, string Name, int Index)? OutputAmplifier
         {
             get => _OutputAmplifier;
-            protected set
-            {
-                if (RaisePropertyChanged(ref _OutputAmplifier, value))
+            protected set =>
+                RaisePropertyChanged(ref _OutputAmplifier, value, @this =>
                 {
-                    HSSpeed = null;
-                    EMCCDGain = null;
-                }
-            }
+                    @this.EMCCDGain = null;
+                    @this.HSSpeed = null;
+                });
         } 
 
         /// <summary>
@@ -186,14 +176,12 @@ namespace ANDOR_CS.Classes
         public AcquisitionMode? AcquisitionMode
         {
             get => _AcquisitionMode;
-            protected set
-            {
-                if (RaisePropertyChanged(ref _AcquisitionMode, value))
+            protected set =>
+                RaisePropertyChanged(ref _AcquisitionMode, value, @this =>
                 {
-                    AccumulateCycle = null;
-                    KineticCycle = null;
-                }
-            }
+                    @this.AccumulateCycle = null;
+                    @this.KineticCycle = null;
+                });
         } 
 
         /// <summary>
@@ -283,6 +271,20 @@ namespace ANDOR_CS.Classes
             OnPropertyChanged(this, new PropertyChangedEventArgs(name));
 
             return true;
+        }
+
+        protected virtual void RaisePropertyChanged<T>(
+            ref T? target,
+            T? value,
+            Action<SettingsBase> onPropChanged,
+            [CallerMemberName] string name = "")
+            where T : struct
+        {
+            var comp = target?.Equals(value) == true;
+            if (comp) return;
+            target = value;
+            onPropChanged?.Invoke(this);
+            OnPropertyChanged(this, new PropertyChangedEventArgs(name));
         }
 
         /// <summary>
