@@ -98,6 +98,9 @@ namespace DIPOL_UF.ViewModels
         public ICommand StartAcquisitionCommand => Model.StartAcquisitionCommand;
         public ICommand StartJobCommand => Model.StartJobCommand;
         public ICommand SetUpJobCommand => Model.SetUpJobCommand;
+
+        public ICommand StartAllAcquisitionsCommand => Model.StartAllAcquisitionsCommand;
+
         public CameraTabViewModel(CameraTab model) : base(model)
         {
 

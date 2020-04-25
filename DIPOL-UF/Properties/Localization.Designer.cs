@@ -1150,7 +1150,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Acquired {0} frames..
+        ///   Looks up a localized string similar to Acquired {0}..
         /// </summary>
         public static string JobManager_MB_Finished_Text {
             get {

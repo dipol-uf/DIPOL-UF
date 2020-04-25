@@ -574,7 +574,7 @@ Position is {2}.</value>
     <value>Acquisition cycle finished</value>
   </data>
   <data name="JobManager_MB_Finished_Text" xml:space="preserve">
-    <value>Acquired {0} frames.</value>
+    <value>Acquired {0}.</value>
   </data>
   <data name="JobSettings_N_repeats" xml:space="preserve">
     <value># of cycles</value>

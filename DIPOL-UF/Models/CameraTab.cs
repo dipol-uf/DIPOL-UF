@@ -96,6 +96,8 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<Unit, bool> StartJobCommand { get; private set; }
         public ReactiveCommand<Unit, object> SetUpJobCommand { get; private set; }
 
+        public ReactiveCommand<Unit,Unit > StartAllAcquisitionsCommand { get; private set; }
+
         public CameraTab(IDevice camera)
         {
             // WATCH: Temp solution
@@ -390,7 +392,26 @@ namespace DIPOL_UF.Models
             StartJobCommand
                 .Where(x => x)
                 .InvokeCommand(CycleConfigWindow.ViewRequested).DisposeWith(Subscriptions);
-            
+
+
+            var canStartAllAcquisitions = JobManager.Manager.WhenPropertyChanged(x => x.IsInProcess)
+                .CombineLatest(
+                    JobManager.Manager.WhenPropertyChanged(y => y.AllCamerasHaveSettings),
+                    JobManager.Manager.WhenPropertyChanged(z => z.IsRegimeSwitching),
+                    (x, y, z) => !x.Value && y.Value && !z.Value)
+                .ObserveOnUi();
+
+            StartAllAcquisitionsCommand = ReactiveCommand.Create(StartStopAcquisitionAll, canStartAllAcquisitions).
+                DisposeWith(Subscriptions);
+
+        }
+
+        private void StartStopAcquisitionAll()
+        {
+            if (JobManager.Manager.AnyCameraIsAcquiring)
+                JobManager.Manager.StopAllAcquisitions();
+            else if (!JobManager.Manager.IsInProcess) 
+                JobManager.Manager.StartAllAcquisitions();
         }
 
         private void TimerTick(object sender, ElapsedEventArgs e)

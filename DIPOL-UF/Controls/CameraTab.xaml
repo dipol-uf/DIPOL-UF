@@ -412,7 +412,7 @@
                 <!-- Acquire all images button -->
                 <Button Grid.Column="0" Grid.Row="5"
                         VerticalAlignment="Center" HorizontalAlignment="Center"
-                        >
+                        Command="{Binding StartAllAcquisitionsCommand}">
                     <Button.Style>
                         <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
                             <Style.Triggers>
