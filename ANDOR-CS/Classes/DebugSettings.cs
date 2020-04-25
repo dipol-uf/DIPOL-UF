@@ -49,15 +49,30 @@ namespace ANDOR_CS.Classes
         }
 
         public override List<(int Index, float Speed)> GetAvailableHSSpeeds(int adConverter, int amplifier)
-            => new List<(int Index, float Speed)>
+            => amplifier switch
             {
-                (Index: 0, Speed: 0),
-                (Index: 1, Speed: 10)
+                0 => new List<(int Index, float Speed)>
+                {
+                    (Index: 0, Speed: 0),
+                    (Index: 1, Speed: 10)
+                },
+                _ => new List<(int Index, float Speed)>
+                {
+                    (Index: 0, Speed: 0),
+                    (Index: 1, Speed: 10),
+                    (Index: 2, Speed: 20),
+                    (Index: 3, Speed: 30)
+                }
             };
 
         public override List<(int Index, string Name)> GetAvailablePreAmpGain(int adConverter, int amplifier,
             int hsSpeed)
-            => Camera.Properties.PreAmpGains.Select((x, i) => (i, x)).ToList();
+        {
+            // Simulates _bug_ that was observed in prod
+            if(hsSpeed >= GetAvailableHSSpeeds(adConverter, amplifier).Count)
+                throw new Exception(@"Detected @ prod");
+            return Camera.Properties.PreAmpGains.Select((x, i) => (i, x)).ToList();
+        }
 
         public override (int Low, int High) GetEmGainRange()
         {
