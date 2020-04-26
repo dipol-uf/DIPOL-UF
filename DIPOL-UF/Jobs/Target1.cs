@@ -1,16 +1,12 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using ANDOR_CS;
-using ANDOR_CS.Classes;
 using DIPOL_UF.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-#nullable enable
-// TODO : Remove in prod
-[assembly:InternalsVisibleTo("Sandbox")]
 
 namespace DIPOL_UF.Jobs
 {
@@ -27,7 +23,7 @@ namespace DIPOL_UF.Jobs
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? Description { get; set; }
         
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
         public Dictionary<string, Dictionary<string, object?>>? PerCameraParameters { get; set; }
 
         [JsonRequired]

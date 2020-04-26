@@ -46,6 +46,7 @@ using DIPOL_UF.Models;
 using DynamicData;
 using DynamicData.Binding;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -226,27 +227,40 @@ namespace DIPOL_UF.ViewModels
         private void PushValues()
         {
 
-            // BUG : Incorrectly generated
             Model.Object.StarName = ObjectName;
             Model.Object.Description = Description;
             Model.Object.CycleType = CycleType;
+            Model.Object.SharedParameters ??= new SharedSettingsContainer();
 
-            var sharedExposure = Model.Object.SharedParameters?.ExposureTime ?? 0f;
+            var sharedExposure = Model.Object.SharedParameters.ExposureTime ?? 0f;
 
             Model.Object.PerCameraParameters ??= new Dictionary<string, Dictionary<string, object?>>();
 
-            if (!Model.Object.PerCameraParameters.ContainsKey(nameof(IAcquisitionSettings.ExposureTime)))
-                Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)] =
-                    new Dictionary<string, object?>();
+            var expTimes = Model.Object.PerCameraParameters.ContainsKey(nameof(IAcquisitionSettings.ExposureTime))
+                ? Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)]
+                : new Dictionary<string, object?>();
+
+            expTimes.Clear();
 
             foreach (var (camName, valueContainer) in _exposureList.KeyValues)
             {
                 if (!valueContainer.HasErrors && float.TryParse(valueContainer.Value, NumberStyles.Any,
                     NumberFormatInfo.InvariantInfo, out var expTime))
-                    Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)][camName] = expTime;
+                    expTimes[camName] = expTime;
                 else if(!Model.Object.PerCameraParameters.ContainsKey(camName))
-                    Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)][camName] = sharedExposure;
+                    expTimes[camName] = sharedExposure;
             }
+
+            var distinctExpTimes = expTimes.Select(x => x.Value is float f ? f : (float?) null).Distinct().ToList();
+            if (distinctExpTimes.Count == 1)
+            {
+                Model.Object.SharedParameters.ExposureTime = distinctExpTimes[0] ?? sharedExposure;
+                expTimes.Clear();
+            }
+            else
+                Model.Object.SharedParameters.ExposureTime = null;
+
+            Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)] = expTimes;
 
         }
         private void LoadValues()
@@ -457,7 +471,7 @@ namespace DIPOL_UF.ViewModels
             {
                 using var fStr = new FileStream(path, FileMode.Create, FileAccess.Write);
                 using var writer = new StreamWriter(fStr);
-                var line = JsonConvert.SerializeObject(Model.Object, Formatting.Indented);
+                var line = JsonConvert.SerializeObject(Model.Object, Formatting.Indented, new StringEnumConverter());
                 await writer.WriteAsync(line);
                 return true;
             }

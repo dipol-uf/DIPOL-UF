@@ -144,27 +144,21 @@ namespace DIPOL_UF.Jobs
 
         private void SetValueFromSettings(object value, PropertyInfo prop)
         {
-            switch (value)
-            {
-                case ITuple tuple:
-                    // Only tuples may have different representation
-                    prop.SetValue(this, prop.Name switch
-                    {
-                        nameof(VSSpeed) when tuple[1] is float speed => speed,
-                        nameof(ADConverter) when tuple[0] is int index => index,
-                        nameof(HSSpeed) when tuple[1] is float speed => speed,
-                        nameof(PreAmpGain) when tuple[1] is string gain => gain,
-                        nameof(OutputAmplifier) when tuple[0] is OutputAmplification amplif => amplif,
-                        nameof(AccumulateCycle) when tuple[0] is int frames && tuple[1] is float time => (Frames: frames, Time: time),
-                        nameof(KineticCycle) when tuple[0] is int frames && tuple[1] is float time => (Frames: frames, Time: time),
-                        _ => null
-                    });
-                    break;
-                case { }:
-                    prop.SetValue(this, value);
-                    break;
-            }
+            if(ConvertValueFromSettings(value, prop.Name) is { } notNullValue)
+                prop.SetValue(this, notNullValue);
         }
+
+       
+        public SharedSettingsContainer Clone()
+        {
+            var result = new SharedSettingsContainer();
+            foreach(var (_, prop) in Properties)
+                if(prop.GetValue(this) is { } value)
+                    prop.SetValue(result, value);
+            return result;
+        }
+
+        object ICloneable.Clone() => Clone();
 
         public static (
             SharedSettingsContainer Shared,
@@ -181,17 +175,19 @@ namespace DIPOL_UF.Jobs
             var uniqueVals = new Dictionary<string, Dictionary<string, object>>();
             foreach (var (name, (sharedProp, specificProp)) in JoinedProperties)
             {
-                var idvVals = settings.ToDictionary(x => x.Key, y => specificProp.GetValue(y.Value));
-                switch(idvVals.Values.Distinct().ToList())
+                var idvVals = settings.ToDictionary(x => x.Key, y => ConvertValueFromSettings(specificProp.GetValue(y.Value), sharedProp.Name));
+                switch (idvVals.Values.Distinct().ToList())
                 {
                     case { } list when list.Count == 1 && list[0] is null:
                         break;
 
                     case { } list when list.Count == 1 && list[0] is { } val:
-                        sharedContainer.SetValueFromSettings(val, sharedProp);
+                        //sharedContainer.SetValueFromSettings(val, sharedProp);
+                        sharedProp.SetValue(sharedContainer, val);
                         break;
-                    
+
                     case { }:
+                        // BUG : Value needs to be converted
                         uniqueVals[name] = idvVals;
                         break;
                 }
@@ -201,16 +197,28 @@ namespace DIPOL_UF.Jobs
             return (sharedContainer, uniqueVals);
         }
 
-        public SharedSettingsContainer Clone()
+        private static object? ConvertValueFromSettings(object? value, string propName)
         {
-            var result = new SharedSettingsContainer();
-            foreach(var (_, prop) in Properties)
-                if(prop.GetValue(this) is { } value)
-                    prop.SetValue(result, value);
-            return result;
+            return value switch
+            {
+                ITuple tuple =>
+                // Only tuples may have different representation
+                propName switch
+                {
+                    nameof(VSSpeed) when tuple[1] is float speed => speed,
+                    nameof(ADConverter) when tuple[0] is int index => index,
+                    nameof(HSSpeed) when tuple[1] is float speed => speed,
+                    nameof(PreAmpGain) when tuple[1] is string gain => gain,
+                    nameof(OutputAmplifier) when tuple[0] is OutputAmplification amplif => amplif,
+                    nameof(AccumulateCycle) when tuple[0] is int frames && tuple[1] is float time => (Frames: frames,
+                        Time: time),
+                    nameof(KineticCycle) when tuple[0] is int frames && tuple[1] is float time => (Frames: frames,
+                        Time: time),
+                    _ => null
+                },
+                { } item => item,
+                null => null
+            };
         }
-
-        object ICloneable.Clone() => Clone();
-
     }
 }
