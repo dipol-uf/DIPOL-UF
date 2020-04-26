@@ -160,6 +160,7 @@
     <Compile Include="Jobs\JobManager.RepeatAction.cs" />
     <Compile Include="Jobs\JobManager.SettingsAction.cs" />
     <Compile Include="Jobs\JobManager.ShutterAction.cs" />
+    <Compile Include="Jobs\PerCameraSettingsContainer.cs" />
     <Compile Include="Jobs\SharedSettingsContainer.cs" />
     <Compile Include="Jobs\Target.cs" />
     <Compile Include="Jobs\Target1.cs" />

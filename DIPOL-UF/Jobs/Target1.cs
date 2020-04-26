@@ -31,12 +31,12 @@ namespace DIPOL_UF.Jobs
         [JsonProperty(NullValueHandling = NullValueHandling.Include)]
         public SharedSettingsContainer SharedParameters { get; set; } = new SharedSettingsContainer();
 
-        public IReadOnlyDictionary<string, IAcquisitionSettings> CreateTemplatesForCameras(
-            IReadOnlyDictionary<string, IDevice> cameras)
+        public IImmutableDictionary<string, IAcquisitionSettings> CreateTemplatesForCameras(
+            IImmutableDictionary<string, IDevice> cameras)
         {
             _ = cameras ?? throw new ArgumentNullException(nameof(cameras));
 
-            return cameras.ToDictionary(
+            return cameras.ToImmutableDictionary(
                 x => x.Key,
                 x => (SharedParameters ?? new SharedSettingsContainer())
                     .PrepareTemplateForCamera(
@@ -45,7 +45,7 @@ namespace DIPOL_UF.Jobs
         }
 
         public static Target1 FromSettings(
-            IReadOnlyDictionary<string, IAcquisitionSettings> settings,
+            IImmutableDictionary<string, IAcquisitionSettings> settings,
             string? starName = null,
             string? description = null,
             CycleType cycleType = CycleType.Polarimetric)
@@ -73,8 +73,7 @@ namespace DIPOL_UF.Jobs
                 Description = Description,
                 CycleType = CycleType,
                 SharedParameters = SharedParameters?.Clone() ?? new SharedSettingsContainer(),
-                PerCameraParameters =
-                    PerCameraParameters.Clone()
+                PerCameraParameters = PerCameraParameters?.Clone()
             };
 
         object ICloneable.Clone() => Clone();

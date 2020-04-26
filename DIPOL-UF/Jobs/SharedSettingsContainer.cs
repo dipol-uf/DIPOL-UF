@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -161,7 +162,7 @@ namespace DIPOL_UF.Jobs
         object ICloneable.Clone() => Clone();
 
         public static (SharedSettingsContainer Shared, PerCameraSettingsContainer Unique) 
-            FindSharedSettings(IReadOnlyDictionary<string, IAcquisitionSettings> settings)
+            FindSharedSettings(IImmutableDictionary<string, IAcquisitionSettings> settings)
         {
             if (settings.Count == 0)
                 return (new SharedSettingsContainer(), new PerCameraSettingsContainer());
@@ -173,7 +174,7 @@ namespace DIPOL_UF.Jobs
             var uniqueVals = new PerCameraSettingsContainer();
             foreach (var (name, (sharedProp, specificProp)) in JoinedProperties)
             {
-                var idvVals = settings.ToDictionary(x => x.Key, y => ConvertValueFromSettings(specificProp.GetValue(y.Value), sharedProp.Name));
+                var idvVals = settings.ToDictionary(x => x.Key, y => AdjustType(ConvertValueFromSettings(specificProp.GetValue(y.Value), sharedProp.Name), sharedProp.PropertyType));
                 switch (idvVals.Values.Distinct().ToList())
                 {
                     case { } list when list.Count == 1 && list[0] is null:
@@ -193,6 +194,24 @@ namespace DIPOL_UF.Jobs
             }
 
             return (sharedContainer, uniqueVals);
+        }
+
+        private static object? AdjustType(object? value, Type propType)
+        {
+            if (value is null)
+                return null;
+            if (value.GetType() == propType)
+                return value;
+
+            // This case is for structs/nullables
+            if (!propType.IsClass && propType.IsGenericType && propType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                var innerType = propType.GetGenericArguments()[0];
+                if (value.GetType() == innerType)
+                    return Activator.CreateInstance(propType, value);
+            }
+
+            throw new InvalidOperationException();
         }
 
         private static object? ConvertValueFromSettings(object? value, string propName)

@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -210,8 +211,8 @@ namespace DIPOL_UF.Jobs
             return SetupNewTarget();
         }
 
-        public IReadOnlyDictionary<string, IDevice> GetCameras() 
-            => _windowRef.ConnectedCameras.Items.ToDictionary(
+        public IImmutableDictionary<string, IDevice> GetCameras() 
+            => _windowRef.ConnectedCameras.Items.ToImmutableDictionary(
                 x => ConverterImplementations.CameraToFilterConversion(x.Camera), x => x.Camera);
 
         public async Task SubmitNewTarget1(Target1 target)
@@ -236,7 +237,7 @@ namespace DIPOL_UF.Jobs
         public Target1 GenerateTarget1()
         {
             var result = CurrentTarget1.Clone();
-            var setts = GetCameras().ToDictionary(x => x.Key, x => x.Value.CurrentSettings);
+            var setts = GetCameras().ToImmutableDictionary(x => x.Key, x => x.Value.CurrentSettings);
             if (setts.All(x => x.Value is {}))
             {
                 // If all settings are present, recalculating target value

@@ -234,11 +234,9 @@ namespace DIPOL_UF.ViewModels
 
             var sharedExposure = Model.Object.SharedParameters.ExposureTime ?? 0f;
 
-            Model.Object.PerCameraParameters ??= new Dictionary<string, Dictionary<string, object?>>();
+            Model.Object.PerCameraParameters ??= new PerCameraSettingsContainer();
 
-            var expTimes = Model.Object.PerCameraParameters.ContainsKey(nameof(IAcquisitionSettings.ExposureTime))
-                ? Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)]
-                : new Dictionary<string, object?>();
+            var expTimes = Model.Object.PerCameraParameters.ExposureTime ?? new Dictionary<string, float?>();
 
             expTimes.Clear();
 
@@ -247,11 +245,11 @@ namespace DIPOL_UF.ViewModels
                 if (!valueContainer.HasErrors && float.TryParse(valueContainer.Value, NumberStyles.Any,
                     NumberFormatInfo.InvariantInfo, out var expTime))
                     expTimes[camName] = expTime;
-                else if(!Model.Object.PerCameraParameters.ContainsKey(camName))
+                else 
                     expTimes[camName] = sharedExposure;
             }
 
-            var distinctExpTimes = expTimes.Select(x => x.Value is float f ? f : (float?) null).Distinct().ToList();
+            var distinctExpTimes = expTimes.Select(x => x.Value).Distinct().ToList();
             if (distinctExpTimes.Count == 1)
             {
                 Model.Object.SharedParameters.ExposureTime = distinctExpTimes[0] ?? sharedExposure;
@@ -260,7 +258,7 @@ namespace DIPOL_UF.ViewModels
             else
                 Model.Object.SharedParameters.ExposureTime = null;
 
-            Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)] = expTimes;
+            Model.Object.PerCameraParameters.ExposureTime = expTimes;
 
         }
         private void LoadValues()
@@ -275,11 +273,11 @@ namespace DIPOL_UF.ViewModels
             if (Model.Object.SharedParameters is { } @params)
             {
 
-                var perCamSetts = Model.Object.PerCameraParameters?.Where(x => x.Value.Keys.Join(camNames, y => y, z => z, (y, z) => Unit.Default).Any())
-                    .Select(x => x.Key).ToList();
+                //var perCamSetts = Model.Object.PerCameraParameters?.Where(x => x.Value.Keys.Join(camNames, y => y, z => z, (y, z) => Unit.Default).Any())
+                //    .Select(x => x.Key).ToList();
 
                 var dataToLoad = @params.AsDictionary(true)
-                    .Select(x => (x.Value, perCamSetts?.Contains(x.Key) == true) switch
+                    .Select(x => (x.Value, Model.Object.PerCameraParameters?[x.Key] is {} dict && dict.Count > 0) switch
                     {
                         (float f, bool ovr) => new CollectionItem(x.Key, f.ToString("F"), ovr),
                         (Enum @enum, bool ovr) => new CollectionItem(x.Key,
@@ -296,28 +294,21 @@ namespace DIPOL_UF.ViewModels
                 });
             }
 
-            if (Model.Object.PerCameraParameters?.ContainsKey(nameof(IAcquisitionSettings.ExposureTime)) == true)
+            if (Model.Object.PerCameraParameters?.ExposureTime is IDictionary<string, float?> expTimes && expTimes.Any())
             {
-                var exposures = Model.Object.PerCameraParameters[nameof(IAcquisitionSettings.ExposureTime)]
-                    .ToDictionary(x => x.Key,
-                        x => x.Value switch
-                        {
-                            float f => f.ToString("F"),
-                            double d => d.ToString("F"),
-                            _ => ""
-                        });
-
                 _exposureList.Edit(x =>
                 {
-                    foreach (var (camName, val) in exposures)
+                    foreach (var (camName, val) in expTimes)
                     {
+                        var updateVal = val?.ToString("F") ?? string.Empty;
+
                         if (x.Lookup(camName) is var lookup && lookup.HasValue)
                         {
-                            lookup.Value.Value = val;
+                            lookup.Value.Value = updateVal;
                             x.AddOrUpdate(lookup.Value);
                         }
                         else
-                            x.AddOrUpdate(new PerCameraSettingItem(camName, val));
+                            x.AddOrUpdate(new PerCameraSettingItem(camName, updateVal));
                     }
                 });
             }
@@ -387,7 +378,7 @@ namespace DIPOL_UF.ViewModels
                     if (x is ReactiveWrapper<IAcquisitionSettings> wrapper)
                     {
                         Model.Object.SharedParameters = new SharedSettingsContainer(wrapper.Object);
-                        Model.Object.PerCameraParameters = new Dictionary<string, Dictionary<string, object?>>();
+                        Model.Object.PerCameraParameters = new PerCameraSettingsContainer();
                         // If the settings are applied to the camera, do not dispose it 
                         if (ReferenceEquals(_firstCamera.CurrentSettings, wrapper.Object))
                             wrapper.Object = null!;
