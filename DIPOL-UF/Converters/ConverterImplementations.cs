@@ -93,6 +93,34 @@ namespace DIPOL_UF.Converters
                 : cam.CameraIndex;
         }
 
+        public static int CameraToIndexConversion(string cam)
+        {
+            if (cam is null)
+                return int.MaxValue;
+            if (_cachedFilters is null)
+                _cachedFilters =
+                    UiSettingsProvider.Settings
+                        .GetArray<JToken>(@"CameraDescriptors")
+                        .ToDictionary(x => x.Value<string>(@"Name"),
+                            y => y.Value<string>(@"Filter"));
+
+            if (_cachedOrders is null)
+                _cachedOrders =
+                    UiSettingsProvider.Settings
+                        .GetArray<JToken>(@"CameraDescriptors")
+                        .ToDictionary(x => x.Value<string>(@"Name"),
+                            y => y.Value<int>(@"Order"));
+
+            var camString = _cachedFilters.Where(x => x.Value == cam).Select(x => x.Key).FirstOrDefault();
+
+
+            return !string.IsNullOrWhiteSpace(camString) && _cachedOrders.TryGetValue(camString, out var result)
+                ? result
+                : int.TryParse(cam, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var id)
+                    ? id
+                    : cam.GetHashCode();
+        }
+
 
         public static string CameraKeyToHostConversion(string input)
             => Helper.GetCameraHostName(input);
