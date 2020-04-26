@@ -23,7 +23,9 @@
 //     SOFTWARE.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace DIPOL_UF
 {
@@ -34,8 +36,6 @@ namespace DIPOL_UF
 
         public Func<T, T, bool> EqualityComparer { get; }
         public Func<T, T, int> Comparer { get; }
-
-        private CustomComparer() { }
 
         private CustomComparer(Func<T, T, bool> method, Func<T, T, int> orderMethod)
         {
@@ -53,9 +53,29 @@ namespace DIPOL_UF
             => Comparer?.GetHashCode() ?? 0;
 
 
-        public static CustomComparer<T> FromMethod(
+        public static IEqualityComparer<T> FromMethod(
             Func<T, T, bool> comparer,
             Func<T, T, int> orderComparer)
             => new CustomComparer<T>(comparer, orderComparer);
+    }
+
+    internal abstract class SimpleEqualityComparer
+    {
+        public static IEqualityComparer<TSource> FromMethod<TSource, TTarget>(Func<TSource, TTarget> selector) => new SimpleEqualityComparer<TSource,TTarget>(selector);
+    }
+
+    internal sealed class SimpleEqualityComparer<TSource, TTarget> : SimpleEqualityComparer, IEqualityComparer<TSource>
+    {
+        private readonly Func<TSource, TTarget> _selector;
+        private readonly IEqualityComparer<TTarget> _comparer;
+        public SimpleEqualityComparer(Func<TSource, TTarget> selector)
+        {
+            _selector = selector ?? throw new ArgumentNullException(nameof(selector));
+            _comparer = EqualityComparer<TTarget>.Default;
+        }
+
+        public bool Equals(TSource x, TSource y) => _comparer.Equals(_selector(x), _selector(y));
+
+        public int GetHashCode(TSource obj) => _comparer.GetHashCode(_selector(obj));
     }
 }
