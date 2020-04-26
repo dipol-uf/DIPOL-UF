@@ -9,6 +9,8 @@ using System.Reflection;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
+using DIPOL_UF.Annotations;
+using DIPOL_UF.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serializers;
@@ -26,6 +28,10 @@ namespace DIPOL_UF.Jobs
                 .OrderBy(x => x.Order.Index)
                 .ToImmutableDictionary(x => x.Property.Name, x => x.Property);
 
+        private static readonly MethodInfo GenericToDictionary = typeof(PerCameraSettingsContainer)
+            .GetMethod(nameof(ToConcreteDictionary), BindingFlags.Static | BindingFlags.NonPublic)
+            .GetGenericMethodDefinition();
+
         [SerializationOrder(1)]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, float?>? VSSpeed { get; private set; }
@@ -39,12 +45,10 @@ namespace DIPOL_UF.Jobs
         public Dictionary<string, int?>? ADConverter { get; set; }
 
         [SerializationOrder(2)]
-        [JsonConverter(typeof(StringEnumConverter))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, VSAmplitude?>? VSAmplitude { get; set; }
 
         [SerializationOrder(4)]
-        [JsonConverter(typeof(StringEnumConverter))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, OutputAmplification?>? OutputAmplifier { get; set; }
 
@@ -53,17 +57,14 @@ namespace DIPOL_UF.Jobs
         public Dictionary<string, string?>? PreAmpGain { get; set; }
 
         [SerializationOrder(7)]
-        [JsonConverter(typeof(StringEnumConverter))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, AcquisitionMode?>? AcquisitionMode { get; set; }
 
         [SerializationOrder(8)]
-        [JsonConverter(typeof(StringEnumConverter))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, ReadMode?>? ReadoutMode { get; set; }
 
         [SerializationOrder(9)]
-        [JsonConverter(typeof(StringEnumConverter))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, TriggerMode?>? TriggerMode { get; set; }
 
@@ -95,7 +96,7 @@ namespace DIPOL_UF.Jobs
             set
             {
                 if (Properties.TryGetValue(propName, out var prop))
-                    prop.SetValue(this, value);
+                    prop.SetValue(this, CastAnyDictionaryToSpecificType(value, prop));
                 else throw new KeyNotFoundException();
             }
         }
@@ -127,5 +128,28 @@ namespace DIPOL_UF.Jobs
             return result.ToImmutable();
         }
 
+        private static Type? GetPropItemType(PropertyInfo prop)
+            => prop.PropertyType is { } t
+               && t.IsGenericType
+               && t.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+               && t.GetGenericArguments() is { } genArgCol
+               && genArgCol.Length == 2
+                ? genArgCol[1]
+                : null;
+
+        private static IDictionary<string, TSrc> ToConcreteDictionary<TSrc>(IDictionary dict) 
+            => dict.Cast<KeyValuePair<string, object>>()
+                .OrderBy(x => ConverterImplementations.CameraToIndexConversion(x.Key))
+                .ToDictionary(x => x.Key, x => x.Value is TSrc val ? val : default!);
+
+        private static IDictionary? CastAnyDictionaryToSpecificType(IDictionary? dict, PropertyInfo targetProp)
+        {
+            if (dict is null)
+                return null;
+            var propType = GetPropItemType(targetProp);
+
+            return GenericToDictionary.MakeGenericMethod(propType).Invoke(null, new object[] { dict }) as IDictionary;
+
+        }
     }
 }
