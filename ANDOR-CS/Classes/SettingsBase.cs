@@ -953,11 +953,12 @@ namespace ANDOR_CS.Classes
         public IReadOnlyCollection<string> Load1(IReadOnlyDictionary<string, object> input)
         {
             var props = new Collection<string>();
-
-            foreach (var (name, value, setter) in input.Join(DeserializationSetMethods,
-                x => x.Key.ToLowerInvariant(),
-                y => y.Key,
-                (x, y) => (Name: x.Key, x.Value, Setter: y.Value)))
+            // Changing oreder because dictionary is not a sorted container
+            foreach (var (name, value, setter) in
+                DeserializationSetMethods.Join(input,
+                    y => y.Key,
+                    x => x.Key.ToLowerInvariant(),
+                    (y, x) => (Name: x.Key, x.Value, Setter: y.Value)))
             {
                 if (value is { })
                 {
