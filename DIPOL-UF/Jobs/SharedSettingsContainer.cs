@@ -19,21 +19,21 @@ namespace DIPOL_UF.Jobs
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     internal sealed class SharedSettingsContainer : ICloneable
     {
-        internal static readonly Dictionary<string, PropertyInfo> Properties = typeof(SharedSettingsContainer)
+        private static readonly Dictionary<string, PropertyInfo> Properties = typeof(SharedSettingsContainer)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Select(x => new { Property = x, Order = x.GetCustomAttribute<SerializationOrderAttribute>() })
             .Where(x => x.Order is { })
             .OrderBy(x => x.Order.Index)
             .ToDictionary(x => x.Property.Name, x => x.Property);
 
-        internal static readonly Dictionary<string, PropertyInfo> SbProperties = typeof(IAcquisitionSettings)
+        private static readonly Dictionary<string, PropertyInfo> SbProperties = typeof(IAcquisitionSettings)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Select(x => new { Property = x, Order = x.GetCustomAttribute<SerializationOrderAttribute>() })
             .Where(x => x.Order is { })
             .OrderBy(x => x.Order.Index)
             .ToDictionary(x => x.Property.Name, x => x.Property);
 
-        internal static readonly Dictionary<string, (PropertyInfo This, PropertyInfo Settings)> JoinedProperties = 
+        private static readonly Dictionary<string, (PropertyInfo This, PropertyInfo Settings)> JoinedProperties = 
             Properties.Join(SbProperties, x => x.Key, y => y.Key, (x, y) => (x.Key, This: x.Value, Settings: y.Value))
             .ToDictionary(x => x.Key, x => (Shared: x.This, x.Settings));
 
@@ -160,19 +160,17 @@ namespace DIPOL_UF.Jobs
 
         object ICloneable.Clone() => Clone();
 
-        public static (
-            SharedSettingsContainer Shared,
-            Dictionary<string, Dictionary<string, object>>) FindSharedSettings(
-                IReadOnlyDictionary<string, IAcquisitionSettings> settings)
+        public static (SharedSettingsContainer Shared, PerCameraSettingsContainer Unique) 
+            FindSharedSettings(IReadOnlyDictionary<string, IAcquisitionSettings> settings)
         {
             if (settings.Count == 0)
-                return (new SharedSettingsContainer(), new Dictionary<string, Dictionary<string, object>>());
+                return (new SharedSettingsContainer(), new PerCameraSettingsContainer());
             if (settings.Count == 1)
                 return (new SharedSettingsContainer(settings.Values.First()),
-                    new Dictionary<string, Dictionary<string, object>>());
+                    new PerCameraSettingsContainer());
 
             var sharedContainer = new SharedSettingsContainer();
-            var uniqueVals = new Dictionary<string, Dictionary<string, object>>();
+            var uniqueVals = new PerCameraSettingsContainer();
             foreach (var (name, (sharedProp, specificProp)) in JoinedProperties)
             {
                 var idvVals = settings.ToDictionary(x => x.Key, y => ConvertValueFromSettings(specificProp.GetValue(y.Value), sharedProp.Name));

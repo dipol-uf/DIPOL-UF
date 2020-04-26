@@ -1,9 +1,11 @@
 ﻿#nullable enable
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
@@ -14,8 +16,16 @@ using Serializers;
 namespace DIPOL_UF.Jobs
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    internal sealed class PerCameraSettingsContainer
+    internal sealed class PerCameraSettingsContainer: ICloneable
     {
+        private static readonly ImmutableDictionary<string, PropertyInfo> Properties =
+            typeof(PerCameraSettingsContainer)
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Select(x => new {Property = x, Order = x.GetCustomAttribute<SerializationOrderAttribute>()})
+                .Where(x => x.Order is { })
+                .OrderBy(x => x.Order.Index)
+                .ToImmutableDictionary(x => x.Property.Name, x => x.Property);
+
         [SerializationOrder(1)]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, float?>? VSSpeed { get; private set; }
@@ -77,11 +87,37 @@ namespace DIPOL_UF.Jobs
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, int?>? EMCCDGain { get; set; }
 
+        public IDictionary? this[string propName]
+        {
+            get => Properties.TryGetValue(propName, out var prop)
+                ? prop.GetValue(this) as IDictionary
+                : null;
+            set
+            {
+                if (Properties.TryGetValue(propName, out var prop))
+                    prop.SetValue(this, value);
+                else throw new KeyNotFoundException();
+            }
+        }
+        public PerCameraSettingsContainer Clone()
+        {
+            var result = new PerCameraSettingsContainer();
+            foreach (var (_, prop) in Properties)
+            {
+                if(prop.GetValue(this) is { } value)
+                    prop.SetValue(result, value);
+            }
+
+            return result;
+        }
+
+        object ICloneable.Clone() => Clone();
+
         public IImmutableDictionary<string, object?> GatherCameraSettings(string camKey)
         {
             var result = ImmutableDictionary.CreateBuilder<string, object?>();
 
-            foreach (var (name, prop) in SharedSettingsContainer.Properties)
+            foreach (var (name, prop) in Properties)
             {
                 var setts = prop.GetValue(this) as IDictionary;
                 if (setts?[camKey] is { } value)

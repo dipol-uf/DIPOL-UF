@@ -74,7 +74,7 @@ namespace DIPOL_UF.Jobs
                 CycleType = CycleType,
                 SharedParameters = SharedParameters?.Clone() ?? new SharedSettingsContainer(),
                 PerCameraParameters =
-                    PerCameraParameters?.ToDictionary(x => x.Key, y => y.Value.ToDictionary(z => z.Key, z => z.Value))
+                    PerCameraParameters.Clone()
             };
 
         object ICloneable.Clone() => Clone();
