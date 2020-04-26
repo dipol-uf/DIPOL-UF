@@ -1,6 +1,10 @@
 ﻿#nullable enable
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using ANDOR_CS.Classes;
 using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using Newtonsoft.Json;
@@ -72,6 +76,20 @@ namespace DIPOL_UF.Jobs
         [SerializationOrder(10)]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, int?>? EMCCDGain { get; set; }
+
+        public IImmutableDictionary<string, object?> GatherCameraSettings(string camKey)
+        {
+            var result = ImmutableDictionary.CreateBuilder<string, object?>();
+
+            foreach (var (name, prop) in SharedSettingsContainer.Properties)
+            {
+                var setts = prop.GetValue(this) as IDictionary;
+                if (setts?[camKey] is { } value)
+                    result[name] = value;
+            }
+
+            return result.ToImmutable();
+        }
 
     }
 }

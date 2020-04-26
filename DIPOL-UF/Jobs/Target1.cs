@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using ANDOR_CS;
 using DIPOL_UF.Enums;
@@ -24,7 +25,7 @@ namespace DIPOL_UF.Jobs
         public string? Description { get; set; }
         
         [JsonProperty(NullValueHandling = NullValueHandling.Include)]
-        public Dictionary<string, Dictionary<string, object?>>? PerCameraParameters { get; set; }
+        public PerCameraSettingsContainer? PerCameraParameters { get; set; }
 
         [JsonRequired]
         [JsonProperty(NullValueHandling = NullValueHandling.Include)]
@@ -40,20 +41,7 @@ namespace DIPOL_UF.Jobs
                 x => (SharedParameters ?? new SharedSettingsContainer())
                     .PrepareTemplateForCamera(
                         x.Value,
-                        GatherPerCameraParameters(x.Key)));
-        }
-
-        private IReadOnlyDictionary<string, object?> GatherPerCameraParameters(string key)
-        {
-            if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentException(nameof(key));
-
-            var result = PerCameraParameters
-                       ?.Where(x => x.Value?.ContainsKey(key) is true)
-                       .ToDictionary(x => x.Key, x => x.Value?[key])
-                   ?? new Dictionary<string, object?>();
-
-            return result;
+                        PerCameraParameters?.GatherCameraSettings(x.Key) ?? ImmutableDictionary<string, object?>.Empty));
         }
 
         public static Target1 FromSettings(

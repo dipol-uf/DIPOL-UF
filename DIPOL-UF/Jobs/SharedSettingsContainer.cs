@@ -17,23 +17,23 @@ using Serializers;
 namespace DIPOL_UF.Jobs
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    internal class SharedSettingsContainer : ICloneable
+    internal sealed class SharedSettingsContainer : ICloneable
     {
-        private static readonly Dictionary<string, PropertyInfo> Properties = typeof(SharedSettingsContainer)
+        internal static readonly Dictionary<string, PropertyInfo> Properties = typeof(SharedSettingsContainer)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Select(x => new { Property = x, Order = x.GetCustomAttribute<SerializationOrderAttribute>() })
             .Where(x => x.Order is { })
             .OrderBy(x => x.Order.Index)
             .ToDictionary(x => x.Property.Name, x => x.Property);
 
-        private static readonly Dictionary<string, PropertyInfo> SbProperties = typeof(IAcquisitionSettings)
+        internal static readonly Dictionary<string, PropertyInfo> SbProperties = typeof(IAcquisitionSettings)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Select(x => new { Property = x, Order = x.GetCustomAttribute<SerializationOrderAttribute>() })
             .Where(x => x.Order is { })
             .OrderBy(x => x.Order.Index)
             .ToDictionary(x => x.Property.Name, x => x.Property);
 
-        private static readonly Dictionary<string, (PropertyInfo This, PropertyInfo Settings)> JoinedProperties = 
+        internal static readonly Dictionary<string, (PropertyInfo This, PropertyInfo Settings)> JoinedProperties = 
             Properties.Join(SbProperties, x => x.Key, y => y.Key, (x, y) => (x.Key, This: x.Value, Settings: y.Value))
             .ToDictionary(x => x.Key, x => (Shared: x.This, x.Settings));
 
