@@ -98,8 +98,8 @@ namespace Host
 
         private static int Main(string[] args)
         {
-            System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(@"en-US");
-            System.Threading.Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(@"en-US");
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo(@"en-US");
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo(@"en-US");
 
             var options = HandleArgs(args);
 
