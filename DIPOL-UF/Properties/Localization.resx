@@ -666,4 +666,9 @@ Position is {2}.</value>
   <data name="CameraTab_Imaging_StopAll" xml:space="preserve">
     <value>Stop all</value>
   </data>
+  <data name="MainWindow_MB_PolarimeterMotorOK_Text_2" xml:space="preserve">
+    <value>Step motor on port {0} at address {1:00} is healthy and responding.
+Position is {2}.
+Click "Yes" if you would like to re-calibrate its position.</value>
+  </data>
 </root>

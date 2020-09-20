@@ -1430,6 +1430,17 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Step motor on port {0} at address {1:00} is healthy and responding.
+        ///Position is {2}.
+        ///Click &quot;Yes&quot; if you would like to re-calibrate its position..
+        /// </summary>
+        public static string MainWindow_MB_PolarimeterMotorOK_Text_2 {
+            get {
+                return ResourceManager.GetString("MainWindow_MB_PolarimeterMotorOK_Text_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Photometer.
         /// </summary>
         public static string MainWindow_Photometer {

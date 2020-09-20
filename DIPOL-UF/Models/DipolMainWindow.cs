@@ -198,10 +198,13 @@ namespace DIPOL_UF.Models
         {
 
             ChangeRegimeCommand =
-                ReactiveCommand.CreateFromTask<InstrumentRegime, ProgressBar>(ChangeRegimeCommandExecute, this
-                        .WhenPropertyChanged(x => x.RetractorMotor)
-                        .CombineLatest(this.WhenPropertyChanged(y => y.PolarimeterMotor), (x, y) =>
-                            x != null && y != null))
+                ReactiveCommand.CreateFromTask<InstrumentRegime, ProgressBar>(
+                        ChangeRegimeCommandExecute,
+                        this
+                            .WhenPropertyChanged(x => x.RetractorMotor)
+                            .CombineLatest(
+                                this.WhenPropertyChanged(y => y.PolarimeterMotor), 
+                                (x, y) => x is {} && y is {}))
                     .DisposeWith(Subscriptions);
 
             ContextMenuCommand =
@@ -526,37 +529,60 @@ namespace DIPOL_UF.Models
                 RetractorMotor?.Dispose();
                 RetractorMotor = null;
             }
-            if (!(RetractorMotor is null))
+
+            switch (RetractorMotor)
             {
-                MessageBox.Show(
-                    string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
-                        _retractorPort.PortName,
-                        RetractorMotor.Address,
-                        pos),
-                    Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            else
-            {
-                if (!(_retractorPortScanningTask is null)
-                    && !_retractorPortScanningTask.IsFaulted)
-                {
-                    var response = MessageBox.Show(
-                        string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
-                            UiSettingsProvider.Settings.Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant()),
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
-                        MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                    if (response == MessageBoxResult.Yes)
-                        _retractorPortScanningTask = CheckRetractorMotor();
-                }
-                else
-                {
+                case {} motor when !JobManager.Manager.AnyCameraIsAcquiring && !JobManager.Manager.IsInProcess && !IsSwitchingRegimes:
+                    if (MessageBox.Show(
+                            string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text_2,
+                                _retractorPort.PortName,
+                                motor.Address,
+                                pos),
+                            Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Information)
+                        is MessageBoxResult.Yes)
+                    {
+                        // TODO : Calibrate
+                        // WATCH : Check for deadlocks
+                        await ChangeRegimeCommand.Execute(Regime);
+
+                    }
+                    break;
+                case { } motor:
                     MessageBox.Show(
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                        string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
+                            _retractorPort.PortName,
+                            motor.Address,
+                            pos),
+                        Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    break;
+                default:
+                    if (_retractorPortScanningTask is {} && !_retractorPortScanningTask.IsFaulted)
+                    {
+                        var response = 
+                            MessageBox.Show(
+                                string.Format(
+                                    Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
+                                    UiSettingsProvider.Settings.Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant()),
+                            Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
+                            MessageBoxButton.YesNo, 
+                            MessageBoxImage.Warning);
+                        
+                        if (response == MessageBoxResult.Yes)
+                            _retractorPortScanningTask = CheckRetractorMotor();
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
+                            Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                    break;
             }
+
         }
 
         private void DisconnectButtonCommandExecute()
