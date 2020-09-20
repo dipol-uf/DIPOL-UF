@@ -38,16 +38,33 @@ namespace DIPOL_UF.Jobs
             private static readonly Regex Regex =
                 new Regex(@"^(?:motor/)?(rotate|reset)\s*?([+-]?[0-9]+\.?[0-9]*)?$",
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            /// <summary>
+            /// 3200
+            /// </summary>
+            private readonly int _angleInUnits = UiSettingsProvider.Settings.Get(@"StepMotorUnitsPerOneRotation", 3200);
+            /// <summary>
+            /// 3
+            /// </summary>
+            private readonly int _nRetries = UiSettingsProvider.Settings.Get(@"StepMotorNRetries", 3);
+            /// <summary>
+            /// 16
+            /// </summary>
+            private readonly int _nSteps = UiSettingsProvider.Settings.Get(@"StepMotorNSteps", 16);
 
-            private const int Angle = 3200;
-            private const int NRetries = 3;
-
+            /// <summary>
+            /// 1 &lt;&lt; 23 = 8388608
+            /// </summary>
+            private readonly int _stepMotorMaxPositionAbs =
+                UiSettingsProvider.Settings.Get(@"StepMotorMaxPositionAbs", 1 << 23);
 
             private enum MotorActionType
             {
                 Rotate,
                 Reset
             }
+
+            private float OneStepAngle => 360f / _nSteps;
+            private int StepsPerFullRotation => _angleInUnits * _nSteps;
 
             private double Parameter { get; }
 
@@ -87,30 +104,52 @@ namespace DIPOL_UF.Jobs
                 if (Manager._windowRef.PolarimeterMotor is null)
                     throw new NotSupportedException(@"No step motor found");
 
+                var pos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetActualPositionAsync(), _nRetries);
+
                 if (ActionType == MotorActionType.Reset)
-                    await RetryAction(() => Manager._windowRef.PolarimeterMotor.ReferenceReturnToOriginAsync(token), NRetries);
+                {
+                    var zeroPos = StepsPerFullRotation * (int)Math.Ceiling(1.0 * pos / StepsPerFullRotation);
+                    Helper.WriteLog(@$"Resetting motor: from {pos} to {zeroPos}");
+
+                    if ((Math.Abs(zeroPos) + StepsPerFullRotation) >= _stepMotorMaxPositionAbs)
+                    {
+                        // Exceeding default ~327 rotations without reference search
+                        // Step motor buffer overflow is predicted, forcing reference search
+                        // TODO : Call reference search
+                        // BUG : Reference search not implemented
+                        throw new NotImplementedException();
+                    }
+                    
+                    await RetryAction(
+                        () => Manager._windowRef.PolarimeterMotor.MoveToPosition(zeroPos), 
+                        _nRetries);
+                    await RetryAction(
+                        () => Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token),
+                        _nRetries);
+                }
                 else
                 {
-                    var oldPos = (Manager.MotorPosition ?? 0f) / 22.5f * Angle;
-
-                    await RetryAction(() => Manager._windowRef.PolarimeterMotor.MoveToPosition(
+                    // WATCH : Check that `Parameter` is 1
+                    var newPos = (int)(pos + _angleInUnits * Parameter);
+                    await RetryAction(
+                        () => Manager._windowRef.PolarimeterMotor.MoveToPosition(
                             // ReSharper disable once RedundantArgumentDefaultValue
-                            (int) (oldPos + Angle * Parameter), CommandType.Absolute),
-                        NRetries);
+                            newPos, CommandType.Absolute),
+                        _nRetries);
 
 
                     await RetryAction(
                         () => Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token),
-                        NRetries);
+                        _nRetries);
                 }
 
-                var pos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetActualPositionAsync(), NRetries);
-                var actualPos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetTruePositionAsync(), NRetries);
-                // TODO : deal with constant
-                Manager.MotorPosition = 22.5f * pos / Angle;
-                Manager.ActualMotorPosition = 22.5f * actualPos / Angle;
+                pos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetActualPositionAsync(), _nRetries);
+                var actualPos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetTruePositionAsync(), _nRetries);
+                
+                Manager.MotorPosition = OneStepAngle * (pos % StepsPerFullRotation) / _angleInUnits;
+                Manager.ActualMotorPosition = OneStepAngle * (actualPos % StepsPerFullRotation) / _angleInUnits;
 
-                Console.WriteLine($"Motor finished at {Manager.MotorPosition}");
+                Helper.WriteLog($@"Motor at position {pos} ({actualPos})");
             }
             private static async Task RetryAction(Func<Task> action, int retries)
             {
