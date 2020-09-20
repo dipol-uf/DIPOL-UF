@@ -157,14 +157,10 @@ namespace DIPOL_UF.Jobs
                     Helper.WriteLog(@$"Resetting motor: from {pos} to {zeroPos}");
 
                     if ((Math.Abs(zeroPos) + StepsPerFullRotation) >= _stepMotorMaxPositionAbs)
-                    {
                         // Exceeding default ~327 rotations without reference search
                         // Step motor buffer overflow is predicted, forcing reference search
-                        // TODO : Call reference search
-                        // BUG : Reference search not implemented
-                        throw new NotImplementedException();
-                    }
-                    
+                        await Initialize(token);
+
                     await RetryAction(
                         () => Manager._windowRef.PolarimeterMotor.MoveToPosition(zeroPos), 
                         _nRetries);
