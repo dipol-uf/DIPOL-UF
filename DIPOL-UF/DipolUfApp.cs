@@ -83,9 +83,9 @@ namespace DIPOL_UF
             applicationInstance.InitializeComponent();
 
 
-            using (var mainModel = new DipolMainWindow())
-            using (var view = new DipolMainWindowViewModel(mainModel))
-                applicationInstance.Run(new Views.DipolMainWindow().WithDataContext(view));
+            using var mainModel = new DipolMainWindow();
+            using var view = new DipolMainWindowViewModel(mainModel);
+            applicationInstance.Run(new Views.DipolMainWindow().WithDataContext(view));
 
 
 #if DEBUG && HOST_SERVER
