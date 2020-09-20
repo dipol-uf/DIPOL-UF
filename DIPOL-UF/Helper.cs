@@ -43,6 +43,7 @@ using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using Serializers;
+using Serilog.Events;
 
 namespace DIPOL_UF
 {
@@ -61,18 +62,11 @@ namespace DIPOL_UF
 
             return (bool) (showingAsDialogField?.GetValue(window) ?? false);
         }
-        public static void WriteLog(string entry)
-        {
-            System.Diagnostics.Debug.WriteLine(entry);
-        }
+        public static void WriteLog(string entry) => Injector.GetLogger().Write(LogEventLevel.Information, entry);
 
-        public static void WriteLog(ANDOR_CS.Exceptions.AndorSdkException entry)
-        {
-            System.Diagnostics.Debug.WriteLine($"{entry.Message} [{entry.ErrorCode}]");
-        }
+        public static void WriteLog(ANDOR_CS.Exceptions.AndorSdkException entry) => WriteLog($"{entry.Message} [{entry.ErrorCode}]");
 
-        public static void WriteLog(object entry)
-            => WriteLog(entry.ToString());
+        public static void WriteLog(object entry) => WriteLog(entry.ToString());
 
         public static string GetCameraHostName(string input)
         {

@@ -23,15 +23,26 @@
 //     SOFTWARE.
 
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using ANDOR_CS;
 using ANDOR_CS.Classes;
 using DIPOL_Remote;
+using Serilog;
 using StepMotor;
 
 namespace DIPOL_UF
 {
     internal static class Injector
     {
+        private static ILogger _loggerInst = null;
+
+        public static void SetLogger(ILogger logger)
+        {
+            if (_loggerInst is {})
+                throw new InvalidOperationException(@"Logger has been already set");
+            _loggerInst = logger;
+        }
         public static IAsyncMotorFactory NewStepMotorFactory() 
             => new StepMotorHandler.StepMotorFactory();
 
@@ -48,6 +59,8 @@ namespace DIPOL_UF
         public static IControlClientFactory NewClientFactory()
             => new DipolClient.DipolClientFactory();
 
+
+        public static ILogger GetLogger() => _loggerInst ?? Log.Logger;
 //#if DEBUG
 //        public static IDeviceFactory NewDebugDeviceFactory()
 //            => new DebugCamera.DebugCameraFactory();

@@ -34,6 +34,8 @@ using System.Threading;
 using DIPOL_Remote;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
+using Serilog;
+using Serilog.Sinks;
 
 
 namespace DIPOL_UF
@@ -69,11 +71,21 @@ namespace DIPOL_UF
                 Directory.CreateDirectory(dirPath);
 
             var filePath = Path.Combine(dirPath, $"{DateTime.UtcNow:yyyyMMdd}.log");
-            using var fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write);
-            using var fileWriter = new StreamWriter(fileStream);
-            Debug.Listeners.Add(new TextWriterTraceListener(fileWriter));
-            Debug.Listeners.Add(new TextWriterTraceListener(Console.Out));
-            Debug.AutoFlush = true;
+            //using var fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write);
+            //using var fileWriter = new StreamWriter(fileStream);
+            //Debug.Listeners.Add(new TextWriterTraceListener(fileWriter));
+            //Debug.Listeners.Add(new TextWriterTraceListener(Console.Out));
+            //Debug.AutoFlush = true;
+            
+            using var logger = 
+                new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.File(filePath)
+                .WriteTo.Console()
+                .CreateLogger();
+                
+            Injector.SetLogger(logger);
+
             Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
 
