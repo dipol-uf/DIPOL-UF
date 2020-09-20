@@ -42,7 +42,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using ANDOR_CS;
-using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using StepMotor;
@@ -147,12 +146,10 @@ namespace DIPOL_UF.Models
                 IAsyncMotor motor = null;
                 try
                 {
-                    if (_polarimeterPort is null)
-                        _polarimeterPort = new SerialPort(UiSettingsProvider.Settings
-                            .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant());
+                    _polarimeterPort ??= new SerialPort(UiSettingsProvider.Settings
+                        .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant());
 
                     motor = await Injector.NewStepMotorFactory().CreateFirstOrFromAddress(_polarimeterPort, 1);
-                    //motor = await StepMotorHandler.CreateFirstOrFromAddress(_polarimeterPort, 1);
                     await motor.ReferenceReturnToOriginAsync();
                 }
                 catch (Exception)
@@ -177,12 +174,10 @@ namespace DIPOL_UF.Models
                 IAsyncMotor motor = null;
                 try
                 { 
-                    if (_retractorPort is null)
-                        _retractorPort = new SerialPort(UiSettingsProvider.Settings
-                            .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant());
+                    _retractorPort ??= new SerialPort(UiSettingsProvider.Settings
+                        .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant());
 
                     motor = await Injector.NewStepMotorFactory().CreateFirstOrFromAddress(_retractorPort, 1);
-                    //motor = await StepMotorHandler.CreateFirstOrFromAddress(_retractorPort, 1);
                     await motor.ReturnToOriginAsync();
                 }
                 catch (Exception)
@@ -444,21 +439,9 @@ namespace DIPOL_UF.Models
 
                         return client;
                     }
-                    //catch (System.ServiceModel.EndpointNotFoundException endpointException)
-                    //{
-                    //    Helper.WriteLog(endpointException.Message);
-                    //    Helper.ExecuteOnUi(() => MessageBox.Show(
-                    //        endpointException.Message,
-                    //        Properties.Localization.RemoteConnection_UnreachableHostTitle,
-                    //        MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
-                    //}
                     catch (Exception e)
                     {
                         Helper.WriteLog(e.Message);
-                        //Helper.ExecuteOnUi(() => MessageBox.Show(
-                        //    e.Message,
-                        //    Properties.Localization.RemoteConnection_UnreachableHostTitle,
-                        //    MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK));
                         return (object)e;
                     }
 
@@ -591,128 +574,119 @@ namespace DIPOL_UF.Models
            {
                IsSwitchingRegimes = true;
 
-                if (param != InstrumentRegime.Unknown && RetractorMotor != null && PolarimeterMotor != null)
-                {
-                    Progress<(int Current, int Target)> progress;
-                    string pbText;
-                    int pos;
-                    int target;
-                    try
-                    {
-                        pbText = string.Format(Properties.Localization.MainWindow_Regime_Switching_Text,
-                            Regime.ToStringEx(),
-                            param.ToStringEx());
-                        Regime = InstrumentRegime.Unknown;
-                        progress = new Progress<(int Current, int Target)>();
+               if (param is InstrumentRegime.Unknown || RetractorMotor is null || PolarimeterMotor is null)
+                   throw new ArgumentException(nameof(param));
+               Progress<(int Current, int Target)> progress;
+               string pbText;
+               int pos;
+               int target;
+               try
+               {
+                   pbText = string.Format(Properties.Localization.MainWindow_Regime_Switching_Text,
+                       Regime.ToStringEx(),
+                       param.ToStringEx());
+                   Regime = InstrumentRegime.Unknown;
+                   progress = new Progress<(int Current, int Target)>();
 
-                        pos = await RetractorMotor.GetActualPositionAsync();
+                   pos = await RetractorMotor.GetActualPositionAsync();
 
-                        // ReSharper disable once RedundantArgumentDefaultValue
-                        var reply = await RetractorMotor.MoveToPosition((int) param, CommandType.Absolute);
-                        if (reply.Status != ReturnStatus.Success)
-                            throw new InvalidOperationException("Failed to operate retractor,");
+                   // ReSharper disable once RedundantArgumentDefaultValue
+                   var reply = await RetractorMotor.MoveToPosition((int) param, CommandType.Absolute);
+                   if (reply.Status != ReturnStatus.Success)
+                       throw new InvalidOperationException("Failed to operate retractor,");
 
-                        var axis = await RetractorMotor.GetRotationStatusAsync();
-                        target = axis[AxisParameter.TargetPosition];
+                   var axis = await RetractorMotor.GetRotationStatusAsync();
+                   target = axis[AxisParameter.TargetPosition];
 
-                    }
-                    catch(Exception)
-                    {
-                        IsSwitchingRegimes = false;
-                        throw;
-                    }
+               }
+               catch(Exception)
+               {
+                   IsSwitchingRegimes = false;
+                   throw;
+               }
 
-                    _regimeSwitchingTask = RetractorMotor.WaitForPositionReachedAsync(progress).ContinueWith(
-                        async task =>
-                        {
-                            try
-                            {
-                                await _regimeSwitchingTask;
-                            }
-                            catch (Exception e)
-                            {
-                                Helper.WriteLog(e);
-                            }
+               _regimeSwitchingTask = RetractorMotor.WaitForPositionReachedAsync(progress).ContinueWith(
+                   async task =>
+                   {
+                       try
+                       {
+                           await _regimeSwitchingTask;
+                       }
+                       catch (Exception e)
+                       {
+                           Helper.WriteLog(e);
+                       }
 
-                            await RegimeSwitchProvider.ClosingRequested.Execute();
-                            if (task.IsCompleted)
-                                Regime = param;
-                            IsSwitchingRegimes = false;
-                        });
+                       await RegimeSwitchProvider.ClosingRequested.Execute();
+                       if (task.IsCompleted)
+                           Regime = param;
+                       IsSwitchingRegimes = false;
+                   });
 
-                    var pb = new ProgressBar()
-                    {
-                        Minimum = 0,
-                        Maximum = Math.Abs(target - pos),
-                        DisplayPercents = true,
-                        BarComment = pbText,
-                        BarTitle = Properties.Localization.MainWindow_Regime_Swtitching_Title
-                    };
-                    progress.ProgressChanged += (_, e) => pb.Value = Math.Abs(e.Current - pos);
+               var pb = new ProgressBar()
+               {
+                   Minimum = 0,
+                   Maximum = Math.Abs(target - pos),
+                   DisplayPercents = true,
+                   BarComment = pbText,
+                   BarTitle = Properties.Localization.MainWindow_Regime_Swtitching_Title
+               };
+               progress.ProgressChanged += (_, e) => pb.Value = Math.Abs(e.Current - pos);
 
-                    return pb;
-                }
+               return pb;
 
-                throw new ArgumentException(nameof(param));
-            });
+           });
 
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (!IsDisposed && !IsDisposing)
-                if (disposing)
+            if (IsDisposed || IsDisposing || !disposing) return;
+            // This one overrides on [Disconnect] disposal,
+            // as it is "fire & forget", and time-consuming.
+            // When window is closed, the unobserved disposals take some time
+            // and can use client infrastructure when client has been disconnected.
+            // [IsDisposing] overrides that behaviour, and each camera is removed & disposed
+            // individually and synchronously.
+
+            IsDisposing = true;
+            PolarimeterMotor?.Dispose();
+            RetractorMotor?.Dispose();
+            _polarimeterPort?.Dispose();
+            _retractorPort?.Dispose();
+                    
+            var keys = _connectedCameras.Keys.ToList();
+            foreach (var val in 
+                keys
+                    .Select(key => _connectedCameras.Lookup(key))
+                    .Where(val => val.HasValue))
+            {
+                _connectedCameras.Remove(val.Value.Id);
+                if(!val.Value.Camera.IsDisposed)
+                    val.Value.Camera.Dispose();
+            }
+
+            if (!(_remoteClients.IsEmpty))
+                Parallel.ForEach(_remoteClients, (client) =>
                 {
-                    // This one overrides on [Disconnect] disposal,
-                    // as it is "fire & forget", and time-consuming.
-                    // When window is closed, the unobserved disposals take some time
-                    // and can use client infrastructure when client has been disconnected.
-                    // [IsDisposing] overrides that behaviour, and each camera is removed & disposed
-                    // individually and synchronously.
-
-                    // TODO : Dispose ports
-                    
-                    PolarimeterMotor?.Dispose();
-                    RetractorMotor?.Dispose();
-                    _polarimeterPort?.Dispose();
-                    _retractorPort?.Dispose();
-                    
-                    IsDisposing = true;
-                    var keys = _connectedCameras.Keys.ToList();
-                    foreach (var key in keys)
+                    try
                     {
-                        var val = _connectedCameras.Lookup(key);
-                        if (val.HasValue)
-                        {
-                            _connectedCameras.Remove(val.Value.Id);
-                            if(!val.Value.Camera.IsDisposed)
-                                val.Value.Camera.Dispose();
-                        }
+                        client?.Disconnect();
+                        client?.Dispose();
                     }
-
-                    if (!(_remoteClients.IsEmpty))
-                        Parallel.ForEach(_remoteClients, (client) =>
-                        {
-                            try
-                            {
-                                client?.Disconnect();
-                                client?.Dispose();
-                            }
-                            catch (Exception)
-                            {
-                                // TODO : may be important
-                                // Ignored
-                            }
-                        });
-                    IsDisposing = false;
-                    base.Dispose(true);
-                }
+                    catch (Exception)
+                    {
+                        // TODO : may be important
+                        // Ignored
+                    }
+                });
+            IsDisposing = false;
+            base.Dispose(true);
         }
 
         private static async Task<AvailableCamerasModel> QueryCamerasAsync(AvailableCamerasModel model)
         {
-            (await Helper.RunNoMarshall(() => model
-                                              .QueryCamerasCommand.Execute()))
+            (await Helper.RunNoMarshall(() => model.QueryCamerasCommand.Execute()))
                 .Subscribe(_ => { }, () => { });
 
             return model;
@@ -744,12 +718,11 @@ namespace DIPOL_UF.Models
             {
                 // This one only works if a camera is disposed through 
                 // removal from collection - as in "user pressed Disconnect"
-                if (cam?.IsDisposed == false && !IsDisposing)
-                {
-                    cam.CoolerControl(Switch.Disabled);
-                    cam.TemperatureMonitor(Switch.Disabled, 0);
-                    cam.Dispose();
-                }
+                if (cam?.IsDisposed != false || IsDisposing) return;
+
+                cam.CoolerControl(Switch.Disabled);
+                cam.TemperatureMonitor(Switch.Disabled, 0);
+                cam.Dispose();
             });
     }
 }
