@@ -24,6 +24,7 @@
 
 using System;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -96,6 +97,50 @@ namespace DIPOL_UF.Jobs
                         ActionType == MotorActionType.Rotate
                             ? 1
                             : 0;
+            }
+
+            public override async Task Initialize(CancellationToken token)
+            {
+                await base.Initialize(token);
+                var motor = Manager._windowRef.PolarimeterMotor;
+
+                await motor.SetAxisParameter(
+                    AxisParameter.ReferencingSwitchSpeed,
+                    UiSettingsProvider.Settings.Get(@"StepMotorRFSSpeed", 95));
+
+                for (var i = 0; i < _nRetries; i++)
+                {
+                    Helper.WriteLog($@"Reference search, step {i}");
+                    await motor.ReferenceReturnToOriginAsync(token);
+                    if (await motor.GetAxisParameter(AxisParameter.ReferenceSwitchStatus) == 0)
+                        break;
+                }
+
+                await motor.MoveToPosition(250, CommandType.Relative);
+                await motor.WaitForPositionReachedAsync(token);
+
+                for (var i = 0; i < 3 * _nRetries; i++)
+                {
+                    Helper.WriteLog($@"Backtracking, step {i}");
+                    if (await motor.GetAxisParameter(AxisParameter.ReferenceSwitchStatus) == 0)
+                    {
+                        await motor.MoveToPosition(-100, CommandType.Relative);
+                        await motor.WaitForPositionReachedAsync(token);
+                    }
+                    else break;
+                }
+
+                var pos = await motor.GetTruePositionAsync();
+                if (Math.Abs(pos) < 150)
+                {
+                    Helper.WriteLog($@"Found position is {pos}, marking as origin");
+                    await motor.SetAxisParameter(AxisParameter.ActualPosition, 0);
+                }
+                else
+                {
+                    Helper.WriteLog($@"WARNING! Found position is {pos}, too far from 0, performing extra RFS with no origin reset.");
+                    await motor.ReferenceReturnToOriginAsync(token);
+                }
             }
 
             public override async Task Execute(CancellationToken token)

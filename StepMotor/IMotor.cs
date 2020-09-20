@@ -52,5 +52,14 @@ namespace StepMotor
         Task<ImmutableDictionary<AxisParameter, int>> GetStatusAsync(byte motorOrBank = 0);
 
         Task<Reply> MoveToPosition(int position, CommandType rotationType = CommandType.Absolute, byte motorOrBank = 0);
+
+        Task<Reply> SetAxisParameter(
+            AxisParameter parameter,
+            int value,
+            byte motorOrBank = 0);
+
+        Task<int> GetAxisParameter(
+            AxisParameter parameter,
+            byte motorOrBank = 0);
     }
 }

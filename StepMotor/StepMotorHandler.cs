@@ -400,6 +400,22 @@ namespace StepMotor
             return status.ToImmutable();
         }
 
+        public async Task<int> GetAxisParameter(
+            AxisParameter parameter,
+            byte motorOrBank = 0)
+        {
+            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType)parameter, motorOrBank);
+            if (reply.Status == ReturnStatus.Success)
+                return reply.ReturnValue;
+            throw new InvalidOperationException(@"Failed to retrieve value.");
+        }
+
+        public Task<Reply> SetAxisParameter(
+            AxisParameter parameter,
+            int value,
+            byte motorOrBank = 0) =>
+            SendCommandAsync(Command.SetAxisParameter, value, (CommandType)parameter, motorOrBank);
+
         public Task<Reply> MoveToPosition(int position, CommandType rotationType = CommandType.Unused, byte motorOrBank = 0)
         {
             return SendCommandAsync(Command.MoveToPosition, position, rotationType, motorOrBank);
@@ -443,6 +459,7 @@ namespace StepMotor
             // Returns query result
             return status.ToImmutable();
         }
+
 
         public async Task<int> GetActualPositionAsync(byte motorOrBank = 0)
         {
