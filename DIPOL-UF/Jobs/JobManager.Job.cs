@@ -90,6 +90,13 @@ namespace DIPOL_UF.Jobs
                 return null;
             }
 
+
+            public async Task Initialize(CancellationToken token)
+            {
+                foreach (var item in _actions)
+                    await item.Initialize(token);
+            }
+
             public async Task Run(CancellationToken token)
             {
                 foreach (var action in _actions)

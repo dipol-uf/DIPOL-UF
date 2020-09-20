@@ -145,7 +145,6 @@ namespace DIPOL_UF.Jobs
 
             public override async Task Execute(CancellationToken token)
             {
-                // TODO : move to resources
                 if (Manager._windowRef.PolarimeterMotor is null)
                     throw new NotSupportedException(@"No step motor found");
 

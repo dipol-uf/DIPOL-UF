@@ -306,6 +306,13 @@ namespace DIPOL_UF.Jobs
                         ? new float?(0)
                         : null;
                     ActualMotorPosition = MotorPosition;
+
+                    if (_firstRun)
+                    {
+                        // WATCH : Check how initialization is performed
+                        Helper.WriteLog($@"First run detected, running initialization.");
+                        await job.Initialize(token);
+                    }
                     await job.Run(token);
                 }
                 finally
@@ -399,6 +406,7 @@ namespace DIPOL_UF.Jobs
                         CurrentJobName = Localization.JobManager_DarkJobName;
                         await DoCameraJobAsync(DarkJob, $"{CurrentTarget1.StarName}_dark", FrameType.Dark);
 
+                        // TODO : Fix correct calibrations behavior
                         calibrationsMade = true;
                         NeedsCalibration = false;
                     }
