@@ -44,6 +44,7 @@ using System.Windows.Input;
 using ANDOR_CS;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
+using Serilog.Events;
 using StepMotor;
 using Exception = System.Exception;
 
@@ -444,7 +445,7 @@ namespace DIPOL_UF.Models
                     }
                     catch (Exception e)
                     {
-                        Helper.WriteLog(e.Message);
+                        Helper.WriteLog(LogEventLevel.Error, e, @"Failed to connect to {Target}", x);
                         return (object)e;
                     }
 
@@ -479,8 +480,9 @@ namespace DIPOL_UF.Models
             {
                 pos = await (PolarimeterMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Helper.WriteLog(LogEventLevel.Error, ex, "Stepper motor failed to respond");
                 PolarimeterMotor?.Dispose();
                 PolarimeterMotor = null;
             }
@@ -505,7 +507,11 @@ namespace DIPOL_UF.Models
                         Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
                         MessageBoxButton.YesNo, MessageBoxImage.Warning);
                     if (response == MessageBoxResult.Yes)
+                    {
+
+                        Helper.WriteLog(LogEventLevel.Information, "Stepper motor re-scanning requested");
                         _polarimeterPortScanningTask = CheckPolarimeterMotor();
+                    }
                 }
                 else
                 {
@@ -524,8 +530,10 @@ namespace DIPOL_UF.Models
             {
                 pos = await (RetractorMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Helper.WriteLog(LogEventLevel.Error, ex, "Retractor motor failed to respond");
+
                 RetractorMotor?.Dispose();
                 RetractorMotor = null;
             }
@@ -543,8 +551,7 @@ namespace DIPOL_UF.Models
                             MessageBoxImage.Information)
                         is MessageBoxResult.Yes)
                     {
-                        // TODO : Calibrate
-                        // WATCH : Check for deadlocks
+                        Helper.WriteLog(LogEventLevel.Information, "Retractor motor recalibration requested");
                         await ChangeRegimeCommand.Execute(Regime);
 
                     }
@@ -569,9 +576,12 @@ namespace DIPOL_UF.Models
                             Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
                             MessageBoxButton.YesNo, 
                             MessageBoxImage.Warning);
-                        
+
                         if (response == MessageBoxResult.Yes)
+                        {
+                            Helper.WriteLog(LogEventLevel.Information, "Retractor motor re-scannings requested");
                             _retractorPortScanningTask = CheckRetractorMotor();
+                        }
                     }
                     else
                     {
@@ -630,6 +640,7 @@ namespace DIPOL_UF.Models
                        _ => throw new ArgumentException(nameof(param))
                    };
 
+                   Helper.WriteLog(LogEventLevel.Information, @"Retractor at {Pos}, rotating to {Regime} by {newPos}", pos, param, newPos);
                    // Now moving relatively
                    var reply = await RetractorMotor.MoveToPosition(newPos, CommandType.Relative);
                    if (reply.Status != ReturnStatus.Success)
@@ -654,7 +665,7 @@ namespace DIPOL_UF.Models
                        }
                        catch (Exception e)
                        {
-                           Helper.WriteLog(e);
+                           Helper.WriteLog(LogEventLevel.Error, e, "Regime switching has failed");
                        }
 
                        await RegimeSwitchProvider.ClosingRequested.Execute();

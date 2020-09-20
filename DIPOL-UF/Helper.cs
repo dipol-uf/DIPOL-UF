@@ -68,6 +68,10 @@ namespace DIPOL_UF
 
         public static void WriteLog(object entry) => WriteLog(entry.ToString());
 
+        public static void WriteLog(LogEventLevel level, string template, params object[] args) => Injector.GetLogger().Write(level, template, args);
+        public static void WriteLog(LogEventLevel level, Exception exception, string template, params object[] args) => 
+            Injector.GetLogger().Write(level, exception, template, args);
+
         public static string GetCameraHostName(string input)
         {
             var splits = input.Split(';');

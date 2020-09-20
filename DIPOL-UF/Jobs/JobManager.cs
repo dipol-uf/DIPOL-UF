@@ -46,6 +46,7 @@ using DynamicData;
 using DynamicData.Binding;
 using FITS_CS;
 using ReactiveUI.Fody.Helpers;
+using Serilog.Events;
 using Localization = DIPOL_UF.Properties.Localization;
 
 namespace DIPOL_UF.Jobs
@@ -274,14 +275,18 @@ namespace DIPOL_UF.Jobs
                 
                 _firstRun = true;
                 ReadyToRun = true;
+                
+                Helper.WriteLog(LogEventLevel.Information, "Set up new target {StarName} in {CycleType} regime", CurrentTarget1.StarName, CurrentTarget1.CycleType);
+
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 CurrentTarget1 = new Target1();
                 AcquisitionJob = null;
                 BiasJob = null;
                 DarkJob = null;
                 _settingsRep = null;
+                Helper.WriteLog(LogEventLevel.Error, ex,  @"Failed to apply new target");
                 throw;
             }
         }
