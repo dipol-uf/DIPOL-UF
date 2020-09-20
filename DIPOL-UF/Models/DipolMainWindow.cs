@@ -582,7 +582,8 @@ namespace DIPOL_UF.Models
                int target;
                try
                {
-                   pbText = string.Format(Properties.Localization.MainWindow_Regime_Switching_Text,
+                   pbText = string.Format(
+                       Properties.Localization.MainWindow_Regime_Switching_Text,
                        Regime.ToStringEx(),
                        param.ToStringEx());
                    Regime = InstrumentRegime.Unknown;
@@ -590,10 +591,23 @@ namespace DIPOL_UF.Models
 
                    pos = await RetractorMotor.GetActualPositionAsync();
 
-                   // ReSharper disable once RedundantArgumentDefaultValue
-                   var reply = await RetractorMotor.MoveToPosition((int) param, CommandType.Absolute);
+                   // By default is +450_000
+                   var posOffset = UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0) -
+                                    UiSettingsProvider.Settings.Get(@"RetractorPositionPhotometry", -450_000);
+
+                   var newPos = param switch
+                   {
+                       // By default, goes to (pos + 450_000)
+                       InstrumentRegime.Polarimeter => posOffset,
+                       // By default, goes to (pos - 450_000)
+                       InstrumentRegime.Photometer => -posOffset,
+                       _ => throw new ArgumentException(nameof(param))
+                   };
+
+                   // Now moving relatively
+                   var reply = await RetractorMotor.MoveToPosition(newPos, CommandType.Relative);
                    if (reply.Status != ReturnStatus.Success)
-                       throw new InvalidOperationException("Failed to operate retractor,");
+                       throw new InvalidOperationException("Failed to operate retractor.");
 
                    var axis = await RetractorMotor.GetRotationStatusAsync();
                    target = axis[AxisParameter.TargetPosition];
@@ -623,7 +637,7 @@ namespace DIPOL_UF.Models
                        IsSwitchingRegimes = false;
                    });
 
-               var pb = new ProgressBar()
+               var pb = new ProgressBar
                {
                    Minimum = 0,
                    Maximum = Math.Abs(target - pos),
