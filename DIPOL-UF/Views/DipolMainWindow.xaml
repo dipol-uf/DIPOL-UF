@@ -31,7 +31,7 @@
         xmlns:vms="clr-namespace:DIPOL_UF.ViewModels"
         xmlns:extensions="clr-namespace:DIPOL_UF.Extensions"
         xmlns:enums="clr-namespace:DIPOL_UF.Enums"
-        Title="{extensions:Text Key=ApplicationName}" 
+        Title="{Binding ApplicationName, Mode=OneTime}" 
         Height="960" Width="1280" HorizontalContentAlignment="Stretch" 
         MinWidth="768" MinHeight="576" WindowStartupLocation="CenterScreen"
         Style="{StaticResource ResourceKey=ContentFont}"
