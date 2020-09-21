@@ -106,7 +106,7 @@ namespace DIPOL_UF.Jobs
                 await base.Initialize(token);
                 var motor = Manager._windowRef.PolarimeterMotor;
 
-                if(UiSettingsProvider.Settings.Get(@"StepMotorBacktrackingRFS", true))
+                if(!UiSettingsProvider.Settings.Get(@"StepMotorBacktrackingRFS", true))
                 {
                     Helper.WriteLog(Serilog.Events.LogEventLevel.Information, "Using simple RFS to calibrate origin");
                     await motor.ReferenceReturnToOriginAsync(token);
