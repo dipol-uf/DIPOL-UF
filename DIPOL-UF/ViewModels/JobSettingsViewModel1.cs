@@ -189,9 +189,6 @@ namespace DIPOL_UF.ViewModels
 
         public JobSettingsViewModel1(ReactiveWrapper<Target1> model) : base(model)
         {
-            WasModified = false;
-
-            Helper.WriteLog(Serilog.Events.LogEventLevel.Debug, @"Wrapper is null {wp}; Object is null {obj}", model is null, model?.Object is null);
 
             _firstCamera = JobManager.Manager.ConnectedCameras.Items.First().Item2;
 
@@ -220,6 +217,7 @@ namespace DIPOL_UF.ViewModels
 
             CreateValidators();
 
+            WasModified = false;
         }
 
         private void CreateValidators()
