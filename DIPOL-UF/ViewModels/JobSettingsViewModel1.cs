@@ -184,8 +184,15 @@ namespace DIPOL_UF.ViewModels
         [Reactive]
         public CycleType CycleType { get; set; }
 
+        [Reactive]
+        public bool WasModified { get; set; }
+
         public JobSettingsViewModel1(ReactiveWrapper<Target1> model) : base(model)
         {
+            WasModified = false;
+
+            Helper.WriteLog(Serilog.Events.LogEventLevel.Debug, @"Wrapper is null {wp}; Object is null {obj}", model is null, model?.Object is null);
+
             _firstCamera = JobManager.Manager.ConnectedCameras.Items.First().Item2;
 
             _propList = new SourceList<CollectionItem>();
@@ -424,25 +431,39 @@ namespace DIPOL_UF.ViewModels
 
         private void HookObservables()
         {
+            var saveAndSubmitWhenModified = SaveAndSubmitButtonCommand.Where(_ => WasModified);
+
             // On save button click, generate file dialog request
-            SaveAndSubmitButtonCommand
+            // This triggers when settings were modified
+            saveAndSubmitWhenModified
                 .Select(_ => GenerateSaveDialogDescriptor())
                 .Subscribe(OnFileDialogRequested)
                 .DisposeWith(Subscriptions);
-            
+
             // When both save button was clicked and dialog finished (one way or another),
             // Close window
-            SaveAndSubmitButtonCommand.Zip(SaveActionCommand, 
-                (x, y) => (Window:x, WasSaved:y))
+            // This triggers when settings were modified
+            saveAndSubmitWhenModified
+                .Zip(
+                    SaveActionCommand, 
+                    (x, y) => (Window:x, WasSaved:y))
                 .Subscribe(x =>
                 {
-                    if (x.WasSaved && x.Window is {} window)
-                    {
-                        _closedUsingButton = true;
-                        window.Close();
-                    }
+                    if (x.WasSaved)
+                        CloseWindowFromButton(x.Window);
 
                 }).DisposeWith(Subscriptions);
+
+            // This happens when data was not modified
+            // Values are pushed manually
+            SaveAndSubmitButtonCommand
+               .Where(_ => !WasModified)
+               .Subscribe(w =>
+               {
+                   PushValues();
+                   CloseWindowFromButton(w);
+                })
+               .DisposeWith(Subscriptions);
 
             LoadButtonCommand
                 .Select(_ => GenerateLoadDialogDescriptor())
@@ -450,6 +471,16 @@ namespace DIPOL_UF.ViewModels
                 .DisposeWith(Subscriptions);
 
             CreateNewButtonCommand.InvokeCommand(_acqSettsProvider?.ViewRequested).DisposeWith(Subscriptions);
+
+            // If any object property was modified, or `CreateNew` was invoked, set the appropriate flag.
+            this.WhenAnyPropertyChanged(nameof(ObjectName), nameof(Description), nameof(CycleType)).Subscribe(_ => WasModified = true).DisposeWith(Subscriptions);
+
+            CreateNewButtonCommand.Subscribe(_ => WasModified = true).DisposeWith(Subscriptions);
+
+            // WATCH : DEBUG
+            this.WhenPropertyChanged(x => x.WasModified)
+                .Subscribe(x => Helper.WriteLog(Serilog.Events.LogEventLevel.Debug, "WasModified: {WasModified}", x.Value))
+                .DisposeWith(Subscriptions);
         }
 
 
@@ -466,8 +497,10 @@ namespace DIPOL_UF.ViewModels
                 await writer.WriteAsync(line);
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Helper.WriteLog(Serilog.Events.LogEventLevel.Error, e, "Failed to write 'target' file");
+
                 return false;
             }
         }
@@ -486,15 +519,26 @@ namespace DIPOL_UF.ViewModels
                 {
                     Model.Object = target;
                     LoadValues();
+                    WasModified = false;
                 }
 
             }
             catch (Exception e)
             {
+                Helper.WriteLog(Serilog.Events.LogEventLevel.Error, e, "Failed to read 'target' file");
                 // TODO : Show message box
             }
         }
 
+
+        private void CloseWindowFromButton(Window? window)
+        {
+            if (window is { })
+            {
+                _closedUsingButton = true;
+                window.Close();
+            }
+        }
 
         private void OnFileDialogRequested(FileDialogDescriptor e) 
             => FileDialogRequested?.Invoke(this, new DialogRequestedEventArgs(e));
