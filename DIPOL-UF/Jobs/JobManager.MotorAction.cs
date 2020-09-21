@@ -101,8 +101,17 @@ namespace DIPOL_UF.Jobs
 
             public override async Task Initialize(CancellationToken token)
             {
+                static Task For50() => Task.Delay(TimeSpan.FromMilliseconds(50));
+                
                 await base.Initialize(token);
                 var motor = Manager._windowRef.PolarimeterMotor;
+
+                if(UiSettingsProvider.Settings.Get(@"StepMotorBacktrackingRFS", true))
+                {
+                    Helper.WriteLog(Serilog.Events.LogEventLevel.Information, "Using simple RFS to calibrate origin");
+                    await motor.ReferenceReturnToOriginAsync(token);
+                    return;
+                }
 
                 await motor.SetAxisParameter(
                     AxisParameter.ReferencingSwitchSpeed,
@@ -110,37 +119,48 @@ namespace DIPOL_UF.Jobs
 
                 for (var i = 0; i < _nRetries; i++)
                 {
-                    Helper.WriteLog($@"Reference search, step {i}");
+                    Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Reference search, step {i}", i);
                     await motor.ReferenceReturnToOriginAsync(token);
+                    await For50();
                     if (await motor.GetAxisParameter(AxisParameter.ReferenceSwitchStatus) == 0)
                         break;
                 }
 
                 await motor.MoveToPosition(250, CommandType.Relative);
                 await motor.WaitForPositionReachedAsync(token);
+                await For50();
 
-                for (var i = 0; i < 3 * _nRetries; i++)
+
+                for (var i = 0; i < 10 * _nRetries; i++)
                 {
-                    Helper.WriteLog($@"Backtracking, step {i}");
+                    Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Backtracking, step {i}", i);
                     if (await motor.GetAxisParameter(AxisParameter.ReferenceSwitchStatus) == 0)
                     {
-                        await motor.MoveToPosition(-100, CommandType.Relative);
+                        await motor.MoveToPosition(-50, CommandType.Relative);
                         await motor.WaitForPositionReachedAsync(token);
+                        await For50();
+
                     }
                     else break;
                 }
 
-                var pos = await motor.GetTruePositionAsync();
-                if (Math.Abs(pos) < 150)
-                {
-                    Helper.WriteLog($@"Found position is {pos}, marking as origin");
-                    await motor.SetAxisParameter(AxisParameter.ActualPosition, 0);
-                }
-                else
-                {
-                    Helper.WriteLog($@"WARNING! Found position is {pos}, too far from 0, performing extra RFS with no origin reset.");
-                    await motor.ReferenceReturnToOriginAsync(token);
-                }
+                Helper.WriteLog(
+                      Serilog.Events.LogEventLevel.Information,
+                      @"Found position is {pos} ({actualPos}), marking as origin",
+                      await motor.GetActualPositionAsync(),
+                      await motor.GetTruePositionAsync()); 
+                
+                await For50();
+                await motor.SetAxisParameter(AxisParameter.ActualPosition, 0);
+                await motor.SetAxisParameter(AxisParameter.ActualPosition, 0);
+                await For50();
+
+
+                Helper.WriteLog(
+                        Serilog.Events.LogEventLevel.Information, 
+                        @"New position is {pos} ({actualPos})", 
+                        await motor.GetActualPositionAsync(),
+                        await motor.GetTruePositionAsync());
             }
 
             public override async Task Execute(CancellationToken token)
@@ -153,7 +173,7 @@ namespace DIPOL_UF.Jobs
                 if (ActionType == MotorActionType.Reset)
                 {
                     var zeroPos = StepsPerFullRotation * (int)Math.Ceiling(1.0 * pos / StepsPerFullRotation);
-                    Helper.WriteLog(@$"Resetting motor: from {pos} to {zeroPos}");
+                    Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Resetting motor: from {pos} to {zeroPos}", pos, zeroPos);
 
                     if ((Math.Abs(zeroPos) + StepsPerFullRotation) >= _stepMotorMaxPositionAbs)
                         // Exceeding default ~327 rotations without reference search
@@ -189,7 +209,7 @@ namespace DIPOL_UF.Jobs
                 Manager.MotorPosition = OneStepAngle * (pos % StepsPerFullRotation) / _angleInUnits;
                 Manager.ActualMotorPosition = OneStepAngle * (actualPos % StepsPerFullRotation) / _angleInUnits;
 
-                Helper.WriteLog($@"Motor at position {pos} ({actualPos})");
+                Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Motor at position {pos} ({actualPos})", pos, actualPos);
             }
             private static async Task RetryAction(Func<Task> action, int retries)
             {

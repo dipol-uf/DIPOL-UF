@@ -404,7 +404,7 @@ namespace StepMotor
             AxisParameter parameter,
             byte motorOrBank = 0)
         {
-            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType)parameter, motorOrBank);
+            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (byte)parameter, Address, motorOrBank, _timeOut);
             if (reply.Status == ReturnStatus.Success)
                 return reply.ReturnValue;
             throw new InvalidOperationException(@"Failed to retrieve value.");
@@ -414,7 +414,7 @@ namespace StepMotor
             AxisParameter parameter,
             int value,
             byte motorOrBank = 0) =>
-            SendCommandAsync(Command.SetAxisParameter, value, (CommandType)parameter, motorOrBank);
+            SendCommandAsync(Command.SetAxisParameter, value, (byte)parameter, Address, motorOrBank, _timeOut);
 
         public Task<Reply> MoveToPosition(int position, CommandType rotationType = CommandType.Unused, byte motorOrBank = 0)
         {
@@ -463,8 +463,8 @@ namespace StepMotor
 
         public async Task<int> GetActualPositionAsync(byte motorOrBank = 0)
         {
-            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType) AxisParameter.ActualPosition,
-                motorOrBank);
+            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (byte) AxisParameter.ActualPosition,
+                Address, motorOrBank, _timeOut);
             if (reply.Status == ReturnStatus.Success)
                 return reply.ReturnValue;
             throw new InvalidOperationException("Failed to retrieve value.");
@@ -472,8 +472,8 @@ namespace StepMotor
 
         public async Task<int> GetTruePositionAsync(byte motorOrBank = 0)
         {
-            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType)AxisParameter.EncoderPosition,
-                motorOrBank);
+            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (byte)AxisParameter.EncoderPosition,
+                Address, motorOrBank, _timeOut);
             if (reply.Status == ReturnStatus.Success)
                 return reply.ReturnValue;
             throw new InvalidOperationException("Failed to retrieve value.");
@@ -481,8 +481,8 @@ namespace StepMotor
 
         public async Task<bool> IsTargetPositionReachedAsync(byte motorOrBank = 0)
         {
-            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (CommandType)AxisParameter.TargetPositionReached,
-                motorOrBank);
+            var reply = await SendCommandAsync(Command.GetAxisParameter, 0, (byte)AxisParameter.TargetPositionReached,
+                Address, motorOrBank, _timeOut);
             if (reply.Status == ReturnStatus.Success)
                 return reply.ReturnValue == 1;
             throw new InvalidOperationException("Failed to retrieve value.");

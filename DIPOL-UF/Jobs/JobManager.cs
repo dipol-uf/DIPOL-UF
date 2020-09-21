@@ -312,12 +312,7 @@ namespace DIPOL_UF.Jobs
                         : null;
                     ActualMotorPosition = MotorPosition;
 
-                    if (_firstRun)
-                    {
-                        // WATCH : Check how initialization is performed
-                        Helper.WriteLog($@"First run detected, running initialization.");
-                        await job.Initialize(token);
-                    }
+
                     await job.Run(token);
                 }
                 finally
@@ -378,8 +373,19 @@ namespace DIPOL_UF.Jobs
                             ? new float?(0)
                             : null;
                         ActualMotorPosition = MotorPosition;
+
+                        if (_firstRun)
+                        {
+                            // WATCH : Check how initialization is performed
+                            Helper.WriteLog(LogEventLevel.Information, $@"First run detected, running initialization");
+                            await AcquisitionJob.Initialize(token);
+                        }
+
                         for (var i = 0; i < AcquisitionRuns; i++)
+                        {
+                            Helper.WriteLog(LogEventLevel.Information, "Running {i} cycle", i + 1);
                             await AcquisitionJob.Run(token);
+                        }
                     }
                     finally
                     {
@@ -396,16 +402,12 @@ namespace DIPOL_UF.Jobs
                             Localization.JobManager_TakeCalibrations_Header,
                             MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                     {
-                        //if (!(BiasJob is null))
-                        //{
                         Progress = 0;
                         Total = BiasActionCount;
                         CurrentJobName = Localization.JobManager_BiasJobName;
                         await DoCameraJobAsync(BiasJob, $"{CurrentTarget1.StarName}_bias", FrameType.Bias);
                     
 
-                        //if (!(DarkJob is null))
-                        //{
                         Progress = 0;
                         Total = DarkActionCount;
                         CurrentJobName = Localization.JobManager_DarkJobName;
@@ -430,6 +432,7 @@ namespace DIPOL_UF.Jobs
             }
             catch (Exception e)
             {
+                Helper.WriteLog(LogEventLevel.Error, e, "Acquisition sequence has failed");
                 MessageBox.Show(
                     string.Format(Localization.JobManager_MB_Failed_Text, e.Message),
                     Localization.JobManager_MB_Failed_Header,

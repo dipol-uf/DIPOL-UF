@@ -171,25 +171,25 @@ namespace DIPOL_UF.ViewModels
             //          });
                       //.LogObservable("MODEL", Subscriptions);
 
-            PropertyChanged += (sender, e) =>
-            {
-                if (e.PropertyName != nameof(HasErrors))
-                    Helper.WriteLog(
-                        $"\tVIEW\t{e.PropertyName}\t{typeof(AcquisitionSettingsViewModel).GetProperty(e.PropertyName)?.GetValue(this)}");
-            };
+            //PropertyChanged += (sender, e) =>
+            //{
+            //    if (e.PropertyName != nameof(HasErrors))
+            //        Helper.WriteLog(
+            //            $"\tVIEW\t{e.PropertyName}\t{typeof(AcquisitionSettingsViewModel).GetProperty(e.PropertyName)?.GetValue(this)}");
+            //};
 
-            AvailableReadModes.CollectionChanged += (sender, e) =>
-            {
-                Helper.WriteLog($"\tREADMODES: {e.Action} \t {e.NewItems?.Count} \t {AvailableReadModes.Count}");
-            };
-            AvailableHsSpeeds.CollectionChanged += (sender, e) =>
-            {
-                Helper.WriteLog($"\tHSSPEEDS: {e.Action} \t {e.NewItems?.Count} \t {AvailableHsSpeeds.Count}");
-            };
-            AvailablePreAmpGains.CollectionChanged += (sender, e) =>
-            {
-                Helper.WriteLog($"\tPREAMPS: {e.Action} \t {e.NewItems?.Count} \t {AvailablePreAmpGains.Count}");
-            };
+            //AvailableReadModes.CollectionChanged += (sender, e) =>
+            //{
+            //    Helper.WriteLog($"\tREADMODES: {e.Action} \t {e.NewItems?.Count} \t {AvailableReadModes.Count}");
+            //};
+            //AvailableHsSpeeds.CollectionChanged += (sender, e) =>
+            //{
+            //    Helper.WriteLog($"\tHSSPEEDS: {e.Action} \t {e.NewItems?.Count} \t {AvailableHsSpeeds.Count}");
+            //};
+            //AvailablePreAmpGains.CollectionChanged += (sender, e) =>
+            //{
+            //    Helper.WriteLog($"\tPREAMPS: {e.Action} \t {e.NewItems?.Count} \t {AvailablePreAmpGains.Count}");
+            //};
 
 
             SupportedSettings = Model.Object.SupportedSettings();
