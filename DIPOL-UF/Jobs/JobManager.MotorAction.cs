@@ -58,6 +58,12 @@ namespace DIPOL_UF.Jobs
             private readonly int _stepMotorMaxPositionAbs =
                 UiSettingsProvider.Settings.Get(@"StepMotorMaxPositionAbs", 1 << 23);
 
+            /// <summary>
+            /// 40
+            /// </summary>
+            private readonly int _referenceSearchMaxAttempts =
+                UiSettingsProvider.Settings.Get(@"StepMotorMaxRFSAttempts", 40);
+
             private enum MotorActionType
             {
                 Rotate,
@@ -101,7 +107,7 @@ namespace DIPOL_UF.Jobs
 
             public override async Task Initialize(CancellationToken token)
             {
-                static Task For50() => Task.Delay(TimeSpan.FromMilliseconds(50));
+                //static Task For50() => Task.Delay(TimeSpan.FromMilliseconds(50));
                 
                 await base.Initialize(token);
                 var motor = Manager._windowRef.PolarimeterMotor;
@@ -116,65 +122,22 @@ namespace DIPOL_UF.Jobs
                 await motor.SetAxisParameter(
                     AxisParameter.ReferencingSwitchSpeed,
                     UiSettingsProvider.Settings.Get(@"StepMotorRFSSpeed", 95));
-
-                for(var i = 0; i < 10 * _nRetries; i++)
+                var i = 0;
+                for(; i < _referenceSearchMaxAttempts; i++)
                 {
-                    Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Reference search, step {i}", i);
+                    Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Reference search, step {i}", i + 1);
                     await motor.ReferenceReturnToOriginAsync(token);
                     if (await motor.GetAxisParameter(AxisParameter.ReferenceSwitchStatus) == 1)
                         break;
-
                 }
 
                 Helper.WriteLog(
                         Serilog.Events.LogEventLevel.Information,
-                        @"RFS finished, new position is {pos} ({actualPos})",
+                        @"RFS finished in {N} steps, new position is {pos} ({actualPos})",
+                        i,
                         await motor.GetActualPositionAsync(),
                         await motor.GetTruePositionAsync());
 
-                //for (var i = 0; i < _nRetries; i++)
-                //{
-                //    await motor.ReferenceReturnToOriginAsync(token);
-                //    await For50();
-                //    if (await motor.GetAxisParameter(AxisParameter.ReferenceSwitchStatus) == 0)
-                //        break;
-                //}
-
-                //await motor.MoveToPosition(250, CommandType.Relative);
-                //await motor.WaitForPositionReachedAsync(token);
-                //await For50();
-
-
-                //for (var i = 0; i < 10 * _nRetries; i++)
-                //{
-                //    Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Backtracking, step {i}", i);
-                //    if (await motor.GetAxisParameter(AxisParameter.ReferenceSwitchStatus) == 0)
-                //    {
-                //        await motor.MoveToPosition(-50, CommandType.Relative);
-                //        await motor.WaitForPositionReachedAsync(token);
-                //        await For50();
-
-                //    }
-                //    else break;
-                //}
-
-                //Helper.WriteLog(
-                //      Serilog.Events.LogEventLevel.Information,
-                //      @"Found position is {pos} ({actualPos}), marking as origin",
-                //      await motor.GetActualPositionAsync(),
-                //      await motor.GetTruePositionAsync()); 
-
-                //await For50();
-                //await motor.SetAxisParameter(AxisParameter.ActualPosition, 0);
-                //await motor.SetAxisParameter(AxisParameter.ActualPosition, 0);
-                //await For50();
-
-
-                //Helper.WriteLog(
-                //        Serilog.Events.LogEventLevel.Information, 
-                //        @"New position is {pos} ({actualPos})", 
-                //        await motor.GetActualPositionAsync(),
-                //        await motor.GetTruePositionAsync());
             }
 
             public override async Task Execute(CancellationToken token)
