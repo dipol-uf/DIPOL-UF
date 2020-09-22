@@ -133,8 +133,8 @@ namespace DIPOL_UF.Jobs
 
                 Helper.WriteLog(
                         Serilog.Events.LogEventLevel.Information,
-                        @"RFS finished in {N} steps, new position is {pos} ({actualPos})",
-                        i,
+                        @"RFS finished in {N} step(s), new position is {pos} ({actualPos})",
+                        i + 1,
                         await motor.GetActualPositionAsync(),
                         await motor.GetTruePositionAsync());
 
@@ -150,19 +150,26 @@ namespace DIPOL_UF.Jobs
                 if (ActionType == MotorActionType.Reset)
                 {
                     var zeroPos = StepsPerFullRotation * (int)Math.Ceiling(1.0 * pos / StepsPerFullRotation);
-                    Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Resetting motor: from {pos} to {zeroPos}", pos, zeroPos);
+                    if (pos != zeroPos)
+                    {
+                        Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Resetting motor: from {pos} to {zeroPos}", pos, zeroPos);
 
-                    if ((Math.Abs(zeroPos) + StepsPerFullRotation) >= _stepMotorMaxPositionAbs)
-                        // Exceeding default ~327 rotations without reference search
-                        // Step motor buffer overflow is predicted, forcing reference search
-                        await Initialize(token);
+                        if ((Math.Abs(zeroPos) + StepsPerFullRotation) >= _stepMotorMaxPositionAbs)
+                            // Exceeding default ~327 rotations without reference search
+                            // Step motor buffer overflow is predicted, forcing reference search
+                            await Initialize(token);
 
-                    await RetryAction(
-                        () => Manager._windowRef.PolarimeterMotor.MoveToPosition(zeroPos), 
-                        _nRetries);
-                    await RetryAction(
-                        () => Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token),
-                        _nRetries);
+                        await RetryAction(
+                            () => Manager._windowRef.PolarimeterMotor.MoveToPosition(zeroPos),
+                            _nRetries);
+                        await RetryAction(
+                            () => Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token),
+                            _nRetries);
+                    }
+                    else
+                    {
+                        Helper.WriteLog(Serilog.Events.LogEventLevel.Information, "Motor is at correct position of {zeroPos}", zeroPos);
+                    }
                 }
                 else
                 {
