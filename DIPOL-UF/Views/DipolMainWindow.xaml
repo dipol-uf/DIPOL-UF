@@ -177,11 +177,11 @@
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource BasicButtonStyle}">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding HasPolarimeterMotor}" Value="True">
+                                        <DataTrigger Binding="{Binding HasRetractorMotor}" Value="True">
                                             <Setter Property="Content" Value="{extensions:Text Key=MainWindow_RetractorButton_Present}"/>
                                             <Setter Property="Background" Value="{StaticResource PositiveEffectButtonBackgroundColor}"></Setter>
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding HasPolarimeterMotor}" Value="False">
+                                        <DataTrigger Binding="{Binding HasRetractorMotor}" Value="False">
                                             <Setter Property="Content" Value="{extensions:Text Key=MainWindow_RetractorButton_None}"/>
                                             <Setter Property="Background" Value="{StaticResource NegativeEffectButtonBackgroundColor}"></Setter>
                                         </DataTrigger>
