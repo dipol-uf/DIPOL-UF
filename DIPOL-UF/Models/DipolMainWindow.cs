@@ -147,16 +147,21 @@ namespace DIPOL_UF.Models
                 IAsyncMotor motor = null;
                 try
                 {
-                    _polarimeterPort ??= new SerialPort(UiSettingsProvider.Settings
-                        .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant());
-
+                    if(PolarimeterMotor is { })
+                    {
+                        PolarimeterMotor.Dispose();
+                        PolarimeterMotor = null;
+                    }
+                    _polarimeterPort?.Dispose();
+                    _polarimeterPort = new SerialPort(
+                        UiSettingsProvider.Settings
+                            .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant());
                     motor = await Injector.NewStepMotorFactory().CreateFirstOrFromAddress(_polarimeterPort, 1);
                     await motor.ReferenceReturnToOriginAsync();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // TODO: maybe handle
-                    // Ignored
+                    Helper.WriteLog(LogEventLevel.Error, ex, "Polarimeter motor has failed");
                 }
                 finally
                 {
@@ -175,16 +180,21 @@ namespace DIPOL_UF.Models
                 IAsyncMotor motor = null;
                 try
                 { 
-                    _retractorPort ??= new SerialPort(UiSettingsProvider.Settings
+                    if(RetractorMotor is { })
+                    {
+                        RetractorMotor.Dispose();
+                        RetractorMotor = null;
+                    }
+                    _retractorPort?.Dispose();
+                    _retractorPort = new SerialPort(UiSettingsProvider.Settings
                         .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant());
 
                     motor = await Injector.NewStepMotorFactory().CreateFirstOrFromAddress(_retractorPort, 1);
                     await motor.ReturnToOriginAsync();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // TODO: maybe handle
-                    // Ignored
+                    Helper.WriteLog(LogEventLevel.Error, ex, "Retractor motor has failed");
                 }
                 finally
                 {
@@ -429,9 +439,13 @@ namespace DIPOL_UF.Models
             var tasks = _remoteLocations.Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => Task.Run(() =>
                 {
+
                     try
                     {
-                        var client = clientFactory.Create(new Uri(x),
+                        var uri = new Uri(x);
+                        Helper.WriteLog(LogEventLevel.Information, "Establishing connection to {Uri}", uri);
+                        var client = clientFactory.Create(
+                            uri,
                             TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")),
                             TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")),
                             TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteCloseTimeout", "00:00:30")));
@@ -441,6 +455,7 @@ namespace DIPOL_UF.Models
                         pb.BarComment = string.Format(Properties.Localization.MainWindow_RemoteConnection_ClientCount,
                             pb.Value, _remoteLocations.Length);
 
+                        Helper.WriteLog(LogEventLevel.Information, "Cnnection to {Uri} established", uri);
                         return client;
                     }
                     catch (Exception e)
