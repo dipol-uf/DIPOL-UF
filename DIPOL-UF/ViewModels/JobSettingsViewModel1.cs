@@ -443,8 +443,8 @@ namespace DIPOL_UF.ViewModels
             // This triggers when settings were modified
             saveAndSubmitWhenModified
                 .Zip(
-                    SaveActionCommand, 
-                    (x, y) => (Window:x, WasSaved:y))
+                    SaveActionCommand,
+                    (x, y) => (Window: x, WasSaved: y))
                 .Subscribe(x =>
                 {
                     if (x.WasSaved)
@@ -460,7 +460,7 @@ namespace DIPOL_UF.ViewModels
                {
                    PushValues();
                    CloseWindowFromButton(w);
-                })
+               })
                .DisposeWith(Subscriptions);
 
             LoadButtonCommand
@@ -475,12 +475,7 @@ namespace DIPOL_UF.ViewModels
 
             CreateNewButtonCommand.Subscribe(_ => WasModified = true).DisposeWith(Subscriptions);
 
-            // WATCH : DEBUG
-            this.WhenPropertyChanged(x => x.WasModified)
-                .Subscribe(x => Helper.WriteLog(Serilog.Events.LogEventLevel.Debug, "WasModified: {WasModified}", x.Value))
-                .DisposeWith(Subscriptions);
         }
-
 
         private async Task<bool> WriteTargetFile(string path)
         {
