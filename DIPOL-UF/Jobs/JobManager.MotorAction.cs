@@ -120,6 +120,7 @@ namespace DIPOL_UF.Jobs
                 for(var i = 0; i < 10 * _nRetries; i++)
                 {
                     Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Reference search, step {i}", i);
+                    await motor.ReferenceReturnToOriginAsync(token);
                     if (await motor.GetAxisParameter(AxisParameter.ReferenceSwitchStatus) == 1)
                         break;
 
