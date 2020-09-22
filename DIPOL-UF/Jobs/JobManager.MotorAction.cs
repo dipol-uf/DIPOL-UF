@@ -170,6 +170,7 @@ namespace DIPOL_UF.Jobs
                     {
                         Helper.WriteLog(Serilog.Events.LogEventLevel.Information, "Motor is at correct position of {zeroPos}", zeroPos);
                     }
+
                 }
                 else
                 {
@@ -189,11 +190,12 @@ namespace DIPOL_UF.Jobs
 
                 pos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetActualPositionAsync(), _nRetries);
                 var actualPos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetTruePositionAsync(), _nRetries);
-                
+                    
                 Manager.MotorPosition = OneStepAngle * (pos % StepsPerFullRotation) / _angleInUnits;
                 Manager.ActualMotorPosition = OneStepAngle * (actualPos % StepsPerFullRotation) / _angleInUnits;
+                if(ActionType == MotorActionType.Rotate) 
+                    Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Motor at position {pos} ({actualPos})", pos, actualPos);
 
-                Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Motor at position {pos} ({actualPos})", pos, actualPos);
             }
             private static async Task RetryAction(Func<Task> action, int retries)
             {
