@@ -200,7 +200,7 @@ namespace StepMotor
             if (_port.BytesToRead > 0)
                 buffer = new byte[_port.BytesToRead];
             
-            while(_responseWaitQueue.TryDequeue(out var taskSrc))
+            while(_responseWaitQueue.TryDequeue(out var taskSrc) && !taskSrc.Task.IsCompleted)
                 taskSrc.SetException(new InvalidOperationException(@"Step motor returned an error."));
 
             OnErrorReceived(new StepMotorEventArgs(buffer ?? Array.Empty<byte>()));
@@ -271,6 +271,11 @@ namespace StepMotor
                     taskSrc?.SetException(new StepMotorException("Step motor response is inconsistent", pool));
                     OnDataReceived(new StepMotorEventArgs(pool.ToArray()));
                 }
+            }
+            catch
+            {
+                // Ignored
+                // This method handles event, thus if it fails on a thread pool, app crashes
             }
             finally
             {
