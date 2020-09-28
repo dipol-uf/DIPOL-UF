@@ -212,7 +212,18 @@ namespace DIPOL_UF.ViewModels
             HookObservables();
             LoadValues();
 
-            AcquisitionSettingsProxy = new DescendantProxy(_acqSettsProvider, x => new AcquisitionSettingsViewModel((ReactiveWrapper<IAcquisitionSettings>)x, false)).DisposeWith(Subscriptions);
+            AcquisitionSettingsProxy = 
+                new DescendantProxy(
+                    _acqSettsProvider, 
+                    x => new AcquisitionSettingsViewModel((ReactiveWrapper<IAcquisitionSettings>)x, false))
+                .DisposeWith(Subscriptions);
+
+            // Observing modifications to the individual exposure times
+            _exposureList.Items
+                .Select(x => x.WhenPropertyChanged(y => y.Value, false))
+                .Merge()
+                .Subscribe(_ => WasModified = true)
+                .DisposeWith(Subscriptions);
 
 
             CreateValidators();
