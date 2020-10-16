@@ -213,7 +213,9 @@ namespace StepMotor
         /// <param name="e">Event arguments.</param>
         private void OnPortDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            if (_port.BytesToRead <= 0) return;
+            // If not enough data has been received, do nothing
+            if (_port.BytesToRead < ResponseSizeInBytes)
+                return;
 
             var len = _port.BytesToRead;
             byte[] pool = null;
@@ -223,21 +225,7 @@ namespace StepMotor
                    taskSrc.Task.IsCanceled)
             {
             }
-
-            // Sometimes step motor writes checksum with a delay.
-            // On trigger .BytesToRead == 8
-            // Checksum is usually written immediately after, 
-            // so small delay allows to capture it
-            if (len < ResponseSizeInBytes)
-            {
-                Task.Delay(TimeSpan.FromMilliseconds(_timeOut.TotalMilliseconds/4)).GetAwaiter().GetResult();
-                if (_port.BytesToRead % ResponseSizeInBytes == 0)
-                {
-                    len = _port.BytesToRead;
-
-                }
-            }
-
+            
             try
             {
                 pool = ArrayPool<byte>.Shared.Rent(Math.Max(ResponseSizeInBytes, len));

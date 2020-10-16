@@ -58,11 +58,11 @@ namespace Tests
         private StepMotorHandler _motor;
         private SerialPort _port;
         [SetUp]
-        public void SetUp()
+        public Task SetUp()
         {
-            _port = new SerialPort("COM1");
-            _motor = new StepMotorHandler(_port);
-            _motor.ReturnToOriginAsync().GetAwaiter().GetResult();
+            _port = new SerialPort(StaticConfigurationProvider.PlateMotorPort);
+            _motor = new StepMotorHandler(_port, defaultTimeOut: TimeSpan.FromMilliseconds(300));
+            return _motor.ReturnToOriginAsync();
         }
 
         [TearDown]

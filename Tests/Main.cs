@@ -33,21 +33,35 @@ namespace Tests
     {
         public static async Task<int> Main()
         {
-            using (var port = new SerialPort(@"COM1"))
-            using (var motor = new StepMotorHandler(port))
+            using (var port = new SerialPort(StaticConfigurationProvider.RetractorMotorPort))
+            using (var motor = new StepMotorHandler(port, defaultTimeOut: TimeSpan.FromMilliseconds(50)))
             {
-                var status = await motor.GetStatusAsync();
+                //var status = await motor.GetStatusAsync();
 
-                await motor.SendCommandAsync(Command.MoveToPosition, 50000, CommandType.Absolute);
-                await motor.WaitForPositionReachedAsync();
+                //await motor.SendCommandAsync(Command.MoveToPosition, 50000, CommandType.Absolute);
+                //await motor.WaitForPositionReachedAsync();
 
-                status = await motor.GetRotationStatusAsync();
+                //status = await motor.GetRotationStatusAsync();
 
-                await motor.ReferenceReturnToOriginAsync();
+                //await motor.ReferenceReturnToOriginAsync();
 
-                status = await motor.GetRotationStatusAsync();
-
+                //status = await motor.GetRotationStatusAsync();
+                await Task.Yield();
+                try
+                {
+                    var pos_1 = await motor.GetActualPositionAsync();
+                    Console.WriteLine(pos_1);
+                    var pos_2 = await motor.GetActualPositionAsync();
+                    Console.WriteLine(pos_2);
+                    Console.WriteLine((pos_1, pos_2));
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine($"Exception {e.Message}");
+                    throw;
+                }
             }
+            Console.ReadKey();
             return 0;
         }
     }
