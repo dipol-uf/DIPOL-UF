@@ -61,8 +61,8 @@ namespace Tests
         public void SetUp()
         {
             _port = new SerialPort("COM1");
-            _motor = new StepMotorHandler(_port);
-            _motor.ReturnToOriginAsync().GetAwaiter().GetResult();
+            _motor = new StepMotorHandler(_port, defaultTimeOut: TimeSpan.FromMilliseconds(300));
+            //_motor.ReturnToOriginAsync().GetAwaiter().GetResult();
         }
 
         [TearDown]
