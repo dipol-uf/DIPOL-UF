@@ -33,7 +33,7 @@ namespace Tests
     {
         public static async Task<int> Main()
         {
-            using (var port = new SerialPort(@"COM2"))
+            using (var port = new SerialPort(StaticConfigurationProvider.RetractorMotorPort))
             using (var motor = new StepMotorHandler(port, defaultTimeOut: TimeSpan.FromMilliseconds(50)))
             {
                 //var status = await motor.GetStatusAsync();

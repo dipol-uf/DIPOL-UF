@@ -44,8 +44,8 @@ namespace Tests
         public async Task SetUp()
         {
             var factory = new StepMotorHandler.StepMotorFactory();
-            _port1 = new SerialPort(@"COM1");
-            _port2 = new SerialPort(@"COM4");
+            _port1 = new SerialPort(StaticConfigurationProvider.PlateMotorPort);
+            _port2 = new SerialPort(StaticConfigurationProvider.RetractorMotorPort);
 
             _handler1 = (StepMotorHandler) await factory.CreateFirstOrFromAddress(_port1, 1);
             _handler2 = (StepMotorHandler) await factory.CreateFirstOrFromAddress(_port2, 1);

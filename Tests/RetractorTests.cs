@@ -34,7 +34,6 @@ namespace Tests
     {
         private IAsyncMotor _device;
         private SerialPort _port;
-        private const string TestPort = @"COM4";
         private IAsyncMotorFactory _factory;
 
         [SetUp]
@@ -58,10 +57,10 @@ namespace Tests
         public async Task Test_TryCreateFromAddress()
         {
             var ports = SerialPort.GetPortNames();
-            Assume.That(ports, Contains.Item(TestPort));
+            Assume.That(ports, Contains.Item(StaticConfigurationProvider.RetractorMotorPort));
             Assume.That(_device, Is.Null);
 
-            _port = new SerialPort(TestPort);
+            _port = new SerialPort(StaticConfigurationProvider.RetractorMotorPort);
             _device = await _factory.TryCreateFromAddress(_port, 1);
             Assume.That(_device, Is.Not.Null);
             Assert.That(await _device.GetActualPositionAsync(), Is.EqualTo(0));
@@ -72,9 +71,9 @@ namespace Tests
         public async Task Test_TryCreateFirst()
         {
             var ports = SerialPort.GetPortNames();
-            Assume.That(ports, Contains.Item(TestPort));
+            Assume.That(ports, Contains.Item(StaticConfigurationProvider.RetractorMotorPort));
             Assume.That(_device, Is.Null);
-            _port = new SerialPort(TestPort);
+            _port = new SerialPort(StaticConfigurationProvider.RetractorMotorPort);
 
             _device = await _factory.TryCreateFirst(_port);
             Assume.That(_device, Is.Not.Null);
@@ -87,9 +86,9 @@ namespace Tests
         public async Task Test_CreateFirstOrFromAddress()
         {
             var ports = SerialPort.GetPortNames();
-            Assume.That(ports, Contains.Item(TestPort));
+            Assume.That(ports, Contains.Item(StaticConfigurationProvider.RetractorMotorPort));
             Assume.That(_device, Is.Null);
-            _port = new SerialPort(TestPort);
+            _port = new SerialPort(StaticConfigurationProvider.RetractorMotorPort);
 
             _device = await _factory.CreateFirstOrFromAddress(_port, 1);
             Assume.That(_device, Is.Not.Null);
@@ -105,13 +104,12 @@ namespace Tests
     {
         private SerialPort _port;
         private IAsyncMotor _motor;
-        private const string PortName = @"COM4";
 
         [SetUp]
         public async Task SetUp()
         {
             var factory = new StepMotorHandler.StepMotorFactory();
-            _port = new SerialPort(PortName);
+            _port = new SerialPort(StaticConfigurationProvider.RetractorMotorPort);
             _motor = await factory.CreateFirstOrFromAddress(_port, 1);
 
         }
