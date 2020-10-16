@@ -10,9 +10,9 @@ using System.Windows;
 [assembly: AssemblyTitle("DIPOL-UF")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Tuorla Observatory")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("DIPOL-UF")]
-[assembly: AssemblyCopyright("Copyright Ilia Kosenkov ©  2017")]
+[assembly: AssemblyCopyright("Copyright Ilia Kosenkov ©  2017-2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -51,5 +51,5 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.1.*")]
+[assembly: AssemblyVersion("2.2.*")]
 //[assembly: AssemblyFileVersion("1.0.*")]
