@@ -562,7 +562,7 @@ namespace DIPOL_UF.Models
                                 motor.Address,
                                 pos),
                             Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
-                            MessageBoxButton.YesNo,
+                            MessageBoxButton.YesNoCancel,
                             MessageBoxImage.Information)
                         is MessageBoxResult.Yes)
                     {
