@@ -1122,6 +1122,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Acquisition was cancelled.
+        /// </summary>
+        public static string JobManager_MB_Acq_Cancelled_Header {
+            get {
+                return ResourceManager.GetString("JobManager_MB_Acq_Cancelled_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Acquistion has been terminated by the user!.
+        /// </summary>
+        public static string JobManager_MB_Acq_Cancelled_Text {
+            get {
+                return ResourceManager.GetString("JobManager_MB_Acq_Cancelled_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Acquisition cycle failed!.
         /// </summary>
         public static string JobManager_MB_Failed_Header {
@@ -1186,7 +1204,9 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Dipol parameters has changed since last calibration. Do you want to take new calibration frames?.
+        ///   Looks up a localized string similar to Dipol parameters has changed since last calibration,
+        ///or acquisition was interupted.
+        ///Do you want to take new calibration frames?.
         /// </summary>
         public static string JobManager_TakeCalibrations_Text {
             get {

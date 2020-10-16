@@ -429,6 +429,18 @@ namespace DIPOL_UF.Jobs
                     string.Format(Localization.JobManager_MB_Finished_Text, report),
                     Localization.JobManager_MB_Finished_Header,
                     MessageBoxButton.OK, MessageBoxImage.Information);
+
+                _firstRun = false;
+            }
+            catch (TaskCanceledException)
+            {
+                Helper.WriteLog(LogEventLevel.Warning, "Acquisition has been cancelled.");
+                MessageBox.Show(
+                    Localization.JobManager_MB_Acq_Cancelled_Text,
+                    Localization.JobManager_MB_Acq_Cancelled_Header,
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                NeedsCalibration = true;
             }
             catch (Exception e)
             {
@@ -437,6 +449,8 @@ namespace DIPOL_UF.Jobs
                     string.Format(Localization.JobManager_MB_Failed_Text, e.Message),
                     Localization.JobManager_MB_Failed_Header,
                     MessageBoxButton.OK, MessageBoxImage.Error);
+
+                NeedsCalibration = true;
             }
             finally
             {
@@ -453,7 +467,6 @@ namespace DIPOL_UF.Jobs
                     sett.Value.Dispose();
                 _settingsCache.Clear();
                 _settingsCache = null;
-                _firstRun = false;
             }
         }
 

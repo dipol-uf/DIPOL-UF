@@ -460,7 +460,7 @@ namespace DIPOL_UF.Models
                     }
                     catch (Exception e)
                     {
-                        Helper.WriteLog(LogEventLevel.Error, e, @"Failed to connect to {Target}", x);
+                        Helper.WriteLog(LogEventLevel.Warning, @"Failed to connect to {Target}", x);
                         return (object)e;
                     }
 

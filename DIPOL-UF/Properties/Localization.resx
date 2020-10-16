@@ -631,7 +631,9 @@ Position is {2}.</value>
     <value>Take calibrations?</value>
   </data>
   <data name="JobManager_TakeCalibrations_Text" xml:space="preserve">
-    <value>Dipol parameters has changed since last calibration. Do you want to take new calibration frames?</value>
+    <value>Dipol parameters has changed since last calibration,
+or acquisition was interupted.
+Do you want to take new calibration frames?</value>
   </data>
   <data name="CycleConfigView_NRepeats" xml:space="preserve">
     <value>Number of repeats:</value>
@@ -670,5 +672,11 @@ Position is {2}.</value>
     <value>Step motor on port {0} at address {1:00} is healthy and responding.
 Position is {2}.
 Click "Yes" if you would like to re-calibrate its position.</value>
+  </data>
+  <data name="JobManager_MB_Acq_Cancelled_Header" xml:space="preserve">
+    <value>Acquisition was cancelled</value>
+  </data>
+  <data name="JobManager_MB_Acq_Cancelled_Text" xml:space="preserve">
+    <value>Acquistion has been terminated by the user!</value>
   </data>
 </root>
