@@ -396,11 +396,24 @@ namespace DIPOL_UF.Jobs
                         ActualMotorPosition = MotorPosition;
                     }
 
-                    if (_firstRun ||
-                        NeedsCalibration && MessageBox.Show(
+                    var areCalibrationsNeeded = false;
+
+                    if (_firstRun)
+                        areCalibrationsNeeded = MessageBox.Show(
+                            string.Format(
+                                Localization.JobManager_TakeCalibrationsFirstTime_Text, CurrentTarget1.StarName
+                            ),
+                            Localization.JobManager_TakeCalibrationsFirstTime_Header,
+                            MessageBoxButton.YesNo, MessageBoxImage.Question
+                        ) == MessageBoxResult.Yes;
+                    else if (NeedsCalibration)
+                        areCalibrationsNeeded = MessageBox.Show(
                             Localization.JobManager_TakeCalibrations_Text,
                             Localization.JobManager_TakeCalibrations_Header,
-                            MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            MessageBoxButton.YesNo, MessageBoxImage.Question
+                        ) == MessageBoxResult.Yes;
+
+                    if (areCalibrationsNeeded)
                     {
                         Progress = 0;
                         Total = BiasActionCount;

@@ -679,4 +679,10 @@ Click "Yes" if you would like to re-calibrate its position.</value>
   <data name="JobManager_MB_Acq_Cancelled_Text" xml:space="preserve">
     <value>Acquistion has been terminated by the user!</value>
   </data>
+  <data name="JobManager_TakeCalibrationsFirstTime_Header" xml:space="preserve">
+    <value>Calibrations are required</value>
+  </data>
+  <data name="JobManager_TakeCalibrationsFirstTime_Text" xml:space="preserve">
+    <value>Target {0} is observed for the first time and there are no calibrations. Do you want to take calibrations needed for correct data reduction?</value>
+  </data>
 </root>

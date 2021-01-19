@@ -1215,6 +1215,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Calibrations are required.
+        /// </summary>
+        public static string JobManager_TakeCalibrationsFirstTime_Header {
+            get {
+                return ResourceManager.GetString("JobManager_TakeCalibrationsFirstTime_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target {0} is observed for the first time and there are no calibrations. Do you want to take calibrations needed for correct data reduction?.
+        /// </summary>
+        public static string JobManager_TakeCalibrationsFirstTime_Text {
+            get {
+                return ResourceManager.GetString("JobManager_TakeCalibrationsFirstTime_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bias file.
         /// </summary>
         public static string JobSettings_BiasFile {
