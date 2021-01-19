@@ -275,6 +275,7 @@ namespace DIPOL_UF.Jobs
                 
                 _firstRun = true;
                 ReadyToRun = true;
+                NeedsCalibration = true;
                 
                 Helper.WriteLog(LogEventLevel.Information, "Set up new target {StarName} in {CycleType} regime", CurrentTarget1.StarName, CurrentTarget1.CycleType);
 
