@@ -631,8 +631,7 @@ Position is {2}.</value>
     <value>Take calibrations?</value>
   </data>
   <data name="JobManager_TakeCalibrations_Text" xml:space="preserve">
-    <value>Dipol parameters has changed since last calibration,
-or acquisition was interupted.
+    <value>Calibrations are missing because either calibration or acquisition were interrupted, or dipol parameters has changed since last calibratio.
 Do you want to take new calibration frames?</value>
   </data>
   <data name="CycleConfigView_NRepeats" xml:space="preserve">

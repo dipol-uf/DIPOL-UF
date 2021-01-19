@@ -1204,8 +1204,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Dipol parameters has changed since last calibration,
-        ///or acquisition was interupted.
+        ///   Looks up a localized string similar to Calibrations are missing because either calibration or acquisition were interrupted, or dipol parameters has changed since last calibratio.
         ///Do you want to take new calibration frames?.
         /// </summary>
         public static string JobManager_TakeCalibrations_Text {
