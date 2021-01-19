@@ -389,11 +389,11 @@
   </data>
   <data name="Slider_PixelToolTipFormat" xml:space="preserve">
     <value>{0:f0} pix</value>
-    <comment>Nonlocalized general resource</comment>
+    <comment>Non-localized general resource</comment>
   </data>
   <data name="StringFormat_Float_DipolImagePresenter_Statistics" xml:space="preserve">
     <value>{0:g7}</value>
-    <comment>Nonlocalized general resource</comment>
+    <comment>Non-localized general resource</comment>
   </data>
   <data name="Validation_CannotBeDefault" xml:space="preserve">
     <value>Default value is illegal</value>
@@ -438,7 +438,7 @@ The following settings produced this error:
     <value>Connecting to remote services...</value>
   </data>
   <data name="AcquisitionSettings_DeserializationFailed_Message" xml:space="preserve">
-    <value>An error occured while loading acquisition settings to {0}:
+    <value>An error occurred while loading acquisition settings to {0}:
 {1}</value>
   </data>
   <data name="AcquisitionSettings_DeserializationFailed_Title" xml:space="preserve">
@@ -451,7 +451,7 @@ The following settings produced this error:
     <value>Save current acquisition settings</value>
   </data>
   <data name="AcquisitionSettings_SerializationFailed_Message" xml:space="preserve">
-    <value>An error occured while saving acquisition settings to {0}:
+    <value>An error occurred while saving acquisition settings to {0}:
 {1}</value>
   </data>
   <data name="AcquisitionSettings_SerializationFailed_Title" xml:space="preserve">
@@ -476,7 +476,7 @@ The following settings produced this error:
     <value>Step motor is unavailable</value>
   </data>
   <data name="MainWindow_MB_PolarimeterMotorNotFound_Text" xml:space="preserve">
-    <value>Step motor on preferred port {0} is not found. Make sure the polariemter is connected and turned on. If you want to rescan, press [Yes].</value>
+    <value>Step motor on preferred port {0} is not found. Make sure the polarimeter is connected and turned on. If you want to rescan, press [Yes].</value>
   </data>
   <data name="MainWindow_MB_PolarimeterMotorOK_Caption" xml:space="preserve">
     <value>Step motor is OK</value>
@@ -610,10 +610,10 @@ Position is {2}.</value>
     <value>Switching from {0} to {1}. Please wait.</value>
   </data>
   <data name="MainWindow_Regime_Swtitching_Title" xml:space="preserve">
-    <value>Switcing instrument regime</value>
+    <value>Switching instrument regime</value>
   </data>
   <data name="JobSettings_CycleType" xml:space="preserve">
-    <value>CyleType:</value>
+    <value>CycleType:</value>
   </data>
   <data name="JobSettings_Description" xml:space="preserve">
     <value>Object description:</value>
@@ -631,8 +631,7 @@ Position is {2}.</value>
     <value>Take calibrations?</value>
   </data>
   <data name="JobManager_TakeCalibrations_Text" xml:space="preserve">
-    <value>Dipol parameters has changed since last calibration,
-or acquisition was interupted.
+    <value>Calibrations are missing because either calibration or acquisition were interrupted, or dipol parameters has changed since last calibration.
 Do you want to take new calibration frames?</value>
   </data>
   <data name="CycleConfigView_NRepeats" xml:space="preserve">
@@ -642,19 +641,19 @@ Do you want to take new calibration frames?</value>
     <value>Configure next cycle</value>
   </data>
   <data name="JobManager_GenericError_Header" xml:space="preserve">
-    <value>An error occured while setting up a new job</value>
+    <value>An error occurred while setting up a new job</value>
   </data>
   <data name="JobManager_InvalidState_Header" xml:space="preserve">
     <value>Dipol-UF is in invalid state</value>
   </data>
   <data name="JobManager_InvalidState_Text" xml:space="preserve">
-    <value>The job system is in invalid state. This inidcates a miscommunication or internal error has happened. The current session may not be recovered, so it is advised to restart the application.</value>
+    <value>The job system is in invalid state. This indicates a miscommunication or internal error has happened. The current session may not be recovered, so it is advised to restart the application.</value>
   </data>
   <data name="JobSettings_PerCameraExposures" xml:space="preserve">
     <value>Individual exposure times:</value>
   </data>
   <data name="JobManager_NotPhotometry" xml:space="preserve">
-    <value>Photometry cycle should not be run when the insrument is in "Polarimeter" regime. Make sure the instrument is switched to the "Photometer" mode.</value>
+    <value>Photometry cycle should not be run when the instrument is in "Polarimeter" regime. Make sure the instrument is switched to the "Photometer" mode.</value>
   </data>
   <data name="JobManager_NotPolarimetry" xml:space="preserve">
     <value>Polarimetry cycle requires connected step motors and instrument in "Polarimeter" regime. Make sure motors are connected and instrument mode is switched to "Polarimeter".</value>
@@ -677,6 +676,12 @@ Click "Yes" if you would like to re-calibrate its position.</value>
     <value>Acquisition was cancelled</value>
   </data>
   <data name="JobManager_MB_Acq_Cancelled_Text" xml:space="preserve">
-    <value>Acquistion has been terminated by the user!</value>
+    <value>Acquisition has been terminated by the user!</value>
+  </data>
+  <data name="JobManager_TakeCalibrationsFirstTime_Header" xml:space="preserve">
+    <value>Calibrations are required</value>
+  </data>
+  <data name="JobManager_TakeCalibrationsFirstTime_Text" xml:space="preserve">
+    <value>Target `{0}` is observed for the first time and there are no calibrations. Do you want to take calibrations needed for correct data reduction?</value>
   </data>
 </root>

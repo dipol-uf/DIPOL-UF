@@ -136,7 +136,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occured while loading acquisition settings to {0}:
+        ///   Looks up a localized string similar to An error occurred while loading acquisition settings to {0}:
         ///{1}.
         /// </summary>
         public static string AcquisitionSettings_DeserializationFailed_Message {
@@ -209,7 +209,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occured while saving acquisition settings to {0}:
+        ///   Looks up a localized string similar to An error occurred while saving acquisition settings to {0}:
         ///{1}.
         /// </summary>
         public static string AcquisitionSettings_SerializationFailed_Message {
@@ -1095,7 +1095,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occured while setting up a new job.
+        ///   Looks up a localized string similar to An error occurred while setting up a new job.
         /// </summary>
         public static string JobManager_GenericError_Header {
             get {
@@ -1113,7 +1113,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The job system is in invalid state. This inidcates a miscommunication or internal error has happened. The current session may not be recovered, so it is advised to restart the application..
+        ///   Looks up a localized string similar to The job system is in invalid state. This indicates a miscommunication or internal error has happened. The current session may not be recovered, so it is advised to restart the application..
         /// </summary>
         public static string JobManager_InvalidState_Text {
             get {
@@ -1131,7 +1131,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Acquistion has been terminated by the user!.
+        ///   Looks up a localized string similar to Acquisition has been terminated by the user!.
         /// </summary>
         public static string JobManager_MB_Acq_Cancelled_Text {
             get {
@@ -1177,7 +1177,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Photometry cycle should not be run when the insrument is in &quot;Polarimeter&quot; regime. Make sure the instrument is switched to the &quot;Photometer&quot; mode..
+        ///   Looks up a localized string similar to Photometry cycle should not be run when the instrument is in &quot;Polarimeter&quot; regime. Make sure the instrument is switched to the &quot;Photometer&quot; mode..
         /// </summary>
         public static string JobManager_NotPhotometry {
             get {
@@ -1204,13 +1204,30 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Dipol parameters has changed since last calibration,
-        ///or acquisition was interupted.
+        ///   Looks up a localized string similar to Calibrations are missing because either calibration or acquisition were interrupted, or dipol parameters has changed since last calibration.
         ///Do you want to take new calibration frames?.
         /// </summary>
         public static string JobManager_TakeCalibrations_Text {
             get {
                 return ResourceManager.GetString("JobManager_TakeCalibrations_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calibrations are required.
+        /// </summary>
+        public static string JobManager_TakeCalibrationsFirstTime_Header {
+            get {
+                return ResourceManager.GetString("JobManager_TakeCalibrationsFirstTime_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target `{0}` is observed for the first time and there are no calibrations. Do you want to take calibrations needed for correct data reduction?.
+        /// </summary>
+        public static string JobManager_TakeCalibrationsFirstTime_Text {
+            get {
+                return ResourceManager.GetString("JobManager_TakeCalibrationsFirstTime_Text", resourceCulture);
             }
         }
         
@@ -1224,7 +1241,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to CyleType:.
+        ///   Looks up a localized string similar to CycleType:.
         /// </summary>
         public static string JobSettings_CycleType {
             get {
@@ -1422,7 +1439,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Step motor on preferred port {0} is not found. Make sure the polariemter is connected and turned on. If you want to rescan, press [Yes]..
+        ///   Looks up a localized string similar to Step motor on preferred port {0} is not found. Make sure the polarimeter is connected and turned on. If you want to rescan, press [Yes]..
         /// </summary>
         public static string MainWindow_MB_PolarimeterMotorNotFound_Text {
             get {
@@ -1506,7 +1523,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Switcing instrument regime.
+        ///   Looks up a localized string similar to Switching instrument regime.
         /// </summary>
         public static string MainWindow_Regime_Swtitching_Title {
             get {
