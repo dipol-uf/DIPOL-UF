@@ -406,7 +406,7 @@ namespace DIPOL_UF.Models
             dataArray[(debugSize - 1) * debugSize] = 300;
             dataArray[debugSize * debugSize - 1] = 400;
 
-            var fakeImage = new Image(dataArray, 512, 512, copy:false);
+            var fakeImage = new Image(dataArray, debugSize, debugSize, copy:false);
 
             image = fakeImage;
 #endif
