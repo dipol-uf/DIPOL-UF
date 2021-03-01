@@ -401,16 +401,19 @@ namespace DIPOL_UF.Models
             // WATCH: Debugging
             const int debugSize = 24;
             var dataArray = new int[debugSize * debugSize];
+            // Top-left
             dataArray[0] = 100;
 
+            // Top-right
             dataArray[debugSize - 1] = 200;
             dataArray[debugSize - 2] = 200;
 
+            // Bottom-left
             dataArray[(debugSize - 1) * debugSize] = 400;
-            dataArray[(debugSize - 1) * debugSize - 1] = 400;
-            dataArray[(debugSize - 1) * debugSize - 2] = 400;
+            dataArray[(debugSize - 1) * debugSize + 1] = 400;
+            dataArray[(debugSize - 1) * debugSize + 2] = 400;
 
-
+            // Bottom-right
             dataArray[debugSize * debugSize - 1] = 800;
             dataArray[debugSize * debugSize - 2] = 800;
             dataArray[debugSize * debugSize - 3] = 800;
