@@ -451,7 +451,7 @@ namespace DIPOL_UF.Models
             DisplayedImage = fakeImage;
 #else
             DisplayedImage = temp;
-#end
+#endif
 
         }
 
