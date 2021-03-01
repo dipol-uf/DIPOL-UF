@@ -438,7 +438,20 @@ namespace DIPOL_UF.Models
                 // ReSharper restore PossibleLossOfFraction
                 : SamplerCenterPosInPix;
 
+#if DEBUG
+            // WATCH: Debugging
+            var dataArray = new int[512 * 512];
+            dataArray[0] = 100;
+            dataArray[511] = 1_000;
+            dataArray[511 * 512] = 10_000;
+            dataArray[512 * 512 - 1] = 20_000;
+
+            var fakeImage = new Image(dataArray, 512, 512, copy:false);
+
+            DisplayedImage = fakeImage;
+#else
             DisplayedImage = temp;
+#end
 
         }
 
