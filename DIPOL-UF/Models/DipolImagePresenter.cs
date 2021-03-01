@@ -421,6 +421,8 @@ namespace DIPOL_UF.Models
 
             var fakeImage = new Image(dataArray, debugSize, debugSize, copy:false);
 
+            
+
             image = fakeImage;
 #endif
             Image temp = null;

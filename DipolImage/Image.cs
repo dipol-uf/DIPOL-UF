@@ -882,6 +882,16 @@ namespace DipolImage
             return new Image(newArray, Height, Width);
         }
 
+        public Image Reflect(ReflectionDirection direction)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Image Rotate(RotateBy rotateBy, RotationDirection direction)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool Equals(Image x, Image y)
             => x?.Equals(y) ?? false;
 

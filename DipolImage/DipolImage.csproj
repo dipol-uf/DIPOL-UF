@@ -125,6 +125,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Image.cs" />
+    <Compile Include="ReflectionDirection.cs" />
+    <Compile Include="RotateBy.cs" />
+    <Compile Include="RotationDirection.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
