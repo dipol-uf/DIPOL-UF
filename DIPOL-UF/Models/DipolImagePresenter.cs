@@ -397,6 +397,19 @@ namespace DIPOL_UF.Models
         private async Task CopyImageAsync(Image image)
         {
             var isFirstLoad = DisplayedImage is null;
+#if DEBUG
+            // WATCH: Debugging
+            const int debugSize = 32;
+            var dataArray = new int[debugSize * debugSize];
+            dataArray[0] = 100;
+            dataArray[debugSize - 1] = 200;
+            dataArray[(debugSize - 1) * debugSize] = 300;
+            dataArray[debugSize * debugSize - 1] = 400;
+
+            var fakeImage = new Image(dataArray, 512, 512, copy:false);
+
+            image = fakeImage;
+#endif
             Image temp = null;
             switch (image.UnderlyingType)
             {
@@ -438,21 +451,7 @@ namespace DIPOL_UF.Models
                 // ReSharper restore PossibleLossOfFraction
                 : SamplerCenterPosInPix;
 
-#if DEBUG
-            // WATCH: Debugging
-            var dataArray = new int[512 * 512];
-            dataArray[0] = 100;
-            dataArray[511] = 1_000;
-            dataArray[511 * 512] = 10_000;
-            dataArray[512 * 512 - 1] = 20_000;
-
-            var fakeImage = new Image(dataArray, 512, 512, copy:false);
-
-            DisplayedImage = fakeImage;
-#else
             DisplayedImage = temp;
-#endif
-
         }
 
         private async Task CalculateStatisticsAsync()
