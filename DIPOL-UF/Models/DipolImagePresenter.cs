@@ -399,12 +399,22 @@ namespace DIPOL_UF.Models
             var isFirstLoad = DisplayedImage is null;
 #if DEBUG
             // WATCH: Debugging
-            const int debugSize = 32;
+            const int debugSize = 24;
             var dataArray = new int[debugSize * debugSize];
             dataArray[0] = 100;
+
             dataArray[debugSize - 1] = 200;
-            dataArray[(debugSize - 1) * debugSize] = 300;
-            dataArray[debugSize * debugSize - 1] = 400;
+            dataArray[debugSize - 2] = 200;
+
+            dataArray[(debugSize - 1) * debugSize] = 400;
+            dataArray[(debugSize - 1) * debugSize - 1] = 400;
+            dataArray[(debugSize - 1) * debugSize - 2] = 400;
+
+
+            dataArray[debugSize * debugSize - 1] = 800;
+            dataArray[debugSize * debugSize - 2] = 800;
+            dataArray[debugSize * debugSize - 3] = 800;
+            dataArray[debugSize * debugSize - 4] = 800;
 
             var fakeImage = new Image(dataArray, debugSize, debugSize, copy:false);
 
