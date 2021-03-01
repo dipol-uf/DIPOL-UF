@@ -23,11 +23,13 @@
 //     SOFTWARE.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using MathNet.Numerics;
 
 namespace DipolImage
@@ -36,6 +38,9 @@ namespace DipolImage
     [DataContract]
     public class Image : IEqualityComparer<Image>, IEquatable<Image>
     {
+        // One row of standard i32 image is 4 * 512 = 2048 bytes
+        private const int StackAllocByteLimit = 2048;
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly TypeCode[] AllowedTypes =
          {
@@ -46,6 +51,18 @@ namespace DipolImage
             TypeCode.UInt32,
             TypeCode.Int32,
             TypeCode.Byte
+        };
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static readonly Dictionary<TypeCode, int> TypeSizes = new Dictionary<TypeCode, int>
+        {
+            {TypeCode.Double, sizeof(double)},
+            {TypeCode.Single, sizeof(float)},
+            {TypeCode.UInt16, sizeof(ushort)},
+            {TypeCode.Int16, sizeof(short)},
+            {TypeCode.UInt32, sizeof(uint)},
+            {TypeCode.Int32, sizeof(int)},
+            {TypeCode.Byte, sizeof(byte)}
         };
 
         [DataMember]
@@ -884,6 +901,36 @@ namespace DipolImage
 
         public Image Reflect(ReflectionDirection direction)
         {
+            var size = TypeSizes[UnderlyingType];
+            var width = Width;
+            var height = Height;
+            // Fast path for row swapping
+            if (direction == ReflectionDirection.Vertical)
+            {
+                byte[] arrayBuff = null;
+                try
+                {
+                    var buffer = width * size <= StackAllocByteLimit
+                        ? stackalloc byte[width * size]
+                        : (arrayBuff = ArrayPool<byte>.Shared.Rent(StackAllocByteLimit)).AsSpan(0, width * size);
+                    
+                    for (var rowId = 0; rowId < height / 2; rowId++)
+                    {
+                        // Swap lines, efficiently
+                    }
+
+                    
+                }
+                finally
+                {
+                    if (arrayBuff is {})
+                    {
+                        ArrayPool<byte>.Shared.Return(arrayBuff);
+                    }
+                }
+
+
+            }
             throw new NotImplementedException();
         }
 
