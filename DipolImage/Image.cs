@@ -389,13 +389,13 @@ namespace DipolImage
                 {
                     var locLow = (byte) (Math.Floor(low));
                     var locHigh = (byte) (Math.Ceiling(high));
-                    var arr = (byte[]) _baseArray;
+                    var arr = UnsafeAsSpan<byte>();
 
                     for (var i = 0; i < arr.Length; i++)
-                        if (arr[i] < locLow)
-                            arr[i] = locLow;
-                        else if (arr[i] > locHigh)
-                            arr[i] = locHigh;
+                    {
+                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
+                    }
+
                     break;
                 }
 
@@ -403,76 +403,70 @@ namespace DipolImage
                 {
                     var locLow = (ushort) (Math.Floor(low));
                     var locHigh = (ushort) (Math.Ceiling(high));
-                    var arr = (ushort[]) _baseArray;
+                    var arr = UnsafeAsSpan<ushort>();
 
                     for (var i = 0; i < arr.Length; i++)
-                        if (arr[i] < locLow)
-                            arr[i] = locLow;
-                        else if (arr[i] > locHigh)
-                            arr[i] = locHigh;
+                    {
+                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
+                    }
                     break;
                 }
                 case TypeCode.Int16:
                 {
                     var locLow = (short) (Math.Floor(low));
                     var locHigh = (short) (Math.Ceiling(high));
-                    var arr = (short[]) _baseArray;
+                    var arr = UnsafeAsSpan<short>();
 
                     for (var i = 0; i < arr.Length; i++)
-                        if (arr[i] < locLow)
-                            arr[i] = locLow;
-                        else if (arr[i] > locHigh)
-                            arr[i] = locHigh;
+                    {
+                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
+                    }
                     break;
                 }
                 case TypeCode.UInt32:
                 {
                     var locLow = (uint) (Math.Floor(low));
                     var locHigh = (uint) (Math.Ceiling(high));
-                    var arr = (uint[]) _baseArray;
+                    var arr = UnsafeAsSpan<uint>();
 
                     for (var i = 0; i < arr.Length; i++)
-                        if (arr[i] < locLow)
-                            arr[i] = locLow;
-                        else if (arr[i] > locHigh)
-                            arr[i] = locHigh;
+                    {
+                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
+                    }
                     break;
                 }
                 case TypeCode.Int32:
                 {
                     var locLow = (int) (Math.Floor(low));
                     var locHigh = (int) (Math.Ceiling(high));
-                    var arr = (int[]) _baseArray;
+                    var arr = UnsafeAsSpan<int>();
 
                     for (var i = 0; i < arr.Length; i++)
-                        if (arr[i] < locLow)
-                            arr[i] = locLow;
-                        else if (arr[i] > locHigh)
-                            arr[i] = locHigh;
+                    {
+                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
+                    }
                     break;
                 }
                 case TypeCode.Single:
                 {
                     var locLow = (float) (low);
                     var locHigh = (float) (high);
-                    var arr = (float[]) _baseArray;
+                    var arr = UnsafeAsSpan<float>();
 
                     for (var i = 0; i < arr.Length; i++)
-                        if (arr[i] < locLow)
-                            arr[i] = locLow;
-                        else if (arr[i] > locHigh)
-                            arr[i] = locHigh;
+                    {
+                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
+                    }
                     break;
                 }
                 default:
                 {
-                    var arr = (double[]) _baseArray;
+                    var arr = UnsafeAsSpan<double>();
 
                     for (var i = 0; i < arr.Length; i++)
-                        if (arr[i] < low)
-                            arr[i] = low;
-                        else if (arr[i] > high)
-                            arr[i] = high;
+                    {
+                        arr[i] = Ops.Clamp(arr[i], low, high);
+                    }
                     break;
                 }
 

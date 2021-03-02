@@ -82,5 +82,26 @@ namespace DipolImage
                 (true, _) => y,
                 (_, true) => x
             };
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte Clamp(byte x, byte low, byte high) => Min(high, Max(low, x));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+        public static ushort Clamp(ushort x, ushort low, ushort high) => Min(high, Max(low, x));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+        public static short Clamp(short x, short low, short high) => Min(high, Max(low, x));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+        public static uint Clamp(uint x, uint low, uint high) => Min(high, Max(low, x));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+        public static int Clamp(int x, int low, int high) => Min(high, Max(low, x));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+        public static float Clamp(float x, float low, float high) => Min(high, Max(low, x));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+        public static double Clamp(double x, double low, double high) => Min(high, Max(low, x));
+
+
+
+
+
+
+
     }
 }
