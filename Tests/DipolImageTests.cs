@@ -23,6 +23,8 @@
 //     SOFTWARE.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -31,7 +33,16 @@ using NUnit.Framework;
 
 namespace Tests
 {
+
+    public class DipolImageTests_DataProvider
+    {
+        private static IEnumerable<TypeCode> AllowedTypes { get; } = DipolImage.Image.AllowedPixelTypes;
+        public static IEnumerable AllowedTypesSource => AllowedTypes.Select(x => new TestCaseData(x));
+
+    }
+
     [TestFixture]
+    [Parallelizable(ParallelScope.All)]
     public class DipolImageTests
     {
         public Random R;
@@ -56,7 +67,6 @@ namespace Tests
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
         public void Test_ConstructorThrows()
         {
             Assert.Multiple(() =>
@@ -79,7 +89,6 @@ namespace Tests
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
         public void Test_ImageEqualsToArray()
         {
             var initArray = new[] {1, 2, 3, 4, 5, 6};
@@ -97,105 +106,97 @@ namespace Tests
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_ImageInitializedFromBytes()
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_ImageInitializedFromBytes(TypeCode code)
         {
             const ushort value = 23;
 
-            foreach (var code in Image.AllowedPixelTypes)
+            var temp = (Convert.ChangeType(value, code)) ?? new object();
+            byte[] bytes;
+            if (code != TypeCode.Byte)
             {
-                var temp = (Convert.ChangeType(value, code)) ?? new object();
-                byte[] bytes;
-                if (code != TypeCode.Byte)
-                {
-                    var mi = typeof(BitConverter)
-                             .GetMethods(BindingFlags.Public | BindingFlags.Static)
-                             .First(m => m.Name == "GetBytes" &&
-                                         m.GetParameters().Length == 1 &&
-                                         m.GetParameters().First().ParameterType == temp.GetType());
-                    bytes = (byte[]) mi.Invoke(null, new[] {temp});
-                }
-                else
-                    bytes = new [] {(byte) value};
-
-                var image = new Image(bytes, 1, 1, code);
-
-                Assert.Multiple(() =>
-                {
-                    Assert.That(image[0, 0], Is.EqualTo(temp));
-                    Assert.That(image.UnderlyingType, Is.EqualTo(code));
-                });
+                var mi = typeof(BitConverter)
+                    .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .First(m => m.Name == "GetBytes" &&
+                                m.GetParameters().Length == 1 &&
+                                m.GetParameters().First().ParameterType == temp.GetType());
+                bytes = (byte[]) mi.Invoke(null, new[] {temp});
             }
+            else
+                bytes = new[] {(byte) value};
+
+            var image = new Image(bytes, 1, 1, code);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(image[0, 0], Is.EqualTo(temp));
+                Assert.That(image.UnderlyingType, Is.EqualTo(code));
+            });
 
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_GetBytes()
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_GetBytes(TypeCode code)
         {
             const int val1 = 1;
             const int val2 = 123;
-            foreach (var code in Image.AllowedPixelTypes)
+            var type = Type.GetType("System." + code) ?? typeof(void);
+            var initArray = Array.CreateInstance(type, 2);
+            initArray.SetValue(Convert.ChangeType(val1, code), 0);
+            initArray.SetValue(Convert.ChangeType(val2, code), 1);
+
+
+            var image = new Image(initArray, 2, 1);
+
+            var bytes = image.GetBytes();
+            byte[] reconstructed;
+            if (code != TypeCode.Byte)
             {
-                var type = Type.GetType("System." + code) ?? typeof(void);
-                var initArray = Array.CreateInstance(type, 2);
-                initArray.SetValue(Convert.ChangeType(val1, code), 0);
-                initArray.SetValue(Convert.ChangeType(val2, code), 1);
-
-
-                var image = new Image(initArray, 2, 1);
-
-                var bytes = image.GetBytes();
-                byte[] reconstructed;
-                if (code != TypeCode.Byte)
-                {
-                    var mi = typeof(BitConverter)
-                             .GetMethods(BindingFlags.Public | BindingFlags.Static)
-                             .First(m => m.Name == "GetBytes" &&
-                                         m.GetParameters().Length == 1 &&
-                                         m.GetParameters().First().ParameterType == type);
-                    var size = Marshal.SizeOf(type);
-                    reconstructed = new byte[2 * size];
-                    Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(0)}), 0, reconstructed, 0, size);
-                    Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(1)}), 0, reconstructed, size, size);
-                }
-                else
-                {
-                    var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
-                    reconstructed = new byte[2 * size];
-                    reconstructed[0] = ((byte[])initArray)[0];
-                    reconstructed[1] = ((byte[])initArray)[1];
-                }
-
-                CollectionAssert.AreEqual(reconstructed, bytes);
+                var mi = typeof(BitConverter)
+                    .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .First(m => m.Name == "GetBytes" &&
+                                m.GetParameters().Length == 1 &&
+                                m.GetParameters().First().ParameterType == type);
+                var size = Marshal.SizeOf(type);
+                reconstructed = new byte[2 * size];
+                Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(0)}), 0, reconstructed, 0, size);
+                Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(1)}), 0, reconstructed, size, size);
             }
+            else
+            {
+                var size = Marshal.SizeOf(type);
+                reconstructed = new byte[2 * size];
+                reconstructed[0] = ((byte[]) initArray)[0];
+                reconstructed[1] = ((byte[]) initArray)[1];
+            }
+
+            CollectionAssert.AreEqual(reconstructed, bytes);
         }
 
         [Test]
-        [Retry(3)]
-        public void Test_Equals()
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_Equals(TypeCode code)
         {
 
-            foreach (var code in Image.AllowedPixelTypes)
-            {
-                var type = Type.GetType("System." + code, true);
-                var size = Marshal.SizeOf(type);
-                var arr = TestByteArray.Take(size * 2 * 2).ToArray();
+            var type = Type.GetType("System." + code, true);
+            var size = Marshal.SizeOf(type);
+            var arr = TestByteArray.Take(size * 2 * 2).ToArray();
 
-                var tempArr = new byte[arr.Length];
-                Array.Copy(arr, tempArr, tempArr.Length);
-                tempArr[0] = (byte) (tempArr[0] == 0 ? 127 : 0);
+            var tempArr = new byte[arr.Length];
+            Array.Copy(arr, tempArr, tempArr.Length);
+            tempArr[3] = (byte) (tempArr[3] == 127 ? 127 : 255);
 
-                var image1 = new Image(arr, 2, 2, code);
-                var image2 = new Image(arr, 2, 2, code);
+            var image1 = new Image(arr, 2, 2, code);
+            var image2 = new Image(arr, 2, 2, code);
 
-                var wrImage1 = new Image(arr.Take(size * 2).ToArray(), 2, 1, code);
-                var wrImage2 = new Image(arr.Take(size * 2).ToArray(), 1, 2, code);
-                var wrImage3 = new Image(arr, 2, 2,
-                    code == TypeCode.Int16 ? TypeCode.UInt16 : TypeCode.Int16);
-                var wrImage4 = new Image(tempArr, 2, 2, code);
+            var wrImage1 = new Image(arr.Take(size * 2).ToArray(), 2, 1, code);
+            var wrImage2 = new Image(arr.Take(size * 2).ToArray(), 1, 2, code);
+            var wrImage3 = new Image(arr, 2, 2,
+                code == TypeCode.Int16 ? TypeCode.UInt16 : TypeCode.Int16);
+            var wrImage4 = new Image(tempArr, 2, 2, code);
 
-                Assert.Multiple(() =>
+            Assert.Multiple(() =>
                 {
                     Assert.That(image1.Equals(image2), Is.True);
                     Assert.That(image2.Equals(image1), Is.True);
@@ -211,12 +212,11 @@ namespace Tests
                     Assert.That(image1.Equals(image1, wrImage1), Is.False);
                     Assert.That(image1.Equals(image1, null), Is.False);
                     Assert.That(image1.Equals(null, image1), Is.False);
-                });
-            }
+                }
+            );
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
         public void Test_Copy()
         {
             var array = new byte[1024];
@@ -227,7 +227,6 @@ namespace Tests
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
         public void Test_ThisAccessor()
         {
             var initArray = new[] {1, 2, 3, 4};
@@ -245,33 +244,31 @@ namespace Tests
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_GetHashCode()
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+
+        public void Test_GetHashCode(TypeCode code)
         {
 
-            foreach (var code in Image.AllowedPixelTypes)
+            var type = Type.GetType("System." + code, true);
+            var size = Marshal.SizeOf(type);
+            var arr = TestByteArray.Take(size * 2 * 2).ToArray();
+
+            var tempArr = new byte[arr.Length];
+            Array.Copy(arr, tempArr, tempArr.Length);
+            tempArr[0] = (byte) (tempArr[0] == 0 ? 127 : 0);
+            var image1 = new Image(arr, 2, 2, code);
+            var image2 = new Image(arr, 2, 2, code);
+
+            var wrImage1 = new Image(tempArr, 2, 2, code);
+
+            Assert.Multiple(() =>
             {
-                var type = Type.GetType("System." + code, true);
-                var size = Marshal.SizeOf(type);
-                var arr = TestByteArray.Take(size * 2 * 2).ToArray();
+                Assert.That(image1.GetHashCode(), Is.EqualTo(image2.GetHashCode()));
+                Assert.That(image1.GetHashCode(image1), Is.EqualTo(image1.GetHashCode(image2)));
+                Assert.That(image1.GetHashCode(), Is.Not.EqualTo(wrImage1.GetHashCode()));
+                Assert.That(image1.GetHashCode(image1), Is.Not.EqualTo(image1.GetHashCode(wrImage1)));
+            });
 
-                var tempArr = new byte[arr.Length];
-                Array.Copy(arr, tempArr, tempArr.Length);
-                tempArr[0] = (byte)(tempArr[0] == 0 ? 127 : 0);
-                var image1 = new Image(arr, 2, 2, code);
-                var image2 = new Image(arr, 2, 2, code);
-
-                var wrImage1 = new Image(tempArr, 2, 2, code);
-
-                Assert.Multiple(() =>
-                {
-                    Assert.That(image1.GetHashCode(), Is.EqualTo(image2.GetHashCode()));
-                    Assert.That(image1.GetHashCode(image1), Is.EqualTo(image1.GetHashCode(image2)));
-                    Assert.That(image1.GetHashCode(), Is.Not.EqualTo(wrImage1.GetHashCode()));
-                    Assert.That(image1.GetHashCode(image1), Is.Not.EqualTo(image1.GetHashCode(wrImage1)));
-                });
-
-            }
         }
 
         [Test]
@@ -401,195 +398,187 @@ namespace Tests
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_Clamp()
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_Clamp(TypeCode code)
         {
-            // ReSharper disable for method InconsistentNaming
-            foreach (var code in Image.AllowedPixelTypes)
+            var type = Type.GetType("System." + code) ?? typeof(byte);
+            var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
+            var image = new Image(TestByteArray, TestByteArray.Length / 4 / size, 4, code);
+            var f_mx = (Type.GetType("System." + code) ?? typeof(byte))
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .First(fi => fi.Name == "MaxValue");
+
+            dynamic m_max = f_mx.GetValue(null);
+
+            var mx = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max / 2 : 5000;
+            var mn = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max / 4 : -5000;
+
+            Assert.That(() => image.Clamp(100, 10),
+                Throws.InstanceOf<ArgumentException>());
+
+            image.Clamp(mn, mx);
+
+            var min = image.Min();
+            var max = image.Max();
+
+            Assert.Multiple(() =>
             {
-                var type = Type.GetType("System." + code) ?? typeof(byte);
-                var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
-                var image = new Image(TestByteArray, TestByteArray.Length/4/ size, 4, code);
-                var f_mx = (Type.GetType("System." + code) ?? typeof(byte))
-                    .GetFields(BindingFlags.Public | BindingFlags.Static)
-                    .First(fi => fi.Name == "MaxValue");
-
-                dynamic m_max = f_mx.GetValue(null);
-
-                var mx = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max / 2 : 5000;
-                var mn = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max/ 4 : -5000;
-
-                Assert.That(() => image.Clamp(100, 10),
-                    Throws.InstanceOf<ArgumentException>());
-
-                image.Clamp(mn, mx);
-
-                var min = image.Min();
-                var max = image.Max();
-
-                Assert.Multiple(() =>
-                {
-                    Assert.That(min.CompareTo(Convert.ChangeType(mn, code)), 
-                        Is.GreaterThanOrEqualTo(0));
-                    Assert.That(max.CompareTo(Convert.ChangeType(mx, code)),
-                        Is.LessThanOrEqualTo(0));
-                });
-            }
+                Assert.That(min.CompareTo(Convert.ChangeType(mn, code)),
+                    Is.GreaterThanOrEqualTo(0));
+                Assert.That(max.CompareTo(Convert.ChangeType(mx, code)),
+                    Is.LessThanOrEqualTo(0));
+            });
         }
 
         [Test]
-        [Retry(3)]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_Scale()
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_Scale(TypeCode code)
         {
-            foreach (var code in Image.AllowedPixelTypes)
+
+            var type = Type.GetType("System." + code, true);
+            var arr = Array.CreateInstance(type, 4096);
+
+            if (code == TypeCode.Byte)
             {
+                for (var i = 0; i < arr.Length; i++)
+                {
+                    arr.SetValue((byte) (i % 255), i);
+                }
+            }
+            else
+            {
+                for (var i = 0; i < arr.Length; i++)
+                {
+                    arr.SetValue(Convert.ChangeType(i, code), i);
+                }
+            }
 
-                var type = Type.GetType("System." + code, true);
-                var arr = Array.CreateInstance(type, 4096);
+            var image = new Image(arr, 1024, 4);
 
-                if (code == TypeCode.Byte)
+            Assert.That(() => image.Scale(100, 10),
+                Throws.InstanceOf<ArgumentException>());
 
-                    for (var i = 0; i < arr.Length; i++)
-                        arr.SetValue((byte)(i % 255), i);
-                else
-                    for (var i = 0; i < arr.Length; i++)
-                        arr.SetValue(Convert.ChangeType(i, code), i);
+            image.Scale(1, 9);
 
-                var image = new Image(arr, 1024, 4);
-
-                Assert.That(() => image.Scale(100, 10),
-                    Throws.InstanceOf<ArgumentException>());
-
-                image.Scale(1, 9);
-
-                var min = image.Min();
-                var max = image.Max();
+            var min = image.Min();
+            var max = image.Max();
 
 
-                Assert.Multiple(() =>
+            Assert.Multiple(
+                () =>
                 {
                     Assert.That(Math.Abs(min - 1) < double.Epsilon ||
                                 Math.Abs(max + min - 10) < double.Epsilon, Is.True);
                     Assert.That(Math.Abs(max - 9) < double.Epsilon ||
                                 Math.Abs(max + min - 10) < double.Epsilon, Is.True);
-                });
+                }
+            );
+        }
+
+        [Test]
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_AddScalar(TypeCode code)
+        {
+            var type = Type.GetType("System." + code) ?? typeof(byte);
+            const int N = 1024;
+            var array = Array.CreateInstance(type, N);
+            for (var i = 0; i < N / 4; i++)
+            for (var j = 0; j < 4; j++)
+                array.SetValue(Convert.ChangeType((i + j) % 128, code), i * 4 + j);
+
+            var image = new Image(array, 4, N / 4);
+
+            const double scalar = 12.0;
+
+            var copyImage = image.Copy();
+
+            image.AddScalar(scalar);
+
+
+            for (var i = 0; i < image.Height; i++)
+            for (var j = 0; j < image.Width; j++)
+            {
+                dynamic val1 = image[i, j];
+                var dVal1 = 1.0 * val1;
+                dynamic val2 = copyImage[i, j];
+                var dVal2 = 1.0 * val2;
+
+                var diff = dVal1 - dVal2 - scalar;
+
+
+                Assert.That(Math.Abs(diff), Is.EqualTo(0).Within(double.Epsilon));
             }
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_AddScalar()
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_MultiplyByScalar(TypeCode code)
         {
-            foreach (var code in Image.AllowedPixelTypes)
+            var type = Type.GetType("System." + code) ?? typeof(byte);
+            const int N = 1024;
+            var array = Array.CreateInstance(type, N);
+            for (var i = 0; i < N / 4; i++)
+            for (var j = 0; j < 4; j++)
+                array.SetValue(Convert.ChangeType((i + j) % 64, code), i * 4 + j);
+
+            var image = new Image(array, 4, N / 4);
+
+            const double scalar = 2.0;
+
+            var copyImage = image.Copy();
+
+            image.MultiplyByScalar(scalar);
+
+
+            for (var i = 0; i < image.Height; i++)
+            for (var j = 0; j < image.Width; j++)
             {
-                var type = Type.GetType("System." + code) ?? typeof(byte);
-                const int N = 1024;
-                var array = Array.CreateInstance(type, N);
-                for(var i = 0; i < N / 4; i ++)
-                    for (var j = 0; j < 4; j++)
-                        array.SetValue(Convert.ChangeType((i + j) % 128, code), i * 4 + j);
+                dynamic val1 = image[i, j];
+                var dVal1 = 1.0 * val1;
+                dynamic val2 = copyImage[i, j];
+                var dVal2 = 1.0 * val2;
 
-                var image = new Image(array, 4, N/4);
-
-                const double scalar = 12.0;
-
-                var copyImage = image.Copy();
-
-                image.AddScalar(scalar);
+                var diff = dVal2 - dVal1 / scalar;
 
 
-                for(var i  = 0; i < image.Height; i++)
-                    for (var j = 0; j < image.Width; j++)
-                    {
-                        dynamic val1 = image[i, j];
-                        var dVal1 = 1.0 * val1;
-                        dynamic val2 = copyImage[i, j];
-                        var dVal2 = 1.0 * val2;
-
-                        var diff = dVal1 - dVal2 - scalar;
-
-
-                        Assert.That(Math.Abs(diff), Is.EqualTo(0).Within(double.Epsilon));
-                    }
+                Assert.That(Math.Abs(diff), Is.EqualTo(0).Within(double.Epsilon));
             }
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_MultiplyByScalar()
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_Percentile(TypeCode code)
         {
-            foreach (var code in Image.AllowedPixelTypes)
+            var type = Type.GetType("System." + code) ?? typeof(byte);
+
+
+            const int N = 1024;
+            var array = Array.CreateInstance(type, N);
+            var d_array = new double[N];
+
+            for (var i = 0; i < N / 4; i++)
+            for (var j = 0; j < 4; j++)
             {
-                var type = Type.GetType("System." + code) ?? typeof(byte);
-                const int N = 1024;
-                var array = Array.CreateInstance(type, N);
-                for (var i = 0; i < N / 4; i++)
-                    for (var j = 0; j < 4; j++)
-                        array.SetValue(Convert.ChangeType((i + j) % 64, code), i * 4 + j);
-
-                var image = new Image(array, 4, N / 4);
-
-                const double scalar = 2.0;
-
-                var copyImage = image.Copy();
-
-                image.MultiplyByScalar(scalar);
-
-
-                for (var i = 0; i < image.Height; i++)
-                    for (var j = 0; j < image.Width; j++)
-                    {
-                        dynamic val1 = image[i, j];
-                        var dVal1 = 1.0 * val1;
-                        dynamic val2 = copyImage[i, j];
-                        var dVal2 = 1.0 * val2;
-
-                        var diff = dVal2 - dVal1/scalar;
-
-
-                        Assert.That(Math.Abs(diff), Is.EqualTo(0).Within(double.Epsilon));
-                    }
+                array.SetValue(Convert.ChangeType((i + j) % 256, code), i * 4 + j);
+                d_array[i * 4 + j] = i + j;
             }
-        }
 
-        [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_Percentile()
-        {
-            foreach (var code in Image.AllowedPixelTypes)
+
+
+            var image = new Image(array, 4, N / 4);
+
+            dynamic mn = image.Min();
+            dynamic mx = image.Max();
+
+            Assert.Multiple(() =>
             {
-                var type = Type.GetType("System." + code) ?? typeof(byte);
-
-             
-                const int N = 1024;
-                var array = Array.CreateInstance(type, N);
-                var d_array = new double[N];
-
-                for (var i = 0; i < N / 4; i++)
-                    for (var j = 0; j < 4; j++)
-                    {
-                        array.SetValue(Convert.ChangeType((i + j) % 256, code), i * 4 + j);
-                        d_array[i * 4 + j] = i + j;
-                    }
-
-
-
-                var image = new Image(array, 4, N / 4);
-
-                dynamic mn = image.Min();
-                dynamic mx = image.Max();
-
-                Assert.Multiple(() =>
-                {
-                    Assert.Throws<ArgumentOutOfRangeException>(() => image.Percentile(-1));
-                    Assert.Throws<ArgumentOutOfRangeException>(() => image.Percentile(2));
-                    Assert.That(image.Percentile(0), Is.EqualTo(mn));
-                    Assert.That(image.Percentile(1), Is.EqualTo(mx));
-                });
-                //var prcnt = image.Percentile(0.5);
-                //var factor = d_array.OrderBy(x => x).Count(x => x < prcnt) - 0.5 * array.Length;
-            }
+                Assert.Throws<ArgumentOutOfRangeException>(() => image.Percentile(-1));
+                Assert.Throws<ArgumentOutOfRangeException>(() => image.Percentile(2));
+                Assert.That(image.Percentile(0), Is.EqualTo(mn));
+                Assert.That(image.Percentile(1), Is.EqualTo(mx));
+            });
+            //var prcnt = image.Percentile(0.5);
+            //var factor = d_array.OrderBy(x => x).Count(x => x < prcnt) - 0.5 * array.Length;
         }
     }
 }
