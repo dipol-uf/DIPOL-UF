@@ -79,7 +79,7 @@ namespace DipolImage
             get;
         }
 
-        public int ItemSizeInBytes { get; } 
+        public int ItemSizeInBytes => ResolveItemSize(UnderlyingType);
         public Type Type => ResolveTypeCode(UnderlyingType);
 
         public object this[int i, int j]
@@ -114,7 +114,6 @@ namespace DipolImage
             Width = width;
             Height = height;
             UnderlyingType = type;
-            ItemSizeInBytes = TypeSizes[UnderlyingType];
 
             _baseArray = Array.CreateInstance(Type, width * height);
         }
@@ -134,8 +133,6 @@ namespace DipolImage
                 throw new ArgumentException($"Provided array's base type {val.GetType()} is not allowed.");
 
             UnderlyingType = typeCode;
-            ItemSizeInBytes = TypeSizes[UnderlyingType];
-
             Width = width;
             Height = height;
             if (copy)
@@ -1218,6 +1215,9 @@ namespace DipolImage
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static Type ResolveTypeCode(TypeCode code) => TypeCodeMap[code];
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static int ResolveItemSize(TypeCode code) => TypeSizes[code];
     }
 }
