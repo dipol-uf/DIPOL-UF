@@ -79,6 +79,32 @@ namespace DipolImage
         public void Set<T>(T value, int i, int j) where T : unmanaged
             => ((T[])_baseArray)[i * Width + j] = value;
 
+        private Image(int width, int height, TypeCode type)
+        {
+            if(width < 1 || height < 1)
+            {
+                throw new ArgumentOutOfRangeException($"Image size is incorrect [{width}, {height}].");
+            }
+
+            if (!Enum.IsDefined(typeof(TypeCode), type))
+            {
+                throw new ArgumentException($"Parameter type ({type}) is not defined in {typeof(TypeCode)}.");
+            }
+
+            if (!AllowedTypes.Contains(type))
+            {
+                throw new ArgumentException($"Specified type {type} is not allowed.");
+            }
+
+            Width = width;
+            Height = height;
+            UnderlyingType = type;
+            ItemSizeInBytes = TypeSizes[UnderlyingType];
+
+            var tp = Type.GetType("System." + UnderlyingType, true, true);
+            _baseArray = Array.CreateInstance(tp, width * height);
+        }
+
         public Image(Array initialArray, int width, int height, bool copy = true)
         {
             if (initialArray == null)
@@ -95,65 +121,39 @@ namespace DipolImage
             UnderlyingType = Type.GetTypeCode(val.GetType());
             ItemSizeInBytes = TypeSizes[UnderlyingType];
 
+            Width = width;
+            Height = height;
             if (copy)
             {
                 _baseArray = Array.CreateInstance(val.GetType(), width * height);
-                Buffer.BlockCopy(initialArray, 0, _baseArray, 0, width * height * Marshal.SizeOf(val));
+                Buffer.BlockCopy(initialArray, 0, _baseArray, 0, width * height * ItemSizeInBytes);
             }
             else _baseArray = initialArray;
 
-            Width = width;
-            Height = height;
         }
 
-        public Image(byte[] initialArray, int width, int height, TypeCode type)
+        public Image(byte[] initialArray, int width, int height, TypeCode type) 
+            : this(
+                (initialArray 
+                 ?? throw new ArgumentNullException("Argument is null: " + nameof(initialArray)))
+                .AsSpan(), 
+                width, 
+                height,
+                type
+            )
         {
-            if (initialArray == null)
-                throw new ArgumentNullException("Argument is null: " + nameof(initialArray));
-            if (width < 1 || height < 1)
-                throw new ArgumentOutOfRangeException($"Image size is incorrect [{width}, {height}].");
-
-            if (!Enum.IsDefined(typeof(TypeCode), type))
-                throw new ArgumentException($"Parameter type ({type}) is not defined in {typeof(TypeCode)}.");
-
-            if (!AllowedTypes.Contains(type))
-                throw new ArgumentException($"Specified type {type} is not allowed.");
-
-            Width = width;
-            Height = height;
-            UnderlyingType = type;
-            ItemSizeInBytes = TypeSizes[UnderlyingType];
-
-            var tp = Type.GetType("System." + UnderlyingType, true, true);
-            var size = ItemSizeInBytes;
-            _baseArray = Array.CreateInstance(tp, width * height);
-
-            Buffer.BlockCopy(initialArray, 0, _baseArray, 0,
-                Math.Min(initialArray.Length, width * height * size));
         }
 
         public Image(ReadOnlySpan<byte> initialArray, int width, int height, TypeCode type)
+            : this(width, height, type)
+
         {
             if (initialArray.IsEmpty)
                 throw new ArgumentNullException("Argument is empty: " + nameof(initialArray));
-            if (width < 1 || height < 1)
-                throw new ArgumentOutOfRangeException($"Image size is incorrect [{width}, {height}].");
 
-            if (!Enum.IsDefined(typeof(TypeCode), type))
-                throw new ArgumentException($"Parameter type ({type}) is not defined in {typeof(TypeCode)}.");
+            var len = Math.Min(initialArray.Length, width * height * ItemSizeInBytes);
 
-            if (!AllowedTypes.Contains(type))
-                throw new ArgumentException($"Specified type {type} is not allowed.");
-
-            Width = width;
-            Height = height;
-            UnderlyingType = type;
-            ItemSizeInBytes = TypeSizes[UnderlyingType];
-
-            var tp = Type.GetType("System." + UnderlyingType, true, true);
-            _baseArray = Array.CreateInstance(tp, width * height);
-
-            initialArray.CopyTo(UnsafeAsBytes());
+            initialArray.Slice(0, len).CopyTo(UnsafeAsBytes());
         }
 
         [Obsolete("Use `" + nameof(ByteView) + "`.")]
@@ -1165,5 +1165,15 @@ namespace DipolImage
                 _ => default // This is unreachable
             };
 
+        internal delegate void ImageInitializer(Span<byte> view);
+
+        internal static Image CreateAndFill(int width, int height, TypeCode type, ImageInitializer initializer)
+        {
+            if (initializer is null)
+            {
+                throw new ArgumentNullException(nameof(initializer));
+            }
+            throw new NotImplementedException();
+        }
     }
 }
