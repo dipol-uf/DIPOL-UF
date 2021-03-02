@@ -1,26 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
+﻿#nullable enable
 
 using System;
 using System.Buffers;
@@ -30,7 +8,6 @@ using System.Runtime.Serialization;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security.Policy;
 using MathNet.Numerics;
 
 namespace DipolImage
@@ -88,7 +65,7 @@ namespace DipolImage
         }
 
         public int ItemSizeInBytes { get; } 
-        public Type Type => Type.GetType("System." + UnderlyingType);
+        public Type Type => Type.GetType("System." + UnderlyingType)!;
 
         public object this[int i, int j]
         {
@@ -175,75 +152,84 @@ namespace DipolImage
                 {
                     var localMax = byte.MinValue;
                     var arr = (byte[]) _baseArray;
-                    foreach (var item in arr)
-                        if (item >= localMax)
-                            localMax = item;
+                    for (var i = 0; i < arr.Length; i++)
+                    {
+                        localMax = Ops.Max(arr[i], localMax);
+                    }
 
                     max = localMax;
-                        break;
+                    break;
                 }
                 case TypeCode.UInt16:
                 {
                     var localMax = ushort.MinValue;
                     var arr = (ushort[])_baseArray;
-                    foreach (var item in arr)
-                        if (item >= localMax)
-                            localMax = item;
+                    for (var i = 0; i < arr.Length; i++)
+                    {
+                        localMax = Ops.Max(arr[i], localMax);
+                    }
 
-                        max = localMax;
+                    max = localMax;
                     break;
                 }
                 case TypeCode.Int16:
                 {
                     var localMax = short.MinValue;
                     var arr = (short[])_baseArray;
-                    foreach (var item in arr)
-                        if (item >= localMax)
-                            localMax = item;
+                    for (var i = 0; i < arr.Length; i++)
+                    {
+                        localMax = Ops.Max(arr[i], localMax);
+                    }
 
-                        max = localMax;
+                    max = localMax;
                     break;
                 }
                 case TypeCode.UInt32:
                 {
                     var localMax = uint.MinValue;
                     var arr = (uint[])_baseArray;
-                    foreach (var item in arr)
-                        if (item >= localMax)
-                            localMax = item;
+                    for (var i = 0; i < arr.Length; i++)
+                    {
+                        localMax = Ops.Max(arr[i], localMax);
+                    }
 
-                        max = localMax;
+                    max = localMax;
                     break;
                 }
                 case TypeCode.Int32:
                 {
                     var localMax = int.MinValue;
                     var arr = (int[])_baseArray;
-                    foreach (var item in arr)
-                        if (item >= localMax)
-                            localMax = item;
+                    for (var i = 0; i < arr.Length; i++)
+                    {
+                        localMax = Ops.Max(arr[i], localMax);
+                    }
 
-                        max = localMax;
+                    max = localMax;
                     break;
                 }
                 case TypeCode.Single:
                 {
-                    var localMax = float.MinValue;
                     var arr = (float[])_baseArray;
-                    foreach (var item in arr)
-                        if (item >= localMax)
-                            localMax = item;
+                    var localMax = arr[0];
+                    for (var i = 0; i < arr.Length; i++)
+                    {
+                        var item = arr[i];
+                        localMax = localMax < item ? item : localMax;
+                    }
 
-                        max = localMax;
+                    max = localMax;
                     break;
                 }
                 default:
                 {
-                    var localMax = double.MinValue;
                     var arr = (double[])_baseArray;
-                    foreach (var item in arr)
-                        if (item >= localMax)
-                            localMax = item;
+                    var localMax = arr[0];
+                    for (var i = 0; i < arr.Length; i++)
+                    {
+                        var item = arr[i];
+                        localMax = localMax < item ? item : localMax;
+                    }
 
                     max = localMax;
                     break;
@@ -264,20 +250,22 @@ namespace DipolImage
                 {
                     var localMin = byte.MaxValue;
                     var arr = (byte[])_baseArray;
-                    foreach (var item in arr)
-                        if (item <= localMin)
-                            localMin = item;
+                    for (var i = 0; i < arr.Length; i++)
+                    {
+                        localMin = Ops.Min(arr[i], localMin);
+                    }
 
-                        min = localMin;
+                    min = localMin;
                     break;
                 }
                 case TypeCode.UInt16:
                     {
                         var localMin = ushort.MaxValue;
                         var arr = (ushort[])_baseArray;
-                        foreach (var item in arr)
-                            if (item <= localMin)
-                                localMin = item;
+                        for (var i = 0; i < arr.Length; i++)
+                        {
+                            localMin = Ops.Min(arr[i], localMin);
+                        }
 
                         min = localMin;
                         break;
@@ -286,9 +274,10 @@ namespace DipolImage
                     {
                         var localMin = short.MaxValue;
                         var arr = (short[])_baseArray;
-                        foreach (var item in arr)
-                            if (item <= localMin)
-                                localMin = item;
+                        for (var i = 0; i < arr.Length; i++)
+                        {
+                            localMin = Ops.Min(arr[i], localMin);
+                        }
 
                         min = localMin;
                         break;
@@ -297,9 +286,10 @@ namespace DipolImage
                     {
                         var localMin = uint.MaxValue;
                         var arr = (uint[])_baseArray;
-                        foreach (var item in arr)
-                            if (item <= localMin)
-                                localMin = item;
+                        for (var i = 0; i < arr.Length; i++)
+                        {
+                            localMin = Ops.Min(arr[i], localMin);
+                        }
 
                         min = localMin;
                         break;
@@ -308,35 +298,41 @@ namespace DipolImage
                     {
                         var localMin = int.MaxValue;
                         var arr = (int[])_baseArray;
-                        foreach (var item in arr)
-                            if (item <= localMin)
-                                localMin = item;
+                        for (var i = 0; i < arr.Length; i++)
+                        {
+                            localMin = Ops.Min(arr[i], localMin);
+                        }
 
                         min = localMin;
                         break;
                     }
                 case TypeCode.Single:
+                {
+                    var arr = (float[])_baseArray;
+                    var localMin = arr[0];
+                    for (var i = 1; i < arr.Length; i++)
                     {
-                        var localMin = float.MaxValue;
-                        var arr = (float[])_baseArray;
-                        foreach (var item in arr)
-                            if (item <= localMin)
-                                localMin = item;
-
-                        min = localMin;
-                        break;
+                        var item = arr[i];
+                        localMin = localMin > item ? item : localMin;
                     }
+
+                    min = localMin;
+                    break;
+                }
                 default:
+                {
+                    var arr = (double[]) _baseArray;
+                    var localMin = arr[0];
+                    for (var i = 1; i < arr.Length; i++)
                     {
-                        var localMin = double.MaxValue;
-                        var arr = (double[]) _baseArray;
-                        foreach(var item in arr)
-                            if (item <= localMin)
-                                localMin = item;
+                        var item = arr[i];
+                        localMin = localMin > item ? item : localMin;
 
-                        min = localMin;
-                        break;
                     }
+
+                    min = localMin;
+                    break;
+                }
             }
 
 
@@ -872,7 +868,6 @@ namespace DipolImage
                 buffer[i + 5] = cast(view[i + 5]);
                 buffer[i + 6] = cast(view[i + 6]);
                 buffer[i + 7] = cast(view[i + 7]);
-
             }
 
             i -= unrollBy;
@@ -1075,7 +1070,7 @@ namespace DipolImage
                     for (var i = 0; i < Width * Height; i++)
                         if (!thisArr[i].AlmostEqual(otherArr[i]))
                             return false;
-                        return true;
+                    return true;
                 }
                 default:
                 {

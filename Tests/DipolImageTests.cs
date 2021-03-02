@@ -278,71 +278,67 @@ namespace Tests
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_Max()
+        [Repeat(16)]
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_Max(TypeCode code)
         {
-            foreach (var code in Image.AllowedPixelTypes)
+            var type = Type.GetType("System." + code) ?? typeof(byte);
+            var size = Marshal.SizeOf(type);
+
+            var max = type
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .First(fi => fi.Name == "MinValue")
+                .GetValue(null);
+
+            var image = new Image(TestByteArray, TestByteArray.Length / size, 1, code);
+            for (var i = 0; i < image.Width; i++)
             {
-                var type = Type.GetType("System." + code) ?? typeof(byte);
-                var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
-
-                var max = type
-                    .GetFields(BindingFlags.Public | BindingFlags.Static)
-                    .First(fi => fi.Name == "MinValue")
-                    .GetValue(null);
-
-                var image = new Image(TestByteArray, TestByteArray.Length / size, 1, code);
-                for (var i = 0; i < image.Width; i++)
-                {
-                    var val = image[0, i] as IComparable;
-                    if (val?.CompareTo(max) > 0)
-                        max = Convert.ChangeType(val, code);
-                }
-
-
-                max = Convert.ChangeType(max, code);
-
-                Assert.That(image.Max(), Is.EqualTo(max));
+                var val = image[0, i] as IComparable;
+                if (val?.CompareTo(max) > 0)
+                    max = Convert.ChangeType(val, code);
             }
-        
+
+
+            max = Convert.ChangeType(max, code);
+
+            Assert.That(image.Max(), Is.EqualTo(max));
+
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_Min()
+        [Repeat(16)]
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_Min(TypeCode code)
         {
-            foreach (var code in Image.AllowedPixelTypes)
+            var type = Type.GetType("System." + code) ?? typeof(byte);
+            var size = Marshal.SizeOf(type);
+
+            var min = type
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .First(fi => fi.Name == "MaxValue")
+                .GetValue(null);
+
+            var image = new Image(TestByteArray, TestByteArray.Length / size, 1, code);
+            for (var i = 0; i < image.Width; i++)
             {
-                var type = Type.GetType("System." + code) ?? typeof(byte);
-                var size = Marshal.SizeOf(type);
-
-                var min = type
-                    .GetFields(BindingFlags.Public | BindingFlags.Static)
-                    .First(fi => fi.Name == "MaxValue")
-                    .GetValue(null);
-
-                var image = new Image(TestByteArray, TestByteArray.Length / size, 1, code);
-                for (var i = 0; i < image.Width; i++)
+                var val = image[0, i] as IComparable;
+                if (val?.CompareTo(min) < 0)
                 {
-                    var val = image[0, i] as IComparable;
-                    if (val?.CompareTo(min) < 0)
-                    {
-                        if(type == typeof(float) && !float.IsNaN((float)val))
-                            min = Convert.ChangeType(val, code);
-                        else if (type == typeof(double) && !double.IsNaN((double)val))
-                            min = Convert.ChangeType(val, code);
-                        else if(type != typeof(double) && type != typeof(float))
-                            min = Convert.ChangeType(val, code);
+                    if (type == typeof(float) && !float.IsNaN((float) val))
+                        min = Convert.ChangeType(val, code);
+                    else if (type == typeof(double) && !double.IsNaN((double) val))
+                        min = Convert.ChangeType(val, code);
+                    else if (type != typeof(double) && type != typeof(float))
+                        min = Convert.ChangeType(val, code);
 
-                    }
                 }
-            
-
-
-                min = Convert.ChangeType(min, code);
-
-                Assert.That(image.Min(), Is.EqualTo(min));
             }
+
+
+
+            min = Convert.ChangeType(min, code);
+
+            Assert.That(image.Min(), Is.EqualTo(min));
         }
 
         [Test]

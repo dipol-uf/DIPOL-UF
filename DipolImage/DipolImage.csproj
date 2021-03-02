@@ -125,6 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Image.cs" />
+    <Compile Include="Ops.cs" />
     <Compile Include="ReflectionDirection.cs" />
     <Compile Include="RotateBy.cs" />
     <Compile Include="RotationDirection.cs" />
