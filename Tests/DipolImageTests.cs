@@ -42,14 +42,14 @@ namespace Tests
     }
 
     [TestFixture]
-    //[Parallelizable(ParallelScope.All)]
+    [Parallelizable(ParallelScope.All)]
     public class DipolImageTests
     {
         public Random R;
         public int[] TestArray;
         public byte[] TestByteArray;
         public byte[] VeryLargeByteArray;
-       
+        
         [SetUp]
         public void Test_Initialize()
         {
@@ -59,7 +59,7 @@ namespace Tests
             {
                 TestArray[i] = R.Next();
             }
-            TestByteArray= new byte[512];
+            TestByteArray = new byte[512];
             R.NextBytes(TestByteArray);
 
             VeryLargeByteArray = new byte[1024 * 1024 * 8];
@@ -300,8 +300,8 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Max(TypeCode code)
         {
-            var type = Type.GetType("System." + code) ?? typeof(byte);
-            var size = Marshal.SizeOf(type);
+            var type = Image.ResolveType(code);
+            var size = Image.ResolveItemSize(code);
 
             var max = type
                 .GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -328,8 +328,8 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Min(TypeCode code)
         {
-            var type = Type.GetType("System." + code) ?? typeof(byte);
-            var size = Marshal.SizeOf(type);
+            var size = Image.ResolveItemSize(code);
+            var type = Image.ResolveType(code);
 
             var min = type
                 .GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -396,17 +396,20 @@ namespace Tests
         [Repeat(4)]
         public void Test_CastTo()
         {
-            var image = new Image(TestArray, 4, TestArray.Length/4);
+            var testArray = TestArray.ToArray();
+            var image = new Image(testArray, 4, TestArray.Length/4);
             Assert.Multiple(() =>
             {
                 Assert.That(image.Equals(image.CastTo<int, int>(x => x)), Is.True);
                 Assert.That(() => image.CastTo<int, char>(x => x.ToString()[0]),
                     Throws.InstanceOf<ArgumentException>());
             });
-            var otherArray = TestArray.Select(x => (double) x).ToArray();
+            var otherArray = testArray.Select(x => (double) x).ToArray();
 
             var otherImage = new Image(otherArray, 4, otherArray.Length/4);
-            Assert.That(otherImage.Equals(image.CastTo<int, double>(x => (double) x)), Is.True);
+            var srcCastImage = image.CastTo<int, double>(x => (double)x);
+
+            Assert.That(otherImage.Equals(srcCastImage, FloatingPointComparisonType.Exact), Is.True);
         }
 
         [Test]
