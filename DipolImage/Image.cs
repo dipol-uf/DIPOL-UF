@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Policy;
 using MathNet.Numerics;
@@ -846,14 +847,50 @@ namespace DipolImage
         public Image CastTo<TS, TD>(Func<TS, TD> cast)
             where TS : unmanaged
             where TD : unmanaged
-            => (typeof(TS) == Type)
-                ? new Image(((TS[]) _baseArray)
-                    .AsParallel()
-                    .Select(cast)
-                    .ToArray(),
-                    Width, Height)
-                : throw new TypeAccessException(
-                    $"Source type {typeof(TS)} differs from underlying type with code {UnderlyingType}.");
+        {
+            const int unrollBy = 8;
+            if (typeof(TS) != Type)
+            {
+                throw new TypeAccessException($"Source type {typeof(TS)} differs from underlying type with code {UnderlyingType}.");
+            }
+
+            var newSize = Unsafe.SizeOf<TD>();
+            var (width, height) = (Width, Height);
+            
+            var buffer = new TD[width * height];
+            var view = TypedView<TS>();
+
+            var i = 0;
+            for (; i < width * height; i += unrollBy)
+            {
+                // Unroll by 8
+                buffer[i] = cast(view[i]);
+                buffer[i + 1] = cast(view[i + 1]);
+                buffer[i + 2] = cast(view[i + 2]);
+                buffer[i + 3] = cast(view[i + 3]);
+                buffer[i + 4] = cast(view[i + 4]);
+                buffer[i + 5] = cast(view[i + 5]);
+                buffer[i + 6] = cast(view[i + 6]);
+                buffer[i + 7] = cast(view[i + 7]);
+
+            }
+
+            i -= unrollBy;
+            if (i < width * height)
+            {
+                for (; i < width * height; i++)
+                {
+                    buffer[i] = cast(view[i]);
+                }
+            }
+
+            return new Image(buffer, width, height, false);
+        }
+
+        public ReadOnlySpan<T> TypedView<T>() where T : unmanaged =>
+            typeof(T) == Type
+                ? (T[]) _baseArray
+                : throw new ArrayTypeMismatchException();
 
         public Image Transpose()
         {
