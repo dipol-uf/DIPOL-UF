@@ -124,6 +124,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FloatingPointComparisonType.cs" />
     <Compile Include="Image.cs" />
     <Compile Include="Ops.cs" />
     <Compile Include="ReflectionDirection.cs" />

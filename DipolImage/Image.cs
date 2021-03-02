@@ -1039,7 +1039,9 @@ namespace DipolImage
         public int GetHashCode(Image obj)
             =>  obj.GetHashCode();
 
-        public bool Equals(Image? other)
+        public bool Equals(Image? other) => Equals(other, FloatingPointComparisonType.Loose);
+
+        public bool Equals(Image? other, FloatingPointComparisonType compType)
         {
             if (UnderlyingType != other?.UnderlyingType ||
                 Width != other.Width ||
@@ -1057,6 +1059,9 @@ namespace DipolImage
                     return ByteView().SequenceEqual(other.ByteView());
                 case TypeCode.Single:
                 {
+                    if(compType == FloatingPointComparisonType.Exact)
+                        return ByteView().SequenceEqual(other.ByteView());
+
                     var thisArr = (float[])_baseArray;
                     var otherArr = (float[])other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
@@ -1068,6 +1073,9 @@ namespace DipolImage
                 }
                 default:
                 {
+                    if (compType == FloatingPointComparisonType.Exact)
+                        return ByteView().SequenceEqual(other.ByteView());
+
                     var thisArr = (double[])_baseArray;
                     var otherArr = (double[])other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
