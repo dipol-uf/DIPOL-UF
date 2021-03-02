@@ -86,6 +86,7 @@ namespace DipolImage
             get;
         }
 
+        public int ItemSizeInBytes { get; } 
         public Type Type => Type.GetType("System." + UnderlyingType);
 
         public object this[int i, int j]
@@ -114,6 +115,8 @@ namespace DipolImage
                 throw new ArgumentException($"Provided array's base type {val.GetType()} is not allowed.");
 
             UnderlyingType = Type.GetTypeCode(val.GetType());
+            ItemSizeInBytes = TypeSizes[UnderlyingType];
+
             if (copy)
             {
                 _baseArray = Array.CreateInstance(val.GetType(), width * height);
@@ -141,8 +144,10 @@ namespace DipolImage
             Width = width;
             Height = height;
             UnderlyingType = type;
+            ItemSizeInBytes = TypeSizes[UnderlyingType];
+
             var tp = Type.GetType("System." + UnderlyingType, true, true);
-            var size = Marshal.SizeOf(tp);
+            var size = ItemSizeInBytes;
             _baseArray = Array.CreateInstance(tp, width * height);
 
             Buffer.BlockCopy(initialArray, 0, _baseArray, 0,
@@ -151,7 +156,7 @@ namespace DipolImage
 
         public byte[] GetBytes()
         {
-            var size = Marshal.SizeOf(_baseArray.GetValue(0));
+            var size = ItemSizeInBytes;
             var byteArray = new byte[Width * Height * size];
 
             Buffer.BlockCopy(_baseArray, 0, byteArray, 0, byteArray.Length);
