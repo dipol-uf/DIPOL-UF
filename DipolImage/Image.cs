@@ -151,7 +151,6 @@ namespace DipolImage
             ItemSizeInBytes = TypeSizes[UnderlyingType];
 
             var tp = Type.GetType("System." + UnderlyingType, true, true);
-            var size = ItemSizeInBytes;
             _baseArray = Array.CreateInstance(tp, width * height);
 
             initialArray.CopyTo(UnsafeAsBytes());
@@ -881,7 +880,6 @@ namespace DipolImage
                 throw new TypeAccessException($"Source type {typeof(TS)} differs from underlying type with code {UnderlyingType}.");
             }
 
-            var newSize = Unsafe.SizeOf<TD>();
             var (width, height) = (Width, Height);
             
             var buffer = new TD[width * height];
