@@ -80,7 +80,7 @@ namespace DipolImage
         }
 
         public int ItemSizeInBytes => ResolveItemSize(UnderlyingType);
-        public Type Type => ResolveTypeCode(UnderlyingType);
+        public Type Type => ResolveType(UnderlyingType);
 
         public object this[int i, int j]
         {
@@ -1216,7 +1216,7 @@ namespace DipolImage
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static Type ResolveTypeCode(TypeCode code) => TypeCodeMap[code];
+        internal static Type ResolveType(TypeCode code) => TypeCodeMap[code];
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static int ResolveItemSize(TypeCode code) => TypeSizes[code];
     }
