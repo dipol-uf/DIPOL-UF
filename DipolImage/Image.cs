@@ -468,12 +468,17 @@ namespace DipolImage
                     {
                         var val = (byte) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = val;
+                        }
                     }
                     else
-
+                    {
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = (byte) (gMin + factor * (arr[i] - min));
+                        }
+                    }
 
                     break;
                 }
@@ -485,17 +490,20 @@ namespace DipolImage
                     {
                         var val = (ushort) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = val;
+                        }
                     }
                     else
-
+                    {
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = (ushort) (gMin + factor * (arr[i] - min));
+                        }
+                    }
 
-                        for (var i = 0; i < arr.Length; i++)
-                            arr[i] = (ushort)(gMin + factor * (arr[i] - min));
 
-                        break;
+                    break;
                 }
                 case TypeCode.Int16:
                 {
@@ -505,17 +513,19 @@ namespace DipolImage
                     {
                         var val = (short) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = val;
+                        }
                     }
                     else
-
+                    {
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = (short) (gMin + factor * (arr[i] - min));
+                        }
+                    }
 
-                        for (var i = 0; i < arr.Length; i++)
-                            arr[i] = (short)(gMin + factor * (arr[i] - min));
-
-                        break;
+                    break;
                 }
                 case TypeCode.UInt32:
                 {
@@ -525,16 +535,19 @@ namespace DipolImage
                     {
                         var val = (uint) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = val;
+                        }
                     }
                     else
-
+                    {
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = (uint) (gMin + factor * (arr[i] - min));
+                        }
+                    }
 
-                        for (var i = 0; i < arr.Length; i++)
-                            arr[i] = (uint)(gMin + factor * (arr[i] - min));
-                        break;
+                    break;
                 }
                 case TypeCode.Int32:
                 {
@@ -544,17 +557,19 @@ namespace DipolImage
                     {
                         var val = (int) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = val;
+                        }
                     }
                     else
-
+                    {
                         for (var i = 0; i < arr.Length; i++)
-                            arr[i] = (int) (gMin + factor * (arr[i] - min));
-
-                        for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = (int)(gMin + factor * (arr[i] - min));
+                        }
+                    }
 
-                        break;
+                    break;
                 }
                 case TypeCode.Single:
                 {
@@ -564,12 +579,17 @@ namespace DipolImage
                     {
                         var val = (float) (0.5 * (gMin + gMax));
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = val;
+                        }
                     }
                     else
-
+                    {
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = (float) (gMin + factor * (arr[i] - min));
+                        }
+                    }
 
                     break;
                 }
@@ -581,12 +601,18 @@ namespace DipolImage
                     {
                         var val = 0.5 * (gMin + gMax);
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = val;
+                        }
                     }
 
                     else
+                    {
                         for (var i = 0; i < arr.Length; i++)
+                        {
                             arr[i] = gMin + factor * (arr[i] - min);
+                        }
+                    }
 
                     break;
                 }
