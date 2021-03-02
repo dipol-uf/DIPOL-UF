@@ -185,8 +185,8 @@ namespace Tests
 
             var tempArr = new byte[arr.Length];
             Array.Copy(arr, tempArr, tempArr.Length);
-            var modifyAt = tempArr.Length <= 4 ? tempArr.Length - 1 : 4;
-            tempArr[modifyAt] = (byte) (tempArr[modifyAt] == 127 ? 127 : 255);
+            var modifyAt = tempArr.Length <= 3 ? tempArr.Length - 1 : 3;
+            tempArr[modifyAt] = (byte) (tempArr[modifyAt] == 127 ? 127 : 146);
 
             var image1 = new Image(arr, 2, 2, code);
             var image2 = new Image(arr, 2, 2, code);
