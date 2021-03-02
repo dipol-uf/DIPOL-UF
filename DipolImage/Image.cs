@@ -986,11 +986,14 @@ namespace DipolImage
             throw new NotImplementedException();
         }
 
-        public bool Equals(Image x, Image y)
-            => x?.Equals(y) ?? false;
+        public bool Equals(Image? x, Image? y)
+            => Equals(x, y, FloatingPointComparisonType.Loose);
 
-        public int GetHashCode(Image obj)
-            =>  obj.GetHashCode();
+        public bool Equals(Image? x, Image? y, FloatingPointComparisonType compType)
+            => x?.Equals(y, compType) ?? false;
+
+        public int GetHashCode(Image? obj)
+            =>  obj?.GetHashCode() ?? 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(Image? other) => Equals(other, FloatingPointComparisonType.Loose);
