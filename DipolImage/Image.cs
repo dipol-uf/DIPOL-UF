@@ -974,9 +974,9 @@ namespace DipolImage
             return direction switch
             {
                 ReflectionDirection.Vertical => 
-                    CreateAndFill(Width, Height, UnderlyingType, ReflectHorizontally, this),
-                ReflectionDirection.Horizontal => 
                     CreateAndFill(Width, Height, UnderlyingType, ReflectVertically, this),
+                ReflectionDirection.Horizontal => 
+                    CreateAndFill(Width, Height, UnderlyingType, ReflectHorizontally, this),
                 _ => throw new ArgumentOutOfRangeException(nameof(direction))
             };
         }
@@ -1124,7 +1124,7 @@ namespace DipolImage
             return image;
         }
 
-        internal static void ReflectHorizontally(Span<byte> dataView, Image image)
+        internal static void ReflectVertically(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -1161,7 +1161,7 @@ namespace DipolImage
             }
         }
 
-        internal static void ReflectVertically(Span<byte> dataView, Image image)
+        internal static void ReflectHorizontally(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -1192,5 +1192,10 @@ namespace DipolImage
         internal static Type ResolveType(TypeCode code) => TypeCodeMap[code];
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static int ResolveItemSize(TypeCode code) => TypeSizes[code];
+
+        public static Image CreateTyped<T>(ReadOnlySpan<T> data, int width, int height) where T : unmanaged
+        {
+            return new Image(MemoryMarshal.AsBytes(data), width, height, Type.GetTypeCode(typeof(T)));
+        }
     }
 }

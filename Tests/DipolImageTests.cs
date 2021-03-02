@@ -68,7 +68,7 @@ namespace Tests
         public int[] TestArray;
         public byte[] TestByteArray;
         public byte[] VeryLargeByteArray;
-        
+
         [SetUp]
         public void Test_Initialize()
         {
@@ -78,6 +78,7 @@ namespace Tests
             {
                 TestArray[i] = R.Next();
             }
+
             TestByteArray = new byte[512];
             R.NextBytes(TestByteArray);
 
@@ -283,7 +284,7 @@ namespace Tests
 
             image[0, 0] = 430;
 
-            Assert.That(image[0,0], Is.EqualTo(430));
+            Assert.That(image[0, 0], Is.EqualTo(430));
         }
 
         [Test]
@@ -416,7 +417,7 @@ namespace Tests
         public void Test_CastTo()
         {
             var testArray = TestArray.ToArray();
-            var image = new Image(testArray, 4, TestArray.Length/4);
+            var image = new Image(testArray, 4, TestArray.Length / 4);
             Assert.Multiple(() =>
             {
                 Assert.That(image.Equals(image.CastTo<int, int>(x => x)), Is.True);
@@ -425,8 +426,8 @@ namespace Tests
             });
             var otherArray = testArray.Select(x => (double) x).ToArray();
 
-            var otherImage = new Image(otherArray, 4, otherArray.Length/4);
-            var srcCastImage = image.CastTo<int, double>(x => (double)x);
+            var otherImage = new Image(otherArray, 4, otherArray.Length / 4);
+            var srcCastImage = image.CastTo<int, double>(x => (double) x);
 
             Assert.That(otherImage.Equals(srcCastImage, FloatingPointComparisonType.Exact), Is.True);
         }
@@ -500,12 +501,12 @@ namespace Tests
 
             //Assert.Multiple(
             //    () =>
-                {
-                    Assert.That(Math.Abs(min - 1) < double.Epsilon ||
-                                Math.Abs(max + min - 10) < double.Epsilon, Is.True);
-                    Assert.That(Math.Abs(max - 9) < double.Epsilon ||
-                                Math.Abs(max + min - 10) < double.Epsilon, Is.True);
-                }
+            {
+                Assert.That(Math.Abs(min - 1) < double.Epsilon ||
+                            Math.Abs(max + min - 10) < double.Epsilon, Is.True);
+                Assert.That(Math.Abs(max - 9) < double.Epsilon ||
+                            Math.Abs(max + min - 10) < double.Epsilon, Is.True);
+            }
             //);
         }
 
@@ -637,6 +638,19 @@ namespace Tests
             Assert.IsFalse(image.Equals(ref1, FloatingPointComparisonType.Exact));
             Assert.IsFalse(ref2.Equals(ref1, FloatingPointComparisonType.Exact));
             Assert.IsTrue(image.Equals(ref2, FloatingPointComparisonType.Exact));
+        }
+
+        [Test]
+        public void Test_Reflection_Direct()
+        {
+            var image = Image.CreateTyped<int>(stackalloc int[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2}, 3, 4);
+
+            var v1 = image.Reflect(ReflectionDirection.Vertical).TypedView<int>();
+            Assert.IsTrue(v1.SequenceEqual(stackalloc int[] {0, 1, 2, 7, 8, 9, 4, 5, 6, 1, 2, 3}));
+
+            var h1 = image.Reflect(ReflectionDirection.Horizontal).TypedView<int>();
+
+            Assert.IsTrue(h1.SequenceEqual(stackalloc int[] {3, 2, 1, 6, 5, 4, 9, 8, 7, 2, 1, 0}));
         }
     }
 }
