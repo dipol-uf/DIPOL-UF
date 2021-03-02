@@ -250,13 +250,11 @@ namespace DipolImage
                 }
                 case TypeCode.Single:
                 {
-                    var arr = (float[])_baseArray;
+                    var arr = (float[]) _baseArray;
                     var localMax = arr[0];
                     for (var i = 0; i < arr.Length; i++)
                     {
-                        var item = arr[i];
-                        localMax = localMax < item ? item : localMax;
-
+                        localMax = Ops.Max(arr[i], localMax);
                     }
 
                     max = localMax;
@@ -264,19 +262,17 @@ namespace DipolImage
                 }
                 default:
                 {
-                    var arr = (double[])_baseArray;
+                    var arr = (double[]) _baseArray;
                     var localMax = arr[0];
                     for (var i = 0; i < arr.Length; i++)
                     {
-                        var item = arr[i];
-                        localMax = localMax < item ? item : localMax;
-
+                        localMax = Ops.Max(arr[i], localMax);
                     }
-                
+
                     max = localMax;
                     break;
                 }
-              
+
             }
 
             return max;
@@ -350,12 +346,11 @@ namespace DipolImage
                     }
                 case TypeCode.Single:
                 {
-                    var arr = (float[])_baseArray;
+                    var arr = (float[]) _baseArray;
                     var localMin = arr[0];
                     for (var i = 1; i < arr.Length; i++)
                     {
-                        var item = arr[i];
-                        localMin = localMin > item ? item : localMin;
+                        localMin = Ops.Min(arr[i], localMin);
                     }
 
                     min = localMin;
@@ -367,9 +362,7 @@ namespace DipolImage
                     var localMin = arr[0];
                     for (var i = 1; i < arr.Length; i++)
                     {
-                        var item = arr[i];
-                        localMin = localMin > item ? item : localMin;
-
+                        localMin = Ops.Min(arr[i], localMin);
                     }
 
                     min = localMin;

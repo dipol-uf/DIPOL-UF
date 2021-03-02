@@ -24,6 +24,25 @@ namespace DipolImage
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte Max(byte x, byte y) => (byte)(x ^ ((x ^ y) & ((x - y) >> (sizeof(int) * 8 - 1))));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Max(float x, float y) =>
+            (float.IsNaN(x), float.IsNaN(y)) switch
+            {
+                (false, false) => System.Math.Max(x, y),
+                (true, true) => float.MinValue,
+                (true, _) => y,
+                (_, true) => x
+            };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Max(double x, double y) =>
+            (double.IsNaN(x), double.IsNaN(y)) switch
+            {
+                (false, false) => System.Math.Max(x, y),
+                (true, true) => double.MinValue,
+                (true, _) => y,
+                (_, true) => x
+            };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Min(int x, int y) => (int)(y ^ ((x ^ y) & (((long)x - y) >> (sizeof(long) * 8 - 1))));
@@ -44,6 +63,24 @@ namespace DipolImage
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Equal(float x, float y) => x.AlmostEqual(y) || float.IsNaN(x) && float.IsNaN(y);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Min(float x, float y) =>
+            (float.IsNaN(x), float.IsNaN(y)) switch
+            {
+                (false, false) => System.Math.Min(x, y),
+                (true, true) => float.MaxValue,
+                (true, _) => y,
+                (_, true) => x
+            };
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Min(double x, double y) =>
+            (double.IsNaN(x), double.IsNaN(y)) switch
+            {
+                (false, false) => System.Math.Min(x, y),
+                (true, true) => double.MaxValue,
+                (true, _) => y,
+                (_, true) => x
+            };
     }
 }
