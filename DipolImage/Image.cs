@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using MathNet.Numerics;
 
+[assembly:InternalsVisibleTo("Tests")]
 namespace DipolImage
 {
     [DebuggerDisplay(@"\{Image ({Height} x {Width}) of type {UnderlyingType}\}")]
@@ -30,6 +32,19 @@ namespace DipolImage
             TypeCode.Int32,
             TypeCode.Byte
         };
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private static readonly Dictionary<TypeCode, Type> TypeCodeMap = new Dictionary<TypeCode, Type>
+        {
+            {TypeCode.Double, typeof(double)},
+            {TypeCode.Single, typeof(float)},
+            {TypeCode.UInt16, typeof(ushort)},
+            {TypeCode.Int16, typeof(short)},
+            {TypeCode.UInt32, typeof(uint)},
+            {TypeCode.Int32, typeof(int)},
+            {TypeCode.Byte, typeof(byte)}
+        };
+
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private static readonly Dictionary<TypeCode, int> TypeSizes = new Dictionary<TypeCode, int>
@@ -65,7 +80,7 @@ namespace DipolImage
         }
 
         public int ItemSizeInBytes { get; } 
-        public Type Type => Type.GetType("System." + UnderlyingType)!;
+        public Type Type => ResolveTypeCode(UnderlyingType);
 
         public object this[int i, int j]
         {
@@ -101,8 +116,7 @@ namespace DipolImage
             UnderlyingType = type;
             ItemSizeInBytes = TypeSizes[UnderlyingType];
 
-            var tp = Type.GetType("System." + UnderlyingType, true, true);
-            _baseArray = Array.CreateInstance(tp, width * height);
+            _baseArray = Array.CreateInstance(Type, width * height);
         }
 
         public Image(Array initialArray, int width, int height, bool copy = true)
@@ -114,18 +128,19 @@ namespace DipolImage
                 throw new ArgumentOutOfRangeException($"Image size is incorrect [{width}, {height}].");
 
             var val = initialArray.GetValue(0);
+            var typeCode = Type.GetTypeCode(val.GetType());
 
-            if (!AllowedTypes.Contains(Type.GetTypeCode(val.GetType())))
+            if (!AllowedTypes.Contains(typeCode))
                 throw new ArgumentException($"Provided array's base type {val.GetType()} is not allowed.");
 
-            UnderlyingType = Type.GetTypeCode(val.GetType());
+            UnderlyingType = typeCode;
             ItemSizeInBytes = TypeSizes[UnderlyingType];
 
             Width = width;
             Height = height;
             if (copy)
             {
-                _baseArray = Array.CreateInstance(val.GetType(), width * height);
+                _baseArray = Array.CreateInstance(Type, width * height);
                 Buffer.BlockCopy(initialArray, 0, _baseArray, 0, width * height * ItemSizeInBytes);
             }
             else _baseArray = initialArray;
@@ -918,7 +933,7 @@ namespace DipolImage
 
         public Image Transpose()
         {
-            var type = Type.GetType("System." + UnderlyingType, true, true);
+            var type = Type;
 
             var newArray = Array.CreateInstance(type, Width * Height);
 
@@ -1202,5 +1217,7 @@ namespace DipolImage
                 }
             }
         }
+
+        internal static Type ResolveTypeCode(TypeCode code) => TypeCodeMap[code];
     }
 }
