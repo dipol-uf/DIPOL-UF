@@ -96,12 +96,5 @@ namespace DipolImage
         public static float Clamp(float x, float low, float high) => Min(high, Max(low, x));
         [MethodImpl(MethodImplOptions.AggressiveInlining)] 
         public static double Clamp(double x, double low, double high) => Min(high, Max(low, x));
-
-
-
-
-
-
-
     }
 }
