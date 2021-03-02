@@ -132,6 +132,32 @@ namespace DipolImage
                 Math.Min(initialArray.Length, width * height * size));
         }
 
+        public Image(ReadOnlySpan<byte> initialArray, int width, int height, TypeCode type)
+        {
+            if (initialArray.IsEmpty)
+                throw new ArgumentNullException("Argument is empty: " + nameof(initialArray));
+            if (width < 1 || height < 1)
+                throw new ArgumentOutOfRangeException($"Image size is incorrect [{width}, {height}].");
+
+            if (!Enum.IsDefined(typeof(TypeCode), type))
+                throw new ArgumentException($"Parameter type ({type}) is not defined in {typeof(TypeCode)}.");
+
+            if (!AllowedTypes.Contains(type))
+                throw new ArgumentException($"Specified type {type} is not allowed.");
+
+            Width = width;
+            Height = height;
+            UnderlyingType = type;
+            ItemSizeInBytes = TypeSizes[UnderlyingType];
+
+            var tp = Type.GetType("System." + UnderlyingType, true, true);
+            var size = ItemSizeInBytes;
+            _baseArray = Array.CreateInstance(tp, width * height);
+
+            initialArray.CopyTo(UnsafeAsBytes());
+        }
+
+        [Obsolete("Use `" + nameof(ByteView) + "`.")]
         public byte[] GetBytes()
         {
             var size = ItemSizeInBytes;
@@ -141,6 +167,9 @@ namespace DipolImage
 
             return byteArray;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlySpan<byte> ByteView() => UnsafeAsBytes();
 
         public double Max()
         {
@@ -1070,8 +1099,10 @@ namespace DipolImage
                     var thisArr = (float[])_baseArray;
                     var otherArr = (float[])other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
-                        if (!thisArr[i].AlmostEqual(otherArr[i]))
+                        if (!Ops.Equal(thisArr[i], otherArr[i]))
+                        {
                             return false;
+                        }
                     return true;
                 }
                 default:
@@ -1079,8 +1110,13 @@ namespace DipolImage
                     var thisArr = (double[])_baseArray;
                     var otherArr = (double[])other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
-                        if(!thisArr[i].AlmostEqual(otherArr[i]))
+                    {
+                        if(!Ops.Equal(thisArr[i], otherArr[i]))
+                        {
                             return false;
+                        }
+                    }
+
                     return true;
                 }
               

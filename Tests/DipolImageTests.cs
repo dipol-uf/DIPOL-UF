@@ -136,6 +136,24 @@ namespace Tests
         }
 
         [Test]
+        [Repeat(4)]
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_SpanInit(TypeCode code)
+        {
+
+            var type = Type.GetType("System." + code, true);
+            var size = Marshal.SizeOf(type);
+            var arr = VeryLargeByteArray.Take(size * 47 * 31).ToArray();
+
+
+            var image1 = new Image(arr, 47, 31, code);
+            var image2 = new Image(arr.AsSpan(), 47, 31, code);
+
+            Assert.IsTrue(image1.Equals(image2));
+
+        }
+
+        [Test]
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_GetBytes(TypeCode code)
         {

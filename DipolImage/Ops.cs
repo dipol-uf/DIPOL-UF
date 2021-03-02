@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using MathNet.Numerics;
 
 namespace DipolImage
 {
@@ -36,6 +37,12 @@ namespace DipolImage
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte Min(byte x, byte y) => (byte)(y ^ ((x ^ y) & ((x - y) >> (sizeof(int) * 8 - 1))));
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Equal(double x, double y) => x.AlmostEqual(y) || double.IsNaN(x) && double.IsNaN(y);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Equal(float x, float y) => x.AlmostEqual(y) || float.IsNaN(x) && float.IsNaN(y);
 
 
     }
