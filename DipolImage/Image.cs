@@ -993,72 +993,14 @@ namespace DipolImage
 
         public Image Reflect(ReflectionDirection direction)
         {
-            var size = TypeSizes[UnderlyingType];
-            var width = Width;
-            var height = Height;
-            var data = new byte[width * height * size];
-            ByteView().CopyTo(data);
-
-            var dataView = data.AsSpan();
-            var rowWidth = width * size;
-
-            if (direction == ReflectionDirection.Vertical)
+            return direction switch
             {
-                byte[]? arrayBuff = null;
-                try
-                {
-                    var buffer = rowWidth <= StackAllocByteLimit
-                        ? stackalloc byte[rowWidth]
-                        : (arrayBuff = ArrayPool<byte>.Shared.Rent(StackAllocByteLimit)).AsSpan(0, rowWidth);
-
-                    // 1 2 3      7 8 9
-                    // 4 5 6  ->  4 5 6
-                    // 7 8 9      1 2 3
-                    for (var rowId = 0; rowId < height / 2; rowId++)
-                    {
-                        var top = dataView.Slice(rowId * rowWidth, rowWidth);
-                        var bottom = dataView.Slice((height - rowId - 1) * rowWidth, rowWidth);
-                        top.CopyTo(buffer);
-                        bottom.CopyTo(top);
-                        buffer.CopyTo(bottom);
-                    }
-                }
-                finally
-                {
-                    if (arrayBuff is {})
-                    {
-                        ArrayPool<byte>.Shared.Return(arrayBuff);
-                    }
-                }
-
-
-            }
-            else if (direction == ReflectionDirection.Horizontal)
-            {
-                Span<byte> buffer = stackalloc byte[size];
-                // 1 2 3 4 5  \   5 4 3 2 1
-                // 6 7 8 9 0  /   0 9 8 7 6
-                for (var rowId = 0; rowId < height; rowId++)
-                {
-                    var rowData = dataView.Slice(rowId * rowWidth, rowWidth);
-                    // 1 2 3 4 5 6 -> 6 5 4 3 2 1
-                    for (var colId = 0; colId < width / 2; colId++)
-                    {
-                        var left = rowData.Slice(colId * size, size);
-                        var right = rowData.Slice((width - colId - 1) * size, size);
-                        left.CopyTo(buffer);
-                        right.CopyTo(left);
-                        buffer.CopyTo(right);
-                    }
-                }
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException(nameof(direction));
-            }
-
-            throw new NotImplementedException();
-
+                ReflectionDirection.Vertical => 
+                    CreateAndFill(Width, Height, UnderlyingType, ReflectHorizontally, this),
+                ReflectionDirection.Horizontal => 
+                    CreateAndFill(Width, Height, UnderlyingType, ReflectVertically, this),
+                _ => throw new ArgumentOutOfRangeException(nameof(direction))
+            };
         }
 
         public Image Rotate(RotateBy rotateBy, RotationDirection direction)
@@ -1166,6 +1108,8 @@ namespace DipolImage
             };
 
         internal delegate void ImageInitializer(Span<byte> view);
+        internal delegate void ImageInitializer<in TState>(Span<byte> view, TState state);
+
 
         internal static Image CreateAndFill(int width, int height, TypeCode type, ImageInitializer initializer)
         {
@@ -1173,7 +1117,90 @@ namespace DipolImage
             {
                 throw new ArgumentNullException(nameof(initializer));
             }
-            throw new NotImplementedException();
+
+            var image = new Image(width, height, type);
+            initializer(image.UnsafeAsBytes());
+
+            return image;
+        }
+
+        internal static Image
+            CreateAndFill<TState>(int width, int height, TypeCode type, 
+                ImageInitializer<TState> initializer, TState state)
+        {
+            if (initializer is null)
+            {
+                throw new ArgumentNullException(nameof(initializer));
+            }
+
+            var image = new Image(width, height, type);
+            initializer(image.UnsafeAsBytes(), state);
+
+            return image;
+        }
+
+        internal static void ReflectHorizontally(Span<byte> dataView, Image image)
+        {
+            var size = TypeSizes[image.UnderlyingType];
+            var width = image.Width;
+            var height = image.Height;
+            var rowWidth = width * size;
+
+            image.ByteView().CopyTo(dataView);
+
+            byte[]? arrayBuff = null;
+            try
+            {
+                var buffer = rowWidth <= StackAllocByteLimit
+                    ? stackalloc byte[rowWidth]
+                    : (arrayBuff = ArrayPool<byte>.Shared.Rent(StackAllocByteLimit)).AsSpan(0, rowWidth);
+
+                // 1 2 3      7 8 9
+                // 4 5 6  ->  4 5 6
+                // 7 8 9      1 2 3
+                for (var rowId = 0; rowId < height / 2; rowId++)
+                {
+                    var top = dataView.Slice(rowId * rowWidth, rowWidth);
+                    var bottom = dataView.Slice((height - rowId - 1) * rowWidth, rowWidth);
+                    top.CopyTo(buffer);
+                    bottom.CopyTo(top);
+                    buffer.CopyTo(bottom);
+                }
+            }
+            finally
+            {
+                if (arrayBuff is { })
+                {
+                    ArrayPool<byte>.Shared.Return(arrayBuff);
+                }
+            }
+        }
+
+        internal static void ReflectVertically(Span<byte> dataView, Image image)
+        {
+            var size = TypeSizes[image.UnderlyingType];
+            var width = image.Width;
+            var height = image.Height;
+            var rowWidth = width * size;
+
+            image.ByteView().CopyTo(dataView);
+
+            Span<byte> buffer = stackalloc byte[size];
+            // 1 2 3 4 5  \   5 4 3 2 1
+            // 6 7 8 9 0  /   0 9 8 7 6
+            for (var rowId = 0; rowId < height; rowId++)
+            {
+                var rowData = dataView.Slice(rowId * rowWidth, rowWidth);
+                // 1 2 3 4 5 6 -> 6 5 4 3 2 1
+                for (var colId = 0; colId < width / 2; colId++)
+                {
+                    var left = rowData.Slice(colId * size, size);
+                    var right = rowData.Slice((width - colId - 1) * size, size);
+                    left.CopyTo(buffer);
+                    right.CopyTo(left);
+                    buffer.CopyTo(right);
+                }
+            }
         }
     }
 }
