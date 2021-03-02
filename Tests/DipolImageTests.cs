@@ -36,9 +36,28 @@ namespace Tests
 
     public class DipolImageTests_DataProvider
     {
-        private static IEnumerable<TypeCode> AllowedTypes { get; } = DipolImage.Image.AllowedPixelTypes;
+        private static IEnumerable<TypeCode> AllowedTypes { get; } = Image.AllowedPixelTypes;
+
+        private static IEnumerable<(int Width, int Height)> TransformSizes { get; } = new[]
+        {
+            (10, 10),
+            (10, 20),
+            (20, 10)
+        };
+
+        private static IEnumerable<ReflectionDirection> ReflectionDirections { get; } = new[]
+        {
+            ReflectionDirection.Horizontal,
+            ReflectionDirection.Vertical
+        };
+
         public static IEnumerable AllowedTypesSource => AllowedTypes.Select(x => new TestCaseData(x));
 
+        public static IEnumerable ReflectionSource =>
+            from tp in AllowedTypes
+            from sizes in TransformSizes
+            from refDir in ReflectionDirections
+            select new TestCaseData(sizes.Width, sizes.Height, tp, refDir);
     }
 
     [TestFixture]
@@ -594,6 +613,30 @@ namespace Tests
             });
             //var prcnt = image.Percentile(0.5);
             //var factor = d_array.OrderBy(x => x).Count(x => x < prcnt) - 0.5 * array.Length;
+        }
+
+        [Test]
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.ReflectionSource))]
+        public void Test_Reflection(int width, int height, TypeCode typeCode, ReflectionDirection direction)
+        {
+            var size = Image.ResolveItemSize(typeCode);
+            var type = Image.ResolveType(typeCode);
+
+            var array = Array.CreateInstance(type, width * height);
+
+            for (var i = 0; i < width * height; i++)
+            {
+                array.SetValue(Convert.ChangeType(i % 256, type), i);
+            }
+
+            var image = new Image(array, width, height, true);
+            var ref1 = image.Reflect(ReflectionDirection.Horizontal);
+            var ref2 = ref1.Reflect(ReflectionDirection.Horizontal);
+
+
+            Assert.IsFalse(image.Equals(ref1, FloatingPointComparisonType.Exact));
+            Assert.IsFalse(ref2.Equals(ref1, FloatingPointComparisonType.Exact));
+            Assert.IsTrue(image.Equals(ref2, FloatingPointComparisonType.Exact));
         }
     }
 }
