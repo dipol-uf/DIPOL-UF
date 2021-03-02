@@ -1039,7 +1039,7 @@ namespace DipolImage
         public int GetHashCode(Image obj)
             =>  obj.GetHashCode();
 
-        public bool Equals(Image other)
+        public bool Equals(Image? other)
         {
             if (UnderlyingType != other?.UnderlyingType ||
                 Width != other.Width ||
@@ -1050,50 +1050,11 @@ namespace DipolImage
             {
 
                 case TypeCode.Byte:
-                {
-                    var thisArr = (byte[])_baseArray;
-                    var otherArr = (byte[])other._baseArray;
-                    for (var i = 0; i < Width * Height; i++)
-                        if (thisArr[i] != otherArr[i])
-                            return false;
-                    return true;
-                }
                 case TypeCode.Int16:
-                {
-                    var thisArr = (short[]) _baseArray;
-                    var otherArr = (short[]) other._baseArray;
-                    for (var i = 0; i < Width * Height; i++)
-                        if (thisArr[i] != otherArr[i])
-                            return false;
-                    return true;
-                }
                 case TypeCode.UInt16:
-                {
-                    var thisArr = (ushort[])_baseArray;
-                    var otherArr = (ushort[])other._baseArray;
-                    for (var i = 0; i < Width * Height; i++)
-                        if (thisArr[i] != otherArr[i])
-                            return false;
-                    return true;
-                }
                 case TypeCode.Int32:
-                {
-                    var thisArr = (int[])_baseArray;
-                    var otherArr = (int[])other._baseArray;
-                    for (var i = 0; i < Width * Height; i++)
-                        if (thisArr[i] != otherArr[i])
-                            return false;
-                    return true;
-                }
                 case TypeCode.UInt32:
-                {
-                    var thisArr = (uint[])_baseArray;
-                    var otherArr = (uint[])other._baseArray;
-                    for (var i = 0; i < Width * Height; i++)
-                        if (thisArr[i] != otherArr[i])
-                            return false;
-                    return true;
-                }
+                    return ByteView().SequenceEqual(other.ByteView());
                 case TypeCode.Single:
                 {
                     var thisArr = (float[])_baseArray;
@@ -1123,7 +1084,7 @@ namespace DipolImage
             }
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is Image im && im.Equals(this);
         }
