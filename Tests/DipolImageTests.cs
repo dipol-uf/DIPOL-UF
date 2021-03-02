@@ -185,7 +185,8 @@ namespace Tests
 
             var tempArr = new byte[arr.Length];
             Array.Copy(arr, tempArr, tempArr.Length);
-            tempArr[3] = (byte) (tempArr[3] == 127 ? 127 : 255);
+            var modifyAt = tempArr.Length <= 4 ? tempArr.Length - 1 : 4;
+            tempArr[modifyAt] = (byte) (tempArr[modifyAt] == 127 ? 127 : 255);
 
             var image1 = new Image(arr, 2, 2, code);
             var image2 = new Image(arr, 2, 2, code);
@@ -464,15 +465,15 @@ namespace Tests
             var max = image.Max();
 
 
-            Assert.Multiple(
-                () =>
+            //Assert.Multiple(
+            //    () =>
                 {
                     Assert.That(Math.Abs(min - 1) < double.Epsilon ||
                                 Math.Abs(max + min - 10) < double.Epsilon, Is.True);
                     Assert.That(Math.Abs(max - 9) < double.Epsilon ||
                                 Math.Abs(max + min - 10) < double.Epsilon, Is.True);
                 }
-            );
+            //);
         }
 
         [Test]
