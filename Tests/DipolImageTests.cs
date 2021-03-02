@@ -278,7 +278,7 @@ namespace Tests
         }
 
         [Test]
-        [Repeat(16)]
+        [Repeat(4)]
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Max(TypeCode code)
         {
@@ -306,7 +306,7 @@ namespace Tests
         }
 
         [Test]
-        [Repeat(16)]
+        [Repeat(4)]
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Min(TypeCode code)
         {

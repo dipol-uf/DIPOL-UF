@@ -215,7 +215,8 @@ namespace DipolImage
                     for (var i = 0; i < arr.Length; i++)
                     {
                         var item = arr[i];
-                        localMax = localMax > item ? localMax : item;
+                        localMax = localMax < item ? item : localMax;
+
                     }
 
                     max = localMax;
@@ -228,9 +229,10 @@ namespace DipolImage
                     for (var i = 0; i < arr.Length; i++)
                     {
                         var item = arr[i];
-                        localMax = localMax > item ?  localMax : item;
-                    }
+                        localMax = localMax < item ? item : localMax;
 
+                    }
+                
                     max = localMax;
                     break;
                 }
