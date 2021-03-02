@@ -981,10 +981,25 @@ namespace DipolImage
             };
         }
 
-        public Image Rotate(RotateBy rotateBy, RotationDirection direction)
-        {
-            throw new NotImplementedException();
-        }
+        public Image Rotate(RotateBy rotateBy, RotationDirection direction) =>
+            (rotateBy, direction) switch
+            {
+                (RotateBy.Deg0, _) => Copy(),
+                (RotateBy.Deg90, RotationDirection.Left) => 
+                    CreateAndFill(Height, Width, UnderlyingType, RotateBy90CounterClock, this),
+                (RotateBy.Deg180, RotationDirection.Left) =>
+                    CreateAndFill(Width, Height, UnderlyingType, RotateBy180CounterClock, this),
+                (RotateBy.Deg270, RotationDirection.Left) =>
+                    CreateAndFill(Height, Width, UnderlyingType, RotateBy270CounterClock, this),
+
+                (RotateBy.Deg90, RotationDirection.Right) =>
+                    CreateAndFill(Height, Width, UnderlyingType, RotateBy270CounterClock, this),
+                (RotateBy.Deg180, RotationDirection.Right) =>
+                    CreateAndFill(Width, Height, UnderlyingType, RotateBy180CounterClock, this),
+                (RotateBy.Deg270, RotationDirection.Right) =>
+                    CreateAndFill(Height, Width, UnderlyingType, RotateBy90CounterClock, this),
+                _ => throw new InvalidOperationException("Image transformation not supported.")
+            };
 
         public bool Equals(Image? x, Image? y)
             => Equals(x, y, FloatingPointComparisonType.Loose);
@@ -1160,7 +1175,6 @@ namespace DipolImage
                 }
             }
         }
-
         internal static void ReflectHorizontally(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
@@ -1186,6 +1200,18 @@ namespace DipolImage
                     buffer.CopyTo(right);
                 }
             }
+        }
+        internal static void RotateBy90CounterClock(Span<byte> dataView, Image image)
+        {
+            throw new NotImplementedException();
+        }
+        internal static void RotateBy180CounterClock(Span<byte> dataView, Image image)
+        {
+            throw new NotImplementedException();
+        }
+        internal static void RotateBy270CounterClock(Span<byte> dataView, Image image)
+        {
+            throw new NotImplementedException();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
