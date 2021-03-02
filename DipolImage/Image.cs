@@ -1048,5 +1048,18 @@ namespace DipolImage
             }
         }
 
+        private Span<byte> UnsafeAsBytes() =>
+            UnderlyingType switch
+            {
+                TypeCode.Double => MemoryMarshal.AsBytes<double>((double[]) _baseArray),
+                TypeCode.Single => MemoryMarshal.AsBytes<float>((float[]) _baseArray),
+                TypeCode.UInt16 => MemoryMarshal.AsBytes<ushort>((ushort[]) _baseArray),
+                TypeCode.Int16 => MemoryMarshal.AsBytes<short>((short[]) _baseArray),
+                TypeCode.UInt32 => MemoryMarshal.AsBytes<uint>((uint[]) _baseArray),
+                TypeCode.Int32 => MemoryMarshal.AsBytes<int>((int[]) _baseArray),
+                TypeCode.Byte => (byte[]) _baseArray,
+                _ => default // This is unreachable
+            };
+
     }
 }
