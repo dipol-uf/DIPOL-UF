@@ -42,7 +42,7 @@ namespace Tests
     }
 
     [TestFixture]
-    [Parallelizable(ParallelScope.All)]
+    //[Parallelizable(ParallelScope.All)]
     public class DipolImageTests
     {
         public Random R;
@@ -175,6 +175,7 @@ namespace Tests
         }
 
         [Test]
+        [Repeat(4)]
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Equals(TypeCode code)
         {
@@ -185,8 +186,12 @@ namespace Tests
 
             var tempArr = new byte[arr.Length];
             Array.Copy(arr, tempArr, tempArr.Length);
-            var modifyAt = tempArr.Length <= 3 ? tempArr.Length - 1 : 3;
-            tempArr[modifyAt] = (byte) (tempArr[modifyAt] == 127 ? 127 : 146);
+            var modifyAt = Math.Min(tempArr.Length, 8);
+            for (var i = 0; i < modifyAt; i++)
+            {
+                tempArr[i] = 255;
+            }
+
 
             var image1 = new Image(arr, 2, 2, code);
             var image2 = new Image(arr, 2, 2, code);
@@ -383,6 +388,7 @@ namespace Tests
         }
 
         [Test]
+        [Repeat(4)]
         public void Test_CastTo()
         {
             var image = new Image(TestArray, 4, TestArray.Length/4);
@@ -395,7 +401,7 @@ namespace Tests
             var otherArray = TestArray.Select(x => (double) x).ToArray();
 
             var otherImage = new Image(otherArray, 4, otherArray.Length/4);
-            Assert.That(otherImage.Equals(image.CastTo<int, double>(x => 1.0 * x)), Is.True);
+            Assert.That(otherImage.Equals(image.CastTo<int, double>(x => (double) x)), Is.True);
         }
 
         [Test]
