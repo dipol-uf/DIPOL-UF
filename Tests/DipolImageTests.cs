@@ -342,45 +342,36 @@ namespace Tests
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_Transpose()
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_Transpose(TypeCode code)
         {
-            foreach (var code in Image.AllowedPixelTypes)
+            var type = Type.GetType("System." + code) ?? typeof(byte);
+            var size = Marshal.SizeOf(type);
+
+            var image = new Image(TestByteArray, TestByteArray.Length / 2 / size, 2, code);
+            var imageT = image.Transpose();
+
+            Assert.Multiple(() =>
             {
-                var type = Type.GetType("System." + code) ?? typeof(byte);
-                var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
 
-                var image = new Image(TestByteArray, TestByteArray.Length / 2 / size, 2, code);
-                var imageT = image.Transpose();
+                Assert.That(imageT.Height, Is.EqualTo(image.Width));
+                Assert.That(imageT.Width, Is.EqualTo(image.Height));
 
-                Assert.Multiple(() =>
-                {
+                Assert.That(Enumerable.Range(0, image.Width * image.Height)
+                        .All(i => image[i % 2, i / 2].Equals(imageT[i / 2, i % 2])),
+                    Is.True);
+            });
 
-                    Assert.That(imageT.Height, Is.EqualTo(image.Width));
-                    Assert.That(imageT.Width, Is.EqualTo(image.Height));
-
-                    Assert.That(Enumerable.Range(0, image.Width * image.Height)
-                                             .All(i => image[i % 2, i / 2].Equals(imageT[i / 2, i % 2])),
-                        Is.True);
-                });
-            }
         }
 
         [Test]
-        [Parallelizable(ParallelScope.Self)]
-        public void Test_Type()
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
+        public void Test_Type(TypeCode code)
         {
-            Assert.Multiple(() =>
-            {
-                foreach (var code in Image.AllowedPixelTypes)
-                {
-                    var type = Type.GetType("System." + code, true);
-                    var size = Marshal.SizeOf(type);
-                    var img = new Image(TestByteArray.Take(size * 2 * 2).ToArray(), 2, 2, code);
-                    Assert.That(img.Type, Is.EqualTo(type));
-
-                }
-            });
+            var type = Type.GetType("System." + code, true);
+            var size = Marshal.SizeOf(type);
+            var img = new Image(TestByteArray.Take(size * 2 * 2).ToArray(), 2, 2, code);
+            Assert.That(img.Type, Is.EqualTo(type));
         }
 
         [Test]
