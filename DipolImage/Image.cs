@@ -996,22 +996,32 @@ namespace DipolImage
             var size = TypeSizes[UnderlyingType];
             var width = Width;
             var height = Height;
-            // Fast path for row swapping
+            var data = new byte[width * height * size];
+            ByteView().CopyTo(data);
+
+            var dataView = data.AsSpan();
+            var rowWidth = width * size;
+
             if (direction == ReflectionDirection.Vertical)
             {
-                byte[] arrayBuff = null;
+                byte[]? arrayBuff = null;
                 try
                 {
-                    var buffer = width * size <= StackAllocByteLimit
-                        ? stackalloc byte[width * size]
-                        : (arrayBuff = ArrayPool<byte>.Shared.Rent(StackAllocByteLimit)).AsSpan(0, width * size);
-                    
+                    var buffer = rowWidth <= StackAllocByteLimit
+                        ? stackalloc byte[rowWidth]
+                        : (arrayBuff = ArrayPool<byte>.Shared.Rent(StackAllocByteLimit)).AsSpan(0, rowWidth);
+
+                    // 1 2 3      7 8 9
+                    // 4 5 6  ->  4 5 6
+                    // 7 8 9      1 2 3
                     for (var rowId = 0; rowId < height / 2; rowId++)
                     {
-                        // Swap lines, efficiently
+                        var top = dataView.Slice(rowId * rowWidth, rowWidth);
+                        var bottom = dataView.Slice((height - rowId - 1) * rowWidth, rowWidth);
+                        top.CopyTo(buffer);
+                        bottom.CopyTo(top);
+                        buffer.CopyTo(bottom);
                     }
-
-                    
                 }
                 finally
                 {
@@ -1023,7 +1033,32 @@ namespace DipolImage
 
 
             }
+            else if (direction == ReflectionDirection.Horizontal)
+            {
+                Span<byte> buffer = stackalloc byte[size];
+                // 1 2 3 4 5  \   5 4 3 2 1
+                // 6 7 8 9 0  /   0 9 8 7 6
+                for (var rowId = 0; rowId < height; rowId++)
+                {
+                    var rowData = dataView.Slice(rowId * rowWidth, rowWidth);
+                    // 1 2 3 4 5 6 -> 6 5 4 3 2 1
+                    for (var colId = 0; colId < width / 2; colId++)
+                    {
+                        var left = rowData.Slice(colId * size, size);
+                        var right = rowData.Slice((width - colId - 1) * size, size);
+                        left.CopyTo(buffer);
+                        right.CopyTo(left);
+                        buffer.CopyTo(right);
+                    }
+                }
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(direction));
+            }
+
             throw new NotImplementedException();
+
         }
 
         public Image Rotate(RotateBy rotateBy, RotationDirection direction)
@@ -1037,6 +1072,7 @@ namespace DipolImage
         public int GetHashCode(Image obj)
             =>  obj.GetHashCode();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(Image? other) => Equals(other, FloatingPointComparisonType.Loose);
 
         public bool Equals(Image? other, FloatingPointComparisonType compType)
