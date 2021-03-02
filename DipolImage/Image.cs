@@ -494,15 +494,12 @@ namespace DipolImage
             {
                 case TypeCode.Byte:
                 {
-                    var arr = (byte[]) _baseArray;
+                    var arr = UnsafeAsSpan<byte>();
 
                     if (min.AlmostEqual(max))
                     {
                         var val = (byte) (0.5 * (gMin + gMax));
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = val;
-                        }
+                        arr.Fill(val);
                     }
                     else
                     {
@@ -516,15 +513,12 @@ namespace DipolImage
                 }
                 case TypeCode.UInt16:
                 {
-                    var arr = (ushort[]) _baseArray;
+                    var arr = UnsafeAsSpan<ushort>();
 
                     if (min.AlmostEqual(max))
                     {
                         var val = (ushort) (0.5 * (gMin + gMax));
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = val;
-                        }
+                        arr.Fill(val);
                     }
                     else
                     {
@@ -539,15 +533,12 @@ namespace DipolImage
                 }
                 case TypeCode.Int16:
                 {
-                    var arr = (short[]) _baseArray;
+                    var arr = UnsafeAsSpan<short>();
 
                     if (min.AlmostEqual(max))
                     {
                         var val = (short) (0.5 * (gMin + gMax));
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = val;
-                        }
+                        arr.Fill(val);
                     }
                     else
                     {
@@ -561,15 +552,12 @@ namespace DipolImage
                 }
                 case TypeCode.UInt32:
                 {
-                    var arr = (uint[]) _baseArray;
+                    var arr = UnsafeAsSpan<uint>();
 
                     if (min.AlmostEqual(max))
                     {
                         var val = (uint) (0.5 * (gMin + gMax));
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = val;
-                        }
+                        arr.Fill(val);
                     }
                     else
                     {
@@ -583,15 +571,12 @@ namespace DipolImage
                 }
                 case TypeCode.Int32:
                 {
-                    var arr = (int[]) _baseArray;
+                    var arr = UnsafeAsSpan<int>();
 
                     if (min.AlmostEqual(max))
                     {
                         var val = (int) (0.5 * (gMin + gMax));
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = val;
-                        }
+                        arr.Fill(val);
                     }
                     else
                     {
@@ -605,15 +590,12 @@ namespace DipolImage
                 }
                 case TypeCode.Single:
                 {
-                    var arr = (float[]) _baseArray;
+                    var arr = UnsafeAsSpan<float>();
 
                     if (min.AlmostEqual(max))
                     {
                         var val = (float) (0.5 * (gMin + gMax));
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = val;
-                        }
+                        arr.Fill(val);
                     }
                     else
                     {
@@ -627,15 +609,12 @@ namespace DipolImage
                 }
                 default:
                 {
-                    var arr = (double[]) _baseArray;
+                    var arr = UnsafeAsSpan<double>();
 
                     if (min.AlmostEqual(max))
                     {
                         var val = 0.5 * (gMin + gMax);
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = val;
-                        }
+                        arr.Fill(val);
                     }
 
                     else
@@ -1099,6 +1078,7 @@ namespace DipolImage
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Span<byte> UnsafeAsBytes() =>
             UnderlyingType switch
             {
@@ -1111,6 +1091,9 @@ namespace DipolImage
                 TypeCode.Byte => (byte[]) _baseArray,
                 _ => default // This is unreachable
             };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Span<T> UnsafeAsSpan<T>() where T : unmanaged => (T[]) _baseArray;
 
         internal delegate void ImageInitializer(Span<byte> view);
         internal delegate void ImageInitializer<in TState>(Span<byte> view, TState state);
