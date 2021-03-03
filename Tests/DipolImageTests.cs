@@ -697,18 +697,23 @@ namespace Tests
             var by270Left = image.Rotate(RotateBy.Deg270, RotationDirection.Left);
             var by270Right = image.Rotate(RotateBy.Deg270, RotationDirection.Right);
 
-            Assert.IsFalse(image.Equals(by90Left), "Source != Left90");
-            Assert.IsFalse(image.Equals(by90Right), "Source != Right90");
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.IsFalse(image.Equals(by90Left), "Source != Left90");
+                    Assert.IsFalse(image.Equals(by90Right), "Source != Right90");
 
-            Assert.IsFalse(image.Equals(by180Left), "Source != Left180");
-            Assert.IsFalse(image.Equals(by180Right), "Source != Right180");
+                    Assert.IsFalse(image.Equals(by180Left), "Source != Left180");
+                    Assert.IsFalse(image.Equals(by180Right), "Source != Right180");
 
-            Assert.IsFalse(image.Equals(by270Left), "Source != Left270");
-            Assert.IsFalse(image.Equals(by270Right), "Source != Right270");
+                    Assert.IsFalse(image.Equals(by270Left), "Source != Left270");
+                    Assert.IsFalse(image.Equals(by270Right), "Source != Right270");
 
-            Assert.IsTrue(by90Left.Equals(by270Right), "Left90 == Right270");
-            Assert.IsTrue(by180Left.Equals(by180Right),"Left180 == Right180");
-            Assert.IsTrue(by270Left.Equals(by90Right), "Left270 == Right90");
+                    Assert.IsTrue(by90Left.Equals(by270Right), "Left90 == Right270");
+                    Assert.IsTrue(by180Left.Equals(by180Right), "Left180 == Right180");
+                    Assert.IsTrue(by270Left.Equals(by90Right), "Left270 == Right90");
+                }
+            );
         }
     }
 }
