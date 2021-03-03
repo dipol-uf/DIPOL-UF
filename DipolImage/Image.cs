@@ -1031,31 +1031,43 @@ namespace DipolImage
                     return ByteView().SequenceEqual(other.ByteView());
                 case TypeCode.Single:
                 {
-                    if(compType == FloatingPointComparisonType.Exact)
+                    if (compType != FloatingPointComparisonType.Loose)
+                    {
                         return ByteView().SequenceEqual(other.ByteView());
+                    }
 
-                    var thisArr = (float[])_baseArray;
-                    var otherArr = (float[])other._baseArray;
+                    var thisArr = (float[]) _baseArray;
+                    var otherArr = (float[]) other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
-                        if (!Ops.Equal(thisArr[i], otherArr[i]))
+                    {
+                        if (Ops.Equal(thisArr[i], otherArr[i]))
                         {
-                            return false;
+                            continue;
                         }
+
+                        return false;
+                    }
+
                     return true;
+
                 }
                 default:
                 {
-                    if (compType == FloatingPointComparisonType.Exact)
+                    if (compType != FloatingPointComparisonType.Loose)
+                    {
                         return ByteView().SequenceEqual(other.ByteView());
+                    }
 
                     var thisArr = (double[])_baseArray;
                     var otherArr = (double[])other._baseArray;
                     for (var i = 0; i < Width * Height; i++)
                     {
-                        if(!Ops.Equal(thisArr[i], otherArr[i]))
+                        if (Ops.Equal(thisArr[i], otherArr[i]))
                         {
-                            return false;
+                            continue;
                         }
+
+                        return false;
                     }
 
                     return true;
