@@ -42,16 +42,38 @@ namespace Tests
         {
             (10, 10),
             (10, 20),
-            (20, 10)
+            (20, 10),
+            (13, 19),
+            (512, 512),
         };
 
         private static IEnumerable<(RotateBy Left, RotateBy Right)> EqualRotations { get; } = new[]
         {
-            (RotateBy.Deg0, Pi0: RotateBy.PiTimes0),
+            (RotateBy.Deg0, RotateBy.PiTimes0),
             (RotateBy.Deg90, RotateBy.PiTimes3Over2),
             (RotateBy.Deg180, RotateBy.Pi),
             (RotateBy.Deg270, RotateBy.PiOver2),
             (RotateBy.Deg360, RotateBy.PiTimes2),
+
+            (RotateBy.Deg90, RotateBy.Deg270),
+            (RotateBy.Deg180, RotateBy.Deg180),
+            (RotateBy.Deg270, RotateBy.Deg90),
+        };
+
+        private static IEnumerable<(RotateBy Roataion, RotationDirection Direction, int N)>
+            IdentityRotations { get; } = new[]
+        {
+            (RotateBy.Deg0, RotationDirection.Left, 0),
+            (RotateBy.Deg0, RotationDirection.Right, 0),
+            
+            (RotateBy.Deg90, RotationDirection.Left, 4),
+            (RotateBy.Deg90, RotationDirection.Right, 4),
+            
+            (RotateBy.Deg180, RotationDirection.Left, 2),
+            (RotateBy.Deg180, RotationDirection.Right, 2),
+            
+            (RotateBy.Deg270, RotationDirection.Left, 4),
+            (RotateBy.Deg270, RotationDirection.Right, 4),
         };
 
         private static IEnumerable<ReflectionDirection> ReflectionDirections { get; } = new[]
@@ -73,6 +95,12 @@ namespace Tests
             from sizes in TransformSizes
             from rots in EqualRotations
             select new TestCaseData(sizes.Width, sizes.Height, tp, rots.Left, rots.Right);
+
+        public static IEnumerable RotationRepSource =>
+            from tp in AllowedTypes
+            from sizes in TransformSizes
+            from rots in IdentityRotations
+            select new TestCaseData(sizes.Width, sizes.Height, tp, rots.Roataion, rots.Direction, rots.N);
     }
 
     [TestFixture]
@@ -754,6 +782,36 @@ namespace Tests
             var left = image.Rotate(leftRot, RotationDirection.Left);
             var right = image.Rotate(rightRot, RotationDirection.Right);
             Assert.IsTrue(left.Equals(right, FloatingPointComparisonType.Exact));
+        }
+
+        [Test]
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.RotationRepSource))]
+        public void Test_Rotation_Rep(
+            int width,
+            int height,
+            TypeCode typeCode,
+            RotateBy rotation,
+            RotationDirection direction,
+            int nRep
+        )
+        {
+            var type = Image.ResolveType(typeCode);
+
+            var array = Array.CreateInstance(type, width * height);
+
+            for (var i = 0; i < width * height; i++)
+            {
+                array.SetValue(Convert.ChangeType(i % 256, type), i);
+            }
+
+            var image = new Image(array, width, height, true);
+            var otherImage = image;
+            for (var i = 0; i < nRep; i++)
+            {
+                otherImage = otherImage.Rotate(rotation, direction);
+            }
+
+            Assert.IsTrue(image.Equals(otherImage, FloatingPointComparisonType.Exact));
         }
     }
 }
