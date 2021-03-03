@@ -45,6 +45,12 @@ namespace DIPOL_UF.Converters
         private static Dictionary<string, string> _cachedFilters;
         private static Dictionary<string, int> _cachedOrders;
 
+        public static void CameraDesc(IDevice cam)
+        {
+            //var camString = $"{cam.CameraModel}_{cam.SerialNumber}";
+            var setts = UiSettingsProvider.Settings.GetArray<JToken>(@"CameraDescriptors");
+        }
+
         public static string CameraToStringAliasConversion(IDevice cam)
         {
             if (cam is null)
