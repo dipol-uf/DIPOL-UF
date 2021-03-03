@@ -114,7 +114,7 @@
       <Name>ANDOR-CS</Name>
     </ProjectReference>
     <ProjectReference Include="..\DipolImage\DipolImage.csproj">
-      <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
+      <Project>{02bcb125-645e-474c-9d7e-84e33bf10a1d}</Project>
       <Name>DipolImage</Name>
     </ProjectReference>
     <ProjectReference Include="..\FITS-CS\FITS-CS.csproj">

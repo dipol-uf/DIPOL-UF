@@ -1,7 +1,4 @@
-﻿#nullable enable
-
-
-using System;
+﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;

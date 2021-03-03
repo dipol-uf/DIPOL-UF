@@ -54,9 +54,6 @@
     <ProjectGuid>{FE7E6722-98AA-41C3-A7C4-3351FA3ACF85}</ProjectGuid>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="dotMemory.Unit, Version=111.0.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
-      <HintPath>..\packages\JetBrains.dotMemoryUnit.3.0.20171219.105559\lib\net35\dotMemory.Unit.dll</HintPath>
-    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -104,7 +101,7 @@
       <Name>DIPOL-UF</Name>
     </ProjectReference>
     <ProjectReference Include="..\DipolImage\DipolImage.csproj">
-      <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
+      <Project>{02bcb125-645e-474c-9d7e-84e33bf10a1d}</Project>
       <Name>DipolImage</Name>
     </ProjectReference>
     <ProjectReference Include="..\FITS-CS\FITS-CS.csproj">
