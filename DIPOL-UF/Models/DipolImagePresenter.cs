@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using DIPOL_UF.Converters;
+using DipolImage;
 using Image = DipolImage.Image;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 
@@ -44,6 +46,8 @@ namespace DIPOL_UF.Models
 
         private static List<Func<double, double, GeometryDescriptor>> AvailableGeometries { get; }
         public static List<string> GeometriesAliases { get; }
+
+        private DeviceSettingsDescriptor? _deviceSettings;
 
         private Image? _sourceImage;
 
@@ -137,9 +141,9 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<MouseButtonEventArgs, MouseButtonEventArgs>? ImageClickCommand { get; private set; }
         public ReactiveCommand<Unit, Unit>? UnloadImageCommand { get; private set; }
 
-        public DipolImagePresenter()
+        public DipolImagePresenter(DeviceSettingsDescriptor? desc = null)
         {
-
+            _deviceSettings = desc;
             ThumbRight = ThumbScaleMax;
             SelectedGeometryIndex = 1;
             ImageSamplerScaleFactor = 1.0;
@@ -461,6 +465,27 @@ namespace DIPOL_UF.Models
                 throw new NullReferenceException("Image cannot be null.");
 
             temp.Scale(ImageScaleMin, ImageScaleMax);
+            if (_deviceSettings is {} && _deviceSettings.RotateImageBy != RotateBy.Deg0)
+            {
+                temp = temp.Rotate(_deviceSettings.RotateImageBy, _deviceSettings.RotateImageDirection);
+            }
+
+            if (
+                _deviceSettings is {} &&
+                _deviceSettings.ReflectionDirection is var reflectDir &&
+                reflectDir != ReflectionDirection.NoReflection
+            )
+            {
+                if ((reflectDir & ReflectionDirection.Horizontal) == ReflectionDirection.Horizontal)
+                {
+                    temp = temp.Reflect(ReflectionDirection.Horizontal);
+                }
+                if((reflectDir & ReflectionDirection.Vertical) == ReflectionDirection.Vertical)
+                {
+                    temp = temp.Reflect(ReflectionDirection.Vertical);
+                }
+            }
+
             SamplerCenterPosInPix = isFirstLoad
                 // ReSharper disable PossibleLossOfFraction
                 ? new Point(temp.Width / 2, temp.Height / 2)

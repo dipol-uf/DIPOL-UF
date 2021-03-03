@@ -23,7 +23,7 @@ namespace DIPOL_UF.Converters
         private static Dictionary<string, int>? _cachedOrders;
 
         private static Dictionary<string, DeviceSettingsDescriptor>? _cachedSettings;
-        public static DeviceSettingsDescriptor? CameraDesc(IDevice? cam)
+        public static DeviceSettingsDescriptor? DeviceDescriptor(IDevice? cam)
         {
             if(cam is null)
             {
