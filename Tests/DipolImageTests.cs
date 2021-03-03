@@ -45,6 +45,15 @@ namespace Tests
             (20, 10)
         };
 
+        private static IEnumerable<(RotateBy Left, RotateBy Right)> EqualRotations { get; } = new[]
+        {
+            (RotateBy.Deg0, Pi0: RotateBy.PiTimes0),
+            (RotateBy.Deg90, RotateBy.PiTimes3Over2),
+            (RotateBy.Deg180, RotateBy.Pi),
+            (RotateBy.Deg270, RotateBy.PiOver2),
+            (RotateBy.Deg360, RotateBy.PiTimes2),
+        };
+
         private static IEnumerable<ReflectionDirection> ReflectionDirections { get; } = new[]
         {
             ReflectionDirection.Horizontal,
@@ -58,6 +67,12 @@ namespace Tests
             from sizes in TransformSizes
             from refDir in ReflectionDirections
             select new TestCaseData(sizes.Width, sizes.Height, tp, refDir);
+
+        public static IEnumerable RotationSource =>
+            from tp in AllowedTypes
+            from sizes in TransformSizes
+            from rots in EqualRotations
+            select new TestCaseData(sizes.Width, sizes.Height, tp, rots.Left, rots.Right);
     }
 
     [TestFixture]
@@ -620,7 +635,6 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.ReflectionSource))]
         public void Test_Reflection(int width, int height, TypeCode typeCode, ReflectionDirection direction)
         {
-            var size = Image.ResolveItemSize(typeCode);
             var type = Image.ResolveType(typeCode);
 
             var array = Array.CreateInstance(type, width * height);
@@ -714,6 +728,32 @@ namespace Tests
                     Assert.IsTrue(by270Left.Equals(by90Right), "Left270 == Right90");
                 }
             );
+        }
+
+        [Test]
+        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.RotationSource))]
+        public void Test_Rotation(
+            int width,
+            int height,
+            TypeCode typeCode, 
+            RotateBy leftRot,
+            RotateBy rightRot
+        )
+        {
+            var type = Image.ResolveType(typeCode);
+
+            var array = Array.CreateInstance(type, width * height);
+
+            for (var i = 0; i < width * height; i++)
+            {
+                array.SetValue(Convert.ChangeType(i % 256, type), i);
+            }
+
+            var image = new Image(array, width, height, true);
+
+            var left = image.Rotate(leftRot, RotationDirection.Left);
+            var right = image.Rotate(rightRot, RotationDirection.Right);
+            Assert.IsTrue(left.Equals(right, FloatingPointComparisonType.Exact));
         }
     }
 }

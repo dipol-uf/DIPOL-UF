@@ -8,7 +8,7 @@
         Deg270 = 3,
         Deg360 = Deg0,
 
-        Pi0 = Deg0,
+        PiTimes0 = Deg0,
         PiOver2 = Deg90,
         Pi = Deg180,
         PiTimes3Over2 = Deg270,
