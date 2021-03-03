@@ -1,4 +1,5 @@
-﻿using DynamicData.Binding;
+﻿#nullable enable
+using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
@@ -44,7 +45,7 @@ namespace DIPOL_UF.Models
         private static List<Func<double, double, GeometryDescriptor>> AvailableGeometries { get; }
         public static List<string> GeometriesAliases { get; }
 
-        private Image _sourceImage;
+        private Image? _sourceImage;
 
         private readonly int ThumbDelta = 1;
         public int ThumbScaleMin => 0;
@@ -58,7 +59,7 @@ namespace DIPOL_UF.Models
         public double MinGeometryWidth => 5;
 
         [Reactive]
-        public Image DisplayedImage { get; set; }
+        public Image? DisplayedImage { get; set; }
 
         [Reactive]
         public double LeftScale { get; set; }
@@ -79,13 +80,13 @@ namespace DIPOL_UF.Models
         public Point SamplerCenterPosInPix { get; set; }
 
         [Reactive]
-        public GeometryDescriptor SamplerGeometry { get; set; }
+        public GeometryDescriptor? SamplerGeometry { get; set; }
 
         [Reactive]
-        public GeometryDescriptor ApertureGeometry { get; set; }
+        public GeometryDescriptor? ApertureGeometry { get; set; }
 
         [Reactive]
-        public GeometryDescriptor GapGeometry { get; set; }
+        public GeometryDescriptor? GapGeometry { get; set; }
 
         [Reactive]
         public double ImageSamplerScaleFactor { get; set; }
@@ -118,7 +119,7 @@ namespace DIPOL_UF.Models
         public bool IsSamplerFixed { get; set; }
 
         [Reactive]
-        public ImageStatsCollection ImageStats { get; set; }
+        public ImageStatsCollection? ImageStats { get; set; }
 
         [Reactive]
         public bool IsMouseOverImage { get; set; }
@@ -128,13 +129,13 @@ namespace DIPOL_UF.Models
         public double ImageSamplerSize { [ObservableAsProperty] get; }
         public double PixValue { [ObservableAsProperty] get; }
 
-        public ReactiveCommand<Image, Image> LoadImageCommand { get; private set; }
-        public ReactiveCommand<int, int> LeftThumbChangedCommand { get; private set; }
-        public ReactiveCommand<int, int> RightThumbChangedCommand { get; private set; }
-        public ReactiveCommand<(Size Size, Point Pos), (Size Size, Point Pos)> MouseHoverCommand { get; private set; }
-        public ReactiveCommand<SizeChangedEventArgs, SizeChangedEventArgs> SizeChangedCommand { get; private set; }
-        public ReactiveCommand<MouseButtonEventArgs, MouseButtonEventArgs> ImageClickCommand { get; private set; }
-        public ReactiveCommand<Unit, Unit> UnloadImageCommand { get; private set; }
+        public ReactiveCommand<Image, Image>? LoadImageCommand { get; private set; }
+        public ReactiveCommand<int, int>? LeftThumbChangedCommand { get; private set; }
+        public ReactiveCommand<int, int>? RightThumbChangedCommand { get; private set; }
+        public ReactiveCommand<(Size Size, Point Pos), (Size Size, Point Pos)>? MouseHoverCommand { get; private set; }
+        public ReactiveCommand<SizeChangedEventArgs, SizeChangedEventArgs>? SizeChangedCommand { get; private set; }
+        public ReactiveCommand<MouseButtonEventArgs, MouseButtonEventArgs>? ImageClickCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit>? UnloadImageCommand { get; private set; }
 
         public DipolImagePresenter()
         {
@@ -185,7 +186,7 @@ namespace DIPOL_UF.Models
                                    async x =>
                                    {
                                        await LoadImageAsync(x);
-                                       return DisplayedImage;
+                                       return DisplayedImage!;
                                    })
                                .DisposeWith(Subscriptions);
 
@@ -236,12 +237,12 @@ namespace DIPOL_UF.Models
             RightThumbChangedCommand.BindTo(this, x => x.ThumbRight)
                                     .DisposeWith(Subscriptions);
 
-            LeftThumbChangedCommand
+            LeftThumbChangedCommand!
                 .Where(x => x >= ThumbRight)
                 .Select(x => x + ThumbDelta)
                 .BindTo(this, x => x.ThumbRight)
                 .DisposeWith(Subscriptions);
-            RightThumbChangedCommand
+            RightThumbChangedCommand!
                 .Where(x => x <= ThumbLeft)
                 .Select(x => x - ThumbDelta)
                 .BindTo(this, x => x.ThumbLeft)
@@ -278,13 +279,13 @@ namespace DIPOL_UF.Models
                 .Subscribe(_ => UpdateGeometrySizeRanges())
                 .DisposeWith(Subscriptions);
 
-            ImageClickCommand
+            ImageClickCommand!
                 .Where(x => x.LeftButton == MouseButtonState.Pressed && x.ClickCount == 2)
                 .Subscribe(ImageDoubleClickCommandExecute)
                 .DisposeWith(Subscriptions);
 
 
-            MouseHoverCommand
+            MouseHoverCommand!
                 .Where(x => !IsSamplerFixed)
                 .Subscribe(x => UpdateSamplerPosition(x.Size, x.Pos))
                 .DisposeWith(Subscriptions);
@@ -349,7 +350,7 @@ namespace DIPOL_UF.Models
                     !LastKnownImageControlSize.IsEmpty
                     && !(_sourceImage is null))
                 // Watch bug fix: may throw if image size changes
-                .Select(x => 1.0 * _sourceImage.Get<float>(
+                .Select(x => 1.0 * _sourceImage!.Get<float>(
                                  Convert.ToInt32(x.SamplerCenterPosInPix.Y),
                                  Convert.ToInt32(x.SamplerCenterPosInPix.X)))
                 .ToPropertyEx(this, x => x.PixValue)
@@ -374,7 +375,7 @@ namespace DIPOL_UF.Models
                            .Merge()
                            .SubscribeDispose(Subscriptions);
 
-            SizeChangedCommand
+            SizeChangedCommand!
                 //.Sample(TimeSpan.Parse(
                 //                  UiSettingsProvider.Settings.Get("ImageRedrawDelay", "00:00:00.5")))
                 .Subscribe(SizeChangedCommandExecute)
@@ -537,7 +538,7 @@ namespace DIPOL_UF.Models
                 return;
 
             var posX = pos.X.Clamp(
-                SamplerGeometry.HalfSize.Width,
+                SamplerGeometry!.HalfSize.Width,
                 elemSize.Width - SamplerGeometry.HalfSize.Width);
             var posY = pos.Y.Clamp(
                 SamplerGeometry.HalfSize.Height,
@@ -588,9 +589,9 @@ namespace DIPOL_UF.Models
             {
 
                 var centerPix = GetPixelScale(SamplerCenterPos);
-                var halfSizePix = GetPixelScale(SamplerGeometry.HalfSize);
-                var gapHalfSizePix = GetPixelScale(GapGeometry.HalfSize);
-                var apertureHalfSizePix = GetPixelScale(ApertureGeometry.HalfSize);
+                var halfSizePix = GetPixelScale(SamplerGeometry!.HalfSize);
+                var gapHalfSizePix = GetPixelScale(GapGeometry!.HalfSize);
+                var apertureHalfSizePix = GetPixelScale(ApertureGeometry!.HalfSize);
                 var thcknssPix = 0.5 * (GetPixelScale(SamplerGeometry.Thickness) +
                                         GetPixelScale(SamplerGeometry.Thickness, true));
 
@@ -677,7 +678,7 @@ namespace DIPOL_UF.Models
         {
             var oldPos = SamplerCenterPosInPix;
             LastKnownImageControlSize = args.NewSize;
-            ImageSamplerScaleFactor = Math.Min(args.NewSize.Width / DisplayedImage.Width,
+            ImageSamplerScaleFactor = Math.Min(args.NewSize.Width / DisplayedImage!.Width,
                 args.NewSize.Height / DisplayedImage.Height);
 
             UpdateSamplerPosition(LastKnownImageControlSize, GetImageScale(oldPos));

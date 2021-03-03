@@ -91,7 +91,6 @@ namespace DIPOL_UF
             Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
 
 
-            ConverterImplementations.CameraDesc(null);
             var applicationInstance = new App();
             applicationInstance.InitializeComponent();
 
