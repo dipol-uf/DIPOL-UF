@@ -652,5 +652,63 @@ namespace Tests
 
             Assert.IsTrue(h1.SequenceEqual(stackalloc int[] {3, 2, 1, 6, 5, 4, 9, 8, 7, 2, 1, 0}));
         }
+
+        [Test]
+        public void Test_Rotation_Direct()
+        {
+            var width = 3;
+            var height = 4;
+            ReadOnlySpan<int> source = stackalloc int[]
+            {
+                1, 2, 3, 
+                4, 5, 6, 
+                7, 8, 9, 
+                0, 1, 2,
+            };
+            ReadOnlySpan<int> by90 = stackalloc int[]
+            {
+                3, 6, 9, 2, 
+                2, 5, 8, 1, 
+                1, 4, 7, 0,
+            };
+
+            ReadOnlySpan<int> by180 = stackalloc int[]
+            {
+                2, 1, 0,
+                9, 8, 7,
+                6, 5, 4,
+                3, 2, 1,
+            };
+
+            ReadOnlySpan<int> by270 = stackalloc int[]
+            {
+                0, 7, 4, 1,
+                1, 8, 5, 2,
+                2, 9, 6, 3,
+            };
+
+            var image = Image.CreateTyped(source, width, height);
+            var by90Left = image.Rotate(RotateBy.Deg90, RotationDirection.Left);
+            var by90Right = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
+
+            var by180Left = image.Rotate(RotateBy.Deg180, RotationDirection.Left);
+            var by180Right = image.Rotate(RotateBy.Deg180, RotationDirection.Right);
+
+            var by270Left = image.Rotate(RotateBy.Deg270, RotationDirection.Left);
+            var by270Right = image.Rotate(RotateBy.Deg270, RotationDirection.Right);
+
+            Assert.IsFalse(image.Equals(by90Left), "Source != Left90");
+            Assert.IsFalse(image.Equals(by90Right), "Source != Right90");
+
+            Assert.IsFalse(image.Equals(by180Left), "Source != Left180");
+            Assert.IsFalse(image.Equals(by180Right), "Source != Right180");
+
+            Assert.IsFalse(image.Equals(by270Left), "Source != Left270");
+            Assert.IsFalse(image.Equals(by270Right), "Source != Right270");
+
+            Assert.IsTrue(by90Left.Equals(by270Right), "Left90 == Right270");
+            Assert.IsTrue(by180Left.Equals(by180Right),"Left180 == Right180");
+            Assert.IsTrue(by270Left.Equals(by90Right), "Left270 == Right90");
+        }
     }
 }
