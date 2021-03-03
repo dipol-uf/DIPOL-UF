@@ -1165,7 +1165,7 @@ namespace DipolImage
             {
                 var buffer = rowWidth <= StackAllocByteLimit
                     ? stackalloc byte[rowWidth]
-                    : (arrayBuff = ArrayPool<byte>.Shared.Rent(StackAllocByteLimit)).AsSpan(0, rowWidth);
+                    : (arrayBuff = ArrayPool<byte>.Shared.Rent(rowWidth)).AsSpan(0, rowWidth);
 
                 // 1 2 3      7 8 9
                 // 4 5 6  ->  4 5 6
@@ -1252,7 +1252,7 @@ namespace DipolImage
             {
                 Span<byte> buffer = rowWidth <= StackAllocByteLimit
                     ? stackalloc byte[rowWidth]
-                    : (arrayBuff = ArrayPool<byte>.Shared.Rent(StackAllocByteLimit)).AsSpan(0, rowWidth);
+                    : (arrayBuff = ArrayPool<byte>.Shared.Rent(rowWidth)).AsSpan(0, rowWidth);
 
                 // 1 2 3 \  6 5 4
                 // 4 5 6 /  3 2 1
