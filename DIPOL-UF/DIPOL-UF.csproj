@@ -131,6 +131,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DeviceSettingsDescriptor.cs" />
     <Compile Include="Controls\CameraTab.xaml.cs">
       <DependentUpon>CameraTab.xaml</DependentUpon>
     </Compile>
