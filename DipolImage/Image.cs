@@ -970,6 +970,7 @@ namespace DipolImage
         {
             return direction switch
             {
+                ReflectionDirection.NoReflection => this.Copy(),
                 ReflectionDirection.Vertical => 
                     CreateAndFill(Width, Height, UnderlyingType, ReflectVertically, this),
                 ReflectionDirection.Horizontal => 
