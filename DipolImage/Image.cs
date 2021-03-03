@@ -1215,7 +1215,27 @@ namespace DipolImage
         }
         internal static void RotateBy90CounterClock(Span<byte> dataView, Image image)
         {
-            throw new NotImplementedException();
+            var size = TypeSizes[image.UnderlyingType];
+            var width = image.Width;
+            var height = image.Height;
+
+            var sourceView = image.ByteView();
+            
+            Span<byte> buffer = stackalloc byte[size];
+
+            // 1 2 3     3 6
+            // 4 5 6 ->  2 5
+            //           1 4
+
+            for (var rowId = 0; rowId < height; rowId++)
+            {
+                for (var colId = 0; colId < width; colId++)
+                {
+                    var src = sourceView.Slice((rowId * width + colId) * size, size);
+                    var dest = dataView.Slice(((width - colId - 1) * height + rowId) * size, size);
+                    src.CopyTo(dest);
+                }
+            }
         }
 
         internal static void RotateBy180CounterClock(Span<byte> dataView, Image image)
@@ -1260,7 +1280,27 @@ namespace DipolImage
 
         internal static void RotateBy270CounterClock(Span<byte> dataView, Image image)
         {
-            throw new NotImplementedException();
+            var size = TypeSizes[image.UnderlyingType];
+            var width = image.Width;
+            var height = image.Height;
+
+            var sourceView = image.ByteView();
+
+            Span<byte> buffer = stackalloc byte[size];
+
+            // 1 2 3     4 1
+            // 4 5 6 ->  5 2
+            //           6 3
+
+            for (var rowId = 0; rowId < height; rowId++)
+            {
+                for (var colId = 0; colId < width; colId++)
+                {
+                    var src = sourceView.Slice((rowId * width + colId) * size, size);
+                    var dest = dataView.Slice((colId * height + (height - rowId - 1)) * size, size);
+                    src.CopyTo(dest);
+                }
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
