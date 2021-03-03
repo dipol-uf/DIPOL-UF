@@ -1217,10 +1217,47 @@ namespace DipolImage
         {
             throw new NotImplementedException();
         }
+
         internal static void RotateBy180CounterClock(Span<byte> dataView, Image image)
         {
-            throw new NotImplementedException();
+            var size = TypeSizes[image.UnderlyingType];
+            var width = image.Width;
+            var height = image.Height;
+            var rowWidth = width * size;
+            
+            image.ByteView().CopyTo(dataView);
+
+            byte[]? arrayBuff = null;
+            try
+            {
+                Span<byte> buffer = rowWidth <= StackAllocByteLimit
+                    ? stackalloc byte[rowWidth]
+                    : (arrayBuff = ArrayPool<byte>.Shared.Rent(StackAllocByteLimit)).AsSpan(0, rowWidth);
+
+                // 1 2 3 \  6 5 4
+                // 4 5 6 /  3 2 1
+                for (var rowId = 0; rowId < height / 2; rowId++)
+                {
+                    var top = dataView.Slice(rowId * rowWidth, rowWidth);
+                    var bottom = dataView.Slice((height - rowId - 1) * rowWidth, rowWidth);
+                    top.CopyTo(buffer);
+                    bottom.CopyTo(top);
+                    buffer.CopyTo(bottom);
+                    
+                    top.Reverse();
+                    bottom.Reverse();
+                }
+
+            }
+            finally
+            {
+                if (arrayBuff is { })
+                {
+                    ArrayPool<byte>.Shared.Return(arrayBuff);
+                }
+            }
         }
+
         internal static void RotateBy270CounterClock(Span<byte> dataView, Image image)
         {
             throw new NotImplementedException();
