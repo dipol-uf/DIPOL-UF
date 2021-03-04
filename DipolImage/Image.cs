@@ -372,7 +372,7 @@ namespace DipolImage
         }
 
         public Image Copy()
-            => new Image(ByteView(), Width, Height, UnderlyingType);
+            => new(ByteView(), Width, Height, UnderlyingType);
 
         public void Clamp(double low, double high)
         {
@@ -646,104 +646,6 @@ namespace DipolImage
                 TypeCode.Single => Percentile<float>(length),
                 _ => Percentile<double>(length)
             };
-            // switch (UnderlyingType)
-            // {
-            //     case TypeCode.Byte:
-            //     {
-            //      
-            //         var query = ((byte[])_baseArray).OrderBy(x => x);
-            //
-            //
-            //
-            //         return query.Skip(length - 1).Take(1).First();
-            //
-            //     }
-            //     case TypeCode.UInt16:
-            //     {
-            //         if (Math.Abs(lvl) < double.Epsilon)
-            //             return (ushort)Min();
-            //         if (Math.Abs(lvl - 1) < double.Epsilon)
-            //             return (ushort)Max();
-            //         var query = ((ushort[])_baseArray).OrderBy(x => x);
-            //
-            //         var length = (int)Math.Ceiling(lvl * Width * Height);
-            //
-            //
-            //         return query.Skip(length - 1).Take(1).First();
-            //
-            //     }
-            //     case TypeCode.Int16:
-            //     {
-            //         if (Math.Abs(lvl) < double.Epsilon)
-            //             return (short)Min();
-            //         if (Math.Abs(lvl - 1) < double.Epsilon)
-            //             return (short)Max();
-            //         var query = ((short[])_baseArray).OrderBy(x => x);
-            //
-            //         var length = (int)Math.Ceiling(lvl * Width * Height);
-            //
-            //
-            //         return query.Skip(length - 1).Take(1).First();
-            //
-            //     }
-            //     case TypeCode.UInt32:
-            //     {
-            //         if (Math.Abs(lvl) < double.Epsilon)
-            //             return (uint)Min();
-            //         if (Math.Abs(lvl - 1) < double.Epsilon)
-            //             return (uint)Max();
-            //         var query = ((uint[])_baseArray).OrderBy(x => x);
-            //
-            //         var length = (int)Math.Ceiling(lvl * Width * Height);
-            //
-            //
-            //         return query.Skip(length - 1).Take(1).First();
-            //
-            //     }
-            //     case TypeCode.Int32:
-            //     {
-            //         if (Math.Abs(lvl) < double.Epsilon)
-            //             return (int)Min();
-            //         if (Math.Abs(lvl - 1) < double.Epsilon)
-            //             return (int)Max();
-            //         var query = ((int[])_baseArray).OrderBy(x => x);
-            //
-            //         var length = (int)Math.Ceiling(lvl * Width * Height);
-            //
-            //
-            //         return query.Skip(length - 1).Take(1).First();
-            //
-            //     }
-            //     case TypeCode.Single:
-            //     {
-            //         if (Math.Abs(lvl) < double.Epsilon)
-            //             return (float)Min();
-            //         if (Math.Abs(lvl - 1) < double.Epsilon)
-            //             return (float)Max();
-            //         var query = ((float[])_baseArray).OrderBy(x => x);
-            //
-            //         var length = (int)Math.Ceiling(lvl * Width * Height);
-            //
-            //
-            //         return query.Skip(length - 1).Take(1).First();
-            //
-            //     }
-            //     default:
-            //     {
-            //         if (Math.Abs(lvl) < double.Epsilon)
-            //             return Min();
-            //         if (Math.Abs(lvl - 1) < double.Epsilon)
-            //             return Max();
-            //         var query = ((double[])_baseArray).OrderBy(x => x);
-            //
-            //         var length = (int)Math.Ceiling(lvl * Width * Height);
-            //
-            //
-            //         return query.Skip(length - 1).Take(1).First();
-            //
-            //     }
-            // }
-
         }
 
         public void AddScalar(double value)
@@ -1232,7 +1134,7 @@ namespace DipolImage
             }
         }
 
-        internal static void Transpose(Span<byte> dataView, Image image)
+        private static void Transpose(Span<byte> dataView, Image image)
         {
             var width = image.Width;
             var height = image.Height;
