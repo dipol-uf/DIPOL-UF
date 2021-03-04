@@ -625,107 +625,124 @@ namespace DipolImage
             if (lvl < 0 | lvl > 1.0)
                 throw new ArgumentOutOfRangeException($"{nameof(lvl)} parameter is out of range ({lvl} should be in [0, 1]).");
 
-            switch (UnderlyingType)
+            if (lvl.AlmostEqual(0.0))
             {
-                case TypeCode.Byte:
-                {
-                    if (Math.Abs(lvl) < double.Epsilon)
-                        return (byte)Min();
-                    if (Math.Abs(lvl - 1) < double.Epsilon)
-                        return (byte)Max();
-                    var query = ((byte[])_baseArray).OrderBy(x => x);
-
-                    var length = (int)Math.Ceiling(lvl * Width * Height);
-
-
-                    return query.Skip(length - 1).Take(1).First();
-
-                }
-                case TypeCode.UInt16:
-                {
-                    if (Math.Abs(lvl) < double.Epsilon)
-                        return (ushort)Min();
-                    if (Math.Abs(lvl - 1) < double.Epsilon)
-                        return (ushort)Max();
-                    var query = ((ushort[])_baseArray).OrderBy(x => x);
-
-                    var length = (int)Math.Ceiling(lvl * Width * Height);
-
-
-                    return query.Skip(length - 1).Take(1).First();
-
-                }
-                case TypeCode.Int16:
-                {
-                    if (Math.Abs(lvl) < double.Epsilon)
-                        return (short)Min();
-                    if (Math.Abs(lvl - 1) < double.Epsilon)
-                        return (short)Max();
-                    var query = ((short[])_baseArray).OrderBy(x => x);
-
-                    var length = (int)Math.Ceiling(lvl * Width * Height);
-
-
-                    return query.Skip(length - 1).Take(1).First();
-
-                }
-                case TypeCode.UInt32:
-                {
-                    if (Math.Abs(lvl) < double.Epsilon)
-                        return (uint)Min();
-                    if (Math.Abs(lvl - 1) < double.Epsilon)
-                        return (uint)Max();
-                    var query = ((uint[])_baseArray).OrderBy(x => x);
-
-                    var length = (int)Math.Ceiling(lvl * Width * Height);
-
-
-                    return query.Skip(length - 1).Take(1).First();
-
-                }
-                case TypeCode.Int32:
-                {
-                    if (Math.Abs(lvl) < double.Epsilon)
-                        return (int)Min();
-                    if (Math.Abs(lvl - 1) < double.Epsilon)
-                        return (int)Max();
-                    var query = ((int[])_baseArray).OrderBy(x => x);
-
-                    var length = (int)Math.Ceiling(lvl * Width * Height);
-
-
-                    return query.Skip(length - 1).Take(1).First();
-
-                }
-                case TypeCode.Single:
-                {
-                    if (Math.Abs(lvl) < double.Epsilon)
-                        return (float)Min();
-                    if (Math.Abs(lvl - 1) < double.Epsilon)
-                        return (float)Max();
-                    var query = ((float[])_baseArray).OrderBy(x => x);
-
-                    var length = (int)Math.Ceiling(lvl * Width * Height);
-
-
-                    return query.Skip(length - 1).Take(1).First();
-
-                }
-                default:
-                {
-                    if (Math.Abs(lvl) < double.Epsilon)
-                        return Min();
-                    if (Math.Abs(lvl - 1) < double.Epsilon)
-                        return Max();
-                    var query = ((double[])_baseArray).OrderBy(x => x);
-
-                    var length = (int)Math.Ceiling(lvl * Width * Height);
-
-
-                    return query.Skip(length - 1).Take(1).First();
-
-                }
+                return Min();
             }
+
+            if (lvl.AlmostEqual(1.0))
+            {
+                return Max();
+            }
+            
+            var length = (int)Math.Ceiling(lvl * Width * Height);
+            return UnderlyingType switch
+            {
+                TypeCode.Byte => Percentile<byte>(length),
+                TypeCode.UInt16 => Percentile<ushort>(length),
+                TypeCode.Int16 => Percentile<short>(length),
+                TypeCode.UInt32 => Percentile<uint>(length),
+                TypeCode.Int32 => Percentile<int>(length),
+                TypeCode.Single => Percentile<float>(length),
+                _ => Percentile<double>(length)
+            };
+            // switch (UnderlyingType)
+            // {
+            //     case TypeCode.Byte:
+            //     {
+            //      
+            //         var query = ((byte[])_baseArray).OrderBy(x => x);
+            //
+            //
+            //
+            //         return query.Skip(length - 1).Take(1).First();
+            //
+            //     }
+            //     case TypeCode.UInt16:
+            //     {
+            //         if (Math.Abs(lvl) < double.Epsilon)
+            //             return (ushort)Min();
+            //         if (Math.Abs(lvl - 1) < double.Epsilon)
+            //             return (ushort)Max();
+            //         var query = ((ushort[])_baseArray).OrderBy(x => x);
+            //
+            //         var length = (int)Math.Ceiling(lvl * Width * Height);
+            //
+            //
+            //         return query.Skip(length - 1).Take(1).First();
+            //
+            //     }
+            //     case TypeCode.Int16:
+            //     {
+            //         if (Math.Abs(lvl) < double.Epsilon)
+            //             return (short)Min();
+            //         if (Math.Abs(lvl - 1) < double.Epsilon)
+            //             return (short)Max();
+            //         var query = ((short[])_baseArray).OrderBy(x => x);
+            //
+            //         var length = (int)Math.Ceiling(lvl * Width * Height);
+            //
+            //
+            //         return query.Skip(length - 1).Take(1).First();
+            //
+            //     }
+            //     case TypeCode.UInt32:
+            //     {
+            //         if (Math.Abs(lvl) < double.Epsilon)
+            //             return (uint)Min();
+            //         if (Math.Abs(lvl - 1) < double.Epsilon)
+            //             return (uint)Max();
+            //         var query = ((uint[])_baseArray).OrderBy(x => x);
+            //
+            //         var length = (int)Math.Ceiling(lvl * Width * Height);
+            //
+            //
+            //         return query.Skip(length - 1).Take(1).First();
+            //
+            //     }
+            //     case TypeCode.Int32:
+            //     {
+            //         if (Math.Abs(lvl) < double.Epsilon)
+            //             return (int)Min();
+            //         if (Math.Abs(lvl - 1) < double.Epsilon)
+            //             return (int)Max();
+            //         var query = ((int[])_baseArray).OrderBy(x => x);
+            //
+            //         var length = (int)Math.Ceiling(lvl * Width * Height);
+            //
+            //
+            //         return query.Skip(length - 1).Take(1).First();
+            //
+            //     }
+            //     case TypeCode.Single:
+            //     {
+            //         if (Math.Abs(lvl) < double.Epsilon)
+            //             return (float)Min();
+            //         if (Math.Abs(lvl - 1) < double.Epsilon)
+            //             return (float)Max();
+            //         var query = ((float[])_baseArray).OrderBy(x => x);
+            //
+            //         var length = (int)Math.Ceiling(lvl * Width * Height);
+            //
+            //
+            //         return query.Skip(length - 1).Take(1).First();
+            //
+            //     }
+            //     default:
+            //     {
+            //         if (Math.Abs(lvl) < double.Epsilon)
+            //             return Min();
+            //         if (Math.Abs(lvl - 1) < double.Epsilon)
+            //             return Max();
+            //         var query = ((double[])_baseArray).OrderBy(x => x);
+            //
+            //         var length = (int)Math.Ceiling(lvl * Width * Height);
+            //
+            //
+            //         return query.Skip(length - 1).Take(1).First();
+            //
+            //     }
+            // }
 
         }
 
@@ -1065,7 +1082,7 @@ namespace DipolImage
             return image;
         }
 
-        internal static void ReflectVertically(Span<byte> dataView, Image image)
+        private static void ReflectVertically(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -1101,7 +1118,8 @@ namespace DipolImage
                 }
             }
         }
-        internal static void ReflectHorizontally(Span<byte> dataView, Image image)
+
+        private static void ReflectHorizontally(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -1127,7 +1145,8 @@ namespace DipolImage
                 }
             }
         }
-        internal static void RotateBy90CounterClock(Span<byte> dataView, Image image)
+
+        private static void RotateBy90CounterClock(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -1135,8 +1154,6 @@ namespace DipolImage
 
             var sourceView = image.ByteView();
             
-            Span<byte> buffer = stackalloc byte[size];
-
             // 1 2 3     3 6
             // 4 5 6 ->  2 5
             //           1 4
@@ -1151,7 +1168,8 @@ namespace DipolImage
                 }
             }
         }
-        internal static void RotateBy180CounterClock(Span<byte> dataView, Image image)
+
+        private static void RotateBy180CounterClock(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -1190,15 +1208,14 @@ namespace DipolImage
                 }
             }
         }
-        internal static void RotateBy270CounterClock(Span<byte> dataView, Image image)
+
+        private static void RotateBy270CounterClock(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
             var height = image.Height;
 
             var sourceView = image.ByteView();
-
-            Span<byte> buffer = stackalloc byte[size];
 
             // 1 2 3     4 1
             // 4 5 6 ->  5 2
@@ -1238,6 +1255,28 @@ namespace DipolImage
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static int ResolveItemSize(TypeCode code) => TypeSizes[code];
 
+        private T Percentile<T>(int length) where T : unmanaged
+        {
+            var view = TypedView<T>();
+            if (length >= view.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(length));
+            }
+            T[]? arrayBuffer = null;
+            try
+            {
+                arrayBuffer = ArrayPool<T>.Shared.Rent(view.Length);
+                var arrayView = arrayBuffer.AsSpan(0, view.Length);
+                view.CopyTo(arrayView);
+                Array.Sort(arrayBuffer, 0, view.Length);
+
+                return arrayBuffer[length];
+            }
+            finally
+            {
+                ArrayPool<T>.Shared.Return(arrayBuffer);
+            }
+        }
         public static Image CreateTyped<T>(ReadOnlySpan<T> data, int width, int height) where T : unmanaged
         {
             return new Image(MemoryMarshal.AsBytes(data), width, height, Type.GetTypeCode(typeof(T)));
