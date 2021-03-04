@@ -891,80 +891,8 @@ namespace DipolImage
                 ? (T[]) _baseArray
                 : throw new ArrayTypeMismatchException();
 
-        public Image Transpose()
-        {
-            var type = Type;
-
-            var newArray = Array.CreateInstance(type, Width * Height);
-
-            switch (UnderlyingType)
-            {
-
-                case TypeCode.Byte:
-                {
-                    var castArray = (byte[])newArray;
-
-                    for (var i = 0; i < Height; i++)
-                        for (var j = 0; j < Width; j++)
-                            castArray[j * Height + i] = Get<byte>(i, j);
-                    break;
-                }
-                case TypeCode.Int16:
-                {
-                    var castArray = (short[]) newArray;
-
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        castArray[j * Height + i] = Get<short>(i, j);
-                    break;
-                }
-
-                case TypeCode.UInt16:
-                {
-                    var castArray = (ushort[]) newArray;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        castArray[j * Height + i] = Get<ushort>(i, j);
-                    break;
-                }
-                case TypeCode.Int32:
-                {
-                    var castArray = (int[]) newArray;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        castArray[j * Height + i] = Get<int>(i, j);
-                    break;
-                }
-                case TypeCode.UInt32:
-                {
-                    var castArray = (uint[])newArray;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        castArray[j * Height + i] = Get<uint>(i, j);
-                    break;
-                }
-                case TypeCode.Single:
-                {
-                    var castArray = (float[])newArray;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        castArray[j * Height + i] = Get<float>(i, j);
-                    break;
-                }
-                default:
-                {
-                    var castArray = (double[])newArray;
-                    for (var i = 0; i < Height; i++)
-                    for (var j = 0; j < Width; j++)
-                        castArray[j * Height + i] = Get<double>(i, j);
-                    break;
-                }
-                
-            }
-
-            // Notice the reversed order of Height Width
-            return new Image(newArray, Height, Width);
-        }
+        public Image Transpose() =>
+            CreateAndFill(Height, Width, UnderlyingType, Transpose, this);
 
         public Image Reflect(ReflectionDirection direction)
         {
@@ -1224,7 +1152,6 @@ namespace DipolImage
                 }
             }
         }
-
         internal static void RotateBy180CounterClock(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
@@ -1264,7 +1191,6 @@ namespace DipolImage
                 }
             }
         }
-
         internal static void RotateBy270CounterClock(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
@@ -1286,6 +1212,24 @@ namespace DipolImage
                     var src = sourceView.Slice((rowId * width + colId) * size, size);
                     var dest = dataView.Slice((colId * height + (height - rowId - 1)) * size, size);
                     src.CopyTo(dest);
+                }
+            }
+        }
+
+        internal static void Transpose(Span<byte> dataView, Image image)
+        {
+            var width = image.Width;
+            var height = image.Height;
+            var size = image.ItemSizeInBytes;
+            ReadOnlySpan<byte> sourceView = image.ByteView();
+
+            for (var rowId = 0; rowId < height; rowId++)
+            {
+                for (var colId = 0; colId < width; colId++)
+                {
+                    ReadOnlySpan<byte> src = sourceView.Slice((rowId * width  + colId) * size, size);
+                    Span<byte> dst = dataView.Slice((colId * height + rowId) * size, size);
+                    src.CopyTo(dst);
                 }
             }
         }
