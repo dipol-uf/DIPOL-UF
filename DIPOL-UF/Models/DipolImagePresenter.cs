@@ -404,27 +404,28 @@ namespace DIPOL_UF.Models
             var isFirstLoad = DisplayedImage is null;
 #if DEBUG
             // WATCH: Debugging
-            const int debugSize = 24;
-            var dataArray = new int[debugSize * debugSize];
+            const int debugWidth = 1024;
+            const int debugHeight = 256;
+            var dataArray = new int[debugWidth * debugHeight];
             // Top-left
             dataArray[0] = 100;
 
             // Top-right
-            dataArray[debugSize - 1] = 200;
-            dataArray[debugSize - 2] = 200;
+            dataArray[debugWidth - 1] = 200;
+            dataArray[debugWidth - 2] = 200;
 
             // Bottom-left
-            dataArray[(debugSize - 1) * debugSize] = 400;
-            dataArray[(debugSize - 1) * debugSize + 1] = 400;
-            dataArray[(debugSize - 1) * debugSize + 2] = 400;
+            dataArray[(debugHeight - 1) * debugWidth] = 400;
+            dataArray[(debugHeight - 1) * debugWidth + 1] = 400;
+            dataArray[(debugHeight - 1) * debugWidth + 2] = 400;
 
             // Bottom-right
-            dataArray[debugSize * debugSize - 1] = 800;
-            dataArray[debugSize * debugSize - 2] = 800;
-            dataArray[debugSize * debugSize - 3] = 800;
-            dataArray[debugSize * debugSize - 4] = 800;
+            dataArray[debugWidth * debugHeight - 1] = 800;
+            dataArray[debugWidth * debugHeight - 2] = 800;
+            dataArray[debugWidth * debugHeight - 3] = 800;
+            dataArray[debugWidth * debugHeight - 4] = 800;
 
-            var fakeImage = new Image(dataArray, debugSize, debugSize, copy:false);
+            var fakeImage = new Image(dataArray, debugWidth, debugHeight, copy:false);
 
             
 
