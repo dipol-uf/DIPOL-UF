@@ -371,7 +371,7 @@ namespace DIPOL_UF.Models
                         UiSettingsProvider.Settings.Get("ImageStatsDelay", "00:00:00.250")));
 
             statsObservable.Where(x => !x.IsMouseOverImage && !IsSamplerFixed)
-                           .Select<DipolImagePresenter, ImageStatsCollection>(x => null)
+                           .Select<DipolImagePresenter, ImageStatsCollection?>(x => null)
                            .BindTo(this, x => x.ImageStats)
                            .DisposeWith(Subscriptions);
             statsObservable.Where(x => x.IsSamplerFixed || x.IsMouseOverImage)
@@ -430,7 +430,7 @@ namespace DIPOL_UF.Models
 
             image = fakeImage;
 #endif
-            Image temp = null;
+            Image? temp = null;
             switch (image.UnderlyingType)
             {
                 case TypeCode.UInt16:
@@ -497,42 +497,51 @@ namespace DIPOL_UF.Models
 
         private async Task CalculateStatisticsAsync()
         {
-
+            if (_sourceImage is null)
+            {
+                return;
+            }
             var stats = new ImageStatsCollection();
 
             await Helper.RunNoMarshall(() =>
             {
                 var n = 0;
 
-                var aperture = GetPixelsInArea(GeometryLayer.Aperture);
+                IReadOnlyList<(int X, int Y)> aperture = GetPixelsInArea(GeometryLayer.Aperture);
 
-                var annulus = GetPixelsInArea(GeometryLayer.Annulus);
+                IReadOnlyList<(int X, int Y)> annulus = GetPixelsInArea(GeometryLayer.Annulus);
 
-                var apData = aperture.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X))
-                                     .OrderBy(x => x)
-                                     .ToList();
+                // var apData = aperture.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X))
+                //                      .OrderBy(x => x)
+                //                      .ToList();
+                float[] apData = PreSelectPixels(aperture, _sourceImage);
 
-                var annData = annulus.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X))
-                                     .ToList();
+                // var annData = annulus.Select(pix => _sourceImage.Get<float>(pix.Y, pix.X))
+                //                      .ToList();
 
-                if (annData.Count > 0)
+                float[] annData = PreSelectPixels(annulus, _sourceImage);
+
+                if (annData.Length > 0)
                 {
-                    stats.AnnulusAvg = annData.Average();
-                    stats.AnnulusSd =
-                        Math.Sqrt(annData.Select(x => Math.Pow(x - stats.AnnulusAvg, 2)).Sum() / annData.Count);
+                    (stats.AnnulusAvg, stats.AnnulusSd) = ComputeAverageAndSd(annData);
+                    // stats.AnnulusAvg = annData.Average();
+                    // stats.AnnulusSd =
+                    //     Math.Sqrt(annData.Select(x => Math.Pow(x - stats.AnnulusAvg, 2)).Sum() / annData.Length);
                 }
 
-                if (apData.Count > 0)
+                if (apData.Length > 0)
                 {
-                    stats.ApertureAvg = apData.Average();
-                    stats.Minimum = apData.First();
-                    stats.Maximum = apData.Last();
-                    stats.Median = apData[apData.Count / 2];
-                    var posPixels = apData.Where(x => x > stats.AnnulusAvg).ToList();
-                    n = posPixels.Count;
-                    stats.Intensity = posPixels.Sum() - n * stats.AnnulusAvg;
-                    stats.ApertureSd =
-                        Math.Sqrt(apData.Select(x => Math.Pow(x - stats.ApertureAvg, 2)).Sum() / apData.Count);
+                    (stats.ApertureAvg, stats.ApertureSd) = ComputeAverageAndSd(apData);
+                    // stats.ApertureAvg = apData.Average();
+                    // stats.ApertureSd =
+                    //     Math.Sqrt(apData.Select(x => Math.Pow(x - stats.ApertureAvg, 2)).Sum() / apData.Length);
+                    stats.Minimum = apData[0];
+                    stats.Maximum = apData[apData.Length - 1];
+                    stats.Median = apData[apData.Length / 2];
+                    stats.Intensity = ComputeIntensity(apData, stats.AnnulusAvg, out n);
+                    // var posPixels = apData.Where(x => x > stats.AnnulusAvg).ToList();
+                    // n = posPixels.Count;
+                    // stats.Intensity = posPixels.Sum() - n * stats.AnnulusAvg;
                 }
 
                 if (stats.Intensity > 0 && n > 0 && stats.AnnulusSd > 0)
@@ -803,5 +812,75 @@ namespace DIPOL_UF.Models
 
         }
 
+
+        private static float[] PreSelectPixels(
+            IReadOnlyList<(int X, int Y)> coords,
+            Image image
+        )
+        {
+            var buffer = new float[coords.Count];
+            var view = image.TypedView<float>();
+            var width = image.Width;
+            for (var i = 0; i < coords.Count; i++)
+            {
+                var (x, y) = coords[i];
+                buffer[i] = view[y * width + x];
+            }
+            Array.Sort(buffer, 0, buffer.Length);
+            return buffer;
+        }
+
+        private static (double Average, double Sd) ComputeAverageAndSd(ReadOnlySpan<float> data)
+        {
+            if (data.IsEmpty)
+            {
+                return (double.NaN, double.NaN);
+            }
+
+            if (data.Length == 1)
+            {
+                return (data[0], double.NaN);
+            }
+            
+            var sd = 0.0;
+            var avg = 0.0;
+            for (var i = 0; i < data.Length; i++)
+            {
+                avg += data[i];
+            }
+
+            avg /= data.Length;
+            for (var i = 0; i < data.Length; i++)
+            {
+                var item = data[i];
+                sd += (item - avg) * (item - avg);
+            }
+
+            sd = Math.Sqrt(sd / (data.Length - 1));
+
+            return (avg, sd);
+        }
+
+        private static double ComputeIntensity(ReadOnlySpan<float> data, double annAvg, out int n)
+        {
+            n = 0;
+            if (data.IsEmpty)
+            {
+                return 0.0;
+            }
+
+            var sum = 0.0;
+            for (var i = 0; i < data.Length; i++)
+            {
+                var item = data[i];
+                if (item > annAvg)
+                {
+                    sum += annAvg;
+                    n++;
+                }
+            }
+
+            return n == 0 ? 0 : sum - n * annAvg;
+        }
     }
 }
