@@ -410,7 +410,7 @@ namespace DIPOL_UF.Models
             var dataArray = new int[debugWidth * debugHeight];
             for (var i = 0; i < debugWidth * debugHeight; i++)
             {
-                dataArray[i] = r.Next() % 127;
+                dataArray[i] = i + r.Next() % 127;
             }
             // Top-left
             dataArray[0] = 100;
