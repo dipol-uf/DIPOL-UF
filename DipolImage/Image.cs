@@ -78,18 +78,16 @@ namespace DipolImage
 
         public int ItemSizeInBytes => ResolveItemSize(UnderlyingType);
         public Type Type => ResolveType(UnderlyingType);
+        public int ItemSizeInBytes { get; }
 
-        public object this[int i, int j]
-        {
-            get => _baseArray.GetValue(i * Width + j);
-            set => _baseArray.SetValue(value, i * Width + j);
-        }
 
         public T Get<T>(int i, int j) where T : unmanaged
             => ((T[])_baseArray)[i * Width + j];
 
         public void Set<T>(T value, int i, int j) where T : unmanaged
             => ((T[])_baseArray)[i * Width + j] = value;
+        //public T Get<T>(int i, int j) where T : unmanaged
+        //    => ((T[])_baseArray)[i * Width + j];
 
         private Image(int width, int height, TypeCode type)
         {
