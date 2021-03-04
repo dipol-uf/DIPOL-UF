@@ -537,77 +537,7 @@ namespace Tests
             //);
         }
 
-        [Test]
-        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
-        public void Test_AddScalar(TypeCode code)
-        {
-            var type = Type.GetType("System." + code) ?? typeof(byte);
-            const int N = 1024;
-            var array = Array.CreateInstance(type, N);
-            for (var i = 0; i < N / 4; i++)
-            for (var j = 0; j < 4; j++)
-                array.SetValue(Convert.ChangeType((i + j) % 128, code), i * 4 + j);
-
-            var image = new Image(array, 4, N / 4);
-
-            const double scalar = 12.0;
-
-            var copyImage = image.Copy();
-
-            image.AddScalar(scalar);
-
-
-            for (var i = 0; i < image.Height; i++)
-            for (var j = 0; j < image.Width; j++)
-            {
-                dynamic val1 = image[i, j];
-                var dVal1 = 1.0 * val1;
-                dynamic val2 = copyImage[i, j];
-                var dVal2 = 1.0 * val2;
-
-                var diff = dVal1 - dVal2 - scalar;
-
-
-                Assert.That(Math.Abs(diff), Is.EqualTo(0).Within(double.Epsilon));
-            }
-        }
-
-        [Test]
-        [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
-        public void Test_MultiplyByScalar(TypeCode code)
-        {
-            var type = Type.GetType("System." + code) ?? typeof(byte);
-            const int N = 1024;
-            var array = Array.CreateInstance(type, N);
-            for (var i = 0; i < N / 4; i++)
-            for (var j = 0; j < 4; j++)
-                array.SetValue(Convert.ChangeType((i + j) % 64, code), i * 4 + j);
-
-            var image = new Image(array, 4, N / 4);
-
-            const double scalar = 2.0;
-
-            var copyImage = image.Copy();
-
-            image.MultiplyByScalar(scalar);
-
-
-            for (var i = 0; i < image.Height; i++)
-            for (var j = 0; j < image.Width; j++)
-            {
-                dynamic val1 = image[i, j];
-                var dVal1 = 1.0 * val1;
-                dynamic val2 = copyImage[i, j];
-                var dVal2 = 1.0 * val2;
-
-                var diff = dVal2 - dVal1 / scalar;
-
-
-                Assert.That(Math.Abs(diff), Is.EqualTo(0).Within(double.Epsilon));
-            }
-        }
-
-        [Test]
+        [Test] 
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Percentile(TypeCode code)
         {
