@@ -881,7 +881,7 @@ namespace DIPOL_UF.Models
                 var item = data[i];
                 if (item > annAvg)
                 {
-                    sum += annAvg;
+                    sum += item;
                     n++;
                 }
             }
