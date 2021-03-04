@@ -403,10 +403,15 @@ namespace DIPOL_UF.Models
         {
             var isFirstLoad = DisplayedImage is null;
 #if DEBUG
+            Random r = new Random();
             // WATCH: Debugging
             const int debugWidth = 1024;
             const int debugHeight = 256;
             var dataArray = new int[debugWidth * debugHeight];
+            for (var i = 0; i < debugWidth * debugHeight; i++)
+            {
+                dataArray[i] = r.Next() % 127;
+            }
             // Top-left
             dataArray[0] = 100;
 
