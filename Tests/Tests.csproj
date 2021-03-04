@@ -156,7 +156,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\Microsoft.NET.Test.Sdk.15.7.2\build\net45\Microsoft.Net.Test.Sdk.targets" Condition="Exists('..\packages\Microsoft.NET.Test.Sdk.15.7.2\build\net45\Microsoft.Net.Test.Sdk.targets')" />
   <Target Name="AfterBuild">
     <Copy Condition="'$(Platform)' == 'x86'" SourceFiles="..\atmcd32d.dll" DestinationFolder="$(TargetDir)" />
     <Copy Condition="'$(Platform)' == 'x64'" SourceFiles="..\atmcd64d.dll" DestinationFolder="$(TargetDir)" />
