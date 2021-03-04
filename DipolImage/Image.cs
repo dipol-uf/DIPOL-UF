@@ -31,7 +31,7 @@ namespace DipolImage
         };
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly Dictionary<TypeCode, Type> TypeCodeMap = new Dictionary<TypeCode, Type>
+        private static readonly Dictionary<TypeCode, Type> TypeCodeMap = new()
         {
             {TypeCode.Double, typeof(double)},
             {TypeCode.Single, typeof(float)},
@@ -44,7 +44,7 @@ namespace DipolImage
 
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly Dictionary<TypeCode, int> TypeSizes = new Dictionary<TypeCode, int>
+        private static readonly Dictionary<TypeCode, int> TypeSizes = new()
         {
             {TypeCode.Double, sizeof(double)},
             {TypeCode.Single, sizeof(float)},
@@ -60,7 +60,7 @@ namespace DipolImage
         private readonly Array _baseArray;
 
         public static IReadOnlyCollection<TypeCode> AllowedPixelTypes
-            => Array.AsReadOnly(AllowedTypes);
+            => AllowedTypes;
 
         [field: DebuggerBrowsable(DebuggerBrowsableState.Never)]
         [field: DataMember]
@@ -969,7 +969,7 @@ namespace DipolImage
             return image;
         }
 
-        internal static Image
+        private static Image
             CreateAndFill<TState>(int width, int height, TypeCode type, 
                 ImageInitializer<TState> initializer, TState state)
         {
