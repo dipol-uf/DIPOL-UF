@@ -1074,30 +1074,19 @@ namespace DipolImage
             }
         }
 
-        public override bool Equals(object? obj)
-        {
-            return obj is Image im && im.Equals(this);
-        }
+        public override bool Equals(object? obj) =>
+            obj is Image im && im.Equals(this);
 
         public override int GetHashCode()
         {
-            switch (UnderlyingType)
+            ReadOnlySpan<byte> view = ByteView();
+            var hash = new HashCode();
+            for (var i = 0; i < view.Length; i++)
             {
-                case TypeCode.Byte:
-                    return ((byte[])_baseArray).Aggregate(0, (sum, pix) => sum ^ (7 * pix % int.MaxValue));
-                case TypeCode.Int16:
-                    return ((short[]) _baseArray).Aggregate(0, (sum, pix) => sum ^ (7 * pix % int.MaxValue));
-                case TypeCode.UInt16:
-                    return ((ushort[])_baseArray).Aggregate(0, (sum, pix) => sum + (7 * pix % int.MaxValue));
-                case TypeCode.Int32:
-                    return ((int[])_baseArray).Aggregate(0, (sum, pix) => sum ^ (7 * pix % int.MaxValue));
-                case TypeCode.UInt32:
-                    return ((uint[])_baseArray).Aggregate(0, (sum, pix) => sum ^ (int)(7 * pix % int.MaxValue));
-                case TypeCode.Single:
-                    return ((float[]) _baseArray).Aggregate(0, (sum, pix) => sum ^ pix.GetHashCode());
-                default:
-                    return ((double[])_baseArray).Aggregate(0, (sum, pix) => sum ^ pix.GetHashCode());
+                hash.Add(view[i]);
             }
+
+            return hash.ToHashCode();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
