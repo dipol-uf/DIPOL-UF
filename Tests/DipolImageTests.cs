@@ -313,23 +313,7 @@ namespace Tests
             Assert.That(img.Equals(img.Copy()), Is.True);
         }
 
-        [Test]
-        public void Test_ThisAccessor()
-        {
-            var initArray = new[] {1, 2, 3, 4};
-            var image = new Image(initArray, 2, 2);
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(image[0, 1], Is.EqualTo(initArray[1]));
-                Assert.That(image[1, 0], Is.EqualTo(initArray[2]));
-            });
-
-            image[0, 0] = 430;
-
-            Assert.That(image[0, 0], Is.EqualTo(430));
-        }
-
+    
         [Test]
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
 
