@@ -54,9 +54,6 @@
     <ProjectGuid>{FE7E6722-98AA-41C3-A7C4-3351FA3ACF85}</ProjectGuid>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="dotMemory.Unit, Version=111.0.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
-      <HintPath>..\packages\JetBrains.dotMemoryUnit.3.0.20171219.105559\lib\net35\dotMemory.Unit.dll</HintPath>
-    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -104,7 +101,7 @@
       <Name>DIPOL-UF</Name>
     </ProjectReference>
     <ProjectReference Include="..\DipolImage\DipolImage.csproj">
-      <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
+      <Project>{02bcb125-645e-474c-9d7e-84e33bf10a1d}</Project>
       <Name>DipolImage</Name>
     </ProjectReference>
     <ProjectReference Include="..\FITS-CS\FITS-CS.csproj">
@@ -121,24 +118,27 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.IO.Ports" Version="4.7.0" />
+    <PackageReference Include="System.Collections.Immutable">
+      <Version>5.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.IO.Ports" Version="5.0.0" />
     <PackageReference Include="JetBrains.DotMemoryUnit">
       <Version>3.1.20200127.214830</Version>
     </PackageReference>
     <PackageReference Include="MathNet.Numerics">
-      <Version>4.12.0</Version>
+      <Version>4.15.0</Version>
     </PackageReference>
     <PackageReference Include="MSTest.TestAdapter">
-      <Version>2.1.2</Version>
+      <Version>2.2.1</Version>
     </PackageReference>
     <PackageReference Include="MSTest.TestFramework">
-      <Version>2.1.2</Version>
+      <Version>2.2.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.3</Version>
     </PackageReference>
     <PackageReference Include="NUnit">
-      <Version>3.12.0</Version>
+      <Version>3.13.1</Version>
     </PackageReference>
     <PackageReference Include="NUnit3TestAdapter">
       <Version>3.17.0</Version>
@@ -156,7 +156,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\Microsoft.NET.Test.Sdk.15.7.2\build\net45\Microsoft.Net.Test.Sdk.targets" Condition="Exists('..\packages\Microsoft.NET.Test.Sdk.15.7.2\build\net45\Microsoft.Net.Test.Sdk.targets')" />
   <Target Name="AfterBuild">
     <Copy Condition="'$(Platform)' == 'x86'" SourceFiles="..\atmcd32d.dll" DestinationFolder="$(TargetDir)" />
     <Copy Condition="'$(Platform)' == 'x64'" SourceFiles="..\atmcd64d.dll" DestinationFolder="$(TargetDir)" />

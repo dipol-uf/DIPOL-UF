@@ -117,7 +117,7 @@ namespace DIPOL_UF.Models
             Alias = ConverterImplementations.CameraToStringAliasConversion(camera);
 
 
-            ImagePresenter = new DipolImagePresenter();
+            ImagePresenter = new DipolImagePresenter(ConverterImplementations.DeviceDescriptor(Camera));
 
             HookObservables();
             InitializeCommands();

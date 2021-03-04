@@ -93,4 +93,5 @@ Temporary Items
 **/bin/*
 *.json
 *.config
+**/.idea/*
 MigrationBackup/*

@@ -1,27 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -41,11 +18,27 @@ namespace DIPOL_UF.Converters
     public static class ConverterImplementations
     {
         //private static List<(string Name, string Alias)> _cachedAliases;
-        private static Dictionary<string, string> _cachedAliases;
-        private static Dictionary<string, string> _cachedFilters;
-        private static Dictionary<string, int> _cachedOrders;
+        private static Dictionary<string, string>? _cachedAliases;
+        private static Dictionary<string, string>? _cachedFilters;
+        private static Dictionary<string, int>? _cachedOrders;
 
-        public static string CameraToStringAliasConversion(IDevice cam)
+        private static Dictionary<string, DeviceSettingsDescriptor>? _cachedSettings;
+        public static DeviceSettingsDescriptor? DeviceDescriptor(IDevice? cam)
+        {
+            if(cam is null)
+            {
+                return null;
+            }
+            var camString = $"{cam.CameraModel}_{cam.SerialNumber}";
+            _cachedSettings ??=
+                UiSettingsProvider.Settings
+                    .GetArray<DeviceSettingsDescriptor>(@"CameraDescriptors")
+                    .ToDictionary(x => x.Name);
+
+            return _cachedSettings.TryGetValue(camString, out var desc) ? desc : null;
+        }
+
+        public static string CameraToStringAliasConversion(IDevice? cam)
         {
             if (cam is null)
                 return string.Empty;
@@ -61,7 +54,7 @@ namespace DIPOL_UF.Converters
                 : camString;
         }
 
-        public static string CameraToFilterConversion(IDevice cam)
+        public static string CameraToFilterConversion(IDevice? cam)
         {
             if (cam is null)
                 return string.Empty;

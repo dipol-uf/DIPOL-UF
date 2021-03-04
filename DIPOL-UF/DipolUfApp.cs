@@ -32,6 +32,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using DIPOL_Remote;
+using DIPOL_UF.Converters;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
 using Serilog;
@@ -88,7 +89,6 @@ namespace DIPOL_UF
 
             Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
-
 
 
             var applicationInstance = new App();

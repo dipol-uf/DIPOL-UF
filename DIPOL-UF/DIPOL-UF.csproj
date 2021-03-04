@@ -109,9 +109,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable">
-      <HintPath>..\packages\System.Collections.Immutable.1.5.0\lib\netstandard2.0\System.Collections.Immutable.dll</HintPath>
-    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
@@ -134,6 +131,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DeviceSettingsDescriptor.cs" />
     <Compile Include="Controls\CameraTab.xaml.cs">
       <DependentUpon>CameraTab.xaml</DependentUpon>
     </Compile>
@@ -384,7 +382,7 @@
       <Name>DIPOL-Remote</Name>
     </ProjectReference>
     <ProjectReference Include="..\DipolImage\DipolImage.csproj">
-      <Project>{eb0aee44-586a-4d15-8d4a-b4f1db8502e6}</Project>
+      <Project>{02bcb125-645e-474c-9d7e-84e33bf10a1d}</Project>
       <Name>DipolImage</Name>
     </ProjectReference>
     <ProjectReference Include="..\FITS-CS\FITS-CS.csproj">
@@ -417,7 +415,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="MathNet.Numerics">
-      <Version>4.9.0</Version>
+      <Version>4.15.0</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
       <Version>1.1.19</Version>
@@ -450,13 +448,16 @@
       <Version>4.5.1</Version>
     </PackageReference>
     <PackageReference Include="System.Collections.Immutable">
-      <Version>1.7.0</Version>
+      <Version>5.0.0</Version>
     </PackageReference>
     <PackageReference Include="System.ComponentModel.Annotations">
       <Version>4.7.0</Version>
     </PackageReference>
     <PackageReference Include="System.Drawing.Primitives">
       <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.IO.Ports">
+      <Version>5.0.0</Version>
     </PackageReference>
     <PackageReference Include="System.Memory">
       <Version>4.5.4</Version>
@@ -504,7 +505,7 @@
       <Version>4.3.0</Version>
     </PackageReference>
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
-      <Version>4.7.1</Version>
+      <Version>5.0.0</Version>
     </PackageReference>
     <PackageReference Include="System.Threading.Tasks.Extensions">
       <Version>4.6.0-preview.18571.3</Version>
