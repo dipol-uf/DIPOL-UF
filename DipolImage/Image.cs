@@ -55,6 +55,7 @@ namespace DipolImage
             {TypeCode.Byte, sizeof(byte)}
         };
 
+
         [DataMember]
         private readonly Array _baseArray;
 
@@ -76,18 +77,18 @@ namespace DipolImage
             get;
         }
 
-        public int ItemSizeInBytes => ResolveItemSize(UnderlyingType);
-        public Type Type => ResolveType(UnderlyingType);
         public int ItemSizeInBytes { get; }
 
+        public Type Type { get; }
 
-        public T Get<T>(int i, int j) where T : unmanaged
-            => ((T[])_baseArray)[i * Width + j];
+        public object this[int i, int j] => _baseArray.GetValue(i * Width + j);
 
-        public void Set<T>(T value, int i, int j) where T : unmanaged
-            => ((T[])_baseArray)[i * Width + j] = value;
         //public T Get<T>(int i, int j) where T : unmanaged
         //    => ((T[])_baseArray)[i * Width + j];
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref readonly T Get<T>(int i, int j) where T : unmanaged =>
+            ref TypedView<T>()[i * Width + j];
 
         private Image(int width, int height, TypeCode type)
         {
@@ -109,7 +110,8 @@ namespace DipolImage
             Width = width;
             Height = height;
             UnderlyingType = type;
-
+            ItemSizeInBytes = ResolveItemSize(type);
+            Type = ResolveType(type);
             _baseArray = Array.CreateInstance(Type, width * height);
         }
 
@@ -130,6 +132,8 @@ namespace DipolImage
             UnderlyingType = typeCode;
             Width = width;
             Height = height;
+            ItemSizeInBytes = ResolveItemSize(typeCode);
+            Type = ResolveType(typeCode);
             if (copy)
             {
                 _baseArray = Array.CreateInstance(Type, width * height);
