@@ -83,9 +83,6 @@ namespace DipolImage
 
         public object this[int i, int j] => _baseArray.GetValue(i * Width + j);
 
-        //public T Get<T>(int i, int j) where T : unmanaged
-        //    => ((T[])_baseArray)[i * Width + j];
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref readonly T Get<T>(int i, int j) where T : unmanaged =>
             ref TypedView<T>()[i * Width + j];
@@ -375,7 +372,7 @@ namespace DipolImage
         }
 
         public Image Copy()
-            => new Image(_baseArray, Width, Height);
+            => new Image(ByteView(), Width, Height, UnderlyingType);
 
         public void Clamp(double low, double high)
         {
