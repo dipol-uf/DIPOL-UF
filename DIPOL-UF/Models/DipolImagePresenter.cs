@@ -8,15 +8,17 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using DIPOL_UF.Converters;
 using DipolImage;
+#if DEBUG
+using DIPOL_UF.Converters;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using MathNet.Numerics.Random;
+#endif
 using Image = DipolImage.Image;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 
@@ -450,8 +452,6 @@ namespace DIPOL_UF.Models
             
 
             image = fakeImage;
-#endif
-#if DEBUG
             image = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
 #endif
             
