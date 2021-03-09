@@ -430,6 +430,27 @@ namespace DIPOL_UF.Models
 
             image = fakeImage;
 #endif
+            if (_deviceSettings is {} && _deviceSettings.RotateImageBy != RotateBy.Deg0)
+            {
+                image = image.Rotate(_deviceSettings.RotateImageBy, _deviceSettings.RotateImageDirection);
+            }
+
+            if (
+                _deviceSettings is {} &&
+                _deviceSettings.ReflectionDirection is var reflectDir &&
+                reflectDir != ReflectionDirection.NoReflection
+            )
+            {
+                if ((reflectDir & ReflectionDirection.Horizontal) == ReflectionDirection.Horizontal)
+                {
+                    image = image.Reflect(ReflectionDirection.Horizontal);
+                }
+                if((reflectDir & ReflectionDirection.Vertical) == ReflectionDirection.Vertical)
+                {
+                    image = image.Reflect(ReflectionDirection.Vertical);
+                }
+            }
+            
             Image temp = null;
             switch (image.UnderlyingType)
             {
@@ -465,26 +486,6 @@ namespace DIPOL_UF.Models
                 throw new NullReferenceException("Image cannot be null.");
 
             temp.Scale(ImageScaleMin, ImageScaleMax);
-            if (_deviceSettings is {} && _deviceSettings.RotateImageBy != RotateBy.Deg0)
-            {
-                temp = temp.Rotate(_deviceSettings.RotateImageBy, _deviceSettings.RotateImageDirection);
-            }
-
-            if (
-                _deviceSettings is {} &&
-                _deviceSettings.ReflectionDirection is var reflectDir &&
-                reflectDir != ReflectionDirection.NoReflection
-            )
-            {
-                if ((reflectDir & ReflectionDirection.Horizontal) == ReflectionDirection.Horizontal)
-                {
-                    temp = temp.Reflect(ReflectionDirection.Horizontal);
-                }
-                if((reflectDir & ReflectionDirection.Vertical) == ReflectionDirection.Vertical)
-                {
-                    temp = temp.Reflect(ReflectionDirection.Vertical);
-                }
-            }
 
             SamplerCenterPosInPix = isFirstLoad
                 // ReSharper disable PossibleLossOfFraction
