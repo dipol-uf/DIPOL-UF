@@ -215,7 +215,10 @@ namespace DIPOL_UF.ViewModels
             AcquisitionSettingsProxy = 
                 new DescendantProxy(
                     _acqSettsProvider, 
-                    x => new AcquisitionSettingsViewModel((ReactiveWrapper<IAcquisitionSettings>)x, false))
+                    x => new AcquisitionSettingsViewModel(
+                        (ReactiveWrapper<IAcquisitionSettings>)x,
+                        submit: false,
+                        allowSave: false))
                 .DisposeWith(Subscriptions);
 
             // Observing modifications to the individual exposure times

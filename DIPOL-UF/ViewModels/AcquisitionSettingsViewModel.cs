@@ -72,7 +72,7 @@ namespace DIPOL_UF.ViewModels
               .ToList();
 
         private readonly bool _submit;
-
+        private readonly bool _allowSave = true;
         public class SettingsAvailability : ReactiveObjectEx
         {
             public bool VsSpeed { [ObservableAsProperty] get; }
@@ -154,10 +154,15 @@ namespace DIPOL_UF.ViewModels
         public bool Group2ContainsErrors { [ObservableAsProperty] get; }
         public bool Group3ContainsErrors { [ObservableAsProperty] get; }
 
-        public AcquisitionSettingsViewModel(ReactiveWrapper<IAcquisitionSettings> model, bool submit = true)
+        public AcquisitionSettingsViewModel(
+            ReactiveWrapper<IAcquisitionSettings> model, 
+            bool submit = true,
+            bool allowSave = true
+            )
             : base(model)
         {
             _submit = submit;
+            _allowSave = allowSave;
             // TODO : Remove logging
 
             //Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
@@ -1041,7 +1046,7 @@ namespace DIPOL_UF.ViewModels
                                        Title = Properties.Localization.AcquisitionSettings_Dialog_Save_Title,
                                        FileName = Camera.ToString(),
                                        DefaultExtenstion = ".acq"
-                                   }, isValid)
+                                   }, isValid.Select(x => x && _allowSave))
                                .DisposeWith(Subscriptions);
 
             LoadButtonCommand =
