@@ -12,8 +12,13 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using DIPOL_UF.Converters;
 using DipolImage;
+#if DEBUG
+using DIPOL_UF.Converters;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+using MathNet.Numerics.Random;
+#endif
 using Image = DipolImage.Image;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 
@@ -401,35 +406,76 @@ namespace DIPOL_UF.Models
 
         private async Task CopyImageAsync(Image image)
         {
+#if DEBUG
+            static void NextBytes<T>(Span<T> input)
+                where T : unmanaged
+            {
+                var r = new Random();
+                var sz = Unsafe.SizeOf<T>();
+                var view = MemoryMarshal.AsBytes(input);
+                for (var i = 0; i < view.Length; i += sz)
+                {
+                    view[i] = (byte)(r.Next() % 256);
+                }
+            }
+#endif
+            
             var isFirstLoad = DisplayedImage is null;
 #if DEBUG
             // WATCH: Debugging
-            const int debugSize = 24;
-            var dataArray = new int[debugSize * debugSize];
+            const int debugWidth = 512;
+            const int debugHeight = 256;
+            const int fillSize = 8;
+            var dataArray = new int[debugWidth * debugHeight];
+            NextBytes<int>(dataArray);
             // Top-left
-            dataArray[0] = 100;
+            dataArray.AsSpan(0, fillSize).Fill(100);
 
             // Top-right
-            dataArray[debugSize - 1] = 200;
-            dataArray[debugSize - 2] = 200;
+            dataArray.AsSpan(debugWidth - 1 - 2 * fillSize, 2 * fillSize).Fill(200);
 
             // Bottom-left
-            dataArray[(debugSize - 1) * debugSize] = 400;
-            dataArray[(debugSize - 1) * debugSize + 1] = 400;
-            dataArray[(debugSize - 1) * debugSize + 2] = 400;
+            dataArray.AsSpan((debugHeight - 1) * debugWidth, 3 * fillSize).Fill(400);
 
             // Bottom-right
-            dataArray[debugSize * debugSize - 1] = 800;
-            dataArray[debugSize * debugSize - 2] = 800;
-            dataArray[debugSize * debugSize - 3] = 800;
-            dataArray[debugSize * debugSize - 4] = 800;
+            dataArray.AsSpan(debugWidth * debugHeight - 1 - 4 * fillSize, 4 * fillSize).Fill(800);
 
-            var fakeImage = new Image(dataArray, debugSize, debugSize, copy:false);
+            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3, 16 * fillSize).Fill(2400);
+            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3 + debugWidth, 16 * fillSize).Fill(2400);
+            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3 + 2 * debugWidth, 16 * fillSize).Fill(2400);
+            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3 + 3 * debugWidth, 16 * fillSize).Fill(2400);
+
+
+
+            var fakeImage = new Image(dataArray, debugWidth, debugHeight, copy:false);
 
             
 
             image = fakeImage;
+            image = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
 #endif
+            
+            if (_deviceSettings is {} && _deviceSettings.RotateImageBy != RotateBy.Deg0)
+            {
+                image = image.Rotate(_deviceSettings.RotateImageBy, _deviceSettings.RotateImageDirection);
+            }
+
+            if (
+                _deviceSettings is {} &&
+                _deviceSettings.ReflectionDirection is var reflectDir &&
+                reflectDir != ReflectionDirection.NoReflection
+            )
+            {
+                if ((reflectDir & ReflectionDirection.Horizontal) == ReflectionDirection.Horizontal)
+                {
+                    image = image.Reflect(ReflectionDirection.Horizontal);
+                }
+                if((reflectDir & ReflectionDirection.Vertical) == ReflectionDirection.Vertical)
+                {
+                    image = image.Reflect(ReflectionDirection.Vertical);
+                }
+            }
+            
             Image temp = null;
             switch (image.UnderlyingType)
             {
@@ -465,26 +511,6 @@ namespace DIPOL_UF.Models
                 throw new NullReferenceException("Image cannot be null.");
 
             temp.Scale(ImageScaleMin, ImageScaleMax);
-            if (_deviceSettings is {} && _deviceSettings.RotateImageBy != RotateBy.Deg0)
-            {
-                temp = temp.Rotate(_deviceSettings.RotateImageBy, _deviceSettings.RotateImageDirection);
-            }
-
-            if (
-                _deviceSettings is {} &&
-                _deviceSettings.ReflectionDirection is var reflectDir &&
-                reflectDir != ReflectionDirection.NoReflection
-            )
-            {
-                if ((reflectDir & ReflectionDirection.Horizontal) == ReflectionDirection.Horizontal)
-                {
-                    temp = temp.Reflect(ReflectionDirection.Horizontal);
-                }
-                if((reflectDir & ReflectionDirection.Vertical) == ReflectionDirection.Vertical)
-                {
-                    temp = temp.Reflect(ReflectionDirection.Vertical);
-                }
-            }
 
             SamplerCenterPosInPix = isFirstLoad
                 // ReSharper disable PossibleLossOfFraction
