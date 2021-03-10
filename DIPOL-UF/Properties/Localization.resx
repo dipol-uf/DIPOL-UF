@@ -684,4 +684,7 @@ Click "Yes" if you would like to re-calibrate its position.</value>
   <data name="JobManager_TakeCalibrationsFirstTime_Text" xml:space="preserve">
     <value>Target `{0}` is observed for the first time and there are no calibrations. Do you want to take calibrations needed for correct data reduction?</value>
   </data>
+  <data name="JobSetting_Modify" xml:space="preserve">
+    <value>Modify</value>
+  </data>
 </root>

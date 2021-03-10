@@ -208,7 +208,7 @@
         <!--CreateNew-->
         <Button Grid.Column="0" Grid.Row="1" 
                 Style="{StaticResource ResourceKey=BasicButtonStyle}"
-                Content="{x:Static props:Localization.General_CreateNew}"
+                Content="{x:Static props:Localization.JobSetting_Modify}"
                 Command="{Binding CreateNewButtonCommand}"/>
         <!--Load-->
         <Button Grid.Column="1" Grid.Row="1"
