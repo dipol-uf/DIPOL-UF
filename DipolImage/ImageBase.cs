@@ -13,13 +13,13 @@ namespace DipolImage
 {
     [DebuggerDisplay(@"\{ImageBase ({Height} x {Width}) of type {UnderlyingType}\}")]
     [DataContract]
-    public abstract class ImageBase : IEqualityComparer<ImageBase>, IEquatable<ImageBase>
+    public abstract class ImageBase : IEquatable<ImageBase>
     {
         // One row of standard i32 image is 4 * 512 = 2048 bytes
-        internal const int StackAllocByteLimit = 2048;
+        private const int StackAllocByteLimit = 2048;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        internal static readonly TypeCode[] AllowedTypes =
+        private static readonly TypeCode[] AllowedTypes =
          {
             TypeCode.Double,
             TypeCode.Single,
@@ -31,7 +31,7 @@ namespace DipolImage
         };
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        internal static readonly Dictionary<TypeCode, Type> TypeCodeMap = new()
+        private static readonly Dictionary<TypeCode, Type> TypeCodeMap = new()
         {
             {TypeCode.Double, typeof(double)},
             {TypeCode.Single, typeof(float)},
@@ -44,7 +44,7 @@ namespace DipolImage
 
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        internal static readonly Dictionary<TypeCode, int> TypeSizes = new()
+        private static readonly Dictionary<TypeCode, int> TypeSizes = new()
         {
             {TypeCode.Double, sizeof(double)},
             {TypeCode.Single, sizeof(float)},
@@ -675,15 +675,6 @@ namespace DipolImage
                 _ => throw new InvalidOperationException("Image transformation not supported.")
             };
 
-        public bool Equals(ImageBase? x, ImageBase? y)
-            => Equals(x, y, FloatingPointComparisonType.Loose);
-
-        public bool Equals(ImageBase? x, ImageBase? y, FloatingPointComparisonType compType)
-            => x?.Equals(y, compType) ?? false;
-
-        public int GetHashCode(ImageBase? obj)
-            =>  obj?.GetHashCode() ?? 0;
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(ImageBase? other) => Equals(other, FloatingPointComparisonType.Loose);
 
@@ -780,11 +771,11 @@ namespace DipolImage
             };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal abstract Span<T> UnsafeAsSpan<T>() where T : unmanaged;
+        protected abstract Span<T> UnsafeAsSpan<T>() where T : unmanaged;
 
-        internal abstract IImageConstructor GetConstructor();
-        
-        protected static void ReflectVertically(Span<byte> dataView, ImageBase image)
+        private protected abstract IImageConstructor GetConstructor();
+
+        private static void ReflectVertically(Span<byte> dataView, ImageBase image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -821,7 +812,7 @@ namespace DipolImage
             }
         }
 
-        protected static void ReflectHorizontally(Span<byte> dataView, ImageBase image)
+        private static void ReflectHorizontally(Span<byte> dataView, ImageBase image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -848,7 +839,7 @@ namespace DipolImage
             }
         }
 
-        protected static void RotateBy90CounterClock(Span<byte> dataView, ImageBase image)
+        private static void RotateBy90CounterClock(Span<byte> dataView, ImageBase image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -871,7 +862,7 @@ namespace DipolImage
             }
         }
 
-        protected static void RotateBy180CounterClock(Span<byte> dataView, ImageBase image)
+        private static void RotateBy180CounterClock(Span<byte> dataView, ImageBase image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -911,7 +902,7 @@ namespace DipolImage
             }
         }
 
-        protected static void RotateBy270CounterClock(Span<byte> dataView, ImageBase image)
+        private static void RotateBy270CounterClock(Span<byte> dataView, ImageBase image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
