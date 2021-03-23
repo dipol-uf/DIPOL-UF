@@ -288,7 +288,6 @@ namespace Tests
                     Assert.That(image1.Equals(image2), Is.True);
                     Assert.That(image2.Equals(image1), Is.True);
                     Assert.That(image1.Equals((object) image2), Is.True);
-                    Assert.That(image1.Equals(image1, image2), Is.True);
 
                     Assert.That(image1.Equals(null), Is.False);
                     Assert.That(image1.Equals(wrImage1), Is.False);
@@ -296,9 +295,6 @@ namespace Tests
                     Assert.That(image1.Equals(wrImage3), Is.False);
                     Assert.That(image1.Equals(wrImage4), Is.False);
                     Assert.That(image1.Equals((object) null), Is.False);
-                    Assert.That(image1.Equals(image1, wrImage1), Is.False);
-                    Assert.That(image1.Equals(image1, null), Is.False);
-                    Assert.That(image1.Equals(null, image1), Is.False);
                 }
             );
         }
@@ -334,10 +330,8 @@ namespace Tests
 
             Assert.Multiple(() =>
             {
-                Assert.That(image1.GetHashCode(), Is.EqualTo(image2.GetHashCode()));
-                Assert.That(image1.GetHashCode(image1), Is.EqualTo(image1.GetHashCode(image2)));
-                Assert.That(image1.GetHashCode(), Is.Not.EqualTo(wrImage1.GetHashCode()));
-                Assert.That(image1.GetHashCode(image1), Is.Not.EqualTo(image1.GetHashCode(wrImage1)));
+                Assert.AreEqual(image1.GetHashCode(), image2.GetHashCode());
+                Assert.AreNotEqual(image1.GetHashCode(), wrImage1.GetHashCode());
             });
 
         }
@@ -718,7 +712,7 @@ namespace Tests
                 array.SetValue(Convert.ChangeType(i % 256, type), i);
             }
 
-            var image = new Image(array, width, height, true);
+            ImageBase image = new Image(array, width, height, true);
             var otherImage = image;
             for (var i = 0; i < nRep; i++)
             {
