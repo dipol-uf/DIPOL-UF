@@ -27,7 +27,8 @@ namespace DipolImage
             TypeCode.Int16,
             TypeCode.UInt32,
             TypeCode.Int32,
-            TypeCode.Byte
+            TypeCode.Byte,
+            TypeCode.SByte
         };
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -39,7 +40,8 @@ namespace DipolImage
             {TypeCode.Int16, typeof(short)},
             {TypeCode.UInt32, typeof(uint)},
             {TypeCode.Int32, typeof(int)},
-            {TypeCode.Byte, typeof(byte)}
+            {TypeCode.Byte, typeof(byte)},
+            {TypeCode.SByte, typeof(sbyte)}
         };
 
 
@@ -52,7 +54,8 @@ namespace DipolImage
             {TypeCode.Int16, sizeof(short)},
             {TypeCode.UInt32, sizeof(uint)},
             {TypeCode.Int32, sizeof(int)},
-            {TypeCode.Byte, sizeof(byte)}
+            {TypeCode.Byte, sizeof(byte)},
+            {TypeCode.SByte, sizeof(sbyte)}
         };
 
 
@@ -125,6 +128,18 @@ namespace DipolImage
                 {
                     var localMax = byte.MinValue;
                     var arr = TypedView<byte>();
+                    for (var i = 0; i < arr.Length; i++)
+                    {
+                        localMax = Ops.Max(arr[i], localMax);
+                    }
+
+                    max = localMax;
+                    break;
+                }
+                case TypeCode.SByte:
+                {
+                    var localMax = sbyte.MinValue;
+                    var arr = TypedView<sbyte>();
                     for (var i = 0; i < arr.Length; i++)
                     {
                         localMax = Ops.Max(arr[i], localMax);
@@ -229,6 +244,18 @@ namespace DipolImage
                     min = localMin;
                     break;
                 }
+                case TypeCode.SByte:
+                {
+                    var localMin = sbyte.MaxValue;
+                    var arr = TypedView<sbyte>();
+                    for (var i = 0; i < arr.Length; i++)
+                    {
+                        localMin = Ops.Min(arr[i], localMin);
+                    }
+
+                    min = localMin;
+                    break;
+                }
                 case TypeCode.UInt16:
                     {
                         var localMin = ushort.MaxValue;
@@ -322,6 +349,19 @@ namespace DipolImage
                     var locLow = (byte) (Math.Floor(low));
                     var locHigh = (byte) (Math.Ceiling(high));
                     var arr = UnsafeAsSpan<byte>();
+
+                    for (var i = 0; i < arr.Length; i++)
+                    {
+                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
+                    }
+
+                    break;
+                }
+                case TypeCode.SByte:
+                {
+                    var locLow = (sbyte) (Math.Floor(low));
+                    var locHigh = (sbyte) (Math.Ceiling(high));
+                    var arr = UnsafeAsSpan<sbyte>();
 
                     for (var i = 0; i < arr.Length; i++)
                     {
@@ -432,6 +472,26 @@ namespace DipolImage
                         for (var i = 0; i < arr.Length; i++)
                         {
                             arr[i] = (byte) (gMin + factor * (arr[i] - min));
+                        }
+                    }
+
+                    break;
+                }
+                
+                case TypeCode.SByte:
+                {
+                    var arr = UnsafeAsSpan<sbyte>();
+
+                    if (min.AlmostEqual(max))
+                    {
+                        var val = (sbyte) (0.5 * (gMin + gMax));
+                        arr.Fill(val);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < arr.Length; i++)
+                        {
+                            arr[i] = (sbyte) (gMin + factor * (arr[i] - min));
                         }
                     }
 
@@ -575,6 +635,7 @@ namespace DipolImage
             return UnderlyingType switch
             {
                 TypeCode.Byte => Percentile<byte>(length),
+                TypeCode.SByte => Percentile<sbyte>(length),
                 TypeCode.UInt16 => Percentile<ushort>(length),
                 TypeCode.Int16 => Percentile<short>(length),
                 TypeCode.UInt32 => Percentile<uint>(length),
@@ -688,6 +749,7 @@ namespace DipolImage
             switch (UnderlyingType)
             {
 
+                case TypeCode.SByte:
                 case TypeCode.Byte:
                 case TypeCode.Int16:
                 case TypeCode.UInt16:
@@ -766,6 +828,7 @@ namespace DipolImage
                 TypeCode.Int16 => MemoryMarshal.AsBytes(UnsafeAsSpan<short>()),
                 TypeCode.UInt32 => MemoryMarshal.AsBytes(UnsafeAsSpan<uint>()),
                 TypeCode.Int32 => MemoryMarshal.AsBytes(UnsafeAsSpan<int>()),
+                TypeCode.SByte => MemoryMarshal.AsBytes(UnsafeAsSpan<sbyte>()),
                 TypeCode.Byte => UnsafeAsSpan<byte>(),
                 _ => default // This is unreachable
             };
@@ -888,8 +951,8 @@ namespace DipolImage
                     bottom.CopyTo(top);
                     buffer.CopyTo(bottom);
                     
-                    top.Reverse();
-                    bottom.Reverse();
+                    Reverse(top, size);
+                    Reverse(bottom, size);
                 }
 
             }
@@ -968,6 +1031,23 @@ namespace DipolImage
             finally
             {
                 ArrayPool<T>.Shared.Return(arrayBuffer);
+            }
+        }
+
+        private static void Reverse(Span<byte> span, int itemSizeInBytes)
+        {
+            // Assuming `span` contains exactly `n` elements of size `itemSizeInBytes`
+            var n = span.Length / itemSizeInBytes;
+
+            Span<byte> buff = stackalloc byte[itemSizeInBytes];
+            
+            for (var i = 0; i < n / 2; i++)
+            {
+                var left = span.Slice(i * itemSizeInBytes, itemSizeInBytes);
+                var right = span.Slice((n - i - 1) * itemSizeInBytes, itemSizeInBytes);
+                right.CopyTo(buff);
+                left.CopyTo(right);
+                buff.CopyTo(left);
             }
         }
     }

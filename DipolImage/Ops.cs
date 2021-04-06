@@ -23,6 +23,9 @@ namespace DipolImage
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte Max(byte x, byte y) => (byte)(x ^ ((x ^ y) & ((x - y) >> (sizeof(int) * ByteSize - 1))));
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static sbyte Max(sbyte x, sbyte y) => (sbyte)(x ^ ((x ^ y) & ((x - y) >> (sizeof(int) * ByteSize - 1))));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Max(float x, float y) =>
@@ -57,6 +60,9 @@ namespace DipolImage
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte Min(byte x, byte y) => (byte)(y ^ ((x ^ y) & ((x - y) >> (sizeof(int) * ByteSize - 1))));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static sbyte Min(sbyte x, sbyte y) => (sbyte)(y ^ ((x ^ y) & ((x - y) >> (sizeof(int) * ByteSize - 1))));
+        
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Equal(double x, double y) => x.AlmostEqual(y) || double.IsNaN(x) && double.IsNaN(y);
@@ -84,6 +90,8 @@ namespace DipolImage
             };
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte Clamp(byte x, byte low, byte high) => Min(high, Max(low, x));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static sbyte Clamp(sbyte x, sbyte low, sbyte high) => Min(high, Max(low, x));
         [MethodImpl(MethodImplOptions.AggressiveInlining)] 
         public static ushort Clamp(ushort x, ushort low, ushort high) => Min(high, Max(low, x));
         [MethodImpl(MethodImplOptions.AggressiveInlining)] 

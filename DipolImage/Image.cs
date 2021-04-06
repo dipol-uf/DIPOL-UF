@@ -82,7 +82,7 @@ namespace DipolImage
         public override ImageBase Copy()
             => new Image(ByteView(), Width, Height, UnderlyingType);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(Image? other) => Equals(other, FloatingPointComparisonType.Loose);
 
         public bool Equals(Image? other, FloatingPointComparisonType compType)
@@ -95,6 +95,7 @@ namespace DipolImage
             switch (UnderlyingType)
             {
 
+                case TypeCode.SByte:
                 case TypeCode.Byte:
                 case TypeCode.Int16:
                 case TypeCode.UInt16:
