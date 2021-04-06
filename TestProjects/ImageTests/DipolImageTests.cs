@@ -1,28 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,12 +7,12 @@ using System.Runtime.InteropServices;
 using DipolImage;
 using NUnit.Framework;
 
-namespace Tests
+namespace ImageTests
 {
 
     public class DipolImageTests_DataProvider
     {
-        private static IEnumerable<TypeCode> AllowedTypes { get; } = Image.AllowedPixelTypes;
+        private static IEnumerable<TypeCode> AllowedTypes { get; } = ImageBase.AllowedPixelTypes;
 
         private static IEnumerable<(int Width, int Height)> TransformSizes { get; } = new[]
         {
@@ -107,26 +83,26 @@ namespace Tests
     [Parallelizable(ParallelScope.All)]
     public class DipolImageTests
     {
-        public Random R;
-        public int[] TestArray;
-        public byte[] TestByteArray;
-        public byte[] VeryLargeByteArray;
+        private Random _r = null!;
+        private int[] _testArray = null!;
+        private byte[] _testByteArray = null!;
+        private byte[] _veryLargeByteArray = null!;
 
         [SetUp]
         public void Test_Initialize()
         {
-            R = new Random();
-            TestArray = new int[32];
-            for (var i = 0; i < TestArray.Length; i++)
+            _r = new Random();
+            _testArray = new int[32];
+            for (var i = 0; i < _testArray.Length; i++)
             {
-                TestArray[i] = R.Next();
+                _testArray[i] = _r.Next();
             }
 
-            TestByteArray = new byte[512];
-            R.NextBytes(TestByteArray);
+            _testByteArray = new byte[512];
+            _r.NextBytes(_testByteArray);
 
-            VeryLargeByteArray = new byte[1024 * 1024 * 8];
-            R.NextBytes(VeryLargeByteArray);
+            _veryLargeByteArray = new byte[1024 * 1024 * 8];
+            _r.NextBytes(_veryLargeByteArray);
         }
 
         [Test]
@@ -136,18 +112,18 @@ namespace Tests
             {
                 // ReSharper disable for method ObjectCreationAsStatement
 
-                Assert.Throws<ArgumentNullException>(() => new Image(null, 2, 3));
-                Assert.Throws<ArgumentOutOfRangeException>(() => new Image(TestArray, 0, 3));
-                Assert.Throws<ArgumentOutOfRangeException>(() => new Image(TestArray, 10, 0));
+                Assert.Throws<ArgumentNullException>(() => new Image(null!, 2, 3));
+                Assert.Throws<ArgumentOutOfRangeException>(() => new Image(_testArray, 0, 3));
+                Assert.Throws<ArgumentOutOfRangeException>(() => new Image(_testArray, 10, 0));
                 Assert.Throws<ArgumentException>(() => new Image(new[] {"s"}, 1, 1));
 
-                Assert.Throws<ArgumentNullException>(() => new Image(null, 1, 1, TypeCode.Int16));
+                Assert.Throws<ArgumentNullException>(() => new Image(null!, 1, 1, TypeCode.Int16));
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
-                    new Image(TestByteArray, 0, 3, TypeCode.Int32));
+                    new Image(_testByteArray, 0, 3, TypeCode.Int32));
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
-                    new Image(TestByteArray, 10, 0, TypeCode.Int32));
-                Assert.Throws<ArgumentException>(() => new Image(TestByteArray, 1, 1, TypeCode.Char));
-                Assert.Throws<ArgumentException>(() => new Image(TestByteArray, 1, 1, (TypeCode) 45500));
+                    new Image(_testByteArray, 10, 0, TypeCode.Int32));
+                Assert.Throws<ArgumentException>(() => new Image(_testByteArray, 1, 1, TypeCode.Char));
+                Assert.Throws<ArgumentException>(() => new Image(_testByteArray, 1, 1, (TypeCode) 45500));
             });
         }
 
@@ -206,7 +182,7 @@ namespace Tests
 
             var type = Type.GetType("System." + code, true);
             var size = Marshal.SizeOf(type);
-            var arr = VeryLargeByteArray.Take(size * 47 * 31).ToArray();
+            var arr = _veryLargeByteArray.Take(size * 47 * 31).ToArray();
 
 
             var image1 = new Image(arr, 47, 31, code);
@@ -230,7 +206,7 @@ namespace Tests
 
             var image = new Image(initArray, 2, 1);
 
-            var bytes = image.GetBytes();
+            ReadOnlySpan<byte> bytes = image.ByteView();
             byte[] reconstructed;
             if (code != TypeCode.Byte)
             {
@@ -252,7 +228,7 @@ namespace Tests
                 reconstructed[1] = ((byte[]) initArray)[1];
             }
 
-            CollectionAssert.AreEqual(reconstructed, bytes);
+            Assert.IsTrue(bytes.SequenceEqual(reconstructed));
         }
 
         [Test]
@@ -263,7 +239,7 @@ namespace Tests
 
             var type = Type.GetType("System." + code, true);
             var size = Marshal.SizeOf(type);
-            var arr = TestByteArray.Take(size * 2 * 2).ToArray();
+            var arr = _testByteArray.Take(size * 2 * 2).ToArray();
 
             var tempArr = new byte[arr.Length];
             Array.Copy(arr, tempArr, tempArr.Length);
@@ -289,12 +265,11 @@ namespace Tests
                     Assert.That(image2.Equals(image1), Is.True);
                     Assert.That(image1.Equals((object) image2), Is.True);
 
-                    Assert.That(image1.Equals(null), Is.False);
                     Assert.That(image1.Equals(wrImage1), Is.False);
                     Assert.That(image1.Equals(wrImage2), Is.False);
                     Assert.That(image1.Equals(wrImage3), Is.False);
                     Assert.That(image1.Equals(wrImage4), Is.False);
-                    Assert.That(image1.Equals((object) null), Is.False);
+                    Assert.That(image1.Equals(null), Is.False);
                 }
             );
         }
@@ -303,7 +278,7 @@ namespace Tests
         public void Test_Copy()
         {
             var array = new byte[1024];
-            R.NextBytes(array);
+            _r.NextBytes(array);
 
             var img = new Image(array, 32, 16, TypeCode.Int16);
             Assert.That(img.Equals(img.Copy()), Is.True);
@@ -318,7 +293,7 @@ namespace Tests
 
             var type = Type.GetType("System." + code, true);
             var size = Marshal.SizeOf(type);
-            var arr = TestByteArray.Take(size * 2 * 2).ToArray();
+            var arr = _testByteArray.Take(size * 2 * 2).ToArray();
 
             var tempArr = new byte[arr.Length];
             Array.Copy(arr, tempArr, tempArr.Length);
@@ -341,15 +316,16 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Max(TypeCode code)
         {
-            var type = Image.ResolveType(code);
-            var size = Image.ResolveItemSize(code);
+            var type = Type.GetType($"System.{code}") ?? throw new ArgumentException(nameof(code));
+            var size = Marshal.SizeOf(type);
 
             var max = type
-                .GetFields(BindingFlags.Public | BindingFlags.Static)
-                .First(fi => fi.Name == "MinValue")
-                .GetValue(null);
+                      .GetFields(BindingFlags.Public | BindingFlags.Static)
+                      .FirstOrDefault(fi => fi.Name == "MinValue")
+                      ?.GetValue(null)
+                      ?? throw new InvalidOperationException("Unable to find `MinValue`.");
 
-            var image = new Image(TestByteArray, TestByteArray.Length / size, 1, code);
+            var image = new Image(_testByteArray, _testByteArray.Length / size, 1, code);
             for (var i = 0; i < image.Width; i++)
             {
                 var val = image[0, i] as IComparable;
@@ -369,15 +345,16 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Min(TypeCode code)
         {
-            var size = Image.ResolveItemSize(code);
-            var type = Image.ResolveType(code);
+            var type = Type.GetType($"System.{code}") ?? throw new ArgumentException(nameof(code));
+            var size = Marshal.SizeOf(type);
 
             var min = type
-                .GetFields(BindingFlags.Public | BindingFlags.Static)
-                .First(fi => fi.Name == "MaxValue")
-                .GetValue(null);
+                      .GetFields(BindingFlags.Public | BindingFlags.Static)
+                      .FirstOrDefault(fi => fi.Name == "MaxValue")
+                      ?.GetValue(null)
+                      ?? throw new InvalidOperationException("Unable to find `MaxValue`.");
 
-            var image = new Image(TestByteArray, TestByteArray.Length / size, 1, code);
+            var image = new Image(_testByteArray, _testByteArray.Length / size, 1, code);
             for (var i = 0; i < image.Width; i++)
             {
                 var val = image[0, i] as IComparable;
@@ -407,7 +384,7 @@ namespace Tests
             var type = Type.GetType("System." + code) ?? typeof(byte);
             var size = Marshal.SizeOf(type);
 
-            var image = new Image(TestByteArray, TestByteArray.Length / 2 / size, 2, code);
+            var image = new Image(_testByteArray, _testByteArray.Length / 2 / size, 2, code);
             var imageT = image.Transpose();
 
             Assert.Multiple(() =>
@@ -429,7 +406,7 @@ namespace Tests
         {
             var type = Type.GetType("System." + code, true);
             var size = Marshal.SizeOf(type);
-            var img = new Image(TestByteArray.Take(size * 2 * 2).ToArray(), 2, 2, code);
+            var img = new Image(_testByteArray.Take(size * 2 * 2).ToArray(), 2, 2, code);
             Assert.That(img.Type, Is.EqualTo(type));
         }
 
@@ -437,8 +414,8 @@ namespace Tests
         [Repeat(4)]
         public void Test_CastTo()
         {
-            var testArray = TestArray.ToArray();
-            var image = new Image(testArray, 4, TestArray.Length / 4);
+            var testArray = _testArray.ToArray();
+            var image = new Image(testArray, 4, _testArray.Length / 4);
             Assert.Multiple(() =>
             {
                 Assert.That(image.Equals(image.CastTo<int, int>(x => x)), Is.True);
@@ -448,7 +425,7 @@ namespace Tests
             var otherArray = testArray.Select(x => (double) x).ToArray();
 
             var otherImage = new Image(otherArray, 4, otherArray.Length / 4);
-            var srcCastImage = image.CastTo<int, double>(x => (double) x);
+            var srcCastImage = image.CastTo<int, double>(x => x);
 
             Assert.That(otherImage.Equals(srcCastImage, FloatingPointComparisonType.Exact), Is.True);
         }
@@ -457,17 +434,17 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Clamp(TypeCode code)
         {
-            var type = Type.GetType("System." + code) ?? typeof(byte);
-            var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
-            var image = new Image(TestByteArray, TestByteArray.Length / 4 / size, 4, code);
-            var f_mx = (Type.GetType("System." + code) ?? typeof(byte))
+            var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
+            var size = Marshal.SizeOf(type);
+            var image = new Image(_testByteArray, _testByteArray.Length / 4 / size, 4, code);
+            var fMx = type
                 .GetFields(BindingFlags.Public | BindingFlags.Static)
                 .First(fi => fi.Name == "MaxValue");
 
-            dynamic m_max = f_mx.GetValue(null);
+            dynamic mMax = fMx.GetValue(null);
 
-            var mx = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max / 2 : 5000;
-            var mn = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max / 4 : -5000;
+            var mx = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? mMax / 2 : 5000;
+            var mn = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? mMax / 4 : -5000;
 
             Assert.That(() => image.Clamp(100, 10),
                 Throws.InstanceOf<ArgumentException>());
@@ -535,23 +512,23 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Percentile(TypeCode code)
         {
-            var type = Type.GetType("System." + code) ?? typeof(byte);
+            var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
 
 
-            const int N = 1024;
-            var array = Array.CreateInstance(type, N);
-            var d_array = new double[N];
+            const int n = 1024;
+            var array = Array.CreateInstance(type, n);
+            var dArray = new double[n];
 
-            for (var i = 0; i < N / 4; i++)
+            for (var i = 0; i < n / 4; i++)
             for (var j = 0; j < 4; j++)
             {
                 array.SetValue(Convert.ChangeType((i + j) % 256, code), i * 4 + j);
-                d_array[i * 4 + j] = i + j;
+                dArray[i * 4 + j] = i + j;
             }
 
 
 
-            var image = new Image(array, 4, N / 4);
+            var image = new Image(array, 4, n / 4);
 
             dynamic mn = image.Min();
             dynamic mx = image.Max();
@@ -563,15 +540,13 @@ namespace Tests
                 Assert.That(image.Percentile(0), Is.EqualTo(mn));
                 Assert.That(image.Percentile(1), Is.EqualTo(mx));
             });
-            //var prcnt = image.Percentile(0.5);
-            //var factor = d_array.OrderBy(x => x).Count(x => x < prcnt) - 0.5 * array.Length;
         }
 
         [Test]
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.ReflectionSource))]
         public void Test_Reflection(int width, int height, TypeCode typeCode, ReflectionDirection direction)
         {
-            var type = Image.ResolveType(typeCode);
+            var type = Type.GetType($"System.{typeCode}") ?? throw new ArgumentException(nameof(typeCode));
 
             var array = Array.CreateInstance(type, width * height);
 
@@ -580,7 +555,7 @@ namespace Tests
                 array.SetValue(Convert.ChangeType(i % 256, type), i);
             }
 
-            var image = new Image(array, width, height, true);
+            var image = new Image(array, width, height, copy: true);
             var ref1 = image.Reflect(ReflectionDirection.Horizontal);
             var ref2 = ref1.Reflect(ReflectionDirection.Horizontal);
 
@@ -606,8 +581,8 @@ namespace Tests
         [Test]
         public void Test_Rotation_Direct()
         {
-            var width = 3;
-            var height = 4;
+            const int width = 3;
+            const int height = 4;
             ReadOnlySpan<int> source = stackalloc int[]
             {
                 1, 2, 3, 
@@ -638,6 +613,10 @@ namespace Tests
             };
 
             var image = Image.CreateTyped(source, width, height);
+            var directBy90Left = Image.CreateTyped(by90, height, width);
+            var directBy180Left = Image.CreateTyped(by180, width, height);
+            var directBy270Left = Image.CreateTyped(by270, height, width);
+
             var by90Left = image.Rotate(RotateBy.Deg90, RotationDirection.Left);
             var by90Right = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
 
@@ -662,6 +641,15 @@ namespace Tests
                     Assert.IsTrue(by90Left.Equals(by270Right), "Left90 == Right270");
                     Assert.IsTrue(by180Left.Equals(by180Right), "Left180 == Right180");
                     Assert.IsTrue(by270Left.Equals(by90Right), "Left270 == Right90");
+                    
+                    Assert.IsTrue(by90Left.Equals(directBy90Left), "Left90 == ByHandLeft90");
+                    Assert.IsTrue(by270Right.Equals(directBy90Left), "Right270 ==  ByHandLeft90");
+                    
+                    Assert.IsTrue(by180Left.Equals(directBy180Left), "Left180 == ByHandLeft180");
+                    Assert.IsTrue(by180Right.Equals(directBy180Left), "Right180 == ByHandRight180");
+                    
+                    Assert.IsTrue(by270Left.Equals(directBy270Left), "Left270 == ByHandLeft270");
+                    Assert.IsTrue(by90Right.Equals(directBy270Left), "Right90 == ByHandLeft270");
                 }
             );
         }
@@ -676,7 +664,7 @@ namespace Tests
             RotateBy rightRot
         )
         {
-            var type = Image.ResolveType(typeCode);
+            var type = Type.GetType($"System.{typeCode}")!;
 
             var array = Array.CreateInstance(type, width * height);
 
@@ -685,7 +673,7 @@ namespace Tests
                 array.SetValue(Convert.ChangeType(i % 256, type), i);
             }
 
-            var image = new Image(array, width, height, true);
+            var image = new Image(array, width, height, copy: true);
 
             var left = image.Rotate(leftRot, RotationDirection.Left);
             var right = image.Rotate(rightRot, RotationDirection.Right);
@@ -703,16 +691,16 @@ namespace Tests
             int nRep
         )
         {
-            var type = Image.ResolveType(typeCode);
+            var type = Type.GetType($"System.{typeCode}") ?? throw new ArgumentException(nameof(typeCode));
 
-            var array = Array.CreateInstance(type, width * height);
+            var array = Array.CreateInstance(type!, width * height);
 
             for (var i = 0; i < width * height; i++)
             {
                 array.SetValue(Convert.ChangeType(i % 256, type), i);
             }
 
-            ImageBase image = new Image(array, width, height, true);
+            ImageBase image = new Image(array, width, height, copy: true);
             var otherImage = image;
             for (var i = 0; i < nRep; i++)
             {

@@ -27,6 +27,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox", "Sandbox\Sandbox.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DipolImage", "DipolImage\DipolImage.csproj", "{02BCB125-645E-474C-9D7E-84E33BF10A1D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestProjects", "TestProjects", "{92606F8F-CB84-4211-806E-CB83689A4C8F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageTests", "TestProjects\ImageTests\ImageTests.csproj", "{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -229,6 +233,24 @@ Global
 		{02BCB125-645E-474C-9D7E-84E33BF10A1D}.Test|x64.Build.0 = Debug|Any CPU
 		{02BCB125-645E-474C-9D7E-84E33BF10A1D}.Test|x86.ActiveCfg = Debug|Any CPU
 		{02BCB125-645E-474C-9D7E-84E33BF10A1D}.Test|x86.Build.0 = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Debug|x64.Build.0 = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Debug|x86.Build.0 = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Release|x64.ActiveCfg = Release|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Release|x64.Build.0 = Release|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Release|x86.ActiveCfg = Release|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Release|x86.Build.0 = Release|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Test|Any CPU.ActiveCfg = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Test|Any CPU.Build.0 = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Test|x64.ActiveCfg = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Test|x64.Build.0 = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Test|x86.ActiveCfg = Debug|Any CPU
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D}.Test|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -241,5 +263,8 @@ Global
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E713E8D7-0A46-4381-B6BE-94BBFEDD500D} = {92606F8F-CB84-4211-806E-CB83689A4C8F}
 	EndGlobalSection
 EndGlobal
