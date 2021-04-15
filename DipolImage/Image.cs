@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 [assembly:InternalsVisibleTo("Tests")]
 namespace DipolImage
 {
-    [DebuggerDisplay(@"\{Image ({Height} x {Width}) of type {UnderlyingType}\}")]
+    [DebuggerDisplay(@"\{AllocatedImage ({Height} x {Width}) of type {UnderlyingType}\}")]
     [DataContract]
-    public class Image : ImageBase, IEquatable<Image>
+    public class AllocatedImage : Image, IEquatable<AllocatedImage>
     {
         private static ImageCtor Ctor { get; } = new ImageCtor();
         
@@ -18,12 +18,12 @@ namespace DipolImage
 
         public override object this[int i, int j] => _baseArray.GetValue(i * Width + j);
 
-        public Image(int width, int height, TypeCode type) : base(width, height, type)
+        public AllocatedImage(int width, int height, TypeCode type) : base(width, height, type)
         {
             _baseArray = Array.CreateInstance(Type, Width * Height);
         }
 
-        public Image(Array initialArray, int width, int height, bool copy = true) :
+        public AllocatedImage(Array initialArray, int width, int height, bool copy = true) :
             base(
                 width,
                 height,
@@ -44,7 +44,7 @@ namespace DipolImage
             }
         }
 
-        public Image(byte[] initialArray, int width, int height, TypeCode type) 
+        public AllocatedImage(byte[] initialArray, int width, int height, TypeCode type) 
             : this(
                 (initialArray 
                  ?? throw new ArgumentNullException("Argument is null: " + nameof(initialArray)))
@@ -56,7 +56,7 @@ namespace DipolImage
         {
         }
 
-        public Image(ReadOnlySpan<byte> initialArray, int width, int height, TypeCode type)
+        public AllocatedImage(ReadOnlySpan<byte> initialArray, int width, int height, TypeCode type)
             : this(width, height, type)
 
         {
@@ -79,13 +79,13 @@ namespace DipolImage
             return byteArray;
         }
 
-        public override ImageBase Copy()
-            => new Image(ByteView(), Width, Height, UnderlyingType);
+        public override Image Copy()
+            => new AllocatedImage(ByteView(), Width, Height, UnderlyingType);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(Image? other) => Equals(other, FloatingPointComparisonType.Loose);
+        public bool Equals(AllocatedImage? other) => Equals(other, FloatingPointComparisonType.Loose);
 
-        public bool Equals(Image? other, FloatingPointComparisonType compType)
+        public bool Equals(AllocatedImage? other, FloatingPointComparisonType compType)
         {
             if (UnderlyingType != other?.UnderlyingType ||
                 Width != other.Width ||
@@ -150,7 +150,7 @@ namespace DipolImage
         }
 
         public override bool Equals(object? obj) =>
-            obj is Image im && im.Equals(this);
+            obj is AllocatedImage im && im.Equals(this);
 
         public override int GetHashCode() => base.GetHashCode();
 
@@ -159,23 +159,23 @@ namespace DipolImage
 
         private protected override IImageConstructor GetConstructor() => Ctor;
 
-        public static Image CreateTyped<T>(ReadOnlySpan<T> data, int width, int height) where T : unmanaged
+        public static AllocatedImage CreateTyped<T>(ReadOnlySpan<T> data, int width, int height) where T : unmanaged
         {
             return new(MemoryMarshal.AsBytes(data), width, height, Type.GetTypeCode(typeof(T)));
         }
 
         private class ImageCtor : IImageConstructor
         {
-            public ImageBase CreateAndFill(int width, int height, TypeCode type, ImageInitializers.ImageInitializer initializer)
+            public Image CreateAndFill(int width, int height, TypeCode type, ImageInitializers.ImageInitializer initializer)
             {
-                var image = new Image(width, height, type);
+                var image = new AllocatedImage(width, height, type);
                 initializer(image.UnsafeAsBytes());
                 return image;
             }
 
-            public ImageBase CreateAndFill<TState>(int width, int height, TypeCode type, ImageInitializers.ImageInitializer<TState> initializer, TState state)
+            public Image CreateAndFill<TState>(int width, int height, TypeCode type, ImageInitializers.ImageInitializer<TState> initializer, TState state)
             {
-                var image = new Image(width, height, type);
+                var image = new AllocatedImage(width, height, type);
                 initializer(image.UnsafeAsBytes(), state);
                 return image;
             }

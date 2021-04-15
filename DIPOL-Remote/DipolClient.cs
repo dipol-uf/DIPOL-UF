@@ -34,6 +34,7 @@ using ANDOR_CS.DataStructures;
 using ANDOR_CS.Enums;
 using DIPOL_Remote.Faults;
 using DIPOL_Remote.Remote;
+using DipolImage;
 using FITS_CS;
 
 namespace DIPOL_Remote
@@ -379,7 +380,7 @@ namespace DIPOL_Remote
                     camIndex,
                     format,
                     token)
-                .ContinueWith(x => x.Result.Select(y => new DipolImage.Image(y.Payload, y.Width, y.Height,
+                .ContinueWith(x => x.Result.Select(y => (Image)new AllocatedImage(y.Payload, y.Width, y.Height,
                                         format == ImageFormat.SignedInt32 ? TypeCode.Int32 : TypeCode.UInt16))
                                     .ToArray(), token);
         

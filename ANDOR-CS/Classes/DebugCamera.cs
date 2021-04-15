@@ -225,7 +225,7 @@ namespace ANDOR_CS.Classes
 
             var data = new byte[matrixSize * sz];
             r.NextBytes(data);
-            return new Image(data, size.Width, size.Height,
+            return new AllocatedImage(data, size.Width, size.Height,
                 typeof(T) == typeof(ushort) ? TypeCode.UInt16 : TypeCode.Int32);
 
         }

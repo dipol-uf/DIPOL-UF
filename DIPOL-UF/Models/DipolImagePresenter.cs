@@ -447,7 +447,7 @@ namespace DIPOL_UF.Models
 
 
 
-            var fakeImage = new Image(dataArray, debugWidth, debugHeight, copy:false);
+            var fakeImage = new AllocatedImage(dataArray, debugWidth, debugHeight, copy:false);
 
             
 

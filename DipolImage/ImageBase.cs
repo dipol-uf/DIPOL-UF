@@ -11,9 +11,9 @@ using MathNet.Numerics;
 [assembly:InternalsVisibleTo("Tests")]
 namespace DipolImage
 {
-    [DebuggerDisplay(@"\{ImageBase ({Height} x {Width}) of type {UnderlyingType}\}")]
+    [DebuggerDisplay(@"\{Image ({Height} x {Width}) of type {UnderlyingType}\}")]
     [DataContract]
-    public abstract class ImageBase : IEquatable<ImageBase>
+    public abstract class Image : IEquatable<Image>
     {
         // One row of standard i32 image is 4 * 512 = 2048 bytes
         private const int StackAllocByteLimit = 2048;
@@ -87,7 +87,7 @@ namespace DipolImage
         public ref readonly T Get<T>(int i, int j) where T : unmanaged =>
             ref TypedView<T>()[i * Width + j];
 
-        protected ImageBase(int width, int height, TypeCode type)
+        protected Image(int width, int height, TypeCode type)
         {
             if(width < 1 || height < 1)
             {
@@ -335,7 +335,7 @@ namespace DipolImage
             return min;
         }
 
-        public abstract ImageBase Copy();
+        public abstract Image Copy();
 
         public void Clamp(double low, double high)
         {
@@ -645,7 +645,7 @@ namespace DipolImage
             };
         }
 
-        public Image CastTo<TS, TD>(Func<TS, TD> cast)
+        public AllocatedImage CastTo<TS, TD>(Func<TS, TD> cast)
             where TS : unmanaged
             where TD : unmanaged
         {
@@ -683,7 +683,7 @@ namespace DipolImage
                 }
             }
 
-            return new Image(buffer, width, height, false);
+            return new AllocatedImage(buffer, width, height, false);
         }
 
         public ReadOnlySpan<T> TypedView<T>() where T : unmanaged =>
@@ -691,11 +691,11 @@ namespace DipolImage
                 ? UnsafeAsSpan<T>()
                 : throw new ArrayTypeMismatchException();
 
-        public ImageBase Transpose() =>
+        public Image Transpose() =>
             GetConstructor()
                 .CreateAndFill(Height, Width, UnderlyingType, Transpose, this);
         
-        public ImageBase Reflect(ReflectionDirection direction)
+        public Image Reflect(ReflectionDirection direction)
         {
             return direction switch
             {
@@ -710,7 +710,7 @@ namespace DipolImage
             };
         }
         
-        public ImageBase Rotate(RotateBy rotateBy, RotationDirection direction) =>
+        public Image Rotate(RotateBy rotateBy, RotationDirection direction) =>
             (rotateBy, direction) switch
             {
                 (RotateBy.Deg0, _) => Copy(),
@@ -737,9 +737,9 @@ namespace DipolImage
             };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(ImageBase? other) => Equals(other, FloatingPointComparisonType.Loose);
+        public bool Equals(Image? other) => Equals(other, FloatingPointComparisonType.Loose);
 
-        public bool Equals(ImageBase? other, FloatingPointComparisonType compType)
+        public bool Equals(Image? other, FloatingPointComparisonType compType)
         {
             if (UnderlyingType != other?.UnderlyingType ||
                 Width != other.Width ||
@@ -804,7 +804,7 @@ namespace DipolImage
         }
 
         public override bool Equals(object? obj) =>
-            obj is ImageBase im && im.Equals(this);
+            obj is Image im && im.Equals(this);
 
         public override int GetHashCode()
         {
@@ -838,7 +838,7 @@ namespace DipolImage
 
         private protected abstract IImageConstructor GetConstructor();
 
-        private static void ReflectVertically(Span<byte> dataView, ImageBase image)
+        private static void ReflectVertically(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -875,7 +875,7 @@ namespace DipolImage
             }
         }
 
-        private static void ReflectHorizontally(Span<byte> dataView, ImageBase image)
+        private static void ReflectHorizontally(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -902,7 +902,7 @@ namespace DipolImage
             }
         }
 
-        private static void RotateBy90CounterClock(Span<byte> dataView, ImageBase image)
+        private static void RotateBy90CounterClock(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -925,7 +925,7 @@ namespace DipolImage
             }
         }
 
-        private static void RotateBy180CounterClock(Span<byte> dataView, ImageBase image)
+        private static void RotateBy180CounterClock(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -965,7 +965,7 @@ namespace DipolImage
             }
         }
 
-        private static void RotateBy270CounterClock(Span<byte> dataView, ImageBase image)
+        private static void RotateBy270CounterClock(Span<byte> dataView, Image image)
         {
             var size = TypeSizes[image.UnderlyingType];
             var width = image.Width;
@@ -988,7 +988,7 @@ namespace DipolImage
             }
         }
 
-        private static void Transpose(Span<byte> dataView, ImageBase image)
+        private static void Transpose(Span<byte> dataView, Image image)
         {
             var width = image.Width;
             var height = image.Height;

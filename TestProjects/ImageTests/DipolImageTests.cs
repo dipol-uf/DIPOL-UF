@@ -12,7 +12,7 @@ namespace ImageTests
 
     public class DipolImageTests_DataProvider
     {
-        private static IEnumerable<TypeCode> AllowedTypes { get; } = ImageBase.AllowedPixelTypes;
+        private static IEnumerable<TypeCode> AllowedTypes { get; } = Image.AllowedPixelTypes;
 
         private static IEnumerable<(int Width, int Height)> TransformSizes { get; } = new[]
         {
@@ -112,18 +112,18 @@ namespace ImageTests
             {
                 // ReSharper disable for method ObjectCreationAsStatement
 
-                Assert.Throws<ArgumentNullException>(() => new Image(null!, 2, 3));
-                Assert.Throws<ArgumentOutOfRangeException>(() => new Image(_testArray, 0, 3));
-                Assert.Throws<ArgumentOutOfRangeException>(() => new Image(_testArray, 10, 0));
-                Assert.Throws<ArgumentException>(() => new Image(new[] {"s"}, 1, 1));
+                Assert.Throws<ArgumentNullException>(() => new AllocatedImage(null!, 2, 3));
+                Assert.Throws<ArgumentOutOfRangeException>(() => new AllocatedImage(_testArray, 0, 3));
+                Assert.Throws<ArgumentOutOfRangeException>(() => new AllocatedImage(_testArray, 10, 0));
+                Assert.Throws<ArgumentException>(() => new AllocatedImage(new[] {"s"}, 1, 1));
 
-                Assert.Throws<ArgumentNullException>(() => new Image(null!, 1, 1, TypeCode.Int16));
+                Assert.Throws<ArgumentNullException>(() => new AllocatedImage(null!, 1, 1, TypeCode.Int16));
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
-                    new Image(_testByteArray, 0, 3, TypeCode.Int32));
+                    new AllocatedImage(_testByteArray, 0, 3, TypeCode.Int32));
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
-                    new Image(_testByteArray, 10, 0, TypeCode.Int32));
-                Assert.Throws<ArgumentException>(() => new Image(_testByteArray, 1, 1, TypeCode.Char));
-                Assert.Throws<ArgumentException>(() => new Image(_testByteArray, 1, 1, (TypeCode) 45500));
+                    new AllocatedImage(_testByteArray, 10, 0, TypeCode.Int32));
+                Assert.Throws<ArgumentException>(() => new AllocatedImage(_testByteArray, 1, 1, TypeCode.Char));
+                Assert.Throws<ArgumentException>(() => new AllocatedImage(_testByteArray, 1, 1, (TypeCode) 45500));
             });
         }
 
@@ -132,7 +132,7 @@ namespace ImageTests
         {
             var initArray = new[] {1, 2, 3, 4, 5, 6};
 
-            var image = new Image(initArray, 2, 3);
+            var image = new AllocatedImage(initArray, 2, 3);
 
             Assert.That(
                 initArray[0] == image.Get<int>(0, 0) &&
@@ -168,7 +168,7 @@ namespace ImageTests
                 bytes = (byte[]) mi.Invoke(null, new[] {temp})!;
             }
 
-            var image = new Image(bytes, 1, 1, code);
+            var image = new AllocatedImage(bytes, 1, 1, code);
 
             Assert.Multiple(() =>
             {
@@ -189,8 +189,8 @@ namespace ImageTests
             var arr = _veryLargeByteArray.Take(size * 47 * 31).ToArray();
 
 
-            var image1 = new Image(arr, 47, 31, code);
-            var image2 = new Image(arr.AsSpan(), 47, 31, code);
+            var image1 = new AllocatedImage(arr, 47, 31, code);
+            var image2 = new AllocatedImage(arr.AsSpan(), 47, 31, code);
 
             Assert.IsTrue(image1.Equals(image2));
 
@@ -208,7 +208,7 @@ namespace ImageTests
             initArray.SetValue(Convert.ChangeType(val2, code), 1);
 
 
-            var image = new Image(initArray, 2, 1);
+            var image = new AllocatedImage(initArray, 2, 1);
 
             ReadOnlySpan<byte> bytes = image.ByteView();
             byte[] reconstructed;
@@ -261,14 +261,14 @@ namespace ImageTests
             }
 
 
-            var image1 = new Image(arr, 2, 2, code);
-            var image2 = new Image(arr, 2, 2, code);
+            var image1 = new AllocatedImage(arr, 2, 2, code);
+            var image2 = new AllocatedImage(arr, 2, 2, code);
 
-            var wrImage1 = new Image(arr.Take(size * 2).ToArray(), 2, 1, code);
-            var wrImage2 = new Image(arr.Take(size * 2).ToArray(), 1, 2, code);
-            var wrImage3 = new Image(arr, 2, 2,
+            var wrImage1 = new AllocatedImage(arr.Take(size * 2).ToArray(), 2, 1, code);
+            var wrImage2 = new AllocatedImage(arr.Take(size * 2).ToArray(), 1, 2, code);
+            var wrImage3 = new AllocatedImage(arr, 2, 2,
                 code == TypeCode.Int16 ? TypeCode.UInt16 : TypeCode.Int16);
-            var wrImage4 = new Image(tempArr, 2, 2, code);
+            var wrImage4 = new AllocatedImage(tempArr, 2, 2, code);
 
             Assert.Multiple(() =>
                 {
@@ -291,7 +291,7 @@ namespace ImageTests
             var array = new byte[1024];
             _r.NextBytes(array);
 
-            var img = new Image(array, 32, 16, TypeCode.Int16);
+            var img = new AllocatedImage(array, 32, 16, TypeCode.Int16);
             Assert.That(img.Equals(img.Copy()), Is.True);
         }
 
@@ -309,10 +309,10 @@ namespace ImageTests
             var tempArr = new byte[arr.Length];
             Array.Copy(arr, tempArr, tempArr.Length);
             tempArr[0] = (byte) (tempArr[0] == 0 ? 127 : 0);
-            var image1 = new Image(arr, 2, 2, code);
-            var image2 = new Image(arr, 2, 2, code);
+            var image1 = new AllocatedImage(arr, 2, 2, code);
+            var image2 = new AllocatedImage(arr, 2, 2, code);
 
-            var wrImage1 = new Image(tempArr, 2, 2, code);
+            var wrImage1 = new AllocatedImage(tempArr, 2, 2, code);
 
             Assert.Multiple(() =>
             {
@@ -336,7 +336,7 @@ namespace ImageTests
                       ?.GetValue(null)
                       ?? throw new InvalidOperationException("Unable to find `MinValue`.");
 
-            var image = new Image(_testByteArray, _testByteArray.Length / size, 1, code);
+            var image = new AllocatedImage(_testByteArray, _testByteArray.Length / size, 1, code);
             for (var i = 0; i < image.Width; i++)
             {
                 var val = image[0, i] as IComparable;
@@ -365,7 +365,7 @@ namespace ImageTests
                       ?.GetValue(null)
                       ?? throw new InvalidOperationException("Unable to find `MaxValue`.");
 
-            var image = new Image(_testByteArray, _testByteArray.Length / size, 1, code);
+            var image = new AllocatedImage(_testByteArray, _testByteArray.Length / size, 1, code);
             for (var i = 0; i < image.Width; i++)
             {
                 var val = image[0, i] as IComparable;
@@ -395,7 +395,7 @@ namespace ImageTests
             var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
             var size = Marshal.SizeOf(type);
 
-            var image = new Image(_testByteArray, _testByteArray.Length / 2 / size, 2, code);
+            var image = new AllocatedImage(_testByteArray, _testByteArray.Length / 2 / size, 2, code);
             var imageT = image.Transpose();
 
             Assert.Multiple(() =>
@@ -417,7 +417,7 @@ namespace ImageTests
         {
             var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
             var size = Marshal.SizeOf(type);
-            var img = new Image(_testByteArray.Take(size * 2 * 2).ToArray(), 2, 2, code);
+            var img = new AllocatedImage(_testByteArray.Take(size * 2 * 2).ToArray(), 2, 2, code);
             Assert.That(img.Type, Is.EqualTo(type));
         }
 
@@ -426,7 +426,7 @@ namespace ImageTests
         public void Test_CastTo()
         {
             var testArray = _testArray.ToArray();
-            var image = new Image(testArray, 4, _testArray.Length / 4);
+            var image = new AllocatedImage(testArray, 4, _testArray.Length / 4);
             Assert.Multiple(() =>
             {
                 Assert.That(image.Equals(image.CastTo<int, int>(x => x)), Is.True);
@@ -435,7 +435,7 @@ namespace ImageTests
             });
             var otherArray = testArray.Select(x => (double) x).ToArray();
 
-            var otherImage = new Image(otherArray, 4, otherArray.Length / 4);
+            var otherImage = new AllocatedImage(otherArray, 4, otherArray.Length / 4);
             var srcCastImage = image.CastTo<int, double>(x => x);
 
             Assert.That(otherImage.Equals(srcCastImage, FloatingPointComparisonType.Exact), Is.True);
@@ -447,7 +447,7 @@ namespace ImageTests
         {
             var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
             var size = Marshal.SizeOf(type);
-            var image = new Image(_testByteArray, _testByteArray.Length / 4 / size, 4, code);
+            var image = new AllocatedImage(_testByteArray, _testByteArray.Length / 4 / size, 4, code);
             var fMx = type
                 .GetFields(BindingFlags.Public | BindingFlags.Static)
                 .First(fi => fi.Name == "MaxValue");
@@ -504,7 +504,7 @@ namespace ImageTests
                 }
             }
 
-            var image = new Image(arr, 1024, 4);
+            var image = new AllocatedImage(arr, 1024, 4);
 
             Assert.That(() => image.Scale(100, 10),
                 Throws.InstanceOf<ArgumentException>());
@@ -546,7 +546,7 @@ namespace ImageTests
 
 
 
-            var image = new Image(array, 4, n / 4);
+            var image = new AllocatedImage(array, 4, n / 4);
 
             dynamic mn = image.Min();
             dynamic mx = image.Max();
@@ -573,7 +573,7 @@ namespace ImageTests
                 array.SetValue(Convert.ChangeType(i % 128, type), i);
             }
 
-            var image = new Image(array, width, height, copy: true);
+            var image = new AllocatedImage(array, width, height, copy: true);
             var ref1 = image.Reflect(ReflectionDirection.Horizontal);
             var ref2 = ref1.Reflect(ReflectionDirection.Horizontal);
 
@@ -586,7 +586,7 @@ namespace ImageTests
         [Test]
         public void Test_Reflection_Direct()
         {
-            var image = Image.CreateTyped<int>(stackalloc int[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2}, 3, 4);
+            var image = AllocatedImage.CreateTyped<int>(stackalloc int[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2}, 3, 4);
 
             var v1 = image.Reflect(ReflectionDirection.Vertical).TypedView<int>();
             Assert.IsTrue(v1.SequenceEqual(stackalloc int[] {0, 1, 2, 7, 8, 9, 4, 5, 6, 1, 2, 3}));
@@ -630,10 +630,10 @@ namespace ImageTests
                 2, 9, 6, 3,
             };
 
-            var image = Image.CreateTyped(source, width, height);
-            var directBy90Left = Image.CreateTyped(by90, height, width);
-            var directBy180Left = Image.CreateTyped(by180, width, height);
-            var directBy270Left = Image.CreateTyped(by270, height, width);
+            var image = AllocatedImage.CreateTyped(source, width, height);
+            var directBy90Left = AllocatedImage.CreateTyped(by90, height, width);
+            var directBy180Left = AllocatedImage.CreateTyped(by180, width, height);
+            var directBy270Left = AllocatedImage.CreateTyped(by270, height, width);
 
             var by90Left = image.Rotate(RotateBy.Deg90, RotationDirection.Left);
             var by90Right = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
@@ -706,10 +706,10 @@ namespace ImageTests
                 2, 9, 6, 3,
             };
 
-            var image = Image.CreateTyped(source, width, height);
-            var directBy90Left = Image.CreateTyped(by90, height, width);
-            var directBy180Left = Image.CreateTyped(by180, width, height);
-            var directBy270Left = Image.CreateTyped(by270, height, width);
+            var image = AllocatedImage.CreateTyped(source, width, height);
+            var directBy90Left = AllocatedImage.CreateTyped(by90, height, width);
+            var directBy180Left = AllocatedImage.CreateTyped(by180, width, height);
+            var directBy270Left = AllocatedImage.CreateTyped(by270, height, width);
 
             var by90Left = image.Rotate(RotateBy.Deg90, RotationDirection.Left);
             var by90Right = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
@@ -782,10 +782,10 @@ namespace ImageTests
                 2, 9, 6, 3,
             };
 
-            var image = Image.CreateTyped(source, width, height);
-            var directBy90Left = Image.CreateTyped(by90, height, width);
-            var directBy180Left = Image.CreateTyped(by180, width, height);
-            var directBy270Left = Image.CreateTyped(by270, height, width);
+            var image = AllocatedImage.CreateTyped(source, width, height);
+            var directBy90Left = AllocatedImage.CreateTyped(by90, height, width);
+            var directBy180Left = AllocatedImage.CreateTyped(by180, width, height);
+            var directBy270Left = AllocatedImage.CreateTyped(by270, height, width);
 
             var by90Left = image.Rotate(RotateBy.Deg90, RotationDirection.Left);
             var by90Right = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
@@ -843,7 +843,7 @@ namespace ImageTests
                 array.SetValue(Convert.ChangeType(i % 128, type), i);
             }
 
-            var image = new Image(array, width, height, copy: true);
+            var image = new AllocatedImage(array, width, height, copy: true);
 
             var left = image.Rotate(leftRot, RotationDirection.Left);
             var right = image.Rotate(rightRot, RotationDirection.Right);
@@ -870,7 +870,7 @@ namespace ImageTests
                 array.SetValue(Convert.ChangeType(i % 128, type), i);
             }
 
-            ImageBase image = new Image(array, width, height, copy: true);
+            Image image = new AllocatedImage(array, width, height, copy: true);
             var otherImage = image;
             for (var i = 0; i < nRep; i++)
             {
