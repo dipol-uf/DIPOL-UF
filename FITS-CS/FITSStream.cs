@@ -261,15 +261,15 @@ namespace FITS_CS
             switch (type)
             {
                 case FitsImageType.UInt8:
-                    return new Image(GetData<byte>(), width, height);
+                    return new AllocatedImage(GetData<byte>(), width, height);
                 case FitsImageType.Int16:
-                    return new Image(GetData<short>(), width, height);
+                    return new AllocatedImage(GetData<short>(), width, height);
                 case FitsImageType.Int32:
-                    return new Image(GetData<int>(), width, height);
+                    return new AllocatedImage(GetData<int>(), width, height);
                 case FitsImageType.Single:
-                    return new Image(GetData<float>(), width, height);
+                    return new AllocatedImage(GetData<float>(), width, height);
                 case FitsImageType.Double:
-                    return new Image(GetData<double>(), width, height);
+                    return new AllocatedImage(GetData<double>(), width, height);
                 default:
                     throw new NotSupportedException($"Fits image of type {type} is not supported.");
             }

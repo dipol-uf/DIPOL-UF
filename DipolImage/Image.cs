@@ -1,146 +1,50 @@
 ﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using MathNet.Numerics;
 
 [assembly:InternalsVisibleTo("Tests")]
 namespace DipolImage
 {
-    [DebuggerDisplay(@"\{Image ({Height} x {Width}) of type {UnderlyingType}\}")]
+    [DebuggerDisplay(@"\{AllocatedImage ({Height} x {Width}) of type {UnderlyingType}\}")]
     [DataContract]
-    public class Image : IEqualityComparer<Image>, IEquatable<Image>
+    public class AllocatedImage : Image, IEquatable<AllocatedImage>
     {
-        // One row of standard i32 image is 4 * 512 = 2048 bytes
-        private const int StackAllocByteLimit = 2048;
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly TypeCode[] AllowedTypes =
-         {
-            TypeCode.Double,
-            TypeCode.Single,
-            TypeCode.UInt16,
-            TypeCode.Int16,
-            TypeCode.UInt32,
-            TypeCode.Int32,
-            TypeCode.Byte
-        };
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly Dictionary<TypeCode, Type> TypeCodeMap = new()
-        {
-            {TypeCode.Double, typeof(double)},
-            {TypeCode.Single, typeof(float)},
-            {TypeCode.UInt16, typeof(ushort)},
-            {TypeCode.Int16, typeof(short)},
-            {TypeCode.UInt32, typeof(uint)},
-            {TypeCode.Int32, typeof(int)},
-            {TypeCode.Byte, typeof(byte)}
-        };
-
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private static readonly Dictionary<TypeCode, int> TypeSizes = new()
-        {
-            {TypeCode.Double, sizeof(double)},
-            {TypeCode.Single, sizeof(float)},
-            {TypeCode.UInt16, sizeof(ushort)},
-            {TypeCode.Int16, sizeof(short)},
-            {TypeCode.UInt32, sizeof(uint)},
-            {TypeCode.Int32, sizeof(int)},
-            {TypeCode.Byte, sizeof(byte)}
-        };
-
-
+        private static ImageCtor Ctor { get; } = new ImageCtor();
+        
         [DataMember]
         private readonly Array _baseArray;
 
-        public static IReadOnlyCollection<TypeCode> AllowedPixelTypes
-            => AllowedTypes;
+        public override object this[int i, int j] => _baseArray.GetValue(i * Width + j);
 
-        [field: DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        [field: DataMember]
-        public TypeCode UnderlyingType { get; }
-
-        [field: DataMember]
-        public int Width
+        public AllocatedImage(int width, int height, TypeCode type) : base(width, height, type)
         {
-            get;
-        }
-        [field: DataMember]
-        public int Height
-        {
-            get;
+            _baseArray = Array.CreateInstance(Type, Width * Height);
         }
 
-        public int ItemSizeInBytes { get; }
+        public AllocatedImage(Array initialArray, int width, int height, bool copy = true) :
+            base(
+                width,
+                height,
+                initialArray is { } notNullArray
+                    ? Type.GetTypeCode(notNullArray.GetType().GetElementType())
+                    : throw new ArgumentNullException("Argument is null: " + nameof(initialArray))
+            )
 
-        public Type Type { get; }
-
-        public object this[int i, int j] => _baseArray.GetValue(i * Width + j);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly T Get<T>(int i, int j) where T : unmanaged =>
-            ref TypedView<T>()[i * Width + j];
-
-        private Image(int width, int height, TypeCode type)
         {
-            if(width < 1 || height < 1)
-            {
-                throw new ArgumentOutOfRangeException($"Image size is incorrect [{width}, {height}].");
-            }
-
-            if (!Enum.IsDefined(typeof(TypeCode), type))
-            {
-                throw new ArgumentException($"Parameter type ({type}) is not defined in {typeof(TypeCode)}.");
-            }
-
-            if (!AllowedTypes.Contains(type))
-            {
-                throw new ArgumentException($"Specified type {type} is not allowed.");
-            }
-
-            Width = width;
-            Height = height;
-            UnderlyingType = type;
-            ItemSizeInBytes = ResolveItemSize(type);
-            Type = ResolveType(type);
-            _baseArray = Array.CreateInstance(Type, width * height);
-        }
-
-        public Image(Array initialArray, int width, int height, bool copy = true)
-        {
-            if (initialArray == null)
-                throw new ArgumentNullException("Argument is null: " + nameof(initialArray));
-
-            if (width < 1 || height < 1)
-                throw new ArgumentOutOfRangeException($"Image size is incorrect [{width}, {height}].");
-
-            var val = initialArray.GetValue(0);
-            var typeCode = Type.GetTypeCode(val.GetType());
-
-            if (!AllowedTypes.Contains(typeCode))
-                throw new ArgumentException($"Provided array's base type {val.GetType()} is not allowed.");
-
-            UnderlyingType = typeCode;
-            Width = width;
-            Height = height;
-            ItemSizeInBytes = ResolveItemSize(typeCode);
-            Type = ResolveType(typeCode);
             if (copy)
             {
                 _baseArray = Array.CreateInstance(Type, width * height);
                 Buffer.BlockCopy(initialArray, 0, _baseArray, 0, width * height * ItemSizeInBytes);
             }
-            else _baseArray = initialArray;
-
+            else
+            {
+                _baseArray = initialArray;
+            }
         }
 
-        public Image(byte[] initialArray, int width, int height, TypeCode type) 
+        public AllocatedImage(byte[] initialArray, int width, int height, TypeCode type) 
             : this(
                 (initialArray 
                  ?? throw new ArgumentNullException("Argument is null: " + nameof(initialArray)))
@@ -152,7 +56,7 @@ namespace DipolImage
         {
         }
 
-        public Image(ReadOnlySpan<byte> initialArray, int width, int height, TypeCode type)
+        public AllocatedImage(ReadOnlySpan<byte> initialArray, int width, int height, TypeCode type)
             : this(width, height, type)
 
         {
@@ -165,7 +69,7 @@ namespace DipolImage
         }
 
         [Obsolete("Use `" + nameof(ByteView) + "`.")]
-        public byte[] GetBytes()
+        public override byte[] GetBytes()
         {
             var size = ItemSizeInBytes;
             var byteArray = new byte[Width * Height * size];
@@ -175,574 +79,13 @@ namespace DipolImage
             return byteArray;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlySpan<byte> ByteView() => UnsafeAsBytes();
-
-        public double Max()
-        {
-            double max;
-
-            switch (UnderlyingType)
-            {
-                case TypeCode.Byte:
-                {
-                    var localMax = byte.MinValue;
-                    var arr = (byte[]) _baseArray;
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        localMax = Ops.Max(arr[i], localMax);
-                    }
-
-                    max = localMax;
-                    break;
-                }
-                case TypeCode.UInt16:
-                {
-                    var localMax = ushort.MinValue;
-                    var arr = (ushort[])_baseArray;
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        localMax = Ops.Max(arr[i], localMax);
-                    }
-
-                    max = localMax;
-                    break;
-                }
-                case TypeCode.Int16:
-                {
-                    var localMax = short.MinValue;
-                    var arr = (short[])_baseArray;
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        localMax = Ops.Max(arr[i], localMax);
-                    }
-
-                    max = localMax;
-                    break;
-                }
-                case TypeCode.UInt32:
-                {
-                    var localMax = uint.MinValue;
-                    var arr = (uint[])_baseArray;
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        localMax = Ops.Max(arr[i], localMax);
-                    }
-
-                    max = localMax;
-                    break;
-                }
-                case TypeCode.Int32:
-                {
-                    var localMax = int.MinValue;
-                    var arr = (int[])_baseArray;
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        localMax = Ops.Max(arr[i], localMax);
-                    }
-
-                    max = localMax;
-                    break;
-                }
-                case TypeCode.Single:
-                {
-                    var arr = (float[]) _baseArray;
-                    var localMax = arr[0];
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        localMax = Ops.Max(arr[i], localMax);
-                    }
-
-                    max = localMax;
-                    break;
-                }
-                default:
-                {
-                    var arr = (double[]) _baseArray;
-                    var localMax = arr[0];
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        localMax = Ops.Max(arr[i], localMax);
-                    }
-
-                    max = localMax;
-                    break;
-                }
-
-            }
-
-            return max;
-        }
-
-        public double Min()
-        {
-            double min;
-
-            switch (UnderlyingType)
-            {
-                case TypeCode.Byte:
-                {
-                    var localMin = byte.MaxValue;
-                    var arr = (byte[])_baseArray;
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        localMin = Ops.Min(arr[i], localMin);
-                    }
-
-                    min = localMin;
-                    break;
-                }
-                case TypeCode.UInt16:
-                    {
-                        var localMin = ushort.MaxValue;
-                        var arr = (ushort[])_baseArray;
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            localMin = Ops.Min(arr[i], localMin);
-                        }
-
-                        min = localMin;
-                        break;
-                    }
-                case TypeCode.Int16:
-                    {
-                        var localMin = short.MaxValue;
-                        var arr = (short[])_baseArray;
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            localMin = Ops.Min(arr[i], localMin);
-                        }
-
-                        min = localMin;
-                        break;
-                    }
-                case TypeCode.UInt32:
-                    {
-                        var localMin = uint.MaxValue;
-                        var arr = (uint[])_baseArray;
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            localMin = Ops.Min(arr[i], localMin);
-                        }
-
-                        min = localMin;
-                        break;
-                    }
-                case TypeCode.Int32:
-                    {
-                        var localMin = int.MaxValue;
-                        var arr = (int[])_baseArray;
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            localMin = Ops.Min(arr[i], localMin);
-                        }
-
-                        min = localMin;
-                        break;
-                    }
-                case TypeCode.Single:
-                {
-                    var arr = (float[]) _baseArray;
-                    var localMin = arr[0];
-                    for (var i = 1; i < arr.Length; i++)
-                    {
-                        localMin = Ops.Min(arr[i], localMin);
-                    }
-
-                    min = localMin;
-                    break;
-                }
-                default:
-                {
-                    var arr = (double[]) _baseArray;
-                    var localMin = arr[0];
-                    for (var i = 1; i < arr.Length; i++)
-                    {
-                        localMin = Ops.Min(arr[i], localMin);
-                    }
-
-                    min = localMin;
-                    break;
-                }
-            }
-
-
-
-            return min;
-        }
-
-        public Image Copy()
-            => new(ByteView(), Width, Height, UnderlyingType);
-
-        public void Clamp(double low, double high)
-        {
-            if (high <= low)
-                throw new ArgumentException(@"[high] should be greater than [low]");
-
-            switch (UnderlyingType)
-            {
-                case TypeCode.Byte:
-                {
-                    var locLow = (byte) (Math.Floor(low));
-                    var locHigh = (byte) (Math.Ceiling(high));
-                    var arr = UnsafeAsSpan<byte>();
-
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
-                    }
-
-                    break;
-                }
-
-                case TypeCode.UInt16:
-                {
-                    var locLow = (ushort) (Math.Floor(low));
-                    var locHigh = (ushort) (Math.Ceiling(high));
-                    var arr = UnsafeAsSpan<ushort>();
-
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
-                    }
-                    break;
-                }
-                case TypeCode.Int16:
-                {
-                    var locLow = (short) (Math.Floor(low));
-                    var locHigh = (short) (Math.Ceiling(high));
-                    var arr = UnsafeAsSpan<short>();
-
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
-                    }
-                    break;
-                }
-                case TypeCode.UInt32:
-                {
-                    var locLow = (uint) (Math.Floor(low));
-                    var locHigh = (uint) (Math.Ceiling(high));
-                    var arr = UnsafeAsSpan<uint>();
-
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
-                    }
-                    break;
-                }
-                case TypeCode.Int32:
-                {
-                    var locLow = (int) (Math.Floor(low));
-                    var locHigh = (int) (Math.Ceiling(high));
-                    var arr = UnsafeAsSpan<int>();
-
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
-                    }
-                    break;
-                }
-                case TypeCode.Single:
-                {
-                    var locLow = (float) (low);
-                    var locHigh = (float) (high);
-                    var arr = UnsafeAsSpan<float>();
-
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        arr[i] = Ops.Clamp(arr[i], locLow, locHigh);
-                    }
-                    break;
-                }
-                default:
-                {
-                    var arr = UnsafeAsSpan<double>();
-
-                    for (var i = 0; i < arr.Length; i++)
-                    {
-                        arr[i] = Ops.Clamp(arr[i], low, high);
-                    }
-                    break;
-                }
-
-            }
-        }
-
-        public void Scale(double gMin, double gMax)
-        {
-            if (gMax <= gMin)
-                throw new ArgumentException(@"[high] should be greater than [low]");
-
-            var min = Min();
-            var max = Max();
-
-            var factor = 1.0 * (gMax - gMin) / (max - min);
-
-
-            switch (UnderlyingType)
-            {
-                case TypeCode.Byte:
-                {
-                    var arr = UnsafeAsSpan<byte>();
-
-                    if (min.AlmostEqual(max))
-                    {
-                        var val = (byte) (0.5 * (gMin + gMax));
-                        arr.Fill(val);
-                    }
-                    else
-                    {
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = (byte) (gMin + factor * (arr[i] - min));
-                        }
-                    }
-
-                    break;
-                }
-                case TypeCode.UInt16:
-                {
-                    var arr = UnsafeAsSpan<ushort>();
-
-                    if (min.AlmostEqual(max))
-                    {
-                        var val = (ushort) (0.5 * (gMin + gMax));
-                        arr.Fill(val);
-                    }
-                    else
-                    {
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = (ushort) (gMin + factor * (arr[i] - min));
-                        }
-                    }
-
-
-                    break;
-                }
-                case TypeCode.Int16:
-                {
-                    var arr = UnsafeAsSpan<short>();
-
-                    if (min.AlmostEqual(max))
-                    {
-                        var val = (short) (0.5 * (gMin + gMax));
-                        arr.Fill(val);
-                    }
-                    else
-                    {
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = (short) (gMin + factor * (arr[i] - min));
-                        }
-                    }
-
-                    break;
-                }
-                case TypeCode.UInt32:
-                {
-                    var arr = UnsafeAsSpan<uint>();
-
-                    if (min.AlmostEqual(max))
-                    {
-                        var val = (uint) (0.5 * (gMin + gMax));
-                        arr.Fill(val);
-                    }
-                    else
-                    {
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = (uint) (gMin + factor * (arr[i] - min));
-                        }
-                    }
-
-                    break;
-                }
-                case TypeCode.Int32:
-                {
-                    var arr = UnsafeAsSpan<int>();
-
-                    if (min.AlmostEqual(max))
-                    {
-                        var val = (int) (0.5 * (gMin + gMax));
-                        arr.Fill(val);
-                    }
-                    else
-                    {
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = (int)(gMin + factor * (arr[i] - min));
-                        }
-                    }
-
-                    break;
-                }
-                case TypeCode.Single:
-                {
-                    var arr = UnsafeAsSpan<float>();
-
-                    if (min.AlmostEqual(max))
-                    {
-                        var val = (float) (0.5 * (gMin + gMax));
-                        arr.Fill(val);
-                    }
-                    else
-                    {
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = (float) (gMin + factor * (arr[i] - min));
-                        }
-                    }
-
-                    break;
-                }
-                default:
-                {
-                    var arr = UnsafeAsSpan<double>();
-
-                    if (min.AlmostEqual(max))
-                    {
-                        var val = 0.5 * (gMin + gMax);
-                        arr.Fill(val);
-                    }
-
-                    else
-                    {
-                        for (var i = 0; i < arr.Length; i++)
-                        {
-                            arr[i] = gMin + factor * (arr[i] - min);
-                        }
-                    }
-
-                    break;
-                }
-            }
-        }
-
-        public double Percentile(double lvl)
-        {
-            if (lvl < 0 | lvl > 1.0)
-                throw new ArgumentOutOfRangeException($"{nameof(lvl)} parameter is out of range ({lvl} should be in [0, 1]).");
-
-            if (lvl.AlmostEqual(0.0))
-            {
-                return Min();
-            }
-
-            if (lvl.AlmostEqual(1.0))
-            {
-                return Max();
-            }
-            
-            var length = (int)Math.Ceiling(lvl * Width * Height);
-            return UnderlyingType switch
-            {
-                TypeCode.Byte => Percentile<byte>(length),
-                TypeCode.UInt16 => Percentile<ushort>(length),
-                TypeCode.Int16 => Percentile<short>(length),
-                TypeCode.UInt32 => Percentile<uint>(length),
-                TypeCode.Int32 => Percentile<int>(length),
-                TypeCode.Single => Percentile<float>(length),
-                _ => Percentile<double>(length)
-            };
-        }
-
-        public Image CastTo<TS, TD>(Func<TS, TD> cast)
-            where TS : unmanaged
-            where TD : unmanaged
-        {
-            const int unrollBy = 8;
-            if (typeof(TS) != Type)
-            {
-                throw new TypeAccessException($"Source type {typeof(TS)} differs from underlying type with code {UnderlyingType}.");
-            }
-
-            var (width, height) = (Width, Height);
-            
-            var buffer = new TD[width * height];
-            var view = TypedView<TS>();
-
-            var i = 0;
-            for (; i < width * height; i += unrollBy)
-            {
-                // Unroll by 8
-                buffer[i] = cast(view[i]);
-                buffer[i + 1] = cast(view[i + 1]);
-                buffer[i + 2] = cast(view[i + 2]);
-                buffer[i + 3] = cast(view[i + 3]);
-                buffer[i + 4] = cast(view[i + 4]);
-                buffer[i + 5] = cast(view[i + 5]);
-                buffer[i + 6] = cast(view[i + 6]);
-                buffer[i + 7] = cast(view[i + 7]);
-            }
-
-            i -= unrollBy;
-            if (i < width * height)
-            {
-                for (; i < width * height; i++)
-                {
-                    buffer[i] = cast(view[i]);
-                }
-            }
-
-            return new Image(buffer, width, height, false);
-        }
-
-        public ReadOnlySpan<T> TypedView<T>() where T : unmanaged =>
-            typeof(T) == Type
-                ? (T[]) _baseArray
-                : throw new ArrayTypeMismatchException();
-
-        public Image Transpose() =>
-            CreateAndFill(Height, Width, UnderlyingType, Transpose, this);
-
-        public Image Reflect(ReflectionDirection direction)
-        {
-            return direction switch
-            {
-                ReflectionDirection.NoReflection => this.Copy(),
-                ReflectionDirection.Vertical => 
-                    CreateAndFill(Width, Height, UnderlyingType, ReflectVertically, this),
-                ReflectionDirection.Horizontal => 
-                    CreateAndFill(Width, Height, UnderlyingType, ReflectHorizontally, this),
-                _ => throw new ArgumentOutOfRangeException(nameof(direction))
-            };
-        }
-
-        public Image Rotate(RotateBy rotateBy, RotationDirection direction) =>
-            (rotateBy, direction) switch
-            {
-                (RotateBy.Deg0, _) => Copy(),
-                (RotateBy.Deg90, RotationDirection.Left) => 
-                    CreateAndFill(Height, Width, UnderlyingType, RotateBy90CounterClock, this),
-                (RotateBy.Deg180, RotationDirection.Left) =>
-                    CreateAndFill(Width, Height, UnderlyingType, RotateBy180CounterClock, this),
-                (RotateBy.Deg270, RotationDirection.Left) =>
-                    CreateAndFill(Height, Width, UnderlyingType, RotateBy270CounterClock, this),
-
-                (RotateBy.Deg90, RotationDirection.Right) =>
-                    CreateAndFill(Height, Width, UnderlyingType, RotateBy270CounterClock, this),
-                (RotateBy.Deg180, RotationDirection.Right) =>
-                    CreateAndFill(Width, Height, UnderlyingType, RotateBy180CounterClock, this),
-                (RotateBy.Deg270, RotationDirection.Right) =>
-                    CreateAndFill(Height, Width, UnderlyingType, RotateBy90CounterClock, this),
-                _ => throw new InvalidOperationException("Image transformation not supported.")
-            };
-
-        public bool Equals(Image? x, Image? y)
-            => Equals(x, y, FloatingPointComparisonType.Loose);
-
-        public bool Equals(Image? x, Image? y, FloatingPointComparisonType compType)
-            => x?.Equals(y, compType) ?? false;
-
-        public int GetHashCode(Image? obj)
-            =>  obj?.GetHashCode() ?? 0;
+        public override Image Copy()
+            => new AllocatedImage(ByteView(), Width, Height, UnderlyingType);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(Image? other) => Equals(other, FloatingPointComparisonType.Loose);
+        public bool Equals(AllocatedImage? other) => Equals(other, FloatingPointComparisonType.Loose);
 
-        public bool Equals(Image? other, FloatingPointComparisonType compType)
+        public bool Equals(AllocatedImage? other, FloatingPointComparisonType compType)
         {
             if (UnderlyingType != other?.UnderlyingType ||
                 Width != other.Width ||
@@ -752,6 +95,7 @@ namespace DipolImage
             switch (UnderlyingType)
             {
 
+                case TypeCode.SByte:
                 case TypeCode.Byte:
                 case TypeCode.Int16:
                 case TypeCode.UInt16:
@@ -806,267 +150,35 @@ namespace DipolImage
         }
 
         public override bool Equals(object? obj) =>
-            obj is Image im && im.Equals(this);
+            obj is AllocatedImage im && im.Equals(this);
 
-        public override int GetHashCode()
-        {
-            ReadOnlySpan<byte> view = ByteView();
-            var hash = new HashCode();
-            for (var i = 0; i < view.Length; i++)
-            {
-                hash.Add(view[i]);
-            }
-
-            return hash.ToHashCode();
-        }
+        public override int GetHashCode() => base.GetHashCode();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Span<byte> UnsafeAsBytes() =>
-            UnderlyingType switch
-            {
-                TypeCode.Double => MemoryMarshal.AsBytes<double>((double[]) _baseArray),
-                TypeCode.Single => MemoryMarshal.AsBytes<float>((float[]) _baseArray),
-                TypeCode.UInt16 => MemoryMarshal.AsBytes<ushort>((ushort[]) _baseArray),
-                TypeCode.Int16 => MemoryMarshal.AsBytes<short>((short[]) _baseArray),
-                TypeCode.UInt32 => MemoryMarshal.AsBytes<uint>((uint[]) _baseArray),
-                TypeCode.Int32 => MemoryMarshal.AsBytes<int>((int[]) _baseArray),
-                TypeCode.Byte => (byte[]) _baseArray,
-                _ => default // This is unreachable
-            };
+        protected override Span<T> UnsafeAsSpan<T>() => (T[]) _baseArray;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Span<T> UnsafeAsSpan<T>() where T : unmanaged => (T[]) _baseArray;
+        private protected override IImageConstructor GetConstructor() => Ctor;
 
-        internal delegate void ImageInitializer(Span<byte> view);
-        internal delegate void ImageInitializer<in TState>(Span<byte> view, TState state);
-
-
-        internal static Image CreateAndFill(int width, int height, TypeCode type, ImageInitializer initializer)
+        public static AllocatedImage CreateTyped<T>(ReadOnlySpan<T> data, int width, int height) where T : unmanaged
         {
-            if (initializer is null)
-            {
-                throw new ArgumentNullException(nameof(initializer));
-            }
-
-            var image = new Image(width, height, type);
-            initializer(image.UnsafeAsBytes());
-
-            return image;
+            return new(MemoryMarshal.AsBytes(data), width, height, Type.GetTypeCode(typeof(T)));
         }
 
-        private static Image
-            CreateAndFill<TState>(int width, int height, TypeCode type, 
-                ImageInitializer<TState> initializer, TState state)
+        private class ImageCtor : IImageConstructor
         {
-            if (initializer is null)
+            public Image CreateAndFill(int width, int height, TypeCode type, ImageInitializers.ImageInitializer initializer)
             {
-                throw new ArgumentNullException(nameof(initializer));
+                var image = new AllocatedImage(width, height, type);
+                initializer(image.UnsafeAsBytes());
+                return image;
             }
 
-            var image = new Image(width, height, type);
-            initializer(image.UnsafeAsBytes(), state);
-
-            return image;
-        }
-
-        private static void ReflectVertically(Span<byte> dataView, Image image)
-        {
-            var size = TypeSizes[image.UnderlyingType];
-            var width = image.Width;
-            var height = image.Height;
-            var rowWidth = width * size;
-
-            image.ByteView().CopyTo(dataView);
-
-            byte[]? arrayBuff = null;
-            try
+            public Image CreateAndFill<TState>(int width, int height, TypeCode type, ImageInitializers.ImageInitializer<TState> initializer, TState state)
             {
-                var buffer = rowWidth <= StackAllocByteLimit
-                    ? stackalloc byte[rowWidth]
-                    : (arrayBuff = ArrayPool<byte>.Shared.Rent(rowWidth)).AsSpan(0, rowWidth);
-
-                // 1 2 3      7 8 9
-                // 4 5 6  ->  4 5 6
-                // 7 8 9      1 2 3
-                for (var rowId = 0; rowId < height / 2; rowId++)
-                {
-                    var top = dataView.Slice(rowId * rowWidth, rowWidth);
-                    var bottom = dataView.Slice((height - rowId - 1) * rowWidth, rowWidth);
-                    top.CopyTo(buffer);
-                    bottom.CopyTo(top);
-                    buffer.CopyTo(bottom);
-                }
+                var image = new AllocatedImage(width, height, type);
+                initializer(image.UnsafeAsBytes(), state);
+                return image;
             }
-            finally
-            {
-                if (arrayBuff is { })
-                {
-                    ArrayPool<byte>.Shared.Return(arrayBuff);
-                }
-            }
-        }
-
-        private static void ReflectHorizontally(Span<byte> dataView, Image image)
-        {
-            var size = TypeSizes[image.UnderlyingType];
-            var width = image.Width;
-            var height = image.Height;
-            var rowWidth = width * size;
-
-            image.ByteView().CopyTo(dataView);
-
-            Span<byte> buffer = stackalloc byte[size];
-            // 1 2 3 4 5  \   5 4 3 2 1
-            // 6 7 8 9 0  /   0 9 8 7 6
-            for (var rowId = 0; rowId < height; rowId++)
-            {
-                var rowData = dataView.Slice(rowId * rowWidth, rowWidth);
-                // 1 2 3 4 5 6 -> 6 5 4 3 2 1
-                for (var colId = 0; colId < width / 2; colId++)
-                {
-                    var left = rowData.Slice(colId * size, size);
-                    var right = rowData.Slice((width - colId - 1) * size, size);
-                    left.CopyTo(buffer);
-                    right.CopyTo(left);
-                    buffer.CopyTo(right);
-                }
-            }
-        }
-
-        private static void RotateBy90CounterClock(Span<byte> dataView, Image image)
-        {
-            var size = TypeSizes[image.UnderlyingType];
-            var width = image.Width;
-            var height = image.Height;
-
-            var sourceView = image.ByteView();
-            
-            // 1 2 3     3 6
-            // 4 5 6 ->  2 5
-            //           1 4
-
-            for (var rowId = 0; rowId < height; rowId++)
-            {
-                for (var colId = 0; colId < width; colId++)
-                {
-                    var src = sourceView.Slice((rowId * width + colId) * size, size);
-                    var dest = dataView.Slice(((width - colId - 1) * height + rowId) * size, size);
-                    src.CopyTo(dest);
-                }
-            }
-        }
-
-        private static void RotateBy180CounterClock(Span<byte> dataView, Image image)
-        {
-            var size = TypeSizes[image.UnderlyingType];
-            var width = image.Width;
-            var height = image.Height;
-            var rowWidth = width * size;
-            
-            image.ByteView().CopyTo(dataView);
-
-            byte[]? arrayBuff = null;
-            try
-            {
-                Span<byte> buffer = rowWidth <= StackAllocByteLimit
-                    ? stackalloc byte[rowWidth]
-                    : (arrayBuff = ArrayPool<byte>.Shared.Rent(rowWidth)).AsSpan(0, rowWidth);
-
-                // 1 2 3 \  6 5 4
-                // 4 5 6 /  3 2 1
-                for (var rowId = 0; rowId < height / 2; rowId++)
-                {
-                    var top = dataView.Slice(rowId * rowWidth, rowWidth);
-                    var bottom = dataView.Slice((height - rowId - 1) * rowWidth, rowWidth);
-                    top.CopyTo(buffer);
-                    bottom.CopyTo(top);
-                    buffer.CopyTo(bottom);
-                    
-                    top.Reverse();
-                    bottom.Reverse();
-                }
-
-            }
-            finally
-            {
-                if (arrayBuff is { })
-                {
-                    ArrayPool<byte>.Shared.Return(arrayBuff);
-                }
-            }
-        }
-
-        private static void RotateBy270CounterClock(Span<byte> dataView, Image image)
-        {
-            var size = TypeSizes[image.UnderlyingType];
-            var width = image.Width;
-            var height = image.Height;
-
-            var sourceView = image.ByteView();
-
-            // 1 2 3     4 1
-            // 4 5 6 ->  5 2
-            //           6 3
-
-            for (var rowId = 0; rowId < height; rowId++)
-            {
-                for (var colId = 0; colId < width; colId++)
-                {
-                    var src = sourceView.Slice((rowId * width + colId) * size, size);
-                    var dest = dataView.Slice((colId * height + (height - rowId - 1)) * size, size);
-                    src.CopyTo(dest);
-                }
-            }
-        }
-
-        private static void Transpose(Span<byte> dataView, Image image)
-        {
-            var width = image.Width;
-            var height = image.Height;
-            var size = image.ItemSizeInBytes;
-            ReadOnlySpan<byte> sourceView = image.ByteView();
-
-            for (var rowId = 0; rowId < height; rowId++)
-            {
-                for (var colId = 0; colId < width; colId++)
-                {
-                    ReadOnlySpan<byte> src = sourceView.Slice((rowId * width  + colId) * size, size);
-                    Span<byte> dst = dataView.Slice((colId * height + rowId) * size, size);
-                    src.CopyTo(dst);
-                }
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static Type ResolveType(TypeCode code) => TypeCodeMap[code];
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static int ResolveItemSize(TypeCode code) => TypeSizes[code];
-
-        private T Percentile<T>(int length) where T : unmanaged
-        {
-            var view = TypedView<T>();
-            if (length >= view.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(length));
-            }
-            T[]? arrayBuffer = null;
-            try
-            {
-                arrayBuffer = ArrayPool<T>.Shared.Rent(view.Length);
-                var arrayView = arrayBuffer.AsSpan(0, view.Length);
-                view.CopyTo(arrayView);
-                Array.Sort(arrayBuffer, 0, view.Length);
-
-                return arrayBuffer[length];
-            }
-            finally
-            {
-                ArrayPool<T>.Shared.Return(arrayBuffer);
-            }
-        }
-        public static Image CreateTyped<T>(ReadOnlySpan<T> data, int width, int height) where T : unmanaged
-        {
-            return new Image(MemoryMarshal.AsBytes(data), width, height, Type.GetTypeCode(typeof(T)));
         }
     }
 }

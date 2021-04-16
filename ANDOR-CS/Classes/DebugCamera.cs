@@ -25,6 +25,7 @@
 
 #if DEBUG
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using ANDOR_CS.AcquisitionMetadata;
@@ -39,6 +40,8 @@ namespace ANDOR_CS.Classes
 {
     public sealed partial class DebugCamera : Camera
     {
+        private const string DebugImagePath = @"debug_image.fits";
+
         private static readonly Random R = new Random();
         private static readonly object Locker = new object();
         private const ConsoleColor Green = ConsoleColor.DarkGreen;
@@ -46,6 +49,8 @@ namespace ANDOR_CS.Classes
         private const ConsoleColor Blue = ConsoleColor.Blue;
         private const ConsoleColor Yellow = ConsoleColor.DarkYellow;
 
+        private Image _debugImage;
+        
         public override bool IsActive => true;
 
         public override CameraStatus GetStatus()
@@ -95,6 +100,11 @@ namespace ANDOR_CS.Classes
 
         public DebugCamera(int camIndex)
         {
+            if (File.Exists(DebugImagePath))
+            {
+                _debugImage = FitsStream.ReadImage(DebugImagePath, out _);
+            }   
+            
             Task.Delay(TimeSpan.FromSeconds(1.5)).GetAwaiter().GetResult();
             
             CameraIndex = camIndex;
@@ -218,6 +228,11 @@ namespace ANDOR_CS.Classes
                 throw new NullReferenceException(
                     "Pulling image requires acquisition settings with specified image area applied to the current camera.");
 
+            if (_debugImage is { })
+            {
+                return _debugImage;
+            }
+            
             var size = CurrentSettings.ImageArea.Value; // -V3125
             var matrixSize = size.Width * size.Height;
             var r = new Random();
@@ -225,7 +240,7 @@ namespace ANDOR_CS.Classes
 
             var data = new byte[matrixSize * sz];
             r.NextBytes(data);
-            return new Image(data, size.Width, size.Height,
+            return new AllocatedImage(data, size.Width, size.Height,
                 typeof(T) == typeof(ushort) ? TypeCode.UInt16 : TypeCode.Int32);
 
         }

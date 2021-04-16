@@ -1021,7 +1021,7 @@ namespace ANDOR_CS.Classes
                             buffer, j * matrixSize * typeSizeBytes,
                             imgArr, 0,
                             matrixSize * typeSizeBytes);
-                        images[j] = new Image(imgArr, matrixDims.Horizontal, matrixDims.Vertical, false);
+                        images[j] = new AllocatedImage(imgArr, matrixDims.Horizontal, matrixDims.Vertical, false);
                     }
                 }
 
@@ -1310,7 +1310,7 @@ namespace ANDOR_CS.Classes
                 if (testResult != SDK.DRV_SUCCESS)
                     return null;
 
-                var image = new Image(data, size.Width, size.Height, false);
+                var image = new AllocatedImage(data, size.Width, size.Height, false);
                 return image;
             }
             return null;

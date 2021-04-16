@@ -1,28 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +7,7 @@ using System.Runtime.InteropServices;
 using DipolImage;
 using NUnit.Framework;
 
-namespace Tests
+namespace ImageTests
 {
 
     public class DipolImageTests_DataProvider
@@ -107,26 +83,26 @@ namespace Tests
     [Parallelizable(ParallelScope.All)]
     public class DipolImageTests
     {
-        public Random R;
-        public int[] TestArray;
-        public byte[] TestByteArray;
-        public byte[] VeryLargeByteArray;
+        private Random _r = null!;
+        private int[] _testArray = null!;
+        private byte[] _testByteArray = null!;
+        private byte[] _veryLargeByteArray = null!;
 
         [SetUp]
         public void Test_Initialize()
         {
-            R = new Random();
-            TestArray = new int[32];
-            for (var i = 0; i < TestArray.Length; i++)
+            _r = new Random();
+            _testArray = new int[32];
+            for (var i = 0; i < _testArray.Length; i++)
             {
-                TestArray[i] = R.Next();
+                _testArray[i] = _r.Next();
             }
 
-            TestByteArray = new byte[512];
-            R.NextBytes(TestByteArray);
+            _testByteArray = new byte[512];
+            _r.NextBytes(_testByteArray);
 
-            VeryLargeByteArray = new byte[1024 * 1024 * 8];
-            R.NextBytes(VeryLargeByteArray);
+            _veryLargeByteArray = new byte[1024 * 1024 * 8];
+            _r.NextBytes(_veryLargeByteArray);
         }
 
         [Test]
@@ -136,18 +112,18 @@ namespace Tests
             {
                 // ReSharper disable for method ObjectCreationAsStatement
 
-                Assert.Throws<ArgumentNullException>(() => new Image(null, 2, 3));
-                Assert.Throws<ArgumentOutOfRangeException>(() => new Image(TestArray, 0, 3));
-                Assert.Throws<ArgumentOutOfRangeException>(() => new Image(TestArray, 10, 0));
-                Assert.Throws<ArgumentException>(() => new Image(new[] {"s"}, 1, 1));
+                Assert.Throws<ArgumentNullException>(() => new AllocatedImage(null!, 2, 3));
+                Assert.Throws<ArgumentOutOfRangeException>(() => new AllocatedImage(_testArray, 0, 3));
+                Assert.Throws<ArgumentOutOfRangeException>(() => new AllocatedImage(_testArray, 10, 0));
+                Assert.Throws<ArgumentException>(() => new AllocatedImage(new[] {"s"}, 1, 1));
 
-                Assert.Throws<ArgumentNullException>(() => new Image(null, 1, 1, TypeCode.Int16));
+                Assert.Throws<ArgumentNullException>(() => new AllocatedImage(null!, 1, 1, TypeCode.Int16));
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
-                    new Image(TestByteArray, 0, 3, TypeCode.Int32));
+                    new AllocatedImage(_testByteArray, 0, 3, TypeCode.Int32));
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
-                    new Image(TestByteArray, 10, 0, TypeCode.Int32));
-                Assert.Throws<ArgumentException>(() => new Image(TestByteArray, 1, 1, TypeCode.Char));
-                Assert.Throws<ArgumentException>(() => new Image(TestByteArray, 1, 1, (TypeCode) 45500));
+                    new AllocatedImage(_testByteArray, 10, 0, TypeCode.Int32));
+                Assert.Throws<ArgumentException>(() => new AllocatedImage(_testByteArray, 1, 1, TypeCode.Char));
+                Assert.Throws<ArgumentException>(() => new AllocatedImage(_testByteArray, 1, 1, (TypeCode) 45500));
             });
         }
 
@@ -156,7 +132,7 @@ namespace Tests
         {
             var initArray = new[] {1, 2, 3, 4, 5, 6};
 
-            var image = new Image(initArray, 2, 3);
+            var image = new AllocatedImage(initArray, 2, 3);
 
             Assert.That(
                 initArray[0] == image.Get<int>(0, 0) &&
@@ -172,23 +148,27 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_ImageInitializedFromBytes(TypeCode code)
         {
-            const ushort value = 23;
+            const byte value = 23;
 
-            var temp = (Convert.ChangeType(value, code)) ?? new object();
+            var temp = Convert.ChangeType(value, code);
             byte[] bytes;
-            if (code != TypeCode.Byte)
+            if (code is TypeCode.Byte or TypeCode.SByte)
             {
-                var mi = typeof(BitConverter)
-                    .GetMethods(BindingFlags.Public | BindingFlags.Static)
-                    .First(m => m.Name == "GetBytes" &&
-                                m.GetParameters().Length == 1 &&
-                                m.GetParameters().First().ParameterType == temp.GetType());
-                bytes = (byte[]) mi.Invoke(null, new[] {temp});
+                bytes = new[] {value};
             }
             else
-                bytes = new[] {(byte) value};
+            {
+                var mi = typeof(BitConverter)
+                         .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                         .First(
+                             m => m.Name == "GetBytes" &&
+                                  m.GetParameters().Length == 1 &&
+                                  m.GetParameters().First().ParameterType == temp.GetType()
+                         );
+                bytes = (byte[]) mi.Invoke(null, new[] {temp})!;
+            }
 
-            var image = new Image(bytes, 1, 1, code);
+            var image = new AllocatedImage(bytes, 1, 1, code);
 
             Assert.Multiple(() =>
             {
@@ -204,13 +184,13 @@ namespace Tests
         public void Test_SpanInit(TypeCode code)
         {
 
-            var type = Type.GetType("System." + code, true);
+            var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
             var size = Marshal.SizeOf(type);
-            var arr = VeryLargeByteArray.Take(size * 47 * 31).ToArray();
+            var arr = _veryLargeByteArray.Take(size * 47 * 31).ToArray();
 
 
-            var image1 = new Image(arr, 47, 31, code);
-            var image2 = new Image(arr.AsSpan(), 47, 31, code);
+            var image1 = new AllocatedImage(arr, 47, 31, code);
+            var image2 = new AllocatedImage(arr.AsSpan(), 47, 31, code);
 
             Assert.IsTrue(image1.Equals(image2));
 
@@ -222,17 +202,31 @@ namespace Tests
         {
             const int val1 = 1;
             const int val2 = 123;
-            var type = Type.GetType("System." + code) ?? typeof(void);
+            var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
             var initArray = Array.CreateInstance(type, 2);
             initArray.SetValue(Convert.ChangeType(val1, code), 0);
             initArray.SetValue(Convert.ChangeType(val2, code), 1);
 
 
-            var image = new Image(initArray, 2, 1);
+            var image = new AllocatedImage(initArray, 2, 1);
 
-            var bytes = image.GetBytes();
+            ReadOnlySpan<byte> bytes = image.ByteView();
             byte[] reconstructed;
-            if (code != TypeCode.Byte)
+            if (code == TypeCode.SByte)
+            {
+                var size = Marshal.SizeOf(type);
+                reconstructed = new byte[2 * size];
+                reconstructed[0] = (byte)((sbyte[]) initArray)[0];
+                reconstructed[1] = (byte)((sbyte[]) initArray)[1];
+            }
+            else if (code == TypeCode.Byte)
+            {
+                var size = Marshal.SizeOf(type);
+                reconstructed = new byte[2 * size];
+                reconstructed[0] = ((byte[]) initArray)[0];
+                reconstructed[1] = ((byte[]) initArray)[1];
+            }
+            else
             {
                 var mi = typeof(BitConverter)
                     .GetMethods(BindingFlags.Public | BindingFlags.Static)
@@ -241,18 +235,11 @@ namespace Tests
                                 m.GetParameters().First().ParameterType == type);
                 var size = Marshal.SizeOf(type);
                 reconstructed = new byte[2 * size];
-                Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(0)}), 0, reconstructed, 0, size);
-                Array.Copy((byte[]) mi.Invoke(null, new[] {initArray.GetValue(1)}), 0, reconstructed, size, size);
-            }
-            else
-            {
-                var size = Marshal.SizeOf(type);
-                reconstructed = new byte[2 * size];
-                reconstructed[0] = ((byte[]) initArray)[0];
-                reconstructed[1] = ((byte[]) initArray)[1];
+                Array.Copy(((byte[]) mi.Invoke(null, new[] {initArray.GetValue(0)})!)!, 0, reconstructed, 0, size);
+                Array.Copy(((byte[]) mi.Invoke(null, new[] {initArray.GetValue(1)})!)!, 0, reconstructed, size, size);
             }
 
-            CollectionAssert.AreEqual(reconstructed, bytes);
+            Assert.IsTrue(bytes.SequenceEqual(reconstructed));
         }
 
         [Test]
@@ -261,9 +248,9 @@ namespace Tests
         public void Test_Equals(TypeCode code)
         {
 
-            var type = Type.GetType("System." + code, true);
+            var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
             var size = Marshal.SizeOf(type);
-            var arr = TestByteArray.Take(size * 2 * 2).ToArray();
+            var arr = _testByteArray.Take(size * 2 * 2).ToArray();
 
             var tempArr = new byte[arr.Length];
             Array.Copy(arr, tempArr, tempArr.Length);
@@ -274,31 +261,26 @@ namespace Tests
             }
 
 
-            var image1 = new Image(arr, 2, 2, code);
-            var image2 = new Image(arr, 2, 2, code);
+            var image1 = new AllocatedImage(arr, 2, 2, code);
+            var image2 = new AllocatedImage(arr, 2, 2, code);
 
-            var wrImage1 = new Image(arr.Take(size * 2).ToArray(), 2, 1, code);
-            var wrImage2 = new Image(arr.Take(size * 2).ToArray(), 1, 2, code);
-            var wrImage3 = new Image(arr, 2, 2,
+            var wrImage1 = new AllocatedImage(arr.Take(size * 2).ToArray(), 2, 1, code);
+            var wrImage2 = new AllocatedImage(arr.Take(size * 2).ToArray(), 1, 2, code);
+            var wrImage3 = new AllocatedImage(arr, 2, 2,
                 code == TypeCode.Int16 ? TypeCode.UInt16 : TypeCode.Int16);
-            var wrImage4 = new Image(tempArr, 2, 2, code);
+            var wrImage4 = new AllocatedImage(tempArr, 2, 2, code);
 
             Assert.Multiple(() =>
                 {
                     Assert.That(image1.Equals(image2), Is.True);
                     Assert.That(image2.Equals(image1), Is.True);
                     Assert.That(image1.Equals((object) image2), Is.True);
-                    Assert.That(image1.Equals(image1, image2), Is.True);
 
-                    Assert.That(image1.Equals(null), Is.False);
                     Assert.That(image1.Equals(wrImage1), Is.False);
                     Assert.That(image1.Equals(wrImage2), Is.False);
                     Assert.That(image1.Equals(wrImage3), Is.False);
                     Assert.That(image1.Equals(wrImage4), Is.False);
-                    Assert.That(image1.Equals((object) null), Is.False);
-                    Assert.That(image1.Equals(image1, wrImage1), Is.False);
-                    Assert.That(image1.Equals(image1, null), Is.False);
-                    Assert.That(image1.Equals(null, image1), Is.False);
+                    Assert.That(image1.Equals(null), Is.False);
                 }
             );
         }
@@ -307,9 +289,9 @@ namespace Tests
         public void Test_Copy()
         {
             var array = new byte[1024];
-            R.NextBytes(array);
+            _r.NextBytes(array);
 
-            var img = new Image(array, 32, 16, TypeCode.Int16);
+            var img = new AllocatedImage(array, 32, 16, TypeCode.Int16);
             Assert.That(img.Equals(img.Copy()), Is.True);
         }
 
@@ -320,24 +302,22 @@ namespace Tests
         public void Test_GetHashCode(TypeCode code)
         {
 
-            var type = Type.GetType("System." + code, true);
+            var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
             var size = Marshal.SizeOf(type);
-            var arr = TestByteArray.Take(size * 2 * 2).ToArray();
+            var arr = _testByteArray.Take(size * 2 * 2).ToArray();
 
             var tempArr = new byte[arr.Length];
             Array.Copy(arr, tempArr, tempArr.Length);
             tempArr[0] = (byte) (tempArr[0] == 0 ? 127 : 0);
-            var image1 = new Image(arr, 2, 2, code);
-            var image2 = new Image(arr, 2, 2, code);
+            var image1 = new AllocatedImage(arr, 2, 2, code);
+            var image2 = new AllocatedImage(arr, 2, 2, code);
 
-            var wrImage1 = new Image(tempArr, 2, 2, code);
+            var wrImage1 = new AllocatedImage(tempArr, 2, 2, code);
 
             Assert.Multiple(() =>
             {
-                Assert.That(image1.GetHashCode(), Is.EqualTo(image2.GetHashCode()));
-                Assert.That(image1.GetHashCode(image1), Is.EqualTo(image1.GetHashCode(image2)));
-                Assert.That(image1.GetHashCode(), Is.Not.EqualTo(wrImage1.GetHashCode()));
-                Assert.That(image1.GetHashCode(image1), Is.Not.EqualTo(image1.GetHashCode(wrImage1)));
+                Assert.AreEqual(image1.GetHashCode(), image2.GetHashCode());
+                Assert.AreNotEqual(image1.GetHashCode(), wrImage1.GetHashCode());
             });
 
         }
@@ -347,15 +327,16 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Max(TypeCode code)
         {
-            var type = Image.ResolveType(code);
-            var size = Image.ResolveItemSize(code);
+            var type = Type.GetType($"System.{code}") ?? throw new ArgumentException(nameof(code));
+            var size = Marshal.SizeOf(type);
 
             var max = type
-                .GetFields(BindingFlags.Public | BindingFlags.Static)
-                .First(fi => fi.Name == "MinValue")
-                .GetValue(null);
+                      .GetFields(BindingFlags.Public | BindingFlags.Static)
+                      .FirstOrDefault(fi => fi.Name == "MinValue")
+                      ?.GetValue(null)
+                      ?? throw new InvalidOperationException("Unable to find `MinValue`.");
 
-            var image = new Image(TestByteArray, TestByteArray.Length / size, 1, code);
+            var image = new AllocatedImage(_testByteArray, _testByteArray.Length / size, 1, code);
             for (var i = 0; i < image.Width; i++)
             {
                 var val = image[0, i] as IComparable;
@@ -375,15 +356,16 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Min(TypeCode code)
         {
-            var size = Image.ResolveItemSize(code);
-            var type = Image.ResolveType(code);
+            var type = Type.GetType($"System.{code}") ?? throw new ArgumentException(nameof(code));
+            var size = Marshal.SizeOf(type);
 
             var min = type
-                .GetFields(BindingFlags.Public | BindingFlags.Static)
-                .First(fi => fi.Name == "MaxValue")
-                .GetValue(null);
+                      .GetFields(BindingFlags.Public | BindingFlags.Static)
+                      .FirstOrDefault(fi => fi.Name == "MaxValue")
+                      ?.GetValue(null)
+                      ?? throw new InvalidOperationException("Unable to find `MaxValue`.");
 
-            var image = new Image(TestByteArray, TestByteArray.Length / size, 1, code);
+            var image = new AllocatedImage(_testByteArray, _testByteArray.Length / size, 1, code);
             for (var i = 0; i < image.Width; i++)
             {
                 var val = image[0, i] as IComparable;
@@ -410,10 +392,10 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Transpose(TypeCode code)
         {
-            var type = Type.GetType("System." + code) ?? typeof(byte);
+            var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
             var size = Marshal.SizeOf(type);
 
-            var image = new Image(TestByteArray, TestByteArray.Length / 2 / size, 2, code);
+            var image = new AllocatedImage(_testByteArray, _testByteArray.Length / 2 / size, 2, code);
             var imageT = image.Transpose();
 
             Assert.Multiple(() =>
@@ -433,9 +415,9 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Type(TypeCode code)
         {
-            var type = Type.GetType("System." + code, true);
+            var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
             var size = Marshal.SizeOf(type);
-            var img = new Image(TestByteArray.Take(size * 2 * 2).ToArray(), 2, 2, code);
+            var img = new AllocatedImage(_testByteArray.Take(size * 2 * 2).ToArray(), 2, 2, code);
             Assert.That(img.Type, Is.EqualTo(type));
         }
 
@@ -443,8 +425,8 @@ namespace Tests
         [Repeat(4)]
         public void Test_CastTo()
         {
-            var testArray = TestArray.ToArray();
-            var image = new Image(testArray, 4, TestArray.Length / 4);
+            var testArray = _testArray.ToArray();
+            var image = new AllocatedImage(testArray, 4, _testArray.Length / 4);
             Assert.Multiple(() =>
             {
                 Assert.That(image.Equals(image.CastTo<int, int>(x => x)), Is.True);
@@ -453,8 +435,8 @@ namespace Tests
             });
             var otherArray = testArray.Select(x => (double) x).ToArray();
 
-            var otherImage = new Image(otherArray, 4, otherArray.Length / 4);
-            var srcCastImage = image.CastTo<int, double>(x => (double) x);
+            var otherImage = new AllocatedImage(otherArray, 4, otherArray.Length / 4);
+            var srcCastImage = image.CastTo<int, double>(x => x);
 
             Assert.That(otherImage.Equals(srcCastImage, FloatingPointComparisonType.Exact), Is.True);
         }
@@ -463,17 +445,17 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Clamp(TypeCode code)
         {
-            var type = Type.GetType("System." + code) ?? typeof(byte);
-            var size = System.Runtime.InteropServices.Marshal.SizeOf(type);
-            var image = new Image(TestByteArray, TestByteArray.Length / 4 / size, 4, code);
-            var f_mx = (Type.GetType("System." + code) ?? typeof(byte))
+            var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
+            var size = Marshal.SizeOf(type);
+            var image = new AllocatedImage(_testByteArray, _testByteArray.Length / 4 / size, 4, code);
+            var fMx = type
                 .GetFields(BindingFlags.Public | BindingFlags.Static)
                 .First(fi => fi.Name == "MaxValue");
 
-            dynamic m_max = f_mx.GetValue(null);
+            dynamic mMax = fMx.GetValue(null)!;
 
-            var mx = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max / 2 : 5000;
-            var mn = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? m_max / 4 : -5000;
+            var mx = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? mMax / 2 : 5000;
+            var mn = code.ToString().Contains("U") || code.ToString().Contains("Byte") ? mMax / 4 : -5000;
 
             Assert.That(() => image.Clamp(100, 10),
                 Throws.InstanceOf<ArgumentException>());
@@ -497,14 +479,21 @@ namespace Tests
         public void Test_Scale(TypeCode code)
         {
 
-            var type = Type.GetType("System." + code, true);
+            var type = Type.GetType("System." + code, true) ?? throw new ArgumentException(nameof(code));
             var arr = Array.CreateInstance(type, 4096);
 
             if (code == TypeCode.Byte)
             {
                 for (var i = 0; i < arr.Length; i++)
                 {
-                    arr.SetValue((byte) (i % 255), i);
+                    arr.SetValue((byte) (i % 256), i);
+                }
+            }
+            else if (code == TypeCode.SByte)
+            {
+                for (var i = 0; i < arr.Length; i++)
+                {
+                    arr.SetValue((sbyte) (i % 128), i);
                 }
             }
             else
@@ -515,7 +504,7 @@ namespace Tests
                 }
             }
 
-            var image = new Image(arr, 1024, 4);
+            var image = new AllocatedImage(arr, 1024, 4);
 
             Assert.That(() => image.Scale(100, 10),
                 Throws.InstanceOf<ArgumentException>());
@@ -541,23 +530,23 @@ namespace Tests
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.AllowedTypesSource))]
         public void Test_Percentile(TypeCode code)
         {
-            var type = Type.GetType("System." + code) ?? typeof(byte);
+            var type = Type.GetType("System." + code) ?? throw new ArgumentException(nameof(code));
 
 
-            const int N = 1024;
-            var array = Array.CreateInstance(type, N);
-            var d_array = new double[N];
+            const int n = 1024;
+            var array = Array.CreateInstance(type, n);
+            var dArray = new double[n];
 
-            for (var i = 0; i < N / 4; i++)
+            for (var i = 0; i < n / 4; i++)
             for (var j = 0; j < 4; j++)
             {
-                array.SetValue(Convert.ChangeType((i + j) % 256, code), i * 4 + j);
-                d_array[i * 4 + j] = i + j;
+                array.SetValue(Convert.ChangeType((i + j) % 128, code), i * 4 + j);
+                dArray[i * 4 + j] = i + j;
             }
 
 
 
-            var image = new Image(array, 4, N / 4);
+            var image = new AllocatedImage(array, 4, n / 4);
 
             dynamic mn = image.Min();
             dynamic mx = image.Max();
@@ -569,24 +558,22 @@ namespace Tests
                 Assert.That(image.Percentile(0), Is.EqualTo(mn));
                 Assert.That(image.Percentile(1), Is.EqualTo(mx));
             });
-            //var prcnt = image.Percentile(0.5);
-            //var factor = d_array.OrderBy(x => x).Count(x => x < prcnt) - 0.5 * array.Length;
         }
 
         [Test]
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.ReflectionSource))]
         public void Test_Reflection(int width, int height, TypeCode typeCode, ReflectionDirection direction)
         {
-            var type = Image.ResolveType(typeCode);
+            var type = Type.GetType($"System.{typeCode}") ?? throw new ArgumentException(nameof(typeCode));
 
             var array = Array.CreateInstance(type, width * height);
 
             for (var i = 0; i < width * height; i++)
             {
-                array.SetValue(Convert.ChangeType(i % 256, type), i);
+                array.SetValue(Convert.ChangeType(i % 128, type), i);
             }
 
-            var image = new Image(array, width, height, true);
+            var image = new AllocatedImage(array, width, height, copy: true);
             var ref1 = image.Reflect(ReflectionDirection.Horizontal);
             var ref2 = ref1.Reflect(ReflectionDirection.Horizontal);
 
@@ -599,7 +586,7 @@ namespace Tests
         [Test]
         public void Test_Reflection_Direct()
         {
-            var image = Image.CreateTyped<int>(stackalloc int[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2}, 3, 4);
+            var image = AllocatedImage.CreateTyped<int>(stackalloc int[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2}, 3, 4);
 
             var v1 = image.Reflect(ReflectionDirection.Vertical).TypedView<int>();
             Assert.IsTrue(v1.SequenceEqual(stackalloc int[] {0, 1, 2, 7, 8, 9, 4, 5, 6, 1, 2, 3}));
@@ -610,10 +597,10 @@ namespace Tests
         }
 
         [Test]
-        public void Test_Rotation_Direct()
+        public void Test_Rotation_Direct_Int32()
         {
-            var width = 3;
-            var height = 4;
+            const int width = 3;
+            const int height = 4;
             ReadOnlySpan<int> source = stackalloc int[]
             {
                 1, 2, 3, 
@@ -643,7 +630,11 @@ namespace Tests
                 2, 9, 6, 3,
             };
 
-            var image = Image.CreateTyped(source, width, height);
+            var image = AllocatedImage.CreateTyped(source, width, height);
+            var directBy90Left = AllocatedImage.CreateTyped(by90, height, width);
+            var directBy180Left = AllocatedImage.CreateTyped(by180, width, height);
+            var directBy270Left = AllocatedImage.CreateTyped(by270, height, width);
+
             var by90Left = image.Rotate(RotateBy.Deg90, RotationDirection.Left);
             var by90Right = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
 
@@ -668,10 +659,171 @@ namespace Tests
                     Assert.IsTrue(by90Left.Equals(by270Right), "Left90 == Right270");
                     Assert.IsTrue(by180Left.Equals(by180Right), "Left180 == Right180");
                     Assert.IsTrue(by270Left.Equals(by90Right), "Left270 == Right90");
+                    
+                    Assert.IsTrue(by90Left.Equals(directBy90Left), "Left90 == ByHandLeft90");
+                    Assert.IsTrue(by270Right.Equals(directBy90Left), "Right270 ==  ByHandLeft90");
+                    
+                    Assert.IsTrue(by180Left.Equals(directBy180Left), "Left180 == ByHandLeft180");
+                    Assert.IsTrue(by180Right.Equals(directBy180Left), "Right180 == ByHandRight180");
+                    
+                    Assert.IsTrue(by270Left.Equals(directBy270Left), "Left270 == ByHandLeft270");
+                    Assert.IsTrue(by90Right.Equals(directBy270Left), "Right90 == ByHandLeft270");
+                }
+            );
+        }
+        
+        [Test]
+        public void Test_Rotation_Direct_Double()
+        {
+            const int width = 3;
+            const int height = 4;
+            ReadOnlySpan<double> source = stackalloc double[]
+            {
+                1, 2, 3, 
+                4, 5, 6, 
+                7, 8, 9, 
+                0, 1, 2,
+            };
+            ReadOnlySpan<double> by90 = stackalloc double[]
+            {
+                3, 6, 9, 2, 
+                2, 5, 8, 1, 
+                1, 4, 7, 0,
+            };
+
+            ReadOnlySpan<double> by180 = stackalloc double[]
+            {
+                2, 1, 0,
+                9, 8, 7,
+                6, 5, 4,
+                3, 2, 1,
+            };
+
+            ReadOnlySpan<double> by270 = stackalloc double[]
+            {
+                0, 7, 4, 1,
+                1, 8, 5, 2,
+                2, 9, 6, 3,
+            };
+
+            var image = AllocatedImage.CreateTyped(source, width, height);
+            var directBy90Left = AllocatedImage.CreateTyped(by90, height, width);
+            var directBy180Left = AllocatedImage.CreateTyped(by180, width, height);
+            var directBy270Left = AllocatedImage.CreateTyped(by270, height, width);
+
+            var by90Left = image.Rotate(RotateBy.Deg90, RotationDirection.Left);
+            var by90Right = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
+
+            var by180Left = image.Rotate(RotateBy.Deg180, RotationDirection.Left);
+            var by180Right = image.Rotate(RotateBy.Deg180, RotationDirection.Right);
+
+            var by270Left = image.Rotate(RotateBy.Deg270, RotationDirection.Left);
+            var by270Right = image.Rotate(RotateBy.Deg270, RotationDirection.Right);
+
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.IsFalse(image.Equals(by90Left), "Source != Left90");
+                    Assert.IsFalse(image.Equals(by90Right), "Source != Right90");
+
+                    Assert.IsFalse(image.Equals(by180Left), "Source != Left180");
+                    Assert.IsFalse(image.Equals(by180Right), "Source != Right180");
+
+                    Assert.IsFalse(image.Equals(by270Left), "Source != Left270");
+                    Assert.IsFalse(image.Equals(by270Right), "Source != Right270");
+
+                    Assert.IsTrue(by90Left.Equals(by270Right), "Left90 == Right270");
+                    Assert.IsTrue(by180Left.Equals(by180Right), "Left180 == Right180");
+                    Assert.IsTrue(by270Left.Equals(by90Right), "Left270 == Right90");
+                    
+                    Assert.IsTrue(by90Left.Equals(directBy90Left), "Left90 == ByHandLeft90");
+                    Assert.IsTrue(by270Right.Equals(directBy90Left), "Right270 ==  ByHandLeft90");
+                    
+                    Assert.IsTrue(by180Left.Equals(directBy180Left), "Left180 == ByHandLeft180");
+                    Assert.IsTrue(by180Right.Equals(directBy180Left), "Right180 == ByHandRight180");
+                    
+                    Assert.IsTrue(by270Left.Equals(directBy270Left), "Left270 == ByHandLeft270");
+                    Assert.IsTrue(by90Right.Equals(directBy270Left), "Right90 == ByHandLeft270");
                 }
             );
         }
 
+         [Test]
+        public void Test_Rotation_Direct_SByte()
+        {
+            const int width = 3;
+            const int height = 4;
+            ReadOnlySpan<sbyte> source = stackalloc sbyte[]
+            {
+                1, 2, 3, 
+                4, 5, 6, 
+                7, 8, 9, 
+                0, 1, 2,
+            };
+            ReadOnlySpan<sbyte> by90 = stackalloc sbyte[]
+            {
+                3, 6, 9, 2, 
+                2, 5, 8, 1, 
+                1, 4, 7, 0,
+            };
+
+            ReadOnlySpan<sbyte> by180 = stackalloc sbyte[]
+            {
+                2, 1, 0,
+                9, 8, 7,
+                6, 5, 4,
+                3, 2, 1,
+            };
+
+            ReadOnlySpan<sbyte> by270 = stackalloc sbyte[]
+            {
+                0, 7, 4, 1,
+                1, 8, 5, 2,
+                2, 9, 6, 3,
+            };
+
+            var image = AllocatedImage.CreateTyped(source, width, height);
+            var directBy90Left = AllocatedImage.CreateTyped(by90, height, width);
+            var directBy180Left = AllocatedImage.CreateTyped(by180, width, height);
+            var directBy270Left = AllocatedImage.CreateTyped(by270, height, width);
+
+            var by90Left = image.Rotate(RotateBy.Deg90, RotationDirection.Left);
+            var by90Right = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
+
+            var by180Left = image.Rotate(RotateBy.Deg180, RotationDirection.Left);
+            var by180Right = image.Rotate(RotateBy.Deg180, RotationDirection.Right);
+
+            var by270Left = image.Rotate(RotateBy.Deg270, RotationDirection.Left);
+            var by270Right = image.Rotate(RotateBy.Deg270, RotationDirection.Right);
+
+            Assert.Multiple(
+                () =>
+                {
+                    Assert.IsFalse(image.Equals(by90Left), "Source != Left90");
+                    Assert.IsFalse(image.Equals(by90Right), "Source != Right90");
+
+                    Assert.IsFalse(image.Equals(by180Left), "Source != Left180");
+                    Assert.IsFalse(image.Equals(by180Right), "Source != Right180");
+
+                    Assert.IsFalse(image.Equals(by270Left), "Source != Left270");
+                    Assert.IsFalse(image.Equals(by270Right), "Source != Right270");
+
+                    Assert.IsTrue(by90Left.Equals(by270Right), "Left90 == Right270");
+                    Assert.IsTrue(by180Left.Equals(by180Right), "Left180 == Right180");
+                    Assert.IsTrue(by270Left.Equals(by90Right), "Left270 == Right90");
+                    
+                    Assert.IsTrue(by90Left.Equals(directBy90Left), "Left90 == ByHandLeft90");
+                    Assert.IsTrue(by270Right.Equals(directBy90Left), "Right270 ==  ByHandLeft90");
+                    
+                    Assert.IsTrue(by180Left.Equals(directBy180Left), "Left180 == ByHandLeft180");
+                    Assert.IsTrue(by180Right.Equals(directBy180Left), "Right180 == ByHandRight180");
+                    
+                    Assert.IsTrue(by270Left.Equals(directBy270Left), "Left270 == ByHandLeft270");
+                    Assert.IsTrue(by90Right.Equals(directBy270Left), "Right90 == ByHandLeft270");
+                }
+            );
+        }
+        
         [Test]
         [TestCaseSource(typeof(DipolImageTests_DataProvider), nameof(DipolImageTests_DataProvider.RotationSource))]
         public void Test_Rotation(
@@ -682,16 +834,16 @@ namespace Tests
             RotateBy rightRot
         )
         {
-            var type = Image.ResolveType(typeCode);
+            var type = Type.GetType($"System.{typeCode}")!;
 
             var array = Array.CreateInstance(type, width * height);
 
             for (var i = 0; i < width * height; i++)
             {
-                array.SetValue(Convert.ChangeType(i % 256, type), i);
+                array.SetValue(Convert.ChangeType(i % 128, type), i);
             }
 
-            var image = new Image(array, width, height, true);
+            var image = new AllocatedImage(array, width, height, copy: true);
 
             var left = image.Rotate(leftRot, RotationDirection.Left);
             var right = image.Rotate(rightRot, RotationDirection.Right);
@@ -709,16 +861,16 @@ namespace Tests
             int nRep
         )
         {
-            var type = Image.ResolveType(typeCode);
+            var type = Type.GetType($"System.{typeCode}") ?? throw new ArgumentException(nameof(typeCode));
 
-            var array = Array.CreateInstance(type, width * height);
+            var array = Array.CreateInstance(type!, width * height);
 
             for (var i = 0; i < width * height; i++)
             {
-                array.SetValue(Convert.ChangeType(i % 256, type), i);
+                array.SetValue(Convert.ChangeType(i % 128, type), i);
             }
 
-            var image = new Image(array, width, height, true);
+            Image image = new AllocatedImage(array, width, height, copy: true);
             var otherImage = image;
             for (var i = 0; i < nRep; i++)
             {
