@@ -27,6 +27,7 @@ using System.Globalization;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using ANDOR_CS;
 using ANDOR_CS.Enums;
@@ -44,6 +45,8 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class CameraTabViewModel : ReactiveViewModel<CameraTab>
     {
+        public event EventHandler FileDialogRequested;
+
         public float MinimumAllowedTemperature => Model.TemperatureRange.Minimum;
         public float MaximumAllowedTemperature => Model.TemperatureRange.Maximum;
         public bool CanControlTemperature => Model.CanControlTemperature;
@@ -93,6 +96,8 @@ namespace DIPOL_UF.ViewModels
         public string LastSavedFilePath { [ObservableAsProperty] get; }
 
 
+        public ReactiveCommand<Unit, FileDialogDescriptor> SaveButtonCommand { get; private set; }
+        public ReactiveCommand<string, Unit> SaveActionCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> CoolerCommand { get; private set; }
         public ICommand SetUpAcquisitionCommand => Model.SetUpAcquisitionCommand;
         public ICommand StartAcquisitionCommand => Model.StartAcquisitionCommand;
@@ -150,6 +155,30 @@ namespace DIPOL_UF.ViewModels
                 ExternalShutterMode = ShutterMode.PermanentlyOpen;
             if (CanControlInternalShutter)
                 InternalShutterState = ShutterMode.PermanentlyOpen;
+
+            SaveButtonCommand =
+                ReactiveCommand.Create<Unit, FileDialogDescriptor>(
+                                    _ => CreateSaveFileDescriptor(),
+                                    DipolImagePresenter.WhenPropertyChanged(x => x.BitmapSource)
+                                                       .Select(x => x.Value is { })
+                                                       .CombineLatest(
+                                                            this.WhenAnyPropertyChanged(
+                                                                     nameof(IsJobInProgress), 
+                                                                     nameof(IsAcquiring)
+                                                                 )
+                                                                .Select(y => !y.IsAcquiring && !y.IsJobInProgress)
+                                                                .StartWith(true),
+                                                            (x, y) => x && y
+                                                        )
+                                )
+                               .DisposeWith(Subscriptions);
+            // TODO: Not implemented yet
+            SaveActionCommand = ReactiveCommand.Create<string, Unit>(_ => default);
+
+
+            // Requests SaveFile window
+            SaveButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
+
         }
 
         private void HookObservables()
@@ -332,8 +361,25 @@ namespace DIPOL_UF.ViewModels
                  .DisposeWith(Subscriptions);
 
             PropagateReadOnlyProperty(this, x => x.IsJobInProgress, y => y.IsJobInProgress);
+
         }
 
+        private void OnFileDialogRequested(FileDialogDescriptor desc) =>
+            FileDialogRequested?.Invoke(this, new DialogRequestedEventArgs(desc));
+        
+        private FileDialogDescriptor CreateSaveFileDescriptor() =>
+            new FileDialogDescriptor
+            {
+                Mode = FileDialogDescriptor.DialogMode.Save,
+                DefaultExtenstion = ".fits",
+                Title = "Save temporary image",
+                FileName = GetTempFileName()
+            };
+
+        private string GetTempFileName()
+            => JobManager.Manager.CurrentTarget1?.StarName is { } starName
+                ? $"{starName}_{DateTimeOffset.UtcNow:yyyy-MM-ddTHH-mm-ss}.fits"
+                : $"temp_{DateTimeOffset.UtcNow:yyyy-MM-ddTHH-mm-ss}.fits";
         public string Name => Model.ToString();
 
     }

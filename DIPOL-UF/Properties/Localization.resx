@@ -687,4 +687,7 @@ Click "Yes" if you would like to re-calibrate its position.</value>
   <data name="JobSetting_Modify" xml:space="preserve">
     <value>Modify</value>
   </data>
+  <data name="CameraTab_SaveSingleButton" xml:space="preserve">
+    <value>Save Current</value>
+  </data>
 </root>
