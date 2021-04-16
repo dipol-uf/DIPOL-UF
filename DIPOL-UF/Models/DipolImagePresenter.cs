@@ -451,8 +451,8 @@ namespace DIPOL_UF.Models
 
             
 
-            image = fakeImage;
-            image = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
+            // image = fakeImage;
+            // image = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
 #endif
             
             if (_deviceSettings is {} && _deviceSettings.RotateImageBy != RotateBy.Deg0)
@@ -483,6 +483,13 @@ namespace DIPOL_UF.Models
                     await Helper.RunNoMarshall(() =>
                     {
                         _sourceImage = image.CastTo<ushort, float>(x => x);
+                        temp = _sourceImage.Copy();
+                    });
+                    break;
+                case TypeCode.Int16:
+                    await Helper.RunNoMarshall(() =>
+                    {
+                        _sourceImage = image.CastTo<short, float>(x => x);
                         temp = _sourceImage.Copy();
                     });
                     break;
