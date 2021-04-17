@@ -15,12 +15,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using DipolImage;
 using Microsoft.Toolkit.HighPerformance;
-#if DEBUG
-using DIPOL_UF.Converters;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using MathNet.Numerics.Random;
-#endif
 using Image = DipolImage.Image;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 
@@ -148,6 +142,8 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<(Size Size, Point Pos), (Size Size, Point Pos)>? MouseHoverCommand { get; private set; }
         public ReactiveCommand<SizeChangedEventArgs, SizeChangedEventArgs>? SizeChangedCommand { get; private set; }
         public ReactiveCommand<MouseButtonEventArgs, MouseButtonEventArgs>? ImageClickCommand { get; private set; }
+
+        public ReactiveCommand<MouseButtonEventArgs, MouseButtonEventArgs>? ImageRightClickCommand { get; private set; }
         public ReactiveCommand<Unit, Unit>? UnloadImageCommand { get; private set; }
 
         public DipolImagePresenter(DeviceSettingsDescriptor? desc = null)
@@ -208,6 +204,14 @@ namespace DIPOL_UF.Models
                                    x => x,
                                    this.WhenPropertyChanged(x => x.DisplayedImage)
                                        .Select(x => !(x.Value is null)))
+                               .DisposeWith(Subscriptions);
+
+            ImageRightClickCommand =
+                ReactiveCommand.Create<MouseButtonEventArgs, MouseButtonEventArgs>(
+                                    x => x,
+                                    this.WhenPropertyChanged(x => x.DisplayedImage)
+                                        .Select(x => x.Value is {})
+                                )
                                .DisposeWith(Subscriptions);
 
             MouseHoverCommand =
@@ -296,6 +300,11 @@ namespace DIPOL_UF.Models
                 .Where(x => x.LeftButton == MouseButtonState.Pressed && x.ClickCount == 2)
                 .Subscribe(ImageDoubleClickCommandExecute)
                 .DisposeWith(Subscriptions);
+
+            ImageRightClickCommand!
+               .Where(x => x.RightButton == MouseButtonState.Pressed && !IsSamplerFixed)
+               .Subscribe(ImageRightClickCommandExecute)
+               .DisposeWith(Subscriptions);
 
 
             MouseHoverCommand!
@@ -747,6 +756,20 @@ namespace DIPOL_UF.Models
                     var pos = args.GetPosition(elem);
                     UpdateSamplerPosition(new Size(elem.ActualWidth, elem.ActualHeight), pos);
                 }
+            }
+        }
+
+        private void ImageRightClickCommandExecute(MouseEventArgs args)
+        {
+            if (args.Source is FrameworkElement elem)
+            {
+                var pos = args.GetPosition(elem);
+#if DEBUG
+                if (Injector.GetLogger() is { } logger)
+                {
+                    logger.Information("Right-clicked on image at {X}, {Y}.", pos.X, pos.Y);
+                }
+#endif
             }
         }
 

@@ -103,6 +103,8 @@ namespace DIPOL_UF.ViewModels
         public ReactiveCommand<MouseEventArgs, MouseEventArgs> MouseHoverCommand { get; private set; }
         public ICommand SizeChangedCommand => Model.SizeChangedCommand;
         public ICommand ImageClickCommand => Model.ImageClickCommand;
+        public ICommand ImageRightClickCommand => Model.ImageRightClickCommand;
+
 
         public ICollection<string> GeometryAliasCollection => DipolImagePresenter.GeometriesAliases;
 
