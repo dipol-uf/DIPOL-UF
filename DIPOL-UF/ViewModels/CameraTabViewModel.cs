@@ -36,6 +36,7 @@ using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DIPOL_UF.Properties;
 using DynamicData.Binding;
+using FITS_CS;
 using MathNet.Numerics;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -173,8 +174,7 @@ namespace DIPOL_UF.ViewModels
                                 )
                                .DisposeWith(Subscriptions);
             // TODO: Not implemented yet
-            SaveActionCommand = ReactiveCommand.Create<string, Unit>(_ => default);
-
+            SaveActionCommand = ReactiveCommand.CreateFromTask<string>(WriteTempFileAsync).DisposeWith(Subscriptions);
 
             // Requests SaveFile window
             SaveButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
@@ -375,6 +375,64 @@ namespace DIPOL_UF.ViewModels
                 Title = "Save temporary image",
                 FileName = GetTempFileName()
             };
+
+        private async Task WriteTempFileAsync(string path)
+        {
+            var image = Model.ImagePresenter.SourceImage;
+            if (image is null)
+            {
+                return;
+            }
+
+            try
+            {
+                var type = image.UnderlyingType switch
+                {
+                    TypeCode.SByte  => FitsImageType.UInt8,
+                    TypeCode.Byte   => FitsImageType.UInt8,
+                    TypeCode.Int16  => FitsImageType.Int16,
+                    TypeCode.UInt16 => FitsImageType.Int16,
+                    TypeCode.Int32  => FitsImageType.Int32,
+                    TypeCode.UInt32 => FitsImageType.Int32,
+                    TypeCode.Single => FitsImageType.Single,
+                    _               => FitsImageType.Double,
+                };
+
+
+                await FitsStream.WriteImageAsync(
+                    image, type, path, new[]
+                    {
+                        new FitsKey(
+                            "CAMERA", FitsKeywordType.String,
+                            Converters.ConverterImplementations.CameraToStringAliasConversion(Model.Camera)
+                        ),
+                        new FitsKey(
+                            "FILTER", FitsKeywordType.String,
+                            Converters.ConverterImplementations.CameraToFilterConversion(Model.Camera)
+                        ),
+                        FitsKey.CreateComment("Image for target acquisition")
+                    }
+                );
+
+                if (Injector.GetLogger() is { } logger)
+                {
+                    logger.Information(
+                        "Saved current image from camera {Camera} to {Path}.",
+                        Converters.ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
+                    );
+                }
+            }
+            catch (Exception e)
+            {
+                if (Injector.GetLogger() is { } logger)
+                {
+                    logger.Error(
+                        e, "Failed to save current image from camera {Camera} to {Path}.",
+                        Converters.ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
+                    );
+                }
+            }
+        }
 
         private string GetTempFileName()
             => JobManager.Manager.CurrentTarget1?.StarName is { } starName

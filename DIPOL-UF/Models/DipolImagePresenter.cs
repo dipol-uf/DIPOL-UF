@@ -67,6 +67,8 @@ namespace DIPOL_UF.Models
         public double MaxGeometryThickness => 10;
         public double MinGeometryWidth => 5;
 
+        public Image? SourceImage => _sourceImage;
+
         [Reactive]
         public Image? DisplayedImage { get; set; }
 
