@@ -408,54 +408,8 @@ namespace DIPOL_UF.Models
 
         private async Task CopyImageAsync(Image image)
         {
-#if DEBUG
-            static void NextBytes<T>(Span<T> input)
-                where T : unmanaged
-            {
-                var r = new Random();
-                var sz = Unsafe.SizeOf<T>();
-                var view = MemoryMarshal.AsBytes(input);
-                for (var i = 0; i < view.Length; i += sz)
-                {
-                    view[i] = (byte)(r.Next() % 256);
-                }
-            }
-#endif
             
             var isFirstLoad = DisplayedImage is null;
-#if DEBUG
-            // WATCH: Debugging
-            const int debugWidth = 512;
-            const int debugHeight = 256;
-            const int fillSize = 8;
-            var dataArray = new int[debugWidth * debugHeight];
-            NextBytes<int>(dataArray);
-            // Top-left
-            dataArray.AsSpan(0, fillSize).Fill(100);
-
-            // Top-right
-            dataArray.AsSpan(debugWidth - 1 - 2 * fillSize, 2 * fillSize).Fill(200);
-
-            // Bottom-left
-            dataArray.AsSpan((debugHeight - 1) * debugWidth, 3 * fillSize).Fill(400);
-
-            // Bottom-right
-            dataArray.AsSpan(debugWidth * debugHeight - 1 - 4 * fillSize, 4 * fillSize).Fill(800);
-
-            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3, 16 * fillSize).Fill(2400);
-            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3 + debugWidth, 16 * fillSize).Fill(2400);
-            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3 + 2 * debugWidth, 16 * fillSize).Fill(2400);
-            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3 + 3 * debugWidth, 16 * fillSize).Fill(2400);
-
-
-
-            var fakeImage = new AllocatedImage(dataArray, debugWidth, debugHeight, copy:false);
-
-            
-
-            // image = fakeImage;
-            // image = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
-#endif
             
             if (_deviceSettings is {} && _deviceSettings.RotateImageBy != RotateBy.Deg0)
             {
@@ -463,9 +417,7 @@ namespace DIPOL_UF.Models
             }
 
             if (
-                _deviceSettings is {} &&
-                _deviceSettings.ReflectionDirection is var reflectDir &&
-                reflectDir != ReflectionDirection.NoReflection
+                _deviceSettings is {ReflectionDirection: var reflectDir} && reflectDir != ReflectionDirection.NoReflection
             )
             {
                 if ((reflectDir & ReflectionDirection.Horizontal) == ReflectionDirection.Horizontal)
@@ -478,7 +430,7 @@ namespace DIPOL_UF.Models
                 }
             }
             
-            Image temp = null;
+            Image? temp = null;
             switch (image.UnderlyingType)
             {
                 case TypeCode.UInt16:
@@ -642,6 +594,27 @@ namespace DIPOL_UF.Models
                     GetImageScale(p.X, true),
                     GetImageScale(p.Y))
                 : p;
+
+        private void GetImageSlices()
+        {
+            if (!LastKnownImageControlSize.IsEmpty && DisplayedImage != null)
+            {
+                var centerPix = GetPixelScale(SamplerCenterPos);
+                var sizePix = GetPixelScale(SamplerGeometry!.Size);
+                var halfSizePix = GetPixelScale(SamplerGeometry!.HalfSize);
+                var image = _sourceImage!;
+
+                var view2D = image.ByteView2D();
+
+                var rowStart = Math.Max(0, (int) (centerPix.Y - halfSizePix.Height));
+                var colStart = Math.Max(0, (int)(centerPix.X - halfSizePix.Width));
+                var width = Math.Min((int) sizePix.Width, image.Width    - colStart);
+                var height = Math.Min((int) sizePix.Height, image.Height - rowStart);
+
+                var subView = view2D.Slice(rowStart, colStart, width, height);
+            }
+
+        }
 
         private List<(int X, int Y)> GetPixelsInArea(GeometryLayer layer)
         {
