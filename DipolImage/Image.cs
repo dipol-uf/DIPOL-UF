@@ -698,6 +698,11 @@ namespace DipolImage
                 ? UnsafeAsSpan<T>()
                 : throw new ArrayTypeMismatchException();
 
+        public ReadOnlySpan2D<T> TypedView2D<T>() where T : unmanaged =>
+            typeof(T) == Type
+                ? UnsafeAsSpan2D<T>()
+                : throw new ArrayTypeMismatchException();
+
         public Image Transpose() =>
             GetConstructor()
                 .CreateAndFill(Height, Width, UnderlyingType, Transpose, this);
@@ -845,6 +850,9 @@ namespace DipolImage
            
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract Span<T> UnsafeAsSpan<T>() where T : unmanaged;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract Span2D<T> UnsafeAsSpan2D<T>() where T : unmanaged;
 
         private protected abstract IImageConstructor GetConstructor();
 

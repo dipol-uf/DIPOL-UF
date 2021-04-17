@@ -3,6 +3,7 @@ using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
@@ -13,6 +14,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using DipolImage;
+using Microsoft.Toolkit.HighPerformance;
 #if DEBUG
 using DIPOL_UF.Converters;
 using System.Runtime.InteropServices;
@@ -611,7 +613,24 @@ namespace DIPOL_UF.Models
                 var width = Math.Min((int) sizePix.Width, image.Width    - colStart);
                 var height = Math.Min((int) sizePix.Height, image.Height - rowStart);
 
-                var subView = view2D.Slice(rowStart, colStart, width, height);
+                double[]? buffer = null;
+                try
+                {
+                    buffer = ArrayPool<double>.Shared.Rent(width * height * image.ItemSizeInBytes);
+                    var tempView = new Span2D<double>(buffer, height, width);
+
+
+                }
+                finally
+                {
+                    if (buffer is { })
+                    {
+                        ArrayPool<double>.Shared.Return(buffer);
+                    }
+                }
+                // TODO: THIS IS INCORRECT
+
+                // Elementwise copy to a pooled array
             }
 
         }
@@ -811,5 +830,9 @@ namespace DIPOL_UF.Models
 
         }
 
+        private static void ComputeFullWidthHalfMax(ReadOnlySpan2D<double> data)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

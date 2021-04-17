@@ -3,6 +3,7 @@ using System.Runtime.Serialization;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Microsoft.Toolkit.HighPerformance;
 
 [assembly:InternalsVisibleTo("Tests")]
 namespace DipolImage
@@ -156,6 +157,9 @@ namespace DipolImage
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override Span<T> UnsafeAsSpan<T>() => (T[]) _baseArray;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override Span2D<T> UnsafeAsSpan2D<T>() => new((T[]) _baseArray, Height, Width);
 
         private protected override IImageConstructor GetConstructor() => Ctor;
 
