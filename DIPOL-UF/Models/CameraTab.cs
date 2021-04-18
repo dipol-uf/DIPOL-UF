@@ -37,7 +37,6 @@ using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
 using DipolImage;
 using DIPOL_UF.Converters;
-using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DynamicData.Binding;
 using ReactiveUI;

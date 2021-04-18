@@ -690,4 +690,13 @@ Click "Yes" if you would like to re-calibrate its position.</value>
   <data name="CameraTab_SaveSingleButton" xml:space="preserve">
     <value>Save Current</value>
   </data>
+  <data name="FWHM_Caption" xml:space="preserve">
+    <value>Full width at half maximum</value>
+  </data>
+  <data name="FWHM_Center" xml:space="preserve">
+    <value>Center:</value>
+  </data>
+  <data name="FWHM_Value" xml:space="preserve">
+    <value>FWHM:</value>
+  </data>
 </root>

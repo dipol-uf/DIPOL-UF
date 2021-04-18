@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -291,8 +292,28 @@ namespace DIPOL_UF.ViewModels
                  .ToPropertyEx(this, x => x.PixValue)
                  .DisposeWith(Subscriptions);
 
+            Model.FWHMEstimates.Subscribe(x => DisplayFWHMEstimates(x.Row, x.Column)).DisposeWith(Subscriptions);
         }
 
+        private void DisplayFWHMEstimates(
+            DipolImagePresenter.GaussianFitResults row, 
+            DipolImagePresenter.GaussianFitResults col
+        )
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine($"{Properties.Localization.FWHM_Center}\t({col.Origin + col.Center:F2}, {row.Origin + row.Center:F2})");
+            builder.AppendLine($"{Properties.Localization.FWHM_Value}:\t{col.FWHM:G5} x {row.FWHM:G5}");
+
+            MessageBox.Show(builder.ToString(), Properties.Localization.FWHM_Caption, MessageBoxButton.OK, MessageBoxImage.Information);
+
+            if (Injector.GetLogger() is { } logger)
+            {
+                logger.Information(
+                    "Gaussian fit at {Position}: FWHM is {FWHM}.", (col.Origin + col.Center, row.Origin + row.Center),
+                    (col.FWHM, row.FWHM)
+                );
+            }
+        }
         private void UpdateBitmap(DipolImage.Image image)
         {
             var temp = image.Copy();

@@ -461,6 +461,30 @@ namespace DIPOL_UF
             notificationSuspender.Dispose();
         }
 
+        public static (double Min, double Max) MinMax(this ReadOnlySpan<double> @this)
+        {
+            if (!@this.IsEmpty)
+            {
+                var result = (Min: @this[0], Max: @this[0]);
+                for (var i = 0; i < @this.Length; i++)
+                {
+                    var temp = @this[i];
+                    if (temp > result.Max)
+                    {
+                        result.Max = temp;
+                    } 
+                    else if (temp < result.Min)
+                    {
+                        result.Min = temp;
+                    }
+                }
+
+                return result;
+            }
+
+            return (double.NaN, double.NaN);
+        }
+
         private static string GetEnumString(string key, Type type)
             => Properties.Localization.ResourceManager
                          .GetString($"General_{type.Name}_{key}")
