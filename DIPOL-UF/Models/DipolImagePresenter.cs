@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -606,7 +607,7 @@ namespace DIPOL_UF.Models
                     GetImageScale(p.Y))
                 : p;
 
-        private void GetImageSlices()
+        private void GetImageStatistics(Point clickPosition)
         {
             if (!LastKnownImageControlSize.IsEmpty && DisplayedImage != null)
             {
@@ -625,9 +626,10 @@ namespace DIPOL_UF.Models
                 double[]? buffer = null;
                 try
                 {
-                    buffer = ArrayPool<double>.Shared.Rent(width * height * image.ItemSizeInBytes);
+                    buffer = ArrayPool<double>.Shared.Rent(width * height);
                     var tempView = new Span2D<double>(buffer, height, width);
 
+                    CastViewToDouble(image, colStart, rowStart, width, height, tempView);
 
                 }
                 finally
@@ -769,6 +771,8 @@ namespace DIPOL_UF.Models
                 {
                     logger.Information("Right-clicked on image at {X}, {Y}.", pos.X, pos.Y);
                 }
+
+                GetImageStatistics(pos);
 #endif
             }
         }
@@ -850,6 +854,114 @@ namespace DIPOL_UF.Models
 
             return (new List<Func<double, double, GeometryDescriptor>> {CommonRectangle, CommonCircle},
                 new List<string> {@"Rectangle", @"Circle"});
+
+        }
+
+        private static void CastViewToDouble(Image image, int col, int row, int width, int height, Span2D<double> target)
+        {
+            if (image.UnderlyingType is TypeCode.SByte)
+            {
+                ReadOnlySpan2D<sbyte> srcView = image.TypedView2D<sbyte>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Byte)
+            {
+                ReadOnlySpan2D<byte> srcView = image.TypedView2D<byte>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Int16)
+            {
+                ReadOnlySpan2D<short> srcView = image.TypedView2D<short>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.UInt16)
+            {
+                ReadOnlySpan2D<ushort> srcView = image.TypedView2D<ushort>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Int32)
+            {
+                ReadOnlySpan2D<int> srcView = image.TypedView2D<int>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.UInt32)
+            {
+                ReadOnlySpan2D<uint> srcView = image.TypedView2D<uint>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Int64)
+            {
+                ReadOnlySpan2D<long> srcView = image.TypedView2D<long>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.UInt64)
+            {
+                ReadOnlySpan2D<ulong> srcView = image.TypedView2D<ulong>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Single)
+            {
+                ReadOnlySpan2D<float> srcView = image.TypedView2D<float>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Double)
+            {
+                image.TypedView2D<double>().Slice(row, col, width, height).CopyTo(target);
+            }
 
         }
 
