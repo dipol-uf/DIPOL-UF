@@ -12,6 +12,7 @@ using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using DipolImage;
@@ -620,7 +621,7 @@ namespace DIPOL_UF.Models
 
                 var rowStart = Math.Max(0, (int) (centerPix.Y - halfSizePix.Height));
                 var colStart = Math.Max(0, (int)(centerPix.X - halfSizePix.Width));
-                var width = Math.Min((int) sizePix.Width, image.Width    - colStart);
+                var width = Math.Min((int) sizePix.Width, image.Width - colStart);
                 var height = Math.Min((int) sizePix.Height, image.Height - rowStart);
 
                 double[]? buffer = null;
@@ -630,6 +631,7 @@ namespace DIPOL_UF.Models
                     var tempView = new Span2D<double>(buffer, height, width);
 
                     CastViewToDouble(image, colStart, rowStart, width, height, tempView);
+                    ComputeFullWidthHalfMax(tempView);
 
                 }
                 finally
@@ -967,7 +969,36 @@ namespace DIPOL_UF.Models
 
         private static void ComputeFullWidthHalfMax(ReadOnlySpan2D<double> data)
         {
-            throw new NotImplementedException();
+            var center = FindBrightestPixel(data);
+            // TODO: Not implemented
+        }
+
+        private static (int Row, int Column) FindBrightestPixel(ReadOnlySpan2D<double> data)
+        {
+            // TODO: This can be possibly improved
+            var result = (Row: data.Height / 2, Column: data.Width / 2);
+            var maxVal = data[result.Row, result.Column];
+
+            for (var i = 0; i < data.Height; i++)
+            {
+                for (var j = 0; j < data.Width; j++)
+                {
+                    var current = data[i, j];
+                    if (current <= maxVal)
+                    {
+                        continue;
+                    }
+
+                    maxVal = current;
+                    result = (i, j);
+                }
+            }
+
+            if (Injector.GetLogger() is { } logger)
+            {
+                logger.Information("Found maximum within aperture at ({X}, {Y}) with value {MaxValue}.", result.Row, result.Column, maxVal);
+            }
+            return result;
         }
     }
 }
