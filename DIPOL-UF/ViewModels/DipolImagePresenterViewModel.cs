@@ -302,7 +302,7 @@ namespace DIPOL_UF.ViewModels
         {
             var builder = new StringBuilder();
             builder.AppendLine($"{Properties.Localization.FWHM_Center}\t({col.Origin + col.Center:F2}, {row.Origin + row.Center:F2})");
-            builder.AppendLine($"{Properties.Localization.FWHM_Value}:\t{col.FWHM:G5} x {row.FWHM:G5}");
+            builder.AppendLine($"{Properties.Localization.FWHM_Value}\t{col.FWHM:G5} x {row.FWHM:G5}");
 
             MessageBox.Show(builder.ToString(), Properties.Localization.FWHM_Caption, MessageBoxButton.OK, MessageBoxImage.Information);
 

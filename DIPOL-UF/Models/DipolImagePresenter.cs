@@ -341,8 +341,7 @@ namespace DIPOL_UF.Models
             FWHMEstimates =
                 ImageRightClickCommand!
                    .Where(x => x.RightButton == MouseButtonState.Pressed && !IsSamplerFixed)
-                   .Select(ImageRightClickCommandExecute)
-                   .Distinct();
+                   .Select(ImageRightClickCommandExecute);
 
 
             MouseHoverCommand!
