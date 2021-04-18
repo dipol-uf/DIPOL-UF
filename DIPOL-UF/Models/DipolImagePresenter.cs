@@ -5,6 +5,7 @@ using ReactiveUI.Fody.Helpers;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -15,10 +16,16 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ANDOR_CS.DataStructures;
 using DipolImage;
+using IK.ILSpanCasts;
+using MathNet.Numerics;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.Optimization;
 using Microsoft.Toolkit.HighPerformance;
 using Image = DipolImage.Image;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using Size = System.Windows.Size;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 // ReSharper disable UnassignedGetOnlyAutoProperty
@@ -970,9 +977,67 @@ namespace DIPOL_UF.Models
         private static void ComputeFullWidthHalfMax(ReadOnlySpan2D<double> data)
         {
             var center = FindBrightestPixel(data);
+            ReadOnlySpan<double> row = IK.ILSpanCasts.SpanExtensions.GetRow(data, center.Row);
+            var rowBuff = new double[data.Width];
+            row.CopyTo(rowBuff);
+            var args = new double[data.Width];
+            for (var i = 0; i < args.Length; i++)
+            {
+                args[i] = i;
+            }
+#if DEBUG
+            using (var writer = new StreamWriter("debug_row.dat"))
+            {
+                for (var i = 0; i < rowBuff.Length; i++)
+                {
+                    writer.WriteLine($"{i}\t{rowBuff[i]}");
+                }
+            }
+#endif
+
+            ComputeFullWidthHalfMax(args, rowBuff);
             // TODO: Not implemented
         }
 
+        private static (double Scale, double Sigma, double Center, double Background) ComputeFullWidthHalfMax(double[] arg, double[] data)
+        {
+            var baseLine = MathNet.Numerics.Statistics.Statistics.Quantile(data, 0.05);
+            var scale = data.Max();
+
+            // Gaussian with non-zero baseline
+            static double ExpFunc2(double scale, double sigma, double center, double background, double x) =>
+                background + scale * Math.Exp(-(x - center) * (x - center) / 2 / sigma / sigma);
+
+            // Distance between prediction and actual data
+            double DistFunc(double scale, double sigma, double center, double background) =>
+                Distance.Euclidean(
+                    // Prediction
+                    Generate.Map(arg, t => ExpFunc2(scale, sigma, center, background, t)),
+                    // Data
+                    data
+                );
+
+            // Minimizes Euclidean distance
+            MinimizationResult minimizationResult = NelderMeadSimplex.Minimum(
+                // Vector<double> -> double distance function
+                ObjectiveFunction.Value(v => DistFunc(v[0], v[1], v[2], v[3])),
+                // Initial guess
+                CreateVector.Dense(
+                    new[]
+                    {
+                        scale,
+                        data.Length / 4.0,
+                        data.Length / 2.0,
+                        baseLine
+                    }
+                )
+            );
+
+            Vector<double> prediction = minimizationResult.MinimizingPoint;
+
+            return (Scale: prediction[0], Sigma: prediction[1], Center: prediction[2], Background: prediction[3]);
+
+        }
         private static (int Row, int Column) FindBrightestPixel(ReadOnlySpan2D<double> data)
         {
             // TODO: This can be possibly improved
