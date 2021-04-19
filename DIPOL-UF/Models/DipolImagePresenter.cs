@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using ANDOR_CS;
+using ANDOR_CS.Enums;
 using DipolImage;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
@@ -88,6 +90,7 @@ namespace DIPOL_UF.Models
         public static List<string> GeometriesAliases { get; }
 
         private DeviceSettingsDescriptor? _deviceSettings;
+        private IDevice? _device;
 
         private Image? _sourceImage;
 
@@ -186,9 +189,10 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<MouseButtonEventArgs, MouseButtonEventArgs>? ImageRightClickCommand { get; private set; }
         public ReactiveCommand<Unit, Unit>? UnloadImageCommand { get; private set; }
 
-        public DipolImagePresenter(DeviceSettingsDescriptor? desc = null)
+        public DipolImagePresenter(DeviceSettingsDescriptor? desc = null, IDevice? device = null)
         {
             _deviceSettings = desc;
+            _device = device;
             ThumbRight = ThumbScaleMax;
             SelectedGeometryIndex = 1;
             ImageSamplerScaleFactor = 1.0;
@@ -480,7 +484,23 @@ namespace DIPOL_UF.Models
                     image = image.Reflect(ReflectionDirection.Vertical);
                 }
             }
-            
+
+            if (
+                _deviceSettings is {ReflectionEMDirection: var reflectEm and not ReflectionDirection.NoReflection}
+             && _device?.CurrentSettings?.OutputAmplifier is (OutputAmplification.ElectronMultiplication, _, _)
+            )
+            {
+                if ((reflectEm & ReflectionDirection.Horizontal) == ReflectionDirection.Horizontal)
+                {
+                    image = image.Reflect(ReflectionDirection.Horizontal);
+                }
+
+                if ((reflectEm & ReflectionDirection.Vertical) == ReflectionDirection.Vertical)
+                {
+                    image = image.Reflect(ReflectionDirection.Vertical);
+                }
+            }
+
             Image? temp = null;
             switch (image.UnderlyingType)
             {

@@ -11,6 +11,8 @@ namespace DIPOL_UF
         public string[] Reflect { get; set; }
         public RotationDescriptor Rotation { get; set; }
 
+        public string[] ReflectEM { get; set; }
+
         public DipolImage.ReflectionDirection ReflectionDirection {
             get
             {
@@ -28,16 +30,54 @@ namespace DIPOL_UF
                     }
                     return DipolImage.ReflectionDirection.NoReflection;
                 }
-                var len = Reflect?.Length ?? 0;
                 var flag = DipolImage.ReflectionDirection.NoReflection;
-                switch (len)
+                if (Reflect is {Length: var len and > 0})
                 {
-                    case 1:
-                        flag |= Parse(Reflect![0].AsSpan());
-                        break;
-                    case 2:
-                        flag |= Parse(Reflect![0].AsSpan()) | Parse(Reflect[1].AsSpan());
-                        break;
+                    switch (len)
+                    {
+                        case 1:
+                            flag |= Parse(Reflect[0].AsSpan());
+                            break;
+                        case 2:
+                            flag |= Parse(Reflect[0].AsSpan()) | Parse(Reflect[1].AsSpan());
+                            break;
+                    }
+                }
+
+                return flag;
+            }
+        }
+
+        public DipolImage.ReflectionDirection ReflectionEMDirection
+        {
+            get
+            {
+                static DipolImage.ReflectionDirection Parse(ReadOnlySpan<char> view)
+                {
+                    view = view.Trim();
+                    if (view.Equals("horizontal".AsSpan(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        return DipolImage.ReflectionDirection.Horizontal;
+                    }
+
+                    if (view.Equals("vertical".AsSpan(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        return DipolImage.ReflectionDirection.Vertical;
+                    }
+                    return DipolImage.ReflectionDirection.NoReflection;
+                }
+                var flag = DipolImage.ReflectionDirection.NoReflection;
+                if (ReflectEM is { Length: var len and > 0 })
+                {
+                    switch (len)
+                    {
+                        case 1:
+                            flag |= Parse(ReflectEM[0].AsSpan());
+                            break;
+                        case 2:
+                            flag |= Parse(ReflectEM[0].AsSpan()) | Parse(ReflectEM[1].AsSpan());
+                            break;
+                    }
                 }
 
                 return flag;
