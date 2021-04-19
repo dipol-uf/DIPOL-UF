@@ -47,6 +47,9 @@ namespace DIPOL_UF.Models
 
             public int Origin { get; set; }
             public double FWHM => Const * Sigma;
+
+            public bool IsValid => Baseline >= 0 && Scale > 0 && Sigma > 0;
+
             public GaussianFitResults(double baseLine, double scale, double center, double sigma) =>
                 (Baseline, Scale, Center, Sigma, Origin) = (baseLine, scale, center, sigma, 0);
 

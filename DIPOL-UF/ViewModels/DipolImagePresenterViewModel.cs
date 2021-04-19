@@ -300,6 +300,11 @@ namespace DIPOL_UF.ViewModels
             DipolImagePresenter.GaussianFitResults col
         )
         {
+            // Handles incorrect fits
+            if (!row.IsValid || !col.IsValid)
+            {
+                (row, col) = (default, default);
+            }
             var builder = new StringBuilder();
             //builder.AppendLine($"{Properties.Localization.FWHM_Center}\t({col.Origin + col.Center:F2}, {row.Origin + row.Center:F2})");
             builder.AppendFormat(Properties.Localization.FWHM_Center, col.Origin + col.Center, row.Origin + row.Center);
