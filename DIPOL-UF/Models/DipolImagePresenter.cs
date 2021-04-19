@@ -3,6 +3,7 @@ using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
@@ -13,14 +14,13 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using DipolImage;
-#if DEBUG
-using DIPOL_UF.Converters;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using MathNet.Numerics.Random;
-#endif
+using MathNet.Numerics;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.Optimization;
+using Microsoft.Toolkit.HighPerformance;
 using Image = DipolImage.Image;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using Size = System.Windows.Size;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 // ReSharper disable UnassignedGetOnlyAutoProperty
@@ -34,6 +34,41 @@ namespace DIPOL_UF.Models
             Aperture,
             Gap,
             Annulus
+        }
+
+        public struct GaussianFitResults : IEquatable<GaussianFitResults>
+        {
+            private static double Const { get; } = 2 * Math.Sqrt(2 * Math.Log(2));
+
+            public double Baseline { get; }
+            public double Scale { get; }
+            public double Center { get; }
+            public double Sigma { get; }
+
+            public int Origin { get; set; }
+            public double FWHM => Const * Sigma;
+
+            public bool IsValid => Baseline >= 0 && Scale > 0 && Sigma > 0;
+
+            public GaussianFitResults(double baseLine, double scale, double center, double sigma) =>
+                (Baseline, Scale, Center, Sigma, Origin) = (baseLine, scale, center, sigma, 0);
+
+            public override bool Equals(object? obj) =>
+                obj is GaussianFitResults other && Equals(other);
+
+
+            public bool Equals(GaussianFitResults other) =>
+                (Baseline, Scale, Center, Sigma, Origin)
+             == (other.Baseline, other.Scale, other.Center, other.Sigma, other.Origin);
+
+            public override int GetHashCode() =>
+                HashCode.Combine(Baseline, Scale, Center, Sigma);
+
+            public static bool operator ==(GaussianFitResults left, GaussianFitResults right) =>
+                left.Equals(right);
+
+            public static bool operator !=(GaussianFitResults left, GaussianFitResults right) =>
+                !left.Equals(right);
         }
 
         public class ImageStatsCollection
@@ -135,6 +170,7 @@ namespace DIPOL_UF.Models
         [Reactive]
         public bool IsMouseOverImage { get; set; }
 
+        public IObservable<(GaussianFitResults Row, GaussianFitResults Column)> FWHMEstimates { get; private set; }
         public Point SamplerCenterPos { [ObservableAsProperty] get; }
         public double ImageGapSize { [ObservableAsProperty] get; }
         public double ImageSamplerSize { [ObservableAsProperty] get; }
@@ -146,6 +182,8 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<(Size Size, Point Pos), (Size Size, Point Pos)>? MouseHoverCommand { get; private set; }
         public ReactiveCommand<SizeChangedEventArgs, SizeChangedEventArgs>? SizeChangedCommand { get; private set; }
         public ReactiveCommand<MouseButtonEventArgs, MouseButtonEventArgs>? ImageClickCommand { get; private set; }
+
+        public ReactiveCommand<MouseButtonEventArgs, MouseButtonEventArgs>? ImageRightClickCommand { get; private set; }
         public ReactiveCommand<Unit, Unit>? UnloadImageCommand { get; private set; }
 
         public DipolImagePresenter(DeviceSettingsDescriptor? desc = null)
@@ -206,6 +244,14 @@ namespace DIPOL_UF.Models
                                    x => x,
                                    this.WhenPropertyChanged(x => x.DisplayedImage)
                                        .Select(x => !(x.Value is null)))
+                               .DisposeWith(Subscriptions);
+
+            ImageRightClickCommand =
+                ReactiveCommand.Create<MouseButtonEventArgs, MouseButtonEventArgs>(
+                                    x => x,
+                                    this.WhenPropertyChanged(x => x.DisplayedImage)
+                                        .Select(x => x.Value is {})
+                                )
                                .DisposeWith(Subscriptions);
 
             MouseHoverCommand =
@@ -294,6 +340,11 @@ namespace DIPOL_UF.Models
                 .Where(x => x.LeftButton == MouseButtonState.Pressed && x.ClickCount == 2)
                 .Subscribe(ImageDoubleClickCommandExecute)
                 .DisposeWith(Subscriptions);
+
+            FWHMEstimates =
+                ImageRightClickCommand!
+                   .Where(x => x.RightButton == MouseButtonState.Pressed && !IsSamplerFixed)
+                   .Select(ImageRightClickCommandExecute);
 
 
             MouseHoverCommand!
@@ -408,54 +459,8 @@ namespace DIPOL_UF.Models
 
         private async Task CopyImageAsync(Image image)
         {
-#if DEBUG
-            static void NextBytes<T>(Span<T> input)
-                where T : unmanaged
-            {
-                var r = new Random();
-                var sz = Unsafe.SizeOf<T>();
-                var view = MemoryMarshal.AsBytes(input);
-                for (var i = 0; i < view.Length; i += sz)
-                {
-                    view[i] = (byte)(r.Next() % 256);
-                }
-            }
-#endif
             
             var isFirstLoad = DisplayedImage is null;
-#if DEBUG
-            // WATCH: Debugging
-            const int debugWidth = 512;
-            const int debugHeight = 256;
-            const int fillSize = 8;
-            var dataArray = new int[debugWidth * debugHeight];
-            NextBytes<int>(dataArray);
-            // Top-left
-            dataArray.AsSpan(0, fillSize).Fill(100);
-
-            // Top-right
-            dataArray.AsSpan(debugWidth - 1 - 2 * fillSize, 2 * fillSize).Fill(200);
-
-            // Bottom-left
-            dataArray.AsSpan((debugHeight - 1) * debugWidth, 3 * fillSize).Fill(400);
-
-            // Bottom-right
-            dataArray.AsSpan(debugWidth * debugHeight - 1 - 4 * fillSize, 4 * fillSize).Fill(800);
-
-            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3, 16 * fillSize).Fill(2400);
-            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3 + debugWidth, 16 * fillSize).Fill(2400);
-            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3 + 2 * debugWidth, 16 * fillSize).Fill(2400);
-            dataArray.AsSpan(debugWidth / 2 * debugHeight / 3 + 3 * debugWidth, 16 * fillSize).Fill(2400);
-
-
-
-            var fakeImage = new AllocatedImage(dataArray, debugWidth, debugHeight, copy:false);
-
-            
-
-            // image = fakeImage;
-            // image = image.Rotate(RotateBy.Deg90, RotationDirection.Right);
-#endif
             
             if (_deviceSettings is {} && _deviceSettings.RotateImageBy != RotateBy.Deg0)
             {
@@ -463,9 +468,7 @@ namespace DIPOL_UF.Models
             }
 
             if (
-                _deviceSettings is {} &&
-                _deviceSettings.ReflectionDirection is var reflectDir &&
-                reflectDir != ReflectionDirection.NoReflection
+                _deviceSettings is {ReflectionDirection: var reflectDir} && reflectDir != ReflectionDirection.NoReflection
             )
             {
                 if ((reflectDir & ReflectionDirection.Horizontal) == ReflectionDirection.Horizontal)
@@ -478,7 +481,7 @@ namespace DIPOL_UF.Models
                 }
             }
             
-            Image temp = null;
+            Image? temp = null;
             switch (image.UnderlyingType)
             {
                 case TypeCode.UInt16:
@@ -643,6 +646,44 @@ namespace DIPOL_UF.Models
                     GetImageScale(p.Y))
                 : p;
 
+        private (GaussianFitResults Row, GaussianFitResults Column) GetImageStatistics(Point clickPosition)
+        {
+            if (LastKnownImageControlSize.IsEmpty || DisplayedImage == null)
+            {
+                return default;
+            }
+
+            var centerPix = GetPixelScale(SamplerCenterPos);
+            var sizePix = GetPixelScale(SamplerGeometry!.Size);
+            var halfSizePix = GetPixelScale(SamplerGeometry!.HalfSize);
+            var image = _sourceImage!;
+
+            var rowStart = Math.Max(0, (int) (centerPix.Y - halfSizePix.Height));
+            var colStart = Math.Max(0, (int) (centerPix.X - halfSizePix.Width));
+            var width = Math.Min((int) sizePix.Width, image.Width - colStart);
+            var height = Math.Min((int) sizePix.Height, image.Height - rowStart);
+
+            double[]? buffer = null;
+            try
+            {
+                buffer = ArrayPool<double>.Shared.Rent(width * height);
+                var tempView = new Span2D<double>(buffer, height, width);
+
+                CastViewToDouble(image, colStart, rowStart, width, height, tempView);
+                var stats = ComputeFullWidthHalfMax(tempView);
+                stats.Column.Origin = colStart;
+                stats.Row.Origin = rowStart;
+                return stats;
+            }
+            finally
+            {
+                if (buffer is { })
+                {
+                    ArrayPool<double>.Shared.Return(buffer);
+                }
+            }
+        }
+
         private List<(int X, int Y)> GetPixelsInArea(GeometryLayer layer)
         {
             if (!LastKnownImageControlSize.IsEmpty && DisplayedImage != null)
@@ -758,6 +799,35 @@ namespace DIPOL_UF.Models
             }
         }
 
+        private (GaussianFitResults Row, GaussianFitResults Column) ImageRightClickCommandExecute(MouseEventArgs args)
+        {
+            if (!(args.Source is FrameworkElement elem))
+            {
+                return default;
+            }
+
+            var pos = args.GetPosition(elem);
+#if DEBUG
+            if (Injector.GetLogger() is { } logger1)
+            {
+                logger1.Information("Right-clicked on image at {X}, {Y}.", pos.X, pos.Y);
+            }
+#endif
+            try
+            {
+                return GetImageStatistics(pos);
+            }
+            catch (Exception e)
+            {
+                if (Injector.GetLogger() is { } logger2)
+                {
+                    logger2.Error(e, "Failed to fit gaussian at {X}, {Y}.", pos.X, pos.Y);
+                }
+
+                return default;
+            }
+        }
+
         private void UnloadImageCommandExecute()
         {
             _sourceImage = null;
@@ -838,5 +908,204 @@ namespace DIPOL_UF.Models
 
         }
 
+        private static void CastViewToDouble(Image image, int col, int row, int width, int height, Span2D<double> target)
+        {
+            if (image.UnderlyingType is TypeCode.SByte)
+            {
+                ReadOnlySpan2D<sbyte> srcView = image.TypedView2D<sbyte>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Byte)
+            {
+                ReadOnlySpan2D<byte> srcView = image.TypedView2D<byte>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Int16)
+            {
+                ReadOnlySpan2D<short> srcView = image.TypedView2D<short>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.UInt16)
+            {
+                ReadOnlySpan2D<ushort> srcView = image.TypedView2D<ushort>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Int32)
+            {
+                ReadOnlySpan2D<int> srcView = image.TypedView2D<int>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.UInt32)
+            {
+                ReadOnlySpan2D<uint> srcView = image.TypedView2D<uint>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Int64)
+            {
+                ReadOnlySpan2D<long> srcView = image.TypedView2D<long>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.UInt64)
+            {
+                ReadOnlySpan2D<ulong> srcView = image.TypedView2D<ulong>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Single)
+            {
+                ReadOnlySpan2D<float> srcView = image.TypedView2D<float>().Slice(row, col, width, height);
+                for (var i = 0; i < height; i++)
+                {
+                    for (var j = 0; j < width; j++)
+                    {
+                        target[i, j] = srcView[i, j];
+                    }
+                }
+            }
+            else if (image.UnderlyingType is TypeCode.Double)
+            {
+                image.TypedView2D<double>().Slice(row, col, width, height).CopyTo(target);
+            }
+
+        }
+
+        private static (GaussianFitResults Row, GaussianFitResults Column) ComputeFullWidthHalfMax(ReadOnlySpan2D<double> data)
+        {
+            var center = FindBrightestPixel(data);
+            ReadOnlySpan<double> row = IK.ILSpanCasts.SpanExtensions.GetRow(data, center.Row);
+            var rowBuff = new double[data.Width];
+            row.CopyTo(rowBuff);
+
+            var colBuff = new double[data.Height];
+            ReadOnlySpan2D<double> column = data.Slice(0, center.Column, 1, data.Height);
+            for (var i = 0; i < colBuff.Length; i++)
+            {
+                colBuff[i] = column[i, 0];
+            }
+
+            var args = new double[data.Width];
+            for (var i = 0; i < args.Length; i++)
+            {
+                args[i] = i;
+            }
+
+            var rowStats = ComputeFullWidthHalfMax(args, rowBuff);
+            var colStats = ComputeFullWidthHalfMax(args, colBuff);
+
+            return (rowStats, colStats);
+        }
+
+        private static GaussianFitResults ComputeFullWidthHalfMax(double[] arg, double[] data)
+        {
+            var (baseLine, max) = Helper.MinMax(data);
+
+            // Gaussian with non-zero baseline
+            static double ExpFunc2(double scale, double sigma, double center, double background, double x) =>
+                background + scale * Math.Exp(-(x - center) * (x - center) / 2 / sigma / sigma);
+
+            // Distance between prediction and actual data
+            double DistFunc(double scale, double sigma, double center, double background) =>
+                Distance.Euclidean(
+                    // Prediction
+                    Generate.Map(arg, t => ExpFunc2(scale, sigma, center, background, t)),
+                    // Data
+                    data
+                );
+
+            // Minimizes Euclidean distance
+            MinimizationResult minimizationResult = NelderMeadSimplex.Minimum(
+                // Vector<double> -> double distance function
+                ObjectiveFunction.Value(v => DistFunc(v[0], v[1], v[2], v[3])),
+                // Initial guess
+                CreateVector.Dense(
+                    new[]
+                    {
+                        max,
+                        data.Length / 4.0,
+                        data.Length / 2.0,
+                        baseLine
+                    }
+                )
+            );
+
+            Vector<double> prediction = minimizationResult.MinimizingPoint;
+            return new GaussianFitResults(prediction[3], prediction[0], prediction[2], prediction[1]);
+        }
+        private static (int Row, int Column) FindBrightestPixel(ReadOnlySpan2D<double> data)
+        {
+            var result = (Row: data.Height / 2, Column: data.Width / 2);
+            var maxVal = data[result.Row, result.Column];
+
+            for (var i = 0; i < data.Height; i++)
+            {
+                for (var j = 0; j < data.Width; j++)
+                {
+                    var current = data[i, j];
+                    if (current <= maxVal)
+                    {
+                        continue;
+                    }
+
+                    maxVal = current;
+                    result = (i, j);
+                }
+            }
+
+#if DEBUG
+            if (Injector.GetLogger() is { } logger)
+            {
+                logger.Information("Found maximum within aperture at ({X}, {Y}) with value {MaxValue}.", result.Row, result.Column, maxVal);
+            }
+#endif
+            return result;
+        }
+       
     }
 }

@@ -228,6 +228,6 @@
                 Style="{StaticResource ResourceKey=NegativeEffectButtonStyle}"
                 Content="{x:Static props:Localization.General_Cancel}"
                 Command="{Binding CancelButtonCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" Margin="101,1,101,5"/>
+                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"/>
     </Grid>
 </Window>

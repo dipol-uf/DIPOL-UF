@@ -768,6 +768,33 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Full width at half maximum.
+        /// </summary>
+        public static string FWHM_Caption {
+            get {
+                return ResourceManager.GetString("FWHM_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Center:	{0:F2}, {1:F2}.
+        /// </summary>
+        public static string FWHM_Center {
+            get {
+                return ResourceManager.GetString("FWHM_Center", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FWHM:	{0:G5} x {1:G5}.
+        /// </summary>
+        public static string FWHM_Value {
+            get {
+                return ResourceManager.GetString("FWHM_Value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Abort.
         /// </summary>
         public static string General_Abort {

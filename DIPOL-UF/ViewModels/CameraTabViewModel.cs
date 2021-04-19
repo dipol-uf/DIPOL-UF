@@ -23,6 +23,7 @@
 //     SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -173,7 +174,7 @@ namespace DIPOL_UF.ViewModels
                                                         )
                                 )
                                .DisposeWith(Subscriptions);
-            // TODO: Not implemented yet
+            
             SaveActionCommand = ReactiveCommand.CreateFromTask<string>(WriteTempFileAsync).DisposeWith(Subscriptions);
 
             // Requests SaveFile window
@@ -398,9 +399,9 @@ namespace DIPOL_UF.ViewModels
                     _               => FitsImageType.Double,
                 };
 
-
-                await FitsStream.WriteImageAsync(
-                    image, type, path, new[]
+                List<FitsKey> keys = Model.Camera.CurrentSettings?.ConvertToFitsKeys() ?? new List<FitsKey>(4);
+                keys.AddRange(
+                    new[]
                     {
                         new FitsKey(
                             "CAMERA", FitsKeywordType.String,
@@ -409,9 +410,12 @@ namespace DIPOL_UF.ViewModels
                         new FitsKey(
                             "FILTER", FitsKeywordType.String,
                             Converters.ConverterImplementations.CameraToFilterConversion(Model.Camera)
-                        ),
-                        FitsKey.CreateComment("Image for target acquisition")
+                        )
                     }
+                );
+
+                await FitsStream.WriteImageAsync(
+                    image, type, path, keys
                 );
 
                 if (Injector.GetLogger() is { } logger)

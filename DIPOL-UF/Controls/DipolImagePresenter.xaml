@@ -44,6 +44,11 @@
                         <extensions:EventToCommandAction Command="{Binding ImageClickCommand}"/>
                     </behaviors:EventTrigger>
                     <behaviors:EventTrigger
+                        EventName="MouseRightButtonDown"
+                        SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
+                        <extensions:EventToCommandAction Command="{Binding ImageRightClickCommand}"/>
+                    </behaviors:EventTrigger>
+                    <behaviors:EventTrigger
                     EventName="MouseEnter"
                     SourceObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Image}}">
                         <extensions:EventToCommandAction Command="{Binding MouseHoverCommand}"/>
