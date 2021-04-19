@@ -694,9 +694,9 @@ Click "Yes" if you would like to re-calibrate its position.</value>
     <value>Full width at half maximum</value>
   </data>
   <data name="FWHM_Center" xml:space="preserve">
-    <value>Center:</value>
+    <value>Center:	{0:F2}, {1:F2}</value>
   </data>
   <data name="FWHM_Value" xml:space="preserve">
-    <value>FWHM:</value>
+    <value>FWHM:	{0:G5} x {1:G5}</value>
   </data>
 </root>

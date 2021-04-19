@@ -777,7 +777,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Center:.
+        ///   Looks up a localized string similar to Center:	{0:F2}, {1:F2}.
         /// </summary>
         public static string FWHM_Center {
             get {
@@ -786,7 +786,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to FWHM:.
+        ///   Looks up a localized string similar to FWHM:	{0:G5} x {1:G5}.
         /// </summary>
         public static string FWHM_Value {
             get {
