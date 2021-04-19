@@ -415,18 +415,7 @@ namespace DIPOL_UF.ViewModels
                 );
 
                 await FitsStream.WriteImageAsync(
-                    image, type, path, new[]
-                    {
-                        new FitsKey(
-                            "CAMERA", FitsKeywordType.String,
-                            Converters.ConverterImplementations.CameraToStringAliasConversion(Model.Camera)
-                        ),
-                        new FitsKey(
-                            "FILTER", FitsKeywordType.String,
-                            Converters.ConverterImplementations.CameraToFilterConversion(Model.Camera)
-                        ),
-                        FitsKey.CreateComment("Image for target acquisition")
-                    }
+                    image, type, path, keys
                 );
 
                 if (Injector.GetLogger() is { } logger)
