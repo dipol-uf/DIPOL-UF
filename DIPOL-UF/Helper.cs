@@ -23,6 +23,7 @@
 //     SOFTWARE.
 
 using System;
+using System.Buffers;
 using System.Collections;
 using System.ComponentModel;
 using System.Collections.Generic;
@@ -43,6 +44,7 @@ using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using Serializers;
+using Serilog.Core;
 using Serilog.Events;
 
 namespace DIPOL_UF
@@ -483,6 +485,49 @@ namespace DIPOL_UF
             }
 
             return (double.NaN, double.NaN);
+        }
+
+        public static string SanitizePath(this ReadOnlySpan<char> s)
+        {
+            const int maxStackSize = 256;
+            var len = s.Length;
+            char[] borrowedBuffer = null;
+            Span<char> buffer = len > maxStackSize
+                ? (borrowedBuffer = ArrayPool<char>.Shared.Rent(len)).AsSpan(0, len)
+                : stackalloc char[len];
+
+            try
+            {
+                s.CopyTo(buffer);
+                Span<char> disallowedChars = System.IO.Path.GetInvalidPathChars().AsSpan();
+                for (var i = 0; i < buffer.Length; i++)
+                {
+                    if (disallowedChars.IndexOf(buffer[i]) < 0)
+                    {
+                        continue;
+                    }
+
+                    buffer[i] = '_';
+                }
+
+                return buffer.ToString();
+            }
+            catch (Exception e)
+            {
+                if (Injector.GetLogger() is { } logger)
+                {
+                    logger.Error(e, "Failed to sanitize path.");
+                }
+
+                return "00";
+            }
+            finally
+            {
+                if (borrowedBuffer is not null)
+                {
+                    ArrayPool<char>.Shared.Return(borrowedBuffer);
+                }
+            }
         }
 
         private static string GetEnumString(string key, Type type)

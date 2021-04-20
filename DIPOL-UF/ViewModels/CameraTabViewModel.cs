@@ -33,6 +33,7 @@ using System.Windows.Input;
 using ANDOR_CS;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
+using DIPOL_UF.Converters;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DIPOL_UF.Properties;
@@ -439,9 +440,14 @@ namespace DIPOL_UF.ViewModels
         }
 
         private string GetTempFileName()
-            => JobManager.Manager.CurrentTarget1?.StarName is { } starName
-                ? $"{starName}_{DateTimeOffset.UtcNow:yyyy-MM-ddTHH-mm-ss}.fits"
-                : $"temp_{DateTimeOffset.UtcNow:yyyy-MM-ddTHH-mm-ss}.fits";
+        {
+            var timeStamp = DateTimeOffset.UtcNow;
+            var name = JobManager.Manager.CurrentTarget1?.StarName is { } starName ? starName : "temp";
+            var filter = ConverterImplementations.CameraToFilterConversion(Model.Camera);
+            // As a precaution, sanitize default name
+            return $"{name}_{filter}_{timeStamp:yyyy-MM-ddTHH-mm-ss}.fits".AsSpan().SanitizePath();
+            
+        }
         public string Name => Model.ToString();
 
     }
