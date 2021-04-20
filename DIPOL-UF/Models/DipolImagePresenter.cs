@@ -465,26 +465,10 @@ namespace DIPOL_UF.Models
         {
             
             var isFirstLoad = DisplayedImage is null;
-            
-            if (_deviceSettings is {} && _deviceSettings.RotateImageBy != RotateBy.Deg0)
-            {
-                image = image.Rotate(_deviceSettings.RotateImageBy, _deviceSettings.RotateImageDirection);
-            }
-
-            if (
-                _deviceSettings is {ReflectionDirection: var reflectDir} && reflectDir != ReflectionDirection.NoReflection
-            )
-            {
-                if ((reflectDir & ReflectionDirection.Horizontal) == ReflectionDirection.Horizontal)
-                {
-                    image = image.Reflect(ReflectionDirection.Horizontal);
-                }
-                if((reflectDir & ReflectionDirection.Vertical) == ReflectionDirection.Vertical)
-                {
-                    image = image.Reflect(ReflectionDirection.Vertical);
-                }
-            }
-
+            // The EM reflection takes precedence.
+            // 1. Reflect amplifier (in-camera effect)
+            // 2. Rotate (camera position effect)
+            // 3. Reflect (camera position effect)
             if (
                 _deviceSettings is {ReflectionEMDirection: var reflectEm and not ReflectionDirection.NoReflection}
              && _device?.CurrentSettings?.OutputAmplifier is (OutputAmplification.ElectronMultiplication, _, _)
@@ -500,6 +484,26 @@ namespace DIPOL_UF.Models
                     image = image.Reflect(ReflectionDirection.Vertical);
                 }
             }
+
+            if (_deviceSettings is { RotateImageBy: var rotateBy and not RotateBy.Deg0, RotateImageDirection: var rotationDirection})
+            {
+                image = image.Rotate(rotateBy, rotationDirection);
+            }
+
+            if (
+                _deviceSettings is {ReflectionDirection: var reflectDir and not ReflectionDirection.NoReflection}
+            )
+            {
+                if ((reflectDir & ReflectionDirection.Horizontal) == ReflectionDirection.Horizontal)
+                {
+                    image = image.Reflect(ReflectionDirection.Horizontal);
+                }
+                if((reflectDir & ReflectionDirection.Vertical) == ReflectionDirection.Vertical)
+                {
+                    image = image.Reflect(ReflectionDirection.Vertical);
+                }
+            }
+
 
             Image? temp = null;
             switch (image.UnderlyingType)
