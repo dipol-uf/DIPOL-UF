@@ -455,7 +455,7 @@ namespace DIPOL_UF.Models
                         pb.BarComment = string.Format(Properties.Localization.MainWindow_RemoteConnection_ClientCount,
                             pb.Value, _remoteLocations.Length);
 
-                        Helper.WriteLog(LogEventLevel.Information, "Cnnection to {Uri} established", uri);
+                        Helper.WriteLog(LogEventLevel.Information, "Connection to {Uri} established", uri);
                         return client;
                     }
                     catch (Exception e)
