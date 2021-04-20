@@ -381,7 +381,7 @@ namespace DIPOL_UF.ViewModels
         private async Task WriteTempFileAsync(string path)
         {
             var image = Model.ImagePresenter.SourceImage;
-            if (image is null)
+            if (image is null || string.IsNullOrEmpty(path))
             {
                 return;
             }
