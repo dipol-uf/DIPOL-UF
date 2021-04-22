@@ -280,11 +280,14 @@ namespace DIPOL_UF.ViewModels
             Model.Object.PerCameraParameters.ExposureTime = expTimes;
 
         }
-        private void LoadValues()
+        private void LoadValues(bool onlyCameraSettings = false)
         {
-            ObjectName = Model.Object.StarName ?? $"star_{DateTimeOffset.UtcNow:yyMMddHHmmss}";
-            Description = Model.Object.Description;
-            CycleType = Model.Object.CycleType;
+            if (!onlyCameraSettings)
+            {
+                ObjectName = Model.Object.StarName ?? $"star_{DateTimeOffset.UtcNow:yyMMddHHmmss}";
+                Description = Model.Object.Description;
+                CycleType = Model.Object.CycleType;
+            }
 
             var camNames = JobManager.Manager.GetCameras().Keys.ToList();
 
@@ -401,7 +404,8 @@ namespace DIPOL_UF.ViewModels
                         // If the settings are applied to the camera, do not dispose it 
                         if (ReferenceEquals(_firstCamera.CurrentSettings, wrapper.Object))
                             wrapper.Object = null!;
-                        LoadValues();
+                        // Do not modify target name/description/etc
+                        LoadValues(onlyCameraSettings: true);
                     }
 
                     x.Dispose();
