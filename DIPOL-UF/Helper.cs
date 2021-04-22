@@ -42,6 +42,9 @@ using ANDOR_CS;
 using DIPOL_UF.Converters;
 using DynamicData;
 using DynamicData.Binding;
+using IK.ILSpanCasts;
+using Microsoft.Toolkit.HighPerformance;
+using Microsoft.Toolkit.HighPerformance.Enumerables;
 using ReactiveUI;
 using Serializers;
 using Serilog.Core;
@@ -463,30 +466,6 @@ namespace DIPOL_UF
             notificationSuspender.Dispose();
         }
 
-        public static (double Min, double Max) MinMax(this ReadOnlySpan<double> @this)
-        {
-            if (!@this.IsEmpty)
-            {
-                var result = (Min: @this[0], Max: @this[0]);
-                for (var i = 0; i < @this.Length; i++)
-                {
-                    var temp = @this[i];
-                    if (temp > result.Max)
-                    {
-                        result.Max = temp;
-                    } 
-                    else if (temp < result.Min)
-                    {
-                        result.Min = temp;
-                    }
-                }
-
-                return result;
-            }
-
-            return (double.NaN, double.NaN);
-        }
-
         public static string SanitizePath(this ReadOnlySpan<char> s)
         {
             const int maxStackSize = 256;
@@ -530,6 +509,31 @@ namespace DIPOL_UF
             }
         }
 
+        public static bool TryCopyTo_Temp<T>(this ReadOnlySpan2D<T> from, Span<T> to) where T : unmanaged
+        {
+            if (to.Length >= from.Length)
+            {
+                var target = to;
+                for(var i = 0; i < from.Height; i++)
+                {
+                    ReadOnlySpan<T> row = IK.ILSpanCasts.SpanExtensions.GetRow(from, i);
+                    if (row.TryCopyTo(target))
+                    {
+                        // If copy was successful, `target` has at least `row.Length` elements,
+                        // so `.Slice` should work.
+                        target = target.Slice(row.Length);
+                        continue;
+                    }
+
+                    return false;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+        
         private static string GetEnumString(string key, Type type)
             => Properties.Localization.ResourceManager
                          .GetString($"General_{type.Name}_{key}")

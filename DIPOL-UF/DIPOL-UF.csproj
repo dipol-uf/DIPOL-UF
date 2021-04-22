@@ -168,6 +168,7 @@
     <Compile Include="Extensions\ValidationAdorner.cs" />
     <Compile Include="Extensions\ValidationBinding.cs" />
     <Compile Include="FileDialogDescriptor.cs" />
+    <Compile Include="FWHM2D.cs" />
     <Compile Include="GeometryDescriptor.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Injector.cs" />
@@ -185,6 +186,7 @@
     <Compile Include="Jobs\Target.cs" />
     <Compile Include="Jobs\Target1.cs" />
     <Compile Include="MappedNameAttribute.cs" />
+    <Compile Include="MathHelper.cs" />
     <Compile Include="Models\AvailableCamerasModel.cs" />
     <Compile Include="Models\CameraTab.cs" />
     <Compile Include="Models\DescendantProvider.cs" />

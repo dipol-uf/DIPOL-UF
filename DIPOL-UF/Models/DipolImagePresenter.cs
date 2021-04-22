@@ -1063,12 +1063,16 @@ namespace DIPOL_UF.Models
             var rowStats = ComputeFullWidthHalfMax(args, rowBuff);
             var colStats = ComputeFullWidthHalfMax(args, colBuff);
 
+            var test = FWHM2D.ComputeFullWidthHalfMax2D(data);
+            
             return (rowStats, colStats);
         }
 
+        
+
         private static GaussianFitResults ComputeFullWidthHalfMax(double[] arg, double[] data)
         {
-            var (baseLine, max) = Helper.MinMax(data);
+            var (baseLine, max) = MathHelper.MinMax(data);
 
             // Gaussian with non-zero baseline
             static double ExpFunc2(double scale, double sigma, double center, double background, double x) =>
