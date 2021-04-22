@@ -161,19 +161,19 @@ namespace DIPOL_UF.ViewModels
 
             SaveButtonCommand =
                 ReactiveCommand.Create<Unit, FileDialogDescriptor>(
-                                    _ => CreateSaveFileDescriptor(),
-                                    DipolImagePresenter.WhenPropertyChanged(x => x.BitmapSource)
-                                                       .Select(x => x.Value is { })
-                                                       .CombineLatest(
-                                                            this.WhenAnyPropertyChanged(
-                                                                     nameof(IsJobInProgress), 
-                                                                     nameof(IsAcquiring)
-                                                                 )
-                                                                .Select(y => !y.IsAcquiring && !y.IsJobInProgress)
-                                                                .StartWith(true),
-                                                            (x, y) => x && y
-                                                        )
-                                )
+                                   _ => CreateSaveFileDescriptor(),
+                                   DipolImagePresenter.WhenPropertyChanged(x => x.BitmapSource)
+                                                      .Select(x => x.Value is { })
+                                   // .CombineLatest(
+                                   //      this.WhenAnyPropertyChanged(
+                                   //               nameof(IsJobInProgress), 
+                                   //               nameof(IsAcquiring)
+                                   //           )
+                                   //          .Select(y => !y.IsAcquiring && !y.IsJobInProgress)
+                                   //          .StartWith(true),
+                                   //      (x, y) => x && y
+                                   //  )
+                               )
                                .DisposeWith(Subscriptions);
             
             SaveActionCommand = ReactiveCommand.CreateFromTask<string>(WriteTempFileAsync).DisposeWith(Subscriptions);
@@ -380,8 +380,12 @@ namespace DIPOL_UF.ViewModels
 
         private async Task WriteTempFileAsync(string path)
         {
-            var image = Model.ImagePresenter.SourceImage;
-            if (image is null || string.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
+            var image = Model.ImagePresenter.SourceImage?.Copy();
+            if (image is null)
             {
                 return;
             }
@@ -406,11 +410,11 @@ namespace DIPOL_UF.ViewModels
                     {
                         new FitsKey(
                             "CAMERA", FitsKeywordType.String,
-                            Converters.ConverterImplementations.CameraToStringAliasConversion(Model.Camera)
+                            ConverterImplementations.CameraToStringAliasConversion(Model.Camera)
                         ),
                         new FitsKey(
                             "FILTER", FitsKeywordType.String,
-                            Converters.ConverterImplementations.CameraToFilterConversion(Model.Camera)
+                            ConverterImplementations.CameraToFilterConversion(Model.Camera)
                         )
                     }
                 );
@@ -423,7 +427,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     logger.Information(
                         "Saved current image from camera {Camera} to {Path}.",
-                        Converters.ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
+                        ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
                     );
                 }
             }
@@ -433,7 +437,7 @@ namespace DIPOL_UF.ViewModels
                 {
                     logger.Error(
                         e, "Failed to save current image from camera {Camera} to {Path}.",
-                        Converters.ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
+                        ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
                     );
                 }
             }
