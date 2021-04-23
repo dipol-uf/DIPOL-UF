@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -347,8 +348,11 @@ namespace DIPOL_UF.Models
 
             FWHMEstimates =
                 ImageRightClickCommand!
-                   .Where(x => x.RightButton == MouseButtonState.Pressed && !IsSamplerFixed)
-                   .Select(ImageRightClickCommandExecute);
+                    .Where(x => x.RightButton == MouseButtonState.Pressed && !IsSamplerFixed)
+                    .Select(x => Observable.FromAsync(async () => await ImageRightClickCommandExecute(x)))
+                    .Merge();
+                
+                    // .Select(async x => await ImageRightClickCommandExecute(x));
 
 
             MouseHoverCommand!
@@ -823,7 +827,7 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private (GaussianFitResults Row, GaussianFitResults Column) ImageRightClickCommandExecute(MouseEventArgs args)
+        private Task<(GaussianFitResults Row, GaussianFitResults Column)> ImageRightClickCommandExecute(MouseEventArgs args)
         {
             if (!(args.Source is FrameworkElement elem))
             {
@@ -839,7 +843,8 @@ namespace DIPOL_UF.Models
 #endif
             try
             {
-                return GetImageStatistics(pos);
+                return Task.Run(() => GetImageStatistics(pos));
+                // return Task.FromResult(GetImageStatistics(pos));
             }
             catch (Exception e)
             {
@@ -848,7 +853,7 @@ namespace DIPOL_UF.Models
                     logger2.Error(e, "Failed to fit gaussian at {X}, {Y}.", pos.X, pos.Y);
                 }
 
-                return default;
+                return Task.FromResult<(GaussianFitResults Row, GaussianFitResults Column)>(default);
             }
         }
 
