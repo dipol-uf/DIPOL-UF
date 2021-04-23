@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System;
+using System.Buffers;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.Optimization;
@@ -8,49 +9,42 @@ using Microsoft.Toolkit.HighPerformance;
 
 namespace DIPOL_UF
 {
-    internal class FWHM2D
+    internal class FWHM2DSimple
     {
-        private const int StackAllocLimit = 72;
         public class FitParams
         {
             public double Scale { get; init; }
-            public double Sigma1 { get; init; }
-            public double Sigma2 { get; init; }
+            public double Sigma { get; init; }
             public double X0 { get; init; }
             public double Y0 { get; init; }
             public double ZeroPoint { get; init; }
-            public double AngleRad { get; init; }
-            public double AngleDeg => AngleRad / Math.PI * 180;
 
+            public double FWHM => MathHelper.FWHMConst * Sigma;
             public Vector<double> ToVector()
             {
-                Vector<double> v = Vector<double>.Build.Dense(7);
+                Vector<double> v = Vector<double>.Build.Dense(5);
                 v[0] = Scale;
-                v[1] = Sigma1;
-                v[2] = Sigma2;
-                v[3] = X0;
-                v[4] = Y0;
-                v[5] = ZeroPoint;
-                v[6] = AngleRad;
+                v[1] = Sigma;
+                v[2] = X0;
+                v[3] = Y0;
+                v[4] = ZeroPoint;
                 return v;
             }
 
             public static FitParams FromVector(Vector<double> data) =>
-                data.Count != 7
+                data.Count != 5
                     ? throw new ArgumentException()
                     : new FitParams
                     {
                         Scale = data[0],
-                        Sigma1 = data[1],
-                        Sigma2 = data[2],
-                        X0 = data[3],
-                        Y0 = data[4],
-                        ZeroPoint = data[5],
-                        AngleRad = data[6]
+                        Sigma = data[1],
+                        X0 = data[2],
+                        Y0 = data[3],
+                        ZeroPoint = data[4]
                     };
         }
 
-        public static FitParams ComputeFullWidthHalfMax2D(ReadOnlySpan2D<double> data)
+        public static FitParams ComputeFullWidthHalfMax2D(ReadOnlySpan2D<float> data)
         {
             if (data.IsEmpty)
             {
@@ -60,10 +54,9 @@ namespace DIPOL_UF
             try
             {
                 var (width, height) = (data.Width, data.Height);
-
                 double[] x = Generate.LinearRange(0, width - 1);
                 double[] y = Generate.LinearRange(0, height - 1);
-                double[] dataAlloc = new double[data.Length];
+                float[] dataAlloc = new float[data.Length];
                 if (!data.TryCopyTo_Temp(dataAlloc))
                 {
                     return new FitParams();
@@ -74,21 +67,17 @@ namespace DIPOL_UF
                 var @params = new FitParams
                 {
                     Scale = max,
-                    Sigma1 = x.Length / 4.0,
-                    Sigma2 = y.Length / 4.0,
-                    X0 = x.Length / 2.0,
-                    Y0 = y.Length / 2.0,
-                    ZeroPoint = min,
-                    AngleRad = 0
+                    Sigma = x.Length / 8.0f + y.Length / 8.0f,
+                    X0 = x.Length / 2.0f,
+                    Y0 = y.Length / 2.0f,
+                    ZeroPoint = min
                 };
-                // var fitResult = NewtonMinimizer.Minimum(
-                //     fun, @params.ToVector()
-                // );
+
                 var fitResult = NelderMeadSimplex.Minimum(
                     fun,
                     @params.ToVector(),
                     convergenceTolerance: 1e-6,
-                    maximumIterations: 2_000
+                    maximumIterations: 5_000
                 );
                 return FitParams.FromVector(fitResult.MinimizingPoint);
             }
@@ -105,21 +94,16 @@ namespace DIPOL_UF
 
         private static double ExpFunc2D(FitParams p, double x, double y)
         {
-            var (cos, sin) = (Math.Cos(p.AngleRad), Math.Sin(p.AngleRad));
-            var (x0, y0) = (
-                p.X0 * cos - p.Y0 * sin,
-                p.X0 * sin + p.Y0 * cos
-            );
+            var r2 = (x - p.X0) * (x - p.X0) + (y - p.Y0) * (y - p.Y0);
             return
                 p.ZeroPoint
                 + p.Scale // / (2 * Math.PI * p.Sigma1 * p.Sigma2)
                 * Math.Exp(
-                    -(x - x0) * (x - x0) / (2 * p.Sigma1 * p.Sigma1)
-                    -(y - y0) * (y - y0) / (2 * p.Sigma2 * p.Sigma2)
+                    -r2 / 2 / p.Sigma / p.Sigma
                 );
         }
 
-        private static double Dist2D(FitParams p, ReadOnlySpan<double> x, ReadOnlySpan<double> y, double[] data, double[]? buffer = null)
+        private static double Dist2D(FitParams p, ReadOnlySpan<double> x, ReadOnlySpan<double> y, float[] data, double[]? buffer = null)
         {
             if (data.Length != x.Length * y.Length)
             {
@@ -133,8 +117,11 @@ namespace DIPOL_UF
 
             MathHelper.GridExpand(x, y, new Span2D<double>(buffer, y.Length, x.Length), (lx, ly) => ExpFunc2D(p, lx, ly));
 
-            return Distance.Euclidean(data, buffer);
+            return MathHelper.DistanceEuclidean(buffer, data);
+            // return Distance.Euclidean(data, buffer);
         }
+
+        
         
     }
 }

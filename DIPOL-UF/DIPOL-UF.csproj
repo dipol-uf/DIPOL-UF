@@ -169,9 +169,11 @@
     <Compile Include="Extensions\ValidationBinding.cs" />
     <Compile Include="FileDialogDescriptor.cs" />
     <Compile Include="FWHM2D.cs" />
+    <Compile Include="FWHM2DSimple.cs" />
     <Compile Include="GeometryDescriptor.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Injector.cs" />
+    <Compile Include="IsExternalInit.cs" />
     <Compile Include="Jobs\JobManager.CameraAction.cs" />
     <Compile Include="Jobs\JobManager.DelayAction.cs" />
     <Compile Include="Jobs\JobManager.Job.cs" />

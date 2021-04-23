@@ -41,15 +41,13 @@ namespace DIPOL_UF.Models
 
         public struct GaussianFitResults : IEquatable<GaussianFitResults>
         {
-            private static double Const { get; } = 2 * Math.Sqrt(2 * Math.Log(2));
-
             public double Baseline { get; }
             public double Scale { get; }
             public double Center { get; }
             public double Sigma { get; }
 
             public int Origin { get; set; }
-            public double FWHM => Const * Sigma;
+            public double FWHM => MathHelper.FWHMConst * Sigma;
 
             public bool IsValid => Baseline >= 0 && Scale > 0 && Sigma > 0;
 
@@ -684,7 +682,7 @@ namespace DIPOL_UF.Models
             var centerPix = GetPixelScale(SamplerCenterPos);
             var sizePix = GetPixelScale(SamplerGeometry!.Size);
             var halfSizePix = GetPixelScale(SamplerGeometry!.HalfSize);
-            var image = _sourceImage!;
+            var image = _sourceImage!.Copy();
 
             var rowStart = Math.Max(0, (int) (centerPix.Y - halfSizePix.Height));
             var colStart = Math.Max(0, (int) (centerPix.X - halfSizePix.Width));
@@ -694,11 +692,13 @@ namespace DIPOL_UF.Models
             double[]? buffer = null;
             try
             {
-                buffer = ArrayPool<double>.Shared.Rent(width * height);
-                var tempView = new Span2D<double>(buffer, height, width);
-
-                CastViewToDouble(image, colStart, rowStart, width, height, tempView);
+                // buffer = ArrayPool<double>.Shared.Rent(width * height);
+                // var tempView = new Span2D<double>(buffer, height, width);
+                ReadOnlySpan2D<float> tempView = image.TypedView2D<float>().Slice(rowStart, colStart, width, height);
+                // CastViewToDouble(image, colStart, rowStart, width, height, tempView);
                 var stats = ComputeFullWidthHalfMax(tempView);
+                var test = FWHM2DSimple.ComputeFullWidthHalfMax2D(tempView);
+                // var test2 = FWHM2D.ComputeFullWidthHalfMax2D(tempView);
                 stats.Column.Origin = colStart;
                 stats.Row.Origin = rowStart;
                 return stats;
@@ -1045,15 +1045,15 @@ namespace DIPOL_UF.Models
 
         }
 
-        private static (GaussianFitResults Row, GaussianFitResults Column) ComputeFullWidthHalfMax(ReadOnlySpan2D<double> data)
+        private static (GaussianFitResults Row, GaussianFitResults Column) ComputeFullWidthHalfMax(ReadOnlySpan2D<float> data)
         {
             var center = FindBrightestPixel(data);
-            ReadOnlySpan<double> row = IK.ILSpanCasts.SpanExtensions.GetRow(data, center.Row);
-            var rowBuff = new double[data.Width];
+            ReadOnlySpan<float> row = IK.ILSpanCasts.SpanExtensions.GetRow(data, center.Row);
+            var rowBuff = new float[data.Width];
             row.CopyTo(rowBuff);
 
-            var colBuff = new double[data.Height];
-            ReadOnlySpan2D<double> column = data.Slice(0, center.Column, 1, data.Height);
+            var colBuff = new float[data.Height];
+            ReadOnlySpan2D<float> column = data.Slice(0, center.Column, 1, data.Height);
             for (var i = 0; i < colBuff.Length; i++)
             {
                 colBuff[i] = column[i, 0];
@@ -1068,16 +1068,15 @@ namespace DIPOL_UF.Models
             var rowStats = ComputeFullWidthHalfMax(args, rowBuff);
             var colStats = ComputeFullWidthHalfMax(args, colBuff);
 
-            var test = FWHM2D.ComputeFullWidthHalfMax2D(data);
             
             return (rowStats, colStats);
         }
 
         
 
-        private static GaussianFitResults ComputeFullWidthHalfMax(double[] arg, double[] data)
+        private static GaussianFitResults ComputeFullWidthHalfMax(double[] arg, float[] data)
         {
-            var (baseLine, max) = MathHelper.MinMax(data);
+            var (baseLine, max) = data.MinMax();
 
             // Gaussian with non-zero baseline
             static double ExpFunc2(double scale, double sigma, double center, double background, double x) =>
@@ -1085,7 +1084,7 @@ namespace DIPOL_UF.Models
 
             // Distance between prediction and actual data
             double DistFunc(double scale, double sigma, double center, double background) =>
-                Distance.Euclidean(
+                MathHelper.DistanceEuclidean(
                     // Prediction
                     Generate.Map(arg, t => ExpFunc2(scale, sigma, center, background, t)),
                     // Data
@@ -1111,7 +1110,7 @@ namespace DIPOL_UF.Models
             Vector<double> prediction = minimizationResult.MinimizingPoint;
             return new GaussianFitResults(prediction[3], prediction[0], prediction[2], prediction[1]);
         }
-        private static (int Row, int Column) FindBrightestPixel(ReadOnlySpan2D<double> data)
+        private static (int Row, int Column) FindBrightestPixel(ReadOnlySpan2D<float> data)
         {
             var result = (Row: data.Height / 2, Column: data.Width / 2);
             var maxVal = data[result.Row, result.Column];
