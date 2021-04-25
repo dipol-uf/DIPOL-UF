@@ -1,27 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -40,7 +17,7 @@ namespace Serializers
     public static class JsonParser
     {
         // WATCH: NOT-HotFixing here
-        internal static object Converter(object input, bool convertAll = false)
+        internal static object? Converter(object? input, bool convertAll = false)
         {
             static string[] FlagEnumConverter(Enum @enum)
             {
@@ -85,7 +62,7 @@ namespace Serializers
         }
        
 
-        internal static object Converter3(object inp, bool convertAll = false)
+        internal static object? Converter3(object? inp, bool convertAll = false)
         {
             var result = inp;
             if (inp is { } &&
@@ -135,7 +112,7 @@ namespace Serializers
             str.Flush();
         }
 
-        public static IReadOnlyDictionary<string, object> GenerateJson(object settings)
+        public static IReadOnlyDictionary<string, object?> GenerateJson(object settings)
         {
             var props = settings.GetType()
                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
@@ -155,19 +132,22 @@ namespace Serializers
                 .ToDictionary(item => item.Name, item => item.Value);
         }
 
-        public static ReadOnlyDictionary<string, object> ReadJson(StreamReader str)
+        public static ReadOnlyDictionary<string, object?> ReadJson(StreamReader str)
         {
 
 
             var line = str.ReadToEnd();
 
             var result = JsonConvert.DeserializeObject<Dictionary<string, object>>(line)
-                                    .ToDictionary(x => x.Key, x => Process(x.Value));
+                                    ?.ToDictionary(x => x.Key, x => Process(x.Value))
+                         ?? new Dictionary<string, object?>();
 
-            return new ReadOnlyDictionary<string, object>(result);
+            return new ReadOnlyDictionary<string, object?>(result);
         }
 
-        public static async Task<ReadOnlyDictionary<string, object>> ReadJsonAsync(Stream str, Encoding enc, CancellationToken token)
+        public static async Task<ReadOnlyDictionary<string, object?>> ReadJsonAsync(
+            Stream str, Encoding enc, CancellationToken token
+        )
         {
             if (!str.CanRead)
                 throw new ArgumentException("Stream does not support writing.", nameof(str));
@@ -179,8 +159,9 @@ namespace Serializers
             var @string = enc.GetString(buffer);
 
             var result = JsonConvert.DeserializeObject<Dictionary<string, object>>(@string)
-                                    .ToDictionary(x => x.Key, x => Process(x.Value));
-            return new ReadOnlyDictionary<string, object>(result);
+                                    ?.ToDictionary(x => x.Key, x => Process(x.Value))
+                         ?? new Dictionary<string, object?>();
+            return new ReadOnlyDictionary<string, object?>(result);
 
         }
 
@@ -211,11 +192,11 @@ namespace Serializers
             return str.WriteAsync(byteRep, 0, byteRep.Length, token);
         }
 
-        private static object Process( object token)
+        private static object? Process(object? token)
         {
             return token switch
             {
-                JObject obj => new ReadOnlyDictionary<string, object>(obj.Properties()
+                JObject obj => new ReadOnlyDictionary<string, object?>(obj.Properties()
                     .ToDictionary(x => x.Name, x => Process(x.Value))),
                 JValue val => val.Value,
                 JArray array => array.Select(Process).ToArray(),
