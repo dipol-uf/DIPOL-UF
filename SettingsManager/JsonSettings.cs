@@ -1,27 +1,5 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -33,12 +11,12 @@ namespace SettingsManager
 
         public int Count => _rawObject.Count;
 
-        public object this[in string name] => Get(name);
+        public object? this[in string name] => Get(name);
 
-        public void Set(in string name, object val)
+        public void Set(in string name, object? val)
         {
             if (HasKey(name))
-                _rawObject[name].Replace(new JValue(val));
+                _rawObject[name]?.Replace(new JValue(val));
             else
                 _rawObject.Add(name, new JValue(val));
         }
@@ -52,39 +30,49 @@ namespace SettingsManager
         public bool HasKey(in string name)
 			=> _rawObject.ContainsKey(name);
 
+        [return:MaybeNull]
         public T Get<T>(in string name)
-			=> !HasKey(name) ? default : _rawObject.GetValue(name).ToObject<T>();
+            => _rawObject.TryGetValue(name, out var value) && value is not null ? value.ToObject<T>() : default;        
 
+        [return:MaybeNull] 
         public T Get<T>(in string name, T fallback)
-            => !HasKey(name) ? fallback : _rawObject.GetValue(name).ToObject<T>();
+            => _rawObject.TryGetValue(name, out var value) && value is not null ? value.ToObject<T>() : fallback; 
 
         public T[] GetArray<T>(in string name)
-			=> !HasKey(name) ? new T[] { } : (_rawObject.GetValue(name) as JArray)?.ToObject<T[]>();
+            => _rawObject.TryGetValue(name, out var value) && value is JArray jArray && jArray.ToObject<T[]>() is T[] array ? array : Array.Empty<T>();
 
-        public JsonSettings GetJson(in string name)
-			=> !HasKey(name) ? null : new JsonSettings(_rawObject.GetValue(name) as JObject);
+        public JsonSettings? GetJson(in string name)
+            => _rawObject.TryGetValue(name, out var value) && value is JObject obj ? new JsonSettings(obj) : null;
+			// => !HasKey(name) ? null : new JsonSettings(_rawObject.GetValue(name) as JObject);
 
-        public object Get(in string name)
-            => _rawObject.GetValue(name)?.ToObject(typeof(object));
+        public object? Get(in string name)
+            => _rawObject.TryGetValue(name, out var value) && value is not null ? value.ToObject(typeof(object)) : null;
 
-        public bool TryGet<T>(in string name, out T value)
+        public bool TryGet<T>(
+            in string name,
+            [MaybeNullWhen(false)]out T value
+        )
         {
             value = default;
 
-            if (HasKey(name))
+            if (_rawObject.TryGetValue(name, out var token) && token is not null && token.Value<T>() is T result)
             {
-                //if (Get(name) is T result)
-                //    value = result;
-                if(_rawObject.TryGetValue(name, out var token) && token.Value<T>() is T result)
-                    value = result;
-
-                if (Get(name) == null &&
-                    typeof(T) == typeof(object))
-                    value = default;
-
-
+                value = result;
                 return true;
             }
+
+            // if (HasKey(name))
+            // {
+            //     //if (Get(name) is T result)
+            //     //    value = result;
+            //
+            //     if (Get(name) == null &&
+            //         typeof(T) == typeof(object))
+            //         value = default;
+            //
+            //
+            //     return true;
+            // }
 
             return false;
         }
@@ -96,7 +84,7 @@ namespace SettingsManager
 			=> _rawObject = new JObject();
 
         public JsonSettings(in string input)
-			=> _rawObject = JsonConvert.DeserializeObject(input) as JObject;
+			=> _rawObject = JsonConvert.DeserializeObject(input) as JObject ?? throw new InvalidOperationException();
 
         public JsonSettings(in JObject json)
 			=> _rawObject = json;
