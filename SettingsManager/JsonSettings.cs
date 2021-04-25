@@ -32,20 +32,21 @@ namespace SettingsManager
 
         [return:MaybeNull]
         public T Get<T>(in string name)
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             => _rawObject.TryGetValue(name, out var value) && value is not null ? value.ToObject<T>() : default;        
 
-        [return:MaybeNull] 
         public T Get<T>(in string name, T fallback)
-            => _rawObject.TryGetValue(name, out var value) && value is not null ? value.ToObject<T>() : fallback; 
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+            => _rawObject.TryGetValue(name, out var value) && value is not null && value.ToObject<T>() is {} obj ? obj : fallback; 
 
         public T[] GetArray<T>(in string name)
-            => _rawObject.TryGetValue(name, out var value) && value is JArray jArray && jArray.ToObject<T[]>() is T[] array ? array : Array.Empty<T>();
+            => _rawObject.TryGetValue(name, out var value) && value is JArray jArray && jArray.ToObject<T[]>() is { } array ? array : Array.Empty<T>();
 
         public JsonSettings? GetJson(in string name)
             => _rawObject.TryGetValue(name, out var value) && value is JObject obj ? new JsonSettings(obj) : null;
-			// => !HasKey(name) ? null : new JsonSettings(_rawObject.GetValue(name) as JObject);
 
         public object? Get(in string name)
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             => _rawObject.TryGetValue(name, out var value) && value is not null ? value.ToObject(typeof(object)) : null;
 
         public bool TryGet<T>(
@@ -55,24 +56,13 @@ namespace SettingsManager
         {
             value = default;
 
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+            // ReSharper disable once PatternAlwaysOfType
             if (_rawObject.TryGetValue(name, out var token) && token is not null && token.Value<T>() is T result)
             {
                 value = result;
                 return true;
             }
-
-            // if (HasKey(name))
-            // {
-            //     //if (Get(name) is T result)
-            //     //    value = result;
-            //
-            //     if (Get(name) == null &&
-            //         typeof(T) == typeof(object))
-            //         value = default;
-            //
-            //
-            //     return true;
-            // }
 
             return false;
         }
