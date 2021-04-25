@@ -3,6 +3,7 @@
     <ProjectGuid>{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}</ProjectGuid>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
     <Platforms>AnyCPU</Platforms>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>

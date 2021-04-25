@@ -33,13 +33,13 @@ namespace StepMotor
     {
         Task<ImmutableList<byte>> FindDevice(SerialPort port, byte startAddress = 1, byte endAddress = 16);
 
-        Task<IAsyncMotor> TryCreateFromAddress(
+        Task<IAsyncMotor?> TryCreateFromAddress(
             SerialPort port, byte address, TimeSpan defaultTimeOut = default);
 
-        Task<IAsyncMotor> TryCreateFirst(
+        Task<IAsyncMotor?> TryCreateFirst(
             SerialPort port, byte startAddress = 1, byte endAddress = 16, TimeSpan defaultTimeOut = default);
 
-        Task<IAsyncMotor> CreateFirstOrFromAddress(
+        Task<IAsyncMotor?> CreateFirstOrFromAddress(
             SerialPort port, byte address,
             byte startAddress = 1, byte endAddress = 16,
             TimeSpan defaultTimeOut = default);
