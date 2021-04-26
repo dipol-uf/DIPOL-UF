@@ -1,31 +1,9 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
-using System;
+﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -46,20 +24,20 @@ namespace FITS_CS
             //NonFixed = 2,
         }
 
-        public static readonly int KeySize = 80;
-        public static readonly int KeyHeaderSize = 8;
-        public static readonly int ReservedSize = 2;
-        public static readonly int StringQuotePos = 20;
-        public static readonly int NumericValueMaxLengthFixed = 20;
+        public const int KeySize = 80;
+        public const int KeyHeaderSize = 8;
+        public const int ReservedSize = 2;
+        public const int StringQuotePos = 20;
+        public const int NumericValueMaxLengthFixed = 20;
 
         public static FitsKey End => new FitsKey("END", FitsKeywordType.Comment, "");
         public static FitsKey Empty => new FitsKey();
 
         [field: DataMember]
-        private byte[] RawValue { get;}
+        private byte[]? RawValue { get;}
 
         [field: DataMember]
-        public string Header
+        public string? Header
         {
             get;
         }
@@ -136,7 +114,7 @@ namespace FITS_CS
                     Type = FitsKeywordType.Blank;
                     RawValue = new byte[0];
                 }
-                else if (trimVal == "F" || trimVal == "T")
+                else if (trimVal is "F" or "T")
                 {
                     Type = FitsKeywordType.Logical;
                     RawValue = GetBytes(trimVal == "T");
@@ -144,7 +122,9 @@ namespace FITS_CS
                 else if (trimVal.Contains('\''))
                 {
                     Type = FitsKeywordType.String;
-                    RawValue = GetBytes(Regex.Match(trimVal, "'(.*)'").Groups[1].Value.Replace("''", "'"));
+                    var match = Regex.Match(trimVal, "'(.*)'").Groups[1].Value.Replace("''", "'");
+                    RawValue = new byte[match.Length * sizeof(char)];
+                    match.AsSpan().GetBytes(RawValue);
                 }
                 else if (Value.Length > maxPos + 1 && 
                          double.TryParse(Value.Substring(0, maxPos), 
@@ -153,7 +133,8 @@ namespace FITS_CS
                              NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var img))
                 {
                     Type = FitsKeywordType.Complex;
-                    RawValue = GetBytes(new Complex(real, img));
+                    RawValue = new byte[sizeof(double) * 2];
+                    new Complex(real, img).GetBytes(RawValue);
                 }
                 else if (int.TryParse(trimVal, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var intVal))
                 {
@@ -169,8 +150,9 @@ namespace FITS_CS
             }
             else
             {
-                Value = keyString.Substring(KeyHeaderSize).Trim();
-                RawValue = GetBytes(Value);
+                Value = keyString.AsSpan(KeyHeaderSize).Trim().ToString();
+                RawValue = new byte[Value.Length * sizeof(char)];
+                Value.AsSpan().GetBytes(RawValue);
                 Type = FitsKeywordType.Comment;
             }
 
@@ -245,7 +227,7 @@ namespace FITS_CS
                         Value = string.Format($"{{0, {maxValuePos}}}{complexSep}{{1, {maxValuePos}}}",
                             FormatDouble(cVal.Real, dblDecPrecision),
                             FormatDouble(cVal.Imaginary, dblDecPrecision));
-                        RawValue = GetBytes(cVal);
+                        RawValue = cVal.GetBytes();
 
                     }
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type" +
@@ -263,7 +245,7 @@ namespace FITS_CS
                         if (Value.Length < maxValuePos)
                             Value += new string(' ', maxValuePos - Value.Length);
 
-                        RawValue = GetBytes(srcVal);
+                        RawValue = srcVal.GetBytes();
 
                     }
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type" +
@@ -275,7 +257,7 @@ namespace FITS_CS
                     if (value is string commVal)
                         Value = commVal.Substring(0, Math.Min(commVal.Length, KeySize - KeyHeaderSize));
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(string)}.");
-                    RawValue = GetBytes(Value);
+                    RawValue = Value.GetBytes();
                     break;
                 case FitsKeywordType.Blank:
                     if (value is string blankVal)
@@ -283,7 +265,7 @@ namespace FITS_CS
                     else if (value is null)
                         Value = "";
                     else throw new ArgumentException($"\"{nameof(value)}\" should be of type {typeof(string)}.");
-                    RawValue = GetBytes(Value);
+                    RawValue = Value.GetBytes();
                     break;
                 default:
                     throw new NotSupportedException($"Unsupported \"{nameof(type)}\".");
@@ -310,39 +292,66 @@ namespace FITS_CS
         /// </summary>
         /// <typeparam name="T">Type of the contained value</typeparam>
         /// <returns>Raw value cast to the type.</returns>
+        [return:MaybeNull]
         public T GetValue<T>()
         {
-            dynamic result;
+            if (RawValue is null)
+            {
+                return default;
+            }
 
-            if (typeof(T) == typeof(bool) 
+            if (typeof(T) == typeof(bool)
                 && Type == FitsKeywordType.Logical)
-                result = ToBoolean(RawValue, 0);
-            else if (typeof(T) == typeof(int)
-                     && Type == FitsKeywordType.Integer)
-                result = ToInt32(RawValue, 0);
-            else if ((typeof(T) == typeof(float) || typeof(T) == typeof(double))
-                     && Type == FitsKeywordType.Float)
-                result = ToSingle(RawValue, 0);
-            else if (typeof(T) == typeof(Complex)
-                     && Type == FitsKeywordType.Complex)
-                result = ToComplex(RawValue, 0);
-            else if (typeof(T) == typeof(string)
-                     && (Type == FitsKeywordType.String || Type == FitsKeywordType.Comment))
-                result = ExtendedBitConverter.ToString(RawValue, 0);
+            {
+                return Unsafe.As<byte, T>(ref RawValue[0]);
+            }
 
-            else
-                throw new ArgumentException(
-                    "Generic type does not match the keyword type and conversion is impossible.");
+            if (typeof(T) == typeof(int)
+                && Type == FitsKeywordType.Integer)
+            {
+                return Unsafe.As<byte, T>(ref RawValue[0]);
+            }
 
-            return (T)result;
+            if (typeof(T) == typeof(float)
+                && Type == FitsKeywordType.Float)
+            {
+                return Unsafe.As<byte, T>(ref RawValue[0]);
+            }
+            
+            if (typeof(T) == typeof(double)
+                && Type == FitsKeywordType.Float)
+            {
+                var floatVal = Unsafe.As<byte, float>(ref RawValue[0]);
+                var dblVal = (double) floatVal;
+                return Unsafe.As<double, T>(ref dblVal);
+            }
+            
+            if (typeof(T) == typeof(Complex)
+                && Type == FitsKeywordType.Complex)
+            {
+                var cmplVal = ToComplex(RawValue);
+                return Unsafe.As<Complex, T>(ref cmplVal);
+            }
+
+            if (typeof(T) == typeof(string)
+                && Type is FitsKeywordType.Comment or FitsKeywordType.String)
+            {
+                var strVal = ExtendedBitConverter.ToString(RawValue);
+                return Unsafe.As<string, T>(ref strVal);
+            }
+
+
+            throw new ArgumentException(
+                "Generic type does not match the keyword type and conversion is impossible."
+            );
         }
 
         public override string ToString() => KeyString;
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is FitsKey key)
                 return Type.Equals(key.Type) &&
-                       Header.Equals(key.Header) &&
+                       string.Equals(Header, key.Header) &&
                        Value.Equals(key.Value) &&
                        Comment.Equals(key.Comment);
             return false;

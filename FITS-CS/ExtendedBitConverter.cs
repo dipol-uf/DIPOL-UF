@@ -1,91 +1,82 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
+﻿
 using System;
+using System.Buffers;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace FITS_CS
 {
     internal static class ExtendedBitConverter
     {
-        public static byte[] GetBytes(Complex c)
+        public static byte[] GetBytes(this Complex c)
         {
-            const int size = sizeof(double);
-            var array = new byte[size * 2];
-            Buffer.BlockCopy(BitConverter.GetBytes(c.Real), 0, array, 0, size);
-            Buffer.BlockCopy(BitConverter.GetBytes(c.Imaginary), 0, array, size, size);
-
+            var array = new byte[2 * sizeof(double)];
+            c.GetBytes(array);
             return array;
         }
 
-        public static byte[] GetBytes(string s)
+        public static void GetBytes(this Complex c, Span<byte> buffer)
         {
-            if (s is null)
-                throw new ArgumentNullException(nameof(s));
+            if (buffer.Length < 2 * sizeof(double))
+            {
+                throw new ArgumentOutOfRangeException(nameof(buffer));
+            }
 
-            const int size = sizeof(char);
-            var array = new byte[size * s.Length];
-            for (var i = 0; i < s.Length; i++)
-                Buffer.BlockCopy(BitConverter.GetBytes(s[i]), 0, array, size * i, size);
+            Unsafe.WriteUnaligned(ref buffer[0], c.Real);
+            Unsafe.WriteUnaligned(ref buffer[sizeof(double)], c.Imaginary);
+        }
+        
+        public static byte[] GetBytes(this ReadOnlySpan<char> s)
+        {
+            if (s.IsEmpty)
+            {
+                return Array.Empty<byte>();
+            }
 
+            var array = new byte[s.Length * sizeof(char)];
+            s.GetBytes(array);
             return array;
         }
 
-        public static Complex ToComplex(byte[] array, int startIndex)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte[] GetBytes(this string s) => s.AsSpan().GetBytes();
+        
+        public static void GetBytes(this ReadOnlySpan<char> s, Span<byte> data)
         {
-            const int size = sizeof(double);
-
-            if(array is null)
-                throw  new ArgumentNullException(nameof(array));
-            if(array.Length < 2 * size)
-                throw new ArgumentException("Array is too small.");
-            if (startIndex < 0 || array.Length - startIndex < 2 * size)
-                throw new ArgumentOutOfRangeException(nameof(startIndex));
-
-            return new Complex(BitConverter.ToDouble(array, startIndex), BitConverter.ToDouble(array, startIndex + size));
+            if (data.Length < s.Length * sizeof(char))
+            {
+                throw new ArgumentOutOfRangeException(nameof(data));
+            }
+            MemoryMarshal.AsBytes(s).CopyTo(data);
         }
 
-        public static string ToString(byte[] array, int startIndex)
+        public static Complex ToComplex(ReadOnlySpan<byte> data)
         {
-            const int size = sizeof(char);
+            if (data.Length < 2 * sizeof(double))
+            {
+                throw new ArgumentOutOfRangeException(nameof(data));
+            }
 
-            if (array is null)
-                throw new ArgumentNullException(nameof(array));
-            if (array.Length < size)
-                throw new ArgumentException("Array is too small.");
-            if (array.Length % size != 0)
-                throw new ArgumentException("Array does not contain a whole number of characters.");
-            if (startIndex < 0 || array.Length - startIndex < size)
-                throw new ArgumentOutOfRangeException(nameof(startIndex));
-            
-            var builder = new StringBuilder(array.Length / size);
+            return new Complex(
+                Unsafe.ReadUnaligned<double>(ref Unsafe.AsRef(in data[0])),
+                Unsafe.ReadUnaligned<double>(ref Unsafe.AsRef(in data[sizeof(double)]))
+            );
+        }
+        
+        public static string ToString(ReadOnlySpan<byte> data)
+        {
+            const int stackAllocLimit = FitsKey.KeySize * sizeof(char);
+            var len = data.Length;
+            Span<char> buff = len > stackAllocLimit
+                ? new char[len]
+                : stackalloc char[len];
 
-            for (var i = 0; i < array.Length / size; i++)
-                builder.Append(BitConverter.ToChar(array, startIndex + size * i));
+            Span<byte> view = MemoryMarshal.AsBytes(buff);
+            data.CopyTo(view);
 
-            return builder.ToString();
+            return buff.ToString();
         }
     }
 }

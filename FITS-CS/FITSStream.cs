@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -126,7 +127,9 @@ namespace FITS_CS
             
         }
 
-        public bool TryReadUnit(out FitsUnit unit)
+        public bool TryReadUnit(
+            [MaybeNullWhen(false)]out FitsUnit unit
+            )
         {
             unit = null;
             try
@@ -140,16 +143,16 @@ namespace FITS_CS
             }
         }
 
-        public static void WriteImage(Image image, FitsImageType type, Stream stream, IEnumerable<FitsKey> extraKeys = null)
+        public static void WriteImage(Image image, FitsImageType type, Stream stream, IEnumerable<FitsKey>? extraKeys = null)
         {
             var keys = new List<FitsKey>
             {
-                new FitsKey("SIMPLE", FitsKeywordType.Logical, true),
-                new FitsKey("BITPIX", FitsKeywordType.Integer, (int)(short)type),
-                new FitsKey("NAXIS", FitsKeywordType.Integer, 2),
-                new FitsKey("NAXIS1", FitsKeywordType.Integer, image.Width),
-                new FitsKey("NAXIS2", FitsKeywordType.Integer, image.Height),
-                new FitsKey("NAXIS", FitsKeywordType.Integer, 2)
+                new("SIMPLE", FitsKeywordType.Logical, true),
+                new("BITPIX", FitsKeywordType.Integer, (int)(short)type),
+                new("NAXIS", FitsKeywordType.Integer, 2),
+                new("NAXIS1", FitsKeywordType.Integer, image.Width),
+                new("NAXIS2", FitsKeywordType.Integer, image.Height),
+                new("NAXIS", FitsKeywordType.Integer, 2)
             };
 
             if (extraKeys != null)
@@ -167,27 +170,27 @@ namespace FITS_CS
                 str.WriteUnit(unit);
         }
 
-        public static void WriteImage(Image image, FitsImageType type, string path, IEnumerable<FitsKey> extraKeys = null)
+        public static void WriteImage(Image image, FitsImageType type, string path, IEnumerable<FitsKey>? extraKeys = null)
         {
             using (var str = new FileStream(path, FileMode.Create, FileAccess.Write))
                 WriteImage(image, type, str, extraKeys);
         }
 
         public static async Task WriteImageAsync(Image image, FitsImageType type, Stream stream,
-            IEnumerable<FitsKey> extraKeys = null, CancellationToken token = default)
+            IEnumerable<FitsKey>? extraKeys = null, CancellationToken token = default)
         {
-            List<FitsUnit> keyUnits = null;
-            List<FitsUnit> dataUnits = null;
+            List<FitsUnit>? keyUnits = null;
+            List<FitsUnit>? dataUnits = null;
             await Task.Run(() =>
             {
                 var keys = new List<FitsKey>
                 {
-                    new FitsKey("SIMPLE", FitsKeywordType.Logical, true),
-                    new FitsKey("BITPIX", FitsKeywordType.Integer, (int) (short) type),
-                    new FitsKey("NAXIS", FitsKeywordType.Integer, 2),
-                    new FitsKey("NAXIS1", FitsKeywordType.Integer, image.Width),
-                    new FitsKey("NAXIS2", FitsKeywordType.Integer, image.Height),
-                    new FitsKey("NAXIS", FitsKeywordType.Integer, 2)
+                    new("SIMPLE", FitsKeywordType.Logical, true),
+                    new("BITPIX", FitsKeywordType.Integer, (int) (short) type),
+                    new("NAXIS", FitsKeywordType.Integer, 2),
+                    new("NAXIS1", FitsKeywordType.Integer, image.Width),
+                    new("NAXIS2", FitsKeywordType.Integer, image.Height),
+                    new("NAXIS", FitsKeywordType.Integer, 2)
                 };
 
                 if (extraKeys != null)
@@ -210,7 +213,7 @@ namespace FITS_CS
         }
 
         public static async Task WriteImageAsync(Image image, FitsImageType type, string path,
-            IEnumerable<FitsKey> extraKeys = null, CancellationToken token = default)
+            IEnumerable<FitsKey>? extraKeys = null, CancellationToken token = default)
         {
             using (var str = new FileStream(path, FileMode.Create, FileAccess.Write))
                 await WriteImageAsync(image, type, str, extraKeys, token);
