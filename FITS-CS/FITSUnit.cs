@@ -3,8 +3,8 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 
 namespace FITS_CS
 {
@@ -66,57 +66,70 @@ namespace FITS_CS
 
         }
 
-        public T[] GetData<T>() where T : unmanaged
+        public void GetData<T>(Span<T> data) where T : unmanaged
         {
-            var size = Marshal.SizeOf<T>();
+            var size = Unsafe.SizeOf<T>();
             // Hardcoded values 
             if (size != 1 &&
                 size != 2 &&
                 size != 4 &&
                 size != 8)
+            {
                 throw new ArgumentException(
-                    $"{typeof(T)} is not compatible with allowed {nameof(FitsImageType)} types.");
+                    $"{typeof(T)} is not compatible with allowed {nameof(FitsImageType)} types."
+                );
+
+            }
 
             // This should have no rounding errors
             var n = UnitSizeInBytes / size;
-            var result = new T[n];
+            if (data.Length < n)
+            {
+                throw new ArgumentOutOfRangeException(nameof(data));
+            }
             // Buffer should have `UnitSizeInBytes` size or `n` elements of type `T`
-            Span<byte> buffer = MemoryMarshal.AsBytes(result.AsSpan());
+            Span<byte> buffer = MemoryMarshal.AsBytes(data.Slice(0, n));
             _data.CopyTo(buffer);
 
-            if (BitConverter.IsLittleEndian && size > 1)
+            if (!BitConverter.IsLittleEndian || size <= 1) return;
+            
+            switch (size)
             {
-                switch (size)
+                case 2:
                 {
-                    case 2:
+                    for (var i = 0; i < n; i++)
                     {
-                        for (var i = 0; i < n; i++)
-                        {
-                            ReverseBy2(buffer.Slice(i * 2));
-                        }
+                        ReverseBy2(buffer.Slice(i * 2));
+                    }
 
-                        break;
-                    }
-                    case 4:
+                    break;
+                }
+                case 4:
+                {
+                    for (var i = 0; i < n; i++)
                     {
-                        for (var i = 0; i < n; i++)
-                        {
-                            ReverseBy4(buffer.Slice(i * 4));
-                        }
+                        ReverseBy4(buffer.Slice(i * 4));
+                    }
 
-                        break;
-                    }
-                    case 8:
+                    break;
+                }
+                case 8:
+                {
+                    for (var i = 0; i < n; i++)
                     {
-                        for (var i = 0; i < n; i++)
-                        {
-                            ReverseBy8(buffer.Slice(i * 8));
-                        }
-                        break;
+                        ReverseBy8(buffer.Slice(i * 8));
                     }
+                    break;
                 }
             }
-
+        }
+        
+        public T[] GetData<T>() where T : unmanaged
+        {
+            var size = Unsafe.SizeOf<T>();
+            var n = UnitSizeInBytes / size;
+            var result = new T[n];
+            GetData(result.AsSpan());
             return result;
         }
 
@@ -176,23 +189,23 @@ namespace FITS_CS
             return result;
         }
 
-        public static List<FitsUnit> GenerateFromDataArray(byte[] array, FitsImageType type)
+        public static List<FitsUnit> GenerateFromDataArray(ReadOnlySpan<byte> data, FitsImageType type)
         {
 
             var size = Math.Abs((short)type) / 8;
-            var n = (int)Math.Ceiling(1.0 * array.Length / UnitSizeInBytes);
+            var n = (int)Math.Ceiling(1.0 * data.Length / UnitSizeInBytes);
             var result = new List<FitsUnit>(n);
 
             var pooledArray = ArrayPool<byte>.Shared.Rent(UnitSizeInBytes);
             Span<byte> buffer = pooledArray.AsSpan(0, UnitSizeInBytes);
 
-            ReadOnlySpan<byte> arrayView = array.AsSpan();
+            ReadOnlySpan<byte> arrayView = data;
             try
             {
                 for (var iUnit = 0; iUnit < n; iUnit++)
                 {
                     buffer.Clear();
-                    var cpSize = Math.Min(UnitSizeInBytes, array.Length - iUnit * UnitSizeInBytes);
+                    var cpSize = Math.Min(UnitSizeInBytes, data.Length - iUnit * UnitSizeInBytes);
                     arrayView.Slice(iUnit * UnitSizeInBytes, cpSize).CopyTo(buffer);
                     if (BitConverter.IsLittleEndian && size > 1)
                     {
