@@ -1,35 +1,38 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 namespace FITS_CS
 {
     public class FitsUnit
     {
-        public static readonly int UnitSizeInBytes = 2880;
+        public const int UnitSizeInBytes = 2880;
 
         // ReSharper disable once InconsistentNaming
         internal readonly byte[] _data = new byte[UnitSizeInBytes];
 
         public IReadOnlyList<byte> Data => _data;
 
-        private FitsUnit(byte[] data, bool isKeywords = false)
+        private FitsUnit(ReadOnlySpan<byte> data, bool isKeywords)
         {
-            Array.Copy(data, _data, data.Length);
+            if (data.Length != UnitSizeInBytes)
+                throw new ArgumentException($"{nameof(data)} has wrong length");
+
+            data.CopyTo(_data);
 
             IsKeywords = isKeywords;
         }
 
-        public FitsUnit(byte[] data)
+        public FitsUnit(ReadOnlySpan<byte> data)
         {
-            if (data == null)
-                throw new ArgumentNullException($"{nameof(data)} is null");
             if (data.Length != UnitSizeInBytes)
                 throw new ArgumentException($"{nameof(data)} has wrong length");
 
-            Array.Copy(data, _data, data.Length);
+            data.CopyTo(_data);
 
             IsKeywords = Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
                                    .All(i => FitsKey.IsFitsKey(_data, i * FitsKey.KeySize) ||
@@ -46,9 +49,11 @@ namespace FITS_CS
         {
             keys = null;
             if (IsData)
+            {
                 return false;
+            }
 
-            var n = UnitSizeInBytes / FitsKey.KeySize;
+            const int n = UnitSizeInBytes / FitsKey.KeySize;
 
             keys = new List<FitsKey>(n);
 
@@ -61,7 +66,7 @@ namespace FITS_CS
 
         }
 
-        public T[] GetData<T>() where T : struct
+        public T[] GetData<T>() where T : unmanaged
         {
             var size = Marshal.SizeOf<T>();
             // Hardcoded values 
@@ -72,68 +77,100 @@ namespace FITS_CS
                 throw new ArgumentException(
                     $"{typeof(T)} is not compatible with allowed {nameof(FitsImageType)} types.");
 
-            var workData = new byte[_data.Length];
-            Array.Copy(_data, workData, _data.Length);
+            // This should have no rounding errors
             var n = UnitSizeInBytes / size;
             var result = new T[n];
+            // Buffer should have `UnitSizeInBytes` size or `n` elements of type `T`
+            Span<byte> buffer = MemoryMarshal.AsBytes(result.AsSpan());
+            _data.CopyTo(buffer);
 
             if (BitConverter.IsLittleEndian && size > 1)
             {
-                if(size == 2)
-                    for (var i = 0; i < n; i++)
-                        ArrayReverseBy2(workData, i * 2);
-                else if(size == 4)
-                    for (var i = 0; i < n; i++)
-                        ArrayReverseBy4(workData, i * 4);
-                else if (size == 8)
-                    for (var i = 0; i < n; i++)
-                        ArrayReverseBy8(workData, i * 8);
+                switch (size)
+                {
+                    case 2:
+                    {
+                        for (var i = 0; i < n; i++)
+                        {
+                            ReverseBy2(buffer.Slice(i * 2));
+                        }
 
-                // [size]
-                //else
-                //    for (var i = 0; i < n; i++)
-                //        ArrayReverse(workData, i * size, size);
+                        break;
+                    }
+                    case 4:
+                    {
+                        for (var i = 0; i < n; i++)
+                        {
+                            ReverseBy4(buffer.Slice(i * 4));
+                        }
+
+                        break;
+                    }
+                    case 8:
+                    {
+                        for (var i = 0; i < n; i++)
+                        {
+                            ReverseBy8(buffer.Slice(i * 8));
+                        }
+                        break;
+                    }
+                }
             }
-
-            //var handle = GCHandle.Alloc(result, GCHandleType.Pinned);
-            //Marshal.Copy(workData, 0, handle.AddrOfPinnedObject(), workData.Length);
-            //handle.Free();
-            Buffer.BlockCopy(workData, 0, result, 0, workData.Length);
 
             return result;
         }
 
         public static List<FitsUnit> GenerateFromKeywords(params FitsKey[] keys)
         {
-            var keysPerUnit = UnitSizeInBytes / FitsKey.KeySize;
+            const int keysPerUnit = UnitSizeInBytes / FitsKey.KeySize;
             var result = new List<FitsUnit>(keys.Length / keysPerUnit + 1);
 
             var nUnits = (int)Math.Ceiling(1.0 * keys.Length / keysPerUnit);
 
             var nEmpty = nUnits * keysPerUnit - keys.Length;
 
-            var buffer = new byte[UnitSizeInBytes];
+            var pooledArray = ArrayPool<byte>.Shared.Rent(UnitSizeInBytes);
+            Span<byte> buffer = pooledArray.AsSpan(0, UnitSizeInBytes);
 
-            for (var iUnit = 0; iUnit < nUnits; iUnit++)
+            try
             {
-
-                if (iUnit != nUnits - 1)
+                for (var iUnit = 0; iUnit < nUnits; iUnit++)
                 {
-                    for (var iKey = 0; iKey < keysPerUnit; iKey++)
-                        Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FitsKey.KeySize, FitsKey.KeySize);
+                    buffer.Fill((byte)' ');
+                    if (iUnit != nUnits - 1)
+                    {
+                        for (var iKey = 0; iKey < keysPerUnit; iKey++)
+                        {
+                            keys[iUnit * keysPerUnit + iKey]
+                                .Data
+                                .CopyTo(buffer.Slice(iKey * FitsKey.KeySize));
+                        }
 
-                    result.Add(new FitsUnit(buffer)); 
+                        result.Add(new FitsUnit(buffer));
+                    }
+                    else
+                    {
+                        for (var iKey = 0; iKey < keysPerUnit - nEmpty; iKey++)
+                        {
+                            keys[iUnit * keysPerUnit + iKey]
+                                .Data
+                                .CopyTo(buffer.Slice(iKey * FitsKey.KeySize));
+                        }
+
+                        // TODO: Maybe not needed
+                        for (var iKey = keysPerUnit - nEmpty; iKey < keysPerUnit; iKey++)
+                        {
+                            FitsKey.Empty.Data.CopyTo(buffer.Slice(iKey * FitsKey.KeySize));
+                        }
+
+                        result.Add(new FitsUnit(buffer));
+
+                    }
                 }
-                else
-                {
-                    for (var iKey = 0; iKey < keysPerUnit - nEmpty; iKey++)
-                        Array.Copy(keys[iUnit * keysPerUnit + iKey].Data, 0, buffer, iKey * FitsKey.KeySize, FitsKey.KeySize);
-                    for (var iKey = keysPerUnit - nEmpty; iKey < keysPerUnit; iKey++)
-                        Array.Copy(FitsKey.Empty.Data, 0, buffer, iKey * FitsKey.KeySize, FitsKey.KeySize);
-
-                    result.Add(new FitsUnit(buffer));
-
-                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(pooledArray);
             }
 
             return result;
@@ -146,87 +183,103 @@ namespace FITS_CS
             var n = (int)Math.Ceiling(1.0 * array.Length / UnitSizeInBytes);
             var result = new List<FitsUnit>(n);
 
-            var buffer = new byte[UnitSizeInBytes];
+            var pooledArray = ArrayPool<byte>.Shared.Rent(UnitSizeInBytes);
+            Span<byte> buffer = pooledArray.AsSpan(0, UnitSizeInBytes);
 
-            for (var iUnit = 0; iUnit < n; iUnit++)
+            ReadOnlySpan<byte> arrayView = array.AsSpan();
+            try
             {
-                var cpSize = Math.Min(UnitSizeInBytes, array.Length - iUnit * UnitSizeInBytes);
-                Array.Copy(array, iUnit * UnitSizeInBytes, buffer, 0, cpSize);
-                if(BitConverter.IsLittleEndian && size > 1)
+                for (var iUnit = 0; iUnit < n; iUnit++)
                 {
-                    if(size == 2)
-                        for (var i = 0; i < buffer.Length / 2; i++)
-                            ArrayReverseBy2(buffer, i * 2);
-                    else if (size == 4)
-                        for (var i = 0; i < buffer.Length / 4; i++)
-                            ArrayReverseBy4(buffer, i * 4);
-                    else if (size == 8)
-                        for (var i = 0; i < buffer.Length / 8; i++)
-                            ArrayReverseBy8(buffer, i * 8);
-                    
-                    // As [size] is determined based on the [FitsImageType] enum,
-                    // it can never be anything other than (8, 16, 32, 64) / 8,
-                    // therefore other options are not considered
-                    //else
-                    //    for (var i = 0; i < buffer.Length / size; i++)
-                    //        ArrayReverse(buffer, i * size, size);
+                    buffer.Clear();
+                    var cpSize = Math.Min(UnitSizeInBytes, array.Length - iUnit * UnitSizeInBytes);
+                    arrayView.Slice(iUnit * UnitSizeInBytes, cpSize).CopyTo(buffer);
+                    if (BitConverter.IsLittleEndian && size > 1)
+                    {
+                        switch (size)
+                        {
+                            case 2:
+                            {
+                                for (var i = 0; i < buffer.Length / 2; i++)
+                                {
+                                    ReverseBy2(buffer.Slice(i * 2));
+                                }
 
+                                break;
+                            }
+                            case 4:
+                            {
+                                for (var i = 0; i < buffer.Length / 4; i++)
+                                {
+                                    ReverseBy4(buffer.Slice(i * 4));
+                                }
+
+                                break;
+                            }
+                            case 8:
+                            {
+                                for (var i = 0; i < buffer.Length / 8; i++)
+                                {
+                                    ReverseBy8(buffer.Slice(i * 8));
+                                }
+
+                                break;
+                            }
+                        }
+
+                        // As [size] is determined based on the [FitsImageType] enum,
+                        // it can never be anything other than (8, 16, 32, 64) / 8,
+                        // therefore other options are not considered
+                    }
+
+                    result.Add(new FitsUnit(buffer, false));
                 }
-                result.Add(new FitsUnit(buffer, false));
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(pooledArray);
             }
 
             return result;
         }
 
-        //protected internal static void ArrayReverse(byte[] array, int start, int count)
-        //{
-        //    if (count <= 1)
-        //        return;
-           
-        //    for (var i = 0; i < count / 2; i++)
-        //    {
-        //        var buff = array[start + i];
-        //        array[start + i] = array[start + count - 1 -i];
-        //        array[start + count - 1 - i] = buff;
-        //    }
-        //}
-
-        protected internal static void ArrayReverseBy2(byte[] array, int start)
+        private static void ReverseBy2(Span<byte> data)
         {
-            var buff = array[start + 1];
-            array[start + 1] = array[start];
-            array[start] = buff;
+            var temp = data[0];
+            data[0] = data[1];
+            data[1] = temp;
         }
 
-        protected internal static void ArrayReverseBy4(byte[] array, int start)
+        private static void ReverseBy4(Span<byte> data)
         {
-            var buff = array[start + 3];
-            array[start + 3] = array[start];
-            array[start] = buff;
+            var temp = data[3];
+            data[3] = data[0];
+            data[0] = temp;
 
-            buff = array[start + 2];
-            array[start + 2] = array[start + 1];
-            array[start + 1] = buff;
+            temp = data[2];
+            data[2] = data[1];
+            data[1] = temp;
         }
 
-        protected internal static void ArrayReverseBy8(byte[] array, int start)
+        private static void ReverseBy8(Span<byte> data)
         {
-            var buff = array[start + 7];
-            array[start + 7] = array[start];
-            array[start] = buff;
+            var temp = data[7];
+            data[7] = data[0];
+            data[0] = temp;
 
-            buff = array[start + 6];
-            array[start + 6] = array[start + 1];
-            array[start + 1] = buff;
+            temp = data[6];
+            data[6] = data[1];
+            data[1] = temp;
 
-            buff = array[start + 5];
-            array[start + 5] = array[start + 2];
-            array[start + 2] = buff;
+            temp = data[5];
+            data[5] = data[2];
+            data[2] = temp;
 
-            buff = array[start + 4];
-            array[start + 4] = array[start + 3];
-            array[start + 3] = buff;
+            temp = data[4];
+            data[4] = data[3];
+            data[3] = temp;
         }
+        
 
     }
 }

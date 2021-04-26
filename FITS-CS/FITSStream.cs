@@ -246,7 +246,7 @@ namespace FITS_CS
                                ?? throw new FormatException(
                                    "Fits data has no required keyword \"NAXIS2\"."));
 
-            Array GetData<T>() where T : struct
+            Array GetData<T>() where T : unmanaged
             {
 
                 var data = new T[width * height];
