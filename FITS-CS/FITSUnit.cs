@@ -35,8 +35,8 @@ namespace FITS_CS
             data.CopyTo(_data);
 
             IsKeywords = Enumerable.Range(0, UnitSizeInBytes / FitsKey.KeySize)
-                                   .All(i => FitsKey.IsFitsKey(_data, i * FitsKey.KeySize) ||
-                                             FitsKey.IsEmptyKey(_data, i * FitsKey.KeySize));
+                                   .All(i => FitsKey.IsFitsKey(_data.AsSpan(i * FitsKey.KeySize)) ||
+                                             FitsKey.IsEmptyKey(_data.AsSpan(i * FitsKey.KeySize)));
         }
 
         public bool IsKeywords { get; }

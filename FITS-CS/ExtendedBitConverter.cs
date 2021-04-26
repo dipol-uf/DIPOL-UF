@@ -78,5 +78,18 @@ namespace FITS_CS
 
             return buff.ToString();
         }
+
+        public static void GetAsciiChars(ReadOnlySpan<byte> source, Span<char> target)
+        {
+            if (source.Length != target.Length)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
+            for (var i = 0; i < source.Length; i++)
+            {
+                target[i] = (char)source[i];
+            }
+        }
     }
 }

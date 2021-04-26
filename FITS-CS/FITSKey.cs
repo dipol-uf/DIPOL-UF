@@ -158,7 +158,7 @@ namespace FITS_CS
 
         }
 
-        public FitsKey(string header, FitsKeywordType type, object value,
+        public FitsKey(string header, FitsKeywordType type, object? value,
             string comment = "", 
             // ReSharper disable once UnusedParameter.Local
             FitsKeyLayout layout = FitsKeyLayout.Fixed)
@@ -359,23 +359,24 @@ namespace FITS_CS
         public override int GetHashCode()
             => KeyString.GetHashCode();
 
-        /// <summary>
-        /// Checks if data chunk has a valid FITS header
-        /// </summary>
-        /// <param name="data">Input array. Should be at least the size of one keyword.</param>
-        /// <param name="offset">Optional offset. Allows to check arbitrary chunk from the array.</param>
-        /// <returns>true if header is valid, false otherwise.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ArgumentException"></exception>
-        public static bool IsFitsKey(byte[] data, int offset = 0)
+       public static bool IsFitsKey(ReadOnlySpan<byte>data)
         {
-            if (data == null)
+            if (data.IsEmpty)
+            {
                 throw new ArgumentNullException(nameof(data));
-            if (data.Length + offset < KeySize)
+            }
+
+            if (data.Length < KeySize)
+            {
                 throw new ArgumentException($"{nameof(data)} has wrong length");
+            }
 
-            var strRep = new string(Encoding.ASCII.GetChars(data, offset, KeySize));
-
+            data = data.Slice(0, KeySize);
+            
+            Span<char> strBuff = stackalloc char[KeySize];
+            // TODO : Verify this
+            GetAsciiChars(data, strBuff);
+            var strRep = strBuff.ToString();
             var isKey = string.IsNullOrWhiteSpace(strRep) ||
                         strRep.StartsWith("HISTORY ") || 
                         strRep.StartsWith("COMMENT ") ||
@@ -385,10 +386,24 @@ namespace FITS_CS
 
             return isKey;
         }
-        public static bool IsEmptyKey(byte[] data, int offset = 0)
+        public static bool IsEmptyKey(ReadOnlySpan<byte> data)
         {
-            return Enumerable.Range(offset, KeySize).All(i => data[i] == 0) ||
-                Enumerable.Range(offset, KeySize).All(i => data[i] == (byte)' ');
+            if (data.Length < KeySize)
+            {
+                throw new ArgumentOutOfRangeException(nameof(data));
+            }
+
+            foreach (var b in data.Slice(0, KeySize))
+            {
+                if (b == 0 || b == (byte) ' ')
+                {
+                    continue;
+                }
+
+                return false;
+            }
+
+            return true;
         }
 
         public static FitsKey CreateComment(string text)
@@ -401,17 +416,11 @@ namespace FITS_CS
             string comment = "", string format = "yyyy/MM/dd HH:mm:ss.fff")
             => new FitsKey(header, FitsKeywordType.String, string.Format($"{{0:{format}}}", date), comment);
 
-        [Obsolete("Use constructor instead")]
-        public static FitsKey CreateNew(string header, FitsKeywordType type, object value,
-            string comment = "", FitsKeyLayout layout = FitsKeyLayout.Fixed)
-        {
-            throw new NotSupportedException();
-        }
-
-        public static bool operator ==(FitsKey key1, FitsKey key2)
+        
+        public static bool operator ==(FitsKey? key1, FitsKey? key2)
             => key1?.Equals(key2) ?? false;
 
-        public static bool operator !=(FitsKey key1, FitsKey key2)
+        public static bool operator !=(FitsKey? key1, FitsKey? key2)
             => !(key1 == key2);
 
         private static string FormatDouble(double input, int decPlaces)
