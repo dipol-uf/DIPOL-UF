@@ -11,9 +11,9 @@ namespace SettingsManager
 
         public int Count => _rawObject.Count;
 
-        public object? this[in string name] => Get(name);
+        public object? this[string name] => Get(name);
 
-        public void Set(in string name, object? val)
+        public void Set(string name, object? val)
         {
             if (HasKey(name))
                 _rawObject[name]?.Replace(new JValue(val));
@@ -21,36 +21,36 @@ namespace SettingsManager
                 _rawObject.Add(name, new JValue(val));
         }
 
-        public void Clear(in string name) => Set(name, null);
+        public void Clear(string name) => Set(name, null);
 
-        public bool TryRemove(in string name)
+        public bool TryRemove(string name)
 			=> _rawObject.Remove(name);
 
 
-        public bool HasKey(in string name)
+        public bool HasKey(string name)
 			=> _rawObject.ContainsKey(name);
 
         [return:MaybeNull]
-        public T Get<T>(in string name)
+        public T Get<T>(string name)
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             => _rawObject.TryGetValue(name, out var value) && value is not null ? value.ToObject<T>() : default;        
 
-        public T Get<T>(in string name, T fallback)
+        public T Get<T>(string name, T fallback)
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             => _rawObject.TryGetValue(name, out var value) && value is not null && value.ToObject<T>() is {} obj ? obj : fallback; 
 
-        public T[] GetArray<T>(in string name)
+        public T[] GetArray<T>(string name)
             => _rawObject.TryGetValue(name, out var value) && value is JArray jArray && jArray.ToObject<T[]>() is { } array ? array : Array.Empty<T>();
 
-        public JsonSettings? GetJson(in string name)
+        public JsonSettings? GetJson(string name)
             => _rawObject.TryGetValue(name, out var value) && value is JObject obj ? new JsonSettings(obj) : null;
 
-        public object? Get(in string name)
+        public object? Get(string name)
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             => _rawObject.TryGetValue(name, out var value) && value is not null ? value.ToObject(typeof(object)) : null;
 
         public bool TryGet<T>(
-            in string name,
+            string name,
             [MaybeNullWhen(false)]out T value
         )
         {
@@ -73,7 +73,7 @@ namespace SettingsManager
         public JsonSettings()
 			=> _rawObject = new JObject();
 
-        public JsonSettings(in string input)
+        public JsonSettings(string input)
 			=> _rawObject = JsonConvert.DeserializeObject(input) as JObject ?? throw new InvalidOperationException();
 
         public JsonSettings(in JObject json)
