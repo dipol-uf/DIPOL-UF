@@ -74,11 +74,11 @@ namespace StepMotor
         /// <summary>
         /// Fires when data has been received from COM port.
         /// </summary>
-        public event StepMotorEventHandler DataReceived;
+        public event StepMotorEventHandler? DataReceived;
         /// <summary>
         /// Fires when error data has been received from COM port.
         /// </summary>
-        public event StepMotorEventHandler ErrorReceived;
+        public event StepMotorEventHandler? ErrorReceived;
 
         /// <summary>
         /// Default constructor
@@ -195,7 +195,7 @@ namespace StepMotor
         private void OnPortErrorReceived(object sender, SerialErrorReceivedEventArgs e)
         {
             // Reads last response
-            byte[] buffer = null;
+            byte[]? buffer = null;
 
             if (_port.BytesToRead > 0)
                 buffer = new byte[_port.BytesToRead];
@@ -218,7 +218,7 @@ namespace StepMotor
                 return;
 
             var len = _port.BytesToRead;
-            byte[] pool = null;
+            byte[]? pool = null;
             TaskCompletionSource<Reply> taskSrc;
 
             while (_responseWaitQueue.TryDequeue(out taskSrc) &&
@@ -708,7 +708,7 @@ namespace StepMotor
                 return result.ToImmutable();
             }
 
-            public async Task<IAsyncMotor> TryCreateFromAddress(
+            public async Task<IAsyncMotor?> TryCreateFromAddress(
                 SerialPort port, byte address, TimeSpan defaultTimeOut = default)
             {
                 if (port is null)
@@ -735,7 +735,7 @@ namespace StepMotor
                 return null;
             }
 
-            public async Task<IAsyncMotor> TryCreateFirst(
+            public async Task<IAsyncMotor?> TryCreateFirst(
                 SerialPort port, byte startAddress = 1, byte endAddress = 16, TimeSpan defaultTimeOut = default)
             {
                 if (port is null)
@@ -754,7 +754,7 @@ namespace StepMotor
                 return null;
             }
 
-            public async Task<IAsyncMotor> CreateFirstOrFromAddress(
+            public async Task<IAsyncMotor?> CreateFirstOrFromAddress(
                 SerialPort port, byte address,
                 byte startAddress = 1, byte endAddress = 16,
                 TimeSpan defaultTimeOut = default)

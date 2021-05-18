@@ -24,8 +24,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using DipolImage;
@@ -96,16 +98,11 @@ namespace FITS_CS
 
         protected override void Dispose(bool disposing)
         {
-            if (IsDisposed)
-                return;
+            if (IsDisposed) return;
+            if (!disposing) return;
 
-            if (disposing)
-                if (_baseStream != null)
-                {
-                    _baseStream.Dispose();
-                    IsDisposed = true;
-                }
-                        
+            _baseStream.Dispose();
+            IsDisposed = true;
         }
 
         public override void Close() => Dispose();
@@ -126,7 +123,9 @@ namespace FITS_CS
             
         }
 
-        public bool TryReadUnit(out FitsUnit unit)
+        public bool TryReadUnit(
+            [MaybeNullWhen(false)]out FitsUnit unit
+            )
         {
             unit = null;
             try
@@ -140,16 +139,61 @@ namespace FITS_CS
             }
         }
 
-        public static void WriteImage(Image image, FitsImageType type, Stream stream, IEnumerable<FitsKey> extraKeys = null)
+        public static void WriteImage(Image image, FitsImageType type, Stream stream, IEnumerable<FitsKey>? extraKeys = null)
         {
             var keys = new List<FitsKey>
             {
-                new FitsKey("SIMPLE", FitsKeywordType.Logical, true),
-                new FitsKey("BITPIX", FitsKeywordType.Integer, (int)(short)type),
-                new FitsKey("NAXIS", FitsKeywordType.Integer, 2),
-                new FitsKey("NAXIS1", FitsKeywordType.Integer, image.Width),
-                new FitsKey("NAXIS2", FitsKeywordType.Integer, image.Height),
-                new FitsKey("NAXIS", FitsKeywordType.Integer, 2)
+                new("SIMPLE", FitsKeywordType.Logical, true),
+                new("BITPIX", FitsKeywordType.Integer, (int)(short)type),
+                new("NAXIS", FitsKeywordType.Integer, 2),
+                new("NAXIS1", FitsKeywordType.Integer, image.Width),
+                new("NAXIS2", FitsKeywordType.Integer, image.Height),
+                new("NAXIS", FitsKeywordType.Integer, 2)
+            };
+
+            if (extraKeys != null)
+            {
+                keys.AddRange(extraKeys);
+            }
+
+            keys.Add(FitsKey.End);
+
+            var keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
+            var dataUnits = FitsUnit.GenerateFromDataArray(image.ByteView(), type);
+
+            var str = new FitsStream(stream);
+            foreach (var unit in keyUnits)
+            {
+                str.WriteUnit(unit);
+            }
+
+            foreach (var unit in dataUnits)
+            {
+                str.WriteUnit(unit);
+            }
+        }
+
+        public static void WriteImage(Image image, FitsImageType type, string path, IEnumerable<FitsKey>? extraKeys = null)
+        {
+            using var str = new FileStream(path, FileMode.Create, FileAccess.Write);
+            WriteImage(image, type, str, extraKeys);
+        }
+
+        public static async Task WriteImageAsync(
+            Image image, FitsImageType type, Stream stream,
+            IEnumerable<FitsKey>? extraKeys = null, CancellationToken token = default
+        )
+        {
+            // await Task.Run(() =>
+            // {
+            var keys = new List<FitsKey>
+            {
+                new("SIMPLE", FitsKeywordType.Logical, true),
+                new("BITPIX", FitsKeywordType.Integer, (int) (short) type),
+                new("NAXIS", FitsKeywordType.Integer, 2),
+                new("NAXIS1", FitsKeywordType.Integer, image.Width),
+                new("NAXIS2", FitsKeywordType.Integer, image.Height),
+                new("NAXIS", FitsKeywordType.Integer, 2)
             };
 
             if (extraKeys != null)
@@ -157,63 +201,28 @@ namespace FITS_CS
 
             keys.Add(FitsKey.End);
 
-            var keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
-            var dataUnits = FitsUnit.GenerateFromDataArray(image.GetBytes(), type);
+            List<FitsUnit> keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
+            List<FitsUnit> dataUnits = FitsUnit.GenerateFromDataArray(image.ByteView(), type);
+            // }, token);
+
 
             var str = new FitsStream(stream);
             foreach (var unit in keyUnits)
-                str.WriteUnit(unit);
-            foreach (var unit in dataUnits)
-                str.WriteUnit(unit);
-        }
-
-        public static void WriteImage(Image image, FitsImageType type, string path, IEnumerable<FitsKey> extraKeys = null)
-        {
-            using (var str = new FileStream(path, FileMode.Create, FileAccess.Write))
-                WriteImage(image, type, str, extraKeys);
-        }
-
-        public static async Task WriteImageAsync(Image image, FitsImageType type, Stream stream,
-            IEnumerable<FitsKey> extraKeys = null, CancellationToken token = default)
-        {
-            List<FitsUnit> keyUnits = null;
-            List<FitsUnit> dataUnits = null;
-            await Task.Run(() =>
             {
-                var keys = new List<FitsKey>
-                {
-                    new FitsKey("SIMPLE", FitsKeywordType.Logical, true),
-                    new FitsKey("BITPIX", FitsKeywordType.Integer, (int) (short) type),
-                    new FitsKey("NAXIS", FitsKeywordType.Integer, 2),
-                    new FitsKey("NAXIS1", FitsKeywordType.Integer, image.Width),
-                    new FitsKey("NAXIS2", FitsKeywordType.Integer, image.Height),
-                    new FitsKey("NAXIS", FitsKeywordType.Integer, 2)
-                };
-
-                if (extraKeys != null)
-                    keys.AddRange(extraKeys);
-
-                keys.Add(FitsKey.End);
-
-                keyUnits = FitsUnit.GenerateFromKeywords(keys.ToArray());
-                dataUnits = FitsUnit.GenerateFromDataArray(image.GetBytes(), type);
-            }, token);
-
-            if (keyUnits is null || dataUnits is null)
-                throw new NullReferenceException();
-
-            var str = new FitsStream(stream);
-            foreach (var unit in keyUnits)
                 await str.WriteUnitAsync(unit, token);
+            }
+
             foreach (var unit in dataUnits)
+            {
                 await str.WriteUnitAsync(unit, token);
+            }
         }
 
         public static async Task WriteImageAsync(Image image, FitsImageType type, string path,
-            IEnumerable<FitsKey> extraKeys = null, CancellationToken token = default)
+                                                 IEnumerable<FitsKey>? extraKeys = null, CancellationToken token = default)
         {
-            using (var str = new FileStream(path, FileMode.Create, FileAccess.Write))
-                await WriteImageAsync(image, type, str, extraKeys, token);
+            using var str = new FileStream(path, FileMode.Create, FileAccess.Write);
+            await WriteImageAsync(image, type, str, extraKeys, token);
         }
 
 
@@ -236,51 +245,49 @@ namespace FITS_CS
             var type = (FitsImageType)(keywords.FirstOrDefault(k => k.Header == "BITPIX")?.GetValue<int>()
                                         ?? throw new FormatException(
                                                 "Fits data has no required keyword \"BITPIX\"."));
-            var width = (keywords.FirstOrDefault(k => k.Header == "NAXIS1")?.GetValue<int>()
-                              ?? throw new FormatException(
-                                  "Fits data has no required keyword \"NAXIS1\"."));
-            var height = (keywords.FirstOrDefault(k => k.Header == "NAXIS2")?.GetValue<int>()
-                               ?? throw new FormatException(
-                                   "Fits data has no required keyword \"NAXIS2\"."));
+            var width = keywords.FirstOrDefault(k => k.Header == "NAXIS1")?.GetValue<int>()
+                        ?? throw new FormatException(
+                            "Fits data has no required keyword \"NAXIS1\".");
+            var height = keywords.FirstOrDefault(k => k.Header == "NAXIS2")?.GetValue<int>()
+                         ?? throw new FormatException(
+                             "Fits data has no required keyword \"NAXIS2\".");
 
-            Array GetData<T>() where T : struct
+            Array GetData<T>() where T : unmanaged
             {
 
                 var data = new T[width * height];
                 var pos = 0;
+                var size = Unsafe.SizeOf<T>();
+                var n = FitsUnit.UnitSizeInBytes / size;
+                T[] buffer = new T[n];
+                Span<T> bufferView = buffer.AsSpan();
                 foreach (var dataUnit in units.SkipWhile(u => u.IsKeywords))
                 {
-                    var buffer = dataUnit.GetData<T>();
-                    Array.Copy(buffer, 0, data, pos, Math.Min(buffer.Length, data.Length - pos));
-                    pos += buffer.Length;
+                    dataUnit.GetData(bufferView);
+                    var len = Math.Min(n, data.Length - pos);
+                    bufferView.Slice(0, len).CopyTo(data.AsSpan(pos, len));
+                    // Array.Copy(buffer, 0, data, pos, Math.Min(n, data.Length - pos));
+                    pos += len;
                 }
 
                 return data;
             }
 
-            switch (type)
+            return type switch
             {
-                case FitsImageType.UInt8:
-                    return new AllocatedImage(GetData<byte>(), width, height);
-                case FitsImageType.Int16:
-                    return new AllocatedImage(GetData<short>(), width, height);
-                case FitsImageType.Int32:
-                    return new AllocatedImage(GetData<int>(), width, height);
-                case FitsImageType.Single:
-                    return new AllocatedImage(GetData<float>(), width, height);
-                case FitsImageType.Double:
-                    return new AllocatedImage(GetData<double>(), width, height);
-                default:
-                    throw new NotSupportedException($"Fits image of type {type} is not supported.");
-            }
+                FitsImageType.UInt8 => new AllocatedImage(GetData<byte>(), width, height),
+                FitsImageType.Int16 => new AllocatedImage(GetData<short>(), width, height),
+                FitsImageType.Int32 => new AllocatedImage(GetData<int>(), width, height),
+                FitsImageType.Single => new AllocatedImage(GetData<float>(), width, height),
+                FitsImageType.Double => new AllocatedImage(GetData<double>(), width, height),
+                _ => throw new NotSupportedException($"Fits image of type {type} is not supported.")
+            };
         }
 
         public static Image ReadImage(string path, out List<FitsKey> keywords)
         {
-
-            using (var str = new FileStream(path, FileMode.Open))
-                return ReadImage(str, out keywords);
-                
+            using var str = new FileStream(path, FileMode.Open);
+            return ReadImage(str, out keywords);
         }
         
     }
