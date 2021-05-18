@@ -1,29 +1,7 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
+﻿
 
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
-//#define HOST_SERVER
-//#define IN_PROCESS
+#define HOST_SERVER
+// #define IN_PROCESS
 
 using System;
 using System.Diagnostics;
@@ -57,7 +35,11 @@ namespace DIPOL_UF
 
             var pInfo = new ProcessStartInfo()
             {
-                FileName = Path.Combine("../../../../Host/bin/x86/Debug/Host.exe"),
+#if X86
+                FileName = Path.GetFullPath("../../../../Host/bin/x86/Debug/Host.exe"),
+#else
+                FileName = Path.GetFullPath("../../../../Host/bin/x64/Debug/Host.exe"),
+#endif
                 Arguments = connStr,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
@@ -67,7 +49,7 @@ namespace DIPOL_UF
 #endif
 
 #endif
-            var dirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"Dipol-UF");
+                var dirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"Dipol-UF");
             if (!Directory.Exists(dirPath))
                 Directory.CreateDirectory(dirPath);
 
