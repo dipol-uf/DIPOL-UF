@@ -5,7 +5,8 @@
     <TargetFramework>net4.8</TargetFramework>
     <LangVersion>9</LangVersion>
     <Platforms>x64;x86</Platforms>
-    <ProjectGuid>d1e8b17d-4c59-42dd-87bd-f111df8e631d</ProjectGuid>
+    <ProjectGuid>{d1e8b17d-4c59-42dd-87bd-f111df8e631d}</ProjectGuid>
+	<Version>3.0.0</Version>
     <Copyright>Copyright © Ilia Kosenkov, 2019-2021</Copyright>
   </PropertyGroup>
 
