@@ -96,4 +96,7 @@ Temporary Items
 **/.idea/*
 MigrationBackup/*
 Releases/*
+
+# Needed on CI
 !nuget.config
+!Host/config.json
