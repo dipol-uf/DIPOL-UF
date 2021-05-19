@@ -15,6 +15,7 @@ on:
       - '**/*resx'
       - '**/*config'
       - '**/*yml'
+      - '.gitignore'
   pull_request:
     branches: 
       - main
@@ -28,6 +29,7 @@ on:
       - '**/*resx'
       - '**/*config'
       - '**/*yml'
+      - '.gitignore'
   workflow_dispatch:
 
 jobs:
