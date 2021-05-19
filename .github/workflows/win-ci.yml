@@ -79,4 +79,3 @@ jobs:
       - name: Build Dipol-UF x64
         run: |
            MSBuild.exe .\Dipol-UF\Dipol-UF.csproj -p:Configuration=Release -p:Platform=x64
-
