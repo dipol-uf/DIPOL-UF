@@ -1,0 +1,5 @@
+{
+  "SettingsPath": "path-to-settings",
+  "JobPath": "path-to-job",
+  "TargetName": "sample_star"
+}

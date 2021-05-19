@@ -1,0 +1,17 @@
+{
+  "TTLShutterSignal": 1,
+  "ShutterOpenTimeMS": 27,
+  "ShutterCloseTimeMS": 27,
+  "AcquisitionTimerOffsetMS": 20.0,
+  "RootDirectory": "C:\\DipolData",
+  "CleanTempOnStartup": true,
+  "PollingIntervalMS": 100,
+  "ImageChunkMiB": 128,
+  "FitsAutosaveComments": [
+    "DEBUG_IMAGE",
+    "Automatically saved image",
+    "PC: DIPOL-1"
+  ],
+  "RootDirectoryTimeOffset" : "-12:00:00",
+  "AllowedSettingsPath": "user-allowed-setts.json"
+}
