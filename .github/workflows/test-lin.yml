@@ -1,0 +1,52 @@
+name: Test cross-platform libs (Lin)
+
+on:
+  push:
+    branches: 
+      - main
+      - master
+      - staging
+    paths:
+      - '**/*cs'
+      - '**/*csproj'
+      - '**/*sln'
+      - '**/*xaml'
+      - '**/*resx'
+      - '**/*config'
+      - '**/*yml'
+  pull_request:
+    branches: 
+      - main
+      - master
+      - staging
+    paths:
+      - '**/*cs'
+      - '**/*csproj'
+      - '**/*sln'
+      - '**/*xaml'
+      - '**/*resx'
+      - '**/*config'
+      - '**/*yml'
+  workflow_dispatch:
+
+jobs:
+  test_resources:
+    runs-on: 'ubuntu-latest'
+    name: 'ubuntu-latest'
+
+    defaults:
+      run:
+        shell: pwsh
+    env: 
+      GITHUB_NUGET_RO: ${{ secrets.GITHUB_TOKEN }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run cross-platform tests
+        run: |
+           dotnet test .\TestProjects\ImageTests\ImageTests.csproj 
+          
+
+

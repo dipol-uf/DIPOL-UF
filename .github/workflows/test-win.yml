@@ -1,19 +1,6 @@
-name: Test cross-platform libs
+name: Test cross-platform libs (Win)
 
 on:
-  push:
-    branches: 
-      - main
-      - master
-      - staging
-    paths:
-      - '**/*cs'
-      - '**/*csproj'
-      - '**/*sln'
-      - '**/*xaml'
-      - '**/*resx'
-      - '**/*config'
-      - '**/*yml'
   pull_request:
     branches: 
       - main
@@ -31,13 +18,9 @@ on:
 
 jobs:
   test_resources:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ['Windows-latest', 'ubuntu-latest', 'macOS-latest']
 
-    runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }}
+    runs-on: 'windows-latest'
+    name: 'windows-latest'
 
     defaults:
       run:
