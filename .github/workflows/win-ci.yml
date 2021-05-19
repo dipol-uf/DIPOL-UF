@@ -6,7 +6,6 @@ on:
       - main
       - master
       - staging
-      - 'windows-ci'
     paths:
       - '**/*cs'
       - '**/*csproj'
