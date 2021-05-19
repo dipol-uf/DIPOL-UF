@@ -1,0 +1,19 @@
+{
+  "AllowedSettings": [
+    "ExposureTime",
+    "VsAmplitude",
+    "VsSpeed",
+		"HsSpeed",
+		"AdConverter",
+		"OutputAmplifier",
+    "ImageArea",
+    "PreAmpGain",
+    "EMCCDGain",
+    "TriggerMode",
+    "AcquisitionMode",
+    "ReadoutMode",
+    "FrameTransfer",
+    "AccumulateCycle",
+		"KineticCycle"
+		]
+}

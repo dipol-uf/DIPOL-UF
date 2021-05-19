@@ -96,7 +96,11 @@ Temporary Items
 **/.idea/*
 MigrationBackup/*
 Releases/*
+**/*backup
 
 # Needed on CI
 !nuget.config
 !Host/config.json
+!Dipol-UF/ui-config.json
+!Dipol-UF/config.json
+!Dipol-UF/user-allowed-setts.json
