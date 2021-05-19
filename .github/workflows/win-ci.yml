@@ -57,6 +57,7 @@ jobs:
       
       - name: Build Host
         run: |
+           MSBuild.exe .\Host\Host.csproj -t:restore
            MSBuild.exe .\Host\Host.csproj -p:Configuration=Release -p:Platform=x86
            MSBuild.exe .\Host\Host.csproj -p:Configuration=Release -p:Platform=x64
 
