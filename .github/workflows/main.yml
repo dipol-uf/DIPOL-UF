@@ -20,6 +20,8 @@ jobs:
     defaults:
       run:
         shell: pwsh
+    env: 
+      GITHUB_NUGET_RO: ${{ secrets.GITHUB_TOKEN }}
       
     
     # Steps represent a sequence of tasks that will be executed as part of the job
