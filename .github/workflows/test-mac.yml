@@ -32,9 +32,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Download test data
+        run: |
+          New-Item -Type Directory -ErrorAction SilentlyContinue tests/TestData
+          Invoke-WebRequest https://fits.gsfc.nasa.gov/samples/UITfuv2582gc.fits -OutFile tests/TestData/UITfuv2582gc.fits
+          Invoke-WebRequest https://fits.gsfc.nasa.gov/nrao_data/tests/nost_headers/bitpix13.fits -OutFile tests/TestData/unsupp_bitpix.fits
+
       - name: Run cross-platform tests
         run: |
-           dotnet test .\TestProjects\ImageTests\ImageTests.csproj 
+          dotnet test tests -c Release
+
           
 
 

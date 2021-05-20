@@ -24,12 +24,12 @@
 
   <ItemGroup Condition="'$(Platform)' == 'x64'">
     <Reference Include="AndorSDK">
-      <HintPath>..\ATMCD64CS.dll</HintPath>
+      <HintPath>..\..\ATMCD64CS.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup Condition="'$(Platform)' == 'x86'">
     <Reference Include="AndorSDK">
-      <HintPath>..\ATMCD32CS.dll</HintPath>
+      <HintPath>..\..\ATMCD32CS.dll</HintPath>
     </Reference>
   </ItemGroup>
   
@@ -39,8 +39,8 @@
   
   
   <Target Name="AfterBuild">
-    <Copy Condition="'$(Platform)' == 'x86'" SourceFiles="..\atmcd32d.dll" DestinationFolder="$(OutputPath)" />
-    <Copy Condition="'$(Platform)' == 'x64'" SourceFiles="..\atmcd64d.dll" DestinationFolder="$(OutputPath)" />
+    <Copy Condition="'$(Platform)' == 'x86'" SourceFiles="..\..\atmcd32d.dll" DestinationFolder="$(OutputPath)" />
+    <Copy Condition="'$(Platform)' == 'x64'" SourceFiles="..\..\atmcd64d.dll" DestinationFolder="$(OutputPath)" />
   </Target>
 
   <ItemGroup>

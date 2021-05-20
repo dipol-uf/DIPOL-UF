@@ -1,8 +1,8 @@
 **/Json Backup/*
 
 # IGNORE ANDOR LIBS
-**/*ATMCD64CD.dll
-**/*atmcd64d.dll
+**/*64CD.dll
+**/*64d.dll
 
 # NUGET pacakges
 **/*package*
@@ -100,9 +100,11 @@ Releases/*
 
 # Needed on CI
 !nuget.config
-!Host/config.json
-!Dipol-UF/ui-config.json
-!Dipol-UF/config.json
-!Dipol-UF/user-allowed-setts.json
+!src/Host/config.json
+!src/DIPOL-UF/ui-config.json
+!src/DIPOL-UF/config.json
+!src/DIPOL-UF/user-allowed-setts.json
 !**/FodyWeavers.xml
-!Dipol-UF/sample_star.json
+!src/DIPOL-UF/sample_star.json
+!src/DIPOL-UF/App.config
+!src/ANDOR-CS/DebugData/*

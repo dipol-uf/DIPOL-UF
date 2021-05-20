@@ -120,7 +120,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
-    <Copy Condition="'$(Platform)' == 'x86'" SourceFiles="..\atmcd32d.dll" DestinationFolder="$(OutputPath)" />
-    <Copy Condition="'$(Platform)' == 'x64'" SourceFiles="..\atmcd64d.dll" DestinationFolder="$(OutputPath)" />
+    <Copy Condition="'$(Platform)' == 'x86'" SourceFiles="..\..\atmcd32d.dll" DestinationFolder="$(OutputPath)" />
+    <Copy Condition="'$(Platform)' == 'x64'" SourceFiles="..\..\atmcd64d.dll" DestinationFolder="$(OutputPath)" />
   </Target>
 </Project>

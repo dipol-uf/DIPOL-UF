@@ -68,7 +68,7 @@ namespace FITS_CS
         public static string ToString(ReadOnlySpan<byte> data)
         {
             const int stackAllocLimit = FitsKey.KeySize * sizeof(char);
-            var len = data.Length;
+            var len = data.Length / sizeof(char);
             Span<char> buff = len > stackAllocLimit
                 ? new char[len]
                 : stackalloc char[len];

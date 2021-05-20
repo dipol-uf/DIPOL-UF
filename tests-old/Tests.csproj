@@ -71,7 +71,6 @@
     <Compile Include="ConverterTests.cs" />
     <Compile Include="DeployItemAttribute.cs" />
     <Compile Include="DipolClientHostRemoteControlTests.cs" />
-    <Compile Include="DipolImageTests.cs" />
     <Compile Include="CameraTests.cs" />
     <Compile Include="FitsTests.cs" />
     <Compile Include="HelperTests.cs" />

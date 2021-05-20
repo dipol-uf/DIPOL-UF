@@ -58,25 +58,25 @@ jobs:
       
       - name: Restore Host
         run: |
-           MSBuild.exe .\Host\Host.csproj -t:restore
+           MSBuild.exe .\src\Host\Host.csproj -t:restore
 
       - name: Build Host x86
         run: |
-           MSBuild.exe .\Host\Host.csproj -p:Configuration=Release -p:Platform=x86
+           MSBuild.exe .\src\Host\Host.csproj -p:Configuration=Release -p:Platform=x86
 
       - name: Build Host x64
         run: |
-           MSBuild.exe .\Host\Host.csproj -p:Configuration=Release -p:Platform=x64
+           MSBuild.exe .\src\Host\Host.csproj -p:Configuration=Release -p:Platform=x64
 
           
       - name: Restore Dipol-UF
         run: |
-           MSBuild.exe .\Dipol-UF\Dipol-UF.csproj -t:restore
+           MSBuild.exe .\src\Dipol-UF\Dipol-UF.csproj -t:restore
 
       - name: Build Dipol-UF x86
         run: |
-           MSBuild.exe .\Dipol-UF\Dipol-UF.csproj -p:Configuration=Release -p:Platform=x86
+           MSBuild.exe .\src\Dipol-UF\Dipol-UF.csproj -p:Configuration=Release -p:Platform=x86
 
       - name: Build Dipol-UF x64
         run: |
-           MSBuild.exe .\Dipol-UF\Dipol-UF.csproj -p:Configuration=Release -p:Platform=x64
+           MSBuild.exe .\src\Dipol-UF\Dipol-UF.csproj -p:Configuration=Release -p:Platform=x64
