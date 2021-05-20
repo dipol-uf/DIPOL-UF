@@ -81,6 +81,13 @@ jobs:
           draft: false
           prerelease: false
             
+      - name: Set version
+        run: |
+          $ref = $env:GITHUB_REF.Substring(10)
+          echo "RELEASE_VERSION=$ref" >> $GITHUB_ENV
+
+        
+
       - name: Host_x64
         uses: actions/upload-release-asset@v1
         env:
@@ -88,7 +95,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: Host_x64.zip
-          asset_name: ${{ format( 'Host_{0}_{1}.zip' , 'x64', github.event.release.tag_name ) }}
+          asset_name: ${{ format( 'Host_{0}_{1}.zip' , 'x64', env.RELEASE_VERSION ) }}
           asset_content_type: application/zip    
       
       - name: Host_x86
@@ -98,5 +105,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: Host_x86.zip
-          asset_name: ${{ format( 'Host_{0}_{1}.zip' , 'x86', github.event.release.tag_name ) }}
+          asset_name: ${{ format( 'Host_{0}_{1}.zip' , 'x86', env.RELEASE_VERSION ) }}
           asset_content_type: application/zip
