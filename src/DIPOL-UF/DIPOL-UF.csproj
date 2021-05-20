@@ -352,9 +352,6 @@
     <None Include="polarimetry.job">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="sample_star.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="user-allowed-setts.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
