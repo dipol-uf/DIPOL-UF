@@ -59,10 +59,10 @@ jobs:
            
       - name: Cleanup
         run: |
-          Remove-Item .\src\Dipol-UF\bin\x64\Release\*64??.dll 
-          Remove-Item .\src\Dipol-UF\bin\x86\Release\*32??.dll
-          Remove-Item .\src\Host\bin\x64\Release\*64??.dll 
-          Remove-Item .\src\Host\bin\x86\Release\*32??.dll
+          Remove-Item .\src\Dipol-UF\bin\x64\Release\*64*.dll 
+          Remove-Item .\src\Dipol-UF\bin\x86\Release\*32*.dll
+          Remove-Item .\src\Host\bin\x64\Release\*64*.dll 
+          Remove-Item .\src\Host\bin\x86\Release\*32*.dll
            
       - name: Pack artifacts
         run: |
