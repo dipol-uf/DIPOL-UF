@@ -13,10 +13,11 @@ using System.Threading.Tasks;
 using DipolImage;
 using FITS_CS;
 using NUnit.Framework;
+using Tests;
 using Assert = NUnit.Framework.Assert;
 using TestContext = NUnit.Framework.TestContext;
 
-namespace Tests
+namespace FitsTests
 {
 
     public class FitsTestsData
@@ -35,13 +36,6 @@ namespace Tests
                 yield return new TestCaseData(512, 512);
                 yield return new TestCaseData(1024, 1024);
                 yield return new TestCaseData(2048, 2048);
-#if X64
-// These are 24 MPixel images
-                yield return new TestCaseData(4096, 4096);
-                yield return new TestCaseData(6000, 4000);
-                yield return new TestCaseData(4000, 6000);
-#endif
-
             }
         }
 
@@ -73,25 +67,28 @@ namespace Tests
             {
                 return new[]
                     {
-                        (H:"SIMPLE", B:"=         T", C:"Comment", O:0, V: true),
-                        (H:"NSIMPLE", B:"=         F", C:"", O:0, V: false),
-                        (H:"STRSIM", B:"= 'some string'", C:"With comment", O:0, V: "some string" as object),
-                        (H:"STRQUO", B:"= 'some string with ''quotes'''", C:"", O:0, V: "some string with 'quotes'" as object),
-                        (H:"HISTORY", B:"History entry", C:"", O:0, V: "History entry"),
-                        (H:"COMMENT", B:"Comment", C:"", O:0, V: "Comment"),
-                        (H:"BLANK", B:"= ", C:" With comment", O:0, V: null),
-                        (H:"INTVAL1", B:"=      1234", C:"Comment", O:0, V: 1234),
-                        (H:"INTVAL2", B:"=      -1234", C:"Comment", O:0, V: -1234),
-                        (H:"DBLVAL1", B:"=      1234.0", C:"Comment", O:0, V: 1234.0),
-                        (H:"DBLVAL2", B:"=      -1234.0", C:"Comment", O:0, V: -1234.0),
-                        (H:"DBLVAL3", B:"=      1234e30", C:"Comment", O:0, V: 1234e30),
-                        (H:"DBLVAL4", B:"=      -1234e-30", C:"Comment", O:0, V: -1234e-30),
-                        (H:"DBLVAL4", B:"=                   1223.5", C:"Comment", O:0, V: new Complex(12, 23.5))
+                        (H: "SIMPLE", B: "=         T", C: "Comment", O: 0, V: true),
+                        (H: "NSIMPLE", B: "=         F", C: "", O: 0, V: false),
+                        (H: "STRSIM", B: "= 'some string'", C: "With comment", O: 0, V: "some string" as object),
+                        (H: "STRQUO", B: "= 'some string with ''quotes'''", C: "", O: 0, V: "some string with 'quotes'"),
+                        (H: "HISTORY", B: "History entry", C: "", O: 0, V: "History entry"),
+                        (H: "COMMENT", B: "Comment", C: "", O: 0, V: "Comment"),
+                        (H: "BLANK", B: "= ", C: " With comment", O: 0, V: null),
+                        (H: "INTVAL1", B: "=      1234", C: "Comment", O: 0, V: 1234),
+                        (H: "INTVAL2", B: "=      -1234", C: "Comment", O: 0, V: -1234),
+                        (H: "DBLVAL1", B: "=      1234.0", C: "Comment", O: 0, V: 1234.0),
+                        (H: "DBLVAL2", B: "=      -1234.0", C: "Comment", O: 0, V: -1234.0),
+                        (H: "DBLVAL3", B: "=      1234e30", C: "Comment", O: 0, V: 1234e30),
+                        (H: "DBLVAL4", B: "=      -1234e-30", C: "Comment", O: 0, V: -1234e-30),
+                        (H: "DBLVAL4", B: "=                   1223.5", C: "Comment", O: 0, V: new Complex(12, 23.5))
                     }
-                    .Select(x => new TestCaseData(
-                        new string(' ', x.O) + $"{x.H, -8}{x.B}"+
-                            $"{(string.IsNullOrWhiteSpace(x.C) ? "" : " / " + x.C)}", 
-                        x.O, x.H, x.V));
+                    .Select(
+                        x => new TestCaseData(
+                            new string(' ', x.O) + $"{x.H,-8}{x.B}" +
+                            $"{(string.IsNullOrWhiteSpace(x.C) ? "" : " / " + x.C)}",
+                            x.O, x.H, x.V
+                        )
+                    );
             }
         }
 
@@ -126,44 +123,45 @@ namespace Tests
             }
         }
 
-        public static List<FitsKey> ExtraKeys => new List<FitsKey>(10)
+        public static List<FitsKey> ExtraKeys => new(10)
             {
-                new FitsKey("LGT", FitsKeywordType.Logical, true, "Logical true"),
-                new FitsKey("LGF", FitsKeywordType.Logical, false, "Logical false"),
-                new FitsKey("STREMP", FitsKeywordType.String, "", "Empty string"),
-                new FitsKey("STRCNT", FitsKeywordType.String, "String with some content and quotes '", "String w content"),
-                new FitsKey("INTZRO", FitsKeywordType.Integer, 0, "Zero int"),
-                new FitsKey("INTPOS", FitsKeywordType.Integer, 100, "Positive int"),
-                new FitsKey("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
-                new FitsKey("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
-                new FitsKey("FLOAT", FitsKeywordType.Float, -100e50),
-                new FitsKey("CMPLX", FitsKeywordType.Complex, new Complex(-1.14151645e30, -1e45)),
-                new FitsKey("HISTORY", FitsKeywordType.Comment, "First history entry")
+                new("LGT", FitsKeywordType.Logical, true, "Logical true"),
+                new("LGF", FitsKeywordType.Logical, false, "Logical false"),
+                new("STREMP", FitsKeywordType.String, "", "Empty string"),
+                new("STRCNT", FitsKeywordType.String, "String with some content and quotes '", "String w content"),
+                new("INTZRO", FitsKeywordType.Integer, 0, "Zero int"),
+                new("INTPOS", FitsKeywordType.Integer, 100, "Positive int"),
+                new("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
+                new("INTNEG", FitsKeywordType.Integer, -100, "Negative int"),
+                new("FLOAT", FitsKeywordType.Float, -100e50),
+                new("CMPLX", FitsKeywordType.Complex, new Complex(-1.14151645e30, -1e45)),
+                new("HISTORY", FitsKeywordType.Comment, "First history entry")
             };
     }
     [TestFixture]
     public class FitsTests
     {
         [StructLayout(LayoutKind.Sequential)]
-        private struct VeryLargeStruct
+        private readonly struct VeryLargeStruct
         {
-            private double Item1;
-            private double Item2;
-            private double Item3;
-            private double Item4;
+            private readonly double Item1;
+            private readonly double Item2;
+            private readonly double Item3;
+            private readonly double Item4;
         }
 
-        private readonly ConcurrentQueue<Action> _cleanActions
-            = new ConcurrentQueue<Action>();
+        private readonly ConcurrentQueue<Action> _cleanActions = new();
 
         [TearDown]
         public void TearDown()
         {
             while (_cleanActions.TryDequeue(out var action))
+            {
                 action();
+            }
         }
 
-        [Theory]
+        [Test]
         [TestCaseSource(typeof(FitsTestsData), nameof(FitsTestsData.Test_ReadWrite_Data))]
         [Parallelizable(ParallelScope.All)]
         public void Test_ReadWriteRaw(int  width, int height)
@@ -204,7 +202,7 @@ namespace Tests
             var doubleData = testData.Select(x => 1.0 * x).ToArray();
             FitsStream.WriteImage(new AllocatedImage(doubleData, width, height),
                 FitsImageType.Double, GetPath(file));
-            GenerateAssert<double>(file, doubleData);
+            GenerateAssert(file, doubleData);
             AssumeExistsAndScheduleForCleanup(file);
 
 
@@ -212,7 +210,7 @@ namespace Tests
             var singleData = testData.Select(x => 1.0f * x).ToArray();
             FitsStream.WriteImage(new AllocatedImage(singleData, width, height),
                 FitsImageType.Single, GetPath(file));
-            GenerateAssert<float>(file, singleData);
+            GenerateAssert(file, singleData);
             AssumeExistsAndScheduleForCleanup(file);
 
 
@@ -220,7 +218,7 @@ namespace Tests
             var byteData = testData.Select(x => (byte)x).ToArray();
             FitsStream.WriteImage(new AllocatedImage(byteData, width, height),
                 FitsImageType.UInt8, GetPath(file));
-            GenerateAssert<byte>(file, byteData);
+            GenerateAssert(file, byteData);
             AssumeExistsAndScheduleForCleanup(file);
 
 
@@ -228,7 +226,7 @@ namespace Tests
             var shortData = testData.Select(x => (short)x).ToArray();
             FitsStream.WriteImage(new AllocatedImage(shortData, width, height),
                 FitsImageType.Int16, GetPath(file));
-            GenerateAssert<short>(file, shortData);
+            GenerateAssert(file, shortData);
             AssumeExistsAndScheduleForCleanup(file);
 
 
@@ -236,7 +234,7 @@ namespace Tests
             var intData = testData.ToArray();
             FitsStream.WriteImage(new AllocatedImage(intData, width, height),
                 FitsImageType.Int32, GetPath(file));
-            GenerateAssert<int>(file, intData);
+            GenerateAssert(file, intData);
             AssumeExistsAndScheduleForCleanup(file);
 
 
@@ -409,7 +407,7 @@ namespace Tests
         {
             var image = new AllocatedImage(new [] {1, 2, 3, 4}, 2, 2);
             const string path = "fits_keys_short.fits";
-            var extraKeys = FitsTestsData.ExtraKeys;
+            List<FitsKey> extraKeys = FitsTestsData.ExtraKeys;
 
             FitsStream.WriteImage(image, FitsImageType.Int32, GetPath(path),extraKeys);
             FitsStream.ReadImage(GetPath(path), out var readKeys);
@@ -446,38 +444,38 @@ namespace Tests
             var bytes = Encoding.ASCII.GetBytes(input);
             var data =
                 Enumerable.Range(0, Math.Max(FitsKey.KeySize, bytes.Length))
-                          .Select(i => (byte) 32)
+                          .Select(_ => (byte) 32)
                           .ToArray();
             
             Array.Copy(bytes, 0, data, 0, Math.Min(data.Length, bytes.Length));
 
-            FitsKey key = null;
             Assert.Multiple(() =>
             {
+                FitsKey? key = null;
                 Assert.That(() => key = new FitsKey(data, offset), Throws.Nothing);
-                Assert.That(key.Header, Is.EqualTo(header.Trim()));
+                // Not null because a constructor was used
+                Assert.That(key!.Header, Is.EqualTo(header.Trim()));
             });
         }
 
         [Test]
         [TestCaseSource(typeof(FitsTestsData), nameof(FitsTestsData.Test_FitsKeyCtor_Throws_Data))]
         [Parallelizable(ParallelScope.All)]
-        public void Test_FitsKeyCtor_Throws(string input, int offset, Type exceptType)
+        public void Test_FitsKeyCtor_Throws(string? input, int offset, Type exceptType)
         {
-            byte[] data = null;
-            if (!(input is null))
+            byte[]? data = null;
+            if (input is not null)
             {
                 var bytes = Encoding.ASCII.GetBytes(input);
 
 
                data = Enumerable.Range(0, Math.Max(FitsKey.KeySize, bytes.Length))
-                                .Select(i => (byte) 32)
+                                .Select(_ => (byte) 32)
                                 .ToArray();
 
                 Array.Copy(bytes, 0, data, 0, bytes.Length);
             }
-
-            Assert.That(() => new FitsKey(data, offset), Throws.InstanceOf(exceptType));
+            Assert.That(() => new FitsKey(data!, offset), Throws.InstanceOf(exceptType));
         }
 
 
@@ -486,18 +484,19 @@ namespace Tests
         [Parallelizable(ParallelScope.All)]
         public void Test_FitsKeyCtor_2(string header, FitsKeywordType type, object value, string comment)
         {
-            FitsKey key = null;
+            FitsKey? key = null;
 
-            // ReSharper disable once ImplicitlyCapturedClosure
             Assert.That(() => key = new FitsKey(header, type, new object(), comment),
                 Throws.InstanceOf<ArgumentException>());
             Assert.Multiple(() =>
             {
                 Assert.That(() => key = new FitsKey(header, type, value, comment), Throws.Nothing,
                     $"Fails for {header}");
-                Assert.That(key.Header, Is.EqualTo(header.Trim()),
+                
+                // It can't be null because a constructor was used
+                Assert.That(key!.Header, Is.EqualTo(header.Trim()),
                     $"Fails for {header}");
-                Assert.That(comment.StartsWith(key.Comment) || key.Comment.Length == 0, Is.True,
+                Assert.That(comment.StartsWith(key!.Comment) || key.Comment.Length == 0, Is.True,
                     $"Fails for {header}");
                 Assert.That(key.Type, Is.EqualTo(type),
                     $"Fails for {type}");
@@ -511,8 +510,8 @@ namespace Tests
         {
             Assert.Multiple(() =>
             {
-
-                Assert.That(() => new FitsKey(null, FitsKeywordType.Blank, null),
+                // Null-argument check test
+                Assert.That(() => new FitsKey(null!, FitsKeywordType.Blank, null),
                     Throws.ArgumentNullException);
                 Assert.That(() => new FitsKey("EXTREMELYLONGHEADER", FitsKeywordType.Blank, null),
                     Throws.ArgumentException);
@@ -597,7 +596,7 @@ namespace Tests
         [Parallelizable(ParallelScope.Self)]
         public void Test_FitsKey_GetValue()
         {
-            void Test<T>(T input, FitsKeywordType type)
+            static void Test<T>(T input, FitsKeywordType type)
             {
                 var key = new FitsKey("TSTKEY", type, input);
                 Assert.That(key.GetValue<T>(), Is.EqualTo(input),
@@ -606,8 +605,6 @@ namespace Tests
 
             Assert.Multiple(() =>
             {
-                //Test(float.MaxValue, FitsKeywordType.Float);
-                //Test(1.0 * float.MaxValue, FitsKeywordType.Float);
                 Test("String", FitsKeywordType.String);
                 Test(true, FitsKeywordType.Logical);
                 Test(false, FitsKeywordType.Logical);
@@ -633,16 +630,16 @@ namespace Tests
             var history = FitsKey.CreateHistory(hStr);
 
             Assert.AreEqual("COMMENT", comment.Header);
-            Assert.AreEqual(FitsKeywordType.Comment, comment.Type);
             Assert.AreEqual(cStr, comment.GetValue<string>());
+            Assert.AreEqual(FitsKeywordType.Comment, comment.Type);
 
-            Assert.That(history.Header == "HISTORY" &&
-                        history.Type == FitsKeywordType.Comment &&
-                        history.GetValue<string>() == hStr);
+            Assert.AreEqual("HISTORY", history.Header);
+            Assert.AreEqual(FitsKeywordType.Comment, history.Type);
+            Assert.AreEqual(hStr, history.GetValue<string>());
         }
 
 
-        [Theory]
+        [Test]
         [DeployItem(
             "../../../../TestData/UITfuv2582gc.fits", 
             CopyTo = "_dispose_twice_and_close.fits",
@@ -652,24 +649,29 @@ namespace Tests
         {
             var path = GetPath("_dispose_twice_and_close.fits");
 
-            FitsStream str = null;
+            FitsStream? str = null;
             Assume.That(() => str = new FitsStream(new FileStream(path, FileMode.Open)), 
                 Throws.Nothing);
 
-            Assert.That(str, Is.Not.Null);
-            str.Dispose();
+            Assert.NotNull(str);
+            // Test for null above
+            str!.Dispose();
+            
             Assert.That(str, Has.Property(nameof(str.IsDisposed)).True);
-            Assert.That(str.Dispose,
-                Throws.Nothing);
+            Assert.That(
+                str.Dispose,
+                Throws.Nothing
+            );
             Assert.That(str, Has.Property(nameof(str.IsDisposed)).True);
-            Assert.That(str.Close,
-                Throws.Nothing);
+            Assert.That(
+                str.Close,
+                Throws.Nothing
+            );
             Assert.That(str, Has.Property(nameof(str.IsDisposed)).True);
             
             Assert.That(str.ReadUnit, 
                 Throws.InstanceOf<ObjectDisposedException>());
             AssumeExistsAndScheduleForCleanup("_dispose_twice_and_close.fits");
-            
         }
 
         [Test]
@@ -686,15 +688,15 @@ namespace Tests
         [Parallelizable(ParallelScope.Self)]
         public void Test_Fits_CannotWrite()
         {
-            using (var fstr = new FitsStream(new MemoryStream(new byte[1], false)))
-                Assert.Multiple(() =>
-                {
-                    // ReSharper disable once AccessToDisposedClosure
-                    Assert.That(fstr.CanWrite, Is.False);
-                    // ReSharper disable once AccessToDisposedClosure
-                    Assert.That(() => fstr.Write(new byte[] {1}, 0, 1),
-                        Throws.InstanceOf<NotSupportedException>());
-                });
+            using var fstr = new FitsStream(new MemoryStream(new byte[1], false));
+            Assert.Multiple(() =>
+            {
+                // ReSharper disable once AccessToDisposedClosure
+                Assert.That(fstr.CanWrite, Is.False);
+                // ReSharper disable once AccessToDisposedClosure
+                Assert.That(() => fstr.Write(new byte[] {1}, 0, 1),
+                    Throws.InstanceOf<NotSupportedException>());
+            });
         }
 
         [Test]
@@ -702,32 +704,30 @@ namespace Tests
         [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         public void Test_Fits_Seeking()
         {
-            using (var fstr = new FitsStream(new MemoryStream(new byte[2880], true)))
-                Assert.Multiple(() =>
-                {
-                    Assert.That(fstr.CanRead, Is.True);
-                    Assert.That(fstr.CanSeek, Is.True);
+            using var fstr = new FitsStream(new MemoryStream(new byte[2880], true));
+            Assert.Multiple(() =>
+            {
+                Assert.That(fstr.CanRead, Is.True);
+                Assert.That(fstr.CanSeek, Is.True);
 
-                    Assert.That(fstr.Position, Is.EqualTo(0));
+                Assert.That(fstr.Position, Is.EqualTo(0));
 
-                    fstr.Seek(1440, SeekOrigin.Current);
-                    Assert.That(fstr.Position, Is.EqualTo(1440));
+                fstr.Seek(1440, SeekOrigin.Current);
+                Assert.That(fstr.Position, Is.EqualTo(1440));
 
-                    fstr.Position /= 2;
-                    Assert.That(fstr.Position, Is.EqualTo(720));
-                });
+                fstr.Position /= 2;
+                Assert.That(fstr.Position, Is.EqualTo(720));
+            });
         }
 
         [Test]
         [Parallelizable(ParallelScope.Self)]
         public void Test_SetLong_NotImplemented()
         {
-            using (var fstr = new FitsStream(new MemoryStream(new byte[1], true)))
-            {
-                // ReSharper disable once AccessToDisposedClosure
-                Assert.That(() => fstr.SetLength(0),
-                    Throws.InstanceOf<NotSupportedException>());
-            }
+            using var fstr = new FitsStream(new MemoryStream(new byte[1], true));
+            // ReSharper disable once AccessToDisposedClosure
+            Assert.That(() => fstr.SetLength(0),
+                Throws.InstanceOf<NotSupportedException>());
         }
 
         [Theory]
@@ -764,7 +764,7 @@ namespace Tests
             var date = DateTime.Now;
             var dateKey = FitsKey.CreateDate("TDATE", date);
 
-            var parsedVal = DateTime.Parse(dateKey.GetValue<string>());
+            var parsedVal = DateTime.Parse(dateKey.GetValue<string>() ?? throw new NullReferenceException());
 
             Assert.Multiple(() =>
             {
