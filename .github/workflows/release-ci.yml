@@ -88,7 +88,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: Host_x64.zip
-          asset_name: Host_x64
+          asset_name: ${{ format( "Host_{0}_{1}.zip" , "x64", github.event.release.tag_name ) }}
           asset_content_type: application/zip    
       
       - name: Host_x86
@@ -98,5 +98,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: Host_x86.zip
-          asset_name: Host_x86
+          asset_name: ${{ format( "Host_{0}_{1}.zip" , "x86", github.event.release.tag_name ) }}
           asset_content_type: application/zip
