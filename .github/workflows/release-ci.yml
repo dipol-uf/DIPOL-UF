@@ -64,6 +64,12 @@ jobs:
           Remove-Item .\src\Host\bin\x64\Release\*64??.dll 
           Remove-Item .\src\Host\bin\x86\Release\*32??.dll
            
+      - name: Pack artifacts
+        run: |
+          7z a Host_x64.zip .\src\Host\bin\x64\Release\* -y
+          7z a Host_x86.zip .\src\Host\bin\x64\Release\* -y
+
+
       - name: Creating release
         id: create_release
         uses: actions/create-release@v1
