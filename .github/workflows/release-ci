@@ -1,0 +1,90 @@
+name: Build executables
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  Release:
+
+    runs-on: 'windows-latest'
+    name: Building Dipol-UF.exe & Host.exe
+
+    defaults:
+      run:
+        shell: pwsh
+    env: 
+      GITHUB_NUGET_RO: ${{ secrets.GITHUB_TOKEN }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Get deps
+        run: |
+          iex $env:DIPOL_PRIVATE_DEPS_PWSH
+        env:
+          DIPOL_PRIVATE_DEPS_PWSH: ${{secrets.DIPOL_PRIVATE_DEPS_PWSH}}
+      
+      - name: Restore Host
+        run: |
+           MSBuild.exe .\src\Host\Host.csproj -t:restore
+
+      - name: Build Host x86
+        run: |
+           MSBuild.exe .\src\Host\Host.csproj -p:Configuration=Release -p:Platform=x86
+
+      - name: Build Host x64
+        run: |
+           MSBuild.exe .\src\Host\Host.csproj -p:Configuration=Release -p:Platform=x64
+
+          
+      - name: Restore Dipol-UF
+        run: |
+           MSBuild.exe .\src\Dipol-UF\Dipol-UF.csproj -t:restore
+
+      - name: Build Dipol-UF x86
+        run: |
+           MSBuild.exe .\src\Dipol-UF\Dipol-UF.csproj -p:Configuration=Release -p:Platform=x86
+
+      - name: Build Dipol-UF x64
+        run: |
+           MSBuild.exe .\src\Dipol-UF\Dipol-UF.csproj -p:Configuration=Release -p:Platform=x64
+           
+           
+      - name: Cleanup
+        run: |
+          Remove-Item .\src\Dipol-UF\bin\x64\Release\*64??.dll 
+          Remove-Item .\src\Dipol-UF\bin\x86\Release\*32??.dll
+          Remove-Item .\src\Host\bin\x64\Release\*64??.dll 
+          Remove-Item .\src\Host\bin\x86\Release\*32??.dll
+           
+      - name: Creating release
+        id: create_release
+          uses: actions/create-release@v1
+          with:
+            tag_name: ${{ github.ref }}
+            release_name: Release ${{ github.ref }}
+            draft: false
+            prerelease: false
+            
+      - name: Add artifact
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: .\src\Host\bin\x64\Release\
+          asset_name: Host_x64
+          asset_content_type: application/zip    
+      
+      - name: Add artifact
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: .\src\Host\bin\x86\Release\
+          asset_name: Host_x86
+          asset_content_type: application/zip
