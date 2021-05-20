@@ -84,6 +84,8 @@ jobs:
       - name: Set version
         run: |
           $ref = $env:GITHUB_REF.Substring(10)
+          echo $env:GITHUB_REF
+          echo $ref
           echo "RELEASE_VERSION=$ref" >> $GITHUB_ENV
 
         
