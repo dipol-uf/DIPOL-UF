@@ -17,7 +17,7 @@ jobs:
         shell: pwsh
     env: 
       GITHUB_NUGET_RO: ${{ secrets.GITHUB_TOKEN }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
