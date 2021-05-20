@@ -34,7 +34,7 @@ jobs:
 
       - name: Run cross-platform tests
         run: |
-           dotnet test .\TestProjects\ImageTests\ImageTests.csproj 
+           dotnet test tests -c Release
           
 
 
