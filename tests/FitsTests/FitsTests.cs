@@ -674,13 +674,13 @@ namespace FitsTests
         }
 
         [Test]
-        [DeployItem("../../../../TestData/UITfuv2582gc_unsupp_bitpix.fits")]
+        [DeployItem("../../../../TestData/unsupp_bitpix.fits")]
         [Parallelizable(ParallelScope.Self)]
         public void Test_Fits_ReadImage_Unsupported_Format()
         {
-            Assert.That(() => FitsStream.ReadImage(GetPath("UITfuv2582gc_unsupp_bitpix.fits"), out _),
+            Assert.That(() => FitsStream.ReadImage(GetPath("unsupp_bitpix.fits"), out _),
                 Throws.InstanceOf<NotSupportedException>());
-            AssumeExistsAndScheduleForCleanup("UITfuv2582gc_unsupp_bitpix.fits");
+            AssumeExistsAndScheduleForCleanup("unsupp_bitpix.fits");
         }
 
         [Test]
