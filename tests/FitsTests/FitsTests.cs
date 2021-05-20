@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using DipolImage;
 using FITS_CS;
 using NUnit.Framework;
-using Tests;
 using Assert = NUnit.Framework.Assert;
 using TestContext = NUnit.Framework.TestContext;
 
