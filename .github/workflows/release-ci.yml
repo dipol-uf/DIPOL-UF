@@ -68,6 +68,9 @@ jobs:
         run: |
           7z a Host_x64.zip .\src\Host\bin\x64\Release\* -y
           7z a Host_x86.zip .\src\Host\bin\x64\Release\* -y
+          7z a Dipol-UF_x64.zip .\src\DIPOL-UF\bin\x64\Release\* -y
+          7z a Dipol-UF_x86.zip .\src\DIPOL-UF\bin\x64\Release\* -y
+
 
 
       - name: Creating release
@@ -106,3 +109,23 @@ jobs:
           asset_path: Host_x86.zip
           asset_name: ${{ format( 'Host_{0}_{1}.zip' , 'x86', env.RELEASE_VERSION ) }}
           asset_content_type: application/zip
+          
+      - name: Dipol-UF_x64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: Dipol-UF_x64.zip
+          asset_name: ${{ format( 'Dipol-UF_{0}_{1}.zip' , 'x64', env.RELEASE_VERSION ) }}
+          asset_content_type: application/zip    
+      
+      - name: Dipol-UF_x86
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: Dipol-UF_x86.zip
+          asset_name: ${{ format( 'Dipol-UF_{0}_{1}.zip' , 'x86', env.RELEASE_VERSION ) }}
+          asset_content_type: application/zip    
