@@ -73,16 +73,20 @@ jobs:
           draft: false
           prerelease: false
             
-      - name: Add artifact
+      - name: Host_x64
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: .\src\Host\bin\x64\Release\
           asset_name: Host_x64
           asset_content_type: application/zip    
       
-      - name: Add artifact
+      - name: Host_x86
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: .\src\Host\bin\x86\Release\
