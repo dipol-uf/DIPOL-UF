@@ -1,28 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -197,7 +173,7 @@ namespace Tests
                                  .Select(i => 32 * i)
                                  .ToList();
 
-            void GenerateAssert<T>(string path, IEnumerable<T> compareTo) where T: struct
+            void GenerateAssert<T>(string path, IEnumerable<T> compareTo) where T: unmanaged
             {
                 using (var str = new FitsStream(new FileStream(GetPath(path), FileMode.Open)))
                 {
@@ -226,7 +202,7 @@ namespace Tests
 
             var file = $"test_dbl_{width:0000}x{height:0000}.fits";
             var doubleData = testData.Select(x => 1.0 * x).ToArray();
-            FitsStream.WriteImage(new Image(doubleData, width, height),
+            FitsStream.WriteImage(new AllocatedImage(doubleData, width, height),
                 FitsImageType.Double, GetPath(file));
             GenerateAssert<double>(file, doubleData);
             AssumeExistsAndScheduleForCleanup(file);
@@ -234,7 +210,7 @@ namespace Tests
 
             file = $"test_sng_{width:0000}x{height:0000}.fits";
             var singleData = testData.Select(x => 1.0f * x).ToArray();
-            FitsStream.WriteImage(new Image(singleData, width, height),
+            FitsStream.WriteImage(new AllocatedImage(singleData, width, height),
                 FitsImageType.Single, GetPath(file));
             GenerateAssert<float>(file, singleData);
             AssumeExistsAndScheduleForCleanup(file);
@@ -242,7 +218,7 @@ namespace Tests
 
             file = $"test_ui8_{width:0000}x{height:0000}.fits";
             var byteData = testData.Select(x => (byte)x).ToArray();
-            FitsStream.WriteImage(new Image(byteData, width, height),
+            FitsStream.WriteImage(new AllocatedImage(byteData, width, height),
                 FitsImageType.UInt8, GetPath(file));
             GenerateAssert<byte>(file, byteData);
             AssumeExistsAndScheduleForCleanup(file);
@@ -250,7 +226,7 @@ namespace Tests
 
             file = $"test_i16_{width:0000}x{height:0000}.fits";
             var shortData = testData.Select(x => (short)x).ToArray();
-            FitsStream.WriteImage(new Image(shortData, width, height),
+            FitsStream.WriteImage(new AllocatedImage(shortData, width, height),
                 FitsImageType.Int16, GetPath(file));
             GenerateAssert<short>(file, shortData);
             AssumeExistsAndScheduleForCleanup(file);
@@ -258,7 +234,7 @@ namespace Tests
 
             file = $"test_i32_{width:0000}x{height:0000}.fits";
             var intData = testData.ToArray();
-            FitsStream.WriteImage(new Image(intData, width, height),
+            FitsStream.WriteImage(new AllocatedImage(intData, width, height),
                 FitsImageType.Int32, GetPath(file));
             GenerateAssert<int>(file, intData);
             AssumeExistsAndScheduleForCleanup(file);
@@ -276,7 +252,7 @@ namespace Tests
                                  .Select(i => 32 * i)
                                  .ToList();
 
-            void GenerateAssert<T>(string path, IEnumerable<T> compareTo) where T : struct
+            void GenerateAssert<T>(string path, IEnumerable<T> compareTo) where T : unmanaged
             {
                 using (var str = new FitsStream(new FileStream(GetPath(path), FileMode.Open)))
                 {
@@ -305,7 +281,7 @@ namespace Tests
 
             var file = $"async_test_dbl_{width:0000}x{height:0000}.fits";
             var doubleData = testData.Select(x => 1.0 * x).ToArray();
-            await FitsStream.WriteImageAsync(new Image(doubleData, width, height),
+            await FitsStream.WriteImageAsync(new AllocatedImage(doubleData, width, height),
                 FitsImageType.Double, GetPath(file));
             GenerateAssert(file, doubleData);
             AssumeExistsAndScheduleForCleanup(file);
@@ -313,7 +289,7 @@ namespace Tests
 
             file = $"test_sng_{width:0000}x{height:0000}.fits";
             var singleData = testData.Select(x => 1.0f * x).ToArray();
-            await FitsStream.WriteImageAsync(new Image(singleData, width, height),
+            await FitsStream.WriteImageAsync(new AllocatedImage(singleData, width, height),
                 FitsImageType.Single, GetPath(file));
             GenerateAssert(file, singleData);
             AssumeExistsAndScheduleForCleanup(file);
@@ -321,7 +297,7 @@ namespace Tests
 
             file = $"test_ui8_{width:0000}x{height:0000}.fits";
             var byteData = testData.Select(x => (byte)x).ToArray();
-            await FitsStream.WriteImageAsync(new Image(byteData, width, height),
+            await FitsStream.WriteImageAsync(new AllocatedImage(byteData, width, height),
                 FitsImageType.UInt8, GetPath(file));
             GenerateAssert(file, byteData);
             AssumeExistsAndScheduleForCleanup(file);
@@ -329,7 +305,7 @@ namespace Tests
 
             file = $"test_i16_{width:0000}x{height:0000}.fits";
             var shortData = testData.Select(x => (short)x).ToArray();
-            await FitsStream.WriteImageAsync(new Image(shortData, width, height),
+            await FitsStream.WriteImageAsync(new AllocatedImage(shortData, width, height),
                 FitsImageType.Int16, GetPath(file));
             GenerateAssert(file, shortData);
             AssumeExistsAndScheduleForCleanup(file);
@@ -337,7 +313,7 @@ namespace Tests
 
             file = $"test_i32_{width:0000}x{height:0000}.fits";
             var intData = testData.ToArray();
-            await FitsStream.WriteImageAsync(new Image(intData, width, height),
+            await FitsStream.WriteImageAsync(new AllocatedImage(intData, width, height),
                 FitsImageType.Int32, GetPath(file));
             GenerateAssert(file, intData);
             AssumeExistsAndScheduleForCleanup(file);
@@ -355,31 +331,31 @@ namespace Tests
                                      .ToArray();
 
             var file = $"test_dbl_img_{width:0000}x{height:0000}.fits";
-            var dblImage = new Image(testData.Select(x => 1.0 * x).ToArray(), width, height);
+            var dblImage = new AllocatedImage(testData.Select(x => 1.0 * x).ToArray(), width, height);
             FitsStream.WriteImage(dblImage, FitsImageType.Double, GetPath(file));
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(dblImage));
             AssumeExistsAndScheduleForCleanup(file);
 
             file = $"test_sng_img_{width:0000}x{height:0000}.fits";
-            var sngImage = new Image(testData.Select(x => 1.0f * x).ToArray(), width, height);
+            var sngImage = new AllocatedImage(testData.Select(x => 1.0f * x).ToArray(), width, height);
             FitsStream.WriteImage(sngImage, FitsImageType.Single, GetPath(file));
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(sngImage));
             AssumeExistsAndScheduleForCleanup(file);
 
             file = $"test_ui8_img_{width:0000}x{height:0000}.fits";
-            var ui8Image = new Image(testData.Select(x => (byte) x).ToArray(), width, height);
+            var ui8Image = new AllocatedImage(testData.Select(x => (byte) x).ToArray(), width, height);
             FitsStream.WriteImage(ui8Image, FitsImageType.UInt8, GetPath(file));
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(ui8Image));
             AssumeExistsAndScheduleForCleanup(file);
 
             file = $"test_i16_img_{width:0000}x{height:0000}.fits";
-            var i16Image = new Image(testData.Select(x => (short)x).ToArray(), width, height);
+            var i16Image = new AllocatedImage(testData.Select(x => (short)x).ToArray(), width, height);
             FitsStream.WriteImage(i16Image, FitsImageType.Int16, GetPath(file));
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(i16Image));
             AssumeExistsAndScheduleForCleanup(file);
 
             file = $"test_i32_img_{width:0000}x{height:0000}.fits";
-            var intImage = new Image(testData, width, height);
+            var intImage = new AllocatedImage(testData, width, height);
             FitsStream.WriteImage(intImage, FitsImageType.Int32, GetPath(file));
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(intImage));
             AssumeExistsAndScheduleForCleanup(file);
@@ -396,31 +372,31 @@ namespace Tests
                                      .ToArray();
 
             var file = $"async_test_dbl_img_{width:0000}x{height:0000}.fits";
-            var dblImage = new Image(testData.Select(x => 1.0 * x).ToArray(), width, height);
+            var dblImage = new AllocatedImage(testData.Select(x => 1.0 * x).ToArray(), width, height);
             await FitsStream.WriteImageAsync(dblImage, FitsImageType.Double, GetPath(file));
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(dblImage));
             AssumeExistsAndScheduleForCleanup(file);
 
             file = $"async_test_sng_img_{width:0000}x{height:0000}.fits";
-            var sngImage = new Image(testData.Select(x => 1.0f * x).ToArray(), width, height);
+            var sngImage = new AllocatedImage(testData.Select(x => 1.0f * x).ToArray(), width, height);
             await FitsStream.WriteImageAsync(sngImage, FitsImageType.Single, GetPath(file));
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(sngImage));
             AssumeExistsAndScheduleForCleanup(file);
 
             file = $"async_test_ui8_img_{width:0000}x{height:0000}.fits";
-            var ui8Image = new Image(testData.Select(x => (byte)x).ToArray(), width, height);
+            var ui8Image = new AllocatedImage(testData.Select(x => (byte)x).ToArray(), width, height);
             await FitsStream.WriteImageAsync(ui8Image, FitsImageType.UInt8, GetPath(file));
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(ui8Image));
             AssumeExistsAndScheduleForCleanup(file);
 
             file = $"async_test_i16_img_{width:0000}x{height:0000}.fits";
-            var i16Image = new Image(testData.Select(x => (short)x).ToArray(), width, height);
+            var i16Image = new AllocatedImage(testData.Select(x => (short)x).ToArray(), width, height);
             await FitsStream.WriteImageAsync(i16Image, FitsImageType.Int16, GetPath(file));
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(i16Image));
             AssumeExistsAndScheduleForCleanup(file);
 
             file = $"async_test_i32_img_{width:0000}x{height:0000}.fits";
-            var intImage = new Image(testData, width, height);
+            var intImage = new AllocatedImage(testData, width, height);
             await FitsStream.WriteImageAsync(intImage, FitsImageType.Int32, GetPath(file));
             Assert.That(FitsStream.ReadImage(GetPath(file), out _), Is.EqualTo(intImage));
             AssumeExistsAndScheduleForCleanup(file);
@@ -431,7 +407,7 @@ namespace Tests
         [Parallelizable(ParallelScope.Self)]
         public void Test_WriteExtraKeywords()
         {
-            var image = new Image(new [] {1, 2, 3, 4}, 2, 2);
+            var image = new AllocatedImage(new [] {1, 2, 3, 4}, 2, 2);
             const string path = "fits_keys_short.fits";
             var extraKeys = FitsTestsData.ExtraKeys;
 
@@ -458,7 +434,7 @@ namespace Tests
 
             Array.Copy(strBytes, 0, bytes, 0, Math.Min(bytes.Length, strBytes.Length));
 
-            Assert.That(FitsKey.IsFitsKey(bytes, offset), Is.EqualTo(isKey));
+            Assert.That(FitsKey.IsFitsKey(bytes.AsSpan(offset)), Is.EqualTo(isKey));
         }
 
        
@@ -574,12 +550,16 @@ namespace Tests
                     Throws.InstanceOf<ArgumentException>()
                           .With
                           .Message.Length.GreaterThan(0));
-                Assert.That(() => FitsKey.IsFitsKey(Enumerable.Range(1, FitsKey.KeySize)
-                                                              .Select(x => (byte)x)
-                                                              .ToArray(), 10),
+                Assert.That(
+                    () => FitsKey.IsFitsKey(
+                        Enumerable.Range(1, FitsKey.KeySize)
+                                  .Select(x => (byte) x)
+                                  .ToArray().AsSpan(10)
+                    ),
                     Throws.InstanceOf<ArgumentException>()
                           .With
-                          .Message.Length.GreaterThan(0));
+                          .Message.Length.GreaterThan(0)
+                );
             });
         }
 
@@ -652,23 +632,19 @@ namespace Tests
             var comment = FitsKey.CreateComment(cStr);
             var history = FitsKey.CreateHistory(hStr);
 
-            Assert.That(comment.Header == "COMMENT" && 
-                        comment.Type == FitsKeywordType.Comment && 
-                        comment.GetValue<string>() is string s1 && 
-                        s1 == cStr &&
-                        comment.GetValue<string>() == cStr);
+            Assert.AreEqual("COMMENT", comment.Header);
+            Assert.AreEqual(FitsKeywordType.Comment, comment.Type);
+            Assert.AreEqual(cStr, comment.GetValue<string>());
 
             Assert.That(history.Header == "HISTORY" &&
                         history.Type == FitsKeywordType.Comment &&
-                        history.GetValue<string>() is string s2 &&
-                        s2 == hStr &&
                         history.GetValue<string>() == hStr);
         }
 
 
         [Theory]
         [DeployItem(
-            "../../../Test inputs/UITfuv2582gc.fits", 
+            "../../../../TestData/UITfuv2582gc.fits", 
             CopyTo = "_dispose_twice_and_close.fits",
             ForceOverwrite = true)]
         [Parallelizable(ParallelScope.Self)]
@@ -697,7 +673,7 @@ namespace Tests
         }
 
         [Test]
-        [DeployItem("../../../Test inputs/UITfuv2582gc_unsupp_bitpix.fits")]
+        [DeployItem("../../../../TestData/UITfuv2582gc_unsupp_bitpix.fits")]
         [Parallelizable(ParallelScope.Self)]
         public void Test_Fits_ReadImage_Unsupported_Format()
         {
@@ -793,17 +769,14 @@ namespace Tests
             Assert.Multiple(() =>
             {
                 Assert.That(key.IsEmpty, Is.True);
-#pragma warning disable 618
-                Assert.That(() => FitsKey.CreateNew("", FitsKeywordType.Blank, null),
-                    Throws.InstanceOf<NotSupportedException>());
-#pragma warning restore 618
+
                 Assert.That(parsedVal, Is.EqualTo(date).Within(TimeSpan.FromSeconds(1e-3)));
             });
         }
 
         [Test]
         [Parallelizable(ParallelScope.Self)]
-        public void Test_FitsUniCtor()
+        public void Test_FitsUnitCtor()
         {
 
             var test = new byte[1];
@@ -811,7 +784,7 @@ namespace Tests
             Assert.Multiple(() =>
             {
                 Assert.That(() => new FitsUnit(null),
-                    Throws.InstanceOf<ArgumentNullException>(),
+                    Throws.InstanceOf<ArgumentException>(),
                     $"{nameof(FitsUnit)} ctor should through if argument is null.");
 
                 Assert.That(() => new FitsUnit(test),
