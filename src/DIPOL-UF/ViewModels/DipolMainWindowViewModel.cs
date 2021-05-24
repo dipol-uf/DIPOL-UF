@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Windows;
 using System.Windows.Input;
 using ANDOR_CS.Enums;
 using DIPOL_UF.Annotations;
@@ -15,7 +14,6 @@ using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using MessageBox = System.Windows.MessageBox;
 
 // ReSharper disable UnassignedGetOnlyAutoProperty
 
@@ -83,7 +81,7 @@ namespace DIPOL_UF.ViewModels
 
             WindowClosingCommand =
                 ReactiveCommand.Create<(object Sender, object Args)>(
-                                   x => OverrideWindowClosing(x.Sender, x.Args as CancelEventArgs)
+                                   x => OverrideWindowClosing(x.Args as CancelEventArgs)
                                )
                                .DisposeWith(Subscriptions);
 
@@ -174,7 +172,7 @@ namespace DIPOL_UF.ViewModels
         }
 
 
-        private void OverrideWindowClosing([CanBeNull] object _, [CanBeNull] CancelEventArgs args)
+        private void OverrideWindowClosing([CanBeNull] CancelEventArgs args)
         {
             var caption = Properties.Localization.MainWindow_Notify_Closing_Caption;
 
