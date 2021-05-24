@@ -163,6 +163,7 @@
     <Compile Include="Enums\InstrumentRegime.cs" />
     <Compile Include="EqualityComparer.cs" />
     <Compile Include="Extensions\EventToCommandAction.cs" />
+    <Compile Include="Extensions\EventToCommandAction1.cs" />
     <Compile Include="Extensions\FileDialogAction.cs" />
     <Compile Include="Extensions\ShowViewAction.cs" />
     <Compile Include="Extensions\ValidationAdorner.cs" />
