@@ -1,38 +1,20 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
-using System;
+﻿using System;
+using System.ComponentModel;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using ANDOR_CS.Enums;
+using DIPOL_UF.Annotations;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
+using DIPOL_UF.UserNotifications;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+
 // ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace DIPOL_UF.ViewModels
@@ -58,6 +40,8 @@ namespace DIPOL_UF.ViewModels
         public ICommand WindowLoadedCommand => Model.WindowLoadedCommand;
         public ICommand PolarimeterMotorButtonCommand => Model.PolarimeterMotorButtonCommand;
         public ICommand RetractorMotorButtonCommand => Model.RetractorMotorButtonCommand;
+        
+        public ICommand WindowClosingCommand { get; private set; }
         public bool CanSwitchRegime { [ObservableAsProperty] get; }
         public InstrumentRegime ActualRegime { [ObservableAsProperty] get; }
         
@@ -94,6 +78,12 @@ namespace DIPOL_UF.ViewModels
             RegimeSwitchProxy = new DescendantProxy(Model.RegimeSwitchProvider,
                     x => new ProgressBarViewModel((ProgressBar) x))
                 .DisposeWith(Subscriptions);
+
+            WindowClosingCommand =
+                ReactiveCommand.Create<(object Sender, object Args)>(
+                                   x => OverrideWindowClosing(x.Args as CancelEventArgs)
+                               )
+                               .DisposeWith(Subscriptions);
 
             HookObservables();
             HookValidators();
@@ -181,5 +171,73 @@ namespace DIPOL_UF.ViewModels
 
         }
 
+
+        private void OverrideWindowClosing([CanBeNull] CancelEventArgs args)
+        {
+            var caption = Properties.Localization.MainWindow_Notify_Closing_Caption;
+
+            if (args is null)
+            {
+                return;
+            }
+
+            var notifier = Injector.Locate<IUserNotifier>();
+
+            // If regime is being switched, cancel closing
+            if (Model.IsSwitchingRegimes)
+            {
+                notifier.Error(
+                    caption,
+                    Properties.Localization.MainWindow_Notify_Closing_RegimeSwitching
+                );
+                args.Cancel = true;
+                return;
+            }
+
+            // In photometric regime
+            if (Model.RetractorMotor is not null && Model.Regime is not InstrumentRegime.Polarimeter)
+            {
+                notifier.Error(
+                    caption,
+                    Properties.Localization.MainWindow_Notify_Closing_NotPolarimeter
+                );
+                args.Cancel = true;
+                return;
+            }
+
+            if (
+                Model.ConnectedCameras.Items.Any(
+                    // Camera not disposed
+                    x => x.Camera is {IsDisposed: false, Capabilities: {GetFunctions: var funs}} cam &&
+                         // Can read temperature
+                         (funs & GetFunction.Temperature) is not 0 &&
+                         // Temperature is negative
+                         cam.GetCurrentTemperature() is (_, < 0f)
+                )
+
+            )
+            {
+
+                var result = notifier.YesNo(
+                    caption,
+                    Properties.Localization.MainWindow_Notify_Closing_NegativeTemp
+                );
+                if (result is not YesNoResult.Yes)
+                {
+                    args.Cancel = true;
+                }
+
+                return;
+            }
+
+            // Default Yes/No question
+            if (notifier.YesNo(
+                caption,
+                Properties.Localization.MainWindow_Notify_Closing_Message
+            ) is not YesNoResult.Yes)
+            {
+                args.Cancel = true;
+            }
+        }
     }
 }

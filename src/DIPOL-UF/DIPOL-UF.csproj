@@ -163,6 +163,7 @@
     <Compile Include="Enums\InstrumentRegime.cs" />
     <Compile Include="EqualityComparer.cs" />
     <Compile Include="Extensions\EventToCommandAction.cs" />
+    <Compile Include="Extensions\EventToCommandAction1.cs" />
     <Compile Include="Extensions\FileDialogAction.cs" />
     <Compile Include="Extensions\ShowViewAction.cs" />
     <Compile Include="Extensions\ValidationAdorner.cs" />
@@ -194,6 +195,8 @@
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ReactiveWrapper.cs" />
     <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
+    <Compile Include="UserNotifications\IUserNotifier.cs" />
+    <Compile Include="UserNotifications\MessageBox.cs" />
     <Compile Include="ViewModels\CameraTabViewModel.cs" />
     <Compile Include="ViewModels\CycleConfigViewModel.cs" />
     <Compile Include="ViewModels\DescendantProxy.cs" />
