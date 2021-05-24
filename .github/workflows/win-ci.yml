@@ -41,7 +41,7 @@ jobs:
       run:
         shell: pwsh
     env: 
-      GITHUB_NUGET_RO: ${{ secrets.GITHUB_NUGET_RO }}
+      GITHUB_NUGET_RO: ${{ secrets.NUGET_RO }}
       
     steps:
       - name: Checkout
