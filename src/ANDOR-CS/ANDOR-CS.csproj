@@ -22,34 +22,35 @@
     <DefineConstants>X86</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(Platform)' == 'x64'">
-    <Reference Include="AndorSDK">
-      <HintPath>..\..\ATMCD64CS.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup Condition="'$(Platform)' == 'x86'">
-    <Reference Include="AndorSDK">
-      <HintPath>..\..\ATMCD32CS.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+<!--  <ItemGroup Condition="'$(Platform)' == 'x64'">-->
+<!--    <Reference Include="AndorSDK">-->
+<!--      <HintPath>..\..\ATMCD64CS.dll</HintPath>-->
+<!--    </Reference>-->
+<!--  </ItemGroup>-->
+<!--  <ItemGroup Condition="'$(Platform)' == 'x86'">-->
+<!--    <Reference Include="AndorSDK">-->
+<!--      <HintPath>..\..\ATMCD32CS.dll</HintPath>-->
+<!--    </Reference>-->
+<!--  </ItemGroup>-->
   
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
-    <None Include="debug_image.fits" CopyToOutputDirectory="PreserveNewest"/>
+    <None Include="debug_image.fits" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   
-  
-  <Target Name="AfterBuild">
-    <Copy Condition="'$(Platform)' == 'x86'" SourceFiles="..\..\atmcd32d.dll" DestinationFolder="$(OutputPath)" />
-    <Copy Condition="'$(Platform)' == 'x64'" SourceFiles="..\..\atmcd64d.dll" DestinationFolder="$(OutputPath)" />
-  </Target>
+<!--  -->
+<!--  <Target Name="AfterBuild">-->
+<!--    <Copy Condition="'$(Platform)' == 'x86'" SourceFiles="..\..\atmcd32d.dll" DestinationFolder="$(OutputPath)" />-->
+<!--    <Copy Condition="'$(Platform)' == 'x64'" SourceFiles="..\..\atmcd64d.dll" DestinationFolder="$(OutputPath)" />-->
+<!--  </Target>-->
 
   <ItemGroup>
-    <ProjectReference Include="..\DipolImage\DipolImage.csproj"/>
-    <ProjectReference Include="..\FITS-CS\FITS-CS.csproj"/>
-    <ProjectReference Include="..\Serializers\Serializers.csproj"/>
-    <ProjectReference Include="..\SettingsManager\SettingsManager.csproj"/>
+    <ProjectReference Include="..\DipolImage\DipolImage.csproj" />
+    <ProjectReference Include="..\FITS-CS\FITS-CS.csproj" />
+    <ProjectReference Include="..\Serializers\Serializers.csproj" />
+    <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
+    <PackageReference Include="Dipol-UF.Andor.Dependencies" Version="1.0.0" />
 
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
-    <PackageReference Include="System.Reactive" Version="5.0.0"/>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="System.Reactive" Version="5.0.0" />
   </ItemGroup>
 </Project>
