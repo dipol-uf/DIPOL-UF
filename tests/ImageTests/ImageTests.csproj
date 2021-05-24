@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>9</LangVersion>
     <IsPackable>false</IsPackable>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>
