@@ -50,12 +50,6 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Get deps
-        run: |
-          iex $env:DIPOL_PRIVATE_DEPS_PWSH
-        env:
-          DIPOL_PRIVATE_DEPS_PWSH: ${{secrets.DIPOL_PRIVATE_DEPS_PWSH}}
-      
       - name: Restore Host
         run: |
            MSBuild.exe .\src\Host\Host.csproj -t:restore
