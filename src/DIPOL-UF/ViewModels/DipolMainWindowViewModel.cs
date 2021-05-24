@@ -2,11 +2,13 @@
 using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Windows;
 using System.Windows.Input;
 using DIPOL_UF.Annotations;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
+using DIPOL_UF.UserNotifications;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -170,8 +172,22 @@ namespace DIPOL_UF.ViewModels
         }
 
 
-        private static void OverrideWindowClosing([CanBeNull] object source, [CanBeNull] CancelEventArgs e)
+        private static void OverrideWindowClosing([CanBeNull] object source, [CanBeNull] CancelEventArgs args)
         {
+            var caption = "Sample header";
+            var message = "Sample message";
+
+            if (args is null)
+            {
+                return;
+            }
+
+            var notifier = Injector.Locate<IUserNotifier>();
+            
+            if (notifier.YesNo(message, caption) is not YesNoResult.Yes)
+            {
+                args.Cancel = true;
+            }
         }
     }
 }

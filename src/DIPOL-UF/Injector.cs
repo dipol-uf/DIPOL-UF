@@ -1,33 +1,11 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using ANDOR_CS;
 using ANDOR_CS.Classes;
 using DIPOL_Remote;
+using DIPOL_UF.UserNotifications;
 using Serilog;
 using StepMotor;
 
@@ -35,16 +13,45 @@ namespace DIPOL_UF
 {
     internal static class Injector
     {
-        private static ILogger _loggerInst = null;
+        // Basically singleton lifetimes
+        private static IUserNotifier? _notifier;
+        
+        private static readonly Dictionary<Type, Func<object?>> ServiceLocator = new();
 
+        private static IUserNotifier Notifier => _notifier ??= new MessageBox.MessageBoxNotifier();
+
+        private static ILogger? Logger { get; set; }
+
+        public static T Locate<T>() => ServiceLocator.TryGetValue(typeof(T), out Func<object?> init)
+            ? init() is T result 
+                ? result 
+                : throw new InvalidCastException()
+            : throw new InvalidOperationException();
+        
+        public static T? LocateOrDefault<T>() => ServiceLocator.TryGetValue(typeof(T), out Func<object?> init)
+            ? init() is T result 
+                ? result 
+                : default
+            : throw new InvalidOperationException();
+
+        static Injector()
+        {
+            // These are singletons
+            ServiceLocator.Add(typeof(IUserNotifier), () => Notifier);
+            ServiceLocator.Add(typeof(ILogger), () => Logger);
+            
+            // These are transients
+            ServiceLocator.Add(typeof(IAsyncMotorFactory), () => new StepMotorHandler.StepMotorFactory());
+            ServiceLocator.Add(typeof(IControlClientFactory), () => new DipolClient.DipolClientFactory());
+        }
+        
         public static void SetLogger(ILogger logger)
         {
-            if (_loggerInst is {})
+            if (Logger is {})
                 throw new InvalidOperationException(@"Logger has been already set");
-            _loggerInst = logger;
+            Logger = logger;
         }
-        public static IAsyncMotorFactory NewStepMotorFactory() 
-            => new StepMotorHandler.StepMotorFactory();
+        public static IAsyncMotorFactory NewStepMotorFactory() => Locate<IAsyncMotorFactory>();
 
         public static IDeviceFactory NewLocalDeviceFactory()
             => new LocalCamera.LocalCameraFactory();
@@ -57,14 +64,11 @@ namespace DIPOL_UF
         public static IDeviceFactory NewRemoteDeviceFactory(IControlClient client)
             => new RemoteCamera.RemoteCameraFactory(client);
 
-        public static IControlClientFactory NewClientFactory()
-            => new DipolClient.DipolClientFactory();
+        public static IControlClientFactory NewClientFactory() => Locate<IControlClientFactory>();
 
 
-        public static ILogger GetLogger() => _loggerInst ?? Log.Logger;
-//#if DEBUG
-//        public static IDeviceFactory NewDebugDeviceFactory()
-//            => new DebugCamera.DebugCameraFactory();
-//#endif
+        public static ILogger? GetLogger() => LocateOrDefault<ILogger>();
+
+        public static IUserNotifier GetNotifier() => Locate<IUserNotifier>();
     }
 }

@@ -2,7 +2,7 @@
 
 using System.Windows;
 
-namespace DIPOL_UF
+namespace DIPOL_UF.UserNotifications
 {
     internal static class MessageBox
     {
@@ -46,5 +46,20 @@ namespace DIPOL_UF
         public static void Info(string caption, string message, Window? window = null) => 
             Present(caption, message, MessageBoxButton.OK, MessageBoxImage.Information, window: window);
 
+
+        public class MessageBoxNotifier : IUserNotifier
+        {
+            public YesNoResult YesNo(string caption, string message) => 
+                MessageBox.YesNo(caption, message) switch
+            {
+                MessageBoxResult.Yes => YesNoResult.Yes,
+                MessageBoxResult.No => YesNoResult.No,
+                _ => YesNoResult.No
+            };
+
+            public void Error(string caption, string message) => MessageBox.Error(caption, message);
+
+            public void Info(string caption, string message) => MessageBox.Info(caption, message);
+        }
     }
 }
