@@ -715,6 +715,6 @@ Click "Yes" if you would like to re-calibrate its position.</value>
     <value>Cannot exit application when the intrument is not in polarimetric regime! Please switch to 'Polariemtry' and try again.</value>
   </data>
   <data name="MainWindow_Notify_Closing_NegativeTemp" xml:space="preserve">
-    <value>Cannot exit application because at least one or camera has temperature below 0 degress. Please, wait while all cameras are heated up.</value>
+    <value>At least one camera has temperature below 0 degrees. It is recommended to wait until all cameras are heated up. Are you sure you want ot exit?</value>
   </data>
 </root>

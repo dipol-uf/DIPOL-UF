@@ -217,14 +217,16 @@ namespace DIPOL_UF.ViewModels
 
             )
             {
-                notifier.Error(
+
+                var result = notifier.YesNo(
                     caption,
                     Properties.Localization.MainWindow_Notify_Closing_NegativeTemp
                 );
-#if !DEBUG
-                // Disable during debug phase
-                args.Cancel = true;
-#endif
+                if (result is not YesNoResult.Yes)
+                {
+                    args.Cancel = true;
+                }
+
                 return;
             }
 

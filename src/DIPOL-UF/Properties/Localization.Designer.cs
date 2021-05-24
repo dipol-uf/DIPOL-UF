@@ -1541,7 +1541,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot exit application because at least one or camera has temperature below 0 degress. Please, wait while all cameras are heated up..
+        ///   Looks up a localized string similar to At least one camera has temperature below 0 degrees. It is recommended to wait until all cameras are heated up. Are you sure you want ot exit?.
         /// </summary>
         public static string MainWindow_Notify_Closing_NegativeTemp {
             get {
