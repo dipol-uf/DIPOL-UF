@@ -1523,6 +1523,51 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Closing &apos;Dipol-UF&apos;.
+        /// </summary>
+        public static string MainWindow_Notify_Closing_Caption {
+            get {
+                return ResourceManager.GetString("MainWindow_Notify_Closing_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to close the window and exit the application?.
+        /// </summary>
+        public static string MainWindow_Notify_Closing_Message {
+            get {
+                return ResourceManager.GetString("MainWindow_Notify_Closing_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot exit application because at least one or camera has temperature below 0 degress. Please, wait while all cameras are heated up..
+        /// </summary>
+        public static string MainWindow_Notify_Closing_NegativeTemp {
+            get {
+                return ResourceManager.GetString("MainWindow_Notify_Closing_NegativeTemp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot exit application when the intrument is not in polarimetric regime! Please switch to &apos;Polariemtry&apos; and try again..
+        /// </summary>
+        public static string MainWindow_Notify_Closing_NotPolarimeter {
+            get {
+                return ResourceManager.GetString("MainWindow_Notify_Closing_NotPolarimeter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot exit application while observation regime is being switched!.
+        /// </summary>
+        public static string MainWindow_Notify_Closing_RegimeSwitching {
+            get {
+                return ResourceManager.GetString("MainWindow_Notify_Closing_RegimeSwitching", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Photometer.
         /// </summary>
         public static string MainWindow_Photometer {
@@ -1663,6 +1708,15 @@ namespace DIPOL_UF.Properties {
         public static string ProgressBar_IsInvalidString {
             get {
                 return ResourceManager.GetString("ProgressBar_IsInvalidString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string Properties_Localization_MainWindow_Notify_Closing_NotPolarimeter {
+            get {
+                return ResourceManager.GetString("Properties.Localization.MainWindow_Notify_Closing_NotPolarimeter", resourceCulture);
             }
         }
         

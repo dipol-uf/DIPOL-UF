@@ -1,9 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Input;
+using ANDOR_CS.Enums;
 using DIPOL_UF.Annotations;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
@@ -172,10 +174,9 @@ namespace DIPOL_UF.ViewModels
         }
 
 
-        private static void OverrideWindowClosing([CanBeNull] object source, [CanBeNull] CancelEventArgs args)
+        private void OverrideWindowClosing([CanBeNull] object _, [CanBeNull] CancelEventArgs args)
         {
-            var caption = "Sample header";
-            var message = "Sample message";
+            var caption = Properties.Localization.MainWindow_Notify_Closing_Caption;
 
             if (args is null)
             {
@@ -183,8 +184,57 @@ namespace DIPOL_UF.ViewModels
             }
 
             var notifier = Injector.Locate<IUserNotifier>();
-            
-            if (notifier.YesNo(message, caption) is not YesNoResult.Yes)
+
+            // If regime is being switched, cancel closing
+            if (Model.IsSwitchingRegimes)
+            {
+                notifier.Error(
+                    caption,
+                    Properties.Localization.MainWindow_Notify_Closing_RegimeSwitching
+                );
+                args.Cancel = true;
+                return;
+            }
+
+            // In photometric regime
+            if (Model.RetractorMotor is not null && Model.Regime is not InstrumentRegime.Polarimeter)
+            {
+                notifier.Error(
+                    caption,
+                    Properties.Localization.MainWindow_Notify_Closing_NotPolarimeter
+                );
+                args.Cancel = true;
+                return;
+            }
+
+            if (
+                Model.ConnectedCameras.Items.Any(
+                    // Camera not disposed
+                    x => x.Camera is {IsDisposed: false, Capabilities: {GetFunctions: var funs}} cam &&
+                         // Can read temperature
+                         (funs & GetFunction.Temperature) is not 0 &&
+                         // Temperature is negative
+                         cam.GetCurrentTemperature() is (_, < 0f)
+                )
+
+            )
+            {
+                notifier.Error(
+                    caption,
+                    Properties.Localization.MainWindow_Notify_Closing_NegativeTemp
+                );
+#if !DEBUG
+                // Disable during debug phase
+                args.Cancel = true;
+#endif
+                return;
+            }
+
+            // Default Yes/No question
+            if (notifier.YesNo(
+                caption,
+                Properties.Localization.MainWindow_Notify_Closing_Message
+            ) is not YesNoResult.Yes)
             {
                 args.Cancel = true;
             }
