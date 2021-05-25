@@ -156,7 +156,11 @@ namespace DIPOL_UF.Models
                     _polarimeterPort = new SerialPort(
                         UiSettingsProvider.Settings
                             .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant());
-                    motor = await Injector.NewStepMotorFactory().CreateFirstOrFromAddress(_polarimeterPort, 1);
+                    motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_polarimeterPort, 1);
+                    if (motor is null)
+                    {
+                        throw new NullReferenceException();
+                    }
                     await motor.ReferenceReturnToOriginAsync();
                 }
                 catch (Exception ex)
@@ -189,7 +193,11 @@ namespace DIPOL_UF.Models
                     _retractorPort = new SerialPort(UiSettingsProvider.Settings
                         .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant());
 
-                    motor = await Injector.NewStepMotorFactory().CreateFirstOrFromAddress(_retractorPort, 1);
+                    motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_retractorPort, 1);
+                    if (motor is null)
+                    {
+                        throw new NullReferenceException();
+                    }
                     await motor.ReturnToOriginAsync();
                 }
                 catch (Exception ex)
@@ -434,7 +442,7 @@ namespace DIPOL_UF.Models
 
         private async Task<List<Exception>> InitializeRemoteSessionsAsync(ProgressBar pb)
         {
-            var clientFactory = Injector.NewClientFactory();
+            var clientFactory = Injector.Locate<IControlClientFactory>();
 
             var tasks = _remoteLocations.Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => Task.Run(() =>

@@ -71,17 +71,7 @@ namespace DIPOL_UF
                 throw new InvalidOperationException(@"Logger has been already set");
             Logger = logger;
         }
-        public static IAsyncMotorFactory NewStepMotorFactory() => Locate<IAsyncMotorFactory>();
-
-        public static IDeviceFactory NewLocalDeviceFactory() => Locate<IDeviceFactory>();
-            
-        public static IRemoteDeviceFactory NewRemoteDeviceFactory(IControlClient client) =>
-            Locate<IRemoteDeviceFactory>(client);
-        public static IControlClientFactory NewClientFactory() => Locate<IControlClientFactory>();
-
 
         public static ILogger? GetLogger() => LocateOrDefault<ILogger>();
-
-        public static IUserNotifier GetNotifier() => Locate<IUserNotifier>();
     }
 }
