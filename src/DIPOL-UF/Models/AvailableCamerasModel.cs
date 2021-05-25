@@ -29,11 +29,8 @@ namespace DIPOL_UF.Models
 
         private readonly SourceCache<(string Id, IDevice Camera), string> _foundDevices;
 
-        private readonly ImmutableArray<IDeviceFactory> _remoteFactories;
+        private readonly ImmutableArray<IRemoteDeviceFactory> _remoteFactories;
         private readonly IDeviceFactory _localFactory;
-#if DEBUG
-        private readonly IDeviceFactory _debugFactory;
-#endif
         private bool _isClosed;
         private bool _isSelected;
 
@@ -59,8 +56,8 @@ namespace DIPOL_UF.Models
             _remoteClients = remoteClients;
             _remoteFactories = 
                 _remoteClients.IsDefaultOrEmpty
-                ? ImmutableArray<IDeviceFactory>.Empty 
-                : _remoteClients.Select(Injector.NewRemoteDeviceFactory).ToImmutableArray();
+                ? ImmutableArray<IRemoteDeviceFactory>.Empty 
+                : _remoteClients.Select(x => Injector.Locate<IRemoteDeviceFactory>(x)).ToImmutableArray();
 
             IsInteractive = true;
             SelectedIds = new SourceList<string>().DisposeWith(Subscriptions);
@@ -69,10 +66,7 @@ namespace DIPOL_UF.Models
                 new SourceCache<(string Id, IDevice Camera), string>(x => x.Id)
                     .DisposeWith(Subscriptions);
 
-            _localFactory = Injector.NewLocalDeviceFactory();
-#if DEBUG
-            _debugFactory = Injector.NewDebugDeviceFactory();
-#endif
+            _localFactory = Injector.Locate<IDeviceFactory>();
             InitializeCommands();
             HookObservables();
             HookValidators();
@@ -175,9 +169,6 @@ namespace DIPOL_UF.Models
             try
             {
                 nLocal = await Helper.RunNoMarshall(_localFactory.GetNumberOfCameras);
-#if DEBUG
-                nLocal = nLocal > 0 ? nLocal : 1;
-#endif
             }
             catch (AndorSdkException aExp)
             {
@@ -246,17 +237,7 @@ namespace DIPOL_UF.Models
                     IDevice cam = null;
                     try
                     {
-
-#if DEBUG
-
-                        cam =
-                            _localFactory.GetNumberOfCameras() > 0
-                                ? await _localFactory.CreateAsync(index).ConfigureAwait(false)
-                                : await _debugFactory.CreateAsync(index).ConfigureAwait(false);
-#else
                         cam = await _localFactory.CreateAsync(index).ConfigureAwait(false);
-#endif
-
                     }
                     // Silently catch exception and continue
                     catch (Exception aExp)

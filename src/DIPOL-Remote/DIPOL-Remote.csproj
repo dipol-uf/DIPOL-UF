@@ -88,6 +88,7 @@
     <Compile Include="DipolClientFactory.cs" />
     <Compile Include="IControlClient.cs" />
     <Compile Include="IControlClientFactory.cs" />
+    <Compile Include="IRemoteDeviceFactory.cs" />
     <Compile Include="RemoteCameraFactory.cs" />
     <Compile Include="Remote\AsyncResult.cs" />
     <Compile Include="DipolClient.cs" />
