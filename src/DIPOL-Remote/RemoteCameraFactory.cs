@@ -30,7 +30,7 @@ namespace DIPOL_Remote
 {
     public sealed partial class RemoteCamera
     {
-        public class RemoteCameraFactory : IDeviceFactory
+        public class RemoteCameraFactory : IRemoteDeviceFactory
         {
             private readonly IControlClient _client;
 
