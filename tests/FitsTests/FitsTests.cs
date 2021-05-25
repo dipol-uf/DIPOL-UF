@@ -197,7 +197,24 @@ namespace FitsTests
                 GC.Collect(2, GCCollectionMode.Forced, true, true);
             }
 
-            var file = $"test_dbl_{width:0000}x{height:0000}.fits";
+            var version = RuntimeInformation.FrameworkDescription.ToLowerInvariant();
+            var versionN = Math.Min(version.Length, 24);
+            Span<char> versionBuff = stackalloc char[versionN];
+            version.AsSpan(0, versionN).CopyTo(versionBuff);
+            foreach (var ch in Path.GetInvalidFileNameChars())
+            {
+                foreach (ref var vch in versionBuff)
+                {
+                    if (vch == ch)
+                    {
+                        vch = '_';
+                    }
+                }
+            }
+            version = versionBuff.ToString();
+            
+            
+            var file = $"test_dbl_{width:0000}x{height:0000}_{version}.fits";
             var doubleData = testData.Select(x => 1.0 * x).ToArray();
             FitsStream.WriteImage(new AllocatedImage(doubleData, width, height),
                 FitsImageType.Double, GetPath(file));
@@ -205,7 +222,7 @@ namespace FitsTests
             AssumeExistsAndScheduleForCleanup(file);
 
 
-            file = $"test_sng_{width:0000}x{height:0000}.fits";
+            file = $"test_sng_{width:0000}x{height:0000}_{version}..fits";
             var singleData = testData.Select(x => 1.0f * x).ToArray();
             FitsStream.WriteImage(new AllocatedImage(singleData, width, height),
                 FitsImageType.Single, GetPath(file));
@@ -213,7 +230,7 @@ namespace FitsTests
             AssumeExistsAndScheduleForCleanup(file);
 
 
-            file = $"test_ui8_{width:0000}x{height:0000}.fits";
+            file = $"test_ui8_{width:0000}x{height:0000}_{version}..fits";
             var byteData = testData.Select(x => (byte)x).ToArray();
             FitsStream.WriteImage(new AllocatedImage(byteData, width, height),
                 FitsImageType.UInt8, GetPath(file));
@@ -221,7 +238,7 @@ namespace FitsTests
             AssumeExistsAndScheduleForCleanup(file);
 
 
-            file = $"test_i16_{width:0000}x{height:0000}.fits";
+            file = $"test_i16_{width:0000}x{height:0000}_{version}..fits";
             var shortData = testData.Select(x => (short)x).ToArray();
             FitsStream.WriteImage(new AllocatedImage(shortData, width, height),
                 FitsImageType.Int16, GetPath(file));
@@ -229,7 +246,7 @@ namespace FitsTests
             AssumeExistsAndScheduleForCleanup(file);
 
 
-            file = $"test_i32_{width:0000}x{height:0000}.fits";
+            file = $"test_i32_{width:0000}x{height:0000}_{version}..fits";
             var intData = testData.ToArray();
             FitsStream.WriteImage(new AllocatedImage(intData, width, height),
                 FitsImageType.Int32, GetPath(file));
