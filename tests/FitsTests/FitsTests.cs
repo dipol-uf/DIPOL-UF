@@ -197,8 +197,22 @@ namespace FitsTests
                 GC.Collect(2, GCCollectionMode.Forced, true, true);
             }
 
-            var version = RuntimeInformation.FrameworkDescription.Replace(" ", "_")
-                                .ToLowerInvariant();
+            var version = RuntimeInformation.FrameworkDescription.ToLowerInvariant();
+            var versionN = Math.Min(version.Length, 24);
+            Span<char> versionBuff = stackalloc char[versionN];
+            version.AsSpan(0, versionN).CopyTo(versionBuff);
+            foreach (var ch in Path.GetInvalidFileNameChars())
+            {
+                foreach (ref var vch in versionBuff)
+                {
+                    if (vch == ch)
+                    {
+                        vch = '_';
+                    }
+                }
+            }
+            version = versionBuff.ToString();
+            
             
             var file = $"test_dbl_{width:0000}x{height:0000}_{version}.fits";
             var doubleData = testData.Select(x => 1.0 * x).ToArray();
