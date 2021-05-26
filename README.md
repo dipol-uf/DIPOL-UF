@@ -58,4 +58,4 @@ Providing the ANDOR dependencies are added, the GUI can be built as
 
 where `<PLATFORM>` is either `x64` or `x86` (for 32-bit).
 
-Examples of build & test workflows can be found in the [CI scripts](./.github/workflow)
+Examples of build & test workflows can be found in the [CI scripts](./.github/workflows)
