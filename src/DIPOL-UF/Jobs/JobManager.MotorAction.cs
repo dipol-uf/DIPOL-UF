@@ -82,8 +82,6 @@ namespace DIPOL_UF.Jobs
 
             public override async Task Initialize(CancellationToken token)
             {
-                //static Task For50() => Task.Delay(TimeSpan.FromMilliseconds(50));
-                
                 await base.Initialize(token);
                 var motor = Manager._windowRef.PolarimeterMotor;
 
