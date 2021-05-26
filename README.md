@@ -59,3 +59,25 @@ Providing the ANDOR dependencies are added, the GUI can be built as
 where `<PLATFORM>` is either `x64` or `x86` (for 32-bit).
 
 Examples of build & test workflows can be found in the [CI scripts](./.github/workflows)
+
+---
+## Citations
+Please use the following BibTex entry whenever you want to cite this project:
+
+```
+@ARTICLE{2021AJ....161...20P,
+       author = {{Piirola}, Vilppu and {Kosenkov}, Ilia A. and {Berdyugin}, Andrei V. and {Berdyugina}, Svetlana V. and {Poutanen}, Juri},
+        title = "{Double Image Polarimeter{\textemdash}Ultra Fast: Simultaneous Three-color (BV R) Polarimeter with Electron-multiplying Charge-coupled Devices}",
+      journal = {\aj},
+     keywords = {Observational astronomy, Polarimeters, Photometer, Polarimetry, High energy astrophysics, Black holes, Binary stars, 1145, 1277, 2030, 1278, 739, 162, 154},
+         year = 2021,
+        month = jan,
+       volume = {161},
+       number = {1},
+          eid = {20},
+        pages = {20},
+          doi = {10.3847/1538-3881/abc74f},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2021AJ....161...20P},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
+```
