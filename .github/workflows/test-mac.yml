@@ -1,19 +1,19 @@
 name: Test cross-platform libs (Mac)
 
 on:
-  pull_request:
-    branches: 
-      - main
-      - master
-      - staging
-    paths:
-      - '**/*cs'
-      - '**/*csproj'
-      - '**/*sln'
-      - '**/*xaml'
-      - '**/*resx'
-      - '**/*config'
-      - '**/test-mac.yml'
+  # pull_request:
+  #   branches: 
+  #     - main
+  #     - master
+  #     - staging
+  #   paths:
+  #     - '**/*cs'
+  #     - '**/*csproj'
+  #     - '**/*sln'
+  #     - '**/*xaml'
+  #     - '**/*resx'
+  #     - '**/*config'
+  #     - '**/test-mac.yml'
   workflow_dispatch:
 
 jobs:
