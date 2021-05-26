@@ -375,12 +375,8 @@ namespace DIPOL_UF.Jobs
                             : null;
                         ActualMotorPosition = MotorPosition;
 
-                        if (_firstRun)
-                        {
-                            // WATCH : Check how initialization is performed
-                            Helper.WriteLog(LogEventLevel.Information, $@"First run detected, running initialization");
-                            await AcquisitionJob.Initialize(token);
-                        }
+                        Helper.WriteLog(LogEventLevel.Information, @"Initializing system before the new cycle.");
+                        await AcquisitionJob.Initialize(token);
 
                         for (var i = 0; i < AcquisitionRuns; i++)
                         {
