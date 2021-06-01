@@ -1,28 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -39,6 +15,7 @@ using ANDOR_CS;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
+using DIPOL_UF.Annotations;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Models;
@@ -51,6 +28,7 @@ using Localization = DIPOL_UF.Properties.Localization;
 
 namespace DIPOL_UF.Jobs
 {
+    internal sealed record ObservationScenario(string Light, string Bias, string Dark);
     internal sealed partial class JobManager : ReactiveObjectEx
     {
         // These regimes might produce data that will overflow uint16 format,
@@ -256,19 +234,21 @@ namespace DIPOL_UF.Jobs
 
             try
             {
-                var paths = JobPaths(CurrentTarget1.CycleType);
+                // WATCH: THIS WAS MODIFIED
+                // var jobScenario = GetJobScenario(CurrentTarget1.CycleType);
+                var jobScenario = GetJobScenario(CycleType.Polarimetric);
 
-
-                AcquisitionJob = await ConstructJob(paths["Light"]);
+                
+                AcquisitionJob = await ConstructJob(jobScenario.Light);
 
                 if(CurrentTarget1.CycleType is CycleType.Polarimetric
                     && (!AcquisitionJob.ContainsActionOfType<MotorAction>() || _windowRef.PolarimeterMotor is null))
                     throw new InvalidOperationException("Cannot execute current control with no motor connected.");
 
-                BiasJob = await ConstructJob(paths["Bias"]);
+                BiasJob = await ConstructJob(jobScenario.Bias);
                 BiasActionCount = BiasJob?.NumberOfActions<CameraAction>() ?? 0;
 
-                DarkJob = await ConstructJob(paths["Dark"]);
+                DarkJob = await ConstructJob(jobScenario.Dark);
                 DarkActionCount = DarkJob?.NumberOfActions<CameraAction>() ?? 0;
                 
                 ApplySettingsTemplate1();
@@ -578,24 +558,35 @@ namespace DIPOL_UF.Jobs
             using var str = new FileStream(path, FileMode.Open, FileAccess.Read);
             return await Job.CreateAsync(str);
         }
-        private static IReadOnlyDictionary<string, string> JobPaths(CycleType type)
+        private static ObservationScenario GetJobScenario(CycleType type)
         {
-            var setts = UiSettingsProvider.Settings.Get<Dictionary<string, string>>(type == CycleType.Polarimetric
-                ? @"Polarimetry"
-                : "Photometry") ?? new Dictionary<string, string>();
+            var scenarios = UiSettingsProvider.Settings.Get<Dictionary<string, ObservationScenario>>(@"Scenarios");
 
+            ObservationScenario scenario = null;
+            scenarios?.TryGetValue(
+                type == CycleType.Polarimetric
+                    ? @"Polarimetry"
+                    : "Photometry", out scenario
+            );
+            scenario ??= new ObservationScenario(null, null, null);
+            
             var prefix = type == CycleType.Polarimetric ? @"polarimetry" : @"photometry";
 
-            if (!setts.ContainsKey("Light") || string.IsNullOrWhiteSpace("Light"))
-                setts["Light"] = $"{prefix}.job";
+            if (string.IsNullOrWhiteSpace(scenario.Light))
+            {
+                scenario = scenario with {Light = $"{prefix}.job"};
+            }
 
-            if (!setts.ContainsKey("Bias") || string.IsNullOrWhiteSpace("Bias"))
-                setts["Bias"] = $"{prefix}.bias";
+            if (string.IsNullOrWhiteSpace(scenario.Bias))
+            {
+                scenario = scenario with {Bias = $"{prefix}.bias"};
+            }
 
-            if (!setts.ContainsKey("Dark") || string.IsNullOrWhiteSpace("Dark"))
-                setts["Dark"] = $"{prefix}.dark";
-
-            return setts;
+            if (string.IsNullOrWhiteSpace(scenario.Dark))
+            {
+                scenario = scenario with {Dark = $"{prefix}.dark"};
+            }
+            return scenario;
         }
 
         private JobManager() { }
