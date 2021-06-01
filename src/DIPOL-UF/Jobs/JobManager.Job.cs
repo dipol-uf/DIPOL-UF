@@ -74,7 +74,7 @@ namespace DIPOL_UF.Jobs
                 if (name.StartsWith(@"repeat") && obj.Value is ReadOnlyDictionary<string, object> innerActions)
                 {
                     var list = (innerActions["Actions"] as object[])
-                               ?.Select(x => x is ReadOnlyDictionary<string, object> d && d.Count == 1
+                               ?.Select(x => x is ReadOnlyDictionary<string, object> {Count: 1} d
                                    ? ItemToJob(d.First())
                                    : null).ToList();
 
@@ -87,6 +87,12 @@ namespace DIPOL_UF.Jobs
                         : null;
                 }
 
+                // Modified motor
+                if (name.StartsWith(@"motor") && obj.Value is IReadOnlyDictionary<string, object> props)
+                {
+                    return new MotorAction(props);
+                }
+                
                 return null;
             }
 

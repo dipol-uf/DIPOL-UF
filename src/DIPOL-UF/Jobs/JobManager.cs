@@ -234,11 +234,8 @@ namespace DIPOL_UF.Jobs
 
             try
             {
-                // WATCH: THIS WAS MODIFIED
-                // var jobScenario = GetJobScenario(CurrentTarget1.CycleType);
-                var jobScenario = GetJobScenario(CycleType.Polarimetric);
+                var jobScenario = GetJobScenario(CurrentTarget1.CycleType);
 
-                
                 AcquisitionJob = await ConstructJob(jobScenario.Light);
 
                 if(CurrentTarget1.CycleType is CycleType.Polarimetric

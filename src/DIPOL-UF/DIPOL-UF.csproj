@@ -357,6 +357,9 @@
     <None Include="polarimetry.job">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="polarimetry_circular.job">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="user-allowed-setts.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

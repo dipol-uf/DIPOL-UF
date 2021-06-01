@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -22,10 +23,8 @@ namespace DIPOL_UF.Jobs
             /// 3
             /// </summary>
             private readonly int _nRetries = UiSettingsProvider.Settings.Get(@"StepMotorNRetries", 3);
-            /// <summary>
-            /// 16
-            /// </summary>
-            private readonly int _nSteps = UiSettingsProvider.Settings.Get(@"StepMotorNSteps", 16);
+
+            private int NSteps { get; }
 
             /// <summary>
             /// 1 &lt;&lt; 23 = 8388608
@@ -45,9 +44,11 @@ namespace DIPOL_UF.Jobs
                 Reset
             }
 
-            private float OneStepAngle => 360f / _nSteps;
-            private int StepsPerFullRotation => _angleInUnits * _nSteps;
-
+            private float OneStepAngle => 360f / NSteps;
+            
+            private int Step => (int) (_angleInUnits * Parameter);
+            private int StepsPerFullRotation => Step * NSteps;
+            
             private double Parameter { get; }
 
             private MotorActionType ActionType { get; }
@@ -78,6 +79,33 @@ namespace DIPOL_UF.Jobs
                         ActionType == MotorActionType.Rotate
                             ? 1
                             : 0;
+
+                NSteps = 16;
+            }
+
+            public MotorAction(IReadOnlyDictionary<string, object> props)
+            {
+                // Action type
+                ActionType = props.TryGetValue("Type", out var actionType)
+                             && actionType is string typeStr && typeStr.ToLowerInvariant() == "reset"
+                    ? MotorActionType.Reset
+                    : MotorActionType.Rotate;
+
+                // Rotation scaling factor. 
+                // `1` corresponds to standard HWP linear polarization rotation of 22.5 deg,
+                // measured in units of `StepMotorUnitsPerOneRotation` configuration (default is 3200)
+                // `4` corresponds to QWP circular polarization rotation of 90 deg 
+                // `0` can be used for `no rotation`
+                Parameter =
+                    props.TryGetValue("Parameter", out var param) && ObjectAsDouble(param) is { } dParam
+                        ? dParam
+                        : ActionType switch
+                        {
+                            MotorActionType.Rotate => 1,
+                            _ => 0
+                        };
+
+                NSteps = props.TryGetValue("NSteps", out var nSteps) && ObjectToInt(nSteps) is { } n ? n : 16;
             }
 
             public override async Task Initialize(CancellationToken token)
@@ -96,7 +124,7 @@ namespace DIPOL_UF.Jobs
                     AxisParameter.ReferencingSwitchSpeed,
                     UiSettingsProvider.Settings.Get(@"StepMotorRFSSpeed", 95));
                 var i = 0;
-                if (UiSettingsProvider.Settings.Get(@"StepMotorRFSSwitchStatus") is int switchStatus)
+                if (ObjectToInt(UiSettingsProvider.Settings.Get(@"StepMotorRFSSwitchStatus")) is { } switchStatus)
                 {
 
                     for (; i < _referenceSearchMaxAttempts; i++)
@@ -161,7 +189,7 @@ namespace DIPOL_UF.Jobs
                 else
                 {
                     // WATCH : Check that `Parameter` is 1
-                    var newPos = (int)(pos + _angleInUnits * Parameter);
+                    var newPos = pos + Step;
                     await RetryAction(
                         () => Manager._windowRef.PolarimeterMotor.MoveToPosition(
                             // ReSharper disable once RedundantArgumentDefaultValue
@@ -177,10 +205,15 @@ namespace DIPOL_UF.Jobs
                 pos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetActualPositionAsync(), _nRetries);
                 var actualPos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetTruePositionAsync(), _nRetries);
                     
-                Manager.MotorPosition = OneStepAngle * (pos % StepsPerFullRotation) / _angleInUnits;
-                Manager.ActualMotorPosition = OneStepAngle * (actualPos % StepsPerFullRotation) / _angleInUnits;
-                if(ActionType == MotorActionType.Rotate) 
-                    Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Motor at position {pos} ({actualPos})", pos, actualPos);
+                Manager.MotorPosition = OneStepAngle * (pos % StepsPerFullRotation) / Step;
+                Manager.ActualMotorPosition = OneStepAngle * (actualPos % StepsPerFullRotation) / Step;
+                if (ActionType == MotorActionType.Rotate)
+                {
+                    Helper.WriteLog(
+                        Serilog.Events.LogEventLevel.Information, @"Motor at position {pos} ({actualPos})", pos,
+                        actualPos
+                    );
+                }
 
             }
             private static async Task RetryAction(Func<Task> action, int retries)
@@ -240,6 +273,23 @@ namespace DIPOL_UF.Jobs
                 return result;
             }
 
+            private static int? ObjectToInt(object value) =>
+                value switch
+                {
+                    int iValue => iValue,
+                    long lValue => (int)lValue,
+                    _ => null
+                };
+            
+            private static double? ObjectAsDouble(object value) =>
+                value switch
+                {
+                    int iValue => iValue,
+                    long lValue => lValue,
+                    float fValue => fValue,
+                    double dValue => dValue,
+                    _ => null
+                };
         }
     }
 }
