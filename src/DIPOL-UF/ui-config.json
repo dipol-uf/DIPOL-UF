@@ -15,6 +15,9 @@
     "RemoteEstablishPBTimeout": "00:00:05",
     "UICamStatusUpdateDelay": "00:00:02.50",
     "StepMotorRFSSwitchStatus" : 1,
+    "RetractorPositionPolarimetry" : 0,
+    "RetractorPositionPhotometry" : -450000,
+    "RetractorPositionDelta" : 15000,
     "Scenarios" : {
         "Polarimetry": {
             "Light": "polarimetry_circular.job",
