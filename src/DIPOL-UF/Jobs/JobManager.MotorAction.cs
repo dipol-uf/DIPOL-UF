@@ -109,9 +109,12 @@ namespace DIPOL_UF.Jobs
                 }
                 else
                 {
-                    throw new InvalidOperationException(
-                        "`StepMotorRFSSwitchStatus` should be set in configuration file!"
+                    Helper.WriteLog(
+                        Serilog.Events.LogEventLevel.Warning,
+                        @"{Config} is not set in the configuration file. Reference search is unreliable.",
+                        @"StepMotorRFSSwitchStatus"
                     );
+                    await motor.ReferenceReturnToOriginAsync(token);
                 }
 
                 Helper.WriteLog(
