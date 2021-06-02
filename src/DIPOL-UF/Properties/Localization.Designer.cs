@@ -1748,6 +1748,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to RFS is not configured.
+        /// </summary>
+        public static string StepMotor_MissingRFSSwitchStatus_Header {
+            get {
+                return ResourceManager.GetString("StepMotor_MissingRFSSwitchStatus_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reference search success status is not set in the configuration file. Make sure &quot;{0}&quot; is set to eitehr `1` or `0` depending on the model of the motor. Until it is fixed, RFS is unreliable..
+        /// </summary>
+        public static string StepMotor_MissingRFSSwitchStatus_Message {
+            get {
+                return ResourceManager.GetString("StepMotor_MissingRFSSwitchStatus_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0:g7}.
         /// </summary>
         public static string StringFormat_Float_DipolImagePresenter_Statistics {

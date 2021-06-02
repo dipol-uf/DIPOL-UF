@@ -1,9 +1,13 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using DIPOL_UF.Annotations;
+using DIPOL_UF.UserNotifications;
+using Serilog;
 using StepMotor;
 
 namespace DIPOL_UF.Jobs
@@ -16,6 +20,9 @@ namespace DIPOL_UF.Jobs
                 new Regex(@"^(?:motor/)?(rotate|reset)\s*?([+-]?[0-9]+\.?[0-9]*)?$",
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+            private readonly IUserNotifier? _notifier;
+            private readonly ILogger? _logger;
+            
             /// <summary>
             /// 3
             /// </summary>
@@ -50,8 +57,15 @@ namespace DIPOL_UF.Jobs
 
             private MotorActionType ActionType { get; }
 
-           
-            public MotorAction(string command)
+            private MotorAction(IUserNotifier? notifier, ILogger? logger) =>
+                (_notifier, _logger) = (
+                    notifier ?? Injector.LocateOrDefault<IUserNotifier>(),
+                    logger ?? Injector.LocateOrDefault<ILogger>()
+                );
+            
+                
+            
+            public MotorAction(string command, IUserNotifier? notifier, ILogger? logger) : this(notifier, logger)
             {
                 // Assuming regex produces exactly the amount of groups
                 if (command is null)
@@ -80,7 +94,7 @@ namespace DIPOL_UF.Jobs
                 NSteps = 16;
             }
 
-            public MotorAction(IReadOnlyDictionary<string, object> props)
+            public MotorAction(IReadOnlyDictionary<string, object> props, IUserNotifier? notifier, ILogger? logger) : this(notifier, logger)
             {
                 // Action type
                 ActionType = props.TryGetValue("Type", out var actionType)
@@ -110,13 +124,6 @@ namespace DIPOL_UF.Jobs
                 await base.Initialize(token);
                 var motor = Manager._windowRef.PolarimeterMotor;
 
-                if(!UiSettingsProvider.Settings.Get(@"StepMotorBacktrackingRFS", true))
-                {
-                    Helper.WriteLog(Serilog.Events.LogEventLevel.Information, "Using simple RFS to calibrate origin");
-                    await motor.ReferenceReturnToOriginAsync(token);
-                    return;
-                }
-
                 await motor.SetAxisParameter(
                     AxisParameter.ReferencingSwitchSpeed,
                     UiSettingsProvider.Settings.Get(@"StepMotorRFSSpeed", 95));
@@ -139,6 +146,11 @@ namespace DIPOL_UF.Jobs
                         @"{Config} is not set in the configuration file. Reference search is unreliable.",
                         @"StepMotorRFSSwitchStatus"
                     );
+                    Injector.LocateOrDefault<IUserNotifier>()?.Error(
+                        Properties.Localization.StepMotor_MissingRFSSwitchStatus_Header,
+                        Properties.Localization.StepMotor_MissingRFSSwitchStatus_Message
+                    );
+                    
                     await motor.ReferenceReturnToOriginAsync(token);
                 }
 
@@ -199,13 +211,9 @@ namespace DIPOL_UF.Jobs
                         _nRetries);
                 }
                 
-                Helper.WriteLog(Serilog.Events.LogEventLevel.Error, "Motor setup parameters: {Type} {Parameter} {NSteps}", ActionType, Parameter, NSteps);
-
                 pos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetActualPositionAsync(), _nRetries);
                 var actualPos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetTruePositionAsync(), _nRetries);
                     
-                // Manager.MotorPosition = OneStepAngle * (pos % StepsPerFullRotation) / Step;
-                // Manager.ActualMotorPosition = OneStepAngle * (actualPos % StepsPerFullRotation) / Step;
                 Manager.MotorPosition = (float)(360.0 * (pos % UnitsPerFullRotation) / UnitsPerFullRotation);
                 Manager.ActualMotorPosition = (float)(360.0 * (actualPos % UnitsPerFullRotation) / UnitsPerFullRotation);
                 

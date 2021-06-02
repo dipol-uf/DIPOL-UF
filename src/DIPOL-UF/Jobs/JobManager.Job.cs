@@ -30,7 +30,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DIPOL_UF.UserNotifications;
 using Serializers;
+using Serilog;
 
 namespace DIPOL_UF.Jobs
 {
@@ -49,8 +51,7 @@ namespace DIPOL_UF.Jobs
 
                 _actions = input.ContainsKey("Actions")
                     ? (input["Actions"] as object[])
-                      ?.Select(x => x is ReadOnlyDictionary<string, object> dict
-                                    && dict.Count == 1
+                      ?.Select(x => x is ReadOnlyDictionary<string, object> {Count: 1} dict
                           ? dict.FirstOrDefault()
                           : new KeyValuePair<string, object>())
                       .Select(ItemToJob).ToList()
@@ -60,9 +61,14 @@ namespace DIPOL_UF.Jobs
 
             private JobAction ItemToJob(KeyValuePair<string, object> obj)
             {
+                var (notifier, logger) = (
+                    Injector.LocateOrDefault<IUserNotifier>(),
+                    Injector.LocateOrDefault<ILogger>()
+                );
+                
                 var name = obj.Key.ToLowerInvariant();
                 if (name.StartsWith(@"motor") && obj.Value is string motorStr)
-                    return new MotorAction(motorStr);
+                    return new MotorAction(motorStr, notifier, logger);
                 if (name.StartsWith(@"camera") && obj.Value is string camStr)
                     return new CameraAction(camStr);
                 if(name.StartsWith(@"shutter") && obj.Value is string shutterStr)
@@ -90,7 +96,7 @@ namespace DIPOL_UF.Jobs
                 // Modified motor
                 if (name.StartsWith(@"motor") && obj.Value is IReadOnlyDictionary<string, object> props)
                 {
-                    return new MotorAction(props);
+                    return new MotorAction(props, notifier, logger);
                 }
                 
                 return null;

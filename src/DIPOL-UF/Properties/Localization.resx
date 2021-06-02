@@ -717,4 +717,10 @@ Click "Yes" if you would like to re-calibrate its position.</value>
   <data name="MainWindow_Notify_Closing_NegativeTemp" xml:space="preserve">
     <value>At least one camera has temperature below 0 degrees. It is recommended to wait until all cameras are heated up. Are you sure you want ot exit?</value>
   </data>
+  <data name="StepMotor_MissingRFSSwitchStatus_Header" xml:space="preserve">
+    <value>RFS is not configured</value>
+  </data>
+  <data name="StepMotor_MissingRFSSwitchStatus_Message" xml:space="preserve">
+    <value>Reference search success status is not set in the configuration file. Make sure "{0}" is set to eitehr `1` or `0` depending on the model of the motor. Until it is fixed, RFS is unreliable.</value>
+  </data>
 </root>
