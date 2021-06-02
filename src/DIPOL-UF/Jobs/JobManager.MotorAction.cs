@@ -15,10 +15,7 @@ namespace DIPOL_UF.Jobs
             private static readonly Regex Regex =
                 new Regex(@"^(?:motor/)?(rotate|reset)\s*?([+-]?[0-9]+\.?[0-9]*)?$",
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            /// <summary>
-            /// 3200
-            /// </summary>
-            private readonly int _angleInUnits = UiSettingsProvider.Settings.Get(@"StepMotorUnitsPerOneRotation", 3200);
+
             /// <summary>
             /// 3
             /// </summary>
@@ -44,11 +41,11 @@ namespace DIPOL_UF.Jobs
                 Reset
             }
 
-            private float OneStepAngle => 360f / NSteps;
-            
-            private int Step => (int) (_angleInUnits * Parameter);
-            private int StepsPerFullRotation => Step * NSteps;
-            
+            // ReSharper disable once InconsistentNaming
+            private int UnitsPer22_5Deg => UnitsPerFullRotation / 16;
+            private int Step => (int) (Parameter * UnitsPer22_5Deg);
+            private int UnitsPerFullRotation { get; } = UiSettingsProvider.Settings.Get(@"StepMotorUnitsPerOnePlateRevolution", 51200);
+
             private double Parameter { get; }
 
             private MotorActionType ActionType { get; }
@@ -163,12 +160,12 @@ namespace DIPOL_UF.Jobs
 
                 if (ActionType == MotorActionType.Reset)
                 {
-                    var zeroPos = StepsPerFullRotation * (int)Math.Ceiling(1.0 * pos / StepsPerFullRotation);
+                    var zeroPos = UnitsPerFullRotation * (int)Math.Ceiling(1.0 * pos / UnitsPerFullRotation);
                     if (pos != zeroPos)
                     {
                         Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Resetting motor: from {pos} to {zeroPos}", pos, zeroPos);
 
-                        if ((Math.Abs(zeroPos) + StepsPerFullRotation) >= _stepMotorMaxPositionAbs)
+                        if ((Math.Abs(zeroPos) + UnitsPerFullRotation) >= _stepMotorMaxPositionAbs)
                             // Exceeding default ~327 rotations without reference search
                             // Step motor buffer overflow is predicted, forcing reference search
                             await Initialize(token);
@@ -188,8 +185,8 @@ namespace DIPOL_UF.Jobs
                 }
                 else
                 {
-                    // WATCH : Check that `Parameter` is 1
                     var newPos = pos + Step;
+                    
                     await RetryAction(
                         () => Manager._windowRef.PolarimeterMotor.MoveToPosition(
                             // ReSharper disable once RedundantArgumentDefaultValue
@@ -201,12 +198,17 @@ namespace DIPOL_UF.Jobs
                         () => Manager._windowRef.PolarimeterMotor.WaitForPositionReachedAsync(token),
                         _nRetries);
                 }
+                
+                Helper.WriteLog(Serilog.Events.LogEventLevel.Error, "Motor setup parameters: {Type} {Parameter} {NSteps}", ActionType, Parameter, NSteps);
 
                 pos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetActualPositionAsync(), _nRetries);
                 var actualPos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetTruePositionAsync(), _nRetries);
                     
-                Manager.MotorPosition = OneStepAngle * (pos % StepsPerFullRotation) / Step;
-                Manager.ActualMotorPosition = OneStepAngle * (actualPos % StepsPerFullRotation) / Step;
+                // Manager.MotorPosition = OneStepAngle * (pos % StepsPerFullRotation) / Step;
+                // Manager.ActualMotorPosition = OneStepAngle * (actualPos % StepsPerFullRotation) / Step;
+                Manager.MotorPosition = (float)(360.0 * (pos % UnitsPerFullRotation) / UnitsPerFullRotation);
+                Manager.ActualMotorPosition = (float)(360.0 * (actualPos % UnitsPerFullRotation) / UnitsPerFullRotation);
+                
                 if (ActionType == MotorActionType.Rotate)
                 {
                     Helper.WriteLog(

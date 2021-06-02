@@ -18,6 +18,7 @@
     "RetractorPositionPolarimetry" : 0,
     "RetractorPositionPhotometry" : -450000,
     "RetractorPositionDelta" : 15000,
+    "StepMotorUnitsPerOnePlateRevolution" : 51200,
     "Scenarios" : {
         "Polarimetry": {
             "Light": "polarimetry_circular.job",
