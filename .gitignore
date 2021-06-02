@@ -108,3 +108,6 @@ Releases/*
 !src/DIPOL-UF/sample_star.json
 !src/DIPOL-UF/App.config
 !src/ANDOR-CS/DebugData/*
+
+scripts/*
+!scripts/*ps1

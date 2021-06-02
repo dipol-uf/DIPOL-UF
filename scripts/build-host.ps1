@@ -1,14 +1,15 @@
 param (
     [string]$PathToSrc,
     [string]$OutputDir = "./Hosts",
-    [string]$Arch = "x64"
+    [string]$Arch = "x64",
+    [string]$Configuration = "Release"
 )
 
 $csprojPath = "$PathToSrc/Host/Host.csproj"
 
 # Restore and build project
 MSBuild.exe $csprojPath -t:restore -verbosity:minimal
-MSBuild.exe $csprojPath -p:Configuration=Release -p:Platform=$Arch -verbosity:minimal
+MSBuild.exe $csprojPath -p:Configuration=$Configuration -p:Platform=$Arch -verbosity:minimal
 
 $regex = [System.Text.RegularExpressions.Regex]::new("^\s*\[assembly:\s*AssemblyVersion\s*\(\s*`"(\d+\.\d+.\d+)`"\s*\)\s*\]");
 
@@ -19,9 +20,9 @@ $version = Get-Content "$PathToSrc/Host/Properties/AssemblyInfo.cs" | `
     ForEach-Object {$_.Groups[1].Value}
 
 # Creates output directory if it is missing
-$dir = "$OutputDir/Host $version"
+$dir = "$OutputDir/Host_$($Configuration)_$($Arch)_v$version"
 New-Item $dir -Force -ItemType Directory -ErrorAction SilentlyContinue
 
 # Copies items one by one
-Get-ChildItem "$PathToSrc/Host/bin/$Arch/Release/" | `
+Get-ChildItem "$PathToSrc/Host/bin/$Arch/$Configuration/" | `
     ForEach-Object {Copy-Item -Path $($_.FullName) -Destination "$dir\"}
