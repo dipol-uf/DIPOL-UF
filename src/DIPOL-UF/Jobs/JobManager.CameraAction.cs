@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Events;
+using DIPOL_UF.Models;
 using FITS_CS;
 
 namespace DIPOL_UF.Jobs
@@ -23,7 +24,7 @@ namespace DIPOL_UF.Jobs
                 new(@"^(?:camera/)?(expose)\s*((?:\s*[0-9]+,?)+)?$",
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-            private List<int> SpecificCameras { get; }
+            // private List<int> SpecificCameras { get; }
 
 
             public CameraAction(string command)
@@ -34,7 +35,9 @@ namespace DIPOL_UF.Jobs
 
                 var match = Regex.Match(command.ToLowerInvariant());
                 if (!match.Success)
+                {
                     throw new ArgumentException(@"Motor command is invalid.", nameof(command));
+                }
 
                 // SpecificCameras = match.Groups[2].Value.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                 //                        .Select(x =>
@@ -61,17 +64,33 @@ namespace DIPOL_UF.Jobs
                     );
                 }
 
-                List<Task> tasks = Manager._jobControls.Select(async x => {
-                    // In order to capture extremely fast acquisitions, first capture a task from observable,
-                    // then start acquisition through the command interface
-                    // and then await initial task
-                    ConfiguredTaskAwaitable<AcquisitionStatusEventArgs> task = x.WhenAcquisitionFinished.FirstAsync()
-                        .ToTask(token).ConfigureAwait(false);
-                    await Task.Delay(TimeSpan.FromMilliseconds(0.001), token);
-                    x.StartAcquisition(Manager._requestMap[x.Camera.GetHashCode()].WithNewKeywords(sharedKeys), token);
-                    await task;
-                }).ToList();
+                // List<Task> tasks = Manager._jobControls.Select(async x => {
+                //     // In order to capture extremely fast acquisitions, first capture a task from observable,
+                //     // then start acquisition through the command interface
+                //     // and then await initial task
+                //     ConfiguredTaskAwaitable<AcquisitionStatusEventArgs> task = x.WhenAcquisitionFinished.FirstAsync()
+                //         .ToTask(token).ConfigureAwait(false);
+                //     await Task.Delay(TimeSpan.FromMilliseconds(0.001), token);
+                //     x.StartAcquisition(Manager._requestMap[x.Camera.GetHashCode()].WithNewKeywords(sharedKeys), token);
+                //     await task;
+                // }).ToList();
 
+                List<Task<AcquisitionStatusEventArgs>> tasks = Manager._jobControls.Select(
+                    async x => await x.WhenAcquisitionFinished.FirstAsync().ToTask(token).ConfigureAwait(false)
+                ).ToList();
+
+                List<(CameraTab x, Request)> requests =
+                    Manager._jobControls
+                           .Select(
+                               x => (x, Manager._requestMap[x.Camera.GetHashCode()]
+                                               .WithNewKeywords(sharedKeys))
+                           ).ToList();
+
+                foreach (var (tab, request) in requests)
+                {
+                    tab.StartAcquisition(request, token);
+                }
+                
                 await Task.WhenAll(tasks);
                 Manager.Progress++;
                 Manager.CumulativeProgress++;

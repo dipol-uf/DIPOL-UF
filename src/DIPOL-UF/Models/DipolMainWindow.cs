@@ -753,12 +753,18 @@ namespace DIPOL_UF.Models
                             (int) (TimeSpan.Parse(UiSettingsProvider.Settings.Get("UICamStatusUpdateDelay", "00:00:01"))
                                            .TotalMilliseconds));
 
-                    if(cam.Capabilities.Features.HasFlag(SdkFeatures.ShutterEx) ||
-                       cam.Capabilities.Features.HasFlag(SdkFeatures.Shutter))
+                    if (
+                        (cam.Capabilities.Features & SdkFeatures.ShutterEx) == SdkFeatures.ShutterEx ||
+                        (cam.Capabilities.Features & SdkFeatures.Shutter) == SdkFeatures.Shutter
+                    )
+                    {
                         cam.ShutterControl(ShutterMode.PermanentlyOpen, ShutterMode.PermanentlyOpen);
+                    }
 
-                    if(cam.Capabilities.Features.HasFlag(SdkFeatures.FanControl))
+                    if (cam.Capabilities.Features.HasFlag(SdkFeatures.FanControl))
+                    {
                         cam.FanControl(FanMode.FullSpeed);
+                    }
                 }
             });
         }

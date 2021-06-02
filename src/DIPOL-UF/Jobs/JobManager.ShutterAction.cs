@@ -29,6 +29,7 @@ using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms.VisualStyles;
 using ANDOR_CS.Enums;
 
 namespace DIPOL_UF.Jobs
@@ -83,18 +84,34 @@ namespace DIPOL_UF.Jobs
 
             public override Task Execute(CancellationToken token)
             {
-                var tasks = Manager._jobControls.Select(tab =>
-                    Task.Run(async () =>
+                foreach (var tab in Manager._jobControls)
+                {
+                    var shouldChange = (tab.Camera.Shutter, Internal, External) switch
                     {
-                        if (!(Internal is null) &&
-                            await tab.InternalShutterCommand.CanExecute.FirstAsync())
-                            await tab.InternalShutterCommand.Execute(Internal.Value);
-                        if (!(External is null) &&
-                            await tab.ExternalShutterCommand.CanExecute.FirstAsync())
-                            await tab.ExternalShutterCommand.Execute(External.Value);
-                    }, token));
+                        (var (@internal, _, _, _, _), { } newInternal, _) when @internal != newInternal => true,
+                        (var (_, external, _, _, _), _, { } newExternal) when external != newExternal => true,
+                        _ => false
+                    };
+                    if (shouldChange)
+                    {
+                        tab.Camera.ShutterControl(
+                            Internal ?? tab.Camera.Shutter.Internal,
+                            External ?? tab.Camera.Shutter.External ?? ShutterMode.FullyAuto
+                        );
+                    }
+                }
+                //     Task.Run(async () =>
+                //     {
+                //         if (!(Internal is null) &&
+                //             await tab.InternalShutterCommand.CanExecute.FirstAsync())
+                //             await tab.InternalShutterCommand.Execute(Internal.Value);
+                //         if (!(External is null) &&
+                //             await tab.ExternalShutterCommand.CanExecute.FirstAsync())
+                //             await tab.ExternalShutterCommand.Execute(External.Value);
+                //     }, token)
+                // );
 
-                return Task.WhenAll(tasks);
+                return Task.CompletedTask;
             }
         }
     }
