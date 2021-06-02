@@ -28,8 +28,6 @@ namespace DIPOL_UF.Jobs
             /// </summary>
             private readonly int _nRetries = UiSettingsProvider.Settings.Get(@"StepMotorNRetries", 3);
 
-            private int NSteps { get; }
-
             /// <summary>
             /// 1 &lt;&lt; 23 = 8388608
             /// </summary>
@@ -92,8 +90,6 @@ namespace DIPOL_UF.Jobs
                         ActionType == MotorActionType.Rotate
                             ? 1
                             : 0;
-
-                NSteps = 16;
             }
 
             public MotorAction(IReadOnlyDictionary<string, object> props, IUserNotifier? notifier, ILogger? logger) : this(notifier, logger)
@@ -117,9 +113,6 @@ namespace DIPOL_UF.Jobs
                             MotorActionType.Rotate => 1,
                             _ => 0
                         };
-
-                // TODO : Likely unused and unnecessary
-                NSteps = props.TryGetValue("NSteps", out var nSteps) && ObjectToInt(nSteps) is { } n ? n : 16;
             }
 
             public override async Task Initialize(CancellationToken token)

@@ -11,8 +11,7 @@
           { 
             "MotorAction": { 
                 "Type" : "Rotate",
-                "Parameter" : 4,
-                "NSteps" : 4
+                "Parameter" : 4
             } 
           }
         ]
