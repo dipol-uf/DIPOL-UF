@@ -5,9 +5,9 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using DIPOL_UF.Annotations;
 using DIPOL_UF.UserNotifications;
 using Serilog;
+using Serilog.Events;
 using StepMotor;
 
 namespace DIPOL_UF.Jobs
@@ -17,7 +17,7 @@ namespace DIPOL_UF.Jobs
         private class MotorAction : JobAction
         {
             private static readonly Regex Regex =
-                new Regex(@"^(?:motor/)?(rotate|reset)\s*?([+-]?[0-9]+\.?[0-9]*)?$",
+                new(@"^(?:motor/)?(rotate|reset)\s*?([+-]?[0-9]+\.?[0-9]*)?$",
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             private readonly IUserNotifier? _notifier;
@@ -73,7 +73,9 @@ namespace DIPOL_UF.Jobs
 
                 var match = Regex.Match(command.ToLowerInvariant());
                 if (!match.Success)
+                {
                     throw new ArgumentException(@"Motor command is invalid.", nameof(command));
+                }
 
                 ActionType =
                     match.Groups[1].Value == "reset"
@@ -116,6 +118,7 @@ namespace DIPOL_UF.Jobs
                             _ => 0
                         };
 
+                // TODO : Likely unused and unnecessary
                 NSteps = props.TryGetValue("NSteps", out var nSteps) && ObjectToInt(nSteps) is { } n ? n : 16;
             }
 
@@ -126,27 +129,32 @@ namespace DIPOL_UF.Jobs
 
                 await motor.SetAxisParameter(
                     AxisParameter.ReferencingSwitchSpeed,
-                    UiSettingsProvider.Settings.Get(@"StepMotorRFSSpeed", 95));
+                    UiSettingsProvider.Settings.Get(@"StepMotorRFSSpeed", 95)
+                );
                 var i = 0;
                 if (ObjectToInt(UiSettingsProvider.Settings.Get(@"StepMotorRFSSwitchStatus")) is { } switchStatus)
                 {
 
                     for (; i < _referenceSearchMaxAttempts; i++)
                     {
-                        Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Reference search, step {i}", i + 1);
+                        _logger?.Write(LogEventLevel.Information, @"Reference search, step {i}", i + 1);
+                        
                         await motor.ReferenceReturnToOriginAsync(token);
                         if (await motor.GetAxisParameter(AxisParameter.ReferenceSwitchStatus) == switchStatus)
+                        {
                             break;
+                        }
                     }
                 }
                 else
                 {
-                    Helper.WriteLog(
-                        Serilog.Events.LogEventLevel.Warning,
+                    _logger?.Write(
+                        LogEventLevel.Warning,
                         @"{Config} is not set in the configuration file. Reference search is unreliable.",
                         @"StepMotorRFSSwitchStatus"
                     );
-                    Injector.LocateOrDefault<IUserNotifier>()?.Error(
+                    
+                    _notifier?.Error(
                         Properties.Localization.StepMotor_MissingRFSSwitchStatus_Header,
                         Properties.Localization.StepMotor_MissingRFSSwitchStatus_Message
                     );
@@ -154,19 +162,22 @@ namespace DIPOL_UF.Jobs
                     await motor.ReferenceReturnToOriginAsync(token);
                 }
 
-                Helper.WriteLog(
-                        Serilog.Events.LogEventLevel.Information,
-                        @"RFS finished in {N} step(s), new position is {pos} ({actualPos})",
-                        i + 1,
-                        await motor.GetActualPositionAsync(),
-                        await motor.GetTruePositionAsync());
+                _logger?.Write(
+                    LogEventLevel.Information,
+                    @"RFS finished in {N} step(s), new position is {pos} ({actualPos})",
+                    i + 1,
+                    await motor.GetActualPositionAsync(),
+                    await motor.GetTruePositionAsync()
+                );
 
             }
 
             public override async Task Execute(CancellationToken token)
             {
                 if (Manager._windowRef.PolarimeterMotor is null)
+                {
                     throw new NotSupportedException(@"No step motor found");
+                }
 
                 var pos = await RetryAction(() => Manager._windowRef.PolarimeterMotor.GetActualPositionAsync(), _nRetries);
 
@@ -175,7 +186,7 @@ namespace DIPOL_UF.Jobs
                     var zeroPos = UnitsPerFullRotation * (int)Math.Ceiling(1.0 * pos / UnitsPerFullRotation);
                     if (pos != zeroPos)
                     {
-                        Helper.WriteLog(Serilog.Events.LogEventLevel.Information, @"Resetting motor: from {pos} to {zeroPos}", pos, zeroPos);
+                        _logger?.Write(LogEventLevel.Information, @"Resetting motor: from {pos} to {zeroPos}", pos, zeroPos);
 
                         if ((Math.Abs(zeroPos) + UnitsPerFullRotation) >= _stepMotorMaxPositionAbs)
                             // Exceeding default ~327 rotations without reference search
@@ -191,7 +202,7 @@ namespace DIPOL_UF.Jobs
                     }
                     else
                     {
-                        Helper.WriteLog(Serilog.Events.LogEventLevel.Information, "Motor is at correct position of {zeroPos}", zeroPos);
+                        _logger?.Write(LogEventLevel.Information, "Motor is at correct position of {zeroPos}", zeroPos);
                     }
 
                 }
@@ -219,8 +230,10 @@ namespace DIPOL_UF.Jobs
                 
                 if (ActionType == MotorActionType.Rotate)
                 {
-                    Helper.WriteLog(
-                        Serilog.Events.LogEventLevel.Information, @"Motor at position {pos} ({actualPos})", pos,
+                    _logger?.Write(
+                        LogEventLevel.Information, 
+                        @"Motor at position {pos} ({actualPos})", 
+                        pos,
                         actualPos
                     );
                 }
@@ -229,7 +242,7 @@ namespace DIPOL_UF.Jobs
             private static async Task RetryAction(Func<Task> action, int retries)
             {
                 var isFinished = false;
-                Exception lastException = null;
+                Exception? lastException = null;
                 for (var i = 0; !isFinished && i < retries; i++)
                 {
                     try
@@ -249,15 +262,17 @@ namespace DIPOL_UF.Jobs
                 }
 
                 if (!isFinished)
+                {
                     throw lastException ??
                           new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
+                }
             }
 
-            private static async Task<T> RetryAction<T>(Func<Task<T>> action, int retries)
+            private static async Task<T?> RetryAction<T>(Func<Task<T>> action, int retries)
             {
                 var isFinished = false;
-                Exception lastException = null;
-                T result = default;
+                Exception? lastException = null;
+                T? result = default;
                 for (var i = 0; !isFinished && i < retries; i++)
                 {
                     try
@@ -277,13 +292,15 @@ namespace DIPOL_UF.Jobs
                 }
 
                 if (!isFinished)
+                {
                     throw lastException ??
                           new InvalidOperationException(Properties.Localization.General_ShouldNotHappen);
+                }
 
                 return result;
             }
 
-            private static int? ObjectToInt(object value) =>
+            private static int? ObjectToInt(object? value) =>
                 value switch
                 {
                     int iValue => iValue,
@@ -291,7 +308,7 @@ namespace DIPOL_UF.Jobs
                     _ => null
                 };
             
-            private static double? ObjectAsDouble(object value) =>
+            private static double? ObjectAsDouble(object? value) =>
                 value switch
                 {
                     int iValue => iValue,
