@@ -146,10 +146,13 @@ namespace DIPOL_UF.Jobs
                         @"{Config} is not set in the configuration file. Reference search is unreliable.",
                         @"StepMotorRFSSwitchStatus"
                     );
-                    
+
                     _notifier?.Error(
                         Properties.Localization.StepMotor_MissingRFSSwitchStatus_Header,
-                        Properties.Localization.StepMotor_MissingRFSSwitchStatus_Message
+                        string.Format(
+                            Properties.Localization.StepMotor_MissingRFSSwitchStatus_Message,
+                            @"StepMotorRFSSwitchStatus"
+                        )
                     );
                     
                     await motor.ReferenceReturnToOriginAsync(token);
