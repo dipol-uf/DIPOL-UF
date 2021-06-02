@@ -1,36 +1,16 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ANDOR_CS.AcquisitionMetadata;
+using ANDOR_CS.Events;
 using FITS_CS;
 
 namespace DIPOL_UF.Jobs
@@ -40,7 +20,7 @@ namespace DIPOL_UF.Jobs
         private class CameraAction : JobAction
         {
             private static readonly Regex Regex =
-                new Regex(@"^(?:camera/)?(expose)\s*((?:\s*[0-9]+,?)+)?$",
+                new(@"^(?:camera/)?(expose)\s*((?:\s*[0-9]+,?)+)?$",
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             private List<int> SpecificCameras { get; }
@@ -56,53 +36,45 @@ namespace DIPOL_UF.Jobs
                 if (!match.Success)
                     throw new ArgumentException(@"Motor command is invalid.", nameof(command));
 
-                SpecificCameras = match.Groups[2].Value.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
-                                       .Select(x =>
-                                           int.TryParse(x, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var y)
-                                               ? new int?(y)
-                                               : null)
-                                       .Where(x => !(x is null))
-                                       .Select(x => x.Value)
-                                       .ToList();
+                // SpecificCameras = match.Groups[2].Value.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                //                        .Select(x =>
+                //                            int.TryParse(x, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var y)
+                //                                ? new int?(y)
+                //                                : null)
+                //                        .Where(x => x is not null)
+                //                        .Select(x => x!.Value)
+                //                        .ToList();
             }
 
             public override async Task Execute(CancellationToken token)
             {
-                var info =
-                    SpecificCameras.Count == 0
-                        ? "all"
-                        : SpecificCameras.EnumerableToString();
-
                 var sharedKeys = new List<FitsKey>();
-                if(Manager.MotorPosition is {} motorPosition)
+                if (Manager.MotorPosition is { } motorPosition)
+                {
                     sharedKeys.Add(new FitsKey("ANGLE", FitsKeywordType.Float, motorPosition, "Plate position in deg"));
+                }
 
-                if(Manager.ActualMotorPosition is { } actualPosition)
-                    sharedKeys.Add(new FitsKey("RAWANGLE", FitsKeywordType.Float, actualPosition, "Actual position in deg"));
+                if (Manager.ActualMotorPosition is { } actualPosition)
+                {
+                    sharedKeys.Add(
+                        new FitsKey("RAWANGLE", FitsKeywordType.Float, actualPosition, "Actual position in deg")
+                    );
+                }
 
-                //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) start exposure");
-                // TODO : add support for the specific cameras
-                var tasks = Manager._jobControls.Select(async x => {
-
-                    // TODO : Add cancellation support
-                    // WATCH : Disabled saving
-                    //x.Camera.SaveNextAcquisitionAs(
-                    //Manager.CurrentTarget.TargetName,
-                    //Manager._fileName,
-                    //ImageFormat.SignedInt32);
+                List<Task> tasks = Manager._jobControls.Select(async x => {
                     // In order to capture extremely fast acquisitions, first capture a task from observable,
                     // then start acquisition through the command interface
                     // and then await initial task
-                    var task = x.WhenAcquisitionFinished.FirstAsync().ToTask(token).ConfigureAwait(false);
-                    await Task.Delay(TimeSpan.FromMilliseconds(0.001));
+                    ConfiguredTaskAwaitable<AcquisitionStatusEventArgs> task = x.WhenAcquisitionFinished.FirstAsync()
+                        .ToTask(token).ConfigureAwait(false);
+                    await Task.Delay(TimeSpan.FromMilliseconds(0.001), token);
                     x.StartAcquisition(Manager._requestMap[x.Camera.GetHashCode()].WithNewKeywords(sharedKeys), token);
                     await task;
                 }).ToList();
 
-                await Task.WhenAll(tasks);//.ConfigureAwait(false);
+                await Task.WhenAll(tasks);
                 Manager.Progress++;
                 Manager.CumulativeProgress++;
-                //Console.WriteLine($@"{DateTime.Now:HH:mm:ss.fff} Cameras ({info}) finish exposure");
             }
         }
     }
