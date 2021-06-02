@@ -14,7 +14,7 @@
     "RemoteOpenTimeout": "00:00:15",
     "RemoteEstablishPBTimeout": "00:00:05",
     "UICamStatusUpdateDelay": "00:00:02.50",
-    "StepMotorRFSSwitchStatus" : 1,
+    "StepMotorRFSSwitchStatus" : 0,
     "RetractorPositionPolarimetry" : 0,
     "RetractorPositionPhotometry" : -450000,
     "RetractorPositionDelta" : 15000,
