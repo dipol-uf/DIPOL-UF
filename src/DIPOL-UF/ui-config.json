@@ -20,7 +20,12 @@
     "RetractorPositionDelta" : 15000,
     "StepMotorUnitsPerOnePlateRevolution" : 51200,
     "Scenarios" : {
-        "Polarimetry": {
+        "LinearPolarimetry": {
+            "Light": "polarimetry.job",
+            "Bias": "polarimetry.bias",
+            "Dark": "polarimetry.dark"
+        },
+        "CircularPolarimetry": {
             "Light": "polarimetry_circular.job",
             "Bias": "polarimetry.bias",
             "Dark": "polarimetry.dark"

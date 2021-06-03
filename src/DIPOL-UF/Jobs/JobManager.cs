@@ -15,7 +15,6 @@ using ANDOR_CS;
 using ANDOR_CS.AcquisitionMetadata;
 using ANDOR_CS.Classes;
 using ANDOR_CS.Enums;
-using DIPOL_UF.Annotations;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Models;
@@ -238,7 +237,7 @@ namespace DIPOL_UF.Jobs
 
                 AcquisitionJob = await ConstructJob(jobScenario.Light);
 
-                if(CurrentTarget1.CycleType is CycleType.LinearPolarimetry
+                if(CurrentTarget1.CycleType.IsPolarimetric()
                     && (!AcquisitionJob.ContainsActionOfType<MotorAction>() || _windowRef.PolarimeterMotor is null))
                     throw new InvalidOperationException("Cannot execute current control with no motor connected.");
 
@@ -321,14 +320,18 @@ namespace DIPOL_UF.Jobs
                         ? ImageFormat.SignedInt32
                         : ImageFormat.UnsignedInt16));
 
-                if (CurrentTarget1.CycleType == CycleType.LinearPolarimetry
+                if (CurrentTarget1.CycleType.IsPolarimetric()
                     && (_windowRef.Regime != InstrumentRegime.Polarimeter ||
                         _windowRef.PolarimeterMotor is null))
+                {
                     throw new InvalidOperationException(Localization.JobManager_NotPolarimetry);
+                }
 
-                if (CurrentTarget1.CycleType == CycleType.Photometry
+                if (CurrentTarget1.CycleType.IsPhotometric()
                     && _windowRef.Regime == InstrumentRegime.Polarimeter)
+                {
                     throw new InvalidOperationException(Localization.JobManager_NotPhotometry);
+                }
 
                 var calibrationsMade = false;
                 //await Task.Factory.StartNew(async ()  =>
@@ -400,7 +403,6 @@ namespace DIPOL_UF.Jobs
                         CurrentJobName = Localization.JobManager_DarkJobName;
                         await DoCameraJobAsync(DarkJob, $"{CurrentTarget1.StarName}_dark", FrameType.Dark);
 
-                        // TODO : Fix correct calibrations behavior
                         calibrationsMade = true;
                         NeedsCalibration = false;
                     }
@@ -509,11 +511,9 @@ namespace DIPOL_UF.Jobs
                 throw new InvalidOperationException("No connected cameras to work with.");
 
 
-            using (var str = new FileStream(CurrentTarget.SettingsPath, FileMode.Open, FileAccess.Read))
-            {
-                _settingsRep = new byte[str.Length];
-                await str.ReadAsync(_settingsRep, 0, _settingsRep.Length);
-            }
+            using var str = new FileStream(CurrentTarget.SettingsPath, FileMode.Open, FileAccess.Read);
+            _settingsRep = new byte[str.Length];
+            await str.ReadAsync(_settingsRep, 0, _settingsRep.Length);
         }
 
         [Obsolete("Use " + nameof(CurrentTarget1), true)]
@@ -555,37 +555,33 @@ namespace DIPOL_UF.Jobs
             using var str = new FileStream(path, FileMode.Open, FileAccess.Read);
             return await Job.CreateAsync(str);
         }
+#nullable enable
         private static ObservationScenario GetJobScenario(CycleType type)
         {
             var scenarios = UiSettingsProvider.Settings.Get<Dictionary<string, ObservationScenario>>(@"Scenarios");
 
-            ObservationScenario scenario = null;
-            scenarios?.TryGetValue(
-                type == CycleType.LinearPolarimetry
-                    ? @"Polarimetry"
-                    : "Photometry", out scenario
-            );
+            ObservationScenario? scenario = null;
+            scenarios?.TryGetValue(type.ToEnumName(), out scenario);
             scenario ??= new ObservationScenario(null, null, null);
-            
-            var prefix = type == CycleType.LinearPolarimetry ? @"polarimetry" : @"photometry";
+
 
             if (string.IsNullOrWhiteSpace(scenario.Light))
             {
-                scenario = scenario with {Light = $"{prefix}.job"};
+                throw new InvalidOperationException("Unable to load job scenarios");
             }
 
             if (string.IsNullOrWhiteSpace(scenario.Bias))
             {
-                scenario = scenario with {Bias = $"{prefix}.bias"};
+                scenario = scenario with {Bias = Path.ChangeExtension(scenario.Light, ".bias")};
             }
 
             if (string.IsNullOrWhiteSpace(scenario.Dark))
             {
-                scenario = scenario with {Dark = $"{prefix}.dark"};
+                scenario = scenario with {Dark = Path.ChangeExtension(scenario.Light, ".dark")};
             }
             return scenario;
         }
-
+#nullable restore
         private JobManager() { }
 
 
