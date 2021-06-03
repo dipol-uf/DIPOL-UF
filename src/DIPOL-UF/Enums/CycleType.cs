@@ -12,6 +12,10 @@ namespace DIPOL_UF.Enums
         LinearPolarimetry,
         
         [EnumMember]
+        [Description("Circular Polarimetry")]
+        CircularPolarimetry,
+        
+        [EnumMember]
         [Description("Photometry")]
         Photometry
     }
@@ -24,6 +28,7 @@ namespace DIPOL_UF.Enums
         {
             CycleType.LinearPolarimetry => nameof(CycleType.LinearPolarimetry),
             CycleType.Photometry => nameof(CycleType.Photometry),
+            CycleType.CircularPolarimetry => nameof(CycleType.CircularPolarimetry),
             _ => throw new ArgumentException(nameof(@this))
         };
     }
