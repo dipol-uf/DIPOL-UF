@@ -567,7 +567,7 @@ namespace DIPOL_UF.Jobs
 
             if (string.IsNullOrWhiteSpace(scenario.Light))
             {
-                throw new InvalidOperationException("Unable to load job scenarios");
+                throw new InvalidOperationException("Unable to load job scenario.");
             }
 
             if (string.IsNullOrWhiteSpace(scenario.Bias))
