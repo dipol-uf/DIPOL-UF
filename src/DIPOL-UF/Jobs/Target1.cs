@@ -82,5 +82,33 @@ namespace DIPOL_UF.Jobs
        
     }
 
-    
+    [JsonObject]
+    internal class Target1Compat
+    {
+        [JsonRequired]
+        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
+        public string? StarName { get; set; }
+
+        [JsonRequired]
+        public string? CycleType { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? Description { get; set; }
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
+        public PerCameraSettingsContainer? PerCameraParameters { get; set; }
+
+        [JsonRequired]
+        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
+        public SharedSettingsContainer? SharedParameters { get; set; } = new();
+
+        public static implicit operator Target1(Target1Compat? @this) =>
+            new()
+            {
+                StarName =  @this?.StarName,
+                Description = @this?.Description,
+                SharedParameters = @this?.SharedParameters,
+                CycleType = @this?.CycleType?.ToLowerInvariant() is "photometric" ? Enums.CycleType.Photometry : Enums.CycleType.LinearPolarimetry
+            };
+    }
 }
