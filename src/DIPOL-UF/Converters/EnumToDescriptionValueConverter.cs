@@ -9,18 +9,13 @@ namespace DIPOL_UF.Converters
 {
     internal class EnumToDescriptionValueConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            switch (value)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+            value switch
             {
-                case Enum enumVal:
-                    return ConverterImplementations.EnumToDescriptionConversion(enumVal);
-                case IEnumerable enumVals:
-                    return ConverterImplementations.EnumToDescriptionConversion(enumVals.Cast<Enum>());
-                default:
-                    return null;
-            }
-        }
+                Enum enumVal => ConverterImplementations.EnumToDescriptionConversion(enumVal),
+                IEnumerable enumVals => ConverterImplementations.EnumToDescriptionConversion(enumVals.Cast<Enum>()),
+                _ => null
+            };
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             //=> value is string desc 
