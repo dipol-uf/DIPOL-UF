@@ -3,9 +3,12 @@ using System.Linq.Expressions;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using DIPOL_UF.Annotations;
+using DIPOL_UF.UserNotifications;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using Serilog;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -14,7 +17,12 @@ namespace DIPOL_UF.ViewModels
     {
         public override ReactiveObjectEx ReactiveModel => Model;
         protected TModel Model { get; }
-        protected ReactiveViewModel(TModel model)
+        protected ReactiveViewModel(
+            TModel model, 
+            [CanBeNull] IUserNotifier notifier = null,
+            [CanBeNull] ILogger logger = null
+        ) :
+            base(notifier, logger)
         {
             Model = model ?? throw new ArgumentNullException(nameof(model));
         }
