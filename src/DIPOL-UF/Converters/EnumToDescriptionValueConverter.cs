@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Windows.Data;
 using System.Globalization;
 using System.Linq;
@@ -13,7 +12,16 @@ namespace DIPOL_UF.Converters
             value switch
             {
                 Enum enumVal => ConverterImplementations.EnumToDescriptionConversion(enumVal),
-                IEnumerable enumVals => ConverterImplementations.EnumToDescriptionConversion(enumVals.Cast<Enum>()),
+                IEnumerable enumVals => 
+                    (
+                            // This checks if target type implements IEnumerable
+                            targetType.FindInterfaces((t, o) => o is Type compType && t == compType, typeof(IEnumerable)).Any(), 
+                            ConverterImplementations.EnumToDescriptionConversion(enumVals.Cast<Enum>())
+                    ) switch
+                    {
+                        (true, var values) => values,
+                        var (_, values) => values?.EnumerableToString() 
+                    },
                 _ => null
             };
 
