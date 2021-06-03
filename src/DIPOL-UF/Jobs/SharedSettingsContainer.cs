@@ -128,6 +128,7 @@ namespace DIPOL_UF.Jobs
 
             var setts = camera.GetAcquisitionSettingsTemplate();
             
+            // TODO : Check this when settings do not match
             setts.Load1(settsCollection);
 
             return setts;

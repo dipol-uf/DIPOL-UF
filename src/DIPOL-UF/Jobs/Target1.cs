@@ -38,6 +38,7 @@ namespace DIPOL_UF.Jobs
         {
             _ = cameras ?? throw new ArgumentNullException(nameof(cameras));
 
+            // TODO : This throws on settings mismatch
             return cameras.ToImmutableDictionary(
                 x => x.Key,
                 x => (SharedParameters ?? new SharedSettingsContainer())
