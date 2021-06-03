@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DIPOL_UF.Enums
@@ -13,5 +14,17 @@ namespace DIPOL_UF.Enums
         [EnumMember]
         [Description("Photometry")]
         Photometry
+    }
+
+    internal static class CycleTypeExtensions
+    {
+        public static bool IsPolarimetric(this CycleType @this) => @this is not CycleType.Photometry;
+        public static bool IsPhotometric(this CycleType @this) => @this is CycleType.Photometry;
+        public static string ToEnumName(this CycleType @this) => @this switch
+        {
+            CycleType.LinearPolarimetry => nameof(CycleType.LinearPolarimetry),
+            CycleType.Photometry => nameof(CycleType.Photometry),
+            _ => throw new ArgumentException(nameof(@this))
+        };
     }
 }
