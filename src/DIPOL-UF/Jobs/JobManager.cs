@@ -238,7 +238,7 @@ namespace DIPOL_UF.Jobs
 
                 AcquisitionJob = await ConstructJob(jobScenario.Light);
 
-                if(CurrentTarget1.CycleType is CycleType.Polarimetric
+                if(CurrentTarget1.CycleType is CycleType.LinearPolarimetry
                     && (!AcquisitionJob.ContainsActionOfType<MotorAction>() || _windowRef.PolarimeterMotor is null))
                     throw new InvalidOperationException("Cannot execute current control with no motor connected.");
 
@@ -321,12 +321,12 @@ namespace DIPOL_UF.Jobs
                         ? ImageFormat.SignedInt32
                         : ImageFormat.UnsignedInt16));
 
-                if (CurrentTarget1.CycleType == CycleType.Polarimetric
+                if (CurrentTarget1.CycleType == CycleType.LinearPolarimetry
                     && (_windowRef.Regime != InstrumentRegime.Polarimeter ||
                         _windowRef.PolarimeterMotor is null))
                     throw new InvalidOperationException(Localization.JobManager_NotPolarimetry);
 
-                if (CurrentTarget1.CycleType == CycleType.Photometric
+                if (CurrentTarget1.CycleType == CycleType.Photometry
                     && _windowRef.Regime == InstrumentRegime.Polarimeter)
                     throw new InvalidOperationException(Localization.JobManager_NotPhotometry);
 
@@ -561,13 +561,13 @@ namespace DIPOL_UF.Jobs
 
             ObservationScenario scenario = null;
             scenarios?.TryGetValue(
-                type == CycleType.Polarimetric
+                type == CycleType.LinearPolarimetry
                     ? @"Polarimetry"
                     : "Photometry", out scenario
             );
             scenario ??= new ObservationScenario(null, null, null);
             
-            var prefix = type == CycleType.Polarimetric ? @"polarimetry" : @"photometry";
+            var prefix = type == CycleType.LinearPolarimetry ? @"polarimetry" : @"photometry";
 
             if (string.IsNullOrWhiteSpace(scenario.Light))
             {

@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System.ComponentModel;
+using System.Runtime.Serialization;
 
 namespace DIPOL_UF.Enums
 {
@@ -6,8 +7,11 @@ namespace DIPOL_UF.Enums
     public enum CycleType : byte
     {
         [EnumMember]
-        Polarimetric,
+        [Description("Linear Polarimetry")]
+        LinearPolarimetry,
+        
         [EnumMember]
-        Photometric
+        [Description("Photometry")]
+        Photometry
     }
 }

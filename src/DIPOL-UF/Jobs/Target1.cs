@@ -7,10 +7,12 @@ using ANDOR_CS;
 using DIPOL_UF.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 
 namespace DIPOL_UF.Jobs
 {
+    [JsonObject]
     internal class Target1 : ICloneable
     {
         [JsonRequired]
@@ -29,7 +31,7 @@ namespace DIPOL_UF.Jobs
 
         [JsonRequired]
         [JsonProperty(NullValueHandling = NullValueHandling.Include)]
-        public SharedSettingsContainer SharedParameters { get; set; } = new SharedSettingsContainer();
+        public SharedSettingsContainer? SharedParameters { get; set; } = new();
 
         public IImmutableDictionary<string, IAcquisitionSettings> CreateTemplatesForCameras(
             IImmutableDictionary<string, IDevice> cameras)
@@ -48,7 +50,7 @@ namespace DIPOL_UF.Jobs
             IImmutableDictionary<string, IAcquisitionSettings> settings,
             string? starName = null,
             string? description = null,
-            CycleType cycleType = CycleType.Polarimetric)
+            CycleType cycleType = CycleType.LinearPolarimetry)
         {
             var result = new Target1()
             {
