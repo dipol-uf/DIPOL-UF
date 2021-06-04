@@ -113,3 +113,4 @@ Releases/*
 scripts/*
 !scripts/*ps1
 *.xsd
+src/DIPOL-UF/FodyWeavers.xsd
