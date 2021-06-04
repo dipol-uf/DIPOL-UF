@@ -24,12 +24,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ANDOR_CS;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
@@ -98,6 +101,7 @@ namespace DIPOL_UF.ViewModels
         public bool IsPolarimetryJob { [ObservableAsProperty] get; }
         public string LastSavedFilePath { [ObservableAsProperty] get; }
 
+        public RenderTargetBitmap PolarizationSymbolImage { get; }
 
         public ReactiveCommand<Unit, FileDialogDescriptor> SaveButtonCommand { get; private set; }
         public ReactiveCommand<string, Unit> SaveActionCommand { get; private set; }
@@ -111,7 +115,7 @@ namespace DIPOL_UF.ViewModels
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
-
+            PolarizationSymbolImage = new RenderTargetBitmap(256, 256, 96, 96, PixelFormats.Pbgra32);
             DipolImagePresenter = new DipolImagePresenterViewModel(Model.ImagePresenter);
             //AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow, null);
 
@@ -229,6 +233,11 @@ namespace DIPOL_UF.ViewModels
                       .Select(x => x.Value)
                       .ObserveOnUi()
                       .ToPropertyEx(this, x => x.IsAnyCameraAcquiring)
+                      .DisposeWith(Subscriptions);
+
+            JobManager.Manager.WhenPropertyChanged(x => x.CurrentCycleType)
+                      .ObserveOnUi()
+                      .Subscribe(x => ImageProvider.UpdateBitmap(PolarizationSymbolImage, x.Value))
                       .DisposeWith(Subscriptions);
 
             Observable.FromEventPattern<ImageSavedHandler, ImageSavedEventArgs>(

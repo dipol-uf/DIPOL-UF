@@ -85,6 +85,7 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <!--Cooler slider/bar-->
                 <Grid Grid.Column="0" Grid.Row="0" Margin="2">
@@ -483,6 +484,12 @@
                          Text="{Binding ExposureTime, 
                             Mode=OneWay,
                             StringFormat={extensions:Text Key=General_ExposureFloatFormat}}"/>
+                <Image 
+                    Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2" 
+                    Margin="20"
+                    Width="200" Height="200"
+                    Source="{Binding PolarizationSymbolImage}
+                "/>
             </Grid>
             <StackPanel Grid.Row="2" Grid.Column="0">
                 <ProgressBar 

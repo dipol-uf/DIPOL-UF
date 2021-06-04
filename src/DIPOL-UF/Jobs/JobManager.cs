@@ -77,6 +77,10 @@ namespace DIPOL_UF.Jobs
         public bool IsInProcess { get; private set; }
         [Reactive]
         public bool ReadyToRun { get; private set; }
+        
+        [Reactive]
+        public CycleType? CurrentCycleType { get; private set; }
+        
         // ReSharper disable once UnassignedGetOnlyAutoProperty
         public bool AnyCameraIsAcquiring { [ObservableAsProperty] get; }
         // ReSharper disable once UnassignedGetOnlyAutoProperty
@@ -252,8 +256,12 @@ namespace DIPOL_UF.Jobs
                 _firstRun = true;
                 ReadyToRun = true;
                 NeedsCalibration = true;
-                
-                Helper.WriteLog(LogEventLevel.Information, "Set up new target {StarName} in {CycleType} regime", CurrentTarget1.StarName, CurrentTarget1.CycleType);
+                CurrentCycleType = CurrentTarget1.CycleType;
+                Helper.WriteLog(
+                    LogEventLevel.Information, "Set up new target {StarName} in {CycleType} regime",
+                    CurrentTarget1.StarName, 
+                    CurrentTarget1.CycleType.GetEnumNameRep().Full
+                );
 
             }
             catch (Exception ex)
