@@ -84,12 +84,19 @@ namespace DIPOL_UF
                 if (!string.IsNullOrWhiteSpace(host))
                 {
                     if (!host.Contains("://"))
-                        host = @"net.tcp://" + host;
-                    if (Uri.TryCreate(host, UriKind.RelativeOrAbsolute, out var uri)
-                        && uri.Host.ToLowerInvariant() is var invariantHost)
-                        return invariantHost == "localhost" || invariantHost == "127.0.0.1"
+                    {
+                        host = $@"net.tcp://{host}";
+                    }
+
+                    if (
+                        Uri.TryCreate(host, UriKind.RelativeOrAbsolute, out var uri)
+                        && uri.Host.ToLowerInvariant() is var invariantHost
+                    )
+                    {
+                        return invariantHost is "localhost" or "127.0.0.1"
                             ? Properties.Localization.General_LocalHostName
                             : uri.Host;
+                    }
 
                 }
             }
@@ -174,12 +181,12 @@ namespace DIPOL_UF
         public static IObservable<IChangeSet<TEntry, TKey>> DisposeManyEx<TEntry, TKey>(
             this IObservable<IChangeSet<TEntry, TKey>> @this,
             Action<TEntry> disposeAction)
-            => @this.SubscribeMany(x => Disposable.Create(() => disposeAction(x)));
+            => @this.SubscribeMany(x => Disposable.Create(x, disposeAction));
 
         public static IObservable<IChangeSet<TEntry>> DisposeManyEx<TEntry>(
             this IObservable<IChangeSet<TEntry>> @this,
             Action<TEntry> disposeAction)
-            => @this.SubscribeMany(x => Disposable.Create(() => disposeAction(x)));
+            => @this.SubscribeMany(x => Disposable.Create(x, disposeAction));
 
         public static T WithDataContext<T>(this T control, ReactiveObjectEx dataContext)
             where T : FrameworkElement
@@ -202,23 +209,29 @@ namespace DIPOL_UF
 
         public static ConfiguredTaskAwaitable ExpectCancellation(
             this Task input,
-            bool marshal = false)
-            => input.ContinueWith((task, param) =>
-                    {
+            bool marshal = false
+        )
+            => input
 #if DEBUG
-                        if (!(task.Exception is null))
-                            WriteLog(task.Exception.Message);
+               .ContinueWith(
+                   (task, _) =>
+                   {
+                       if (!(task.Exception is null))
+                           WriteLog(task.Exception.Message);
+                   }, null
+               )
 #endif
-                    }, null)
-                    .ConfigureAwait(marshal);
+               .ConfigureAwait(marshal);
 
         public static ConfiguredTaskAwaitable<T> ExpectCancellation<T>(
             this Task<T> input, bool marshal = false)
-            => input.ContinueWith((task, param) =>
+            => input.ContinueWith((task, _) =>
                     {
 #if DEBUG
-                        if (!(task.Exception is null))
+                        if (task.Exception is not null)
+                        {
                             WriteLog(task.Exception.Message);
+                        }
 #endif
                         return task.Status == TaskStatus.RanToCompletion ? task.Result : default;
                     }, null)
@@ -271,22 +284,25 @@ namespace DIPOL_UF
                 IEqualityComparer<TValue> comparer = null)
         {
 
-            comparer = comparer ?? EqualityComparer<TValue>.Default;
+            comparer ??= EqualityComparer<TValue>.Default;
 
             void Updater(IChangeSet<(TKey, TValue), TKey> batch)
             {
                 target.AddRange(batch.Where(x => x.Reason == ChangeReason.Add).Select(x => x.Current));
 
                 foreach (
-                    var update in
+                    Change<(TKey, TValue), TKey> update in
                     from upd in batch
                     where upd.Reason == ChangeReason.Update && !comparer.Equals(upd.Current.Item2, upd.Previous.Value.Item2)
-                    select upd)
+                    select upd
+                )
                 {
                     var index = target.IndexOf(update.Previous.Value);
                     target.Add(update.Current);
                     if (index >= 0)
+                    {
                         target.RemoveAt(index);
+                    }
                 }
 
                 target.Remove(batch.Where(x => x.Reason == ChangeReason.Remove).Select(x => x.Current));
@@ -302,7 +318,7 @@ namespace DIPOL_UF
             Func<TValue, TTarget> selector,
             IEqualityComparer<TValue> comparer = null)
         {
-            comparer = comparer ?? EqualityComparer<TValue>.Default;
+            comparer ??= EqualityComparer<TValue>.Default;
 
             void Updater(IChangeSet<TValue, TKey> batch)
             {
@@ -312,12 +328,15 @@ namespace DIPOL_UF
                     var update in
                     from upd in batch
                     where upd.Reason == ChangeReason.Update && !comparer.Equals(upd.Current, upd.Previous.Value)
-                    select upd)
+                    select upd
+                )
                 {
                     var index = target.IndexOf(selector(update.Previous.Value));
                     target.Add(selector(update.Current));
                     if (index >= 0)
+                    {
                         target.RemoveAt(index);
+                    }
                 }
 
                 target.Remove(batch.Where(x => x.Reason == ChangeReason.Remove).Select(x => selector(x.Current)));
