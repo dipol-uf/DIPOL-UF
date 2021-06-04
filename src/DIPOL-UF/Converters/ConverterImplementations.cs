@@ -133,11 +133,10 @@ namespace DIPOL_UF.Converters
         }
 
         public static string EnumToDescriptionConversion(Enum @enum)
-            => @enum.GetEnumStringEx().EnumerableToString();
+            => @enum.GetEnumNameRep().Full;
 
         public static List<string> EnumToDescriptionConversion(IEnumerable<Enum> enums)
-            => enums.Select(x => x.GetEnumStringEx().EnumerableToString())
-                    .ToList();
+            => enums.GetEnumNamesRep().Select(x => x.Full).ToList();
        
         public static Enum DescriptionToEnumConversion(string desc, Type type)
         {

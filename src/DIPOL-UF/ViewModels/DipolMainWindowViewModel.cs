@@ -53,7 +53,7 @@ namespace DIPOL_UF.ViewModels
             {
                 var asm = System.Reflection.Assembly.GetExecutingAssembly();
                 var version = asm.GetName().Version;
-                return $"{Properties.Localization.ApplicationName} v{version.Major}.{version.Minor}";
+                return $"{Properties.Localization.ApplicationName} v{version.Major}.{version.Minor}.{version.Build}";
             }
         }
 

@@ -5,18 +5,16 @@ using System.Runtime.Serialization;
 namespace DIPOL_UF.Enums
 {
     [DataContract]
+    [DescriptionProvider("CycleType")]
     public enum CycleType : byte
     {
         [EnumMember]
-        [Description("Linear Polarimetry")]
         LinearPolarimetry,
         
         [EnumMember]
-        [Description("Circular Polarimetry")]
         CircularPolarimetry,
         
         [EnumMember]
-        [Description("Photometry")]
         Photometry
     }
 

@@ -39,6 +39,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using ANDOR_CS;
+using DIPOL_UF.Annotations;
 using DIPOL_UF.Converters;
 using DynamicData;
 using DynamicData.Binding;
@@ -185,59 +186,6 @@ namespace DIPOL_UF
             return null;
         }
 
-        /// <summary>
-        /// Converts <see cref="Enum"/> flags to an array of <see cref="Enum"/> values.
-        /// Useful for combobox-like representations.
-        /// </summary>
-        /// <typeparam name="T"><see cref="Enum"/> type. If not, throws <see cref="ArgumentException"/></typeparam>
-        /// <param name="enum">Flags to convert to array.</param>
-        /// <exception cref="ArgumentException"/>
-        /// <returns>An array of flags found in input parameter, one flag per each array item.</returns>
-        public static List<T> EnumFlagsToArray<T>(Enum @enum) where T :Enum
-        {
-            return Enum
-                   .GetValues(@enum.GetType())
-                   .Cast<Enum>()
-                   .Where(@enum.HasFlag)
-                   .Cast<T>()
-                   .ToList();
-        }
-
-        public static List<string> GetEnumStringEx(this Enum @enum)
-        {
-            var type = @enum.GetType();
-
-            if (type.GetCustomAttribute(typeof(FlagsAttribute)) is null)
-                return new List<string>
-                {
-                    Enum.IsDefined(type, @enum) ? GetEnumString(type.GetEnumName(@enum), type) : @enum.ToString()
-                };
-
-            var enumDesc = GetEnumNames(type);
-
-            var @default = enumDesc
-                           .Where(x => type.GetField(x.Value).GetCustomAttribute<IgnoreDefaultAttribute>() != null)
-                           .ToList();
-            if (@default.Count == 1 && Equals(@enum, @default[0].Key))
-                return new List<string>
-                {
-                    GetEnumString(@default[0].Value, type)
-                };
-
-
-            return enumDesc.Where(x => type.GetField(x.Value).GetCustomAttribute<IgnoreDefaultAttribute>() is null
-                                       && @enum.HasFlag(x.Key))
-                           .Select(x => x.Key.ToString())
-                           .Select(x => GetEnumString(x, type))
-                           .ToList();
-
-        }
-
-        public static Dictionary<Enum, string> GetEnumNames(Type type)
-            => Enum.GetValues(type).Cast<Enum>().Zip(Enum.GetNames(type),
-                       (x, y) => (x, y))
-                   .ToDictionary(x => x.x, x => x.y);
-
         public static string GetValueTupleString(this ITuple tuple)
         {
             var list = new List<string>(tuple.Length);
@@ -249,34 +197,17 @@ namespace DIPOL_UF
             return list.EnumerableToString();
         }
 
-        public static string ToStringEx(this object @this)
+        public static string ToStringEx([CanBeNull] this object @this)
         {
-            switch (@this)
+            return @this switch
             {
-                case null:
-                    throw new ArgumentNullException(nameof(@this));
-                case string s:
-                    return s;
-                case Enum @enum:
-                {
-                    var coll = @enum.GetEnumStringEx();
-                    switch (coll.Count)
-                    {
-                        case 0:
-                            return "";
-                        case 1:
-                            return coll[0];
-                        default:
-                            return  '[' + coll.EnumerableToString() + ']';
-                    }
-                }
-                case ITuple tuple:
-                    return "(" + tuple.GetValueTupleString() + ")";
-                case IEnumerable enumerable:
-                    return "[" + enumerable.EnumerableToString() + "]";
-                default:
-                    return @this.ToString();
-            }
+                null => throw new ArgumentNullException(nameof(@this)),
+                string s => s,
+                Enum @enum => @enum.GetEnumNameRep().Full,
+                ITuple tuple => $"({tuple.GetValueTupleString()})",
+                IEnumerable enumerable => $"[{enumerable.EnumerableToString()}]",
+                _ => @this.ToString()
+            };
         }
 
         public static double Clamp(this double val, double min, double max)
@@ -530,7 +461,7 @@ namespace DIPOL_UF
             }
         }
 
-        private static string GetEnumString(string key, Type type)
+        internal static string GetEnumString(string key, Type type)
             => Properties.Localization.ResourceManager
                          .GetString($"General_{type.Name}_{key}")
                ?? (type.GetField(key).GetCustomAttribute(
