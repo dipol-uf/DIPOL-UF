@@ -93,7 +93,7 @@ namespace ANDOR_CS.Classes
                                    | AcquisitionMode.Accumulation
                                    | AcquisitionMode.FastKinetics
                                    | AcquisitionMode.Kinetic,
-                GetFunctions = GetFunction.Temperature | GetFunction.TemperatureRange,
+                GetFunctions = GetFunction.Temperature | GetFunction.TemperatureRange | GetFunction.DetectorSize,
                 SetFunctions = SetFunction.Temperature
                                | SetFunction.VerticalReadoutSpeed
                                | SetFunction.VerticalClockVoltage
