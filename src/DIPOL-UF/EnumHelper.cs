@@ -48,7 +48,48 @@ namespace DIPOL_UF
                               .First(x => x is {Name: nameof(GetEnumNameRep), IsGenericMethod: true})
                               .GetGenericMethodDefinition();
 
+        // ReSharper disable once InconsistentNaming
+        private static readonly MethodInfo FromDescription_GenericHandle =
+            typeof(EnumHelper).GetMethod(nameof(FromDescription), new[] {typeof(string)})!
+                              .GetGenericMethodDefinition();
 
+        public static Enum? FromDescription(string description, Type type)
+        {
+            if (
+                string.IsNullOrWhiteSpace(description) || 
+                type is not {IsEnum: true}
+            )
+            {
+                return null;
+            }
+
+            return (Enum)FromDescription_GenericHandle.MakeGenericMethod(type).Invoke(null, new object[] {description});
+        }
+        
+        public static T? FromDescription<T>(string description) where T : struct, Enum
+        {
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                return null;
+            }
+
+            IImmutableDictionary<T, EnumNameRep> nameReps = GetEnumNameRepresentations<T>();
+            foreach (var (value, (fullName, specialName, _, name)) in nameReps)
+            {
+                if (
+                    string.Equals(description, fullName, StringComparison.Ordinal) ||
+                    string.Equals(description, specialName, StringComparison.Ordinal) ||
+                    string.Equals(description, name, StringComparison.Ordinal)
+                )
+                {
+                    return value;
+                }
+            }
+
+            return null;
+        }
+        
+        
         public static System.Collections.IDictionary? GetEnumNameRepresentations(Type type)
         {
             return type.IsEnum
@@ -57,7 +98,7 @@ namespace DIPOL_UF
                 : null;
         }
         
-        public static IImmutableDictionary<T, EnumNameRep> GetEnumNameRepresentations<T>() where T : Enum
+        public static IImmutableDictionary<T, EnumNameRep> GetEnumNameRepresentations<T>()  where T : Enum
         {
             if (StringRepresentationMaps.TryGetValue(typeof(T), out var value))
             {
@@ -82,7 +123,7 @@ namespace DIPOL_UF
             return nameRep2;
         }
 
-        public static EnumNameRep GetEnumNameRep<T>(this T value) where T : Enum
+        public static EnumNameRep GetEnumNameRep<T>(this T value)  where T : Enum
         {
             IImmutableDictionary<T, EnumNameRep> nameReps = GetEnumNameRepresentations<T>();
             if (!IsFlag<T>())
@@ -125,7 +166,7 @@ namespace DIPOL_UF
                  null, new object[] {@enum}
              ) as EnumNameRep)!;
 
-        public static ImmutableArray<T> GetFlagValues<T>(this T value, bool ignoreDefault = true) where T : Enum
+        public static ImmutableArray<T> GetFlagValues<T>(this T value, bool ignoreDefault = true)  where T : Enum
         {
             IImmutableDictionary<T, EnumNameRep> nameReps = GetEnumNameRepresentations<T>();
             var builder = ImmutableArray.CreateBuilder<T>(nameReps.Count);
@@ -141,7 +182,7 @@ namespace DIPOL_UF
             return builder.ToImmutable();
         }
 
-        public static ImmutableArray<EnumNameRep> GetEnumNamesRep<T>(params T[] @this) where T : Enum
+        public static ImmutableArray<EnumNameRep> GetEnumNamesRep<T>(params T[] @this)  where T : Enum
         {
             IImmutableDictionary<T, EnumNameRep> enumReps = GetEnumNameRepresentations<T>();
             var builder = ImmutableArray.CreateBuilder<EnumNameRep>(@this.Length);
@@ -153,7 +194,7 @@ namespace DIPOL_UF
             return builder.ToImmutable();
         }
         
-        public static ImmutableArray<EnumNameRep> GetEnumNamesRep<T>(this IReadOnlyList<T> @this) where T : Enum
+        public static ImmutableArray<EnumNameRep> GetEnumNamesRep<T>(this IReadOnlyList<T> @this)  where T : Enum
         {
             IImmutableDictionary<T, EnumNameRep> enumReps = GetEnumNameRepresentations<T>();
             var builder = ImmutableArray.CreateBuilder<EnumNameRep>(@this.Count);
@@ -164,17 +205,17 @@ namespace DIPOL_UF
             return builder.ToImmutable();
         }
         
-        public static ImmutableArray<EnumNameRep> GetEnumNamesRep<T>(this IEnumerable<T> @this) where T : Enum
+        public static ImmutableArray<EnumNameRep> GetEnumNamesRep<T>(this IEnumerable<T> @this)  where T : Enum
         {
             IImmutableDictionary<T, EnumNameRep> enumReps = GetEnumNameRepresentations<T>();
             return @this.Select(x => enumReps[x]).ToImmutableArray();
         }
         
-        public static bool HasFlag<T>(this T @enum, T flag) where T : Enum => Equals(And(@enum, flag), flag);
+        public static bool HasFlag<T>(this T @enum, T flag)  where T : Enum => Equals(And(@enum, flag), flag);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable EntityNameCapturedOnly.Global
-        public static T Or<T>(T left, T right) where T : Enum
+        public static T Or<T>(T left, T right)  where T : Enum
         {
             InlineIL.IL.Emit.Ldarg(nameof(left));
             InlineIL.IL.Emit.Ldarg(nameof(right));
@@ -183,7 +224,7 @@ namespace DIPOL_UF
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T And<T>(T left, T right) where T : Enum
+        public static T And<T>(T left, T right)  where T : Enum
         {
             InlineIL.IL.Emit.Ldarg(nameof(left));
             InlineIL.IL.Emit.Ldarg(nameof(right));
@@ -192,7 +233,7 @@ namespace DIPOL_UF
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Equals<T>(T left, T right) where T : Enum
+        public static bool Equals<T>(T left, T right)  where T : Enum
         {
             InlineIL.IL.Emit.Ldarg(nameof(left));
             InlineIL.IL.Emit.Ldarg(nameof(right));
@@ -251,7 +292,7 @@ namespace DIPOL_UF
 
             return builder.ToImmutable();
         }
-        private static bool IsFlag<T>() where T : Enum => typeof(T).GetCustomAttribute<FlagsAttribute>() is not null;
+        private static bool IsFlag<T>()  where T : Enum => typeof(T).GetCustomAttribute<FlagsAttribute>() is not null;
       
     }
 }

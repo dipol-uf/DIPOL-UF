@@ -164,6 +164,7 @@ namespace DIPOL_UF
         /// <param name="description">Description string as defined in attribute constructor.</param>
         /// <param name="enumType">Enum type.</param>
         /// <returns></returns>
+        [Obsolete("Use " + nameof(EnumHelper))]
         public static object GetEnumFromDescription(string description, Type enumType)
         {
             // Gets all declared enum values
