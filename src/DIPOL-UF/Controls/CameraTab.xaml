@@ -488,8 +488,8 @@
                     Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2" 
                     Margin="20"
                     Width="200" Height="200"
-                    Source="{Binding PolarizationSymbolImage}
-                "/>
+                    Source="{Binding PolarizationSymbolImage}"
+                />
             </Grid>
             <StackPanel Grid.Row="2" Grid.Column="0">
                 <ProgressBar 
