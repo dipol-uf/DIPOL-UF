@@ -118,19 +118,16 @@ namespace DIPOL_UF.Converters
         public static string CameraKeyToHostConversion(string input)
             => Helper.GetCameraHostName(input);
 
-        public static Brush TemperatureToBrushConversion(float temp, Brush[] brushes)
-        {
-            if (brushes is null || brushes.Length < 4)
-                return Brushes.Black;
-
-            if (temp > 20)
-                return brushes[0];
-            if (temp > 5)
-                return brushes[1] ;
-            if (temp > -15)
-                return brushes[2];
-            return brushes[3];
-        }
+        public static Brush TemperatureToBrushConversion(float temp, Brush[]? brushes) =>
+            brushes is {Length: >= 4}
+                ? temp switch
+                {
+                    > 20 => brushes[0],
+                    > 5 => brushes[1],
+                    > -15 => brushes[2],
+                    _ => brushes[3]
+                }
+                : Brushes.Black;
 
         public static string EnumToDescriptionConversion(Enum @enum)
             => @enum.GetEnumNameRep().Full;
@@ -138,63 +135,45 @@ namespace DIPOL_UF.Converters
         public static List<string> EnumToDescriptionConversion(IEnumerable<Enum> enums)
             => enums.GetEnumNamesRep().Select(x => x.Full).ToList();
        
-        public static Enum DescriptionToEnumConversion(string desc, Type type)
+        public static Enum? DescriptionToEnumConversion(string desc, Type type)
         {
-            if (type.BaseType == typeof(Enum))
-                return (Enum)Helper.GetEnumFromDescription(desc, type);
+            if (type is {IsEnum: true})
+            {
+                return EnumHelper.FromDescription(desc, type);
+            }
 
-            if(Nullable.GetUnderlyingType(type) is Type innerType &&
-               innerType.BaseType == typeof(Enum))
-                return (Enum)Helper.GetEnumFromDescription(desc, innerType);
-
+            if (Nullable.GetUnderlyingType(type) is {IsEnum: true} innerType)
+            {
+                return EnumHelper.FromDescription(desc, innerType);
+            }
+            
             return null;
         }
 
-        public static Brush TemperatureStatusToBrushConversion(TemperatureStatus status, Brush[] brushes)
-        {
-            if (brushes.Length >= 5)
-
-                switch (status)
+        public static Brush TemperatureStatusToBrushConversion(TemperatureStatus status, Brush[] brushes) =>
+            brushes.Length >= 5
+                ? status switch
                 {
-                    case TemperatureStatus.Off:
-                        return brushes[0];
-                    case TemperatureStatus.Stabilized:
-                        return brushes[1];
-                    case TemperatureStatus.NotReached:
-                        return brushes[2];
-                    case TemperatureStatus.Drift:
-                        return brushes[3];
-                    case TemperatureStatus.NotStabilized:
-                        return brushes[4];
-                    default:
-                        return Brushes.Black;
+                    TemperatureStatus.Off => brushes[0],
+                    TemperatureStatus.Stabilized => brushes[1],
+                    TemperatureStatus.NotReached => brushes[2],
+                    TemperatureStatus.Drift => brushes[3],
+                    TemperatureStatus.NotStabilized => brushes[4],
+                    _ => Brushes.Black
                 }
-            else
-                return Brushes.Black;
-        }
+                : Brushes.Black;
 
-        public static bool BoolToBoolConversion(List<bool> values, string parameter = null)
-        {
-            if (parameter is string strPar)
+        public static bool BoolToBoolConversion(List<bool> values, string? parameter = null) =>
+            parameter?.Trim().ToLowerInvariant() switch
             {
-                var key = strPar.Trim().ToLowerInvariant();
-                switch (key)
-                {
-                    case "all":
-                        return values.All(x => x);
-                    case "any":
-                        return values.Any();
-                    case "notall":
-                        return !values.All(x => x);
-                    case "notany":
-                        return !values.Any();
-                }
-            }
+                "any" => values.Any(x => x),
+                "notall" => values.Any(x => !x),
+                "notany" => !values.Any(x => x),
+                // Default, also "all" branch
+                _ => values.All(x => x),
+            };
 
-            return values.All(x => x);
-        }
-
-        public static bool CompareToConversion(object src, object parameter)
+        public static bool CompareToConversion(object src, object? parameter)
         {
             if(!src.GetType().IsPrimitive)
                 throw new TypeAccessException(nameof(src));
@@ -219,37 +198,30 @@ namespace DIPOL_UF.Converters
                     as IComparable)
                     ?.CompareTo(src);
 
-                switch (operation)
+                return operation switch
                 {
-                    case "=":
-                    case "==":
-                        return diff == 0;
-                    case ">":
-                        return diff < 0;
-                    case ">=":
-                        return diff <= 0;
-                    case "<":
-                        return diff > 0;
-                    case "<=":
-                        return diff >= 0;
-                    case "!=":
-                        return diff != 0;
-                    default:
-                        throw new ArgumentException(string.Format(Localization.General_InvalidArgument, nameof(parameter)));
-                }
-
+                    "=" or "==" => diff == 0,
+                    ">" => diff < 0,
+                    ">=" => diff <= 0,
+                    "<" => diff > 0,
+                    "<=" => diff >= 0,
+                    "!=" => diff != 0,
+                    _ => throw new ArgumentException(
+                        string.Format(Localization.General_InvalidArgument, nameof(parameter))
+                    )
+                };
             }
             throw new ArgumentException(string.Format(Localization.General_InvalidArgument, nameof(parameter)));
         }
 
-        public static object FieldAccessConversion(object src, string fieldName)
+        public static object? FieldAccessConversion(object? src, string fieldName)
             => src?.GetType()
                   .GetField(fieldName, BindingFlags.Public | BindingFlags.Instance)
                   ?.GetValue(src);
 
-        public static string ValidationErrorsToStringConversion(object value)
+        public static string? ValidationErrorsToStringConversion(object value)
             => value is IReadOnlyCollection<ValidationError> collection
-                ? collection.Select(x => x.ErrorContent).EnumerableToString(";\r\n") + "."
+                ? $"{collection.Select(x => x.ErrorContent).EnumerableToString(";\r\n")}."
                 : null;
     }
 }
