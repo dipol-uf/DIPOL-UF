@@ -36,11 +36,11 @@ namespace DIPOL_UF.Enums
         Unknown,
 
         [EnumMember]
-        [Description("Polarimeter regime")]
+        [Description("Polarimeter")]
         Polarimeter,
 
         [EnumMember]
-        [Description("Photometer regime")]
+        [Description("Photometer")]
         Photometer
     }
 }

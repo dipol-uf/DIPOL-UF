@@ -486,8 +486,8 @@
                             StringFormat={extensions:Text Key=General_ExposureFloatFormat}}"/>
                 <Image 
                     Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2" 
-                    Margin="20"
-                    Width="200" Height="200"
+                    Margin="10"
+                    Width="120" Height="120"
                     Source="{Binding PolarizationSymbolImage}"
                 />
             </Grid>
