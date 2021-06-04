@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Windows.Data;
 using System.Globalization;
 using System.Linq;
@@ -9,18 +8,22 @@ namespace DIPOL_UF.Converters
 {
     internal class EnumToDescriptionValueConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            switch (value)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+            value switch
             {
-                case Enum enumVal:
-                    return ConverterImplementations.EnumToDescriptionConversion(enumVal);
-                case IEnumerable enumVals:
-                    return ConverterImplementations.EnumToDescriptionConversion(enumVals.Cast<Enum>());
-                default:
-                    return null;
-            }
-        }
+                Enum enumVal => ConverterImplementations.EnumToDescriptionConversion(enumVal),
+                IEnumerable enumVals => 
+                    (
+                            // This checks if target type implements IEnumerable
+                            targetType.FindInterfaces((t, o) => o is Type compType && t == compType, typeof(IEnumerable)).Any(), 
+                            ConverterImplementations.EnumToDescriptionConversion(enumVals.Cast<Enum>())
+                    ) switch
+                    {
+                        (true, var values) => values,
+                        var (_, values) => values?.EnumerableToString() 
+                    },
+                _ => null
+            };
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             //=> value is string desc 

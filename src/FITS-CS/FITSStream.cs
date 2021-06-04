@@ -286,7 +286,8 @@ namespace FITS_CS
 
         public static Image ReadImage(string path, out List<FitsKey> keywords)
         {
-            using var str = new FileStream(path, FileMode.Open);
+            // This needed to allow multiple simultaneous reads
+            using var str = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
             return ReadImage(str, out keywords);
         }
         

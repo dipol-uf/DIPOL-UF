@@ -1,11 +1,9 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,6 +59,13 @@ namespace DIPOL_UF.Jobs
                 {
                     sharedKeys.Add(
                         new FitsKey("RAWANGLE", FitsKeywordType.Float, actualPosition, "Actual position in deg")
+                    );
+                }
+
+                if (Manager.CurrentCycleType is { } cycleType)
+                {
+                    sharedKeys.Add(
+                        new FitsKey("REGIME", FitsKeywordType.String, cycleType.GetEnumNameRep().Special, "Instrument regime")
                     );
                 }
 

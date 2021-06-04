@@ -1,28 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
-using System;
+﻿using System;
 using System.Buffers;
 using System.Collections;
 using System.ComponentModel;
@@ -39,12 +15,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using ANDOR_CS;
+using DIPOL_UF.Annotations;
 using DIPOL_UF.Converters;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
-using Serializers;
-using Serilog.Core;
 using Serilog.Events;
 
 namespace DIPOL_UF
@@ -64,15 +39,16 @@ namespace DIPOL_UF
 
             return (bool) (showingAsDialogField?.GetValue(window) ?? false);
         }
-        public static void WriteLog(string entry) => Injector.GetLogger().Write(LogEventLevel.Information, entry);
+        public static void WriteLog(string entry) => Injector.GetLogger()?.Write(LogEventLevel.Information, entry);
 
         public static void WriteLog(ANDOR_CS.Exceptions.AndorSdkException entry) => WriteLog($"{entry.Message} [{entry.ErrorCode}]");
 
         public static void WriteLog(object entry) => WriteLog(entry.ToString());
 
-        public static void WriteLog(LogEventLevel level, string template, params object[] args) => Injector.GetLogger().Write(level, template, args);
+        public static void WriteLog(LogEventLevel level, string template, params object[] args) =>
+            Injector.GetLogger()?.Write(level, template, args);
         public static void WriteLog(LogEventLevel level, Exception exception, string template, params object[] args) => 
-            Injector.GetLogger().Write(level, exception, template, args);
+            Injector.GetLogger()?.Write(level, exception, template, args);
 
         public static string GetCameraHostName(string input)
         {
@@ -83,12 +59,19 @@ namespace DIPOL_UF
                 if (!string.IsNullOrWhiteSpace(host))
                 {
                     if (!host.Contains("://"))
-                        host = @"net.tcp://" + host;
-                    if (Uri.TryCreate(host, UriKind.RelativeOrAbsolute, out var uri)
-                        && uri.Host.ToLowerInvariant() is var invariantHost)
-                        return invariantHost == "localhost" || invariantHost == "127.0.0.1"
+                    {
+                        host = $@"net.tcp://{host}";
+                    }
+
+                    if (
+                        Uri.TryCreate(host, UriKind.RelativeOrAbsolute, out var uri)
+                        && uri.Host.ToLowerInvariant() is var invariantHost
+                    )
+                    {
+                        return invariantHost is "localhost" or "127.0.0.1"
                             ? Properties.Localization.General_LocalHostName
                             : uri.Host;
+                    }
 
                 }
             }
@@ -130,114 +113,6 @@ namespace DIPOL_UF
             return s.ToString();
         }
 
-        /// <summary>
-        /// Gets value of <see cref="DescriptionAttribute"/> for an item from a given enum.
-        /// </summary>
-        /// <param name="enumValue">Value from the enum.</param>
-        /// <param name="enumType">Enum type. If types mismatch, returns name of the field or null.</param>
-        /// <returns></returns>
-        public static string GetEnumDescription(object enumValue, Type enumType)
-        {
-            // Retrieves string representation of the enum value
-            var fieldName = Enum.GetName(enumType, enumValue);
-
-            if (fieldName is null)
-                return enumValue.ToString();
-            // Which corresponds to field name of Enum-derived class
-            var descriptionAttr = enumType
-                                  .GetField(fieldName)
-                                  // It is possible that such field is not defined (type error), from this point return null
-                                  ?.GetCustomAttributes(typeof(DescriptionAttribute), false)
-                                  .DefaultIfEmpty(null)
-                                  .FirstOrDefault();
-
-            // Casts result to DescriptionAttribute. 
-            // If attribute is not found or value is of wrong type, cast gives null and method returns fieldName
-            return (descriptionAttr as DescriptionAttribute)?.Description ?? fieldName;
-
-        }
-
-        /// <summary>
-        /// Gets value of <see cref="Enum"/> for a given value of <see cref="DescriptionAttribute"/>.
-        /// </summary>
-        /// <param name="description">Description string as defined in attribute constructor.</param>
-        /// <param name="enumType">Enum type.</param>
-        /// <returns></returns>
-        public static object GetEnumFromDescription(string description, Type enumType)
-        {
-            // Gets all declared enum values
-            var values = Enum.GetValues(enumType);
-
-            // If any present
-            if (values.Length > 0)
-            {
-                // Iterates through values, retrieves description for each
-                for (var i = 0; i < values.Length; i++)
-                {
-                    var local = values.GetValue(i);
-                    // If retrieved description equals to passed argument, returns this value.
-                    if (GetEnumDescription(local, enumType) == description)
-                        return local;
-                }
-            }
-
-            // If Enum is empty or description is not found/defined, returns null
-            return null;
-        }
-
-        /// <summary>
-        /// Converts <see cref="Enum"/> flags to an array of <see cref="Enum"/> values.
-        /// Useful for combobox-like representations.
-        /// </summary>
-        /// <typeparam name="T"><see cref="Enum"/> type. If not, throws <see cref="ArgumentException"/></typeparam>
-        /// <param name="enum">Flags to convert to array.</param>
-        /// <exception cref="ArgumentException"/>
-        /// <returns>An array of flags found in input parameter, one flag per each array item.</returns>
-        public static List<T> EnumFlagsToArray<T>(Enum @enum) where T :Enum
-        {
-            return Enum
-                   .GetValues(@enum.GetType())
-                   .Cast<Enum>()
-                   .Where(@enum.HasFlag)
-                   .Cast<T>()
-                   .ToList();
-        }
-
-        public static List<string> GetEnumStringEx(this Enum @enum)
-        {
-            var type = @enum.GetType();
-
-            if (type.GetCustomAttribute(typeof(FlagsAttribute)) is null)
-                return new List<string>
-                {
-                    Enum.IsDefined(type, @enum) ? GetEnumString(type.GetEnumName(@enum), type) : @enum.ToString()
-                };
-
-            var enumDesc = GetEnumNames(type);
-
-            var @default = enumDesc
-                           .Where(x => type.GetField(x.Value).GetCustomAttribute<IgnoreDefaultAttribute>() != null)
-                           .ToList();
-            if (@default.Count == 1 && Equals(@enum, @default[0].Key))
-                return new List<string>
-                {
-                    GetEnumString(@default[0].Value, type)
-                };
-
-
-            return enumDesc.Where(x => type.GetField(x.Value).GetCustomAttribute<IgnoreDefaultAttribute>() is null
-                                       && @enum.HasFlag(x.Key))
-                           .Select(x => x.Key.ToString())
-                           .Select(x => GetEnumString(x, type))
-                           .ToList();
-
-        }
-
-        public static Dictionary<Enum, string> GetEnumNames(Type type)
-            => Enum.GetValues(type).Cast<Enum>().Zip(Enum.GetNames(type),
-                       (x, y) => (x, y))
-                   .ToDictionary(x => x.x, x => x.y);
-
         public static string GetValueTupleString(this ITuple tuple)
         {
             var list = new List<string>(tuple.Length);
@@ -249,34 +124,17 @@ namespace DIPOL_UF
             return list.EnumerableToString();
         }
 
-        public static string ToStringEx(this object @this)
+        public static string ToStringEx([CanBeNull] this object @this)
         {
-            switch (@this)
+            return @this switch
             {
-                case null:
-                    throw new ArgumentNullException(nameof(@this));
-                case string s:
-                    return s;
-                case Enum @enum:
-                {
-                    var coll = @enum.GetEnumStringEx();
-                    switch (coll.Count)
-                    {
-                        case 0:
-                            return "";
-                        case 1:
-                            return coll[0];
-                        default:
-                            return  '[' + coll.EnumerableToString() + ']';
-                    }
-                }
-                case ITuple tuple:
-                    return "(" + tuple.GetValueTupleString() + ")";
-                case IEnumerable enumerable:
-                    return "[" + enumerable.EnumerableToString() + "]";
-                default:
-                    return @this.ToString();
-            }
+                null => throw new ArgumentNullException(nameof(@this)),
+                string s => s,
+                Enum @enum => @enum.GetEnumNameRep().Full,
+                ITuple tuple => $"({tuple.GetValueTupleString()})",
+                IEnumerable enumerable => $"[{enumerable.EnumerableToString()}]",
+                _ => @this.ToString()
+            };
         }
 
         public static double Clamp(this double val, double min, double max)
@@ -298,12 +156,12 @@ namespace DIPOL_UF
         public static IObservable<IChangeSet<TEntry, TKey>> DisposeManyEx<TEntry, TKey>(
             this IObservable<IChangeSet<TEntry, TKey>> @this,
             Action<TEntry> disposeAction)
-            => @this.SubscribeMany(x => Disposable.Create(() => disposeAction(x)));
+            => @this.SubscribeMany(x => Disposable.Create(x, disposeAction));
 
         public static IObservable<IChangeSet<TEntry>> DisposeManyEx<TEntry>(
             this IObservable<IChangeSet<TEntry>> @this,
             Action<TEntry> disposeAction)
-            => @this.SubscribeMany(x => Disposable.Create(() => disposeAction(x)));
+            => @this.SubscribeMany(x => Disposable.Create(x, disposeAction));
 
         public static T WithDataContext<T>(this T control, ReactiveObjectEx dataContext)
             where T : FrameworkElement
@@ -326,23 +184,29 @@ namespace DIPOL_UF
 
         public static ConfiguredTaskAwaitable ExpectCancellation(
             this Task input,
-            bool marshal = false)
-            => input.ContinueWith((task, param) =>
-                    {
+            bool marshal = false
+        )
+            => input
 #if DEBUG
-                        if (!(task.Exception is null))
-                            WriteLog(task.Exception.Message);
+               .ContinueWith(
+                   (task, _) =>
+                   {
+                       if (!(task.Exception is null))
+                           WriteLog(task.Exception.Message);
+                   }, null
+               )
 #endif
-                    }, null)
-                    .ConfigureAwait(marshal);
+               .ConfigureAwait(marshal);
 
         public static ConfiguredTaskAwaitable<T> ExpectCancellation<T>(
             this Task<T> input, bool marshal = false)
-            => input.ContinueWith((task, param) =>
+            => input.ContinueWith((task, _) =>
                     {
 #if DEBUG
-                        if (!(task.Exception is null))
+                        if (task.Exception is not null)
+                        {
                             WriteLog(task.Exception.Message);
+                        }
 #endif
                         return task.Status == TaskStatus.RanToCompletion ? task.Result : default;
                     }, null)
@@ -395,22 +259,25 @@ namespace DIPOL_UF
                 IEqualityComparer<TValue> comparer = null)
         {
 
-            comparer = comparer ?? EqualityComparer<TValue>.Default;
+            comparer ??= EqualityComparer<TValue>.Default;
 
             void Updater(IChangeSet<(TKey, TValue), TKey> batch)
             {
                 target.AddRange(batch.Where(x => x.Reason == ChangeReason.Add).Select(x => x.Current));
 
                 foreach (
-                    var update in
+                    Change<(TKey, TValue), TKey> update in
                     from upd in batch
                     where upd.Reason == ChangeReason.Update && !comparer.Equals(upd.Current.Item2, upd.Previous.Value.Item2)
-                    select upd)
+                    select upd
+                )
                 {
                     var index = target.IndexOf(update.Previous.Value);
                     target.Add(update.Current);
                     if (index >= 0)
+                    {
                         target.RemoveAt(index);
+                    }
                 }
 
                 target.Remove(batch.Where(x => x.Reason == ChangeReason.Remove).Select(x => x.Current));
@@ -426,7 +293,7 @@ namespace DIPOL_UF
             Func<TValue, TTarget> selector,
             IEqualityComparer<TValue> comparer = null)
         {
-            comparer = comparer ?? EqualityComparer<TValue>.Default;
+            comparer ??= EqualityComparer<TValue>.Default;
 
             void Updater(IChangeSet<TValue, TKey> batch)
             {
@@ -436,12 +303,15 @@ namespace DIPOL_UF
                     var update in
                     from upd in batch
                     where upd.Reason == ChangeReason.Update && !comparer.Equals(upd.Current, upd.Previous.Value)
-                    select upd)
+                    select upd
+                )
                 {
                     var index = target.IndexOf(selector(update.Previous.Value));
                     target.Add(selector(update.Current));
                     if (index >= 0)
+                    {
                         target.RemoveAt(index);
+                    }
                 }
 
                 target.Remove(batch.Where(x => x.Reason == ChangeReason.Remove).Select(x => selector(x.Current)));
@@ -530,7 +400,7 @@ namespace DIPOL_UF
             }
         }
 
-        private static string GetEnumString(string key, Type type)
+        internal static string GetEnumString(string key, Type type)
             => Properties.Localization.ResourceManager
                          .GetString($"General_{type.Name}_{key}")
                ?? (type.GetField(key).GetCustomAttribute(
@@ -575,7 +445,7 @@ namespace DIPOL_UF
             [CallerMemberName]
             string name = null)
         {
-            @this.Subscribe(x => LogTask(name));
+            @this.Subscribe(_ => LogTask(name));
             return @this;
         }
 
