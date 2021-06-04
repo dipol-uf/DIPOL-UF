@@ -112,3 +112,4 @@ Releases/*
 
 scripts/*
 !scripts/*ps1
+*.xsd
