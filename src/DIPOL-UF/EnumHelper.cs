@@ -25,7 +25,12 @@ namespace DIPOL_UF
             DescriptionKey = key ?? throw new ArgumentNullException(nameof(key));
     }
 
-    internal record EnumNameRep(string Full, string Special, [property: JsonIgnore] bool IgnoreDefault = false);
+    internal record EnumNameRep(
+        string Full, 
+        string Special, 
+        [property: JsonIgnore] bool IgnoreDefault = false,
+        [property: JsonIgnore] string? Name = null
+    );
     
     internal static class EnumHelper
     {
@@ -89,7 +94,7 @@ namespace DIPOL_UF
             var fullSb = new StringBuilder(16 * nameReps.Count);
             var specialSb = new StringBuilder(8 * nameReps.Count);
             var isFirst = true;
-            foreach(var (enumVal, (full, special, ignoreDefault)) in nameReps)
+            foreach(var (enumVal, (full, special, ignoreDefault, _)) in nameReps)
             {
                 if (ignoreDefault || !HasFlag(value, enumVal))
                 {
@@ -125,7 +130,7 @@ namespace DIPOL_UF
             IImmutableDictionary<T, EnumNameRep> nameReps = GetEnumNameRepresentations<T>();
             var builder = ImmutableArray.CreateBuilder<T>(nameReps.Count);
 
-            foreach (var (flag, (_, _, currentDefaultIgnored)) in nameReps)
+            foreach (var (flag, (_, _, currentDefaultIgnored, _)) in nameReps)
             {
                 if (HasFlag(value, flag) && !(ignoreDefault && currentDefaultIgnored))
                 {
@@ -230,15 +235,15 @@ namespace DIPOL_UF
                 EnumNameRep enumRep;
                 if (nameProvider is not null && nameProvider.TryGetValue(name, out var retrievedRep))
                 {
-                    enumRep = retrievedRep with {IgnoreDefault = isDefaultIgnored};
+                    enumRep = retrievedRep with {IgnoreDefault = isDefaultIgnored, Name = name};
                 }
                 else if (fifo.GetCustomAttribute<DescriptionAttribute>() is {Description: { } enumDesc})
                 {
-                    enumRep = new EnumNameRep(enumDesc, enumDesc, isDefaultIgnored);
+                    enumRep = new EnumNameRep(enumDesc, enumDesc, isDefaultIgnored, name);
                 }
                 else
                 {
-                    enumRep = new EnumNameRep(name, name, isDefaultIgnored);
+                    enumRep = new EnumNameRep(name, name, isDefaultIgnored, name);
                 }
                 
                 builder.Add(enumVal, enumRep);
