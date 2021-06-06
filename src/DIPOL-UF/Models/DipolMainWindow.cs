@@ -611,45 +611,51 @@ namespace DIPOL_UF.Models
                IsSwitchingRegimes = true;
 
                if (param is InstrumentRegime.Unknown || RetractorMotor is null || PolarimeterMotor is null)
+               {
                    throw new ArgumentException(nameof(param));
+               }
+
                Progress<(int Current, int Target)> progress;
                string pbText;
                int pos;
                int target;
                var logger = Injector.LocateOrDefault<ILogger>();
+               var posOffset = UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0) -
+                                UiSettingsProvider.Settings.Get(@"RetractorPositionPhotometry", -450_000);
+
+               var newRelativePos = param switch
+               {
+                   // By default, goes to (pos + 450_000)
+                   InstrumentRegime.Polarimeter => posOffset,
+                   // By default, goes to (pos - 450_000)
+                   InstrumentRegime.Photometer => -posOffset,
+                   _ => throw new ArgumentException(nameof(param))
+               };
+
+               var oldRegime = Regime;
                try
                {
                    pbText = string.Format(
                        Properties.Localization.MainWindow_Regime_Switching_Text,
                        Regime.ToStringEx(),
-                       param.ToStringEx());
+                       param.ToStringEx()
+                    );
                    Regime = InstrumentRegime.Unknown;
                    progress = new Progress<(int Current, int Target)>();
 
                    pos = await RetractorMotor.GetActualPositionAsync();
 
                    // By default is +450_000
-                   var posOffset = UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0) -
-                                    UiSettingsProvider.Settings.Get(@"RetractorPositionPhotometry", -450_000);
-
-                   var newPos = param switch
-                   {
-                       // By default, goes to (pos + 450_000)
-                       InstrumentRegime.Polarimeter => posOffset,
-                       // By default, goes to (pos - 450_000)
-                       InstrumentRegime.Photometer => -posOffset,
-                       _ => throw new ArgumentException(nameof(param))
-                   };
 
                    logger?.Write(
                        LogEventLevel.Information, 
                        @"Retractor at {Pos}, rotating to {Regime} by {newPos}",
                        pos,
                        param, 
-                       newPos
+                       newRelativePos
                     );
                    // Now moving relatively
-                   var reply = await RetractorMotor.MoveToPosition(newPos, CommandType.Relative);
+                   var reply = await RetractorMotor.MoveToPosition(newRelativePos, CommandType.Relative);
                    if (reply is not {Status: ReturnStatus.Success})
                    {
                        throw new InvalidOperationException("Failed to operate retractor.");
@@ -668,12 +674,42 @@ namespace DIPOL_UF.Models
                _regimeSwitchingTask = RetractorMotor.WaitForPositionReachedAsync(progress).ContinueWith(
                    async task =>
                    {
-                       var logger = Injector.LocateOrDefault<ILogger>();
                        try
                        {
+                           
                            await _regimeSwitchingTask;
                            var reachedPos = await PolarimeterMotor.GetActualPositionAsync();
                            logger?.Write(LogEventLevel.Information, "Retractor reached position {pos}", reachedPos);
+
+                            // This is re-calibration, need to backtrack
+                            if (oldRegime == param)
+                            {
+                                // We need to rotate in the opposite of what calibration did, so
+                                // take `- sign(newRelativePos)` and multiply by the backtracking delta
+                                var backtrackDelta = -UiSettingsProvider.Settings.Get(
+                                    @"RetractorPositionCorrection", 15000
+                                ) * Math.Sign(newRelativePos);
+                                logger?.Write(
+                                    LogEventLevel.Information,
+                                    "Detected re-calibration, backtracking by {BacktrackDelta}",
+                                    backtrackDelta
+                                );
+
+                                if (
+                                    await PolarimeterMotor.MoveToPosition(backtrackDelta, CommandType.Relative) is not
+                                        {Status: ReturnStatus.Success}
+                                )
+                                {
+                                    throw new InvalidOperationException("Backtracking has failed");
+                                }
+
+                                await PolarimeterMotor.WaitForPositionReachedAsync();
+                                reachedPos = await PolarimeterMotor.GetActualPositionAsync();
+                                logger?.Write(
+                                    LogEventLevel.Information, "Retractor reached position {pos}", reachedPos
+                                );
+                            }
+
                        }
                        catch (Exception e)
                        {
@@ -682,7 +718,10 @@ namespace DIPOL_UF.Models
 
                        await RegimeSwitchProvider.ClosingRequested.Execute();
                        if (task.IsCompleted)
+                       {
                            Regime = param;
+                       }
+
                        IsSwitchingRegimes = false;
                    });
 
