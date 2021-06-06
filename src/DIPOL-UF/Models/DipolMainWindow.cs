@@ -20,6 +20,7 @@ using System.Windows.Input;
 using ANDOR_CS;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
+using Serilog;
 using Serilog.Events;
 using StepMotor;
 using Exception = System.Exception;
@@ -565,7 +566,7 @@ namespace DIPOL_UF.Models
                         MessageBoxButton.OK, MessageBoxImage.Information);
                     break;
                 default:
-                    if (_retractorPortScanningTask is {} && !_retractorPortScanningTask.IsFaulted)
+                    if (_retractorPortScanningTask is {IsFaulted: false})
                     {
                         var response = 
                             MessageBox.Show(
@@ -578,7 +579,7 @@ namespace DIPOL_UF.Models
 
                         if (response == MessageBoxResult.Yes)
                         {
-                            Helper.WriteLog(LogEventLevel.Information, "Retractor motor re-scannings requested");
+                            Helper.WriteLog(LogEventLevel.Information, "Retractor motor re-scanning requested");
                             _retractorPortScanningTask = CheckRetractorMotor();
                         }
                     }
@@ -615,6 +616,7 @@ namespace DIPOL_UF.Models
                string pbText;
                int pos;
                int target;
+               var logger = Injector.LocateOrDefault<ILogger>();
                try
                {
                    pbText = string.Format(
@@ -639,13 +641,21 @@ namespace DIPOL_UF.Models
                        _ => throw new ArgumentException(nameof(param))
                    };
 
-                   Helper.WriteLog(LogEventLevel.Information, @"Retractor at {Pos}, rotating to {Regime} by {newPos}", pos, param, newPos);
+                   logger?.Write(
+                       LogEventLevel.Information, 
+                       @"Retractor at {Pos}, rotating to {Regime} by {newPos}",
+                       pos,
+                       param, 
+                       newPos
+                    );
                    // Now moving relatively
                    var reply = await RetractorMotor.MoveToPosition(newPos, CommandType.Relative);
-                   if (reply.Status != ReturnStatus.Success)
+                   if (reply is {Status: ReturnStatus.Success})
+                   {
                        throw new InvalidOperationException("Failed to operate retractor.");
+                   }
 
-                   var axis = await RetractorMotor.GetRotationStatusAsync();
+                   ImmutableDictionary<AxisParameter, int> axis = await RetractorMotor.GetRotationStatusAsync();
                    target = axis[AxisParameter.TargetPosition];
 
                }
@@ -658,13 +668,16 @@ namespace DIPOL_UF.Models
                _regimeSwitchingTask = RetractorMotor.WaitForPositionReachedAsync(progress).ContinueWith(
                    async task =>
                    {
+                       var logger = Injector.LocateOrDefault<ILogger>();
                        try
                        {
                            await _regimeSwitchingTask;
+                           var reachedPos = await PolarimeterMotor.GetActualPositionAsync();
+                           logger?.Write(LogEventLevel.Information, "Retractor reached position {pos}", reachedPos);
                        }
                        catch (Exception e)
                        {
-                           Helper.WriteLog(LogEventLevel.Error, e, "Regime switching has failed");
+                           logger?.Write(LogEventLevel.Error, e, "Regime switching has failed");
                        }
 
                        await RegimeSwitchProvider.ClosingRequested.Execute();
