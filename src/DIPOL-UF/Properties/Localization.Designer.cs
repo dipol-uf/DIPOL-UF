@@ -1541,6 +1541,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot exit application while acquisition is in progress..
+        /// </summary>
+        public static string MainWindow_Notify_Closing_Acquisition {
+            get {
+                return ResourceManager.GetString("MainWindow_Notify_Closing_Acquisition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Closing &apos;Dipol-UF&apos;.
         /// </summary>
         public static string MainWindow_Notify_Closing_Caption {
