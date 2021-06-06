@@ -17,7 +17,7 @@
     "StepMotorRFSSwitchStatus" : 0,
     "RetractorPositionPolarimetry" : 0,
     "RetractorPositionPhotometry" : -450000,
-    "RetractorPositionDelta" : 15000,
+    "RetractorPositionCorrection" : 15000,
     "StepMotorUnitsPerOnePlateRevolution" : 51200,
     "Scenarios" : {
         "LinearPolarimetry": {
