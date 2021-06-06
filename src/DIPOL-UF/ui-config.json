@@ -14,14 +14,26 @@
     "RemoteOpenTimeout": "00:00:15",
     "RemoteEstablishPBTimeout": "00:00:05",
     "UICamStatusUpdateDelay": "00:00:02.50",
-    "Polarimetry": {
-        "Light": "polarimetry.job",
-        "Bias": "polarimetry.bias",
-        "Dark": "polarimetry.dark"
-    },
-    "Photometry": {
-        "Light": "photometry.job",
-        "Bias": "photometry.bias",
-        "Dark": "photometry.dark"
+    "StepMotorRFSSwitchStatus" : 0,
+    "RetractorPositionPolarimetry" : 0,
+    "RetractorPositionPhotometry" : -450000,
+    "RetractorPositionDelta" : 15000,
+    "StepMotorUnitsPerOnePlateRevolution" : 51200,
+    "Scenarios" : {
+        "LinearPolarimetry": {
+            "Light": "polarimetry.job",
+            "Bias": "polarimetry.bias",
+            "Dark": "polarimetry.dark"
+        },
+        "CircularPolarimetry": {
+            "Light": "polarimetry_circular.job",
+            "Bias": "polarimetry.bias",
+            "Dark": "polarimetry.dark"
+        },
+        "Photometry": {
+            "Light": "photometry.job",
+            "Bias": "photometry.bias",
+            "Dark": "photometry.dark"
+        }
     }
 }

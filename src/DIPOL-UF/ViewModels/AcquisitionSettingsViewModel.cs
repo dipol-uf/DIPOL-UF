@@ -130,14 +130,17 @@ namespace DIPOL_UF.ViewModels
         /// Supported acquisition modes.
         /// </summary>
         public AcquisitionMode[] AllowedAcquisitionModes =>
-           Helper.EnumFlagsToArray<AcquisitionMode>(Model.Object.Camera.Capabilities.AcquisitionModes)
+            Model.Object.Camera.Capabilities.AcquisitionModes.GetFlagValues()
+           // Helper.EnumFlagsToArray<AcquisitionMode>(Model.Object.Camera.Capabilities.AcquisitionModes)
             .Where(item => item != ANDOR_CS.Enums.AcquisitionMode.FrameTransfer)
             .Where(EnumConverter.IsAcquisitionModeSupported)
             .ToArray();
+
         public TriggerMode[] AllowedTriggerModes =>
-            Helper.EnumFlagsToArray<TriggerMode>(Model.Object.Camera.Capabilities.TriggerModes)
-            .Where(EnumConverter.IsTriggerModeSupported)
-            .ToArray();
+            Model.Object.Camera.Capabilities.TriggerModes.GetFlagValues()
+             // Helper.EnumFlagsToArray<TriggerMode>(Model.Object.Camera.Capabilities.TriggerModes)
+             .Where(EnumConverter.IsTriggerModeSupported)
+             .ToArray();
         public IObservableCollection<(int Index, float Speed)> AvailableHsSpeeds { get;}
             = new ObservableCollectionExtended<(int Index, float Speed)>();
         public IObservableCollection<(int Index, string Name)> AvailablePreAmpGains { get; }
@@ -267,9 +270,14 @@ namespace DIPOL_UF.ViewModels
             {
                 var isFmt = Model.Object.AcquisitionMode.Value.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer);
                 AvailableReadModes.Load(
-                    Helper.EnumFlagsToArray<ReadMode>(isFmt
-                        ? Camera.Capabilities.FtReadModes
-                        : Camera.Capabilities.ReadModes).Where(EnumConverter.IsReadModeSupported));
+                    // Helper.EnumFlagsToArray<ReadMode>
+                    (
+                        isFmt
+                            ? Camera.Capabilities.FtReadModes
+                            : Camera.Capabilities.ReadModes
+                    ).GetFlagValues()
+                     .Where(EnumConverter.IsReadModeSupported)
+                );
             }
 
             if (Model.Object?.OutputAmplifier.HasValue == true
@@ -979,19 +987,27 @@ namespace DIPOL_UF.ViewModels
 
             // Read mode changes if FrameTransfer is enabled
             Model.Object.WhenAnyPropertyChanged(nameof(Model.Object.AcquisitionMode))
-                    .Where(x => x.AcquisitionMode.HasValue)
-                    // ReSharper disable once PossibleInvalidOperationException
-                    .Select(x => x.AcquisitionMode.Value.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer))
+                 .Where(x => x.AcquisitionMode.HasValue)
+                 // ReSharper disable once PossibleInvalidOperationException
+                 .Select(x => x.AcquisitionMode.Value.HasFlag(ANDOR_CS.Enums.AcquisitionMode.FrameTransfer))
                  .DistinctUntilChanged()
-                 .Select(x => Helper.EnumFlagsToArray<ReadMode>(x
-                                        ? Camera.Capabilities.FtReadModes
-                                        : Camera.Capabilities.ReadModes)
-                                    .Where(EnumConverter.IsReadModeSupported))
+                 .Select(
+                     x =>
+                         // Helper.EnumFlagsToArray<ReadMode>
+                         (
+                             x
+                                 ? Camera.Capabilities.FtReadModes
+                                 : Camera.Capabilities.ReadModes
+                         ).GetFlagValues()
+                          .Where(EnumConverter.IsReadModeSupported)
+                 )
                  .ObserveOnUi()
-                 .Subscribe(x =>
-                 {
-                    AvailableReadModes.GracefullyLoad(x);
-                 })
+                 .Subscribe(
+                     x =>
+                     {
+                         AvailableReadModes.GracefullyLoad(x);
+                     }
+                 )
                  .DisposeWith(Subscriptions);
 
             Model.Object.WhenPropertyChanged(x => x.OutputAmplifier)

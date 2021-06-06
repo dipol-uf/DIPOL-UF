@@ -1,30 +1,6 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-//
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
+﻿#nullable enable
 
 using System;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -81,20 +57,36 @@ namespace DIPOL_UF.Jobs
                     throw new ArgumentException(@"Shutter command is invalid.", nameof(command));
             }
 
-            public override Task Execute(CancellationToken token)
+            public override async Task Execute(CancellationToken token)
             {
-                var tasks = Manager._jobControls.Select(tab =>
-                    Task.Run(async () =>
-                    {
-                        if (!(Internal is null) &&
-                            await tab.InternalShutterCommand.CanExecute.FirstAsync())
-                            await tab.InternalShutterCommand.Execute(Internal.Value);
-                        if (!(External is null) &&
-                            await tab.ExternalShutterCommand.CanExecute.FirstAsync())
-                            await tab.ExternalShutterCommand.Execute(External.Value);
-                    }, token));
+                foreach (var tab in Manager._jobControls)
+                {
+                    token.ThrowIfCancellationRequested();
+                    await Task.Delay(TimeSpan.FromMilliseconds(50), token);
 
-                return Task.WhenAll(tasks);
+                    var(@internal, external, _, _, _) = tab.Camera.Shutter;
+
+                    if (Internal is { } newInternal && newInternal != @internal)
+                    {
+                        if(!await tab.InternalShutterCommand.CanExecute.FirstAsync())
+                        {
+                            throw new InvalidOperationException(@"Cannot control internal shutter!");
+                        }
+                        await tab.InternalShutterCommand.Execute(newInternal);
+                    }
+
+                    if (
+                        (tab.Camera.Capabilities.Features & SdkFeatures.ShutterEx) == SdkFeatures.ShutterEx &&
+                        External is { } newExternal && 
+                        newExternal != external)
+                    {
+                        if (!await tab.ExternalShutterCommand.CanExecute.FirstAsync())
+                        {
+                            throw new InvalidOperationException(@"Cannot control external shutter!");
+                        }
+                        await tab.ExternalShutterCommand.Execute(newExternal);
+                    }
+                }
             }
         }
     }

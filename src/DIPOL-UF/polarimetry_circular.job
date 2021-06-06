@@ -5,13 +5,13 @@
     {
       "RepeatAction":
       {
-        "Repeats": 16,
+        "Repeats": 4,
         "Actions": [
           { "CameraAction": "Expose" },
           { 
             "MotorAction": { 
                 "Type" : "Rotate",
-                "Parameter" : 1
+                "Parameter" : 4
             } 
           }
         ]

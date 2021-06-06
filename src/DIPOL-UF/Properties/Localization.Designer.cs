@@ -336,6 +336,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Polarimetric regime has changed.
+        /// </summary>
+        public static string CalciteWarning_Caption {
+            get {
+                return ResourceManager.GetString("CalciteWarning_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The polarimetric regime has changed from &apos;{0}&apos; to &apos;{1}&apos;. Make sure the correct plate is used (HWP for linear, QWP for circular)..
+        /// </summary>
+        public static string CalciteWarning_Message {
+            get {
+                return ResourceManager.GetString("CalciteWarning_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Alias.
         /// </summary>
         public static string CameraProperties_Alias {
@@ -1744,6 +1762,24 @@ namespace DIPOL_UF.Properties {
         public static string Slider_PixelToolTipFormat {
             get {
                 return ResourceManager.GetString("Slider_PixelToolTipFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RFS is not configured.
+        /// </summary>
+        public static string StepMotor_MissingRFSSwitchStatus_Header {
+            get {
+                return ResourceManager.GetString("StepMotor_MissingRFSSwitchStatus_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reference search success status is not set in the configuration file. Make sure &quot;{0}&quot; is set to eitehr `1` or `0` depending on the model of the motor. Until it is fixed, RFS is unreliable..
+        /// </summary>
+        public static string StepMotor_MissingRFSSwitchStatus_Message {
+            get {
+                return ResourceManager.GetString("StepMotor_MissingRFSSwitchStatus_Message", resourceCulture);
             }
         }
         

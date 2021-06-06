@@ -104,7 +104,13 @@ Releases/*
 !src/DIPOL-UF/ui-config.json
 !src/DIPOL-UF/config.json
 !src/DIPOL-UF/user-allowed-setts.json
+!src/ANDOR-CS/debug_image.fits
 !**/FodyWeavers.xml
 !src/DIPOL-UF/sample_star.json
 !src/DIPOL-UF/App.config
 !src/ANDOR-CS/DebugData/*
+
+scripts/*
+!scripts/*ps1
+*.xsd
+src/DIPOL-UF/FodyWeavers.xsd

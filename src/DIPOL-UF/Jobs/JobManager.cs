@@ -1,28 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -42,15 +18,18 @@ using ANDOR_CS.Enums;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Models;
+using DIPOL_UF.UserNotifications;
 using DynamicData;
 using DynamicData.Binding;
 using FITS_CS;
 using ReactiveUI.Fody.Helpers;
 using Serilog.Events;
 using Localization = DIPOL_UF.Properties.Localization;
+using MessageBox = System.Windows.MessageBox;
 
 namespace DIPOL_UF.Jobs
 {
+    internal sealed record ObservationScenario(string Light, string Bias, string Dark);
     internal sealed partial class JobManager : ReactiveObjectEx
     {
         // These regimes might produce data that will overflow uint16 format,
@@ -100,6 +79,10 @@ namespace DIPOL_UF.Jobs
         public bool IsInProcess { get; private set; }
         [Reactive]
         public bool ReadyToRun { get; private set; }
+        
+        [Reactive]
+        public CycleType? CurrentCycleType { get; private set; }
+        
         // ReSharper disable once UnassignedGetOnlyAutoProperty
         public bool AnyCameraIsAcquiring { [ObservableAsProperty] get; }
         // ReSharper disable once UnassignedGetOnlyAutoProperty
@@ -227,6 +210,24 @@ namespace DIPOL_UF.Jobs
             try
             {
                 await SetupNewTarget1();
+                // If cycle type has changed and both old and new are polarimetric,
+                // this is likely an error, because change of cycle type requires 
+                // manual replacement of the plate inside of the polarimeter
+                if (
+                    oldTarget.CycleType != target.CycleType &&
+                    oldTarget.CycleType.IsPolarimetric() &&
+                    target.CycleType.IsPolarimetric()
+                )
+                {
+                    Injector.LocateOrDefault<IUserNotifier>()?.Info(
+                        Localization.CalciteWarning_Caption, 
+                        string.Format(
+                            Localization.CalciteWarning_Message, 
+                            oldTarget.CycleType.GetEnumNameRep().Full,
+                            target.CycleType.GetEnumNameRep().Full
+                        )
+                    );
+                }
             }
             catch (Exception)
             {
@@ -256,19 +257,18 @@ namespace DIPOL_UF.Jobs
 
             try
             {
-                var paths = JobPaths(CurrentTarget1.CycleType);
+                var jobScenario = GetJobScenario(CurrentTarget1.CycleType);
 
+                AcquisitionJob = await ConstructJob(jobScenario.Light);
 
-                AcquisitionJob = await ConstructJob(paths["Light"]);
-
-                if(CurrentTarget1.CycleType is CycleType.Polarimetric
+                if(CurrentTarget1.CycleType.IsPolarimetric()
                     && (!AcquisitionJob.ContainsActionOfType<MotorAction>() || _windowRef.PolarimeterMotor is null))
                     throw new InvalidOperationException("Cannot execute current control with no motor connected.");
 
-                BiasJob = await ConstructJob(paths["Bias"]);
+                BiasJob = await ConstructJob(jobScenario.Bias);
                 BiasActionCount = BiasJob?.NumberOfActions<CameraAction>() ?? 0;
 
-                DarkJob = await ConstructJob(paths["Dark"]);
+                DarkJob = await ConstructJob(jobScenario.Dark);
                 DarkActionCount = DarkJob?.NumberOfActions<CameraAction>() ?? 0;
                 
                 ApplySettingsTemplate1();
@@ -276,8 +276,12 @@ namespace DIPOL_UF.Jobs
                 _firstRun = true;
                 ReadyToRun = true;
                 NeedsCalibration = true;
-                
-                Helper.WriteLog(LogEventLevel.Information, "Set up new target {StarName} in {CycleType} regime", CurrentTarget1.StarName, CurrentTarget1.CycleType);
+                CurrentCycleType = CurrentTarget1.CycleType;
+                Helper.WriteLog(
+                    LogEventLevel.Information, "Set up new target {StarName} in {CycleType} regime",
+                    CurrentTarget1.StarName, 
+                    CurrentTarget1.CycleType.GetEnumNameRep().Full
+                );
 
             }
             catch (Exception ex)
@@ -344,14 +348,18 @@ namespace DIPOL_UF.Jobs
                         ? ImageFormat.SignedInt32
                         : ImageFormat.UnsignedInt16));
 
-                if (CurrentTarget1.CycleType == CycleType.Polarimetric
+                if (CurrentTarget1.CycleType.IsPolarimetric()
                     && (_windowRef.Regime != InstrumentRegime.Polarimeter ||
                         _windowRef.PolarimeterMotor is null))
+                {
                     throw new InvalidOperationException(Localization.JobManager_NotPolarimetry);
+                }
 
-                if (CurrentTarget1.CycleType == CycleType.Photometric
+                if (CurrentTarget1.CycleType.IsPhotometric()
                     && _windowRef.Regime == InstrumentRegime.Polarimeter)
+                {
                     throw new InvalidOperationException(Localization.JobManager_NotPhotometry);
+                }
 
                 var calibrationsMade = false;
                 //await Task.Factory.StartNew(async ()  =>
@@ -423,7 +431,6 @@ namespace DIPOL_UF.Jobs
                         CurrentJobName = Localization.JobManager_DarkJobName;
                         await DoCameraJobAsync(DarkJob, $"{CurrentTarget1.StarName}_dark", FrameType.Dark);
 
-                        // TODO : Fix correct calibrations behavior
                         calibrationsMade = true;
                         NeedsCalibration = false;
                     }
@@ -532,11 +539,9 @@ namespace DIPOL_UF.Jobs
                 throw new InvalidOperationException("No connected cameras to work with.");
 
 
-            using (var str = new FileStream(CurrentTarget.SettingsPath, FileMode.Open, FileAccess.Read))
-            {
-                _settingsRep = new byte[str.Length];
-                await str.ReadAsync(_settingsRep, 0, _settingsRep.Length);
-            }
+            using var str = new FileStream(CurrentTarget.SettingsPath, FileMode.Open, FileAccess.Read);
+            _settingsRep = new byte[str.Length];
+            await str.ReadAsync(_settingsRep, 0, _settingsRep.Length);
         }
 
         [Obsolete("Use " + nameof(CurrentTarget1), true)]
@@ -578,26 +583,33 @@ namespace DIPOL_UF.Jobs
             using var str = new FileStream(path, FileMode.Open, FileAccess.Read);
             return await Job.CreateAsync(str);
         }
-        private static IReadOnlyDictionary<string, string> JobPaths(CycleType type)
+#nullable enable
+        private static ObservationScenario GetJobScenario(CycleType type)
         {
-            var setts = UiSettingsProvider.Settings.Get<Dictionary<string, string>>(type == CycleType.Polarimetric
-                ? @"Polarimetry"
-                : "Photometry") ?? new Dictionary<string, string>();
+            var scenarios = UiSettingsProvider.Settings.Get<Dictionary<string, ObservationScenario>>(@"Scenarios");
 
-            var prefix = type == CycleType.Polarimetric ? @"polarimetry" : @"photometry";
+            ObservationScenario? scenario = null;
+            scenarios?.TryGetValue(type.ToEnumName(), out scenario);
+            scenario ??= new ObservationScenario(null, null, null);
 
-            if (!setts.ContainsKey("Light") || string.IsNullOrWhiteSpace("Light"))
-                setts["Light"] = $"{prefix}.job";
 
-            if (!setts.ContainsKey("Bias") || string.IsNullOrWhiteSpace("Bias"))
-                setts["Bias"] = $"{prefix}.bias";
+            if (string.IsNullOrWhiteSpace(scenario.Light))
+            {
+                throw new InvalidOperationException("Unable to load job scenario.");
+            }
 
-            if (!setts.ContainsKey("Dark") || string.IsNullOrWhiteSpace("Dark"))
-                setts["Dark"] = $"{prefix}.dark";
+            if (string.IsNullOrWhiteSpace(scenario.Bias))
+            {
+                scenario = scenario with {Bias = Path.ChangeExtension(scenario.Light, ".bias")};
+            }
 
-            return setts;
+            if (string.IsNullOrWhiteSpace(scenario.Dark))
+            {
+                scenario = scenario with {Dark = Path.ChangeExtension(scenario.Light, ".dark")};
+            }
+            return scenario;
         }
-
+#nullable restore
         private JobManager() { }
 
 

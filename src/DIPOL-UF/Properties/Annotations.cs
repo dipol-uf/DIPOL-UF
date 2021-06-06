@@ -1161,3 +1161,10 @@ namespace DIPOL_UF.Annotations
   [AttributeUsage(AttributeTargets.Parameter)]
   public sealed class RazorWriteMethodParameterAttribute : Attribute { }
 }
+
+namespace System.Runtime.CompilerServices
+{
+  internal class IsExternalInit
+  {
+  }
+}

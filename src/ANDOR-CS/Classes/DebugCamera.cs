@@ -1,29 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
-
-#if DEBUG
+﻿#if DEBUG
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -42,6 +17,7 @@ namespace ANDOR_CS.Classes
     {
         private const string DebugImagePath = @"debug_image.fits";
 
+        private static volatile int Counter = -1;
         private static readonly Random R = new Random();
         private static readonly object Locker = new object();
         private const ConsoleColor Green = ConsoleColor.DarkGreen;
@@ -107,7 +83,7 @@ namespace ANDOR_CS.Classes
             
             Task.Delay(TimeSpan.FromSeconds(1.5)).GetAwaiter().GetResult();
             
-            CameraIndex = camIndex;
+            CameraIndex = Interlocked.Increment(ref Counter);
             SerialNumber = $"XYZ-{R.Next(9999):0000}";
             Capabilities = new DeviceCapabilities()
             {
@@ -117,7 +93,7 @@ namespace ANDOR_CS.Classes
                                    | AcquisitionMode.Accumulation
                                    | AcquisitionMode.FastKinetics
                                    | AcquisitionMode.Kinetic,
-                GetFunctions = GetFunction.Temperature | GetFunction.TemperatureRange,
+                GetFunctions = GetFunction.Temperature | GetFunction.TemperatureRange | GetFunction.DetectorSize,
                 SetFunctions = SetFunction.Temperature
                                | SetFunction.VerticalReadoutSpeed
                                | SetFunction.VerticalClockVoltage

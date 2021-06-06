@@ -1,27 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -250,12 +227,12 @@ namespace DIPOL_UF.ViewModels
             Model.Object.Description = Description;
             Model.Object.CycleType = CycleType;
             Model.Object.SharedParameters ??= new SharedSettingsContainer();
-
+            
             var sharedExposure = Model.Object.SharedParameters.ExposureTime ?? 0f;
 
             Model.Object.PerCameraParameters ??= new PerCameraSettingsContainer();
 
-            var expTimes = Model.Object.PerCameraParameters.ExposureTime ?? new Dictionary<string, float?>();
+            Dictionary<string, float?> expTimes = Model.Object.PerCameraParameters.ExposureTime ?? new Dictionary<string, float?>();
 
             expTimes.Clear();
 
@@ -268,14 +245,16 @@ namespace DIPOL_UF.ViewModels
                     expTimes[camName] = sharedExposure;
             }
 
-            var distinctExpTimes = expTimes.Select(x => x.Value).Distinct().ToList();
+            List<float?> distinctExpTimes = expTimes.Select(x => x.Value).Distinct().ToList();
             if (distinctExpTimes.Count == 1)
             {
                 Model.Object.SharedParameters.ExposureTime = distinctExpTimes[0] ?? sharedExposure;
                 expTimes.Clear();
             }
             else
+            {
                 Model.Object.SharedParameters.ExposureTime = null;
+            }
 
             Model.Object.PerCameraParameters.ExposureTime = expTimes;
 
@@ -289,7 +268,7 @@ namespace DIPOL_UF.ViewModels
                 CycleType = Model.Object.CycleType;
             }
 
-            var camNames = JobManager.Manager.GetCameras().Keys.ToList();
+            // var camNames = JobManager.Manager.GetCameras().Keys.ToList();
 
             
             if (Model.Object.SharedParameters is { } @params)
@@ -299,12 +278,15 @@ namespace DIPOL_UF.ViewModels
                 //    .Select(x => x.Key).ToList();
 
                 var dataToLoad = @params.AsDictionary(true)
-                    .Select(x => (x.Value, Model.Object.PerCameraParameters?[x.Key] is {} dict && dict.Count > 0) switch
+                    .Select(x => (x.Value, Model.Object.PerCameraParameters?[x.Key] is {Count: > 0}) switch
                     {
-                        (float f, bool ovr) => new CollectionItem(x.Key, f.ToString("F"), ovr),
-                        (Enum @enum, bool ovr) => new CollectionItem(x.Key,
-                            ConverterImplementations.EnumToDescriptionConversion(@enum), ovr),
-                        ({ } val, bool ovr) => new CollectionItem(x.Key, val.ToString(), ovr),
+                        (float f, var ovr) => new CollectionItem(x.Key, f.ToString("F"), ovr),
+                        (Enum @enum, var ovr) => new CollectionItem(
+                            x.Key,
+                            ConverterImplementations.EnumToDescriptionConversion(@enum), 
+                            ovr
+                        ),
+                        ({ } val, var ovr) => new CollectionItem(x.Key, val.ToString(), ovr),
                         (null, true) => new CollectionItem(x.Key, @"Overriden", true), 
                         (null, false) => new CollectionItem(x.Key, null, false),
                     })
@@ -324,13 +306,15 @@ namespace DIPOL_UF.ViewModels
                     {
                         var updateVal = val?.ToString("F") ?? string.Empty;
 
-                        if (x.Lookup(camName) is var lookup && lookup.HasValue)
+                        if (x.Lookup(camName) is {HasValue: true} lookup)
                         {
                             lookup.Value.Value = updateVal;
                             x.AddOrUpdate(lookup.Value);
                         }
                         else
+                        {
                             x.AddOrUpdate(new PerCameraSettingItem(camName, updateVal));
+                        }
                     }
                 });
             }
@@ -338,7 +322,9 @@ namespace DIPOL_UF.ViewModels
                 _exposureList.Edit(x =>
                 {
                     foreach (var item in x.Items)
+                    {
                         item.Value = string.Empty;
+                    }
                 });
         }
 
@@ -349,14 +335,14 @@ namespace DIPOL_UF.ViewModels
             {
                 return item.SettingsName switch
                 {
-                    nameof(IAcquisitionSettings.EMCCDGain) when Model.Object?.SharedParameters.OutputAmplifier !=
+                    nameof(IAcquisitionSettings.EMCCDGain) when Model.Object?.SharedParameters?.OutputAmplifier !=
                                                                 OutputAmplification.ElectronMultiplication => false,
                     nameof(IAcquisitionSettings.AccumulateCycle) when
-                    Model.Object?.SharedParameters.AcquisitionMode is { } mode
-                    && (mode == AcquisitionMode.SingleScan || mode == AcquisitionMode.RunTillAbort) => false,
+                        Model.Object?.SharedParameters?.AcquisitionMode is AcquisitionMode.SingleScan or AcquisitionMode
+                            .RunTillAbort => false,
                     nameof(IAcquisitionSettings.KineticCycle) when
-                    Model.Object?.SharedParameters.AcquisitionMode is { } mode
-                    && (mode == AcquisitionMode.SingleScan || mode == AcquisitionMode.Accumulation) => false,
+                        Model.Object?.SharedParameters?.AcquisitionMode is AcquisitionMode.SingleScan or AcquisitionMode
+                            .Accumulation => false,
                     _ => true
                 };
             }
@@ -370,16 +356,20 @@ namespace DIPOL_UF.ViewModels
             {
                 _closedUsingButton = true;
                 // Passing `null` to indicate that the operation is cancelled
-                Model.Object = null;
+                Model.Object = null!;
                 w?.Close();
             });
             //.DisposeWith(Subscriptions);
-            
-            var canSubmit = _propList.Connect().Select(_ => _propList.Items.Any(x => x.IsNotSpecified))
-                .CombineLatest(
-                    ObserveHasErrors,
-                    _exposureList.Connect().TrueForAny(x => x.ObserveHasErrors, (x, y) => y).Prepend(false),
-                    (x, y, z) => !x && !y && !z);
+
+            IObservable<bool> canSubmit =
+                _propList.Connect().Select(_ => _propList.Items.Any(x => x.IsNotSpecified))
+                         .CombineLatest(
+                             ObserveHasErrors,
+                             _exposureList.Connect().TrueForAny(
+                                 x => x.ObserveHasErrors, (x, y) => y
+                             ).Prepend(false),
+                             (x, y, z) => !x && !y && !z
+                         );
 
             SaveAndSubmitButtonCommand = ReactiveCommand.Create<Window, Window>(x => x, canSubmit)
                 .DisposeWith(Subscriptions);
@@ -403,7 +393,10 @@ namespace DIPOL_UF.ViewModels
                         Model.Object.PerCameraParameters = new PerCameraSettingsContainer();
                         // If the settings are applied to the camera, do not dispose it 
                         if (ReferenceEquals(_firstCamera.CurrentSettings, wrapper.Object))
+                        {
                             wrapper.Object = null!;
+                        }
+
                         // Do not modify target name/description/etc
                         LoadValues(onlyCameraSettings: true);
                     }
@@ -427,7 +420,7 @@ namespace DIPOL_UF.ViewModels
         }
 
         private FileDialogDescriptor GenerateSaveDialogDescriptor() =>
-            new FileDialogDescriptor
+            new()
             {
                 Mode = FileDialogDescriptor.DialogMode.Save,
                 DefaultExtenstion = "*.star",
@@ -437,7 +430,7 @@ namespace DIPOL_UF.ViewModels
 
 
         private FileDialogDescriptor GenerateLoadDialogDescriptor() =>
-            new FileDialogDescriptor
+            new()
             {
                 Mode = FileDialogDescriptor.DialogMode.Load,
                 DefaultExtenstion = "*.star",
@@ -519,36 +512,45 @@ namespace DIPOL_UF.ViewModels
         private async Task ReadTargetFile(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
+            {
                 return;
+            }
+
             try
             {
                 using var fStr = new FileStream(path, FileMode.Open, FileAccess.Read);
                 using var reader = new StreamReader(fStr);
-                var line = await reader.ReadToEndAsync();
-                var target = JsonConvert.DeserializeObject<Target1>(line);
+                var contents = await reader.ReadToEndAsync();
+                Target1? target;
+                try
+                {
+                    target = JsonConvert.DeserializeObject<Target1>(contents);
+                }
+                catch (JsonSerializationException)
+                {
+                    target = JsonConvert.DeserializeObject<Target1Compat>(contents);
+                }
+
                 if (target is { })
                 {
                     Model.Object = target;
                     LoadValues();
                     WasModified = false;
                 }
-
             }
             catch (Exception e)
             {
                 Helper.WriteLog(Serilog.Events.LogEventLevel.Error, e, "Failed to read 'target' file");
-                // TODO : Show message box
             }
         }
 
 
         private void CloseWindowFromButton(Window? window)
         {
-            if (window is { })
-            {
-                _closedUsingButton = true;
-                window.Close();
-            }
+            if (window is null) return;
+            
+            _closedUsingButton = true;
+            window.Close();
         }
 
         private void OnFileDialogRequested(FileDialogDescriptor e) 
