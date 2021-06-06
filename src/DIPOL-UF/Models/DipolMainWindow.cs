@@ -677,8 +677,8 @@ namespace DIPOL_UF.Models
                        try
                        {
                            
-                           await _regimeSwitchingTask;
-                           var reachedPos = await PolarimeterMotor.GetActualPositionAsync();
+                           // await _regimeSwitchingTask;
+                           var reachedPos = await RetractorMotor.GetActualPositionAsync();
                            logger?.Write(LogEventLevel.Information, "Retractor reached position {pos}", reachedPos);
 
                             // This is re-calibration, need to backtrack
@@ -689,6 +689,7 @@ namespace DIPOL_UF.Models
                                 var backtrackDelta = -UiSettingsProvider.Settings.Get(
                                     @"RetractorPositionCorrection", 15000
                                 ) * Math.Sign(newRelativePos);
+                                
                                 logger?.Write(
                                     LogEventLevel.Information,
                                     "Detected re-calibration, backtracking by {BacktrackDelta}",
@@ -696,15 +697,15 @@ namespace DIPOL_UF.Models
                                 );
 
                                 if (
-                                    await PolarimeterMotor.MoveToPosition(backtrackDelta, CommandType.Relative) is not
+                                    await RetractorMotor.MoveToPosition(backtrackDelta, CommandType.Relative) is not
                                         {Status: ReturnStatus.Success}
                                 )
                                 {
                                     throw new InvalidOperationException("Backtracking has failed");
                                 }
 
-                                await PolarimeterMotor.WaitForPositionReachedAsync();
-                                reachedPos = await PolarimeterMotor.GetActualPositionAsync();
+                                await RetractorMotor.WaitForPositionReachedAsync();
+                                reachedPos = await RetractorMotor.GetActualPositionAsync();
                                 logger?.Write(
                                     LogEventLevel.Information, "Retractor reached position {pos}", reachedPos
                                 );
