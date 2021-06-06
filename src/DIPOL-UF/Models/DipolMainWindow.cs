@@ -620,6 +620,7 @@ namespace DIPOL_UF.Models
                int pos;
                int target;
                var logger = Injector.LocateOrDefault<ILogger>();
+               // By default is +450_000
                var posOffset = UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0) -
                                 UiSettingsProvider.Settings.Get(@"RetractorPositionPhotometry", -450_000);
 
@@ -644,8 +645,6 @@ namespace DIPOL_UF.Models
                    progress = new Progress<(int Current, int Target)>();
 
                    pos = await RetractorMotor.GetActualPositionAsync();
-
-                   // By default is +450_000
 
                    logger?.Write(
                        LogEventLevel.Information, 
