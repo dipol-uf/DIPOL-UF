@@ -650,7 +650,7 @@ namespace DIPOL_UF.Models
                     );
                    // Now moving relatively
                    var reply = await RetractorMotor.MoveToPosition(newPos, CommandType.Relative);
-                   if (reply is {Status: ReturnStatus.Success})
+                   if (reply is not {Status: ReturnStatus.Success})
                    {
                        throw new InvalidOperationException("Failed to operate retractor.");
                    }
