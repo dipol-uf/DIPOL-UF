@@ -345,7 +345,7 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The polarimetric regime has changed from {0} to {1}. Make sure the correct plate is used (HWP for linear, QWP for circularl)..
+        ///   Looks up a localized string similar to The polarimetric regime has changed from &apos;{0}&apos; to &apos;{1}&apos;. Make sure the correct plate is used (HWP for linear, QWP for circular)..
         /// </summary>
         public static string CalciteWarning_Message {
             get {
