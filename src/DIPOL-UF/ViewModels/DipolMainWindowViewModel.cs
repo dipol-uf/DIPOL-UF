@@ -63,7 +63,7 @@ namespace DIPOL_UF.ViewModels
         public DescendantProxy AvailableCamerasProxy { get; }
         public DescendantProxy RegimeSwitchProxy { get; }
 
-    public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
+        public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
         {
             ProgressBarProxy = new DescendantProxy(
                 Model.ProgressBarProvider,
@@ -183,7 +183,20 @@ namespace DIPOL_UF.ViewModels
 
             var notifier = Injector.Locate<IUserNotifier>();
 
-            // If regime is being switched, cancel closing
+            
+            // First, check if cameras are acquiring
+            if (JobManager.Manager.IsInProcess ||
+                Model.ConnectedCameras.Items.Any(x => x is {Camera: {IsAcquiring: true}}))
+            {
+                notifier.Error(
+                    caption,
+                    Properties.Localization.MainWindow_Notify_Closing_Acquisition
+                );
+                args.Cancel = true;
+                return;
+            }
+            
+            // Then, if polarimeter regime is being switched
             if (Model.IsSwitchingRegimes)
             {
                 notifier.Error(
@@ -194,7 +207,7 @@ namespace DIPOL_UF.ViewModels
                 return;
             }
 
-            // In photometric regime
+            // Finally, if in photometric regime, force user to switch to polarimetric regime
             if (Model.RetractorMotor is not null && Model.Regime is not InstrumentRegime.Polarimeter)
             {
                 notifier.Error(
@@ -205,6 +218,8 @@ namespace DIPOL_UF.ViewModels
                 return;
             }
 
+            
+            // Here go warnings/confirmations
             if (
                 Model.ConnectedCameras.Items.Any(
                     // Camera not disposed
