@@ -239,7 +239,7 @@ namespace DIPOL_UF.ViewModels
                       .ObserveOnUi()
                       .Subscribe(x => ImageProvider.UpdateBitmap(PolarizationSymbolImage, x.Value))
                       .DisposeWith(Subscriptions);
-
+            
             Observable.FromEventPattern<ImageSavedHandler, ImageSavedEventArgs>(
                           x => Model.Camera.ImageSaved += x,
                           x => Model.Camera.ImageSaved -= x)

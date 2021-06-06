@@ -723,4 +723,10 @@ Click "Yes" if you would like to re-calibrate its position.</value>
   <data name="StepMotor_MissingRFSSwitchStatus_Message" xml:space="preserve">
     <value>Reference search success status is not set in the configuration file. Make sure "{0}" is set to eitehr `1` or `0` depending on the model of the motor. Until it is fixed, RFS is unreliable.</value>
   </data>
+  <data name="CalciteWarning_Caption" xml:space="preserve">
+    <value>Polarimetric regime has changed</value>
+  </data>
+  <data name="CalciteWarning_Message" xml:space="preserve">
+    <value>The polarimetric regime has changed from {0} to {1}. Make sure the correct plate is used (HWP for linear, QWP for circularl).</value>
+  </data>
 </root>

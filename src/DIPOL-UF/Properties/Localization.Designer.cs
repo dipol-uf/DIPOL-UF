@@ -336,6 +336,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Polarimetric regime has changed.
+        /// </summary>
+        public static string CalciteWarning_Caption {
+            get {
+                return ResourceManager.GetString("CalciteWarning_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The polarimetric regime has changed from {0} to {1}. Make sure the correct plate is used (HWP for linear, QWP for circularl)..
+        /// </summary>
+        public static string CalciteWarning_Message {
+            get {
+                return ResourceManager.GetString("CalciteWarning_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Alias.
         /// </summary>
         public static string CameraProperties_Alias {

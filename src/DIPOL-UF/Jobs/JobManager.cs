@@ -18,12 +18,14 @@ using ANDOR_CS.Enums;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Models;
+using DIPOL_UF.UserNotifications;
 using DynamicData;
 using DynamicData.Binding;
 using FITS_CS;
 using ReactiveUI.Fody.Helpers;
 using Serilog.Events;
 using Localization = DIPOL_UF.Properties.Localization;
+using MessageBox = System.Windows.MessageBox;
 
 namespace DIPOL_UF.Jobs
 {
@@ -208,6 +210,24 @@ namespace DIPOL_UF.Jobs
             try
             {
                 await SetupNewTarget1();
+                // If cycle type has changed and both old and new are polarimetric,
+                // this is likely an error, because change of cycle type requires 
+                // manual replacement of the plate inside of the polarimeter
+                if (
+                    oldTarget.CycleType != target.CycleType &&
+                    oldTarget.CycleType.IsPolarimetric() &&
+                    target.CycleType.IsPolarimetric()
+                )
+                {
+                    Injector.LocateOrDefault<IUserNotifier>()?.Info(
+                        Localization.CalciteWarning_Caption, 
+                        string.Format(
+                            Localization.CalciteWarning_Message, 
+                            oldTarget.CycleType.GetEnumNameRep().Full,
+                            target.CycleType.GetEnumNameRep().Full
+                        )
+                    );
+                }
             }
             catch (Exception)
             {
