@@ -1,28 +1,4 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
-using System;
+﻿using System;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -53,10 +29,11 @@ namespace DIPOL_UF.Models
         private Task _acquisitionTask;
         private CancellationTokenSource _acquisitionTokenSource;
 
-        private DateTime _acqStartTime;
-        private DateTime _acqEndTime;
+        private DateTimeOffset _acqStartTime;
+        private DateTimeOffset _lastImageTime;
+        private DateTimeOffset _acqEndTime;
 
-        private readonly Timer _pbTimer = new Timer();
+        private readonly Timer _pbTimer = new();
 
         public Camera Camera { get; }
         public (float Minimum, float Maximum) TemperatureRange { get; }
@@ -138,7 +115,8 @@ namespace DIPOL_UF.Models
             AcquisitionProgress = AcquisitionProgressRange.Min;
             _acquisitionTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-            _acqStartTime = DateTime.Now;
+            _acqStartTime = DateTimeOffset.UtcNow;
+            _lastImageTime = _acqStartTime;
             _acquisitionTask = Camera
                                .StartAcquisitionAsync(metadata, _acquisitionTokenSource.Token)
                                .ExpectCancellationAsync();
@@ -161,13 +139,13 @@ namespace DIPOL_UF.Models
             Camera.NewImageReceived += (_, args) =>
             {
                 _cachedPreview = Camera.PullPreviewImage(args.Index, ImageFormat.UnsignedInt16);
+                _lastImageTime = DateTimeOffset.UtcNow;
             };
             Camera.NewImageReceived += (_, _) =>
             {
                 if (_cachedPreview is not null)
                 {
                     ImagePresenter.LoadImage(_cachedPreview);
-                    AcquisitionProgress = AcquisitionProgressRange.Max;
                 }
             };
 
@@ -295,8 +273,7 @@ namespace DIPOL_UF.Models
                         _ => new ReactiveWrapper</*Target*/ Target1>(JobManager.Manager.GenerateTarget1())),
                     null, null, ReactiveCommand.CreateFromTask<ReactiveObjectEx>(async x =>
                     {
-                        if (x is ReactiveWrapper<Target1> wrapper
-                            && wrapper.Object is { } target)
+                        if (x is ReactiveWrapper<Target1> {Object: { } target})
                             try
                             {
                                 await JobManager.Manager.SubmitNewTarget1(target);
@@ -418,13 +395,21 @@ namespace DIPOL_UF.Models
 
         private void TimerTick(object sender, ElapsedEventArgs e)
         {
-            if (!(sender is Timer t) || !t.Enabled || _acquisitionTask == null ||
-                !(AcquisitionProgress <= AcquisitionProgressRange.Max)) return;
+            if (
+                sender is not Timer {Enabled: true} ||
+                _acquisitionTask is null ||
+                AcquisitionProgress > AcquisitionProgressRange.Max
+            )
+            {
+                return;
+            }
 
-            var frac = (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min) 
-                       * (e.SignalTime - _acqStartTime).TotalSeconds 
-                       / (_acqEndTime - _acqStartTime).TotalSeconds;
-            AcquisitionProgress = frac;
+            var dtAct = (e.SignalTime - _lastImageTime).TotalSeconds;
+            var dtPred = (_acqEndTime - _acqStartTime).TotalSeconds;
+
+            var frac = (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min) * (dtAct / dtPred);
+
+            AcquisitionProgress = Math.Min(Math.Max(frac, AcquisitionProgressRange.Min), AcquisitionProgressRange.Max);
         }
 
         protected override void Dispose(bool disposing)
