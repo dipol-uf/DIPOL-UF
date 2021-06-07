@@ -702,6 +702,12 @@ namespace DIPOL_UF.Models
             };
             var isCalibration = oldRegime is InstrumentRegime.Polarimeter && newRegime is InstrumentRegime.Polarimeter;
 
+            if (isCalibration)
+            {
+                // Going for an extra 15_000 to compensate for backtracking in the worst-case scenario
+                newAbsPos += UiSettingsProvider.Settings.Get(@"RetractorPositionCorrection", 15_000);
+            }
+            
             try
             {
                 pbText =
