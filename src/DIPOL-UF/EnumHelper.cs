@@ -137,7 +137,7 @@ namespace DIPOL_UF
             var isFirst = true;
             foreach(var (enumVal, (full, special, ignoreDefault, _)) in nameReps)
             {
-                if (ignoreDefault || !HasFlag(value, enumVal))
+                if (ignoreDefault || !HasFlagTyped(value, enumVal))
                 {
                     continue;
                 }
@@ -173,7 +173,7 @@ namespace DIPOL_UF
 
             foreach (var (flag, (_, _, currentDefaultIgnored, _)) in nameReps)
             {
-                if (HasFlag(value, flag) && !(ignoreDefault && currentDefaultIgnored))
+                if (HasFlagTyped(value, flag) && !(ignoreDefault && currentDefaultIgnored))
                 {
                     builder.Add(flag);
                 }
@@ -211,7 +211,7 @@ namespace DIPOL_UF
             return @this.Select(x => enumReps[x]).ToImmutableArray();
         }
         
-        public static bool HasFlag<T>(this T @enum, T flag)  where T : Enum => Equals(And(@enum, flag), flag);
+        public static bool HasFlagTyped<T>(this T @enum, T flag)  where T : Enum => Equals(And(@enum, flag), flag);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable EntityNameCapturedOnly.Global

@@ -162,8 +162,9 @@ namespace DIPOL_UF.ViewModels
             IObservable<bool> canControlQuickVideo = Observable.CombineLatest(
                 this.WhenPropertyChanged(x => x.IsAcquiring).Select(x => x.Value),
                 this.WhenPropertyChanged(y => y.IsInQuickVideoRegime).Select(y => y.Value),
+                Observable.Start(() => Model.Camera.Capabilities.AcquisitionModes.HasFlagTyped(AcquisitionMode.RunTillAbort)),
                 // `true` when either not acquiring (idle) or when in quick video regime
-                (x, y) => !x || y
+                (x, y, z) => z && (!x || y)
             );
 
             StartQuickVideo = ReactiveCommand.Create(
@@ -462,14 +463,23 @@ namespace DIPOL_UF.ViewModels
 
         private void ExecuteStartQuickVideo()
         {
-            // TODO: Verify Video mode is supported
-            // TODO: Verify settings already present
             IsInQuickVideoRegime = true;
-            _previousSettings = Model.Camera.CurrentSettings;
-            var newSettings = _previousSettings.MakeCopy();
-            newSettings.SetAcquisitionMode(AcquisitionMode.RunTillAbort);
-            newSettings.SetKineticCycle(0, 0f);
-            Model.Camera.ApplySettings(newSettings);
+            
+            if (
+                Model.Camera.CurrentSettings is not null
+             && Model.Camera.Capabilities.AcquisitionModes.HasFlagTyped(AcquisitionMode.RunTillAbort)
+            )
+            {
+                _previousSettings = Model.Camera.CurrentSettings;
+                IAcquisitionSettings newSettings = _previousSettings.MakeCopy();
+                newSettings.SetAcquisitionMode(AcquisitionMode.RunTillAbort);
+                newSettings.SetKineticCycle(0, 0f);
+                Model.Camera.ApplySettings(newSettings);
+            }
+
+
+            // If there are no settings (camera was just connected) or if it does not support `RunTillAbort`,
+            // simply ignore and run the equivalent of one exposure.
             StartAcquisitionCommand.Execute(null);
         }
 
@@ -477,13 +487,12 @@ namespace DIPOL_UF.ViewModels
         {
 
             var videoSettings = Model.Camera.CurrentSettings;
-            if (_previousSettings is null || ReferenceEquals(_previousSettings, Model.Camera.CurrentSettings))
+            if (_previousSettings is not null && !ReferenceEquals(_previousSettings, videoSettings))
             {
-                return;
+                Model.Camera.ApplySettings(_previousSettings);
+                videoSettings?.Dispose();
             }
 
-            Model.Camera.ApplySettings(_previousSettings);
-            videoSettings.Dispose();
             _previousSettings = null;
             IsInQuickVideoRegime = false;
         }
