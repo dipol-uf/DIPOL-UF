@@ -486,7 +486,7 @@ namespace DIPOL_UF.Models
                 PolarimeterMotor?.Dispose();
                 PolarimeterMotor = null;
             }
-            if (!(PolarimeterMotor is null))
+            if (PolarimeterMotor is not null)
             {
                 MessageBox.Show(
                     string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
@@ -498,7 +498,7 @@ namespace DIPOL_UF.Models
             }
             else
             {
-                if (!(_polarimeterPortScanningTask is null)
+                if (_polarimeterPortScanningTask is not null
                     && !_polarimeterPortScanningTask.IsFaulted)
                 {
                     var response = MessageBox.Show(
@@ -540,7 +540,11 @@ namespace DIPOL_UF.Models
 
             switch (RetractorMotor)
             {
-                case {} motor when !JobManager.Manager.AnyCameraIsAcquiring && !JobManager.Manager.IsInProcess && !IsSwitchingRegimes:
+                case {} motor when 
+                    !JobManager.Manager.AnyCameraIsAcquiring && 
+                    !JobManager.Manager.IsInProcess && 
+                    !IsSwitchingRegimes &&
+                    Regime is InstrumentRegime.Polarimeter:
                     if (MessageBox.Show(
                             string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text_2,
                                 _retractorPort.PortName,
