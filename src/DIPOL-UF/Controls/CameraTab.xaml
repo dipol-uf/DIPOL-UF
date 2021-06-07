@@ -471,19 +471,47 @@
                     </Button.Style>
                 </Button>
 
-                <!-- Timing table -->
-                <TextBlock HorizontalAlignment="Stretch"
-                           Grid.Column="0" Grid.Row="6"
-                           Style="{StaticResource ContentFont_TextBlock}"
-                           Text="{extensions:Text Key=CameraTab_EstimatedTime}"/>
-                <TextBox Style="{StaticResource TextBoxStyle}" 
-                         Grid.Column="1" Grid.Row="6"
-                         IsReadOnly="True" Focusable="False" 
-                         HorizontalContentAlignment="Right"
-                         HorizontalAlignment="Stretch"
-                         Text="{Binding ExposureTime, 
-                            Mode=OneWay,
-                            StringFormat={extensions:Text Key=General_ExposureFloatFormat}}"/>
+                <Button
+                    Grid.Column="0" Grid.Row="6" 
+                    VerticalAlignment="Top" HorizontalAlignment="Center"
+                    Command="{Binding StartQuickVideo}"
+                >
+                    <Button.Style>
+                        <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger Value="True" Binding="{Binding IsInQuickVideoRegime}" >
+                                    <Setter Property="Content" Value="{extensions:Text Key=CameraTab_Video_Stop}"/>
+                                    <Setter Property="Button.Background" 
+                                        Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
+                                    <Setter Property="Button.Foreground" 
+                                        Value="{StaticResource ResourceKey=NegativeEffectButtonForegroundColor}"/>
+                                </DataTrigger>
+                                <DataTrigger Value="False" Binding="{Binding IsInQuickVideoRegime}" >
+                                    <Setter Property="Content"  Value="{extensions:Text Key=CameraTab_Video_Start}"/>
+                                    <Setter Property="Button.Background" 
+                                        Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>
+                                    <Setter Property="Button.Foreground" 
+                                        Value="{StaticResource ResourceKey=PositiveEffectButtonForegroundColor}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <StackPanel Grid.Column="1" Grid.Row="6" Orientation="Vertical">
+                    <!-- Timing table -->
+                    <TextBlock HorizontalAlignment="Stretch"
+                               Style="{StaticResource ContentFont_TextBlock}"
+                               Text="{extensions:Text Key=CameraTab_EstimatedTime}"/>
+                    <TextBox Style="{StaticResource TextBoxStyle}" 
+                             IsReadOnly="True" Focusable="False" 
+                             HorizontalContentAlignment="Right"
+                             HorizontalAlignment="Stretch"
+                             Text="{Binding ExposureTime, 
+                                Mode=OneWay,
+                                StringFormat={extensions:Text Key=General_ExposureFloatFormat}}"/>
+                </StackPanel>
+
                 <Image 
                     Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2" 
                     Margin="10"

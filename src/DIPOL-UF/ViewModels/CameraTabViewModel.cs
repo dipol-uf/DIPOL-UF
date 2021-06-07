@@ -1,41 +1,19 @@
-﻿//    This file is part of Dipol-3 Camera Manager.
-
-//     MIT License
-//     
-//     Copyright(c) 2018-2019 Ilia Kosenkov
-//     
-//     Permission is hereby granted, free of charge, to any person obtaining a copy
-//     of this software and associated documentation files (the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-//     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//     copies of the Software, and to permit persons to whom the Software is
-//     furnished to do so, subject to the following conditions:
-//     
-//     The above copyright notice and this permission notice shall be included in all
-//     copies or substantial portions of the Software.
-//     
-//     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFINGEMENT. IN NO EVENT SHALL THE
-//     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//     SOFTWARE.
-
+﻿
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Globalization;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ANDOR_CS;
 using ANDOR_CS.Enums;
 using ANDOR_CS.Events;
+using DIPOL_UF.Annotations;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
@@ -51,6 +29,9 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class CameraTabViewModel : ReactiveViewModel<CameraTab>
     {
+        [CanBeNull]
+        private IAcquisitionSettings _previousSettings = null;
+
         public event EventHandler FileDialogRequested;
 
         public float MinimumAllowedTemperature => Model.TemperatureRange.Minimum;
@@ -88,6 +69,9 @@ namespace DIPOL_UF.ViewModels
         [Reactive]
         public ShutterMode? ExternalShutterMode { get; set; }
 
+        [Reactive]
+        public bool IsInQuickVideoRegime { get; set; }
+
         public bool IsJobInProgress { [ObservableAsProperty] get; }
         public bool IsAcquiring { [ObservableAsProperty]get; }
         public bool IsAnyCameraAcquiring { [ObservableAsProperty] get; }
@@ -112,6 +96,8 @@ namespace DIPOL_UF.ViewModels
         public ICommand SetUpJobCommand => Model.SetUpJobCommand;
 
         public ICommand StartAllAcquisitionsCommand => Model.StartAllAcquisitionsCommand;
+        public IReactiveCommand StartQuickVideo { get; private set; }
+
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
@@ -128,7 +114,7 @@ namespace DIPOL_UF.ViewModels
 
         private void InitializeCommands()
         {
-            var canUseCooler =
+            IObservable<bool> canUseCooler =
                 this.WhenAnyPropertyChanged(nameof(IsJobInProgress), nameof(IsAcquiring))
                     .Select(x => !x.IsAcquiring && !x.IsJobInProgress)
                     .StartWith(true)
@@ -165,22 +151,30 @@ namespace DIPOL_UF.ViewModels
 
             SaveButtonCommand =
                 ReactiveCommand.Create<Unit, FileDialogDescriptor>(
-                                   _ => CreateSaveFileDescriptor(),
-                                   DipolImagePresenter.WhenPropertyChanged(x => x.BitmapSource)
-                                                      .Select(x => x.Value is { })
-                                   // .CombineLatest(
-                                   //      this.WhenAnyPropertyChanged(
-                                   //               nameof(IsJobInProgress), 
-                                   //               nameof(IsAcquiring)
-                                   //           )
-                                   //          .Select(y => !y.IsAcquiring && !y.IsJobInProgress)
-                                   //          .StartWith(true),
-                                   //      (x, y) => x && y
-                                   //  )
-                               )
+                                    _ => CreateSaveFileDescriptor(),
+                                    DipolImagePresenter.WhenPropertyChanged(x => x.BitmapSource)
+                                                       .Select(x => x.Value is { })
+                                )
                                .DisposeWith(Subscriptions);
             
             SaveActionCommand = ReactiveCommand.CreateFromTask<string>(WriteTempFileAsync).DisposeWith(Subscriptions);
+
+            IObservable<bool> canControlQuickVideo = Observable.CombineLatest(
+                this.WhenPropertyChanged(x => x.IsAcquiring).Select(x => x.Value),
+                this.WhenPropertyChanged(y => y.IsInQuickVideoRegime).Select(y => y.Value),
+                Observable.Start(() => Model.Camera.Capabilities.AcquisitionModes.HasFlagTyped(AcquisitionMode.RunTillAbort)),
+                // `true` when either not acquiring (idle) or when in quick video regime
+                (x, y, z) => z && (!x || y)
+            );
+
+            StartQuickVideo = ReactiveCommand.Create(
+                ExecuteStartQuickVideo,
+                Model.StartAcquisitionCommand.CanExecute
+                     .CombineLatest(
+                          canControlQuickVideo,
+                          (x, y) => x && y
+                    )
+            ).DisposeWith(Subscriptions);
 
             // Requests SaveFile window
             SaveButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
@@ -371,6 +365,11 @@ namespace DIPOL_UF.ViewModels
                  .ToPropertyEx(this, x => x.AcquisitionPbMax)
                  .DisposeWith(Subscriptions);
 
+            this.WhenPropertyChanged(x => x.IsAcquiring)
+                .Where(x => x.Value is false)
+                .Subscribe(_ => FinishQuickVideo())
+                .DisposeWith(Subscriptions);
+
             PropagateReadOnlyProperty(this, x => x.IsJobInProgress, y => y.IsJobInProgress);
 
         }
@@ -461,7 +460,50 @@ namespace DIPOL_UF.ViewModels
             return $"{name}_{filter}_{timeStamp:yyyy-MM-ddTHH-mm-ss}.fits".AsSpan().SanitizePath();
             
         }
-        public string Name => Model.ToString();
+
+        private void ExecuteStartQuickVideo()
+        {
+            if (IsInQuickVideoRegime || IsAcquiring)
+            {
+                // This should cancel acquisition
+                StartAcquisitionCommand.Execute(null);
+                return;
+            }
+
+            IsInQuickVideoRegime = true;
+            
+            if (
+                Model.Camera.CurrentSettings is not null
+             && Model.Camera.Capabilities.AcquisitionModes.HasFlagTyped(AcquisitionMode.RunTillAbort)
+            )
+            {
+                _previousSettings = Model.Camera.CurrentSettings;
+                IAcquisitionSettings newSettings = _previousSettings.MakeCopy();
+                newSettings.SetAcquisitionMode(AcquisitionMode.RunTillAbort);
+                newSettings.SetKineticCycle(0, 0f);
+                Model.Camera.ApplySettings(newSettings);
+            }
+
+
+            // If there are no settings (camera was just connected) or if it does not support `RunTillAbort`,
+            // simply ignore and run the equivalent of one exposure.
+            StartAcquisitionCommand.Execute(null);
+        }
+
+        private void FinishQuickVideo()
+        {
+
+            var videoSettings = Model.Camera.CurrentSettings;
+            if (_previousSettings is not null && !ReferenceEquals(_previousSettings, videoSettings))
+            {
+                Model.Camera.ApplySettings(_previousSettings);
+                videoSettings?.Dispose();
+            }
+
+            _previousSettings = null;
+            IsInQuickVideoRegime = false;
+        }
+
 
     }
 }

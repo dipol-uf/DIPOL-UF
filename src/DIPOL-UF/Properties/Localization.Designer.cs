@@ -615,6 +615,24 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Start Video.
+        /// </summary>
+        public static string CameraTab_Video_Start {
+            get {
+                return ResourceManager.GetString("CameraTab_Video_Start", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop Video.
+        /// </summary>
+        public static string CameraTab_Video_Stop {
+            get {
+                return ResourceManager.GetString("CameraTab_Video_Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Number of repeats:.
         /// </summary>
         public static string CycleConfigView_NRepeats {
