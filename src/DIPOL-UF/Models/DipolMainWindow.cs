@@ -526,9 +526,14 @@ namespace DIPOL_UF.Models
         private async Task CheckRetractorMotorStatus()
         {
             var pos = 0;
+            var isCloseToPolarimetry = true;
             try
             {
                 pos = await (RetractorMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
+                var polMode = UiSettingsProvider.Settings.Get("RetractorPositionPolarimetry", 0);
+                var delta = UiSettingsProvider.Settings.Get(@"RetractorPositionCorrection", 15000);
+                isCloseToPolarimetry &= Math.Abs(pos - polMode) < 2 * delta;
+
             }
             catch (Exception ex)
             {
@@ -544,7 +549,8 @@ namespace DIPOL_UF.Models
                     !JobManager.Manager.AnyCameraIsAcquiring && 
                     !JobManager.Manager.IsInProcess && 
                     !IsSwitchingRegimes &&
-                    Regime is InstrumentRegime.Polarimeter:
+                    Regime is InstrumentRegime.Polarimeter &&
+                    isCloseToPolarimetry:
                     if (MessageBox.Show(
                             string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text_2,
                                 _retractorPort.PortName,
@@ -559,6 +565,9 @@ namespace DIPOL_UF.Models
                         await ChangeRegimeCommand.Execute(Regime);
 
                     }
+                    break;
+                case { } motor when Regime is InstrumentRegime.Polarimeter && !isCloseToPolarimetry:
+                    MessageBox.Show("Please restart the motor", "Restart required");
                     break;
                 case { } motor:
                     MessageBox.Show(
