@@ -474,10 +474,28 @@
                 <Button
                     Grid.Column="0" Grid.Row="6" 
                     VerticalAlignment="Top" HorizontalAlignment="Center"
-                    Style="{StaticResource BasicButtonStyle}"
                     Command="{Binding StartQuickVideo}"
                 >
-                    Start Video
+                    <Button.Style>
+                        <Style BasedOn="{StaticResource ResourceKey=BasicButtonStyle}" TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger Value="True" Binding="{Binding IsInQuickVideoRegime}" >
+                                    <Setter Property="Content" Value="{extensions:Text Key=CameraTab_Video_Stop}"/>
+                                    <Setter Property="Button.Background" 
+                                        Value="{StaticResource ResourceKey=NegativeEffectButtonBackgroundColor}"/>
+                                    <Setter Property="Button.Foreground" 
+                                        Value="{StaticResource ResourceKey=NegativeEffectButtonForegroundColor}"/>
+                                </DataTrigger>
+                                <DataTrigger Value="False" Binding="{Binding IsInQuickVideoRegime}" >
+                                    <Setter Property="Content"  Value="{extensions:Text Key=CameraTab_Video_Start}"/>
+                                    <Setter Property="Button.Background" 
+                                        Value="{StaticResource ResourceKey=PositiveEffectButtonBackgroundColor}"/>
+                                    <Setter Property="Button.Foreground" 
+                                        Value="{StaticResource ResourceKey=PositiveEffectButtonForegroundColor}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
                 </Button>
 
                 <StackPanel Grid.Column="1" Grid.Row="6" Orientation="Vertical">
