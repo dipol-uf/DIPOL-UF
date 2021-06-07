@@ -628,16 +628,17 @@ namespace DIPOL_UF.Models
                var posOffset = UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0) -
                                 UiSettingsProvider.Settings.Get(@"RetractorPositionPhotometry", -450_000);
 
-               var newRelativePos = param switch
+               var oldRegime = Regime;
+               var newAbsPos = (oldRegime, param) switch
                {
                    // By default, goes to (pos + 450_000)
-                   InstrumentRegime.Polarimeter => posOffset,
+                   (InstrumentRegime.Polarimeter, InstrumentRegime.Polarimeter) => UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0) + posOffset,
+                   (_, InstrumentRegime.Polarimeter) => UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0),
                    // By default, goes to (pos - 450_000)
-                   InstrumentRegime.Photometer => -posOffset,
+                   (_, InstrumentRegime.Photometer) => UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0) - posOffset,
                    _ => throw new ArgumentException(nameof(param))
                };
 
-               var oldRegime = Regime;
                try
                {
                    pbText = string.Format(
@@ -649,16 +650,21 @@ namespace DIPOL_UF.Models
                    progress = new Progress<(int Current, int Target)>();
 
                    pos = await RetractorMotor.GetActualPositionAsync();
-
+                   if (pos == newAbsPos)
+                   {
+                       logger?.Write(LogEventLevel.Information, "Final position reached, cannot perform calibration");
+                   }
+                   
+                   
                    logger?.Write(
                        LogEventLevel.Information, 
                        @"Retractor at {Pos}, rotating to {Regime} by {newPos}",
                        pos,
                        param, 
-                       newRelativePos
+                       newAbsPos
                     );
                    // Now moving relatively
-                   var reply = await RetractorMotor.MoveToPosition(newRelativePos, CommandType.Relative);
+                   var reply = await RetractorMotor.MoveToPosition(newAbsPos);
                    if (reply is not {Status: ReturnStatus.Success})
                    {
                        throw new InvalidOperationException("Failed to operate retractor.");
@@ -689,9 +695,16 @@ namespace DIPOL_UF.Models
                             {
                                 // We need to rotate in the opposite of what calibration did, so
                                 // take `- sign(newRelativePos)` and multiply by the backtracking delta
-                                var backtrackDelta = -UiSettingsProvider.Settings.Get(
-                                    @"RetractorPositionCorrection", 15000
-                                ) * Math.Sign(newRelativePos);
+                                var backtrackDelta = UiSettingsProvider.Settings.Get(
+                                                         @"RetractorPositionCorrection", 15000
+                                                     )
+                                                     * Math.Sign(posOffset)
+                                                     * param switch
+                                                     {
+                                                         InstrumentRegime.Polarimeter => -1,
+                                                         InstrumentRegime.Photometer => 1,
+                                                         _ => 0
+                                                     };
                                 
                                 logger?.Write(
                                     LogEventLevel.Information,
