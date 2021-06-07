@@ -569,44 +569,48 @@ namespace DIPOL_UF.Models
             }
             catch (Exception ex)
             {
-                Helper.WriteLog(LogEventLevel.Error, ex, "Retractor motor failed to respond");
+                _logger.Write(LogEventLevel.Error, ex, "Retractor motor failed to respond");
 
                 RetractorMotor?.Dispose();
                 RetractorMotor = null;
             }
 
-            var notifier = Injector.Locate<IUserNotifier>();
             switch (RetractorMotor)
             {
-                case {} motor when 
-                    !JobManager.Manager.AnyCameraIsAcquiring && 
-                    !JobManager.Manager.IsInProcess && 
+                case { } motor when
+                    !JobManager.Manager.AnyCameraIsAcquiring &&
+                    !JobManager.Manager.IsInProcess &&
                     !IsSwitchingRegimes &&
                     Regime is InstrumentRegime.Polarimeter &&
                     isCloseToPolarimetry:
-                    if (MessageBox.Show(
-                            string.Format(Localization.MainWindow_MB_PolarimeterMotorOK_Text_2,
-                                _retractorPort.PortName,
-                                motor.Address,
-                                pos),
-                            Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
-                            MessageBoxButton.YesNoCancel,
-                            MessageBoxImage.Information)
-                        is MessageBoxResult.Yes)
-                    {
-                        Helper.WriteLog(LogEventLevel.Information, "Retractor motor recalibration requested");
-                        await ChangeRegimeCommand.Execute(Regime);
+                {
+                    var response = _notifier.YesNo(
+                        Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                        string.Format(
+                            Localization.MainWindow_MB_PolarimeterMotorOK_Text_2,
+                            _retractorPort.PortName,
+                            motor.Address,
+                            pos
+                        )
+                    );
 
+                    if(response is YesNoResult.Yes)
+                    {
+                        _logger.Write(LogEventLevel.Information, "Retractor motor recalibration requested");
+                        await ChangeRegimeCommand.Execute(Regime);
                     }
+
                     break;
+                }
+
                 case { } when Regime is InstrumentRegime.Polarimeter && !isCloseToPolarimetry:
-                    notifier.Error(
+                    _notifier.Error(
                         Localization.RegimeCalibration_Restart_Caption,
                         Localization.RegimeCalibration_Restart_Text
                     );
                     break;
                 case { } motor:
-                    notifier.Info(
+                    _notifier.Info(
                         Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
                         string.Format(
                             Localization.MainWindow_MB_PolarimeterMotorOK_Text,
@@ -619,28 +623,29 @@ namespace DIPOL_UF.Models
                 default:
                     if (_retractorPortScanningTask is {IsFaulted: false})
                     {
-                        var response = 
-                            MessageBox.Show(
-                                string.Format(
-                                    Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
-                                    UiSettingsProvider.Settings.Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant()),
-                            Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
-                            MessageBoxButton.YesNo, 
-                            MessageBoxImage.Warning);
 
-                        if (response == MessageBoxResult.Yes)
+                        var response = _notifier.YesNoWarning(
+                            Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
+                            string.Format(
+                                Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
+                                UiSettingsProvider.Settings.Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant()
+                            )
+                        );
+
+                        if (response is YesNoResult.Yes)
                         {
-                            Helper.WriteLog(LogEventLevel.Information, "Retractor motor re-scanning requested");
+                            _logger.Write(LogEventLevel.Information, "Retractor motor re-scanning requested");
                             _retractorPortScanningTask = CheckRetractorMotor();
                         }
                     }
                     else
                     {
-                        MessageBox.Show(
-                            Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
+                        _notifier.Error(
                             Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                            Localization.MainWindow_MB_PolarimeterMotorFailure_Text
+                        );
                     }
+
                     break;
             }
 
@@ -732,7 +737,6 @@ namespace DIPOL_UF.Models
                 IsSwitchingRegimes = false;
                 throw;
             }
-
 
             ContinueAfterRegimeSwitched(progress, isCalibration, posOffset, newRegime);
 
