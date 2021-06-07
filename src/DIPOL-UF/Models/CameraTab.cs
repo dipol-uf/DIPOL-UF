@@ -158,14 +158,17 @@ namespace DIPOL_UF.Models
 
         private void HookObservables()
         {
-            Camera.NewImageReceived += (sender, args) =>
+            Camera.NewImageReceived += (_, args) =>
             {
                 _cachedPreview = Camera.PullPreviewImage(args.Index, ImageFormat.UnsignedInt16);
             };
-            Camera.NewImageReceived += (sender, args) =>
+            Camera.NewImageReceived += (_, _) =>
             {
-                if(!(_cachedPreview is null))
+                if (_cachedPreview is not null)
+                {
                     ImagePresenter.LoadImage(_cachedPreview);
+                    AcquisitionProgress = AcquisitionProgressRange.Max;
+                }
             };
 
 
