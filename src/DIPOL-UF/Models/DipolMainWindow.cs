@@ -295,10 +295,25 @@ namespace DIPOL_UF.Models
                             .Select(x => x.Value))
                     .DisposeWith(Subscriptions);
 
-            RegimeSwitchProvider.ViewFinished.Subscribe(_ => MessageBox.Show("Some text")).DisposeWith(Subscriptions);
-
+            RegimeSwitchProvider.ViewFinished.Select(_ =>NotifyIfCalibrationHappened()).SubscribeDispose(Subscriptions);
         }
 
+        private async Task NotifyIfCalibrationHappened()
+        {
+            var pos = await (RetractorMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
+            var polMode = UiSettingsProvider.Settings.Get("RetractorPositionPolarimetry", 0);
+            var delta = UiSettingsProvider.Settings.Get(@"RetractorPositionCorrection", 15000);
+            var wasCalibrated = Math.Abs(pos - polMode) > 2 * delta && Regime is InstrumentRegime.Polarimeter;
+
+            if (wasCalibrated)
+            {
+                Injector.Locate<IUserNotifier>().Error(
+                    Localization.RegimeCalibration_Restart_Caption, 
+                    Localization.RegimeCalibration_Restart_Text
+                );
+            }
+        }
+        
         private void HookObservables()
         {
             Observable.Merge(
