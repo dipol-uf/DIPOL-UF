@@ -20,10 +20,12 @@ using System.Windows.Input;
 using ANDOR_CS;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
+using DIPOL_UF.UserNotifications;
 using Serilog;
 using Serilog.Events;
 using StepMotor;
 using Exception = System.Exception;
+using MessageBox = System.Windows.MessageBox;
 
 namespace DIPOL_UF.Models
 {
@@ -734,6 +736,8 @@ namespace DIPOL_UF.Models
                                 logger?.Write(
                                     LogEventLevel.Information, "Retractor reached position {pos}", reachedPos
                                 );
+                                
+                                Injector.LocateOrDefault<IUserNotifier>()?.Info("Reset the motor", "Reset the motor");
                             }
 
                        }
