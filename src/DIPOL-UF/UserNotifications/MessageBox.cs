@@ -39,7 +39,15 @@ namespace DIPOL_UF.UserNotifications
             Window? window = null
         ) => Present(caption, message, MessageBoxButton.YesNo, MessageBoxImage.Question, window: window);
 
-
+        public static MessageBoxResult YesNoWarning(
+            string caption,
+            string message,
+            Window? window = null
+        ) => Present(caption, message, MessageBoxButton.YesNo, MessageBoxImage.Exclamation, window: window);
+        
+        public static void Warning(string caption, string message, Window? window = null) =>
+            Present(caption, message, MessageBoxButton.OK, MessageBoxImage.Exclamation, window: window);
+        
         public static void Error(string caption, string message, Window? window = null) =>
             Present(caption, message, MessageBoxButton.OK, MessageBoxImage.Error, window: window);
         
@@ -56,6 +64,16 @@ namespace DIPOL_UF.UserNotifications
                 MessageBoxResult.No => YesNoResult.No,
                 _ => YesNoResult.No
             };
+
+            public YesNoResult YesNoWarning(string caption, string message) =>
+                MessageBox.YesNoWarning(caption, message) switch
+                {
+                    MessageBoxResult.Yes => YesNoResult.Yes,
+                    MessageBoxResult.No => YesNoResult.No,
+                    _ => YesNoResult.No
+                };
+
+            public void Warning(string caption, string message) => MessageBox.Warning(caption, message);
 
             public void Error(string caption, string message) => MessageBox.Error(caption, message);
 

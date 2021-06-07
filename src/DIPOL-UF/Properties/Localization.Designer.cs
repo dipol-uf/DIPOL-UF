@@ -1631,6 +1631,15 @@ namespace DIPOL_UF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Performing calibration. Please wait..
+        /// </summary>
+        public static string MainWindow_Regime_Switching_Calibration_Text {
+            get {
+                return ResourceManager.GetString("MainWindow_Regime_Switching_Calibration_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Switching from {0} to {1}. Please wait..
         /// </summary>
         public static string MainWindow_Regime_Switching_Text {
@@ -1744,6 +1753,24 @@ namespace DIPOL_UF.Properties {
         public static string Properties_Localization_MainWindow_Notify_Closing_NotPolarimeter {
             get {
                 return ResourceManager.GetString("Properties.Localization.MainWindow_Notify_Closing_NotPolarimeter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Motor restart required.
+        /// </summary>
+        public static string RegimeCalibration_Restart_Caption {
+            get {
+                return ResourceManager.GetString("RegimeCalibration_Restart_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Motor position has been re-calibrated. Please power retractor motor off and on again..
+        /// </summary>
+        public static string RegimeCalibration_Restart_Text {
+            get {
+                return ResourceManager.GetString("RegimeCalibration_Restart_Text", resourceCulture);
             }
         }
         

@@ -14,16 +14,21 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Runtime;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using ANDOR_CS;
+using DIPOL_UF.Annotations;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
+using DIPOL_UF.UserNotifications;
 using Serilog;
 using Serilog.Events;
 using StepMotor;
 using Exception = System.Exception;
+using Localization = DIPOL_UF.Properties.Localization;
+using MessageBox = System.Windows.MessageBox;
 
 namespace DIPOL_UF.Models
 {
@@ -42,7 +47,9 @@ namespace DIPOL_UF.Models
 
         private Task _polarimeterPortScanningTask;
         private Task _retractorPortScanningTask;
-        private Task _regimeSwitchingTask;
+
+        private readonly IUserNotifier _notifier;
+        private readonly ILogger _logger;
 
         [Reactive]
         private bool PolarimeterMotorTaskCompleted { get; set; }
@@ -54,6 +61,9 @@ namespace DIPOL_UF.Models
 
         [Reactive]
         public InstrumentRegime Regime { get; private set; } = InstrumentRegime.Unknown;
+
+        [Reactive] 
+        public bool WasCalibrated { get; private set; }
 
         [Reactive]
         // ReSharper disable once UnusedAutoPropertyAccessor.Local
@@ -89,8 +99,16 @@ namespace DIPOL_UF.Models
 
         public ReactiveCommand<InstrumentRegime, ProgressBar> ChangeRegimeCommand { get; private set; }
 
-        public DipolMainWindow()
+        public DipolMainWindow(
+            [CanBeNull] IUserNotifier notifier = null, 
+            [CanBeNull] ILogger logger = null
+        )
         {
+            (_notifier, _logger) = (
+                notifier ?? Injector.Locate<IUserNotifier>(),
+                logger ?? Injector.Locate<ILogger>()
+            );
+            
             _polarimeterPortScanningTask = CheckPolarimeterMotor();
             _retractorPortScanningTask = CheckRetractorMotor();
 
@@ -116,78 +134,81 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private Task CheckPolarimeterMotor()
+        private async Task CheckPolarimeterMotor()
         {
-            return Task.Run(async () =>
+            Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = false);
+            IAsyncMotor motor = null;
+            try
             {
-                Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = false);
-                IAsyncMotor motor = null;
-                try
+                if (PolarimeterMotor is { })
                 {
-                    if(PolarimeterMotor is { })
-                    {
-                        PolarimeterMotor.Dispose();
-                        PolarimeterMotor = null;
-                    }
-                    _polarimeterPort?.Dispose();
-                    _polarimeterPort = new SerialPort(
-                        UiSettingsProvider.Settings
-                            .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant());
-                    motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_polarimeterPort, 1);
-                    if (motor is null)
-                    {
-                        throw new NullReferenceException();
-                    }
-                    await motor.ReferenceReturnToOriginAsync();
+                    PolarimeterMotor.Dispose();
+                    PolarimeterMotor = null;
                 }
-                catch (Exception ex)
+
+                _polarimeterPort?.Dispose();
+                _polarimeterPort = new SerialPort(
+                    UiSettingsProvider.Settings
+                                      .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant()
+                );
+                motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_polarimeterPort, 1);
+                if (motor is null)
                 {
-                    Helper.WriteLog(LogEventLevel.Error, ex, "Polarimeter motor has failed");
+                    throw new NullReferenceException();
                 }
-                finally
-                {
-                    PolarimeterMotor = motor;
-                    SetupRegime();
-                    Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = true);
-                }
-            });
+
+                await motor.ReferenceReturnToOriginAsync();
+            }
+            catch (Exception ex)
+            {
+                Helper.WriteLog(LogEventLevel.Error, ex, "Polarimeter motor has failed");
+            }
+            finally
+            {
+                PolarimeterMotor = motor;
+                SetupRegime();
+                Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = true);
+            }
         }
 
-        private Task CheckRetractorMotor()
+        private async Task CheckRetractorMotor()
         {
-            return Task.Run(async () =>
-            {
-                Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = false);
-                IAsyncMotor motor = null;
-                try
-                { 
-                    if(RetractorMotor is { })
-                    {
-                        RetractorMotor.Dispose();
-                        RetractorMotor = null;
-                    }
-                    _retractorPort?.Dispose();
-                    _retractorPort = new SerialPort(UiSettingsProvider.Settings
-                        .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant());
 
-                    motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_retractorPort, 1);
-                    if (motor is null)
-                    {
-                        throw new NullReferenceException();
-                    }
-                    await motor.ReturnToOriginAsync();
-                }
-                catch (Exception ex)
+            RetractorMotorTaskCompleted = false;
+            IAsyncMotor motor = null;
+            try
+            {
+                if (RetractorMotor is { })
                 {
-                    Helper.WriteLog(LogEventLevel.Error, ex, "Retractor motor has failed");
+                    RetractorMotor.Dispose();
+                    RetractorMotor = null;
                 }
-                finally
+
+                _retractorPort?.Dispose();
+                _retractorPort = new SerialPort(
+                    UiSettingsProvider.Settings
+                                      .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant()
+                );
+
+                motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_retractorPort, 1);
+                if (motor is null)
                 {
-                    RetractorMotor = motor;
-                    SetupRegime();
-                    Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = true);
+                    throw new NullReferenceException();
                 }
-            });
+
+                await motor.ReturnToOriginAsync();
+            }
+            catch (Exception ex)
+            {
+                Helper.WriteLog(LogEventLevel.Error, ex, "Retractor motor has failed");
+            }
+            finally
+            {
+                RetractorMotor = motor;
+                SetupRegime();
+                RetractorMotorTaskCompleted = true;
+                WasCalibrated = false;
+            }
         }
 
         private void InitializeCommands()
@@ -292,8 +313,25 @@ namespace DIPOL_UF.Models
                             .Select(x => x.Value))
                     .DisposeWith(Subscriptions);
 
+            RegimeSwitchProvider.ViewFinished.Select(_ =>NotifyIfCalibrationHappened()).SubscribeDispose(Subscriptions);
         }
 
+        private async Task NotifyIfCalibrationHappened()
+        {
+            var pos = await (RetractorMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
+            var polMode = UiSettingsProvider.Settings.Get("RetractorPositionPolarimetry", 0);
+            var delta = UiSettingsProvider.Settings.Get(@"RetractorPositionCorrection", 15000);
+            var wasCalibrated = Math.Abs(pos - polMode) > 2 * delta && Regime is InstrumentRegime.Polarimeter;
+
+            if (wasCalibrated)
+            {
+                Injector.Locate<IUserNotifier>().Error(
+                    Localization.RegimeCalibration_Restart_Caption, 
+                    Localization.RegimeCalibration_Restart_Text
+                );
+            }
+        }
+        
         private void HookObservables()
         {
             Observable.Merge(
@@ -333,7 +371,7 @@ namespace DIPOL_UF.Models
                     Value = 0,
                     IsIndeterminate = true,
                     CanAbort = false,
-                    BarTitle = Properties.Localization.MainWindow_ConnectingToRemoteLocations
+                    BarTitle = Localization.MainWindow_ConnectingToRemoteLocations
                 } as object).InvokeCommand(ProgressBarProvider.ViewRequested)
                 .DisposeWith(Subscriptions);
 
@@ -351,13 +389,13 @@ namespace DIPOL_UF.Models
                     {
                         Helper.ExecuteOnUi(() => MessageBox.Show(
                             ex.Message,
-                            Properties.Localization.RemoteConnection_UnreachableHostTitle,
+                            Localization.RemoteConnection_UnreachableHostTitle,
                             MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK));
                     }
                     if (x.Count > 3)
                         Helper.ExecuteOnUi(() => MessageBox.Show(
-                            string.Format(Properties.Localization.MB_MoreLeft, x.Count - 3),
-                            Properties.Localization.RemoteConnection_UnreachableHostTitle,
+                            string.Format(Localization.MB_MoreLeft, x.Count - 3),
+                            Localization.RemoteConnection_UnreachableHostTitle,
                             MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK));
                 })
                 .DisposeWith(Subscriptions);
@@ -437,7 +475,7 @@ namespace DIPOL_UF.Models
                         client.Connect();
 
                         pb.TryIncrement();
-                        pb.BarComment = string.Format(Properties.Localization.MainWindow_RemoteConnection_ClientCount,
+                        pb.BarComment = string.Format(Localization.MainWindow_RemoteConnection_ClientCount,
                             pb.Value, _remoteLocations.Length);
 
                         Helper.WriteLog(LogEventLevel.Information, "Connection to {Uri} established", uri);
@@ -457,7 +495,7 @@ namespace DIPOL_UF.Models
 
             var exceptions = result.OfType<Exception>().ToList();
 
-             pb.BarComment = string.Format(Properties.Localization.MainWindow_RemoteConnection_ClientCount,
+             pb.BarComment = string.Format(Localization.MainWindow_RemoteConnection_ClientCount,
                 _remoteClients.Length, _remoteLocations.Length);
 
              return exceptions;
@@ -486,25 +524,25 @@ namespace DIPOL_UF.Models
                 PolarimeterMotor?.Dispose();
                 PolarimeterMotor = null;
             }
-            if (!(PolarimeterMotor is null))
+            if (PolarimeterMotor is not null)
             {
                 MessageBox.Show(
-                    string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
+                    string.Format(Localization.MainWindow_MB_PolarimeterMotorOK_Text,
                         _polarimeterPort.PortName,
                         PolarimeterMotor.Address,
                         pos),
-                    Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                    Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
-                if (!(_polarimeterPortScanningTask is null)
+                if (_polarimeterPortScanningTask is not null
                     && !_polarimeterPortScanningTask.IsFaulted)
                 {
                     var response = MessageBox.Show(
-                        string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
+                        string.Format(Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
                             UiSettingsProvider.Settings.Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant()),
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
+                        Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
                         MessageBoxButton.YesNo, MessageBoxImage.Warning);
                     if (response == MessageBoxResult.Yes)
                     {
@@ -516,8 +554,8 @@ namespace DIPOL_UF.Models
                 else
                 {
                     MessageBox.Show(
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
+                        Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
+                        Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -526,13 +564,18 @@ namespace DIPOL_UF.Models
         private async Task CheckRetractorMotorStatus()
         {
             var pos = 0;
+            var isCloseToPolarimetry = true;
             try
             {
                 pos = await (RetractorMotor?.GetActualPositionAsync() ?? Task.FromResult(0));
+                var polMode = UiSettingsProvider.Settings.Get("RetractorPositionPolarimetry", 0);
+                var delta = UiSettingsProvider.Settings.Get(@"RetractorPositionCorrection", 15000);
+                isCloseToPolarimetry &= Math.Abs(pos - polMode) < 2 * delta;
+
             }
             catch (Exception ex)
             {
-                Helper.WriteLog(LogEventLevel.Error, ex, "Retractor motor failed to respond");
+                _logger.Write(LogEventLevel.Error, ex, "Retractor motor failed to respond");
 
                 RetractorMotor?.Dispose();
                 RetractorMotor = null;
@@ -540,56 +583,77 @@ namespace DIPOL_UF.Models
 
             switch (RetractorMotor)
             {
-                case {} motor when !JobManager.Manager.AnyCameraIsAcquiring && !JobManager.Manager.IsInProcess && !IsSwitchingRegimes:
-                    if (MessageBox.Show(
-                            string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text_2,
-                                _retractorPort.PortName,
-                                motor.Address,
-                                pos),
-                            Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
-                            MessageBoxButton.YesNoCancel,
-                            MessageBoxImage.Information)
-                        is MessageBoxResult.Yes)
-                    {
-                        Helper.WriteLog(LogEventLevel.Information, "Retractor motor recalibration requested");
-                        await ChangeRegimeCommand.Execute(Regime);
-
-                    }
-                    break;
-                case { } motor:
-                    MessageBox.Show(
-                        string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
+                case { } motor when
+                    !JobManager.Manager.AnyCameraIsAcquiring &&
+                    !JobManager.Manager.IsInProcess &&
+                    !IsSwitchingRegimes &&
+                    Regime is InstrumentRegime.Polarimeter &&
+                    isCloseToPolarimetry:
+                {
+                    WasCalibrated = false;
+                    var response = _notifier.YesNo(
+                        Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                        string.Format(
+                            Localization.MainWindow_MB_PolarimeterMotorOK_Text_2,
                             _retractorPort.PortName,
                             motor.Address,
-                            pos),
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                            pos
+                        )
+                    );
+
+                    if(response is YesNoResult.Yes)
+                    {
+                        _logger.Write(LogEventLevel.Information, "Retractor motor recalibration requested");
+                        await ChangeRegimeCommand.Execute(Regime);
+                    }
+
+                    break;
+                }
+
+                case { } when Regime is InstrumentRegime.Polarimeter && !isCloseToPolarimetry:
+                    WasCalibrated = true;
+                    _notifier.Error(
+                        Localization.RegimeCalibration_Restart_Caption,
+                        Localization.RegimeCalibration_Restart_Text
+                    );
+                    break;
+                case { } motor:
+                    _notifier.Info(
+                        Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                        string.Format(
+                            Localization.MainWindow_MB_PolarimeterMotorOK_Text,
+                            _retractorPort.PortName,
+                            motor.Address,
+                            pos
+                        )
+                    );
                     break;
                 default:
                     if (_retractorPortScanningTask is {IsFaulted: false})
                     {
-                        var response = 
-                            MessageBox.Show(
-                                string.Format(
-                                    Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
-                                    UiSettingsProvider.Settings.Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant()),
-                            Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
-                            MessageBoxButton.YesNo, 
-                            MessageBoxImage.Warning);
 
-                        if (response == MessageBoxResult.Yes)
+                        var response = _notifier.YesNoWarning(
+                            Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
+                            string.Format(
+                                Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
+                                UiSettingsProvider.Settings.Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant()
+                            )
+                        );
+
+                        if (response is YesNoResult.Yes)
                         {
-                            Helper.WriteLog(LogEventLevel.Information, "Retractor motor re-scanning requested");
+                            _logger.Write(LogEventLevel.Information, "Retractor motor re-scanning requested");
                             _retractorPortScanningTask = CheckRetractorMotor();
                         }
                     }
                     else
                     {
-                        MessageBox.Show(
-                            Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
-                            Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        _notifier.Error(
+                            Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
+                            Localization.MainWindow_MB_PolarimeterMotorFailure_Text
+                        );
                     }
+
                     break;
             }
 
@@ -604,141 +668,164 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private Task<ProgressBar> ChangeRegimeCommandExecute(InstrumentRegime param)
+        private async Task<ProgressBar> ChangeRegimeCommandExecute(InstrumentRegime newRegime)
         {
-           return Task.Run(async () =>
-           {
-               IsSwitchingRegimes = true;
+            IsSwitchingRegimes = true;
 
-               if (param is InstrumentRegime.Unknown || RetractorMotor is null || PolarimeterMotor is null)
-               {
-                   throw new ArgumentException(nameof(param));
-               }
+            if (newRegime is InstrumentRegime.Unknown || RetractorMotor is null || PolarimeterMotor is null)
+            {
+                throw new ArgumentException(nameof(newRegime));
+            }
 
-               Progress<(int Current, int Target)> progress;
-               string pbText;
-               int pos;
-               int target;
-               var logger = Injector.LocateOrDefault<ILogger>();
-               // By default is +450_000
-               var posOffset = UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0) -
-                                UiSettingsProvider.Settings.Get(@"RetractorPositionPhotometry", -450_000);
+            Progress<(int Current, int Target)> progress;
+            string pbText;
+            int pos;
+            int target;
+            // By default is +450_000
+            var posOffset = UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0) -
+                            UiSettingsProvider.Settings.Get(@"RetractorPositionPhotometry", -450_000);
 
-               var newRelativePos = param switch
-               {
-                   // By default, goes to (pos + 450_000)
-                   InstrumentRegime.Polarimeter => posOffset,
-                   // By default, goes to (pos - 450_000)
-                   InstrumentRegime.Photometer => -posOffset,
-                   _ => throw new ArgumentException(nameof(param))
-               };
+            var oldRegime = Regime;
+            var newAbsPos = (oldRegime, param: newRegime) switch
+            {
+                // By default, goes to (pos + 450_000)
+                (InstrumentRegime.Polarimeter, InstrumentRegime.Polarimeter) => UiSettingsProvider.Settings.Get(
+                    @"RetractorPositionPolarimetry", 0
+                ) + posOffset,
+                (_, InstrumentRegime.Polarimeter) => UiSettingsProvider.Settings.Get(
+                    @"RetractorPositionPolarimetry", 0
+                ),
+                // By default, goes to (pos - 450_000)
+                (_, InstrumentRegime.Photometer) =>
+                    UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0) - posOffset,
+                _ => throw new ArgumentException(nameof(newRegime))
+            };
+            var isCalibration = oldRegime is InstrumentRegime.Polarimeter && newRegime is InstrumentRegime.Polarimeter;
 
-               var oldRegime = Regime;
-               try
-               {
-                   pbText = string.Format(
-                       Properties.Localization.MainWindow_Regime_Switching_Text,
-                       Regime.ToStringEx(),
-                       param.ToStringEx()
+            if (isCalibration)
+            {
+                // Going for an extra 15_000 to compensate for backtracking in the worst-case scenario
+                newAbsPos += UiSettingsProvider.Settings.Get(@"RetractorPositionCorrection", 15_000);
+            }
+            
+            try
+            {
+                pbText =
+                    isCalibration
+                        ? Localization.MainWindow_Regime_Switching_Calibration_Text
+                        : string.Format(
+                            Localization.MainWindow_Regime_Switching_Text,
+                            Regime.ToStringEx(),
+                            newRegime.ToStringEx()
+                        );
+                Regime = InstrumentRegime.Unknown;
+                progress = new Progress<(int Current, int Target)>();
+
+                pos = await RetractorMotor.GetActualPositionAsync();
+                if (pos == newAbsPos)
+                {
+                    _logger?.Write(LogEventLevel.Information, "Final position reached, cannot perform calibration");
+                }
+
+
+                _logger?.Write(
+                    LogEventLevel.Information,
+                    @"Retractor at {Pos}, rotating to {Regime} by {newPos}",
+                    pos,
+                    newRegime,
+                    newAbsPos
+                );
+                // Now moving relatively
+                var reply = await RetractorMotor.MoveToPosition(newAbsPos);
+                if (reply is not {Status: ReturnStatus.Success})
+                {
+                    throw new InvalidOperationException("Failed to operate retractor.");
+                }
+
+                ImmutableDictionary<AxisParameter, int> axis = await RetractorMotor.GetRotationStatusAsync();
+                target = axis[AxisParameter.TargetPosition];
+
+            }
+            catch (Exception)
+            {
+                IsSwitchingRegimes = false;
+                throw;
+            }
+
+            ContinueAfterRegimeSwitched(progress, isCalibration, posOffset, newRegime);
+
+            var pb = new ProgressBar
+            {
+                Minimum = 0,
+                Maximum = Math.Abs(target - pos),
+                DisplayPercents = true,
+                BarComment = pbText,
+                BarTitle = Localization.MainWindow_Regime_Swtitching_Title
+            };
+            progress.ProgressChanged += (_, e) => pb.Value = Math.Abs(e.Current - pos);
+
+            return pb;
+
+
+        }
+
+        private async void ContinueAfterRegimeSwitched(
+            IProgress<(int Current, int Target)> progress,
+            bool isCalibration,
+            int posOffset,
+            InstrumentRegime newRegime
+        )
+        {
+            await RetractorMotor.WaitForPositionReachedAsync(progress);
+            try
+            {
+                var reachedPos = await RetractorMotor.GetActualPositionAsync();
+                _logger?.Write(LogEventLevel.Information, "Retractor reached position {pos}", reachedPos);
+
+                // This is re-calibration, need to backtrack
+                if (isCalibration)
+                {
+                    // We need to rotate in the opposite of what calibration did, so
+                    // take `- sign(newRelativePos)` and multiply by the backtracking delta
+                    var backtrackDelta = UiSettingsProvider.Settings.Get(@"RetractorPositionCorrection", 15000) *
+                                         Math.Sign(posOffset) * newRegime switch
+                                         {
+                                             InstrumentRegime.Polarimeter => -1,
+                                             InstrumentRegime.Photometer => 1,
+                                             _ => 0
+                                         };
+
+                    _logger?.Write(
+                        LogEventLevel.Information, "Detected re-calibration, backtracking by {BacktrackDelta}",
+                        backtrackDelta
                     );
-                   Regime = InstrumentRegime.Unknown;
-                   progress = new Progress<(int Current, int Target)>();
 
-                   pos = await RetractorMotor.GetActualPositionAsync();
+                    if (await RetractorMotor.MoveToPosition(backtrackDelta, CommandType.Relative) is not
+                        {Status: ReturnStatus.Success})
+                    {
+                        throw new InvalidOperationException("Backtracking has failed");
+                    }
 
-                   logger?.Write(
-                       LogEventLevel.Information, 
-                       @"Retractor at {Pos}, rotating to {Regime} by {newPos}",
-                       pos,
-                       param, 
-                       newRelativePos
-                    );
-                   // Now moving relatively
-                   var reply = await RetractorMotor.MoveToPosition(newRelativePos, CommandType.Relative);
-                   if (reply is not {Status: ReturnStatus.Success})
-                   {
-                       throw new InvalidOperationException("Failed to operate retractor.");
-                   }
+                    await RetractorMotor.WaitForPositionReachedAsync();
+                    reachedPos = await RetractorMotor.GetActualPositionAsync();
+                    _logger?.Write(LogEventLevel.Information, "Retractor reached position {pos}", reachedPos);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger?.Write(LogEventLevel.Error, e, "Regime switching has failed");
+            }
 
-                   ImmutableDictionary<AxisParameter, int> axis = await RetractorMotor.GetRotationStatusAsync();
-                   target = axis[AxisParameter.TargetPosition];
+            await RegimeSwitchProvider.ClosingRequested.Execute();
 
-               }
-               catch(Exception)
-               {
-                   IsSwitchingRegimes = false;
-                   throw;
-               }
+            Regime = newRegime;
 
-               _regimeSwitchingTask = RetractorMotor.WaitForPositionReachedAsync(progress).ContinueWith(
-                   async task =>
-                   {
-                       try
-                       {
-                           
-                           // await _regimeSwitchingTask;
-                           var reachedPos = await RetractorMotor.GetActualPositionAsync();
-                           logger?.Write(LogEventLevel.Information, "Retractor reached position {pos}", reachedPos);
+            IsSwitchingRegimes = false;
 
-                            // This is re-calibration, need to backtrack
-                            if (oldRegime == param)
-                            {
-                                // We need to rotate in the opposite of what calibration did, so
-                                // take `- sign(newRelativePos)` and multiply by the backtracking delta
-                                var backtrackDelta = -UiSettingsProvider.Settings.Get(
-                                    @"RetractorPositionCorrection", 15000
-                                ) * Math.Sign(newRelativePos);
-                                
-                                logger?.Write(
-                                    LogEventLevel.Information,
-                                    "Detected re-calibration, backtracking by {BacktrackDelta}",
-                                    backtrackDelta
-                                );
-
-                                if (
-                                    await RetractorMotor.MoveToPosition(backtrackDelta, CommandType.Relative) is not
-                                        {Status: ReturnStatus.Success}
-                                )
-                                {
-                                    throw new InvalidOperationException("Backtracking has failed");
-                                }
-
-                                await RetractorMotor.WaitForPositionReachedAsync();
-                                reachedPos = await RetractorMotor.GetActualPositionAsync();
-                                logger?.Write(
-                                    LogEventLevel.Information, "Retractor reached position {pos}", reachedPos
-                                );
-                            }
-
-                       }
-                       catch (Exception e)
-                       {
-                           logger?.Write(LogEventLevel.Error, e, "Regime switching has failed");
-                       }
-
-                       await RegimeSwitchProvider.ClosingRequested.Execute();
-                       if (task.IsCompleted)
-                       {
-                           Regime = param;
-                       }
-
-                       IsSwitchingRegimes = false;
-                   });
-
-               var pb = new ProgressBar
-               {
-                   Minimum = 0,
-                   Maximum = Math.Abs(target - pos),
-                   DisplayPercents = true,
-                   BarComment = pbText,
-                   BarTitle = Properties.Localization.MainWindow_Regime_Swtitching_Title
-               };
-               progress.ProgressChanged += (_, e) => pb.Value = Math.Abs(e.Current - pos);
-
-               return pb;
-
-           });
-
+            if (isCalibration)
+            {
+                WasCalibrated = true;
+            }
         }
 
         protected override void Dispose(bool disposing)

@@ -154,7 +154,8 @@ namespace DIPOL_UF.ViewModels
                 .CombineLatest(
                     JobManager.Manager.WhenPropertyChanged(y => y.AnyCameraIsAcquiring).Select(y => !y.Value), 
                     JobManager.Manager.WhenPropertyChanged(z => z.IsInProcess).Select(z => !z.Value),
-                    (x, y, z) => x && y && z)
+                    Model.WhenPropertyChanged(w => w.WasCalibrated).Select(w => !w.Value),
+                    (x, y, z, w) => x && y && z && w)
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.CanSwitchRegime)
                 .DisposeWith(Subscriptions);
