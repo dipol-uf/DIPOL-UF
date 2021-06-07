@@ -163,7 +163,7 @@ namespace DIPOL_UF.Models
                 AcquisitionProgress = val;
             }
 
-            Camera.AcquisitionFinished += (_, e) => ResetTimer(AcquisitionProgressRange.Min);
+            Camera.AcquisitionFinished += (_, _) => ResetTimer(AcquisitionProgressRange.Min);
 
             WhenAcquisitionStarted =
                 Observable
@@ -185,8 +185,7 @@ namespace DIPOL_UF.Models
                       .DisposeWith(Subscriptions);
 
 
-            // TODO : Remove
-            WhenAcquisitionFinished.Subscribe(x => { }).DisposeWith(Subscriptions);
+            WhenAcquisitionFinished.SubscribeDispose(Subscriptions);
         }
 
         private void InitializeCommands()
@@ -385,12 +384,16 @@ namespace DIPOL_UF.Models
 
         }
 
-        private void StartStopAcquisitionAll()
+        private static void StartStopAcquisitionAll()
         {
             if (JobManager.Manager.AnyCameraIsAcquiring)
+            {
                 JobManager.Manager.StopAllAcquisitions();
-            else if (!JobManager.Manager.IsInProcess) 
+            }
+            else if (!JobManager.Manager.IsInProcess)
+            {
                 JobManager.Manager.StartAllAcquisitions();
+            }
         }
 
         private void TimerTick(object sender, ElapsedEventArgs e)
