@@ -463,6 +463,13 @@ namespace DIPOL_UF.ViewModels
 
         private void ExecuteStartQuickVideo()
         {
+            if (IsInQuickVideoRegime || IsAcquiring)
+            {
+                // This should cancel acquisition
+                StartAcquisitionCommand.Execute(null);
+                return;
+            }
+
             IsInQuickVideoRegime = true;
             
             if (
