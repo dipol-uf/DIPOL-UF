@@ -25,6 +25,7 @@ using Serilog;
 using Serilog.Events;
 using StepMotor;
 using Exception = System.Exception;
+using Localization = DIPOL_UF.Properties.Localization;
 using MessageBox = System.Windows.MessageBox;
 
 namespace DIPOL_UF.Models
@@ -294,6 +295,8 @@ namespace DIPOL_UF.Models
                             .Select(x => x.Value))
                     .DisposeWith(Subscriptions);
 
+            RegimeSwitchProvider.ViewFinished.Subscribe(_ => MessageBox.Show("Some text")).DisposeWith(Subscriptions);
+
         }
 
         private void HookObservables()
@@ -335,7 +338,7 @@ namespace DIPOL_UF.Models
                     Value = 0,
                     IsIndeterminate = true,
                     CanAbort = false,
-                    BarTitle = Properties.Localization.MainWindow_ConnectingToRemoteLocations
+                    BarTitle = Localization.MainWindow_ConnectingToRemoteLocations
                 } as object).InvokeCommand(ProgressBarProvider.ViewRequested)
                 .DisposeWith(Subscriptions);
 
@@ -353,13 +356,13 @@ namespace DIPOL_UF.Models
                     {
                         Helper.ExecuteOnUi(() => MessageBox.Show(
                             ex.Message,
-                            Properties.Localization.RemoteConnection_UnreachableHostTitle,
+                            Localization.RemoteConnection_UnreachableHostTitle,
                             MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK));
                     }
                     if (x.Count > 3)
                         Helper.ExecuteOnUi(() => MessageBox.Show(
-                            string.Format(Properties.Localization.MB_MoreLeft, x.Count - 3),
-                            Properties.Localization.RemoteConnection_UnreachableHostTitle,
+                            string.Format(Localization.MB_MoreLeft, x.Count - 3),
+                            Localization.RemoteConnection_UnreachableHostTitle,
                             MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK));
                 })
                 .DisposeWith(Subscriptions);
@@ -439,7 +442,7 @@ namespace DIPOL_UF.Models
                         client.Connect();
 
                         pb.TryIncrement();
-                        pb.BarComment = string.Format(Properties.Localization.MainWindow_RemoteConnection_ClientCount,
+                        pb.BarComment = string.Format(Localization.MainWindow_RemoteConnection_ClientCount,
                             pb.Value, _remoteLocations.Length);
 
                         Helper.WriteLog(LogEventLevel.Information, "Connection to {Uri} established", uri);
@@ -459,7 +462,7 @@ namespace DIPOL_UF.Models
 
             var exceptions = result.OfType<Exception>().ToList();
 
-             pb.BarComment = string.Format(Properties.Localization.MainWindow_RemoteConnection_ClientCount,
+             pb.BarComment = string.Format(Localization.MainWindow_RemoteConnection_ClientCount,
                 _remoteClients.Length, _remoteLocations.Length);
 
              return exceptions;
@@ -491,11 +494,11 @@ namespace DIPOL_UF.Models
             if (PolarimeterMotor is not null)
             {
                 MessageBox.Show(
-                    string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
+                    string.Format(Localization.MainWindow_MB_PolarimeterMotorOK_Text,
                         _polarimeterPort.PortName,
                         PolarimeterMotor.Address,
                         pos),
-                    Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                    Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
@@ -504,9 +507,9 @@ namespace DIPOL_UF.Models
                     && !_polarimeterPortScanningTask.IsFaulted)
                 {
                     var response = MessageBox.Show(
-                        string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
+                        string.Format(Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
                             UiSettingsProvider.Settings.Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant()),
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
+                        Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
                         MessageBoxButton.YesNo, MessageBoxImage.Warning);
                     if (response == MessageBoxResult.Yes)
                     {
@@ -518,8 +521,8 @@ namespace DIPOL_UF.Models
                 else
                 {
                     MessageBox.Show(
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
+                        Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
+                        Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -545,6 +548,7 @@ namespace DIPOL_UF.Models
                 RetractorMotor = null;
             }
 
+            var notifier = Injector.Locate<IUserNotifier>();
             switch (RetractorMotor)
             {
                 case {} motor when 
@@ -554,11 +558,11 @@ namespace DIPOL_UF.Models
                     Regime is InstrumentRegime.Polarimeter &&
                     isCloseToPolarimetry:
                     if (MessageBox.Show(
-                            string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text_2,
+                            string.Format(Localization.MainWindow_MB_PolarimeterMotorOK_Text_2,
                                 _retractorPort.PortName,
                                 motor.Address,
                                 pos),
-                            Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                            Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
                             MessageBoxButton.YesNoCancel,
                             MessageBoxImage.Information)
                         is MessageBoxResult.Yes)
@@ -568,17 +572,22 @@ namespace DIPOL_UF.Models
 
                     }
                     break;
-                case { } motor when Regime is InstrumentRegime.Polarimeter && !isCloseToPolarimetry:
-                    MessageBox.Show("Please restart the motor", "Restart required");
+                case { } when Regime is InstrumentRegime.Polarimeter && !isCloseToPolarimetry:
+                    notifier.Error(
+                        Localization.RegimeCalibration_Restart_Caption,
+                        Localization.RegimeCalibration_Restart_Text
+                    );
                     break;
                 case { } motor:
-                    MessageBox.Show(
-                        string.Format(Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Text,
+                    notifier.Info(
+                        Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
+                        string.Format(
+                            Localization.MainWindow_MB_PolarimeterMotorOK_Text,
                             _retractorPort.PortName,
                             motor.Address,
-                            pos),
-                        Properties.Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                            pos
+                        )
+                    );
                     break;
                 default:
                     if (_retractorPortScanningTask is {IsFaulted: false})
@@ -586,9 +595,9 @@ namespace DIPOL_UF.Models
                         var response = 
                             MessageBox.Show(
                                 string.Format(
-                                    Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
+                                    Localization.MainWindow_MB_PolarimeterMotorNotFound_Text,
                                     UiSettingsProvider.Settings.Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant()),
-                            Properties.Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
+                            Localization.MainWindow_MB_PolarimeterMotorNotFound_Caption,
                             MessageBoxButton.YesNo, 
                             MessageBoxImage.Warning);
 
@@ -601,8 +610,8 @@ namespace DIPOL_UF.Models
                     else
                     {
                         MessageBox.Show(
-                            Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
-                            Properties.Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
+                            Localization.MainWindow_MB_PolarimeterMotorFailure_Text,
+                            Localization.MainWindow_MB_PolarimeterMotorFailure_Caption,
                             MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                     break;
@@ -649,14 +658,18 @@ namespace DIPOL_UF.Models
                    (_, InstrumentRegime.Photometer) => UiSettingsProvider.Settings.Get(@"RetractorPositionPolarimetry", 0) - posOffset,
                    _ => throw new ArgumentException(nameof(param))
                };
+               var isCalibration = oldRegime is InstrumentRegime.Polarimeter && param is InstrumentRegime.Polarimeter;
 
                try
                {
-                   pbText = string.Format(
-                       Properties.Localization.MainWindow_Regime_Switching_Text,
-                       Regime.ToStringEx(),
-                       param.ToStringEx()
-                    );
+                   pbText =
+                       isCalibration
+                           ? Localization.MainWindow_Regime_Switching_Calibration_Text
+                           : string.Format(
+                               Localization.MainWindow_Regime_Switching_Text,
+                               Regime.ToStringEx(),
+                               param.ToStringEx()
+                           );
                    Regime = InstrumentRegime.Unknown;
                    progress = new Progress<(int Current, int Target)>();
 
@@ -702,7 +715,7 @@ namespace DIPOL_UF.Models
                            logger?.Write(LogEventLevel.Information, "Retractor reached position {pos}", reachedPos);
 
                             // This is re-calibration, need to backtrack
-                            if (oldRegime == param)
+                            if (isCalibration)
                             {
                                 // We need to rotate in the opposite of what calibration did, so
                                 // take `- sign(newRelativePos)` and multiply by the backtracking delta
@@ -736,8 +749,6 @@ namespace DIPOL_UF.Models
                                 logger?.Write(
                                     LogEventLevel.Information, "Retractor reached position {pos}", reachedPos
                                 );
-                                
-                                Injector.LocateOrDefault<IUserNotifier>()?.Info("Reset the motor", "Reset the motor");
                             }
 
                        }
@@ -761,7 +772,7 @@ namespace DIPOL_UF.Models
                    Maximum = Math.Abs(target - pos),
                    DisplayPercents = true,
                    BarComment = pbText,
-                   BarTitle = Properties.Localization.MainWindow_Regime_Swtitching_Title
+                   BarTitle = Localization.MainWindow_Regime_Swtitching_Title
                };
                progress.ProgressChanged += (_, e) => pb.Value = Math.Abs(e.Current - pos);
 

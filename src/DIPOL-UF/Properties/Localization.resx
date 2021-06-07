@@ -732,4 +732,13 @@ Click "Yes" if you would like to re-calibrate its position.</value>
   <data name="MainWindow_Notify_Closing_Acquisition" xml:space="preserve">
     <value>Cannot exit application while acquisition is in progress.</value>
   </data>
+  <data name="MainWindow_Regime_Switching_Calibration_Text" xml:space="preserve">
+    <value>Performing calibration. Please wait.</value>
+  </data>
+  <data name="RegimeCalibration_Restart_Caption" xml:space="preserve">
+    <value>Motor restart required</value>
+  </data>
+  <data name="RegimeCalibration_Restart_Text" xml:space="preserve">
+    <value>Motor position has been re-calibrated. Please power retractor motor off and on again.</value>
+  </data>
 </root>
