@@ -69,6 +69,9 @@ namespace DIPOL_UF.ViewModels
         [Reactive]
         public ShutterMode? ExternalShutterMode { get; set; }
 
+        [Reactive]
+        public bool IsInQuickVideoRegime { get; set; }
+
         public bool IsJobInProgress { [ObservableAsProperty] get; }
         public bool IsAcquiring { [ObservableAsProperty]get; }
         public bool IsAnyCameraAcquiring { [ObservableAsProperty] get; }
@@ -156,9 +159,20 @@ namespace DIPOL_UF.ViewModels
             
             SaveActionCommand = ReactiveCommand.CreateFromTask<string>(WriteTempFileAsync).DisposeWith(Subscriptions);
 
+            IObservable<bool> canControlQuickVideo = Observable.CombineLatest(
+                this.WhenPropertyChanged(x => x.IsAcquiring).Select(x => x.Value),
+                this.WhenPropertyChanged(y => y.IsInQuickVideoRegime).Select(y => y.Value),
+                // `true` when either not acquiring (idle) or when in quick video regime
+                (x, y) => !x || y
+            );
+
             StartQuickVideo = ReactiveCommand.Create(
                 ExecuteStartQuickVideo,
                 Model.StartAcquisitionCommand.CanExecute
+                     .CombineLatest(
+                          canControlQuickVideo,
+                          (x, y) => x && y
+                    )
             ).DisposeWith(Subscriptions);
 
             // Requests SaveFile window
@@ -450,7 +464,7 @@ namespace DIPOL_UF.ViewModels
         {
             // TODO: Verify Video mode is supported
             // TODO: Verify settings already present
-
+            IsInQuickVideoRegime = true;
             _previousSettings = Model.Camera.CurrentSettings;
             var newSettings = _previousSettings.MakeCopy();
             newSettings.SetAcquisitionMode(AcquisitionMode.RunTillAbort);
@@ -471,6 +485,7 @@ namespace DIPOL_UF.ViewModels
             Model.Camera.ApplySettings(_previousSettings);
             videoSettings.Dispose();
             _previousSettings = null;
+            IsInQuickVideoRegime = false;
         }
 
 
