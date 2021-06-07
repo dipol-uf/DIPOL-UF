@@ -62,6 +62,9 @@ namespace DIPOL_UF.Models
         [Reactive]
         public InstrumentRegime Regime { get; private set; } = InstrumentRegime.Unknown;
 
+        [Reactive] 
+        public bool WasCalibrated { get; private set; }
+
         [Reactive]
         // ReSharper disable once UnusedAutoPropertyAccessor.Local
         public IAsyncMotor PolarimeterMotor { get; private set; }
@@ -131,78 +134,80 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private Task CheckPolarimeterMotor()
+        private async Task CheckPolarimeterMotor()
         {
-            return Task.Run(async () =>
+            Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = false);
+            IAsyncMotor motor = null;
+            try
             {
-                Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = false);
-                IAsyncMotor motor = null;
-                try
+                if (PolarimeterMotor is { })
                 {
-                    if(PolarimeterMotor is { })
-                    {
-                        PolarimeterMotor.Dispose();
-                        PolarimeterMotor = null;
-                    }
-                    _polarimeterPort?.Dispose();
-                    _polarimeterPort = new SerialPort(
-                        UiSettingsProvider.Settings
-                            .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant());
-                    motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_polarimeterPort, 1);
-                    if (motor is null)
-                    {
-                        throw new NullReferenceException();
-                    }
-                    await motor.ReferenceReturnToOriginAsync();
+                    PolarimeterMotor.Dispose();
+                    PolarimeterMotor = null;
                 }
-                catch (Exception ex)
+
+                _polarimeterPort?.Dispose();
+                _polarimeterPort = new SerialPort(
+                    UiSettingsProvider.Settings
+                                      .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant()
+                );
+                motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_polarimeterPort, 1);
+                if (motor is null)
                 {
-                    Helper.WriteLog(LogEventLevel.Error, ex, "Polarimeter motor has failed");
+                    throw new NullReferenceException();
                 }
-                finally
-                {
-                    PolarimeterMotor = motor;
-                    SetupRegime();
-                    Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = true);
-                }
-            });
+
+                await motor.ReferenceReturnToOriginAsync();
+            }
+            catch (Exception ex)
+            {
+                Helper.WriteLog(LogEventLevel.Error, ex, "Polarimeter motor has failed");
+            }
+            finally
+            {
+                PolarimeterMotor = motor;
+                SetupRegime();
+                Application.Current?.Dispatcher.InvokeAsync(() => PolarimeterMotorTaskCompleted = true);
+            }
         }
 
-        private Task CheckRetractorMotor()
+        private async Task CheckRetractorMotor()
         {
-            return Task.Run(async () =>
-            {
-                Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = false);
-                IAsyncMotor motor = null;
-                try
-                { 
-                    if(RetractorMotor is { })
-                    {
-                        RetractorMotor.Dispose();
-                        RetractorMotor = null;
-                    }
-                    _retractorPort?.Dispose();
-                    _retractorPort = new SerialPort(UiSettingsProvider.Settings
-                        .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant());
 
-                    motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_retractorPort, 1);
-                    if (motor is null)
-                    {
-                        throw new NullReferenceException();
-                    }
-                    await motor.ReturnToOriginAsync();
-                }
-                catch (Exception ex)
+            Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = false);
+            IAsyncMotor motor = null;
+            try
+            {
+                if (RetractorMotor is { })
                 {
-                    Helper.WriteLog(LogEventLevel.Error, ex, "Retractor motor has failed");
+                    RetractorMotor.Dispose();
+                    RetractorMotor = null;
                 }
-                finally
+
+                _retractorPort?.Dispose();
+                _retractorPort = new SerialPort(
+                    UiSettingsProvider.Settings
+                                      .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant()
+                );
+
+                motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_retractorPort, 1);
+                if (motor is null)
                 {
-                    RetractorMotor = motor;
-                    SetupRegime();
-                    Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = true);
+                    throw new NullReferenceException();
                 }
-            });
+
+                await motor.ReturnToOriginAsync();
+            }
+            catch (Exception ex)
+            {
+                Helper.WriteLog(LogEventLevel.Error, ex, "Retractor motor has failed");
+            }
+            finally
+            {
+                RetractorMotor = motor;
+                SetupRegime();
+                Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = true);
+            }
         }
 
         private void InitializeCommands()
