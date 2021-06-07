@@ -156,7 +156,10 @@ namespace DIPOL_UF.ViewModels
             
             SaveActionCommand = ReactiveCommand.CreateFromTask<string>(WriteTempFileAsync).DisposeWith(Subscriptions);
 
-            StartQuickVideo = ReactiveCommand.Create(ExecuteStartQuickVideo).DisposeWith(Subscriptions);
+            StartQuickVideo = ReactiveCommand.Create(
+                ExecuteStartQuickVideo,
+                Model.StartAcquisitionCommand.CanExecute
+            ).DisposeWith(Subscriptions);
 
             // Requests SaveFile window
             SaveButtonCommand.Subscribe(OnFileDialogRequested).DisposeWith(Subscriptions);
