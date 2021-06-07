@@ -174,7 +174,7 @@ namespace DIPOL_UF.Models
         private async Task CheckRetractorMotor()
         {
 
-            Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = false);
+            RetractorMotorTaskCompleted = false;
             IAsyncMotor motor = null;
             try
             {
@@ -206,7 +206,8 @@ namespace DIPOL_UF.Models
             {
                 RetractorMotor = motor;
                 SetupRegime();
-                Application.Current?.Dispatcher.InvokeAsync(() => RetractorMotorTaskCompleted = true);
+                RetractorMotorTaskCompleted = true;
+                WasCalibrated = false;
             }
         }
 
@@ -589,6 +590,7 @@ namespace DIPOL_UF.Models
                     Regime is InstrumentRegime.Polarimeter &&
                     isCloseToPolarimetry:
                 {
+                    WasCalibrated = false;
                     var response = _notifier.YesNo(
                         Localization.MainWindow_MB_PolarimeterMotorOK_Caption,
                         string.Format(
@@ -609,6 +611,7 @@ namespace DIPOL_UF.Models
                 }
 
                 case { } when Regime is InstrumentRegime.Polarimeter && !isCloseToPolarimetry:
+                    WasCalibrated = true;
                     _notifier.Error(
                         Localization.RegimeCalibration_Restart_Caption,
                         Localization.RegimeCalibration_Restart_Text
@@ -812,6 +815,11 @@ namespace DIPOL_UF.Models
             Regime = newRegime;
 
             IsSwitchingRegimes = false;
+
+            if (isCalibration)
+            {
+                WasCalibrated = true;
+            }
         }
 
         protected override void Dispose(bool disposing)
