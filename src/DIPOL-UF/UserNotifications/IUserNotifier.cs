@@ -10,6 +10,8 @@
     internal interface IUserNotifier
     {
         YesNoResult YesNo(string caption, string message);
+        YesNoResult YesNoWarning(string caption, string message);
+        void Warning(string caption, string message);
         void Error(string caption, string message);
         void Info(string caption, string message);
     }
