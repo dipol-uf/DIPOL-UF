@@ -61,6 +61,15 @@ where `<PLATFORM>` is either `x64` or `x86` (for 32-bit).
 Examples of build & test workflows can be found in the [CI scripts](./.github/workflows)
 
 ---
+## Development environement configuration using `choco`
+```bash
+choco install visualstudio2019buildtools -y
+choco install visualstudio2019-workload-manageddesktopbuildtools -y
+choco install netfx-4.8-devpack dotnet-5.0-sdk -y
+choco install git
+```
+
+---
 ## Citations
 Please use the following BibTex entry whenever you want to cite this project:
 
