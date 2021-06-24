@@ -1044,33 +1044,34 @@ namespace DIPOL_UF.Models
         {
             var center = FindBrightestPixel(data);
             ReadOnlySpan<double> row = IK.ILSpanCasts.SpanExtensions.GetRow(data, center.Row);
-            var rowBuff = new double[data.Width];
-            row.CopyTo(rowBuff);
 
-            var colBuff = new double[data.Height];
+
+            Span<double> rowView = data.Width > 128
+                ? new double[data.Width]
+                : stackalloc double[data.Width];
+
+            Span<double> colView = data.Height > 128
+                ? new double[data.Height]
+                : stackalloc double[data.Height];
+
             ReadOnlySpan2D<double> column = data.Slice(0, center.Column, width: 1, height: data.Height);
-            for (var i = 0; i < colBuff.Length; i++)
+
+            row.CopyTo(rowView);
+            
+            for (var i = 0; i < colView.Length; i++)
             {
-                colBuff[i] = column[i, 0];
+                colView[i] = column[i, 0];
             }
 
-            var args = new double[data.Width];
-            for (var i = 0; i < args.Length; i++)
-            {
-                args[i] = i;
-            }
 
-            // var rowStats = ComputeFullWidthHalfMax(args, rowBuff);
-            // var colStats = ComputeFullWidthHalfMax(args, colBuff);
-
-            var rowStats = 
-                new GaussianFitResults(1, 1, center.Row, ComputeFullWidthHalfMax(rowBuff, center.Column));
-            var colStats = 
-                new GaussianFitResults(1, 1, center.Column, ComputeFullWidthHalfMax(colBuff, center.Row));
+            var rowStats =
+                new GaussianFitResults(1, 1, center.Row, ComputeFullWidthHalfMax(rowView, center.Column));
+            var colStats =
+                new GaussianFitResults(1, 1, center.Column, ComputeFullWidthHalfMax(colView, center.Row));
             return (rowStats, colStats);
         }
 
-        private static int ComputeFullWidthHalfMax(ReadOnlySpan<double> data, int pos)
+        private static double ComputeFullWidthHalfMax(ReadOnlySpan<double> data, int pos)
         {
             if (pos > data.Length || pos < 0)
             {
@@ -1079,13 +1080,13 @@ namespace DIPOL_UF.Models
 
             var max = data[pos];
 
-            var (left, right) = (0, data.Length - 1);
+            (double left, double right) = (0, data.Length - 1);
             
             for(var i = pos; i >= 0; i--) 
             {
                 if (data[i] < 0.5 * max)
                 {
-                    left = i;
+                    left = Helper.Interpolate(data[i], data[i + 1], i, i + 1, 0.5 * max);
                     break;
                 }
             }
@@ -1094,7 +1095,7 @@ namespace DIPOL_UF.Models
             {
                 if (data[i] < 0.5 * max)
                 {
-                    right = i;
+                    right = Helper.Interpolate(data[i - 1], data[i], i - 1, i, 0.5 * max);
                     break;
                 }
             }
@@ -1102,42 +1103,6 @@ namespace DIPOL_UF.Models
             return right - left;
         }
         
-        private static GaussianFitResults ComputeFullWidthHalfMax(double[] arg, double[] data)
-        {
-            var (baseLine, max) = Helper.MinMax(data);
-
-            // Gaussian with non-zero baseline
-            static double ExpFunc2(double scale, double sigma, double center, double background, double x) =>
-                background + scale * Math.Exp(-(x - center) * (x - center) / 2 / sigma / sigma);
-
-            // Distance between prediction and actual data
-            double DistFunc(double scale, double sigma, double center, double background) =>
-                Distance.Euclidean(
-                    // Prediction
-                    Generate.Map(arg, t => ExpFunc2(scale, sigma, center, background, t)),
-                    // Data
-                    data
-                );
-
-            // Minimizes Euclidean distance
-            MinimizationResult minimizationResult = NelderMeadSimplex.Minimum(
-                // Vector<double> -> double distance function
-                ObjectiveFunction.Value(v => DistFunc(v[0], v[1], v[2], v[3])),
-                // Initial guess
-                CreateVector.Dense(
-                    new[]
-                    {
-                        max,
-                        data.Length / 4.0,
-                        data.Length / 2.0,
-                        baseLine
-                    }
-                )
-            );
-
-            Vector<double> prediction = minimizationResult.MinimizingPoint;
-            return new GaussianFitResults(prediction[3], prediction[0], prediction[2], prediction[1]);
-        }
         private static (int Row, int Column) FindBrightestPixel(ReadOnlySpan2D<double> data)
         {
             var result = (Row: data.Height / 2, Column: data.Width / 2);

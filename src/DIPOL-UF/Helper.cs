@@ -410,6 +410,15 @@ namespace DIPOL_UF
                    : key);
 
 
+
+        internal static double Interpolate(double x1, double x2, double y1, double y2, double x0)
+        {
+            if (Math.Abs(x2 - x1) < 1e-15)
+            {
+                return 0.0;
+            }
+            return y1 + (y2 - y1) / (x2 - x1) * (x0 - x1);
+        }
         
     }
 
