@@ -1048,7 +1048,7 @@ namespace DIPOL_UF.Models
             row.CopyTo(rowBuff);
 
             var colBuff = new double[data.Height];
-            ReadOnlySpan2D<double> column = data.Slice(0, center.Column, 1, data.Height);
+            ReadOnlySpan2D<double> column = data.Slice(0, center.Column, width: 1, height: data.Height);
             for (var i = 0; i < colBuff.Length; i++)
             {
                 colBuff[i] = column[i, 0];
@@ -1060,12 +1060,48 @@ namespace DIPOL_UF.Models
                 args[i] = i;
             }
 
-            var rowStats = ComputeFullWidthHalfMax(args, rowBuff);
-            var colStats = ComputeFullWidthHalfMax(args, colBuff);
+            // var rowStats = ComputeFullWidthHalfMax(args, rowBuff);
+            // var colStats = ComputeFullWidthHalfMax(args, colBuff);
 
+            var rowStats = 
+                new GaussianFitResults(1, 1, center.Row, ComputeFullWidthHalfMax(rowBuff, center.Column));
+            var colStats = 
+                new GaussianFitResults(1, 1, center.Column, ComputeFullWidthHalfMax(colBuff, center.Row));
             return (rowStats, colStats);
         }
 
+        private static int ComputeFullWidthHalfMax(ReadOnlySpan<double> data, int pos)
+        {
+            if (pos > data.Length || pos < 0)
+            {
+                return default;
+            }
+
+            var max = data[pos];
+
+            var (left, right) = (0, data.Length - 1);
+            
+            for(var i = pos; i >= 0; i--) 
+            {
+                if (data[i] < 0.5 * max)
+                {
+                    left = i;
+                    break;
+                }
+            }
+
+            for (var i = pos; i < data.Length; i++)
+            {
+                if (data[i] < 0.5 * max)
+                {
+                    right = i;
+                    break;
+                }
+            }
+
+            return right - left;
+        }
+        
         private static GaussianFitResults ComputeFullWidthHalfMax(double[] arg, double[] data)
         {
             var (baseLine, max) = Helper.MinMax(data);
