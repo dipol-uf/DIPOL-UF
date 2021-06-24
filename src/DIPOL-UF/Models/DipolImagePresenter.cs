@@ -40,31 +40,22 @@ namespace DIPOL_UF.Models
 
         public struct GaussianFitResults : IEquatable<GaussianFitResults>
         {
-            private static double Const { get; } = 2 * Math.Sqrt(2 * Math.Log(2));
-
-            public double Baseline { get; }
-            public double Scale { get; }
             public double Center { get; }
-            public double Sigma { get; }
-
+            public double FWHM { get; }
             public int Origin { get; set; }
-            public double FWHM => Const * Sigma;
 
-            public bool IsValid => Baseline >= 0 && Scale > 0 && Sigma > 0;
-
-            public GaussianFitResults(double baseLine, double scale, double center, double sigma) =>
-                (Baseline, Scale, Center, Sigma, Origin) = (baseLine, scale, center, sigma, 0);
+            public GaussianFitResults(double center, double fwhm) =>
+                (Center, FWHM, Origin) = (center, fwhm, 0);
 
             public override bool Equals(object? obj) =>
                 obj is GaussianFitResults other && Equals(other);
 
 
             public bool Equals(GaussianFitResults other) =>
-                (Baseline, Scale, Center, Sigma, Origin)
-             == (other.Baseline, other.Scale, other.Center, other.Sigma, other.Origin);
+                (Center, FWHM, Origin) == (other.Center, other.FWHM, other.Origin);
 
             public override int GetHashCode() =>
-                HashCode.Combine(Baseline, Scale, Center, Sigma);
+                HashCode.Combine(Center, FWHM, Origin);
 
             public static bool operator ==(GaussianFitResults left, GaussianFitResults right) =>
                 left.Equals(right);
@@ -825,7 +816,7 @@ namespace DIPOL_UF.Models
 
         private (GaussianFitResults Row, GaussianFitResults Column) ImageRightClickCommandExecute(MouseEventArgs args)
         {
-            if (!(args.Source is FrameworkElement elem))
+            if (args.Source is not FrameworkElement elem)
             {
                 return default;
             }
@@ -1065,9 +1056,9 @@ namespace DIPOL_UF.Models
 
 
             var rowStats =
-                new GaussianFitResults(1, 1, center.Row, ComputeFullWidthHalfMax(rowView, center.Column));
+                new GaussianFitResults(center.Row, ComputeFullWidthHalfMax(rowView, center.Column));
             var colStats =
-                new GaussianFitResults(1, 1, center.Column, ComputeFullWidthHalfMax(colView, center.Row));
+                new GaussianFitResults(center.Column, ComputeFullWidthHalfMax(colView, center.Row));
             return (rowStats, colStats);
         }
 
