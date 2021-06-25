@@ -678,17 +678,16 @@ namespace DIPOL_UF.Models
             var width = Math.Min((int) sizePix.Width, image.Width - colStart);
             var height = Math.Min((int) sizePix.Height, image.Height - rowStart);
 
-            var annulusPix = GetPixelsInArea(GeometryLayer.Annulus);
-            
-            
             double[]? buffer = null;
             try
             {
                 buffer = ArrayPool<double>.Shared.Rent(width * height);
                 var tempView = new Span2D<double>(buffer, height, width);
-
                 CastViewToDouble(image, colStart, rowStart, width, height, tempView);
-                var stats = ComputeFullWidthHalfMax(tempView);
+
+                var backGround = Helper.Percentile(buffer.AsSpan(0, width * height), 0.025);
+                
+                var stats = ComputeFullWidthHalfMax(tempView, backGround);
                 stats.Column.Origin = colStart;
                 stats.Row.Origin = rowStart;
                 return stats;
@@ -699,6 +698,8 @@ namespace DIPOL_UF.Models
                 {
                     ArrayPool<double>.Shared.Return(buffer);
                 }
+
+                
             }
         }
 
@@ -895,7 +896,7 @@ namespace DIPOL_UF.Models
                 var path = new List<Tuple<Point, Action<StreamGeometryContext, Point>>>(4)
                 {
                     Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
-                        new Point(0, 0), null),
+                        new Point(0, 0), (_, _) => { }),
                     Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
                         new Point(size, 0), (cont, pt) => cont.LineTo(pt, true, false)),
                     Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
@@ -1065,7 +1066,7 @@ namespace DIPOL_UF.Models
 
         }
 
-        private static (GaussianFitResults Row, GaussianFitResults Column) ComputeFullWidthHalfMax(ReadOnlySpan2D<double> data)
+        private static (GaussianFitResults Row, GaussianFitResults Column) ComputeFullWidthHalfMax(ReadOnlySpan2D<double> data, double bkg)
         {
             var center = FindBrightestPixel(data);
             ReadOnlySpan<double> row = IK.ILSpanCasts.SpanExtensions.GetRow(data, center.Row);
@@ -1090,37 +1091,37 @@ namespace DIPOL_UF.Models
 
 
             var rowStats =
-                new GaussianFitResults(center.Row, ComputeFullWidthHalfMax(rowView, center.Column));
+                new GaussianFitResults(center.Row, ComputeFullWidthHalfMax(rowView, center.Column, bkg));
             var colStats =
-                new GaussianFitResults(center.Column, ComputeFullWidthHalfMax(colView, center.Row));
+                new GaussianFitResults(center.Column, ComputeFullWidthHalfMax(colView, center.Row, bkg));
             return (rowStats, colStats);
         }
 
-        private static double ComputeFullWidthHalfMax(ReadOnlySpan<double> data, int pos)
+        private static double ComputeFullWidthHalfMax(ReadOnlySpan<double> data, int pos, double bkg)
         {
             if (pos > data.Length || pos < 0)
             {
                 return default;
             }
 
-            var max = data[pos];
+            var max = data[pos] - bkg;
 
             (double left, double right) = (0, data.Length - 1);
             
             for(var i = pos; i >= 0; i--) 
             {
-                if (data[i] < 0.5 * max)
+                if (data[i] - bkg < 0.5 * max)
                 {
-                    left = Helper.Interpolate(data[i], data[i + 1], i, i + 1, 0.5 * max);
+                    left = Helper.Interpolate(data[i] - bkg, data[i + 1] - bkg, i, i + 1, 0.5 * max);
                     break;
                 }
             }
 
             for (var i = pos; i < data.Length; i++)
             {
-                if (data[i] < 0.5 * max)
+                if (data[i] - bkg < 0.5 * max)
                 {
-                    right = Helper.Interpolate(data[i - 1], data[i], i - 1, i, 0.5 * max);
+                    right = Helper.Interpolate(data[i - 1] - bkg, data[i] - bkg, i - 1, i, 0.5 * max);
                     break;
                 }
             }
