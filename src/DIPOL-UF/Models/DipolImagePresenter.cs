@@ -661,7 +661,7 @@ namespace DIPOL_UF.Models
                     GetImageScale(p.Y))
                 : p;
 
-        private (GaussianFitResults Row, GaussianFitResults Column) GetImageStatistics(Point clickPosition)
+        private (GaussianFitResults Row, GaussianFitResults Column) GetImageStatistics()
         {
             if (LastKnownImageControlSize.IsEmpty || DisplayedImage == null)
             {
@@ -672,12 +672,15 @@ namespace DIPOL_UF.Models
             var sizePix = GetPixelScale(SamplerGeometry!.Size);
             var halfSizePix = GetPixelScale(SamplerGeometry!.HalfSize);
             var image = _sourceImage!;
-
+            
             var rowStart = Math.Max(0, (int) (centerPix.Y - halfSizePix.Height));
             var colStart = Math.Max(0, (int) (centerPix.X - halfSizePix.Width));
             var width = Math.Min((int) sizePix.Width, image.Width - colStart);
             var height = Math.Min((int) sizePix.Height, image.Height - rowStart);
 
+            var annulusPix = GetPixelsInArea(GeometryLayer.Annulus);
+            
+            
             double[]? buffer = null;
             try
             {
@@ -699,9 +702,12 @@ namespace DIPOL_UF.Models
             }
         }
 
-        private List<(int X, int Y)> GetPixelsInArea(GeometryLayer layer)
+        private IReadOnlyList<(int X, int Y)> GetPixelsInArea(GeometryLayer layer)
         {
-            if (!LastKnownImageControlSize.IsEmpty && DisplayedImage != null)
+            if (
+                !LastKnownImageControlSize.IsEmpty && 
+                DisplayedImage is not null
+            )
             {
 
                 var centerPix = GetPixelScale(SamplerCenterPos);
@@ -734,6 +740,10 @@ namespace DIPOL_UF.Models
                 switch (layer)
                 {
                     case GeometryLayer.Annulus:
+                        if (SamplerGeometry is null || GapGeometry is null)
+                        {
+                            return new List<(int X, int Y)> { (0, 0) };
+                        }
                         var annulusPixels =
                             new List<(int X, int Y)>(
                                 (pixelXLims.Max - pixelXLims.Min) *
@@ -742,16 +752,26 @@ namespace DIPOL_UF.Models
                         for (var xPix = pixelXLims.Min; xPix <= pixelXLims.Max; xPix++)
                             for (var yPix = pixelYLims.Min; yPix <= pixelYLims.Max; yPix++)
                             {
-                                if ((SamplerGeometry?.IsInsideChecker(xPix, yPix, centerPix, halfSizePix,
-                                         thcknssPix) ?? false) &&
-                                    !(GapGeometry?.IsInsideChecker(xPix, yPix, centerPix, gapHalfSizePix,
-                                          thcknssPix) ?? true))
+                                if (SamplerGeometry.IsInsideChecker(
+                                        xPix, yPix, centerPix, halfSizePix,
+                                        thcknssPix
+                                    ) &&
+                                    !GapGeometry.IsInsideChecker(
+                                        xPix, yPix, centerPix, gapHalfSizePix,
+                                        thcknssPix
+                                    ))
+                                {
                                     annulusPixels.Add((X: xPix, Y: yPix));
+                                }
                             }
 
                         return annulusPixels;
 
                     case GeometryLayer.Gap:
+                        if (ApertureGeometry is null || GapGeometry is null)
+                        {
+                            return new List<(int X, int Y)> { (0, 0) };
+                        }
                         var gapPixels =
                             new List<(int X, int Y)>(
                                 (gapPixelXLims.Max - gapPixelXLims.Min) *
@@ -760,16 +780,26 @@ namespace DIPOL_UF.Models
                         for (var xPix = gapPixelXLims.Min; xPix <= gapPixelXLims.Max; xPix++)
                             for (var yPix = gapPixelYLims.Min; yPix <= gapPixelYLims.Max; yPix++)
                             {
-                                if ((GapGeometry?.IsInsideChecker(xPix, yPix, centerPix, halfSizePix,
-                                         thcknssPix) ?? false) &&
-                                    !(ApertureGeometry?.IsInsideChecker(xPix, yPix, centerPix, gapHalfSizePix,
-                                          thcknssPix) ?? true))
+                                if (GapGeometry.IsInsideChecker(
+                                        xPix, yPix, centerPix, halfSizePix,
+                                        thcknssPix
+                                    ) &&
+                                    !ApertureGeometry.IsInsideChecker(
+                                        xPix, yPix, centerPix, gapHalfSizePix,
+                                        thcknssPix
+                                    ))
+                                {
                                     gapPixels.Add((X: xPix, Y: yPix));
+                                }
                             }
 
                         return gapPixels;
 
                     case GeometryLayer.Aperture:
+                        if (ApertureGeometry is null)
+                        {
+                            return new List<(int X, int Y)> { (0, 0) };
+                        }
                         var aperturePixels =
                             new List<(int X, int Y)>(
                                 (aperturePixelXLims.Max - aperturePixelXLims.Min) *
@@ -778,9 +808,13 @@ namespace DIPOL_UF.Models
                         for (var xPix = aperturePixelXLims.Min; xPix <= aperturePixelXLims.Max; xPix++)
                             for (var yPix = aperturePixelYLims.Min; yPix <= aperturePixelYLims.Max; yPix++)
                             {
-                                if (ApertureGeometry?.IsInsideChecker(xPix, yPix, centerPix,
-                                        apertureHalfSizePix, thcknssPix) ?? false)
+                                if (ApertureGeometry.IsInsideChecker(
+                                    xPix, yPix, centerPix,
+                                    apertureHalfSizePix, thcknssPix
+                                ))
+                                {
                                     aperturePixels.Add((X: xPix, Y: yPix));
+                                }
                             }
 
                         return aperturePixels;
@@ -830,7 +864,7 @@ namespace DIPOL_UF.Models
 #endif
             try
             {
-                return GetImageStatistics(pos);
+                return GetImageStatistics();
             }
             catch (Exception e)
             {
