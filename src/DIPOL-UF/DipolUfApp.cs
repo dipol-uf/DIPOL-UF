@@ -1,7 +1,7 @@
 ﻿
 
 #define HOST_SERVER
-// #define IN_PROCESS
+#define IN_PROCESS
 
 using System;
 using System.Diagnostics;
@@ -31,6 +31,7 @@ namespace DIPOL_UF
             var host = connStr is null ? null : new DipolHost(new Uri(connStr));
             host?.Open();
 #else
+            
             var connStr = UiSettingsProvider.Settings.GetArray<string>("RemoteLocations")?.FirstOrDefault();
 
             var pInfo = new ProcessStartInfo()

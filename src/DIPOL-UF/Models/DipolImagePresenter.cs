@@ -40,31 +40,22 @@ namespace DIPOL_UF.Models
 
         public struct GaussianFitResults : IEquatable<GaussianFitResults>
         {
-            private static double Const { get; } = 2 * Math.Sqrt(2 * Math.Log(2));
-
-            public double Baseline { get; }
-            public double Scale { get; }
             public double Center { get; }
-            public double Sigma { get; }
-
+            public double FWHM { get; }
             public int Origin { get; set; }
-            public double FWHM => Const * Sigma;
 
-            public bool IsValid => Baseline >= 0 && Scale > 0 && Sigma > 0;
-
-            public GaussianFitResults(double baseLine, double scale, double center, double sigma) =>
-                (Baseline, Scale, Center, Sigma, Origin) = (baseLine, scale, center, sigma, 0);
+            public GaussianFitResults(double center, double fwhm) =>
+                (Center, FWHM, Origin) = (center, fwhm, 0);
 
             public override bool Equals(object? obj) =>
                 obj is GaussianFitResults other && Equals(other);
 
 
             public bool Equals(GaussianFitResults other) =>
-                (Baseline, Scale, Center, Sigma, Origin)
-             == (other.Baseline, other.Scale, other.Center, other.Sigma, other.Origin);
+                (Center, FWHM, Origin) == (other.Center, other.FWHM, other.Origin);
 
             public override int GetHashCode() =>
-                HashCode.Combine(Baseline, Scale, Center, Sigma);
+                HashCode.Combine(Center, FWHM, Origin);
 
             public static bool operator ==(GaussianFitResults left, GaussianFitResults right) =>
                 left.Equals(right);
@@ -670,7 +661,7 @@ namespace DIPOL_UF.Models
                     GetImageScale(p.Y))
                 : p;
 
-        private (GaussianFitResults Row, GaussianFitResults Column) GetImageStatistics(Point clickPosition)
+        private (GaussianFitResults Row, GaussianFitResults Column) GetImageStatistics()
         {
             if (LastKnownImageControlSize.IsEmpty || DisplayedImage == null)
             {
@@ -681,7 +672,7 @@ namespace DIPOL_UF.Models
             var sizePix = GetPixelScale(SamplerGeometry!.Size);
             var halfSizePix = GetPixelScale(SamplerGeometry!.HalfSize);
             var image = _sourceImage!;
-
+            
             var rowStart = Math.Max(0, (int) (centerPix.Y - halfSizePix.Height));
             var colStart = Math.Max(0, (int) (centerPix.X - halfSizePix.Width));
             var width = Math.Min((int) sizePix.Width, image.Width - colStart);
@@ -692,9 +683,11 @@ namespace DIPOL_UF.Models
             {
                 buffer = ArrayPool<double>.Shared.Rent(width * height);
                 var tempView = new Span2D<double>(buffer, height, width);
-
                 CastViewToDouble(image, colStart, rowStart, width, height, tempView);
-                var stats = ComputeFullWidthHalfMax(tempView);
+
+                var backGround = Helper.Percentile(buffer.AsSpan(0, width * height), 0.025);
+                
+                var stats = ComputeFullWidthHalfMax(tempView, backGround);
                 stats.Column.Origin = colStart;
                 stats.Row.Origin = rowStart;
                 return stats;
@@ -705,12 +698,17 @@ namespace DIPOL_UF.Models
                 {
                     ArrayPool<double>.Shared.Return(buffer);
                 }
+
+                
             }
         }
 
-        private List<(int X, int Y)> GetPixelsInArea(GeometryLayer layer)
+        private IReadOnlyList<(int X, int Y)> GetPixelsInArea(GeometryLayer layer)
         {
-            if (!LastKnownImageControlSize.IsEmpty && DisplayedImage != null)
+            if (
+                !LastKnownImageControlSize.IsEmpty && 
+                DisplayedImage is not null
+            )
             {
 
                 var centerPix = GetPixelScale(SamplerCenterPos);
@@ -743,6 +741,10 @@ namespace DIPOL_UF.Models
                 switch (layer)
                 {
                     case GeometryLayer.Annulus:
+                        if (SamplerGeometry is null || GapGeometry is null)
+                        {
+                            return new List<(int X, int Y)> { (0, 0) };
+                        }
                         var annulusPixels =
                             new List<(int X, int Y)>(
                                 (pixelXLims.Max - pixelXLims.Min) *
@@ -751,16 +753,26 @@ namespace DIPOL_UF.Models
                         for (var xPix = pixelXLims.Min; xPix <= pixelXLims.Max; xPix++)
                             for (var yPix = pixelYLims.Min; yPix <= pixelYLims.Max; yPix++)
                             {
-                                if ((SamplerGeometry?.IsInsideChecker(xPix, yPix, centerPix, halfSizePix,
-                                         thcknssPix) ?? false) &&
-                                    !(GapGeometry?.IsInsideChecker(xPix, yPix, centerPix, gapHalfSizePix,
-                                          thcknssPix) ?? true))
+                                if (SamplerGeometry.IsInsideChecker(
+                                        xPix, yPix, centerPix, halfSizePix,
+                                        thcknssPix
+                                    ) &&
+                                    !GapGeometry.IsInsideChecker(
+                                        xPix, yPix, centerPix, gapHalfSizePix,
+                                        thcknssPix
+                                    ))
+                                {
                                     annulusPixels.Add((X: xPix, Y: yPix));
+                                }
                             }
 
                         return annulusPixels;
 
                     case GeometryLayer.Gap:
+                        if (ApertureGeometry is null || GapGeometry is null)
+                        {
+                            return new List<(int X, int Y)> { (0, 0) };
+                        }
                         var gapPixels =
                             new List<(int X, int Y)>(
                                 (gapPixelXLims.Max - gapPixelXLims.Min) *
@@ -769,16 +781,26 @@ namespace DIPOL_UF.Models
                         for (var xPix = gapPixelXLims.Min; xPix <= gapPixelXLims.Max; xPix++)
                             for (var yPix = gapPixelYLims.Min; yPix <= gapPixelYLims.Max; yPix++)
                             {
-                                if ((GapGeometry?.IsInsideChecker(xPix, yPix, centerPix, halfSizePix,
-                                         thcknssPix) ?? false) &&
-                                    !(ApertureGeometry?.IsInsideChecker(xPix, yPix, centerPix, gapHalfSizePix,
-                                          thcknssPix) ?? true))
+                                if (GapGeometry.IsInsideChecker(
+                                        xPix, yPix, centerPix, halfSizePix,
+                                        thcknssPix
+                                    ) &&
+                                    !ApertureGeometry.IsInsideChecker(
+                                        xPix, yPix, centerPix, gapHalfSizePix,
+                                        thcknssPix
+                                    ))
+                                {
                                     gapPixels.Add((X: xPix, Y: yPix));
+                                }
                             }
 
                         return gapPixels;
 
                     case GeometryLayer.Aperture:
+                        if (ApertureGeometry is null)
+                        {
+                            return new List<(int X, int Y)> { (0, 0) };
+                        }
                         var aperturePixels =
                             new List<(int X, int Y)>(
                                 (aperturePixelXLims.Max - aperturePixelXLims.Min) *
@@ -787,9 +809,13 @@ namespace DIPOL_UF.Models
                         for (var xPix = aperturePixelXLims.Min; xPix <= aperturePixelXLims.Max; xPix++)
                             for (var yPix = aperturePixelYLims.Min; yPix <= aperturePixelYLims.Max; yPix++)
                             {
-                                if (ApertureGeometry?.IsInsideChecker(xPix, yPix, centerPix,
-                                        apertureHalfSizePix, thcknssPix) ?? false)
+                                if (ApertureGeometry.IsInsideChecker(
+                                    xPix, yPix, centerPix,
+                                    apertureHalfSizePix, thcknssPix
+                                ))
+                                {
                                     aperturePixels.Add((X: xPix, Y: yPix));
+                                }
                             }
 
                         return aperturePixels;
@@ -825,7 +851,7 @@ namespace DIPOL_UF.Models
 
         private (GaussianFitResults Row, GaussianFitResults Column) ImageRightClickCommandExecute(MouseEventArgs args)
         {
-            if (!(args.Source is FrameworkElement elem))
+            if (args.Source is not FrameworkElement elem)
             {
                 return default;
             }
@@ -839,7 +865,7 @@ namespace DIPOL_UF.Models
 #endif
             try
             {
-                return GetImageStatistics(pos);
+                return GetImageStatistics();
             }
             catch (Exception e)
             {
@@ -870,7 +896,7 @@ namespace DIPOL_UF.Models
                 var path = new List<Tuple<Point, Action<StreamGeometryContext, Point>>>(4)
                 {
                     Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
-                        new Point(0, 0), null),
+                        new Point(0, 0), (_, _) => { }),
                     Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
                         new Point(size, 0), (cont, pt) => cont.LineTo(pt, true, false)),
                     Tuple.Create<Point, Action<StreamGeometryContext, Point>>(
@@ -1040,68 +1066,69 @@ namespace DIPOL_UF.Models
 
         }
 
-        private static (GaussianFitResults Row, GaussianFitResults Column) ComputeFullWidthHalfMax(ReadOnlySpan2D<double> data)
+        private static (GaussianFitResults Row, GaussianFitResults Column) ComputeFullWidthHalfMax(ReadOnlySpan2D<double> data, double bkg)
         {
             var center = FindBrightestPixel(data);
             ReadOnlySpan<double> row = IK.ILSpanCasts.SpanExtensions.GetRow(data, center.Row);
-            var rowBuff = new double[data.Width];
-            row.CopyTo(rowBuff);
 
-            var colBuff = new double[data.Height];
-            ReadOnlySpan2D<double> column = data.Slice(0, center.Column, 1, data.Height);
-            for (var i = 0; i < colBuff.Length; i++)
+
+            Span<double> rowView = data.Width > 128
+                ? new double[data.Width]
+                : stackalloc double[data.Width];
+
+            Span<double> colView = data.Height > 128
+                ? new double[data.Height]
+                : stackalloc double[data.Height];
+
+            ReadOnlySpan2D<double> column = data.Slice(0, center.Column, width: 1, height: data.Height);
+
+            row.CopyTo(rowView);
+            
+            for (var i = 0; i < colView.Length; i++)
             {
-                colBuff[i] = column[i, 0];
+                colView[i] = column[i, 0];
             }
 
-            var args = new double[data.Width];
-            for (var i = 0; i < args.Length; i++)
-            {
-                args[i] = i;
-            }
 
-            var rowStats = ComputeFullWidthHalfMax(args, rowBuff);
-            var colStats = ComputeFullWidthHalfMax(args, colBuff);
-
+            var rowStats =
+                new GaussianFitResults(center.Row, ComputeFullWidthHalfMax(rowView, center.Column, bkg));
+            var colStats =
+                new GaussianFitResults(center.Column, ComputeFullWidthHalfMax(colView, center.Row, bkg));
             return (rowStats, colStats);
         }
 
-        private static GaussianFitResults ComputeFullWidthHalfMax(double[] arg, double[] data)
+        private static double ComputeFullWidthHalfMax(ReadOnlySpan<double> data, int pos, double bkg)
         {
-            var (baseLine, max) = Helper.MinMax(data);
+            if (pos > data.Length || pos < 0)
+            {
+                return default;
+            }
 
-            // Gaussian with non-zero baseline
-            static double ExpFunc2(double scale, double sigma, double center, double background, double x) =>
-                background + scale * Math.Exp(-(x - center) * (x - center) / 2 / sigma / sigma);
+            var max = data[pos] - bkg;
 
-            // Distance between prediction and actual data
-            double DistFunc(double scale, double sigma, double center, double background) =>
-                Distance.Euclidean(
-                    // Prediction
-                    Generate.Map(arg, t => ExpFunc2(scale, sigma, center, background, t)),
-                    // Data
-                    data
-                );
+            (double left, double right) = (0, data.Length - 1);
+            
+            for(var i = pos; i >= 0; i--) 
+            {
+                if (data[i] - bkg < 0.5 * max)
+                {
+                    left = Helper.Interpolate(data[i] - bkg, data[i + 1] - bkg, i, i + 1, 0.5 * max);
+                    break;
+                }
+            }
 
-            // Minimizes Euclidean distance
-            MinimizationResult minimizationResult = NelderMeadSimplex.Minimum(
-                // Vector<double> -> double distance function
-                ObjectiveFunction.Value(v => DistFunc(v[0], v[1], v[2], v[3])),
-                // Initial guess
-                CreateVector.Dense(
-                    new[]
-                    {
-                        max,
-                        data.Length / 4.0,
-                        data.Length / 2.0,
-                        baseLine
-                    }
-                )
-            );
+            for (var i = pos; i < data.Length; i++)
+            {
+                if (data[i] - bkg < 0.5 * max)
+                {
+                    right = Helper.Interpolate(data[i - 1] - bkg, data[i] - bkg, i - 1, i, 0.5 * max);
+                    break;
+                }
+            }
 
-            Vector<double> prediction = minimizationResult.MinimizingPoint;
-            return new GaussianFitResults(prediction[3], prediction[0], prediction[2], prediction[1]);
+            return right - left;
         }
+        
         private static (int Row, int Column) FindBrightestPixel(ReadOnlySpan2D<double> data)
         {
             var result = (Row: data.Height / 2, Column: data.Width / 2);

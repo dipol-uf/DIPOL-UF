@@ -26,7 +26,7 @@ namespace DIPOL_UF
 {
     public static class Helper
     {
-
+        private static readonly double DEpsilon = Math.Pow(2, -53);
         public static Dispatcher UiDispatcher =>
             Application.Current?.Dispatcher
             ?? throw new InvalidOperationException("Dispatcher is unavailable.");
@@ -410,7 +410,61 @@ namespace DIPOL_UF
                    : key);
 
 
-        
+
+        internal static double Interpolate(double x1, double x2, double y1, double y2, double x0)
+        {
+            if (Math.Abs(x2 - x1) < 1e-15)
+            {
+                return 0.0;
+            }
+            return y1 + (y2 - y1) / (x2 - x1) * (x0 - x1);
+        }
+
+        internal static double Percentile(ReadOnlySpan<double> data, double p)
+        {
+            if (data.IsEmpty || p is < 0 or > 1)
+            {
+                return double.NaN;
+            }
+
+            if (Math.Abs(p) < DEpsilon)
+            {
+                return data[0];
+            }
+
+            if (Math.Abs(1 - p) < DEpsilon)
+            {
+                return data[data.Length - 1];
+            }
+
+            
+            var buffer = ArrayPool<double>.Shared.Rent(data.Length);
+            try
+            {
+                data.CopyTo(buffer);
+                Array.Sort(buffer, 0, data.Length);
+
+                // Strictly non-negative value between `0` and `n - 1`
+                var x = (data.Length - 1) * p;
+
+                // Integral part of `x`
+                var i = (int)Math.Floor(x);
+                // Non-integral part of `x`
+                var g = x - i;
+
+                if (i == data.Length - 1)
+                {
+                    return buffer[i];
+                }
+
+                return (1 - g) * buffer[i] + g * buffer[i + 1];
+            }
+            finally
+            {
+                ArrayPool<double>.Shared.Return(buffer);
+            }
+        }
+
     }
 
     internal class CameraTupleOrderComparer : IComparer<(string Id, IDevice Camera)>
