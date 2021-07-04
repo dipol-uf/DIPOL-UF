@@ -6,17 +6,17 @@
 ![dipol-uf-gui](https://user-images.githubusercontent.com/8782986/119700521-fb28f980-be5b-11eb-9c10-2347120588dc.png)
 
 This repository contains software needed for operation of high-precision three-color BVR polarimeter DIPol-UF.
-The libraries here are designed to handle low-level communication with Trinamic stepper motors, utlize ANDOR SDK capabilities to control three (or any other number) ANDOR iXon Ultra 897 CCDs, acquire and serailzie obtained images in FITS format.
+The libraries here are designed to handle low-level communication with Trinamic stepper motors, utilize ANDOR SDK capabilities to control three (but in principle, any numer of) ANDOR iXon Ultra 897 CCDs, acquire and serailzie obtained images in FITS format.
 
 The current version does not support full range of features of an ANDOR-compatible camera. A subset of regimes needed for DIPol-UF is implemented and tested.
-The system is scalable in a sence that it supports RPC communication over the network. Each camera can be controlled by a separate Windows machine, and the number of such machines is limited by the network capabilities (DIPol-UF uses one primary cotntrol PC and to seondary PCs which provide RPC capabilities).
-Due to the nature of polarimetric observations, DIPol-UF does not requrie extremely precies triggering mechanisms (a typical exposure time is ~1-60 s with a 0.250 s overhead for discrete plate rotation after each exposure), so no support for external triggers is built in.
+The system is scalable in a sense that it supports RPC communication over the network. Each camera can be controlled by a separate Windows machine, and the number of such machines is limited by the network capabilities (DIPol-UF uses one primary cotntrol PC and two seondary PCs which provide RPC capabilities).
+Due to the nature of polarimetric observations, DIPol-UF does not requrie extremely precies triggering mechanisms (a typical exposure time is ~1-60 s with a 0.250 s overhead for discrete plate rotation after each exposure), so no support for external triggers is built in (yet).
 
 The GUI is built using WPF. RPC is implemented using WCF.
-The project was initiated well before the release of stable .NET Core (with at least WPF support), so core GUI and RPC features are .NET Frmework 4.8-only.
+The project was initiated well before the release of a stable .NET Core (with at least WPF support), so core GUI and RPC features are .NET Frmework 4.8-only.
 Auxilary libraries target .NET Standard 2.0 and are fully cross-platform.
 
-An effort is made to solve some of the problems present in code base and to migrate all libraries to .NET Standard 2.0/2.1 with executables targeting .NET 5+.
+An effort is made to solve some of the problems present in code base and to migrate all of the libraries to .NET Standard 2.0/2.1 with executables targeting .NET 5+.
 
 
 ---
@@ -59,6 +59,8 @@ Providing the ANDOR dependencies are added, the GUI can be built as
 where `<PLATFORM>` is either `x64` or `x86` (for 32-bit).
 
 Examples of build & test workflows can be found in the [CI scripts](./.github/workflows)
+
+The [/scripts](./scripts/) folder contains automation scripts that can be used for testing and building executables.
 
 ---
 ## Development environement configuration using `choco`
