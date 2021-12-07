@@ -1,0 +1,26 @@
+{
+    "creators": [
+        {   
+            "orcid": "0000-0001-5563-7840",
+            "name": "Kosenkov, Ilia A."
+        }
+    ],    
+
+    "license": "MIT",
+
+    "title": "DIPol-UF: Remote control software for DIPol-UF polarimeter",
+
+    "related_identifiers": [
+        {
+            "scheme": "doi",
+            "identifier": "10.3847/1538-3881/abc74f",
+            "relation": "isDocumentedBy",
+            "resource_type": {
+                "type": "publication",
+                "subtype": "article"
+            }
+        }
+    ],
+
+    "keywords": ["Instruments", "Polarimetry", "Optical", ".NET"]   
+  }
