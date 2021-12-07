@@ -3,6 +3,9 @@
 [![](https://img.shields.io/badge/BIBCODE-%20%20%20%20%202021AJ....161...20P%20-brightgreen)](https://ui.adsabs.harvard.edu/#abs/2021AJ....161...20P/abstract)
 [![](https://img.shields.io/badge/arXiv-2011.02129-brightgreen)](https://arxiv.org/abs/2011.02129)
 
+[![DOI](https://zenodo.org/badge/90242752.svg)](https://zenodo.org/badge/latestdoi/90242752)
+
+
 ![dipol-uf-gui](https://user-images.githubusercontent.com/8782986/119700521-fb28f980-be5b-11eb-9c10-2347120588dc.png)
 
 This repository contains software needed for operation of high-precision three-color BVR polarimeter DIPol-UF.
