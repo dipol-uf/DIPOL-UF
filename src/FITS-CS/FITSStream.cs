@@ -147,8 +147,7 @@ namespace FITS_CS
                 new("BITPIX", FitsKeywordType.Integer, (int)(short)type),
                 new("NAXIS", FitsKeywordType.Integer, 2),
                 new("NAXIS1", FitsKeywordType.Integer, image.Width),
-                new("NAXIS2", FitsKeywordType.Integer, image.Height),
-                new("NAXIS", FitsKeywordType.Integer, 2)
+                new("NAXIS2", FitsKeywordType.Integer, image.Height)
             };
 
             if (extraKeys != null)
@@ -192,8 +191,7 @@ namespace FITS_CS
                 new("BITPIX", FitsKeywordType.Integer, (int) (short) type),
                 new("NAXIS", FitsKeywordType.Integer, 2),
                 new("NAXIS1", FitsKeywordType.Integer, image.Width),
-                new("NAXIS2", FitsKeywordType.Integer, image.Height),
-                new("NAXIS", FitsKeywordType.Integer, 2)
+                new("NAXIS2", FitsKeywordType.Integer, image.Height)
             };
 
             if (extraKeys != null)
