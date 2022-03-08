@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -172,29 +171,24 @@ namespace FitsTests
 
             void GenerateAssert<T>(string path, IEnumerable<T> compareTo) where T: unmanaged
             {
-                using (var str = new FitsStream(new FileStream(GetPath(path), FileMode.Open)))
-                {
-                    var bSize = Marshal.SizeOf<T>();
-                    var propSize = (int)(Math.Ceiling(1.0 * width * height * bSize / FitsUnit.UnitSizeInBytes)
-                                   * FitsUnit.UnitSizeInBytes
-                                   / bSize);
-                    var data = new T[propSize];
-                    var pos = 0;
-                    while (str.TryReadUnit(out var unit))
-                        if (unit.IsData)
-                        {
-                            var buffer = unit.GetData<T>();
-                            Array.Copy(buffer, 0, data, pos, buffer.Length);
-                            pos += buffer.Length;
-                        }
+                using var str = new FitsStream(new FileStream(GetPath(path), FileMode.Open));
+                var bSize = Marshal.SizeOf<T>();
+                var propSize = (int)(Math.Ceiling(1.0 * width * height * bSize / FitsUnit.UnitSizeInBytes)
+                                     * FitsUnit.UnitSizeInBytes
+                                     / bSize);
+                var data = new T[propSize];
+                var pos = 0;
+                while (str.TryReadUnit(out var unit))
+                    if (unit.IsData)
+                    {
+                        var buffer = unit.GetData<T>();
+                        Array.Copy(buffer, 0, data, pos, buffer.Length);
+                        pos += buffer.Length;
+                    }
 
-                    Assert.That(data.Take(Math.Min(width * height, 100)),
-                        Is.EqualTo(compareTo.Take(Math.Min(width * height, 100))).AsCollection,
-                        $"Failed for [{width:0000}x{height:0000}] of type {typeof(T)}.");
-                }
-
-                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-                GC.Collect(2, GCCollectionMode.Forced, true, true);
+                Assert.That(data.Take(Math.Min(width * height, 100)),
+                    Is.EqualTo(compareTo.Take(Math.Min(width * height, 100))).AsCollection,
+                    $"Failed for [{width:0000}x{height:0000}] of type {typeof(T)}.");
             }
 
             var version = RuntimeInformation.FrameworkDescription.ToLowerInvariant();
@@ -268,29 +262,24 @@ namespace FitsTests
 
             void GenerateAssert<T>(string path, IEnumerable<T> compareTo) where T : unmanaged
             {
-                using (var str = new FitsStream(new FileStream(GetPath(path), FileMode.Open)))
-                {
-                    var bSize = Marshal.SizeOf<T>();
-                    var propSize = (int)(Math.Ceiling(1.0 * width * height * bSize / FitsUnit.UnitSizeInBytes)
-                                   * FitsUnit.UnitSizeInBytes
-                                   / bSize);
-                    var data = new T[propSize];
-                    var pos = 0;
-                    while (str.TryReadUnit(out var unit))
-                        if (unit.IsData)
-                        {
-                            var buffer = unit.GetData<T>();
-                            Array.Copy(buffer, 0, data, pos, buffer.Length);
-                            pos += buffer.Length;
-                        }
+                using var str = new FitsStream(new FileStream(GetPath(path), FileMode.Open));
+                var bSize = Marshal.SizeOf<T>();
+                var propSize = (int)(Math.Ceiling(1.0 * width * height * bSize / FitsUnit.UnitSizeInBytes)
+                                     * FitsUnit.UnitSizeInBytes
+                                     / bSize);
+                var data = new T[propSize];
+                var pos = 0;
+                while (str.TryReadUnit(out var unit))
+                    if (unit.IsData)
+                    {
+                        var buffer = unit.GetData<T>();
+                        Array.Copy(buffer, 0, data, pos, buffer.Length);
+                        pos += buffer.Length;
+                    }
 
-                    Assert.That(data.Take(Math.Min(width * height, 100)),
-                        Is.EqualTo(compareTo.Take(Math.Min(width * height, 100))).AsCollection,
-                        $"Failed for [{width:0000}x{height:0000}] of type {typeof(T)}.");
-                }
-
-                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-                GC.Collect(2, GCCollectionMode.Forced, true, true);
+                Assert.That(data.Take(Math.Min(width * height, 100)),
+                    Is.EqualTo(compareTo.Take(Math.Min(width * height, 100))).AsCollection,
+                    $"Failed for [{width:0000}x{height:0000}] of type {typeof(T)}.");
             }
 
             var file = $"async_test_dbl_{width:0000}x{height:0000}.fits";
