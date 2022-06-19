@@ -67,8 +67,7 @@ namespace DIPOL_UF
                 .WriteTo.File(filePath)
                 .WriteTo.Console()
                 .CreateLogger();
-                
-            Injector.SetLogger(logger);
+            Log.Logger = logger;    
 
             Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");

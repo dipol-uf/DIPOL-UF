@@ -16,6 +16,7 @@ using DIPOL_Remote;
 using DIPOL_UF.Converters;
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -66,7 +67,7 @@ namespace DIPOL_UF.Models
                 new SourceCache<(string Id, IDevice Camera), string>(x => x.Id)
                     .DisposeWith(Subscriptions);
 
-            _localFactory = Injector.Locate<IDeviceFactory>();
+            _localFactory = Injector.ServiceProvider.GetRequiredService<IDeviceFactory>();
             InitializeCommands();
             HookObservables();
             HookValidators();
