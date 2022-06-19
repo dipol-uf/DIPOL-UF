@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29920.165
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32519.111
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ANDOR-CS", "ANDOR-CS\ANDOR-CS.csproj", "{D1E8B17D-4C59-42DD-87BD-F111DF8E631D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ANDOR-CS", "ANDOR-CS\ANDOR-CS.csproj", "{D1E8B17D-4C59-42DD-87BD-F111DF8E631D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DIPOL-UF", "DIPOL-UF\DIPOL-UF.csproj", "{EDB4E90E-B8FA-4A97-B684-8ED430F2A1F7}"
 EndProject
@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DIPOL-Remote", "DIPOL-Remot
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Host", "Host\Host.csproj", "{661AB979-44D7-486C-9316-8592A974D7E7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FITS-CS", "FITS-CS\FITS-CS.csproj", "{89516F86-17D4-4ED3-89F2-D20DF612C7DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FITS-CS", "FITS-CS\FITS-CS.csproj", "{89516F86-17D4-4ED3-89F2-D20DF612C7DE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StepMotor", "StepMotor\StepMotor.csproj", "{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}"
 EndProject
@@ -100,8 +100,8 @@ Global
 		{89516F86-17D4-4ED3-89F2-D20DF612C7DE}.Debug|x86.ActiveCfg = Debug|x86
 		{89516F86-17D4-4ED3-89F2-D20DF612C7DE}.Debug|x86.Build.0 = Debug|x86
 		{89516F86-17D4-4ED3-89F2-D20DF612C7DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{89516F86-17D4-4ED3-89F2-D20DF612C7DE}.Release|x64.ActiveCfg = Release|x64
-		{89516F86-17D4-4ED3-89F2-D20DF612C7DE}.Release|x64.Build.0 = Release|x64
+		{89516F86-17D4-4ED3-89F2-D20DF612C7DE}.Release|x64.ActiveCfg = Release|Any CPU
+		{89516F86-17D4-4ED3-89F2-D20DF612C7DE}.Release|x64.Build.0 = Release|Any CPU
 		{89516F86-17D4-4ED3-89F2-D20DF612C7DE}.Release|x86.ActiveCfg = Release|x86
 		{89516F86-17D4-4ED3-89F2-D20DF612C7DE}.Release|x86.Build.0 = Release|x86
 		{89516F86-17D4-4ED3-89F2-D20DF612C7DE}.Test|Any CPU.ActiveCfg = Test|Any CPU
@@ -116,8 +116,8 @@ Global
 		{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}.Debug|x86.ActiveCfg = Debug|x86
 		{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}.Debug|x86.Build.0 = Debug|x86
 		{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}.Release|x64.ActiveCfg = Release|x64
-		{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}.Release|x64.Build.0 = Release|x64
+		{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}.Release|x64.ActiveCfg = Release|Any CPU
+		{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}.Release|x64.Build.0 = Release|Any CPU
 		{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}.Release|x86.ActiveCfg = Release|Any CPU
 		{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}.Release|x86.Build.0 = Release|Any CPU
 		{27A3F774-A7B6-43D9-BABA-29A36AA0BFE1}.Test|Any CPU.ActiveCfg = Test|Any CPU
@@ -134,8 +134,8 @@ Global
 		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Debug|x86.Build.0 = Debug|x86
 		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Release|x64.ActiveCfg = Release|x64
-		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Release|x64.Build.0 = Release|x64
+		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Release|x64.ActiveCfg = Release|Any CPU
+		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Release|x64.Build.0 = Release|Any CPU
 		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Release|x86.ActiveCfg = Release|Any CPU
 		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Release|x86.Build.0 = Release|Any CPU
 		{0FFBF38F-E75E-46C9-AD9C-78926E7DAC89}.Test|Any CPU.ActiveCfg = Test|Any CPU
@@ -183,8 +183,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {020823D4-9685-444E-AFAD-00D6D278B3AA}
