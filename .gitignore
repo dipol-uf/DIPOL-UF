@@ -98,6 +98,9 @@ MigrationBackup/*
 Releases/*
 **/*backup
 
+# .NET config
+!global.json
+
 # Needed on CI
 !nuget.config
 !src/Host/config.json
