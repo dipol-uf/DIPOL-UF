@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Generic;
 using ANDOR_CS;
 using ANDOR_CS.Classes;
 using DIPOL_Remote;
@@ -30,15 +29,16 @@ namespace DIPOL_UF
                 .AddTransient<IDebugDeviceFactory, DebugCamera.DebugCameraFactory>()
                 .Decorate<IDeviceFactory, DebugLocalDeviceFactory>()
 #endif
-                .AddLogging(builder => builder.AddSerilog())
-                .AddSingleton<ILogger>(Log.Logger)
+                .AddSingleton(Log.Logger)
                 .AddTransient<App>()
                 .AddSingleton<JobManager>()
                 .AddSingleton<JobFactory>()
                 .AddSingleton<IRemoteDeviceFactoryConstructor, RemoteDeviceFactoryConstructor>()
+                .AddScoped<IAcquisitionTimer, AcquisitionTimer>()
                 .AddModels()
                 .AddViewModels()
                 .AddViews()
+                .AddLogging(builder => builder.AddSerilog())
                 .BuildServiceProvider();
         }
 

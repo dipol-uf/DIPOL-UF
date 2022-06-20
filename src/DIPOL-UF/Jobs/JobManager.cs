@@ -22,8 +22,8 @@ using DynamicData;
 using DynamicData.Binding;
 using FITS_CS;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ReactiveUI.Fody.Helpers;
-using Serilog.Events;
 using Localization = DIPOL_UF.Properties.Localization;
 using MessageBox = System.Windows.MessageBox;
 
@@ -33,6 +33,7 @@ namespace DIPOL_UF.Jobs
     internal sealed partial class JobManager : ReactiveObjectEx
     {
         private readonly IUserNotifier _notifier;
+        private readonly ILogger _logger;
         private readonly JobFactory _jobFactory;
 
         // These regimes might produce data that will overflow uint16 format,
@@ -101,9 +102,10 @@ namespace DIPOL_UF.Jobs
         public Job DarkJob { get; private set; }
         public int AcquisitionRuns { get; private set; }
 
-        public JobManager(IUserNotifier notifier, JobFactory jobFactory)
+        public JobManager(IUserNotifier notifier, ILogger<JobManager> logger, JobFactory jobFactory)
         {
             _notifier = notifier;
+            _logger = logger;
             _jobFactory = jobFactory;
         }
 
@@ -257,8 +259,9 @@ namespace DIPOL_UF.Jobs
                 var jobScenario = GetJobScenario(CurrentTarget1.CycleType);
 
                 AcquisitionJob = await ConstructJob(jobScenario.Light);
+                AcquisitionActionCount = AcquisitionJob.NumberOfActions<CameraAction>();
 
-                if(CurrentTarget1.CycleType.IsPolarimetric()
+                if (CurrentTarget1.CycleType.IsPolarimetric()
                     && (!AcquisitionJob.ContainsActionOfType<MotorAction>() || _windowRef.PolarimeterMotor is null))
                     throw new InvalidOperationException("Cannot execute current control with no motor connected.");
 
@@ -274,8 +277,8 @@ namespace DIPOL_UF.Jobs
                 ReadyToRun = true;
                 NeedsCalibration = true;
                 CurrentCycleType = CurrentTarget1.CycleType;
-                Helper.WriteLog(
-                    LogEventLevel.Information, "Set up new target {StarName} in {CycleType} regime",
+                _logger.LogInformation(
+                    "Set up new target {StarName} in {CycleType} regime",
                     CurrentTarget1.StarName, 
                     CurrentTarget1.CycleType.GetEnumNameRep().Full
                 );
@@ -287,7 +290,7 @@ namespace DIPOL_UF.Jobs
                 AcquisitionJob = null;
                 BiasJob = null;
                 DarkJob = null;
-                Helper.WriteLog(LogEventLevel.Error, ex,  @"Failed to apply new target");
+                _logger.LogError(ex,  @"Failed to apply new target");
                 throw;
             }
         }
@@ -379,12 +382,12 @@ namespace DIPOL_UF.Jobs
                             : null;
                         ActualMotorPosition = MotorPosition;
 
-                        Helper.WriteLog(LogEventLevel.Information, @"Initializing system before the new cycle.");
+                        _logger.LogInformation(@"Initializing system before the new cycle.");
                         await AcquisitionJob.Initialize(token);
 
                         for (var i = 0; i < AcquisitionRuns; i++)
                         {
-                            Helper.WriteLog(LogEventLevel.Information, "Running {i} cycle", i + 1);
+                            _logger.LogInformation("Running {i} cycle", i + 1);
                             await AcquisitionJob.Run(token);
                         }
                     }
@@ -447,7 +450,7 @@ namespace DIPOL_UF.Jobs
             }
             catch (TaskCanceledException)
             {
-                Helper.WriteLog(LogEventLevel.Warning, "Acquisition has been cancelled.");
+                _logger.LogWarning("Acquisition has been cancelled.");
                 MessageBox.Show(
                     Localization.JobManager_MB_Acq_Cancelled_Text,
                     Localization.JobManager_MB_Acq_Cancelled_Header,
@@ -457,7 +460,7 @@ namespace DIPOL_UF.Jobs
             }
             catch (Exception e)
             {
-                Helper.WriteLog(LogEventLevel.Error, e, "Acquisition sequence has failed");
+                _logger.LogError(e, "Acquisition sequence has failed");
                 MessageBox.Show(
                     string.Format(Localization.JobManager_MB_Failed_Text, e.Message),
                     Localization.JobManager_MB_Failed_Header,
