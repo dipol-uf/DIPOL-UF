@@ -212,7 +212,6 @@
     <Compile Include="ViewModels\DescendantProxy.cs" />
     <Compile Include="DialogRequestedEventArgs.cs" />
     <Compile Include="ViewModels\JobSettingsViewModel1.cs" />
-    <Compile Include="ViewModels\JobSettingsViewModel.cs" />
     <Compile Include="ViewModels\ReactiveViewModelBase.cs" />
     <Compile Include="ViewModels\MenuItemViewModel.cs" />
     <Compile Include="Models\ProgressBar.cs" />

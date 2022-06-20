@@ -92,8 +92,6 @@ namespace DIPOL_UF.Jobs
         public bool AllCamerasHaveSettings { [ObservableAsProperty] get; }
         public float? ActualMotorPosition { get; private set; }
 
-        [Obsolete("Use " + nameof(CurrentTarget1), true)]
-        public Target CurrentTarget { get; private set; } = new Target();
         public Target1 CurrentTarget1 { get; private set; } = new Target1();
 
         public Job AcquisitionJob { get; private set; }
@@ -183,16 +181,6 @@ namespace DIPOL_UF.Jobs
                 _tokenSource?.Cancel();
 
             }
-        }
-
-        [Obsolete("Use " + nameof(CurrentTarget1), true)]
-        public Task SubmitNewTarget(Target target)
-        {
-            ReadyToRun = false;
-            CurrentTarget = target ?? throw new ArgumentNullException(
-                                Localization.General_ShouldNotHappen,
-                                nameof(target));
-            return SetupNewTarget();
         }
 
         public IImmutableDictionary<string, IDevice> GetCameras() 
@@ -487,85 +475,6 @@ namespace DIPOL_UF.Jobs
             }
         }
 
-        [Obsolete("Use " + nameof(CurrentTarget1), true)]
-        private async Task SetupNewTarget()
-        {
-            try
-            {
-                AcquisitionJob = await ConstructJob(CurrentTarget.JobPath);
-                AcquisitionRuns = CurrentTarget.Repeats > 0 
-                    ? CurrentTarget.Repeats
-                    : throw new InvalidOperationException(Localization.General_ShouldNotHappen);
-                AcquisitionActionCount = AcquisitionJob.NumberOfActions<CameraAction>();
-                TotalAcquisitionActionCount = AcquisitionActionCount * AcquisitionRuns;
-
-                if (AcquisitionJob.ContainsActionOfType<MotorAction>()
-                    && _windowRef.PolarimeterMotor is null)
-                    throw new InvalidOperationException("Cannot execute current control with no motor connected.");
-
-                BiasJob = CurrentTarget.BiasPath is null
-                    ? null
-                    : await ConstructJob(CurrentTarget.BiasPath);
-                BiasActionCount = BiasJob?.NumberOfActions<CameraAction>() ?? 0;  
-
-                DarkJob = CurrentTarget.DarkPath is null
-                    ? null
-                    : await ConstructJob(CurrentTarget.DarkPath);
-                DarkActionCount = DarkJob?.NumberOfActions<CameraAction>() ?? 0;
-
-
-                await LoadSettingsTemplate();
-                await ApplySettingsTemplate();
-                ReadyToRun = true;
-            }
-            catch (Exception)
-            {
-                CurrentTarget = new Target();
-                AcquisitionJob = null;
-                BiasJob = null;
-                DarkJob = null;
-                _settingsRep = null;
-                throw;
-            }
-        }
-
-        [Obsolete("Use " + nameof(CurrentTarget1), true)]
-        private async Task LoadSettingsTemplate()
-        {
-            if(!File.Exists(CurrentTarget.SettingsPath))
-                throw new FileNotFoundException("Settings file is not found", CurrentTarget.SettingsPath);
-
-            if(_windowRef.ConnectedCameras.Count < 1)
-                throw new InvalidOperationException("No connected cameras to work with.");
-
-
-            using var str = new FileStream(CurrentTarget.SettingsPath, FileMode.Open, FileAccess.Read);
-            _settingsRep = new byte[str.Length];
-            await str.ReadAsync(_settingsRep, 0, _settingsRep.Length);
-        }
-
-        [Obsolete("Use " + nameof(CurrentTarget1), true)]
-        private async Task ApplySettingsTemplate()
-        {
-            if (_settingsRep is null)
-                throw new InvalidOperationException(Localization.General_ShouldNotHappen);
-
-            var cameras = _windowRef.ConnectedCameras.Items.Select(x => x.Camera).ToList();
-
-            if (cameras.Count < 1)
-                throw new InvalidOperationException("No connected cameras to work with.");
-
-            using var memory = new MemoryStream(_settingsRep, false);
-            foreach (var cam in cameras)
-            {
-                memory.Position = 0;
-                var template = cam.GetAcquisitionSettingsTemplate();
-                await template.DeserializeAsync(memory, Encoding.ASCII, CancellationToken.None);
-
-
-                cam.ApplySettings(template);
-            }
-        }
 
         private void ApplySettingsTemplate1()
         {
