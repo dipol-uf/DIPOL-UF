@@ -204,6 +204,8 @@
       <DependentUpon>EnumStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="ReactiveWrapper.cs" />
+    <Compile Include="Services\Contract\IRemoteDeviceFactoryConstructor.cs" />
+    <Compile Include="Services\Implementation\RemoteDeviceFactoryConstructor.cs" />
     <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
     <Compile Include="UserNotifications\IUserNotifier.cs" />
     <Compile Include="UserNotifications\MessageBox.cs" />

@@ -6,6 +6,8 @@ using ANDOR_CS;
 using ANDOR_CS.Classes;
 using DIPOL_Remote;
 using DIPOL_UF.Jobs;
+using DIPOL_UF.Services.Contract;
+using DIPOL_UF.Services.Implementation;
 using DIPOL_UF.UserNotifications;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -15,19 +17,7 @@ namespace DIPOL_UF
 {
     internal static class Injector
     {
-        
-        private static readonly Dictionary<Type, Func<object[], object?>> ServiceLocator = new();
-
         public static IServiceProvider ServiceProvider { get; }
-
-        [Obsolete("Use DI")]
-        public static T Locate<T>(params object[] args) =>
-            ServiceLocator.TryGetValue(typeof(T), out Func<object[], object?> init)
-                ? init(args) is T result
-                    ? result
-                    : throw new InvalidCastException()
-                : throw new InvalidOperationException();
-
 
         static Injector()
         {
@@ -45,37 +35,11 @@ namespace DIPOL_UF
                 .AddTransient<App>()
                 .AddSingleton<JobManager>()
                 .AddSingleton<JobFactory>()
+                .AddSingleton<IRemoteDeviceFactoryConstructor, RemoteDeviceFactoryConstructor>()
                 .AddModels()
                 .AddViewModels()
                 .AddViews()
                 .BuildServiceProvider();
-
-            // These are singletons
-            ServiceLocator.Add(typeof(IUserNotifier), _ => ServiceProvider.GetRequiredService<IUserNotifier>());
-            ServiceLocator.Add(typeof(ILogger), _ => Log.Logger);
-            
-            // These are transients
-            ServiceLocator.Add(typeof(IAsyncMotorFactory), _ => new StepMotorHandler.StepMotorFactory());
-            ServiceLocator.Add(typeof(IControlClientFactory), _ => new DipolClient.DipolClientFactory());
-            
-            #if DEBUG
-            ServiceLocator.Add(
-                typeof(IDeviceFactory),
-                _ => new DebugLocalDeviceFactory(
-                    new LocalCamera.LocalCameraFactory(), 
-                    new DebugCamera.DebugCameraFactory()
-                )
-            );
-            #else
-            ServiceLocator.Add(typeof(IDeviceFactory), _ => new LocalCamera.LocalCameraFactory());
-            #endif
-            // This is not yet DI'ed
-            ServiceLocator.Add(
-                typeof(IRemoteDeviceFactory), args =>
-                    args is {Length: 1} && args[0] is IControlClient client
-                        ? new RemoteCamera.RemoteCameraFactory(client)
-                        : null
-            );
         }
 
         [Obsolete("Use DI")]
