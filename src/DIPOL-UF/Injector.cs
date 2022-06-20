@@ -47,6 +47,7 @@ namespace DIPOL_UF
                 .Decorate<IDeviceFactory, DebugLocalDeviceFactory>()
 #endif
                 .AddLogging(builder => builder.AddSerilog())
+                .AddSingleton<ILogger>(Log.Logger)
                 .AddTransient<App>()
                 .AddModels()
                 .AddViewModels()
