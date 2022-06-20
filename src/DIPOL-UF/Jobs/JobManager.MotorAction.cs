@@ -6,8 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using DIPOL_UF.UserNotifications;
-using Serilog;
-using Serilog.Events;
+using Microsoft.Extensions.Logging;
 using StepMotor;
 
 namespace DIPOL_UF.Jobs
@@ -16,12 +15,13 @@ namespace DIPOL_UF.Jobs
     {
         private class MotorAction : JobAction
         {
+
             private static readonly Regex Regex =
                 new(@"^(?:motor/)?(rotate|reset)\s*?([+-]?[0-9]+\.?[0-9]*)?$",
                     RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             private readonly IUserNotifier? _notifier;
-            private readonly ILogger? _logger;
+            private readonly ILogger<MotorAction> _logger;
             
             /// <summary>
             /// 3
@@ -55,15 +55,14 @@ namespace DIPOL_UF.Jobs
 
             private MotorActionType ActionType { get; }
 
-            private MotorAction(IUserNotifier? notifier, ILogger? logger) =>
-                (_notifier, _logger) = (
-                    notifier ?? Injector.LocateOrDefault<IUserNotifier>(),
-                    logger ?? Injector.LocateOrDefault<ILogger>()
-                );
-            
-                
-            
-            public MotorAction(string command, IUserNotifier? notifier, ILogger? logger) : this(notifier, logger)
+            private MotorAction(IUserNotifier notifier, ILogger<MotorAction> logger)
+            {
+                _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+                _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
+            }
+
+
+            public MotorAction(string command, IUserNotifier notifier, ILogger<MotorAction> logger) : this(notifier, logger)
             {
                 // Assuming regex produces exactly the amount of groups
                 if (command is null)
@@ -92,7 +91,7 @@ namespace DIPOL_UF.Jobs
                             : 0;
             }
 
-            public MotorAction(IReadOnlyDictionary<string, object> props, IUserNotifier? notifier, ILogger? logger) : this(notifier, logger)
+            public MotorAction(IReadOnlyDictionary<string, object> props, IUserNotifier notifier, ILogger<MotorAction> logger) : this(notifier, logger)
             {
                 // Action type
                 ActionType = props.TryGetValue("Type", out var actionType)
@@ -130,7 +129,7 @@ namespace DIPOL_UF.Jobs
 
                     for (; i < _referenceSearchMaxAttempts; i++)
                     {
-                        _logger?.Write(LogEventLevel.Information, @"Reference search, step {i}", i + 1);
+                        _logger.LogInformation(@"Reference search, step {i}", i + 1);
                         
                         await motor.ReferenceReturnToOriginAsync(token);
                         if (await motor.GetAxisParameter(AxisParameter.ReferenceSwitchStatus) == switchStatus)
@@ -141,8 +140,7 @@ namespace DIPOL_UF.Jobs
                 }
                 else
                 {
-                    _logger?.Write(
-                        LogEventLevel.Warning,
+                    _logger.LogWarning(
                         @"{Config} is not set in the configuration file. Reference search is unreliable.",
                         @"StepMotorRFSSwitchStatus"
                     );
@@ -158,8 +156,7 @@ namespace DIPOL_UF.Jobs
                     await motor.ReferenceReturnToOriginAsync(token);
                 }
 
-                _logger?.Write(
-                    LogEventLevel.Information,
+                _logger.LogInformation(
                     @"RFS finished in {N} step(s), new position is {pos} ({actualPos})",
                     i + 1,
                     await motor.GetActualPositionAsync(),
@@ -182,7 +179,7 @@ namespace DIPOL_UF.Jobs
                     var zeroPos = UnitsPerFullRotation * (int)Math.Ceiling(1.0 * pos / UnitsPerFullRotation);
                     if (pos != zeroPos)
                     {
-                        _logger?.Write(LogEventLevel.Information, @"Resetting motor: from {pos} to {zeroPos}", pos, zeroPos);
+                        _logger.LogInformation(@"Resetting motor: from {pos} to {zeroPos}", pos, zeroPos);
 
                         if ((Math.Abs(zeroPos) + UnitsPerFullRotation) >= _stepMotorMaxPositionAbs)
                             // Exceeding default ~327 rotations without reference search
@@ -198,7 +195,7 @@ namespace DIPOL_UF.Jobs
                     }
                     else
                     {
-                        _logger?.Write(LogEventLevel.Information, "Motor is at correct position of {zeroPos}", zeroPos);
+                        _logger.LogInformation("Motor is at correct position of {zeroPos}", zeroPos);
                     }
 
                 }
@@ -226,8 +223,7 @@ namespace DIPOL_UF.Jobs
                 
                 if (ActionType == MotorActionType.Rotate)
                 {
-                    _logger?.Write(
-                        LogEventLevel.Information, 
+                    _logger.LogInformation( 
                         @"Motor at position {pos} ({actualPos})", 
                         pos,
                         actualPos

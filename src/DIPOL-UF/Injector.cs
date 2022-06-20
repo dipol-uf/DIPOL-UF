@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using ANDOR_CS;
 using ANDOR_CS.Classes;
 using DIPOL_Remote;
+using DIPOL_UF.Jobs;
 using DIPOL_UF.UserNotifications;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -27,13 +28,6 @@ namespace DIPOL_UF
                     : throw new InvalidCastException()
                 : throw new InvalidOperationException();
 
-        [Obsolete("Use DI")]
-        public static T? LocateOrDefault<T>(params object[] args) =>
-            ServiceLocator.TryGetValue(typeof(T), out Func<object[], object?> init)
-                ? init(args) is T result
-                    ? result
-                    : default
-                : throw new InvalidOperationException();
 
         static Injector()
         {
@@ -49,6 +43,8 @@ namespace DIPOL_UF
                 .AddLogging(builder => builder.AddSerilog())
                 .AddSingleton<ILogger>(Log.Logger)
                 .AddTransient<App>()
+                .AddSingleton<JobManager>()
+                .AddSingleton<JobFactory>()
                 .AddModels()
                 .AddViewModels()
                 .AddViews()

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,6 +21,7 @@ using DIPOL_UF.UserNotifications;
 using DynamicData;
 using DynamicData.Binding;
 using FITS_CS;
+using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI.Fody.Helpers;
 using Serilog.Events;
 using Localization = DIPOL_UF.Properties.Localization;
@@ -32,6 +32,9 @@ namespace DIPOL_UF.Jobs
     internal sealed record ObservationScenario(string Light, string Bias, string Dark);
     internal sealed partial class JobManager : ReactiveObjectEx
     {
+        private readonly IUserNotifier _notifier;
+        private readonly JobFactory _jobFactory;
+
         // These regimes might produce data that will overflow uint16 format,
         // therefore images should be save as int32
         private static readonly AcquisitionMode[] LongFormatModes =
@@ -43,7 +46,6 @@ namespace DIPOL_UF.Jobs
 
 
         private DipolMainWindow _windowRef;
-        private byte[] _settingsRep;
         private List<CameraTab> _jobControls;
         private Dictionary<int, IAcquisitionSettings> _settingsCache;
         private Task _jobTask;
@@ -61,8 +63,8 @@ namespace DIPOL_UF.Jobs
 
         public IObservableCache<(string, IDevice), string> ConnectedCameras => _windowRef.ConnectedCameras;
 
-        public static JobManager Manager { get; } = new JobManager();
-        
+        [Obsolete("Use DI")]
+        public static JobManager Manager => Injector.ServiceProvider.GetRequiredService<JobManager>();
 
 
         [Reactive]
@@ -98,6 +100,13 @@ namespace DIPOL_UF.Jobs
         public Job BiasJob { get; private set; }
         public Job DarkJob { get; private set; }
         public int AcquisitionRuns { get; private set; }
+
+        public JobManager(IUserNotifier notifier, JobFactory jobFactory)
+        {
+            _notifier = notifier;
+            _jobFactory = jobFactory;
+        }
+
 
         public void AttachToMainWindow(DipolMainWindow window)
         {
@@ -207,7 +216,7 @@ namespace DIPOL_UF.Jobs
                     target.CycleType.IsPolarimetric()
                 )
                 {
-                    Injector.LocateOrDefault<IUserNotifier>()?.Info(
+                    _notifier.Info(
                         Localization.CalciteWarning_Caption, 
                         string.Format(
                             Localization.CalciteWarning_Message, 
@@ -278,7 +287,6 @@ namespace DIPOL_UF.Jobs
                 AcquisitionJob = null;
                 BiasJob = null;
                 DarkJob = null;
-                _settingsRep = null;
                 Helper.WriteLog(LogEventLevel.Error, ex,  @"Failed to apply new target");
                 throw;
             }
@@ -484,13 +492,13 @@ namespace DIPOL_UF.Jobs
         }
 
 
-        private static async Task<Job> ConstructJob(string path)
+        private async Task<Job> ConstructJob(string path)
         {
             if (!File.Exists(path))
                 throw new FileNotFoundException("Job file is not found", path);
 
             using var str = new FileStream(path, FileMode.Open, FileAccess.Read);
-            return await Job.CreateAsync(str);
+            return await _jobFactory.CreateAsync(str).ConfigureAwait(false);
         }
 #nullable enable
         private static ObservationScenario GetJobScenario(CycleType type)
@@ -519,8 +527,7 @@ namespace DIPOL_UF.Jobs
             return scenario;
         }
 #nullable restore
-        private JobManager() { }
-
+        
 
     }
 }

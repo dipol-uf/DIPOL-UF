@@ -31,8 +31,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DIPOL_UF.UserNotifications;
+using Microsoft.Extensions.Logging;
 using Serializers;
-using Serilog;
+using ILogger = Serilog.ILogger;
 
 namespace DIPOL_UF.Jobs
 {
@@ -40,14 +41,18 @@ namespace DIPOL_UF.Jobs
     {
         internal class Job
         {
+            private readonly IUserNotifier _notifier;
+            private readonly ILoggerFactory _loggerFactory;
             private readonly List<JobAction> _actions;
 
             public ReadOnlyCollection<JobAction> Actions => _actions.AsReadOnly();
 
-            private Job(ReadOnlyDictionary<string, object> input)
+            public Job(ReadOnlyDictionary<string, object> input, IUserNotifier notifier, ILoggerFactory loggerFactory)
             {
                 if (input is null)
                     throw new ArgumentNullException(nameof(input));
+                _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
+                _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
                 _actions = input.ContainsKey("Actions")
                     ? (input["Actions"] as object[])
@@ -61,14 +66,10 @@ namespace DIPOL_UF.Jobs
 
             private JobAction ItemToJob(KeyValuePair<string, object> obj)
             {
-                var (notifier, logger) = (
-                    Injector.LocateOrDefault<IUserNotifier>(),
-                    Injector.LocateOrDefault<ILogger>()
-                );
-                
+              
                 var name = obj.Key.ToLowerInvariant();
                 if (name.StartsWith(@"motor") && obj.Value is string motorStr)
-                    return new MotorAction(motorStr, notifier, logger);
+                    return new MotorAction(motorStr, _notifier, _loggerFactory.CreateLogger<MotorAction>());
                 if (name.StartsWith(@"camera") && obj.Value is string camStr)
                     return new CameraAction(camStr);
                 if(name.StartsWith(@"shutter") && obj.Value is string shutterStr)
@@ -96,7 +97,7 @@ namespace DIPOL_UF.Jobs
                 // Modified motor
                 if (name.StartsWith(@"motor") && obj.Value is IReadOnlyDictionary<string, object> props)
                 {
-                    return new MotorAction(props, notifier, logger);
+                    return new MotorAction(props, _notifier, _loggerFactory.CreateLogger<MotorAction>());
                 }
                 
                 return null;
@@ -120,38 +121,6 @@ namespace DIPOL_UF.Jobs
 
             public int NumberOfActions<T>() where T : JobAction
                 => _actions.Select(x => x.NumberOfActions<T>()).Sum();
-
-            public static Job Create(ReadOnlyDictionary<string, object> input)
-            {
-                var job = new Job(input);
-                return job;
-            }
-
-            public static Job Create(Stream stream)
-            {
-                if (!stream.CanRead)
-                    throw new IOException(@"Stream does not support reading.");
-
-                ReadOnlyDictionary<string, object> json;
-                using (var str = new StreamReader(stream, Encoding.ASCII, true, 512, true))
-                    json = JsonParser.ReadJson(str);
-
-                var job = new Job(json);
-
-                return job;
-            }
-
-            public static async Task<Job> CreateAsync(Stream stream)
-            {
-                if (!stream.CanRead)
-                    throw new IOException(@"Stream does not support reading.");
-
-                var json = await JsonParser.ReadJsonAsync(stream, Encoding.ASCII, CancellationToken.None);
-
-                var job = new Job(json);
-
-                return job;
-            }
 
         }
     }

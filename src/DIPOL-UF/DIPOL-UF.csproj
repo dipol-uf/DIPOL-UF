@@ -176,6 +176,7 @@
     <Compile Include="Helper.cs" />
     <Compile Include="ImageProvider.cs" />
     <Compile Include="Injector.cs" />
+    <Compile Include="Jobs\JobFactory.cs" />
     <Compile Include="Jobs\JobManager.CameraAction.cs" />
     <Compile Include="Jobs\JobManager.DelayAction.cs" />
     <Compile Include="Jobs\JobManager.Job.cs" />
