@@ -12,6 +12,9 @@
                 <ResourceDictionary Source="/DIPOL-UF;component/Resources/Styles.xaml"/>
                 <ResourceDictionary Source="/DIPOL-UF;component/Resources/ItemTemplates.xaml"/>
                 <ResourceDictionary Source="/DIPOL-UF;component/Resources/ControlTemplates.xaml"/>
+                <ResourceDictionary>
+                    <local:ViewModelLocator x:Key="Locator"/>
+                </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

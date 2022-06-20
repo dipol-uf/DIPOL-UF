@@ -8,7 +8,6 @@ using DIPOL_Remote;
 using DIPOL_UF.UserNotifications;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Serilog.Core;
 using StepMotor;
 
 namespace DIPOL_UF
@@ -45,9 +44,13 @@ namespace DIPOL_UF
                 .AddTransient<IDeviceFactory, LocalCamera.LocalCameraFactory>()
 #if DEBUG
                 .AddTransient<IDebugDeviceFactory, DebugCamera.DebugCameraFactory>()
-                .Decorate<IDeviceFactory, DebugCamera.DebugCameraFactory>()
+                .Decorate<IDeviceFactory, DebugLocalDeviceFactory>()
 #endif
                 .AddLogging(builder => builder.AddSerilog())
+                .AddTransient<App>()
+                .AddModels()
+                .AddViewModels()
+                .AddViews()
                 .BuildServiceProvider();
 
             // These are singletons
@@ -80,5 +83,17 @@ namespace DIPOL_UF
 
         [Obsolete("Use DI")]
         public static ILogger? GetLogger() => ServiceProvider.GetService<ILogger>();
+
+        private static IServiceCollection AddViewModels(this IServiceCollection serviceCollection) =>
+            serviceCollection
+                .AddTransient<ViewModels.DipolMainWindowViewModel>();
+
+        private static IServiceCollection AddModels(this IServiceCollection serviceCollection) =>
+            serviceCollection
+                .AddTransient<Models.DipolMainWindow>();
+
+        private static IServiceCollection AddViews(this IServiceCollection serviceCollection) =>
+            serviceCollection
+                .AddTransient<Views.DipolMainWindow>();
     }
 }

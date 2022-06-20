@@ -13,8 +13,10 @@ using DIPOL_Remote;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Models;
 using DIPOL_UF.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Sinks;
+using DipolMainWindow = DIPOL_UF.Views.DipolMainWindow;
 
 
 namespace DIPOL_UF
@@ -72,14 +74,17 @@ namespace DIPOL_UF
             Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
 
+            var applicationInstance = Injector.ServiceProvider.GetRequiredService<App>();
+            var exitCode = applicationInstance.Run(Injector.ServiceProvider.GetRequiredService<DipolMainWindow>());
 
-            var applicationInstance = new App();
-            applicationInstance.InitializeComponent();
+
+            //var applicationInstance = new App();
+            //applicationInstance.InitializeComponent();
 
 
-            using var mainModel = new DipolMainWindow();
-            using var view = new DipolMainWindowViewModel(mainModel);
-            applicationInstance.Run(new Views.DipolMainWindow().WithDataContext(view));
+            //using var mainModel = new DipolMainWindow();
+            //using var view = new DipolMainWindowViewModel(mainModel);
+            //applicationInstance.Run(new Views.DipolMainWindow().WithDataContext(view));
 
 
 #if DEBUG && HOST_SERVER

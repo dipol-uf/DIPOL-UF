@@ -206,6 +206,7 @@
     <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
     <Compile Include="UserNotifications\IUserNotifier.cs" />
     <Compile Include="UserNotifications\MessageBox.cs" />
+    <Compile Include="ViewModelLocator.cs" />
     <Compile Include="ViewModels\CameraTabViewModel.cs" />
     <Compile Include="ViewModels\CycleConfigViewModel.cs" />
     <Compile Include="ViewModels\DescendantProxy.cs" />
