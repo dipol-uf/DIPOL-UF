@@ -22,7 +22,6 @@ using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.UserNotifications;
 using Microsoft.Extensions.Logging;
-using Serilog.Events;
 using StepMotor;
 using Exception = System.Exception;
 using Localization = DIPOL_UF.Properties.Localization;

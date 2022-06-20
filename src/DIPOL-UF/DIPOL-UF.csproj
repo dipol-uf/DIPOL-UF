@@ -570,8 +570,6 @@
   <ItemGroup>
     <Resource Include="Dipol Logo.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Temp\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -85,6 +85,9 @@ namespace DIPOL_UF.ViewModels
         public bool IsPolarimetryJob { [ObservableAsProperty] get; }
         public string LastSavedFilePath { [ObservableAsProperty] get; }
 
+        public string RemainingAcquisitionTime { [ObservableAsProperty] get; }
+        public string RemainingCycleTime { [ObservableAsProperty] get; }
+
         public RenderTargetBitmap PolarizationSymbolImage { get; }
 
         public ReactiveCommand<Unit, FileDialogDescriptor> SaveButtonCommand { get; private set; }
@@ -369,6 +372,18 @@ namespace DIPOL_UF.ViewModels
                 .Where(x => x.Value is false)
                 .Subscribe(_ => FinishQuickVideo())
                 .DisposeWith(Subscriptions);
+
+            Model.WhenPropertyChanged(x => x.RemainingAcquisitionTime)
+                .Select(x => x.Value.ToString(@"hh\:mm\:ss\.fff"))
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.RemainingAcquisitionTime)
+                .DisposeWith(Subscriptions);
+            Model.WhenPropertyChanged(x => x.RemainingCycleTime)
+                .Select(x => x.Value.ToString(@"hh\:mm\:ss\.fff"))
+                .ObserveOnUi()
+                .ToPropertyEx(this, x => x.RemainingCycleTime)
+                .DisposeWith(Subscriptions);
+
 
             PropagateReadOnlyProperty(this, x => x.IsJobInProgress, y => y.IsJobInProgress);
 

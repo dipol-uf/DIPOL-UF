@@ -21,6 +21,7 @@ namespace DIPOL_UF.ViewModels
 {
     internal sealed class DipolMainWindowViewModel : ReactiveViewModel<DipolMainWindow>
     {
+        private readonly IUserNotifier _notifier;
 
         public IObservableCollection<MainWindowTreeViewModel> CameraPanel { get; }
             = new ObservableCollectionExtended<MainWindowTreeViewModel>();
@@ -63,8 +64,9 @@ namespace DIPOL_UF.ViewModels
         public DescendantProxy AvailableCamerasProxy { get; }
         public DescendantProxy RegimeSwitchProxy { get; }
 
-        public DipolMainWindowViewModel(DipolMainWindow model) : base(model)
+        public DipolMainWindowViewModel(DipolMainWindow model, IUserNotifier notifier) : base(model)
         {
+            _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
             ProgressBarProxy = new DescendantProxy(
                 Model.ProgressBarProvider,
                 x => new ProgressBarViewModel((ProgressBar)x))
@@ -182,14 +184,12 @@ namespace DIPOL_UF.ViewModels
                 return;
             }
 
-            var notifier = Injector.Locate<IUserNotifier>();
-
             
             // First, check if cameras are acquiring
             if (JobManager.Manager.IsInProcess ||
                 Model.ConnectedCameras.Items.Any(x => x is {Camera: {IsAcquiring: true}}))
             {
-                notifier.Error(
+                _notifier.Error(
                     caption,
                     Properties.Localization.MainWindow_Notify_Closing_Acquisition
                 );
@@ -200,7 +200,7 @@ namespace DIPOL_UF.ViewModels
             // Then, if polarimeter regime is being switched
             if (Model.IsSwitchingRegimes)
             {
-                notifier.Error(
+                _notifier.Error(
                     caption,
                     Properties.Localization.MainWindow_Notify_Closing_RegimeSwitching
                 );
@@ -211,7 +211,7 @@ namespace DIPOL_UF.ViewModels
             // Finally, if in photometric regime, force user to switch to polarimetric regime
             if (Model.RetractorMotor is not null && Model.Regime is not InstrumentRegime.Polarimeter)
             {
-                notifier.Error(
+                _notifier.Error(
                     caption,
                     Properties.Localization.MainWindow_Notify_Closing_NotPolarimeter
                 );
@@ -234,7 +234,7 @@ namespace DIPOL_UF.ViewModels
             )
             {
 
-                var result = notifier.YesNo(
+                var result = _notifier.YesNo(
                     caption,
                     Properties.Localization.MainWindow_Notify_Closing_NegativeTemp
                 );
@@ -247,7 +247,7 @@ namespace DIPOL_UF.ViewModels
             }
 
             // Default Yes/No question
-            if (notifier.YesNo(
+            if (_notifier.YesNo(
                 caption,
                 Properties.Localization.MainWindow_Notify_Closing_Message
             ) is not YesNoResult.Yes)
