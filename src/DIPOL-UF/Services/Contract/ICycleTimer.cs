@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace DIPOL_UF.Services.Contract
 {
-    internal interface IAcquisitionTimer
+    internal interface ICycleTimer
     {
-        void StartReporting();
     }
 }

@@ -17,6 +17,7 @@ using ANDOR_CS.Enums;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Models;
+using DIPOL_UF.Services.Contract;
 using DIPOL_UF.UserNotifications;
 using DynamicData;
 using DynamicData.Binding;
@@ -34,6 +35,7 @@ namespace DIPOL_UF.Jobs
     {
         private readonly IUserNotifier _notifier;
         private readonly ILogger _logger;
+        private readonly ICycleTimerManager _timerManager;
         private readonly JobFactory _jobFactory;
 
         // These regimes might produce data that will overflow uint16 format,
@@ -102,10 +104,11 @@ namespace DIPOL_UF.Jobs
         public Job DarkJob { get; private set; }
         public int AcquisitionRuns { get; private set; }
 
-        public JobManager(IUserNotifier notifier, ILogger<JobManager> logger, JobFactory jobFactory)
+        public JobManager(IUserNotifier notifier, ILogger<JobManager> logger,  ICycleTimerManager timerManager, JobFactory jobFactory)
         {
             _notifier = notifier;
             _logger = logger;
+            _timerManager = timerManager;
             _jobFactory = jobFactory;
         }
 
@@ -304,26 +307,34 @@ namespace DIPOL_UF.Jobs
                 try
                 {
                     if (job.ContainsActionOfType<CameraAction>())
+                    {
                         foreach (var control in _jobControls)
+                        {
                             control.Camera.StartImageSavingSequence(
                                 CurrentTarget1.StarName!, 
                                 file,
                                 ConverterImplementations.CameraToFilterConversion(control.Camera),
                                 type,
                                 new[] { FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime, format: @"yyyy-MM-ddTHH:mm:ss.fff") });
+                        }
+                    }
+
                     MotorPosition = job.ContainsActionOfType<MotorAction>()
                         ? new float?(0)
                         : null;
                     ActualMotorPosition = MotorPosition;
-
 
                     await job.Run(token);
                 }
                 finally
                 {
                     if (job.ContainsActionOfType<CameraAction>())
+                    {
                         foreach (var control in _jobControls)
+                        {
                             await control.Camera.FinishImageSavingSequenceAsync();
+                        }
+                    }
 
                     MotorPosition = null;
                     ActualMotorPosition = null;
@@ -359,7 +370,7 @@ namespace DIPOL_UF.Jobs
                 {
                     throw new InvalidOperationException(Localization.JobManager_NotPhotometry);
                 }
-
+                _timerManager.StartMeasuring();
                 var calibrationsMade = false;
                 //await Task.Factory.StartNew(async ()  =>
                 {
@@ -370,12 +381,21 @@ namespace DIPOL_UF.Jobs
                     try
                     {
                         if (AcquisitionJob.ContainsActionOfType<CameraAction>())
+                        {
                             foreach (var control in _jobControls)
+                            {
                                 control.Camera.StartImageSavingSequence(
                                     CurrentTarget1.StarName, fileName,
                                     ConverterImplementations.CameraToFilterConversion(control.Camera),
                                     FrameType.Light,
-                                    new [] {  FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime, format: @"yyyy-MM-ddTHH:mm:ss.fff") });
+                                    new[]
+                                    {
+                                        FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime,
+                                            format: @"yyyy-MM-ddTHH:mm:ss.fff")
+                                    }
+                                );
+                            }
+                        }
 
                         MotorPosition = AcquisitionJob.ContainsActionOfType<MotorAction>()
                             ? new float?(0)
@@ -387,6 +407,7 @@ namespace DIPOL_UF.Jobs
 
                         for (var i = 0; i < AcquisitionRuns; i++)
                         {
+                            _timerManager.AdjustTiming();
                             _logger.LogInformation("Running {i} cycle", i + 1);
                             await AcquisitionJob.Run(token);
                         }
@@ -394,8 +415,13 @@ namespace DIPOL_UF.Jobs
                     finally
                     {
                         if (AcquisitionJob.ContainsActionOfType<CameraAction>())
+                        {
                             foreach (var control in _jobControls)
+                            {
                                 await control.Camera.FinishImageSavingSequenceAsync();
+                            }
+                        }
+
                         MotorPosition = null;
                         ActualMotorPosition = MotorPosition;
                     }
@@ -403,6 +429,7 @@ namespace DIPOL_UF.Jobs
                     var areCalibrationsNeeded = false;
 
                     if (_firstRun)
+                    {
                         areCalibrationsNeeded = MessageBox.Show(
                             string.Format(
                                 Localization.JobManager_TakeCalibrationsFirstTime_Text, CurrentTarget1.StarName
@@ -410,15 +437,20 @@ namespace DIPOL_UF.Jobs
                             Localization.JobManager_TakeCalibrationsFirstTime_Header,
                             MessageBoxButton.YesNo, MessageBoxImage.Question
                         ) == MessageBoxResult.Yes;
+                    }
                     else if (NeedsCalibration)
+                    {
                         areCalibrationsNeeded = MessageBox.Show(
                             Localization.JobManager_TakeCalibrations_Text,
                             Localization.JobManager_TakeCalibrations_Header,
                             MessageBoxButton.YesNo, MessageBoxImage.Question
                         ) == MessageBoxResult.Yes;
+                    }
 
                     if (areCalibrationsNeeded)
                     {
+                        _timerManager.AdjustTiming();
+
                         Progress = 0;
                         Total = BiasActionCount;
                         CurrentJobName = Localization.JobManager_BiasJobName;
@@ -470,6 +502,7 @@ namespace DIPOL_UF.Jobs
             }
             finally
             {
+                _timerManager.StopMeasuring();
                 ReadyToRun = true;
                 IsInProcess = false;
                 Progress = 0;
