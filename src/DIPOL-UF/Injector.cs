@@ -36,14 +36,14 @@ namespace DIPOL_UF
                 .AddSingleton<JobManager>()
                 .AddSingleton<JobFactory>()
                 .AddSingleton<IRemoteDeviceFactoryConstructor, RemoteDeviceFactoryConstructor>()
-                
+                // These are singletons, single per app
                 .AddSingleton<CycleTimerManager>()
                 .AddSingleton<ICycleTimerManager>(provider => provider.GetRequiredService<CycleTimerManager>())
                 .AddSingleton<ICycleTimerSource>(provider => provider.GetRequiredService<CycleTimerManager>())
-                
-                .AddSingleton<AcquisitionTimerManger>()
-                .AddSingleton<IAcquisitionTimerManager>(provider => provider.GetRequiredService<AcquisitionTimerManger>())
-                .AddSingleton<IAcquisitionTimerSource>(provider => provider.GetRequiredService<AcquisitionTimerManger>())
+                // These are scoped to each camera                
+                .AddScoped<AcquisitionTimerManger>()
+                .AddScoped<IAcquisitionTimerManager>(provider => provider.GetRequiredService<AcquisitionTimerManger>())
+                .AddScoped<IAcquisitionTimerSource>(provider => provider.GetRequiredService<AcquisitionTimerManger>())
                 
                 .AddScoped<IJobTimerSource, JobTimerSource>()
                 .AddScoped<IJobProgressSource, JobProgressSource>()

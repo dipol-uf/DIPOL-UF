@@ -14,7 +14,9 @@ using ANDOR_CS.Events;
 using DipolImage;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Jobs;
+using DIPOL_UF.Services.Contract;
 using DynamicData.Binding;
+using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Timer = System.Timers.Timer;
@@ -34,7 +36,11 @@ namespace DIPOL_UF.Models
         private DateTimeOffset _acqEndTime;
 
         private readonly Timer _pbTimer = new();
+        private readonly IAcquisitionTimerManager _acqTimerManager;
 
+        // WARN: Substitute for scoped DI
+        public IServiceScope ServiceScope { get; }
+        
         public Camera Camera { get; }
         public (float Minimum, float Maximum) TemperatureRange { get; }
         public bool CanControlTemperature { get; }
@@ -79,6 +85,8 @@ namespace DIPOL_UF.Models
 
         public CameraTab(IDevice camera)
         {
+            ServiceScope = Injector.ServiceProvider.CreateScope();
+            _acqTimerManager = ServiceScope.ServiceProvider.GetRequiredService<IAcquisitionTimerManager>();
             // WATCH: Temp solution
             Camera = (Camera)camera;
             
@@ -111,10 +119,10 @@ namespace DIPOL_UF.Models
 
         public void StartAcquisition(Request metadata, CancellationToken token)
         {
-            // TODO : use linked cancellation token source
             var (_, _, kinetic) = Camera.Timings;
-            _pbTimer.Interval = (kinetic /
-                                (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min + 1)) * 1000;
+            
+            _pbTimer.Interval = kinetic /
+                (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min + 1) * 1000;
             AcquisitionProgress = AcquisitionProgressRange.Min;
             _acquisitionTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
 
@@ -125,13 +133,18 @@ namespace DIPOL_UF.Models
                                .ExpectCancellationAsync();
             _acqEndTime = _acqStartTime + TimeSpan.FromSeconds(kinetic);
 
+            _acqTimerManager.StartMeasuring(TimeSpan.FromSeconds(kinetic));
             _pbTimer.Start();
         }
 
         public void StopAcquisition()
         {
             if (Camera.IsAcquiring)
+            {
                 _acquisitionTokenSource.Cancel();
+            }
+            _acqTimerManager.StopMeasuring();
+            
             _acquisitionTask = null;
             _acquisitionTokenSource.Dispose();
             _acquisitionTokenSource = null;
@@ -422,9 +435,13 @@ namespace DIPOL_UF.Models
         protected override void Dispose(bool disposing)
         {
             if(!IsDisposed && disposing)
+            {
                 _pbTimer.Stop();
+            }
+
             _pbTimer.Elapsed -= TimerTick;
 
+            ServiceScope.Dispose();
             base.Dispose(disposing);
         }
     }

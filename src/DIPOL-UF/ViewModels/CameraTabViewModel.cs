@@ -22,6 +22,7 @@ using DynamicData.Binding;
 using FITS_CS;
 using MathNet.Numerics;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 // ReSharper disable UnassignedGetOnlyAutoProperty
@@ -33,6 +34,7 @@ namespace DIPOL_UF.ViewModels
         [CanBeNull]
         private IAcquisitionSettings _previousSettings = null;
 
+        private readonly ILogger<CameraTabViewModel> _logger;
         private readonly IJobTimerSource _jobTimerSource;
         private readonly IJobProgressSource _jobProgressSource;
 
@@ -108,8 +110,11 @@ namespace DIPOL_UF.ViewModels
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
-            _jobProgressSource = Injector.ServiceProvider.GetRequiredService<IJobProgressSource>();
-            _jobTimerSource = Injector.ServiceProvider.GetRequiredService<IJobTimerSource>();
+            var serviceProvider = model.ServiceScope.ServiceProvider;
+            _jobProgressSource = serviceProvider.GetRequiredService<IJobProgressSource>();
+            _jobTimerSource = serviceProvider.GetRequiredService<IJobTimerSource>();
+            _logger = serviceProvider.GetRequiredService<ILogger<CameraTabViewModel>>();
+
             PolarizationSymbolImage = new RenderTargetBitmap(256, 256, 96, 96, PixelFormats.Pbgra32);
             DipolImagePresenter = new DipolImagePresenterViewModel(Model.ImagePresenter);
             //AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow, null);
@@ -441,23 +446,17 @@ namespace DIPOL_UF.ViewModels
                     image, type, path, keys
                 );
 
-                if (Injector.GetLogger() is { } logger)
-                {
-                    logger.Information(
-                        "Saved current image from camera {Camera} to {Path}.",
-                        ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
-                    );
-                }
+                _logger.LogInformation(
+                    "Saved current image from camera {Camera} to {Path}",
+                    ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
+                );
             }
             catch (Exception e)
             {
-                if (Injector.GetLogger() is { } logger)
-                {
-                    logger.Error(
-                        e, "Failed to save current image from camera {Camera} to {Path}.",
-                        ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
-                    );
-                }
+                _logger.LogError(
+                    e, "Failed to save current image from camera {Camera} to {Path}",
+                    ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
+                );
             }
         }
 
