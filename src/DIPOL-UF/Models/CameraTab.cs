@@ -87,16 +87,16 @@ namespace DIPOL_UF.Models
             // WATCH: Temp solution
             Camera = (Camera)camera;
             
-            TemperatureRange = camera.Capabilities.GetFunctions.HasFlag(GetFunction.TemperatureRange)
+            TemperatureRange = camera.Capabilities.GetFunctions.HasFlagTyped(GetFunction.TemperatureRange)
                 ? camera.Properties.AllowedTemperatures
                 : default;
-            CanControlTemperature = camera.Capabilities.SetFunctions.HasFlag(SetFunction.Temperature);
-            CanQueryTemperature = camera.Capabilities.GetFunctions.HasFlag(GetFunction.Temperature);
-            CanControlFan = camera.Capabilities.Features.HasFlag(SdkFeatures.FanControl);
-            IsThreeStateFan = camera.Capabilities.Features.HasFlag(SdkFeatures.LowFanMode);
+            CanControlTemperature = camera.Capabilities.SetFunctions.HasFlagTyped(SetFunction.Temperature);
+            CanQueryTemperature = camera.Capabilities.GetFunctions.HasFlagTyped(GetFunction.Temperature);
+            CanControlFan = camera.Capabilities.Features.HasFlagTyped(SdkFeatures.FanControl);
+            IsThreeStateFan = camera.Capabilities.Features.HasFlagTyped(SdkFeatures.LowFanMode);
             CanControlShutter = (
-                Internal: camera.Capabilities.Features.HasFlag(SdkFeatures.Shutter),
-                External: camera.Capabilities.Features.HasFlag(SdkFeatures.ShutterEx));
+                Internal: camera.Capabilities.Features.HasFlagTyped(SdkFeatures.Shutter),
+                External: camera.Capabilities.Features.HasFlagTyped(SdkFeatures.ShutterEx));
 
             Alias = ConverterImplementations.CameraToStringAliasConversion(camera);
 
