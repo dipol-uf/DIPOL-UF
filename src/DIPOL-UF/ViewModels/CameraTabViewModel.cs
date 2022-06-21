@@ -37,6 +37,7 @@ namespace DIPOL_UF.ViewModels
         private readonly ILogger<CameraTabViewModel> _logger;
         private readonly IJobTimerSource _jobTimerSource;
         private readonly IJobProgressSource _jobProgressSource;
+        private readonly IAcquisitionProgressTimerSource _acqTimerSource;
 
         public event EventHandler FileDialogRequested;
 
@@ -113,6 +114,7 @@ namespace DIPOL_UF.ViewModels
             var serviceProvider = model.ServiceScope.ServiceProvider;
             _jobProgressSource = serviceProvider.GetRequiredService<IJobProgressSource>();
             _jobTimerSource = serviceProvider.GetRequiredService<IJobTimerSource>();
+            _acqTimerSource = serviceProvider.GetRequiredService<IAcquisitionProgressTimerSource>();
             _logger = serviceProvider.GetRequiredService<ILogger<CameraTabViewModel>>();
 
             PolarizationSymbolImage = new RenderTargetBitmap(256, 256, 96, 96, PixelFormats.Pbgra32);
@@ -371,11 +373,12 @@ namespace DIPOL_UF.ViewModels
                 .Subscribe(_ => FinishQuickVideo())
                 .DisposeWith(Subscriptions);
 
-            Model.WhenPropertyChanged(x => x.RemainingAcquisitionTime)
-                .Select(x => x.Value.ToString(@"hh\:mm\:ss\.fff"))
-                .ObserveOnUi()
-                .ToPropertyEx(this, x => x.RemainingAcquisitionTime)
-                .DisposeWith(Subscriptions);
+            BindToProperty(
+                _acqTimerSource
+                    .AcquisitionRemainingTime(this.WhenPropertyChanged(x => x.IsAcquiring).Select(x => x.Value))
+                    .Select(x => x?.ToString(@"hh\:mm\:ss\.fff")),
+                x => x.RemainingAcquisitionTime
+            );
 
             BindToProperty(
                 _jobTimerSource

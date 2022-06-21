@@ -47,6 +47,8 @@ namespace DIPOL_UF
                 
                 .AddScoped<IJobTimerSource, JobTimerSource>()
                 .AddScoped<IJobProgressSource, JobProgressSource>()
+                .AddScoped<IAcquisitionProgressTimerSource, AcquisitionProgressTimerSource>()
+                
                 .AddModels()
                 .AddViewModels()
                 .AddViews()

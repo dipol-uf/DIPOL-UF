@@ -211,8 +211,10 @@
     <Compile Include="Services\Contract\IRemoteDeviceFactoryConstructor.cs" />
     <Compile Include="Services\Implementation\TimerManager.cs" />
     <Compile Include="Services\Implementation\RemoteDeviceFactoryConstructor.cs" />
+    <Compile Include="UiComponents\Contract\IAcquisitionProgressTimerSource.cs" />
     <Compile Include="UiComponents\Contract\IJobProgressSource.cs" />
     <Compile Include="UiComponents\Contract\IJobTimerSource.cs" />
+    <Compile Include="UiComponents\Implementation\AcquisitionProgressTimerSource.cs" />
     <Compile Include="UiComponents\Implementation\JobProgressSource.cs" />
     <Compile Include="UiComponents\Implementation\JobTimerSource.cs" />
     <Compile Include="UnderlyingCameraSettingsAttribute.cs" />

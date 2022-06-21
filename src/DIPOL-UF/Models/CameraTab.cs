@@ -59,9 +59,6 @@ namespace DIPOL_UF.Models
         // ReSharper disable once UnassignedGetOnlyAutoProperty
         public bool IsJobInProgress { [ObservableAsProperty] get; }
 
-        [Reactive]
-        public TimeSpan RemainingAcquisitionTime { get; private set; }
-
         public IObservable<AcquisitionStatusEventArgs> WhenAcquisitionStarted { get; private set; }
         public IObservable<AcquisitionStatusEventArgs> WhenAcquisitionFinished { get; private set; }
         public IObservable<(float Exposure, float Accumulation, float Kinetic)> WhenTimingCalculated { get; private set; }
@@ -429,7 +426,6 @@ namespace DIPOL_UF.Models
             var frac = (AcquisitionProgressRange.Max - AcquisitionProgressRange.Min) * (dtAct / dtPred);
 
             AcquisitionProgress = Math.Min(Math.Max(frac, AcquisitionProgressRange.Min), AcquisitionProgressRange.Max);
-            RemainingAcquisitionTime = _acqEndTime - e.SignalTime;
         }
 
         protected override void Dispose(bool disposing)
