@@ -37,6 +37,7 @@ namespace DIPOL_UF
                 .AddSingleton<JobManager>()
                 .AddSingleton<JobFactory>()
                 .AddSingleton<IRemoteDeviceFactoryConstructor, RemoteDeviceFactoryConstructor>()
+                .AddSingleton<ITimeOffsetCalculator<CycleTimingInfo>, CycleTimingInfoOffsetCalculator>()
                 .AddSingleton<CycleTimerManager>()
                 .AddSingleton<ICycleTimerManager>(provider => provider.GetRequiredService<CycleTimerManager>())
                 .AddSingleton<ICycleTimerSource>(provider => provider.GetRequiredService<CycleTimerManager>())

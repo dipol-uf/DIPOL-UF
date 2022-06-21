@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DIPOL_UF.Services.Contract
 {
-    internal interface ICycleTimer
+    internal interface ITimer
     {
         TimeSpan GetRemainingTime();
     }

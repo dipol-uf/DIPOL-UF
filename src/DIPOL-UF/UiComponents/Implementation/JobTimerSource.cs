@@ -10,12 +10,12 @@ namespace DIPOL_UF.UiComponents.Implementation
 {
     internal sealed class JobTimerSource : IJobTimerSource
     {
-        private readonly ICycleTimerSource _cycleTimerSource;
+        private readonly ICycleTimerSource _timerSource;
         private readonly JobManager _jobManager;
 
-        public JobTimerSource(ICycleTimerSource cycleTimerSource, JobManager jobManager)
+        public JobTimerSource(ICycleTimerSource timerSource, JobManager jobManager)
         {
-            _cycleTimerSource = cycleTimerSource;
+            _timerSource = timerSource;
             _jobManager = jobManager;
         }
 
@@ -23,7 +23,7 @@ namespace DIPOL_UF.UiComponents.Implementation
             _jobManager.WhenPropertyChanged(x => x.IsInProcess)
                 .Select(inProgress =>
                     inProgress.Value
-                        ? Observable.Interval(TimeSpan.FromMilliseconds(100)).Select(_ => _cycleTimerSource)
+                        ? Observable.Interval(TimeSpan.FromMilliseconds(100)).Select(_ => _timerSource)
                         : Observable.Return<ICycleTimerSource?>(null)
                 )
                 .Switch()
