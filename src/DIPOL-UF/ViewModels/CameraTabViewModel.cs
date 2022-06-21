@@ -219,22 +219,6 @@ namespace DIPOL_UF.ViewModels
             BindToProperty(_jobProgressSource.GetJobProgress().Select(x => x.Done), x => x.JobCumulativeCurrent);
             BindToProperty(_jobProgressSource.GetJobProgress().Select(x => x.Total), x => x.JobCumulativeTotal);
 
-            // JobManager.Manager.WhenAnyPropertyChanged(nameof(JobManager.IsInProcess))
-            //           .Sample(UiSettingsProvider.UiThrottlingDelay)
-            //           .Select(x => x.IsInProcess
-            //               ? x.TotalAcquisitionActionCount + x.BiasActionCount + x.DarkActionCount
-            //               : 0)
-            //           .ObserveOnUi()
-            //           .ToPropertyEx(this, x => x.JobCumulativeTotal)
-            //           .DisposeWith(Subscriptions);
-            //           
-            // JobManager.Manager.WhenPropertyChanged(x => x.CumulativeProgress)
-            //           .Select(x => x.Value)
-            //           .Sample(UiSettingsProvider.UiThrottlingDelay)
-            //           .ObserveOnUi()
-            //           .ToPropertyEx(this, x => x.JobCumulativeCurrent)
-            //           .DisposeWith(Subscriptions);
-
             JobManager.Manager.WhenPropertyChanged(x => x.AnyCameraIsAcquiring)
                       .Select(x => x.Value)
                       .ObserveOnUi()
@@ -388,12 +372,12 @@ namespace DIPOL_UF.ViewModels
                 .ToPropertyEx(this, x => x.RemainingAcquisitionTime)
                 .DisposeWith(Subscriptions);
 
-
-            _jobTimerSource.JobRemainingTime()
-                .Select(x => x?.ToString(@"hh\:mm\:ss\.fff"))
-                .ObserveOnUi()
-                .ToPropertyEx(this, x => x.RemainingCycleTime)
-                .DisposeWith(Subscriptions);
+            BindToProperty(
+                _jobTimerSource
+                    .JobRemainingTime()
+                    .Select(x => x?.ToString(@"hh\:mm\:ss\.fff")),
+                x => x.RemainingCycleTime
+            );
             
 
             PropagateReadOnlyProperty(this, x => x.IsJobInProgress, y => y.IsJobInProgress);
