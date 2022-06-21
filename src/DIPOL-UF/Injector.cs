@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using System.Collections.Generic;
 using ANDOR_CS;
 using ANDOR_CS.Classes;
 using DIPOL_Remote;
@@ -10,6 +11,7 @@ using DIPOL_UF.Services.Implementation;
 using DIPOL_UF.UiComponents.Contract;
 using DIPOL_UF.UiComponents.Implementation;
 using DIPOL_UF.UserNotifications;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using StepMotor;
@@ -22,6 +24,9 @@ namespace DIPOL_UF
 
         static Injector()
         {
+            var config = new ConfigurationBuilder()
+                .Build();
+            
             ServiceProvider = new ServiceCollection()
                 .AddSingleton<IUserNotifier, MessageBox.MessageBoxNotifier>()
                 .AddTransient<IAsyncMotorFactory, StepMotorHandler.StepMotorFactory>()
@@ -56,6 +61,8 @@ namespace DIPOL_UF
                 .AddMemoryCache()
                 .AddOptions()
                 .BuildServiceProvider();
+            
+            
         }
 
         [Obsolete("Use DI")]

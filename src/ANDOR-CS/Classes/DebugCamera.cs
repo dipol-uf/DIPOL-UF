@@ -190,8 +190,8 @@ namespace ANDOR_CS.Classes
             }
             finally
             {
-                OnAcquisitionFinished(new AcquisitionStatusEventArgs(CameraStatus.Idle));
                 IsAcquiring = false;
+                OnAcquisitionFinished(new AcquisitionStatusEventArgs(CameraStatus.Idle));
             }
         }
 
