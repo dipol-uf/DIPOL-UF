@@ -7,4 +7,9 @@ namespace DIPOL_UF.Services.Contract
     }
     
     internal interface ICycleTimerSource : ITimerSource {}
+
+    internal interface IAcquisitionTimerSource : ITimerSource
+    {
+    }
+
 }

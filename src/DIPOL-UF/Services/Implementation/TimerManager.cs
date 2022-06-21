@@ -6,20 +6,14 @@ namespace DIPOL_UF.Services.Implementation
 {
     internal abstract class TimerManager<T> : ITimerManager<T>, ITimerSource
     {
-        private readonly ITimeOffsetCalculator<T> _offsetCalculator;
         private ITimer? _timerInstance;
         private DateTimeOffset _end;
         private DateTimeOffset _start;
 
-        protected TimerManager(ITimeOffsetCalculator<T> offsetCalculator)
+        public void StartMeasuring(T timingInfo)
         {
-            _offsetCalculator = offsetCalculator;
-        }
-
-        public void StartMeasuring(T cycleTimingInfo)
-        {
-           _timerInstance = new Timer(this);
-           AdjustTiming(cycleTimingInfo);
+            _timerInstance = new Timer(this);
+            AdjustTiming(timingInfo);
         }
 
         public void StopMeasuring()
@@ -34,14 +28,16 @@ namespace DIPOL_UF.Services.Implementation
                 _timerInstance = new ConstantTimer(_timerInstance.GetRemainingTime());
             }
         }
-        
-        public void AdjustTiming(T cycleTimingInfo)
+
+        public void AdjustTiming(T timingInfo)
         {
             _start = DateTimeOffset.UtcNow;
-           _end = _start + _offsetCalculator.CalculateOffset(cycleTimingInfo);
+            _end = _start + CalculateOffset(timingInfo);
         }
 
         public ITimer? GetIfRunning() => _timerInstance;
+
+        protected abstract TimeSpan CalculateOffset(T value);
 
         private sealed class Timer : ITimer
         {
@@ -51,10 +47,10 @@ namespace DIPOL_UF.Services.Implementation
             {
                 _manager = manager;
             }
-            
+
             public TimeSpan GetRemainingTime()
             {
-                var remainingTime =  _manager._end - DateTimeOffset.UtcNow;
+                var remainingTime = _manager._end - DateTimeOffset.UtcNow;
 
                 return remainingTime.Ticks < 0 ? TimeSpan.Zero : remainingTime;
             }
@@ -63,11 +59,43 @@ namespace DIPOL_UF.Services.Implementation
         private sealed class ConstantTimer : ITimer
         {
             private readonly TimeSpan _remainingTime;
+
             public ConstantTimer(TimeSpan remainingTime)
             {
                 _remainingTime = remainingTime;
             }
+
             public TimeSpan GetRemainingTime() => _remainingTime;
         }
+    }
+
+    internal sealed class CycleTimerManager : TimerManager<CycleTimingInfo>, ICycleTimerManager, ICycleTimerSource
+    {
+        private const int ImageReadoutDelayMs = 25;
+        private const int MotorRotationDelayMs = 200;
+
+        protected override TimeSpan CalculateOffset(CycleTimingInfo value)
+        {
+            var offsetMs =
+                (value.ExposureTime.TotalMilliseconds + ImageReadoutDelayMs) *
+                value.ExposedCamActionsCount * value.CycleCount;
+
+            offsetMs += MotorRotationDelayMs * value.MotorActionsCount;
+
+            offsetMs += value.BiasCamActionsCount * ImageReadoutDelayMs;
+
+            offsetMs += value.DarkCamActionsCount *
+                        (value.ExposureTime.TotalMilliseconds + ImageReadoutDelayMs);
+
+            return TimeSpan.FromMilliseconds(offsetMs);
+        }
+
+    }
+
+    internal sealed class AcquisitionTimerManger : TimerManager<TimeSpan>,
+                                                   IAcquisitionTimerManager,
+                                                   IAcquisitionTimerSource
+    {
+        protected override TimeSpan CalculateOffset(TimeSpan value) => value;
     }
 }

@@ -10,7 +10,6 @@ using DIPOL_UF.Services.Implementation;
 using DIPOL_UF.UiComponents.Contract;
 using DIPOL_UF.UiComponents.Implementation;
 using DIPOL_UF.UserNotifications;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using StepMotor;
@@ -37,10 +36,15 @@ namespace DIPOL_UF
                 .AddSingleton<JobManager>()
                 .AddSingleton<JobFactory>()
                 .AddSingleton<IRemoteDeviceFactoryConstructor, RemoteDeviceFactoryConstructor>()
-                .AddSingleton<ITimeOffsetCalculator<CycleTimingInfo>, CycleTimingInfoOffsetCalculator>()
+                
                 .AddSingleton<CycleTimerManager>()
                 .AddSingleton<ICycleTimerManager>(provider => provider.GetRequiredService<CycleTimerManager>())
                 .AddSingleton<ICycleTimerSource>(provider => provider.GetRequiredService<CycleTimerManager>())
+                
+                .AddSingleton<AcquisitionTimerManger>()
+                .AddSingleton<IAcquisitionTimerManager>(provider => provider.GetRequiredService<AcquisitionTimerManger>())
+                .AddSingleton<IAcquisitionTimerSource>(provider => provider.GetRequiredService<AcquisitionTimerManger>())
+                
                 .AddScoped<IJobTimerSource, JobTimerSource>()
                 .AddScoped<IJobProgressSource, JobProgressSource>()
                 .AddModels()

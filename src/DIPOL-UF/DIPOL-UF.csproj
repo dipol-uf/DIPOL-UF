@@ -205,14 +205,10 @@
     </Compile>
     <Compile Include="ReactiveWrapper.cs" />
     <Compile Include="Services\Contract\CycleTimingInfo.cs" />
-    <Compile Include="Services\Contract\ICycleTimerManager.cs" />
-    <Compile Include="Services\Contract\ITimeOffsetCalculator.cs" />
     <Compile Include="Services\Contract\ITimer.cs" />
     <Compile Include="Services\Contract\ITimerManager.cs" />
     <Compile Include="Services\Contract\ITimerSource.cs" />
     <Compile Include="Services\Contract\IRemoteDeviceFactoryConstructor.cs" />
-    <Compile Include="Services\Implementation\CycleTimerManager.cs" />
-    <Compile Include="Services\Implementation\CycleTimingInfoOffsetCalculator.cs" />
     <Compile Include="Services\Implementation\TimerManager.cs" />
     <Compile Include="Services\Implementation\RemoteDeviceFactoryConstructor.cs" />
     <Compile Include="UiComponents\Contract\IJobProgressSource.cs" />
