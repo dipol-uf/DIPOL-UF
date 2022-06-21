@@ -158,10 +158,6 @@ namespace DIPOL_UF
             Action<TEntry> disposeAction)
             => @this.SubscribeMany(x => Disposable.Create(x, disposeAction));
 
-        public static IObservable<IChangeSet<TEntry>> DisposeManyEx<TEntry>(
-            this IObservable<IChangeSet<TEntry>> @this,
-            Action<TEntry> disposeAction)
-            => @this.SubscribeMany(x => Disposable.Create(x, disposeAction));
 
         public static T WithDataContext<T>(this T control, ReactiveObjectEx dataContext)
             where T : FrameworkElement
@@ -253,75 +249,8 @@ namespace DIPOL_UF
             => Observable.Return(value).Concat(@this);
 
 
-        public static IDisposable GracefullyBindTo<TKey, TValue>(
-            this IObservable<IChangeSet<(TKey, TValue), TKey>> @this,
-                IObservableCollection<(TKey, TValue)> target,
-                IEqualityComparer<TValue> comparer = null)
-        {
-
-            comparer ??= EqualityComparer<TValue>.Default;
-
-            void Updater(IChangeSet<(TKey, TValue), TKey> batch)
-            {
-                target.AddRange(batch.Where(x => x.Reason == ChangeReason.Add).Select(x => x.Current));
-
-                foreach (
-                    Change<(TKey, TValue), TKey> update in
-                    from upd in batch
-                    where upd.Reason == ChangeReason.Update && !comparer.Equals(upd.Current.Item2, upd.Previous.Value.Item2)
-                    select upd
-                )
-                {
-                    var index = target.IndexOf(update.Previous.Value);
-                    target.Add(update.Current);
-                    if (index >= 0)
-                    {
-                        target.RemoveAt(index);
-                    }
-                }
-
-                target.Remove(batch.Where(x => x.Reason == ChangeReason.Remove).Select(x => x.Current));
-
-            }
-
-            return @this.Subscribe(Updater);
-        }
-
-        public static IDisposable GracefullyBindTo<TKey, TValue, TTarget>(
-            this IObservable<IChangeSet<TValue, TKey>> @this,
-            IObservableCollection<TTarget> target,
-            Func<TValue, TTarget> selector,
-            IEqualityComparer<TValue> comparer = null)
-        {
-            comparer ??= EqualityComparer<TValue>.Default;
-
-            void Updater(IChangeSet<TValue, TKey> batch)
-            {
-                target.AddRange(batch.Where(x => x.Reason == ChangeReason.Add).Select(x => selector(x.Current)));
-
-                foreach (
-                    var update in
-                    from upd in batch
-                    where upd.Reason == ChangeReason.Update && !comparer.Equals(upd.Current, upd.Previous.Value)
-                    select upd
-                )
-                {
-                    var index = target.IndexOf(selector(update.Previous.Value));
-                    target.Add(selector(update.Current));
-                    if (index >= 0)
-                    {
-                        target.RemoveAt(index);
-                    }
-                }
-
-                target.Remove(batch.Where(x => x.Reason == ChangeReason.Remove).Select(x => selector(x.Current)));
-
-            }
-
-            return @this.Subscribe(Updater);
-        }
-
-        public static void GracefullyLoad<T>(this IObservableCollection<T> @this, 
+       
+       public static void GracefullyLoad<T>(this IObservableCollection<T> @this, 
             IEnumerable<T> newItems)
         {
             
@@ -475,34 +404,5 @@ namespace DIPOL_UF
                 .CompareTo(ConverterImplementations.CameraToIndexConversion(y.Camera));
     }
 
-#if DEBUG
-    internal static class DebugHelper
-    {
-        public static IObservable<T> LogObservable<T>(
-            this IObservable<T> source, 
-            string name, 
-            CompositeDisposable disposedWith)
-        {
-            source.Subscribe(x => Helper.WriteLog($"{name}: {x}"))
-                  .DisposeWith(disposedWith);
 
-            return source;
-        }
-
-        public static void LogTask([CallerMemberName] string name = null)
-        {
-            Helper.WriteLog($"{name,25} : task: {Task.CurrentId,7}; thread : {Thread.CurrentThread.ManagedThreadId,3}; dispatch : {Application.Current?.Dispatcher?.CheckAccess()}");
-        }
-
-        public static IObservable<T> LogTask<T>(
-            this IObservable<T> @this,
-            [CallerMemberName]
-            string name = null)
-        {
-            @this.Subscribe(_ => LogTask(name));
-            return @this;
-        }
-
-    }
-#endif
 }
