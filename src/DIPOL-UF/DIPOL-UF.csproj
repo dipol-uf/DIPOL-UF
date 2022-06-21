@@ -210,8 +210,10 @@
     <Compile Include="Services\Contract\IRemoteDeviceFactoryConstructor.cs" />
     <Compile Include="Services\Implementation\CycleTimerManager.cs" />
     <Compile Include="Services\Implementation\RemoteDeviceFactoryConstructor.cs" />
-    <Compile Include="UiComponents\Contract\ICameraTabTimerSource.cs" />
-    <Compile Include="UiComponents\Implementation\CameraTabTimerSource.cs" />
+    <Compile Include="UiComponents\Contract\IJobProgressSource.cs" />
+    <Compile Include="UiComponents\Contract\IJobTimerSource.cs" />
+    <Compile Include="UiComponents\Implementation\JobProgressSource.cs" />
+    <Compile Include="UiComponents\Implementation\JobTimerSource.cs" />
     <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
     <Compile Include="UserNotifications\IUserNotifier.cs" />
     <Compile Include="UserNotifications\MessageBox.cs" />

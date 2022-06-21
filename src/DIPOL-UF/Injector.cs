@@ -40,12 +40,14 @@ namespace DIPOL_UF
                 .AddSingleton<CycleTimerManager>()
                 .AddSingleton<ICycleTimerManager>(provider => provider.GetRequiredService<CycleTimerManager>())
                 .AddSingleton<ICycleTimerSource>(provider => provider.GetRequiredService<CycleTimerManager>())
-                .AddScoped<ICameraTabTimerSource, CameraTabTimerSource>()
+                .AddScoped<IJobTimerSource, JobTimerSource>()
+                .AddScoped<IJobProgressSource, JobProgressSource>()
                 .AddModels()
                 .AddViewModels()
                 .AddViews()
                 .AddLogging(builder => builder.AddSerilog())
                 .AddMemoryCache()
+                .AddOptions()
                 .BuildServiceProvider();
         }
 

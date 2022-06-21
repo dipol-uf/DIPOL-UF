@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -16,7 +17,6 @@ using DIPOL_UF.Converters;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DIPOL_UF.Properties;
-using DIPOL_UF.Services.Contract;
 using DIPOL_UF.UiComponents.Contract;
 using DynamicData.Binding;
 using FITS_CS;
@@ -33,8 +33,8 @@ namespace DIPOL_UF.ViewModels
         [CanBeNull]
         private IAcquisitionSettings _previousSettings = null;
 
-        private readonly ICameraTabTimerSource _timerSource;
-
+        private readonly IJobTimerSource _jobTimerSource;
+        private readonly IJobProgressSource _jobProgressSource;
 
         public event EventHandler FileDialogRequested;
 
@@ -108,7 +108,8 @@ namespace DIPOL_UF.ViewModels
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
-            _timerSource = Injector.ServiceProvider.GetRequiredService<ICameraTabTimerSource>();
+            _jobProgressSource = Injector.ServiceProvider.GetRequiredService<IJobProgressSource>();
+            _jobTimerSource = Injector.ServiceProvider.GetRequiredService<IJobTimerSource>();
             PolarizationSymbolImage = new RenderTargetBitmap(256, 256, 96, 96, PixelFormats.Pbgra32);
             DipolImagePresenter = new DipolImagePresenterViewModel(Model.ImagePresenter);
             //AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow, null);
@@ -215,21 +216,24 @@ namespace DIPOL_UF.ViewModels
                       .ToPropertyEx(this, x => x.JobName)
                       .DisposeWith(Subscriptions);
 
-            JobManager.Manager.WhenAnyPropertyChanged(nameof(JobManager.IsInProcess))
-                      .Sample(UiSettingsProvider.UiThrottlingDelay)
-                      .Select(x => x.IsInProcess
-                          ? x.TotalAcquisitionActionCount + x.BiasActionCount + x.DarkActionCount
-                          : 0)
-                      .ObserveOnUi()
-                      .ToPropertyEx(this, x => x.JobCumulativeTotal)
-                      .DisposeWith(Subscriptions);
-                      
-            JobManager.Manager.WhenPropertyChanged(x => x.CumulativeProgress)
-                      .Select(x => x.Value)
-                      .Sample(UiSettingsProvider.UiThrottlingDelay)
-                      .ObserveOnUi()
-                      .ToPropertyEx(this, x => x.JobCumulativeCurrent)
-                      .DisposeWith(Subscriptions);
+            BindToProperty(_jobProgressSource.GetJobProgress().Select(x => x.Done), x => x.JobCumulativeCurrent);
+            BindToProperty(_jobProgressSource.GetJobProgress().Select(x => x.Total), x => x.JobCumulativeTotal);
+
+            // JobManager.Manager.WhenAnyPropertyChanged(nameof(JobManager.IsInProcess))
+            //           .Sample(UiSettingsProvider.UiThrottlingDelay)
+            //           .Select(x => x.IsInProcess
+            //               ? x.TotalAcquisitionActionCount + x.BiasActionCount + x.DarkActionCount
+            //               : 0)
+            //           .ObserveOnUi()
+            //           .ToPropertyEx(this, x => x.JobCumulativeTotal)
+            //           .DisposeWith(Subscriptions);
+            //           
+            // JobManager.Manager.WhenPropertyChanged(x => x.CumulativeProgress)
+            //           .Select(x => x.Value)
+            //           .Sample(UiSettingsProvider.UiThrottlingDelay)
+            //           .ObserveOnUi()
+            //           .ToPropertyEx(this, x => x.JobCumulativeCurrent)
+            //           .DisposeWith(Subscriptions);
 
             JobManager.Manager.WhenPropertyChanged(x => x.AnyCameraIsAcquiring)
                       .Select(x => x.Value)
@@ -385,7 +389,7 @@ namespace DIPOL_UF.ViewModels
                 .DisposeWith(Subscriptions);
 
 
-            _timerSource.JobRemainingTime()
+            _jobTimerSource.JobRemainingTime()
                 .Select(x => x?.ToString(@"hh\:mm\:ss\.fff"))
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.RemainingCycleTime)
@@ -525,6 +529,12 @@ namespace DIPOL_UF.ViewModels
             _previousSettings = null;
             IsInQuickVideoRegime = false;
         }
+
+        private void BindToProperty<T>(IObservable<T> source, Expression<Func<CameraTabViewModel, T>> property) =>
+            source
+                .ObserveOnUi()
+                .ToPropertyEx(this, property)
+                .DisposeWith(Subscriptions);
 
 
     }

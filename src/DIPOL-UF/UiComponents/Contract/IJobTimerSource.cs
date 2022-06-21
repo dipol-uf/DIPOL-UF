@@ -3,7 +3,7 @@ using System;
 
 namespace DIPOL_UF.UiComponents.Contract
 {
-    internal interface ICameraTabTimerSource
+    internal interface IJobTimerSource
     {
         IObservable<TimeSpan?> JobRemainingTime();
     }

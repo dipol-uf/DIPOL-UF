@@ -8,12 +8,12 @@ using DynamicData.Binding;
 
 namespace DIPOL_UF.UiComponents.Implementation
 {
-    internal sealed class CameraTabTimerSource : ICameraTabTimerSource
+    internal sealed class JobTimerSource : IJobTimerSource
     {
         private readonly ICycleTimerSource _cycleTimerSource;
         private readonly JobManager _jobManager;
 
-        public CameraTabTimerSource(ICycleTimerSource cycleTimerSource, JobManager jobManager)
+        public JobTimerSource(ICycleTimerSource cycleTimerSource, JobManager jobManager)
         {
             _cycleTimerSource = cycleTimerSource;
             _jobManager = jobManager;
