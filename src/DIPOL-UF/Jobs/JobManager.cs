@@ -445,7 +445,7 @@ namespace DIPOL_UF.Jobs
                         MotorPosition = null;
                         ActualMotorPosition = MotorPosition;
                     }
-                    _timerManager.StopMeasuring();
+                    _timerManager.PauseMeasuring();
 
                     var areCalibrationsNeeded = false;
 
@@ -506,8 +506,6 @@ namespace DIPOL_UF.Jobs
                 if(calibrationsMade)
                     report += $",{Environment.NewLine}{BiasActionCount} {Localization.JobManager_BiasJobName},{Environment.NewLine}{BiasActionCount} {Localization.JobManager_DarkJobName}";
 
-                _timerManager.StopMeasuring();
-
                 MessageBox.Show(
                     string.Format(Localization.JobManager_MB_Finished_Text, report),
                     Localization.JobManager_MB_Finished_Header,
@@ -537,6 +535,7 @@ namespace DIPOL_UF.Jobs
             }
             finally
             {
+                _timerManager.StopMeasuring();
                 ReadyToRun = true;
                 IsInProcess = false;
                 Progress = 0;
@@ -552,7 +551,6 @@ namespace DIPOL_UF.Jobs
                 }
                 _settingsCache.Clear();
                 _settingsCache = null;
-                _timerManager.StopMeasuring();
             }
         }
 

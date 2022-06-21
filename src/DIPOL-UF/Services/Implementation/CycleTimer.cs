@@ -3,16 +3,15 @@ using DIPOL_UF.Services.Contract;
 
 namespace DIPOL_UF.Services.Implementation
 {
-    internal sealed class CycleTimer : ICycleTimer
+
+    
+    internal sealed class ConstantCycleTimer : ICycleTimer
     {
-        private DateTimeOffset _end = DateTimeOffset.UtcNow;
-        public void UpdateTimes(DateTimeOffset end) => _end = end;
-
-        public TimeSpan GetRemainingTime()
+        private readonly TimeSpan _remainingTime;
+        public ConstantCycleTimer(TimeSpan remainingTime)
         {
-            var remainingTime =  _end - DateTimeOffset.UtcNow;
-
-            return remainingTime.Ticks < 0 ? TimeSpan.Zero : remainingTime;
+            _remainingTime = remainingTime;
         }
+        public TimeSpan GetRemainingTime() => _remainingTime;
     }
 }

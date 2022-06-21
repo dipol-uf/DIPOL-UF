@@ -12,6 +12,7 @@ namespace DIPOL_UF.Services.Contract
     {
         void StartMeasuring(CycleTimingInfo cycleTimingInfo);
         void StopMeasuring();
+        void PauseMeasuring();
         void AdjustTiming(CycleTimingInfo cycleTimingInfo);
     }
 }

@@ -22,10 +22,12 @@ namespace DIPOL_UF.UiComponents.Implementation
         public IObservable<string?> JobRemainingTime() =>
             _jobManager.WhenPropertyChanged(x => x.IsInProcess)
                 .Select(inProgress =>
-                    inProgress.Value ? Observable.Interval(TimeSpan.FromMilliseconds(100)) : Observable.Empty<long>()
+                    inProgress.Value
+                        ? Observable.Interval(TimeSpan.FromMilliseconds(100)).Select(_ => _cycleTimerSource)
+                        : Observable.Return<ICycleTimerSource?>(null)
                 )
                 .Switch()
-                .Select(_ => _cycleTimerSource.GetIfRunning()?.GetRemainingTime().ToString(@"hh\:mm\:ss\.fff"));
+                .Select(x => x?.GetIfRunning()?.GetRemainingTime().ToString(@"hh\:mm\:ss\.fff"));
 
     }
 }
