@@ -445,6 +445,7 @@ namespace DIPOL_UF.Jobs
                         MotorPosition = null;
                         ActualMotorPosition = MotorPosition;
                     }
+                    _timerManager.StopMeasuring();
 
                     var areCalibrationsNeeded = false;
 
@@ -469,7 +470,7 @@ namespace DIPOL_UF.Jobs
 
                     if (areCalibrationsNeeded)
                     {
-                        _timerManager.AdjustTiming(cycleTimingInfo with
+                        _timerManager.StartMeasuring(cycleTimingInfo with
                             {
                                 CycleCount = 0, BiasCamActionsCount = BiasActionCount,
                                 DarkCamActionsCount = DarkActionCount
@@ -481,6 +482,13 @@ namespace DIPOL_UF.Jobs
                         CurrentJobName = Localization.JobManager_BiasJobName;
                         await DoCameraJobAsync(BiasJob, $"{CurrentTarget1.StarName}_bias", FrameType.Bias);
                     
+                        _timerManager.AdjustTiming(cycleTimingInfo with
+                            {
+                                CycleCount = 0, 
+                                BiasCamActionsCount = 0,
+                                DarkCamActionsCount = DarkActionCount
+                            }
+                        );
 
                         Progress = 0;
                         Total = DarkActionCount;

@@ -18,9 +18,11 @@ using DIPOL_UF.Converters;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DIPOL_UF.Properties;
+using DIPOL_UF.Services.Contract;
 using DynamicData.Binding;
 using FITS_CS;
 using MathNet.Numerics;
+using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 // ReSharper disable UnassignedGetOnlyAutoProperty
@@ -31,6 +33,8 @@ namespace DIPOL_UF.ViewModels
     {
         [CanBeNull]
         private IAcquisitionSettings _previousSettings = null;
+
+        private readonly ICycleTimerSource _cycleTimerSource;
 
         public event EventHandler FileDialogRequested;
 
@@ -104,6 +108,7 @@ namespace DIPOL_UF.ViewModels
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
+            _cycleTimerSource = Injector.ServiceProvider.GetRequiredService<ICycleTimerSource>();
             PolarizationSymbolImage = new RenderTargetBitmap(256, 256, 96, 96, PixelFormats.Pbgra32);
             DipolImagePresenter = new DipolImagePresenterViewModel(Model.ImagePresenter);
             //AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow, null);
@@ -378,12 +383,17 @@ namespace DIPOL_UF.ViewModels
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.RemainingAcquisitionTime)
                 .DisposeWith(Subscriptions);
-            Model.WhenPropertyChanged(x => x.RemainingCycleTime)
-                .Select(x => x.Value.ToString(@"hh\:mm\:ss\.fff"))
+
+
+            var acquisitionTimer = this.WhenPropertyChanged(x => x.IsJobInProgress)
+                .Select(x => x.Value ? Observable.Interval(TimeSpan.FromMilliseconds(100)) : Observable.Empty<long>())
+                .Switch();
+
+            acquisitionTimer
+                .Select(_ => _cycleTimerSource.GetIfRunning()?.GetRemainingTime().ToString(@"hh\:mm\:ss\.fff"))
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.RemainingCycleTime)
                 .DisposeWith(Subscriptions);
-
 
             PropagateReadOnlyProperty(this, x => x.IsJobInProgress, y => y.IsJobInProgress);
 
