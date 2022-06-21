@@ -12,7 +12,6 @@ namespace DIPOL_UF.Services.Implementation
         private const int MotorRotationDelayMs = 200;
 
         private readonly ILogger<CycleTimerManager> _logger;
-        private readonly Timer _timer = new();
 
         private CycleTimer? _timerInstance;
         private DateTimeOffset _end;
@@ -27,11 +26,6 @@ namespace DIPOL_UF.Services.Implementation
         {
            _timerInstance = new CycleTimer();
            AdjustTiming(cycleTimingInfo);
-
-            _timer.Interval = 250;
-            _timer.AutoReset = true;
-            _timer.Elapsed += Log;
-            _timer.Start();
         }
 
         private void Log(object sender, EventArgs e)
@@ -42,16 +36,16 @@ namespace DIPOL_UF.Services.Implementation
         public void StopMeasuring()
         {
             _timerInstance = null;
-            _timer.Stop();
-            _timer.Elapsed -= Log;
         }
 
         public void AdjustTiming(CycleTimingInfo cycleTimingInfo)
         {
             _start = DateTimeOffset.UtcNow;
             var offsetMs =
-                (cycleTimingInfo.ExposureTime.TotalMilliseconds + ImageReadoutDelayMs + MotorRotationDelayMs) *
+                (cycleTimingInfo.ExposureTime.TotalMilliseconds + ImageReadoutDelayMs) *
                 cycleTimingInfo.ExposedCamActionsCount * cycleTimingInfo.CycleCount;
+
+            offsetMs += MotorRotationDelayMs * cycleTimingInfo.MotorActionsCount;
 
             offsetMs += cycleTimingInfo.BiasCamActionsCount * ImageReadoutDelayMs;
 

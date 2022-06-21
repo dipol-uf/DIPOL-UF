@@ -7,6 +7,8 @@ using DIPOL_Remote;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Services.Contract;
 using DIPOL_UF.Services.Implementation;
+using DIPOL_UF.UiComponents.Contract;
+using DIPOL_UF.UiComponents.Implementation;
 using DIPOL_UF.UserNotifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,6 +40,7 @@ namespace DIPOL_UF
                 .AddSingleton<CycleTimerManager>()
                 .AddSingleton<ICycleTimerManager>(provider => provider.GetRequiredService<CycleTimerManager>())
                 .AddSingleton<ICycleTimerSource>(provider => provider.GetRequiredService<CycleTimerManager>())
+                .AddScoped<ICameraTabTimerSource, CameraTabTimerSource>()
                 .AddModels()
                 .AddViewModels()
                 .AddViews()

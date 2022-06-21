@@ -1,12 +1,10 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -19,6 +17,7 @@ using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DIPOL_UF.Properties;
 using DIPOL_UF.Services.Contract;
+using DIPOL_UF.UiComponents.Contract;
 using DynamicData.Binding;
 using FITS_CS;
 using MathNet.Numerics;
@@ -34,7 +33,8 @@ namespace DIPOL_UF.ViewModels
         [CanBeNull]
         private IAcquisitionSettings _previousSettings = null;
 
-        private readonly ICycleTimerSource _cycleTimerSource;
+        private readonly ICameraTabTimerSource _timerSource;
+
 
         public event EventHandler FileDialogRequested;
 
@@ -108,7 +108,7 @@ namespace DIPOL_UF.ViewModels
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
-            _cycleTimerSource = Injector.ServiceProvider.GetRequiredService<ICycleTimerSource>();
+            _timerSource = Injector.ServiceProvider.GetRequiredService<ICameraTabTimerSource>();
             PolarizationSymbolImage = new RenderTargetBitmap(256, 256, 96, 96, PixelFormats.Pbgra32);
             DipolImagePresenter = new DipolImagePresenterViewModel(Model.ImagePresenter);
             //AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow, null);
@@ -385,15 +385,11 @@ namespace DIPOL_UF.ViewModels
                 .DisposeWith(Subscriptions);
 
 
-            var acquisitionTimer = this.WhenPropertyChanged(x => x.IsJobInProgress)
-                .Select(x => x.Value ? Observable.Interval(TimeSpan.FromMilliseconds(100)) : Observable.Empty<long>())
-                .Switch();
-
-            acquisitionTimer
-                .Select(_ => _cycleTimerSource.GetIfRunning()?.GetRemainingTime().ToString(@"hh\:mm\:ss\.fff"))
+            _timerSource.JobRemainingTime()
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.RemainingCycleTime)
                 .DisposeWith(Subscriptions);
+            
 
             PropagateReadOnlyProperty(this, x => x.IsJobInProgress, y => y.IsJobInProgress);
 

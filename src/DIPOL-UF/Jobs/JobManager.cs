@@ -505,7 +505,9 @@ namespace DIPOL_UF.Jobs
 
                 if(calibrationsMade)
                     report += $",{Environment.NewLine}{BiasActionCount} {Localization.JobManager_BiasJobName},{Environment.NewLine}{BiasActionCount} {Localization.JobManager_DarkJobName}";
-                
+
+                _timerManager.StopMeasuring();
+
                 MessageBox.Show(
                     string.Format(Localization.JobManager_MB_Finished_Text, report),
                     Localization.JobManager_MB_Finished_Header,
@@ -535,7 +537,6 @@ namespace DIPOL_UF.Jobs
             }
             finally
             {
-                _timerManager.StopMeasuring();
                 ReadyToRun = true;
                 IsInProcess = false;
                 Progress = 0;
@@ -546,9 +547,12 @@ namespace DIPOL_UF.Jobs
                 _jobControls.Clear();
                 _jobControls = null;
                 foreach( var sett in _settingsCache)
+                {
                     sett.Value.Dispose();
+                }
                 _settingsCache.Clear();
                 _settingsCache = null;
+                _timerManager.StopMeasuring();
             }
         }
 

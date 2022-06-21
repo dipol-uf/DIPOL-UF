@@ -211,6 +211,8 @@
     <Compile Include="Services\Implementation\CycleTimer.cs" />
     <Compile Include="Services\Implementation\CycleTimerManager.cs" />
     <Compile Include="Services\Implementation\RemoteDeviceFactoryConstructor.cs" />
+    <Compile Include="UiComponents\Contract\ICameraTabTimerSource.cs" />
+    <Compile Include="UiComponents\Implementation\CameraTabTimerSource.cs" />
     <Compile Include="UnderlyingCameraSettingsAttribute.cs" />
     <Compile Include="UserNotifications\IUserNotifier.cs" />
     <Compile Include="UserNotifications\MessageBox.cs" />
@@ -580,6 +582,5 @@
   <ItemGroup>
     <Resource Include="Dipol Logo.ico" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
