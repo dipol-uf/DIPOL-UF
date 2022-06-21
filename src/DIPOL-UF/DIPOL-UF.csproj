@@ -208,7 +208,6 @@
     <Compile Include="Services\Contract\ICycleTimerManager.cs" />
     <Compile Include="Services\Contract\ICycleTimerSource.cs" />
     <Compile Include="Services\Contract\IRemoteDeviceFactoryConstructor.cs" />
-    <Compile Include="Services\Implementation\CycleTimer.cs" />
     <Compile Include="Services\Implementation\CycleTimerManager.cs" />
     <Compile Include="Services\Implementation\RemoteDeviceFactoryConstructor.cs" />
     <Compile Include="UiComponents\Contract\ICameraTabTimerSource.cs" />

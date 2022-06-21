@@ -386,6 +386,7 @@ namespace DIPOL_UF.ViewModels
 
 
             _timerSource.JobRemainingTime()
+                .Select(x => x?.ToString(@"hh\:mm\:ss\.fff"))
                 .ObserveOnUi()
                 .ToPropertyEx(this, x => x.RemainingCycleTime)
                 .DisposeWith(Subscriptions);

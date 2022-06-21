@@ -19,7 +19,7 @@ namespace DIPOL_UF.UiComponents.Implementation
             _jobManager = jobManager;
         }
 
-        public IObservable<string?> JobRemainingTime() =>
+        public IObservable<TimeSpan?> JobRemainingTime() =>
             _jobManager.WhenPropertyChanged(x => x.IsInProcess)
                 .Select(inProgress =>
                     inProgress.Value
@@ -27,7 +27,7 @@ namespace DIPOL_UF.UiComponents.Implementation
                         : Observable.Return<ICycleTimerSource?>(null)
                 )
                 .Switch()
-                .Select(x => x?.GetIfRunning()?.GetRemainingTime().ToString(@"hh\:mm\:ss\.fff"));
+                .Select(x => x?.GetIfRunning()?.GetRemainingTime());
 
     }
 }

@@ -5,6 +5,6 @@ namespace DIPOL_UF.UiComponents.Contract
 {
     internal interface ICameraTabTimerSource
     {
-        IObservable<string?> JobRemainingTime();
+        IObservable<TimeSpan?> JobRemainingTime();
     }
 }

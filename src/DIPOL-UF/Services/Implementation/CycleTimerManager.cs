@@ -50,10 +50,7 @@ namespace DIPOL_UF.Services.Implementation
             _end = _start + TimeSpan.FromMilliseconds(offsetMs);
         }
 
-        public ICycleTimer? GetIfRunning()
-        {
-            return _timerInstance;
-        }
+        public ICycleTimer? GetIfRunning() => _timerInstance;
 
         private sealed class CycleTimer : ICycleTimer
         {
@@ -70,6 +67,16 @@ namespace DIPOL_UF.Services.Implementation
 
                 return remainingTime.Ticks < 0 ? TimeSpan.Zero : remainingTime;
             }
+        }
+
+        private sealed class ConstantCycleTimer : ICycleTimer
+        {
+            private readonly TimeSpan _remainingTime;
+            public ConstantCycleTimer(TimeSpan remainingTime)
+            {
+                _remainingTime = remainingTime;
+            }
+            public TimeSpan GetRemainingTime() => _remainingTime;
         }
     }
 }
