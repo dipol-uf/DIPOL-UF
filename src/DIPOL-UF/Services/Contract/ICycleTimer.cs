@@ -8,5 +8,6 @@ namespace DIPOL_UF.Services.Contract
 {
     internal interface ICycleTimer
     {
+        TimeSpan GetRemainingTime();
     }
 }

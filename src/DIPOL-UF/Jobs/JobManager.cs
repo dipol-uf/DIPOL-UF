@@ -347,10 +347,14 @@ namespace DIPOL_UF.Jobs
                 CurrentTarget1.StarName ??= $"star_{DateTimeOffset.UtcNow:yyyyMMddHHmmss}";
 
                 _jobControls = _windowRef.CameraTabs.Items.Select(x => x.Tab).ToList();
-                _settingsCache = _jobControls.ToDictionary(x => x.Camera.GetHashCode(),
-                    y => y.Camera.CurrentSettings.MakeCopy());
+                _settingsCache = _jobControls.ToDictionary(
+                    x => x.Camera.GetHashCode(),
+                    y => y.Camera.CurrentSettings.MakeCopy()
+                );
                 if (_jobControls.Any(x => x.Camera?.CurrentSettings is null))
+                {
                     throw new InvalidOperationException("At least one camera has no settings applied to it.");
+                }
 
                 _requestMap = _jobControls.ToDictionary(
                     x => x.Camera.GetHashCode(),
@@ -370,7 +374,23 @@ namespace DIPOL_UF.Jobs
                 {
                     throw new InvalidOperationException(Localization.JobManager_NotPhotometry);
                 }
-                _timerManager.StartMeasuring();
+
+                var maxExposureTime = TimeSpan.FromSeconds(_settingsCache.Select(x => x.Value.Camera.Timings.Kinetic).Max());
+                var cycleTimingInfo = new CycleTimingInfo(maxExposureTime,
+                    AcquisitionRuns,
+                    AcquisitionJob.NumberOfActions<CameraAction>(),
+                    AcquisitionJob.NumberOfActions<MotorAction>()
+                );
+
+                if (NeedsCalibration || _firstRun)
+                {
+                    cycleTimingInfo = cycleTimingInfo with
+                    {
+                        BiasCamActionsCount = BiasActionCount, DarkCamActionsCount = DarkActionCount
+                    };
+                }
+                
+                _timerManager.StartMeasuring(cycleTimingInfo);
                 var calibrationsMade = false;
                 //await Task.Factory.StartNew(async ()  =>
                 {
@@ -402,13 +422,13 @@ namespace DIPOL_UF.Jobs
                             : null;
                         ActualMotorPosition = MotorPosition;
 
-                        _logger.LogInformation(@"Initializing system before the new cycle.");
+                        _logger.LogInformation(@"Initializing system before the new cycle");
                         await AcquisitionJob.Initialize(token);
 
                         for (var i = 0; i < AcquisitionRuns; i++)
                         {
-                            _timerManager.AdjustTiming();
-                            _logger.LogInformation("Running {i} cycle", i + 1);
+                            _timerManager.AdjustTiming(cycleTimingInfo with { CycleCount = AcquisitionRuns - i});
+                            _logger.LogInformation("Running {CycleNumber} cycle", i + 1);
                             await AcquisitionJob.Run(token);
                         }
                     }
@@ -449,7 +469,12 @@ namespace DIPOL_UF.Jobs
 
                     if (areCalibrationsNeeded)
                     {
-                        _timerManager.AdjustTiming();
+                        _timerManager.AdjustTiming(cycleTimingInfo with
+                            {
+                                CycleCount = 0, BiasCamActionsCount = BiasActionCount,
+                                DarkCamActionsCount = DarkActionCount
+                            }
+                        );
 
                         Progress = 0;
                         Total = BiasActionCount;
