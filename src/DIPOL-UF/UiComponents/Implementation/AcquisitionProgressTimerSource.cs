@@ -15,8 +15,8 @@ namespace DIPOL_UF.UiComponents.Implementation
 
         public IObservable<TimeSpan?> AcquisitionRemainingTime(IObservable<bool> isAcquiring) =>
             isAcquiring
-                .Select(x =>
-                    x
+                .Select(isAcq =>
+                    isAcq
                         ? Observable.Interval(TimeSpan.FromMilliseconds(100)).Select(_ => _timerSource)
                         : Observable.Return<Services.Contract.IAcquisitionTimerSource?>(null)
                 )

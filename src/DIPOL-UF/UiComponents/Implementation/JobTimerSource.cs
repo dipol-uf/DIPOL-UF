@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Services.Contract;
 using DIPOL_UF.UiComponents.Contract;
-using DynamicData.Binding;
+using ReactiveUI;
 
 namespace DIPOL_UF.UiComponents.Implementation
 {
@@ -20,9 +20,9 @@ namespace DIPOL_UF.UiComponents.Implementation
         }
 
         public IObservable<TimeSpan?> JobRemainingTime() =>
-            _jobManager.WhenPropertyChanged(x => x.IsInProcess)
+            _jobManager.WhenAnyValue(x => x.IsInProcess)
                 .Select(inProgress =>
-                    inProgress.Value
+                    inProgress
                         ? Observable.Interval(TimeSpan.FromMilliseconds(100)).Select(_ => _timerSource)
                         : Observable.Return<ICycleTimerSource?>(null)
                 )

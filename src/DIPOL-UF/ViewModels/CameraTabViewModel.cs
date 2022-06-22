@@ -375,7 +375,7 @@ namespace DIPOL_UF.ViewModels
 
             BindToProperty(
                 _acqTimerSource
-                    .AcquisitionRemainingTime(this.WhenPropertyChanged(x => x.IsAcquiring).Select(x => x.Value))
+                    .AcquisitionRemainingTime(this.WhenAnyValue(x => x.IsAcquiring))
                     .Select(x => x?.ToString(@"hh\:mm\:ss\.fff")),
                 x => x.RemainingAcquisitionTime
             );
