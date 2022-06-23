@@ -20,6 +20,7 @@ on:
   schedule:
     - cron: '00 00 * * 6'
 
+
 jobs:
   analyze:
     name: Analyze
@@ -28,7 +29,8 @@ jobs:
       actions: read
       contents: read
       security-events: write
-
+    env: 
+      GITHUB_NUGET_RO: ${{ secrets.NUGET_RO }}
     strategy:
       fail-fast: false
       matrix:
