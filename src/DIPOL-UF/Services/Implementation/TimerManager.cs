@@ -71,8 +71,8 @@ namespace DIPOL_UF.Services.Implementation
 
     internal sealed class CycleTimerManager : TimerManager<CycleTimingInfo>, ICycleTimerManager, ICycleTimerSource
     {
-        private const int ImageReadoutDelayMs = 750;
-        private const int MotorRotationDelayMs = 300;
+        private const int ImageReadoutDelayMs = 50;
+        private const int MotorRotationDelayMs = 1050;
 
         protected override TimeSpan CalculateOffset(CycleTimingInfo value)
         {
