@@ -15,20 +15,20 @@ on:
       - '**/*config'
       - '**/win-ci.yml'
       - '.gitignore'
-  # pull_request:
-  #   branches: 
-  #     - main
-  #     - master
-  #     - staging
-  #   paths:
-  #     - '**/*cs'
-  #     - '**/*csproj'
-  #     - '**/*sln'
-  #     - '**/*xaml'
-  #     - '**/*resx'
-  #     - '**/*config'
-  #     - '**/win-ci.yml'
-  #     - '.gitignore'
+  pull_request:
+    branches: 
+      - main
+      - master
+      - staging
+    paths:
+      - '**/*cs'
+      - '**/*csproj'
+      - '**/*sln'
+      - '**/*xaml'
+      - '**/*resx'
+      - '**/*config'
+      - '**/win-ci.yml'
+      - '.gitignore'
   workflow_dispatch:
 
 jobs:
@@ -41,7 +41,7 @@ jobs:
       run:
         shell: pwsh
     env: 
-      GITHUB_NUGET_RO: ${{ secrets.NUGET_RO }}
+      GITHUB_NUGET_RO: ${{ secrets.GITHUB_TOKEN }}
       
     steps:
       - name: Checkout
