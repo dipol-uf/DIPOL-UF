@@ -71,8 +71,8 @@ namespace DIPOL_UF.Services.Implementation
 
     internal sealed class CycleTimerManager : TimerManager<CycleTimingInfo>, ICycleTimerManager, ICycleTimerSource
     {
-        private const int ImageReadoutDelayMs = 50;
-        private const int MotorRotationDelayMs = 1050;
+        private const int ImageReadoutDelayMs = 150;
+        private const int MotorRotationDelayMs = 700;
 
         protected override TimeSpan CalculateOffset(CycleTimingInfo value)
         {
@@ -80,7 +80,7 @@ namespace DIPOL_UF.Services.Implementation
                 (value.ExposureTime.TotalMilliseconds + ImageReadoutDelayMs) *
                 value.ExposedCamActionsCount * value.CycleCount;
 
-            offsetMs += MotorRotationDelayMs * value.MotorActionsCount;
+            offsetMs += MotorRotationDelayMs * value.MotorActionsCount * value.CycleCount;
 
             offsetMs += value.BiasCamActionsCount * ImageReadoutDelayMs;
 

@@ -472,7 +472,9 @@ namespace DIPOL_UF.Jobs
                     {
                         _timerManager.StartMeasuring(cycleTimingInfo with
                             {
-                                CycleCount = 0, BiasCamActionsCount = BiasActionCount,
+                                CycleCount = 0,
+                                ExposedCamActionsCount = 0,
+                                BiasCamActionsCount = BiasActionCount,
                                 DarkCamActionsCount = DarkActionCount
                             }
                         );
@@ -481,10 +483,11 @@ namespace DIPOL_UF.Jobs
                         Total = BiasActionCount;
                         CurrentJobName = Localization.JobManager_BiasJobName;
                         await DoCameraJobAsync(BiasJob, $"{CurrentTarget1.StarName}_bias", FrameType.Bias);
-                    
+
                         _timerManager.AdjustTiming(cycleTimingInfo with
                             {
-                                CycleCount = 0, 
+                                CycleCount = 0,
+                                ExposedCamActionsCount = 0,
                                 BiasCamActionsCount = 0,
                                 DarkCamActionsCount = DarkActionCount
                             }
