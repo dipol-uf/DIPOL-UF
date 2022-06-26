@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -18,12 +17,14 @@ using ANDOR_CS.Enums;
 using DIPOL_UF.Converters;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Models;
+using DIPOL_UF.Services.Contract;
 using DIPOL_UF.UserNotifications;
 using DynamicData;
 using DynamicData.Binding;
 using FITS_CS;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ReactiveUI.Fody.Helpers;
-using Serilog.Events;
 using Localization = DIPOL_UF.Properties.Localization;
 using MessageBox = System.Windows.MessageBox;
 
@@ -32,6 +33,11 @@ namespace DIPOL_UF.Jobs
     internal sealed record ObservationScenario(string Light, string Bias, string Dark);
     internal sealed partial class JobManager : ReactiveObjectEx
     {
+        private readonly IUserNotifier _notifier;
+        private readonly ILogger _logger;
+        private readonly ICycleTimerManager _timerManager;
+        private readonly JobFactory _jobFactory;
+
         // These regimes might produce data that will overflow uint16 format,
         // therefore images should be save as int32
         private static readonly AcquisitionMode[] LongFormatModes =
@@ -43,7 +49,6 @@ namespace DIPOL_UF.Jobs
 
 
         private DipolMainWindow _windowRef;
-        private byte[] _settingsRep;
         private List<CameraTab> _jobControls;
         private Dictionary<int, IAcquisitionSettings> _settingsCache;
         private Task _jobTask;
@@ -61,8 +66,8 @@ namespace DIPOL_UF.Jobs
 
         public IObservableCache<(string, IDevice), string> ConnectedCameras => _windowRef.ConnectedCameras;
 
-        public static JobManager Manager { get; } = new JobManager();
-        
+        [Obsolete("Use DI")]
+        public static JobManager Manager => Injector.ServiceProvider.GetRequiredService<JobManager>();
 
 
         [Reactive]
@@ -92,14 +97,21 @@ namespace DIPOL_UF.Jobs
         public bool AllCamerasHaveSettings { [ObservableAsProperty] get; }
         public float? ActualMotorPosition { get; private set; }
 
-        [Obsolete("Use " + nameof(CurrentTarget1), true)]
-        public Target CurrentTarget { get; private set; } = new Target();
         public Target1 CurrentTarget1 { get; private set; } = new Target1();
 
         public Job AcquisitionJob { get; private set; }
         public Job BiasJob { get; private set; }
         public Job DarkJob { get; private set; }
         public int AcquisitionRuns { get; private set; }
+
+        public JobManager(IUserNotifier notifier, ILogger<JobManager> logger,  ICycleTimerManager timerManager, JobFactory jobFactory)
+        {
+            _notifier = notifier;
+            _logger = logger;
+            _timerManager = timerManager;
+            _jobFactory = jobFactory;
+        }
+
 
         public void AttachToMainWindow(DipolMainWindow window)
         {
@@ -185,16 +197,6 @@ namespace DIPOL_UF.Jobs
             }
         }
 
-        [Obsolete("Use " + nameof(CurrentTarget1), true)]
-        public Task SubmitNewTarget(Target target)
-        {
-            ReadyToRun = false;
-            CurrentTarget = target ?? throw new ArgumentNullException(
-                                Localization.General_ShouldNotHappen,
-                                nameof(target));
-            return SetupNewTarget();
-        }
-
         public IImmutableDictionary<string, IDevice> GetCameras() 
             => _windowRef.ConnectedCameras.Items.ToImmutableDictionary(
                 x => ConverterImplementations.CameraToFilterConversion(x.Camera), x => x.Camera);
@@ -219,7 +221,7 @@ namespace DIPOL_UF.Jobs
                     target.CycleType.IsPolarimetric()
                 )
                 {
-                    Injector.LocateOrDefault<IUserNotifier>()?.Info(
+                    _notifier.Info(
                         Localization.CalciteWarning_Caption, 
                         string.Format(
                             Localization.CalciteWarning_Message, 
@@ -260,8 +262,9 @@ namespace DIPOL_UF.Jobs
                 var jobScenario = GetJobScenario(CurrentTarget1.CycleType);
 
                 AcquisitionJob = await ConstructJob(jobScenario.Light);
+                AcquisitionActionCount = AcquisitionJob.NumberOfActions<CameraAction>();
 
-                if(CurrentTarget1.CycleType.IsPolarimetric()
+                if (CurrentTarget1.CycleType.IsPolarimetric()
                     && (!AcquisitionJob.ContainsActionOfType<MotorAction>() || _windowRef.PolarimeterMotor is null))
                     throw new InvalidOperationException("Cannot execute current control with no motor connected.");
 
@@ -277,8 +280,8 @@ namespace DIPOL_UF.Jobs
                 ReadyToRun = true;
                 NeedsCalibration = true;
                 CurrentCycleType = CurrentTarget1.CycleType;
-                Helper.WriteLog(
-                    LogEventLevel.Information, "Set up new target {StarName} in {CycleType} regime",
+                _logger.LogInformation(
+                    "Set up new target {StarName} in {CycleType} regime",
                     CurrentTarget1.StarName, 
                     CurrentTarget1.CycleType.GetEnumNameRep().Full
                 );
@@ -290,8 +293,7 @@ namespace DIPOL_UF.Jobs
                 AcquisitionJob = null;
                 BiasJob = null;
                 DarkJob = null;
-                _settingsRep = null;
-                Helper.WriteLog(LogEventLevel.Error, ex,  @"Failed to apply new target");
+                _logger.LogError(ex,  @"Failed to apply new target");
                 throw;
             }
         }
@@ -305,26 +307,34 @@ namespace DIPOL_UF.Jobs
                 try
                 {
                     if (job.ContainsActionOfType<CameraAction>())
+                    {
                         foreach (var control in _jobControls)
+                        {
                             control.Camera.StartImageSavingSequence(
                                 CurrentTarget1.StarName!, 
                                 file,
                                 ConverterImplementations.CameraToFilterConversion(control.Camera),
                                 type,
                                 new[] { FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime, format: @"yyyy-MM-ddTHH:mm:ss.fff") });
+                        }
+                    }
+
                     MotorPosition = job.ContainsActionOfType<MotorAction>()
                         ? new float?(0)
                         : null;
                     ActualMotorPosition = MotorPosition;
-
 
                     await job.Run(token);
                 }
                 finally
                 {
                     if (job.ContainsActionOfType<CameraAction>())
+                    {
                         foreach (var control in _jobControls)
+                        {
                             await control.Camera.FinishImageSavingSequenceAsync();
+                        }
+                    }
 
                     MotorPosition = null;
                     ActualMotorPosition = null;
@@ -337,10 +347,14 @@ namespace DIPOL_UF.Jobs
                 CurrentTarget1.StarName ??= $"star_{DateTimeOffset.UtcNow:yyyyMMddHHmmss}";
 
                 _jobControls = _windowRef.CameraTabs.Items.Select(x => x.Tab).ToList();
-                _settingsCache = _jobControls.ToDictionary(x => x.Camera.GetHashCode(),
-                    y => y.Camera.CurrentSettings.MakeCopy());
+                _settingsCache = _jobControls.ToDictionary(
+                    x => x.Camera.GetHashCode(),
+                    y => y.Camera.CurrentSettings.MakeCopy()
+                );
                 if (_jobControls.Any(x => x.Camera?.CurrentSettings is null))
+                {
                     throw new InvalidOperationException("At least one camera has no settings applied to it.");
+                }
 
                 _requestMap = _jobControls.ToDictionary(
                     x => x.Camera.GetHashCode(),
@@ -361,6 +375,22 @@ namespace DIPOL_UF.Jobs
                     throw new InvalidOperationException(Localization.JobManager_NotPhotometry);
                 }
 
+                var maxExposureTime = TimeSpan.FromSeconds(_settingsCache.Select(x => x.Value.Camera.Timings.Kinetic).Max());
+                var cycleTimingInfo = new CycleTimingInfo(maxExposureTime,
+                    AcquisitionRuns,
+                    AcquisitionJob.NumberOfActions<CameraAction>(),
+                    AcquisitionJob.NumberOfActions<MotorAction>()
+                );
+
+                if (NeedsCalibration || _firstRun)
+                {
+                    cycleTimingInfo = cycleTimingInfo with
+                    {
+                        BiasCamActionsCount = BiasActionCount, DarkCamActionsCount = DarkActionCount
+                    };
+                }
+                
+                _timerManager.StartMeasuring(cycleTimingInfo);
                 var calibrationsMade = false;
                 //await Task.Factory.StartNew(async ()  =>
                 {
@@ -371,39 +401,56 @@ namespace DIPOL_UF.Jobs
                     try
                     {
                         if (AcquisitionJob.ContainsActionOfType<CameraAction>())
+                        {
                             foreach (var control in _jobControls)
+                            {
                                 control.Camera.StartImageSavingSequence(
                                     CurrentTarget1.StarName, fileName,
                                     ConverterImplementations.CameraToFilterConversion(control.Camera),
                                     FrameType.Light,
-                                    new [] {  FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime, format: @"yyyy-MM-ddTHH:mm:ss.fff") });
+                                    new[]
+                                    {
+                                        FitsKey.CreateDate("STDATE", DateTimeOffset.Now.UtcDateTime,
+                                            format: @"yyyy-MM-ddTHH:mm:ss.fff")
+                                    }
+                                );
+                            }
+                        }
 
                         MotorPosition = AcquisitionJob.ContainsActionOfType<MotorAction>()
                             ? new float?(0)
                             : null;
                         ActualMotorPosition = MotorPosition;
 
-                        Helper.WriteLog(LogEventLevel.Information, @"Initializing system before the new cycle.");
+                        _logger.LogInformation(@"Initializing system before the new cycle");
                         await AcquisitionJob.Initialize(token);
 
                         for (var i = 0; i < AcquisitionRuns; i++)
                         {
-                            Helper.WriteLog(LogEventLevel.Information, "Running {i} cycle", i + 1);
+                            _timerManager.AdjustTiming(cycleTimingInfo with { CycleCount = AcquisitionRuns - i});
+                            _logger.LogInformation("Running {CycleNumber} cycle", i + 1);
                             await AcquisitionJob.Run(token);
                         }
                     }
                     finally
                     {
                         if (AcquisitionJob.ContainsActionOfType<CameraAction>())
+                        {
                             foreach (var control in _jobControls)
+                            {
                                 await control.Camera.FinishImageSavingSequenceAsync();
+                            }
+                        }
+
                         MotorPosition = null;
                         ActualMotorPosition = MotorPosition;
                     }
+                    _timerManager.PauseMeasuring();
 
                     var areCalibrationsNeeded = false;
 
                     if (_firstRun)
+                    {
                         areCalibrationsNeeded = MessageBox.Show(
                             string.Format(
                                 Localization.JobManager_TakeCalibrationsFirstTime_Text, CurrentTarget1.StarName
@@ -411,20 +458,37 @@ namespace DIPOL_UF.Jobs
                             Localization.JobManager_TakeCalibrationsFirstTime_Header,
                             MessageBoxButton.YesNo, MessageBoxImage.Question
                         ) == MessageBoxResult.Yes;
+                    }
                     else if (NeedsCalibration)
+                    {
                         areCalibrationsNeeded = MessageBox.Show(
                             Localization.JobManager_TakeCalibrations_Text,
                             Localization.JobManager_TakeCalibrations_Header,
                             MessageBoxButton.YesNo, MessageBoxImage.Question
                         ) == MessageBoxResult.Yes;
+                    }
 
                     if (areCalibrationsNeeded)
                     {
+                        _timerManager.StartMeasuring(cycleTimingInfo with
+                            {
+                                CycleCount = 0, BiasCamActionsCount = BiasActionCount,
+                                DarkCamActionsCount = DarkActionCount
+                            }
+                        );
+
                         Progress = 0;
                         Total = BiasActionCount;
                         CurrentJobName = Localization.JobManager_BiasJobName;
                         await DoCameraJobAsync(BiasJob, $"{CurrentTarget1.StarName}_bias", FrameType.Bias);
                     
+                        _timerManager.AdjustTiming(cycleTimingInfo with
+                            {
+                                CycleCount = 0, 
+                                BiasCamActionsCount = 0,
+                                DarkCamActionsCount = DarkActionCount
+                            }
+                        );
 
                         Progress = 0;
                         Total = DarkActionCount;
@@ -441,7 +505,7 @@ namespace DIPOL_UF.Jobs
 
                 if(calibrationsMade)
                     report += $",{Environment.NewLine}{BiasActionCount} {Localization.JobManager_BiasJobName},{Environment.NewLine}{BiasActionCount} {Localization.JobManager_DarkJobName}";
-                
+
                 MessageBox.Show(
                     string.Format(Localization.JobManager_MB_Finished_Text, report),
                     Localization.JobManager_MB_Finished_Header,
@@ -451,7 +515,7 @@ namespace DIPOL_UF.Jobs
             }
             catch (TaskCanceledException)
             {
-                Helper.WriteLog(LogEventLevel.Warning, "Acquisition has been cancelled.");
+                _logger.LogWarning("Acquisition has been cancelled.");
                 MessageBox.Show(
                     Localization.JobManager_MB_Acq_Cancelled_Text,
                     Localization.JobManager_MB_Acq_Cancelled_Header,
@@ -461,7 +525,7 @@ namespace DIPOL_UF.Jobs
             }
             catch (Exception e)
             {
-                Helper.WriteLog(LogEventLevel.Error, e, "Acquisition sequence has failed");
+                _logger.LogError(e, "Acquisition sequence has failed");
                 MessageBox.Show(
                     string.Format(Localization.JobManager_MB_Failed_Text, e.Message),
                     Localization.JobManager_MB_Failed_Header,
@@ -471,6 +535,7 @@ namespace DIPOL_UF.Jobs
             }
             finally
             {
+                _timerManager.StopMeasuring();
                 ReadyToRun = true;
                 IsInProcess = false;
                 Progress = 0;
@@ -481,91 +546,14 @@ namespace DIPOL_UF.Jobs
                 _jobControls.Clear();
                 _jobControls = null;
                 foreach( var sett in _settingsCache)
+                {
                     sett.Value.Dispose();
+                }
                 _settingsCache.Clear();
                 _settingsCache = null;
             }
         }
 
-        [Obsolete("Use " + nameof(CurrentTarget1), true)]
-        private async Task SetupNewTarget()
-        {
-            try
-            {
-                AcquisitionJob = await ConstructJob(CurrentTarget.JobPath);
-                AcquisitionRuns = CurrentTarget.Repeats > 0 
-                    ? CurrentTarget.Repeats
-                    : throw new InvalidOperationException(Localization.General_ShouldNotHappen);
-                AcquisitionActionCount = AcquisitionJob.NumberOfActions<CameraAction>();
-                TotalAcquisitionActionCount = AcquisitionActionCount * AcquisitionRuns;
-
-                if (AcquisitionJob.ContainsActionOfType<MotorAction>()
-                    && _windowRef.PolarimeterMotor is null)
-                    throw new InvalidOperationException("Cannot execute current control with no motor connected.");
-
-                BiasJob = CurrentTarget.BiasPath is null
-                    ? null
-                    : await ConstructJob(CurrentTarget.BiasPath);
-                BiasActionCount = BiasJob?.NumberOfActions<CameraAction>() ?? 0;  
-
-                DarkJob = CurrentTarget.DarkPath is null
-                    ? null
-                    : await ConstructJob(CurrentTarget.DarkPath);
-                DarkActionCount = DarkJob?.NumberOfActions<CameraAction>() ?? 0;
-
-
-                await LoadSettingsTemplate();
-                await ApplySettingsTemplate();
-                ReadyToRun = true;
-            }
-            catch (Exception)
-            {
-                CurrentTarget = new Target();
-                AcquisitionJob = null;
-                BiasJob = null;
-                DarkJob = null;
-                _settingsRep = null;
-                throw;
-            }
-        }
-
-        [Obsolete("Use " + nameof(CurrentTarget1), true)]
-        private async Task LoadSettingsTemplate()
-        {
-            if(!File.Exists(CurrentTarget.SettingsPath))
-                throw new FileNotFoundException("Settings file is not found", CurrentTarget.SettingsPath);
-
-            if(_windowRef.ConnectedCameras.Count < 1)
-                throw new InvalidOperationException("No connected cameras to work with.");
-
-
-            using var str = new FileStream(CurrentTarget.SettingsPath, FileMode.Open, FileAccess.Read);
-            _settingsRep = new byte[str.Length];
-            await str.ReadAsync(_settingsRep, 0, _settingsRep.Length);
-        }
-
-        [Obsolete("Use " + nameof(CurrentTarget1), true)]
-        private async Task ApplySettingsTemplate()
-        {
-            if (_settingsRep is null)
-                throw new InvalidOperationException(Localization.General_ShouldNotHappen);
-
-            var cameras = _windowRef.ConnectedCameras.Items.Select(x => x.Camera).ToList();
-
-            if (cameras.Count < 1)
-                throw new InvalidOperationException("No connected cameras to work with.");
-
-            using var memory = new MemoryStream(_settingsRep, false);
-            foreach (var cam in cameras)
-            {
-                memory.Position = 0;
-                var template = cam.GetAcquisitionSettingsTemplate();
-                await template.DeserializeAsync(memory, Encoding.ASCII, CancellationToken.None);
-
-
-                cam.ApplySettings(template);
-            }
-        }
 
         private void ApplySettingsTemplate1()
         {
@@ -575,13 +563,13 @@ namespace DIPOL_UF.Jobs
         }
 
 
-        private static async Task<Job> ConstructJob(string path)
+        private async Task<Job> ConstructJob(string path)
         {
             if (!File.Exists(path))
                 throw new FileNotFoundException("Job file is not found", path);
 
             using var str = new FileStream(path, FileMode.Open, FileAccess.Read);
-            return await Job.CreateAsync(str);
+            return await _jobFactory.CreateAsync(str).ConfigureAwait(false);
         }
 #nullable enable
         private static ObservationScenario GetJobScenario(CycleType type)
@@ -610,8 +598,7 @@ namespace DIPOL_UF.Jobs
             return scenario;
         }
 #nullable restore
-        private JobManager() { }
-
+        
 
     }
 }

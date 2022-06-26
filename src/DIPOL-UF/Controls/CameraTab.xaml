@@ -519,22 +519,32 @@
                     Source="{Binding PolarizationSymbolImage}"
                 />
             </Grid>
-            <StackPanel Grid.Row="2" Grid.Column="0">
-                <ProgressBar 
-                     MaxWidth="450"
-                     Style="{StaticResource ProgressBarStyle}"
-                     Minimum="{Binding AcquisitionPbMin}"
-                     Maximum="{Binding AcquisitionPbMax}"
-                     Value="{Binding AcquisitionPbVal, Mode=OneWay}"/>
-                <ProgressBar 
-                    MaxWidth="450"
-                    Style="{StaticResource ProgressBarStyle}"
-                    Minimum="0"
-                    Maximum="{Binding JobCumulativeTotal}"
-                    Value="{Binding JobCumulativeCurrent, Mode=OneWay}"
-                    Foreground="{StaticResource JobProgressBarColor}"
-                    Visibility="{Binding IsJobInProgress, Converter={StaticResource BoolToVisibilityConverter}}"/>
-            </StackPanel>
+            <Grid Grid.Row="2" Grid.Column="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="150"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                    <ProgressBar Grid.Row="0"
+                         MaxWidth="450"
+                         Style="{StaticResource ProgressBarStyle}"
+                         Minimum="{Binding AcquisitionPbMin}"
+                         Maximum="{Binding AcquisitionPbMax}"
+                         Value="{Binding AcquisitionPbVal, Mode=OneWay}"/>
+                    <ProgressBar Grid.Row="1"
+                        MaxWidth="450"
+                        Style="{StaticResource ProgressBarStyle}"
+                        Minimum="0"
+                        Maximum="{Binding JobCumulativeTotal}"
+                        Value="{Binding JobCumulativeCurrent, Mode=OneWay}"
+                        Foreground="{StaticResource JobProgressBarColor}"
+                        Visibility="{Binding IsJobInProgress, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource ContentFont_TextBlock}" Text="{Binding RemainingAcquisitionTime}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource ContentFont_TextBlock}" Text="{Binding RemainingCycleTime}"/>
+            </Grid>
         </Grid>
     </ScrollViewer>
 </UserControl>

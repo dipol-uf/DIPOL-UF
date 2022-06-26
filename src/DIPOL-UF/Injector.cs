@@ -5,7 +5,14 @@ using System.Collections.Generic;
 using ANDOR_CS;
 using ANDOR_CS.Classes;
 using DIPOL_Remote;
+using DIPOL_UF.Jobs;
+using DIPOL_UF.Services.Contract;
+using DIPOL_UF.Services.Implementation;
+using DIPOL_UF.UiComponents.Contract;
+using DIPOL_UF.UiComponents.Implementation;
 using DIPOL_UF.UserNotifications;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using StepMotor;
 
@@ -13,65 +20,64 @@ namespace DIPOL_UF
 {
     internal static class Injector
     {
-        // Basically singleton lifetimes
-        private static IUserNotifier? _notifier;
-        
-        private static readonly Dictionary<Type, Func<object[], object?>> ServiceLocator = new();
-        
-        private static IUserNotifier Notifier => _notifier ??= new MessageBox.MessageBoxNotifier();
-
-        private static ILogger? Logger { get; set; }
-
-        public static T Locate<T>(params object[] args) =>
-            ServiceLocator.TryGetValue(typeof(T), out Func<object[], object?> init)
-                ? init(args) is T result
-                    ? result
-                    : throw new InvalidCastException()
-                : throw new InvalidOperationException();
-
-        public static T? LocateOrDefault<T>(params object[] args) =>
-            ServiceLocator.TryGetValue(typeof(T), out Func<object[], object?> init)
-                ? init(args) is T result
-                    ? result
-                    : default
-                : throw new InvalidOperationException();
+        public static IServiceProvider ServiceProvider { get; }
 
         static Injector()
         {
-            // These are singletons
-            ServiceLocator.Add(typeof(IUserNotifier), _ => Notifier);
-            ServiceLocator.Add(typeof(ILogger), _ => Logger);
+            var config = new ConfigurationBuilder()
+                .Build();
             
-            // These are transients
-            ServiceLocator.Add(typeof(IAsyncMotorFactory), _ => new StepMotorHandler.StepMotorFactory());
-            ServiceLocator.Add(typeof(IControlClientFactory), _ => new DipolClient.DipolClientFactory());
+            ServiceProvider = new ServiceCollection()
+                .AddSingleton<IUserNotifier, MessageBox.MessageBoxNotifier>()
+                .AddTransient<IAsyncMotorFactory, StepMotorHandler.StepMotorFactory>()
+                .AddTransient<IControlClientFactory, DipolClient.DipolClientFactory>()
+                .AddTransient<IDeviceFactory, LocalCamera.LocalCameraFactory>()
+#if DEBUG
+                .AddTransient<IDebugDeviceFactory, DebugCamera.DebugCameraFactory>()
+                .Decorate<IDeviceFactory, DebugLocalDeviceFactory>()
+#endif
+                .AddSingleton(Log.Logger)
+                .AddTransient<App>()
+                .AddSingleton<JobManager>()
+                .AddSingleton<JobFactory>()
+                .AddSingleton<IRemoteDeviceFactoryConstructor, RemoteDeviceFactoryConstructor>()
+                // These are singletons, single per app
+                .AddSingleton<CycleTimerManager>()
+                .AddSingleton<ICycleTimerManager>(provider => provider.GetRequiredService<CycleTimerManager>())
+                .AddSingleton<ICycleTimerSource>(provider => provider.GetRequiredService<CycleTimerManager>())
+                // These are scoped to each camera                
+                .AddScoped<AcquisitionTimerManger>()
+                .AddScoped<IAcquisitionTimerManager>(provider => provider.GetRequiredService<AcquisitionTimerManger>())
+                .AddScoped<IAcquisitionTimerSource>(provider => provider.GetRequiredService<AcquisitionTimerManger>())
+                
+                .AddScoped<IJobTimerSource, JobTimerSource>()
+                .AddScoped<IJobProgressSource, JobProgressSource>()
+                .AddScoped<IAcquisitionProgressTimerSource, AcquisitionProgressTimerSource>()
+                
+                .AddModels()
+                .AddViewModels()
+                .AddViews()
+                .AddLogging(builder => builder.AddSerilog())
+                .AddMemoryCache()
+                .AddOptions()
+                .BuildServiceProvider();
             
-            #if DEBUG
-            ServiceLocator.Add(
-                typeof(IDeviceFactory),
-                _ => new DebugLocalDeviceFactory(
-                    new LocalCamera.LocalCameraFactory(), 
-                    new DebugCamera.DebugCameraFactory()
-                )
-            );
-            #else
-            ServiceLocator.Add(typeof(IDeviceFactory), _ => new LocalCamera.LocalCameraFactory());
-            #endif
-            ServiceLocator.Add(
-                typeof(IRemoteDeviceFactory), args =>
-                    args is {Length: 1} && args[0] is IControlClient client
-                        ? new RemoteCamera.RemoteCameraFactory(client)
-                        : null
-            );
-        }
-        
-        public static void SetLogger(ILogger logger)
-        {
-            if (Logger is {})
-                throw new InvalidOperationException(@"Logger has been already set");
-            Logger = logger;
+            
         }
 
-        public static ILogger? GetLogger() => LocateOrDefault<ILogger>();
+        [Obsolete("Use DI")]
+        public static ILogger? GetLogger() => ServiceProvider.GetService<ILogger>();
+
+        private static IServiceCollection AddViewModels(this IServiceCollection serviceCollection) =>
+            serviceCollection
+                .AddTransient<ViewModels.DipolMainWindowViewModel>();
+
+        private static IServiceCollection AddModels(this IServiceCollection serviceCollection) =>
+            serviceCollection
+                .AddTransient<Models.DipolMainWindow>();
+
+        private static IServiceCollection AddViews(this IServiceCollection serviceCollection) =>
+            serviceCollection
+                .AddTransient<Views.DipolMainWindow>();
     }
 }

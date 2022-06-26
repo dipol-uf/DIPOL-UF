@@ -4,17 +4,14 @@
 #define IN_PROCESS
 
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using DIPOL_Remote;
-using DIPOL_UF.Converters;
-using DIPOL_UF.Models;
-using DIPOL_UF.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Serilog.Sinks;
+using DipolMainWindow = DIPOL_UF.Views.DipolMainWindow;
 
 
 namespace DIPOL_UF
@@ -67,22 +64,15 @@ namespace DIPOL_UF
                 .WriteTo.File(filePath)
                 .WriteTo.Console()
                 .CreateLogger();
-                
-            Injector.SetLogger(logger);
+            Log.Logger = logger;    
 
             Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
 
+            var applicationInstance = Injector.ServiceProvider.GetRequiredService<App>();
+            var exitCode = applicationInstance.Run(Injector.ServiceProvider.GetRequiredService<DipolMainWindow>());
 
-            var applicationInstance = new App();
-            applicationInstance.InitializeComponent();
-
-
-            using var mainModel = new DipolMainWindow();
-            using var view = new DipolMainWindowViewModel(mainModel);
-            applicationInstance.Run(new Views.DipolMainWindow().WithDataContext(view));
-
-
+            
 #if DEBUG && HOST_SERVER
            
 #if IN_PROCESS

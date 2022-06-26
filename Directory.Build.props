@@ -1,0 +1,17 @@
+<Project>
+ <PropertyGroup>
+   <Deterministic>true</Deterministic>
+   <LangVersion>9</LangVersion>
+ </PropertyGroup>
+
+ <PropertyGroup>
+    <Authors>Ilia Kosenkov</Authors>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Description>Tools for Dipol-UF astro polarimeters.</Description>
+    <Copyright>Copyright Ilia Kosenkov © 2017-2022</Copyright>
+    <PackageLicenseUrl>https://github.com/dipol-uf/DIPOL-UF/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/dipol-uf/DIPOL-UF</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dipol-uf/DIPOL-UF</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+  </PropertyGroup>
+</Project>

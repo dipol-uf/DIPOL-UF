@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -25,13 +26,15 @@ namespace DIPOL_UF
             DescriptionKey = key ?? throw new ArgumentNullException(nameof(key));
     }
 
-    internal record EnumNameRep(
+    internal sealed record EnumNameRep(
         string Full, 
         string Special, 
         [property: JsonIgnore] bool IgnoreDefault = false,
         [property: JsonIgnore] string? Name = null
     );
     
+    [SuppressMessage("ReSharper", "EntityNameCapturedOnly.Local")]
+    [SuppressMessage("ReSharper", "EntityNameCapturedOnly.Global")]
     internal static class EnumHelper
     {
         // Assuming concurrency level of 2 (threads), likely UI and some worker, and 16 initial elements
@@ -212,19 +215,51 @@ namespace DIPOL_UF
         }
         
         public static bool HasFlagTyped<T>(this T @enum, T flag)  where T : Enum => Equals(And(@enum, flag), flag);
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        // ReSharper disable EntityNameCapturedOnly.Global
-        public static T Or<T>(T left, T right)  where T : Enum
-        {
-            InlineIL.IL.Emit.Ldarg(nameof(left));
-            InlineIL.IL.Emit.Ldarg(nameof(right));
-            InlineIL.IL.Emit.Or();
-            return InlineIL.IL.Return<T>();
-        }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T And<T>(T left, T right)  where T : Enum
+        {
+            var size = Unsafe.SizeOf<T>();
+            switch (size)
+            {
+                case 1:
+                {
+                    var leftVal = Unsafe.As<T, byte>(ref left);
+                    var rightVal = Unsafe.As<T, byte>(ref right);
+                    var and = (byte)(leftVal & rightVal);
+
+                    return Unsafe.As<byte, T>(ref and);
+                }
+                case 2:
+                {
+                    var leftVal = Unsafe.As<T, short>(ref left);
+                    var rightVal = Unsafe.As<T, short>(ref right);
+                    var and = (short)(leftVal & rightVal);
+
+                    return Unsafe.As<short, T>(ref and);
+                }
+                case 4:
+                {
+                    var leftVal = Unsafe.As<T, int>(ref left);
+                    var rightVal = Unsafe.As<T, int>(ref right);
+                    var and = leftVal & rightVal;
+
+                    return Unsafe.As<int, T>(ref and);
+                }
+                case 8:
+                {
+                    var leftVal = Unsafe.As<T, long>(ref left);
+                    var rightVal = Unsafe.As<T, long>(ref right);
+                    var and = leftVal & rightVal;
+
+                    return Unsafe.As<long, T>(ref and);
+                }
+                default:
+                    return AndIl(left, right);
+            }
+        }
+
+        private static T AndIl<T>(T left, T right) where T : Enum
         {
             InlineIL.IL.Emit.Ldarg(nameof(left));
             InlineIL.IL.Emit.Ldarg(nameof(right));
@@ -232,15 +267,27 @@ namespace DIPOL_UF
             return InlineIL.IL.Return<T>();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Equals<T>(T left, T right)  where T : Enum
+        public static bool Equals<T>(T left, T right) where T : Enum
+        {
+            var size = Unsafe.SizeOf<T>();
+
+            return size switch
+            {
+                1 => Unsafe.As<T, byte>(ref left) == Unsafe.As<T, byte>(ref right),
+                2 => Unsafe.As<T, short>(ref left) == Unsafe.As<T, short>(ref right),
+                4 => Unsafe.As<T, int>(ref left) == Unsafe.As<T, int>(ref right),
+                8 => Unsafe.As<T, long>(ref left) == Unsafe.As<T, long>(ref right),
+                _ => EqualsIl(left, right)
+            };
+        }
+        
+        private static bool EqualsIl<T>(T left, T right)  where T : Enum
         {
             InlineIL.IL.Emit.Ldarg(nameof(left));
             InlineIL.IL.Emit.Ldarg(nameof(right));
             InlineIL.IL.Emit.Ceq();
             return InlineIL.IL.Return<bool>();
         }
-        // ReSharper restore EntityNameCapturedOnly.Global
         
         private static IImmutableDictionary<T, EnumNameRep> GenerateEnumStrings<T>() where T : Enum
         {

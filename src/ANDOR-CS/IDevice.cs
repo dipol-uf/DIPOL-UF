@@ -48,6 +48,7 @@ namespace ANDOR_CS
         bool IsAcquiring { get; }
         (Version EPROM, Version COFFile, Version Driver, Version Dll) Software { get; }
         (Version PCB, Version Decode, Version CameraFirmware) Hardware { get; }
+        (float Exposure, float Accumulation, float Kinetic) Timings { get; }
 
         IAcquisitionSettings? CurrentSettings { get; }
 

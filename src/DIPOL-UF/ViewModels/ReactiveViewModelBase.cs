@@ -1,10 +1,9 @@
 ﻿#nullable enable
 using System.Reactive.Disposables;
-using DIPOL_UF.Annotations;
-using DIPOL_UF.Properties;
 using DIPOL_UF.UserNotifications;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using Serilog;
 
 namespace DIPOL_UF.ViewModels
 {
@@ -16,8 +15,8 @@ namespace DIPOL_UF.ViewModels
 
         protected ReactiveViewModelBase(IUserNotifier? notifier = null, ILogger? logger = null) =>
             (Notifier, Logger) = (
-                notifier ?? Injector.LocateOrDefault<IUserNotifier>(),
-                logger ?? Injector.LocateOrDefault<ILogger>()
+                notifier ?? Injector.ServiceProvider.GetRequiredService<IUserNotifier>(),
+                logger ?? Injector.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(GetType())
             );
             
         

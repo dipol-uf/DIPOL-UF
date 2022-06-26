@@ -1,12 +1,11 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -18,9 +17,12 @@ using DIPOL_UF.Converters;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.Models;
 using DIPOL_UF.Properties;
+using DIPOL_UF.UiComponents.Contract;
 using DynamicData.Binding;
 using FITS_CS;
 using MathNet.Numerics;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 // ReSharper disable UnassignedGetOnlyAutoProperty
@@ -31,6 +33,11 @@ namespace DIPOL_UF.ViewModels
     {
         [CanBeNull]
         private IAcquisitionSettings _previousSettings = null;
+
+        private readonly ILogger<CameraTabViewModel> _logger;
+        private readonly IJobTimerSource _jobTimerSource;
+        private readonly IJobProgressSource _jobProgressSource;
+        private readonly IAcquisitionProgressTimerSource _acqTimerSource;
 
         public event EventHandler FileDialogRequested;
 
@@ -85,6 +92,9 @@ namespace DIPOL_UF.ViewModels
         public bool IsPolarimetryJob { [ObservableAsProperty] get; }
         public string LastSavedFilePath { [ObservableAsProperty] get; }
 
+        public string RemainingAcquisitionTime { [ObservableAsProperty] get; }
+        public string RemainingCycleTime { [ObservableAsProperty] get; }
+
         public RenderTargetBitmap PolarizationSymbolImage { get; }
 
         public ReactiveCommand<Unit, FileDialogDescriptor> SaveButtonCommand { get; private set; }
@@ -101,6 +111,12 @@ namespace DIPOL_UF.ViewModels
 
         public CameraTabViewModel(CameraTab model) : base(model)
         {
+            var serviceProvider = model.ServiceScope.ServiceProvider;
+            _jobProgressSource = serviceProvider.GetRequiredService<IJobProgressSource>();
+            _jobTimerSource = serviceProvider.GetRequiredService<IJobTimerSource>();
+            _acqTimerSource = serviceProvider.GetRequiredService<IAcquisitionProgressTimerSource>();
+            _logger = serviceProvider.GetRequiredService<ILogger<CameraTabViewModel>>();
+
             PolarizationSymbolImage = new RenderTargetBitmap(256, 256, 96, 96, PixelFormats.Pbgra32);
             DipolImagePresenter = new DipolImagePresenterViewModel(Model.ImagePresenter);
             //AcquisitionSettingsWindow = new DescendantProxy(Model.AcquisitionSettingsWindow, null);
@@ -207,21 +223,8 @@ namespace DIPOL_UF.ViewModels
                       .ToPropertyEx(this, x => x.JobName)
                       .DisposeWith(Subscriptions);
 
-            JobManager.Manager.WhenAnyPropertyChanged(nameof(JobManager.IsInProcess))
-                      .Sample(UiSettingsProvider.UiThrottlingDelay)
-                      .Select(x => x.IsInProcess
-                          ? x.TotalAcquisitionActionCount + x.BiasActionCount + x.DarkActionCount
-                          : 0)
-                      .ObserveOnUi()
-                      .ToPropertyEx(this, x => x.JobCumulativeTotal)
-                      .DisposeWith(Subscriptions);
-                      
-            JobManager.Manager.WhenPropertyChanged(x => x.CumulativeProgress)
-                      .Select(x => x.Value)
-                      .Sample(UiSettingsProvider.UiThrottlingDelay)
-                      .ObserveOnUi()
-                      .ToPropertyEx(this, x => x.JobCumulativeCurrent)
-                      .DisposeWith(Subscriptions);
+            BindToProperty(_jobProgressSource.GetJobProgress().Select(x => x.Done), x => x.JobCumulativeCurrent);
+            BindToProperty(_jobProgressSource.GetJobProgress().Select(x => x.Total), x => x.JobCumulativeTotal);
 
             JobManager.Manager.WhenPropertyChanged(x => x.AnyCameraIsAcquiring)
                       .Select(x => x.Value)
@@ -370,6 +373,21 @@ namespace DIPOL_UF.ViewModels
                 .Subscribe(_ => FinishQuickVideo())
                 .DisposeWith(Subscriptions);
 
+            BindToProperty(
+                _acqTimerSource
+                    .AcquisitionRemainingTime(this.WhenAnyValue(x => x.IsAcquiring))
+                    .Select(x => x?.ToString(@"hh\:mm\:ss\.fff")),
+                x => x.RemainingAcquisitionTime
+            );
+
+            BindToProperty(
+                _jobTimerSource
+                    .JobRemainingTime()
+                    .Select(x => x?.ToString(@"hh\:mm\:ss\.fff")),
+                x => x.RemainingCycleTime
+            );
+            
+
             PropagateReadOnlyProperty(this, x => x.IsJobInProgress, y => y.IsJobInProgress);
 
         }
@@ -431,23 +449,17 @@ namespace DIPOL_UF.ViewModels
                     image, type, path, keys
                 );
 
-                if (Injector.GetLogger() is { } logger)
-                {
-                    logger.Information(
-                        "Saved current image from camera {Camera} to {Path}.",
-                        ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
-                    );
-                }
+                _logger.LogInformation(
+                    "Saved current image from camera {Camera} to {Path}",
+                    ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
+                );
             }
             catch (Exception e)
             {
-                if (Injector.GetLogger() is { } logger)
-                {
-                    logger.Error(
-                        e, "Failed to save current image from camera {Camera} to {Path}.",
-                        ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
-                    );
-                }
+                _logger.LogError(
+                    e, "Failed to save current image from camera {Camera} to {Path}",
+                    ConverterImplementations.CameraToStringAliasConversion(Model.Camera), path
+                );
             }
         }
 
@@ -503,6 +515,12 @@ namespace DIPOL_UF.ViewModels
             _previousSettings = null;
             IsInQuickVideoRegime = false;
         }
+
+        private void BindToProperty<T>(IObservable<T> source, Expression<Func<CameraTabViewModel, T>> property) =>
+            source
+                .ObserveOnUi()
+                .ToPropertyEx(this, property)
+                .DisposeWith(Subscriptions);
 
 
     }

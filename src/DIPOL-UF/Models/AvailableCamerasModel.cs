@@ -14,8 +14,10 @@ using System.Windows.Input;
 using ANDOR_CS;
 using DIPOL_Remote;
 using DIPOL_UF.Converters;
+using DIPOL_UF.Services.Contract;
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -52,12 +54,12 @@ namespace DIPOL_UF.Models
         public AvailableCamerasModel(
             ImmutableArray<IControlClient> remoteClients)
         {
-
+            var factoryCtor = Injector.ServiceProvider.GetRequiredService<IRemoteDeviceFactoryConstructor>();
             _remoteClients = remoteClients;
             _remoteFactories = 
                 _remoteClients.IsDefaultOrEmpty
                 ? ImmutableArray<IRemoteDeviceFactory>.Empty 
-                : _remoteClients.Select(x => Injector.Locate<IRemoteDeviceFactory>(x)).ToImmutableArray();
+                : _remoteClients.Select(x => factoryCtor.Construct(x)).ToImmutableArray();
 
             IsInteractive = true;
             SelectedIds = new SourceList<string>().DisposeWith(Subscriptions);
@@ -66,7 +68,7 @@ namespace DIPOL_UF.Models
                 new SourceCache<(string Id, IDevice Camera), string>(x => x.Id)
                     .DisposeWith(Subscriptions);
 
-            _localFactory = Injector.Locate<IDeviceFactory>();
+            _localFactory = Injector.ServiceProvider.GetRequiredService<IDeviceFactory>();
             InitializeCommands();
             HookObservables();
             HookValidators();

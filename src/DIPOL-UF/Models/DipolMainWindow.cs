@@ -14,17 +14,14 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Runtime;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using ANDOR_CS;
-using DIPOL_UF.Annotations;
 using DIPOL_UF.Enums;
 using DIPOL_UF.Jobs;
 using DIPOL_UF.UserNotifications;
-using Serilog;
-using Serilog.Events;
+using Microsoft.Extensions.Logging;
 using StepMotor;
 using Exception = System.Exception;
 using Localization = DIPOL_UF.Properties.Localization;
@@ -34,9 +31,12 @@ namespace DIPOL_UF.Models
 {
     internal sealed class DipolMainWindow : ReactiveObjectEx
     {
+        private readonly IAsyncMotorFactory _motorFactory;
+        private readonly IControlClientFactory _clientsFactory;
+
         private readonly string[] _remoteLocations
             = UiSettingsProvider.Settings.GetArray<string>("RemoteLocations")
-              ?? new string[0];
+              ?? Array.Empty<string>();
 
         private ImmutableArray<IControlClient> _remoteClients;
 
@@ -100,14 +100,16 @@ namespace DIPOL_UF.Models
         public ReactiveCommand<InstrumentRegime, ProgressBar> ChangeRegimeCommand { get; private set; }
 
         public DipolMainWindow(
-            [CanBeNull] IUserNotifier notifier = null, 
-            [CanBeNull] ILogger logger = null
+            IUserNotifier notifier, 
+            ILogger<DipolMainWindow> logger,
+            IAsyncMotorFactory motorFactory,
+            IControlClientFactory clientsFactory
         )
         {
-            (_notifier, _logger) = (
-                notifier ?? Injector.Locate<IUserNotifier>(),
-                logger ?? Injector.Locate<ILogger>()
-            );
+            _motorFactory = motorFactory ?? throw new ArgumentNullException(nameof(motorFactory));
+            _clientsFactory = clientsFactory ?? throw new ArgumentNullException(nameof(clientsFactory));
+            _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             
             _polarimeterPortScanningTask = CheckPolarimeterMotor();
             _retractorPortScanningTask = CheckRetractorMotor();
@@ -151,7 +153,7 @@ namespace DIPOL_UF.Models
                     UiSettingsProvider.Settings
                                       .Get(@"PolarimeterMotorComPort", "COM1").ToUpperInvariant()
                 );
-                motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_polarimeterPort, 1);
+                motor = await _motorFactory.CreateFirstOrFromAddress(_polarimeterPort, 1);
                 if (motor is null)
                 {
                     throw new NullReferenceException();
@@ -161,7 +163,7 @@ namespace DIPOL_UF.Models
             }
             catch (Exception ex)
             {
-                Helper.WriteLog(LogEventLevel.Error, ex, "Polarimeter motor has failed");
+                _logger.LogError(ex, "Polarimeter motor has failed");
             }
             finally
             {
@@ -190,7 +192,7 @@ namespace DIPOL_UF.Models
                                       .Get(@"RetractorMotorComPort", "COM4").ToUpperInvariant()
                 );
 
-                motor = await Injector.Locate<IAsyncMotorFactory>().CreateFirstOrFromAddress(_retractorPort, 1);
+                motor = await _motorFactory.CreateFirstOrFromAddress(_retractorPort, 1);
                 if (motor is null)
                 {
                     throw new NullReferenceException();
@@ -200,7 +202,7 @@ namespace DIPOL_UF.Models
             }
             catch (Exception ex)
             {
-                Helper.WriteLog(LogEventLevel.Error, ex, "Retractor motor has failed");
+                _logger.LogError(ex, "Retractor motor has failed");
             }
             finally
             {
@@ -325,7 +327,7 @@ namespace DIPOL_UF.Models
 
             if (wasCalibrated)
             {
-                Injector.Locate<IUserNotifier>().Error(
+                _notifier.Error(
                     Localization.RegimeCalibration_Restart_Caption, 
                     Localization.RegimeCalibration_Restart_Text
                 );
@@ -364,7 +366,7 @@ namespace DIPOL_UF.Models
                 .DisposeWith(Subscriptions);
 
             WindowLoadedCommand
-                .Select(x => new ProgressBar()
+                .Select(_ => new ProgressBar()
                 {
                     Minimum = 0,
                     Maximum = _remoteClients.IsDefaultOrEmpty ? 1 : _remoteClients.Length,
@@ -379,7 +381,7 @@ namespace DIPOL_UF.Models
                     Observable.FromAsync(async () => await InitializeRemoteSessionsAsync((ProgressBar) x)))
                 .Merge()
                 .CombineLatest(ProgressBarProvider.WindowShown,
-                    (x, y) => x)
+                    (x, _) => x)
                 .Delay(TimeSpan.Parse(UiSettingsProvider.Settings.Get("PopUpDelay", "00:00:00.750")))
                 .Subscribe(async x =>
                 {
@@ -405,7 +407,7 @@ namespace DIPOL_UF.Models
 
             AvailableCamerasProvider.WindowShown.WithLatestFrom(
                                         AvailableCamerasProvider.ViewRequested,
-                                        (x, y) => y)
+                                        (_, y) => y)
                                     .Subscribe(async x =>
                                         await QueryCamerasAsync((AvailableCamerasModel) x)
                                             .ExpectCancellation())
@@ -457,7 +459,6 @@ namespace DIPOL_UF.Models
 
         private async Task<List<Exception>> InitializeRemoteSessionsAsync(ProgressBar pb)
         {
-            var clientFactory = Injector.Locate<IControlClientFactory>();
 
             var tasks = _remoteLocations.Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => Task.Run(() =>
@@ -466,8 +467,8 @@ namespace DIPOL_UF.Models
                     try
                     {
                         var uri = new Uri(x);
-                        Helper.WriteLog(LogEventLevel.Information, "Establishing connection to {Uri}", uri);
-                        var client = clientFactory.Create(
+                        _logger.LogInformation("Establishing connection to {Uri}", uri);
+                        var client = _clientsFactory.Create(
                             uri,
                             TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteOpenTimeout", "00:00:30")),
                             TimeSpan.Parse(UiSettingsProvider.Settings.Get("RemoteSendTimeout", "00:00:30")),
@@ -478,12 +479,12 @@ namespace DIPOL_UF.Models
                         pb.BarComment = string.Format(Localization.MainWindow_RemoteConnection_ClientCount,
                             pb.Value, _remoteLocations.Length);
 
-                        Helper.WriteLog(LogEventLevel.Information, "Connection to {Uri} established", uri);
+                        _logger.LogInformation("Connection to {Uri} established", uri);
                         return client;
                     }
                     catch (Exception e)
                     {
-                        Helper.WriteLog(LogEventLevel.Warning, @"Failed to connect to {Target}", x);
+                        _logger.LogWarning(@"Failed to connect to {Target}", x);
                         return (object)e;
                     }
 
@@ -520,7 +521,7 @@ namespace DIPOL_UF.Models
             }
             catch (Exception ex)
             {
-                Helper.WriteLog(LogEventLevel.Error, ex, "Stepper motor failed to respond");
+                _logger.LogError(ex, "Stepper motor failed to respond");
                 PolarimeterMotor?.Dispose();
                 PolarimeterMotor = null;
             }
@@ -547,7 +548,7 @@ namespace DIPOL_UF.Models
                     if (response == MessageBoxResult.Yes)
                     {
 
-                        Helper.WriteLog(LogEventLevel.Information, "Stepper motor re-scanning requested");
+                        _logger.LogInformation("Stepper motor re-scanning requested");
                         _polarimeterPortScanningTask = CheckPolarimeterMotor();
                     }
                 }
@@ -575,7 +576,7 @@ namespace DIPOL_UF.Models
             }
             catch (Exception ex)
             {
-                _logger.Write(LogEventLevel.Error, ex, "Retractor motor failed to respond");
+                _logger.LogError(ex, "Retractor motor failed to respond");
 
                 RetractorMotor?.Dispose();
                 RetractorMotor = null;
@@ -603,7 +604,7 @@ namespace DIPOL_UF.Models
 
                     if(response is YesNoResult.Yes)
                     {
-                        _logger.Write(LogEventLevel.Information, "Retractor motor recalibration requested");
+                        _logger.LogInformation("Retractor motor recalibration requested");
                         await ChangeRegimeCommand.Execute(Regime);
                     }
 
@@ -642,7 +643,7 @@ namespace DIPOL_UF.Models
 
                         if (response is YesNoResult.Yes)
                         {
-                            _logger.Write(LogEventLevel.Information, "Retractor motor re-scanning requested");
+                            _logger.LogInformation("Retractor motor re-scanning requested");
                             _retractorPortScanningTask = CheckRetractorMotor();
                         }
                     }
@@ -724,12 +725,11 @@ namespace DIPOL_UF.Models
                 pos = await RetractorMotor.GetActualPositionAsync();
                 if (pos == newAbsPos)
                 {
-                    _logger?.Write(LogEventLevel.Information, "Final position reached, cannot perform calibration");
+                    _logger.LogInformation("Final position reached, cannot perform calibration");
                 }
 
 
-                _logger?.Write(
-                    LogEventLevel.Information,
+                _logger.LogInformation(
                     @"Retractor at {Pos}, rotating to {Regime} by {newPos}",
                     pos,
                     newRegime,
@@ -780,7 +780,7 @@ namespace DIPOL_UF.Models
             try
             {
                 var reachedPos = await RetractorMotor.GetActualPositionAsync();
-                _logger?.Write(LogEventLevel.Information, "Retractor reached position {pos}", reachedPos);
+                _logger.LogInformation("Retractor reached position {pos}", reachedPos);
 
                 // This is re-calibration, need to backtrack
                 if (isCalibration)
@@ -795,8 +795,8 @@ namespace DIPOL_UF.Models
                                              _ => 0
                                          };
 
-                    _logger?.Write(
-                        LogEventLevel.Information, "Detected re-calibration, backtracking by {BacktrackDelta}",
+                    _logger.LogInformation(
+                        "Detected re-calibration, backtracking by {BacktrackDelta}",
                         backtrackDelta
                     );
 
@@ -808,12 +808,12 @@ namespace DIPOL_UF.Models
 
                     await RetractorMotor.WaitForPositionReachedAsync();
                     reachedPos = await RetractorMotor.GetActualPositionAsync();
-                    _logger?.Write(LogEventLevel.Information, "Retractor reached position {pos}", reachedPos);
+                    _logger.LogInformation("Retractor reached position {pos}", reachedPos);
                 }
             }
             catch (Exception e)
             {
-                _logger?.Write(LogEventLevel.Error, e, "Regime switching has failed");
+                _logger.LogError(e, "Regime switching has failed");
             }
 
             await RegimeSwitchProvider.ClosingRequested.Execute();
