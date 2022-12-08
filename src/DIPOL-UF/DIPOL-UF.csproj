@@ -465,7 +465,7 @@
       <Version>1.1.39</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>13.0.1</Version>
+      <Version>13.0.2</Version>
     </PackageReference>
     <PackageReference Include="ReactiveUI">
       <Version>18.1.8</Version>
