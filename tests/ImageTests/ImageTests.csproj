@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net4.8;net5.0;net6.0;$(DOTNET_EXTRA_TARGET)</TargetFrameworks>
+    <TargetFrameworks>net4.8;net6.0;$(DOTNET_EXTRA_TARGET)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>10</LangVersion>
     <IsPackable>false</IsPackable>
